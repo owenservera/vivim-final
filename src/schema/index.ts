@@ -1,0 +1,18 @@
+// src/schema/index.ts
+// Barrel re-exports — all domain types + row types + streaming types.
+
+export * from './automation.js'
+export * from './chrome.js'
+export * from './config.js'
+export * from './core.js'
+export * from './harness.js'
+export * from './health.js'
+export * from './learning.js'
+export * from './provider.js'
+export * from './routing.js'
+export * from './session.js'
+export * from './streaming.js'
+export * from './telemetry.js'
+export * from './transfer.js'
+export * from './types.js'
+export * from './versioning.js'

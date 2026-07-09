@@ -1,0 +1,31 @@
+# lefthook.yml — Git hooks for vivim-final
+
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: bun run typecheck
+      stage_fixed: false
+    lint:
+      glob: "*.{ts,tsx}"
+      run: bun run lint --write --no-errors-on-unmatched
+      stage_fixed: true
+    format:
+      glob: "*.{ts,tsx,json,md}"
+      run: bun run format
+      stage_fixed: true
+
+pre-push:
+  commands:
+    test:
+      run: bun test
+    check:
+      run: bun run typecheck && bun run lint
+
+commit-msg:
+  commands:
+    lint-commit:
+      run: npx --yes @commitlint/cli --edit $1
+      env:
+        COMMITLint: npx --yes @commitlint/cli
