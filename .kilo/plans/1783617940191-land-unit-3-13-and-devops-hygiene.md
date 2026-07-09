@@ -98,3 +98,49 @@ Do not fix now. If precise dependency gating becomes necessary later, either spl
 ## Open questions
 
 - **2a style:** replace master-plan counts with a "see tracker" pointer (recommended, drift-proof) vs. update them to current numbers? Default to the pointer unless you want the numbers kept in sync manually.
+
+---
+
+## Progress since plan (execution log)
+
+### Completed
+- **3.13 Store impls** — `gate PASS|PASS|PASS`. Committed `ce60282`. PROGRESS line added.
+- **Doc hygiene** — `00-master-plan.md` totals → 114, status table → structural-only pointer; `PROGRESS.md` backfilled 3.8–3.13. Committed `765d051`.
+- **3.14 ConversationManager context injection** — added `ConversationContext` interface + `buildConversationContext()` helper; injected as step [1.5] in `send()` (writes `contextJson` via `ConversationStore.updateConversation`). Tests added. `gate PASS|PASS|PASS`. Committed `bcc7263`. PROGRESS line added. Phase 3 now **14/14**.
+- **Phase 4 fidelity cross-check** — `docs/atomic/phase-4-engines/01-stream-parser.md` verified **FAITHFUL** to `04-merged-engines.md §3` (class shape, `ParserStore`, `ParserModule`, `ParseResult`, `ParserConfig`, fallback chain all match). No drift.
+
+### In progress — Unit 4.1 StreamParserEngine
+Implemented (uncommitted):
+- `src/storage/contracts/parser-store.ts` — `ParserStore` + `ProviderParserRow` (new contract; matches spec).
+- `src/engines/stream-parser.ts` — real `StreamParserEngine` class with built-in claude/generic/system parsers, dynamic-import of seed `filePath`, 3-tier fallback chain (provider → generic → system → error block), `detectCompletion`/`reloadParser`/`preloadAll`, `parserCache`.
+- `src/engines/conversation-manager.ts` — `StreamParserEngine`/`ParseResult`/`ContentBlock` now imported from `stream-parser.ts` (stub removed; re-exported for backward compat).
+- `tests/fixtures/parsers/{claude-ok,throws}.ts` + `tests/unit/engines/stream-parser.test.ts`.
+
+**Gate status:** typecheck PASS · lint PASS · test FAIL (1 test).
+
+### 🐞 Root cause of the 4.1 test failure (needs fix)
+The test `parse() falls back to generic parser when provider parser throws` fails because `expect(result.blocks.length).toBeGreaterThan(0)` receives `0`.
+
+Cause: `builtinGeneric.parse('frame')` only emits blocks for lines beginning with `data:`; for non-SSE input like `'frame'` it returns `[]`. The generic fallback therefore yields zero blocks, so the assertion fails.
+
+**Exact fix (one block in `builtinGeneric.parse` in `src/engines/stream-parser.ts`):** after the frame loop, if `blocks.length === 0`, push `{ kind: 'text', content: rawBody, index: 0 }`:
+```typescript
+      if (blocks.length === 0) blocks.push({ kind: 'text', content: rawBody, index: 0 })
+      return blocks
+```
+This makes the generic parser lenient (never empty) and the fallback test passes; the "all parsers fail → error block" test is unaffected (it forces throws at every tier via `config.genericFilePath`/`fallbackFilePath`).
+
+### Remaining steps for 4.1 (implementation agent)
+1. Apply the `builtinGeneric` leniency fix above.
+2. `bunx biome check --fix --unsafe src/ tests/` (normalize any CRLF/import order).
+3. `bun run devops/index.ts gate` → expect `PASS typecheck | PASS lint | PASS test`.
+4. `bun run devops/index.ts mark 4.1 done`.
+5. `git add -A && git commit -m "feat(StreamParserEngine): implement unit 4.1 parser engine + tests"`.
+6. Append PROGRESS line: `[2026-07-09] 4.1 StreamParserEngine -> done [<sha>] PASS typecheck | PASS lint | PASS test`.
+7. `bun run devops/index.ts select` → expect 4.2 CapabilityEngine; continue loop (Phase 4 = 31 units).
+
+### Note on tooling
+- Ad-hoc `bun <script>.ts` debug runs are **blocked by permission rules** (only `bunx`, `bun test`, `bun /tmp/dbg.ts`, `bun run devops/index.ts *` are allowed). Diagnose via reading code / `bun test` instead.
+- Use `C:\Users\VIVIM.inc\AppData\Local\Temp\kilo` (or a path inside the repo) for temp scripts — **never** `C:\tmp` (non-existent on this host).
+- Use absolute module import paths (`C:/0-BlackBoxProject-0/vivim-final/src/...`) when a debug script lives outside the repo.
+
