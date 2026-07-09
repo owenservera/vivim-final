@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
+    "alasql": "^4.17.3",
     "ulid": "^2.3.0",
     "zod": "^3.24.2"
   },
