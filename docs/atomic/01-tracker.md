@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 26 | **Blocked:** 0 | **Pending:** 88
+**Total units:** 114 | **Done:** 27 | **Blocked:** 0 | **Pending:** 87
 
 ---
 
@@ -42,7 +42,7 @@
 - [x] 3.7 — CapabilityEventBus (typed pub/sub) → `src/engines/capability-event-bus.ts`
 - [x] 3.8 — StreamBlockStore (ContentBlock persistence) → `src/engines/stream-block-store.ts`
 - [x] 3.9 — Store: GovernorStore        → `src/storage/contracts/governor-store.ts`
-- [ ] 3.10 — Store: ConversationStore   → `src/storage/contracts/conversation-store.ts`
+- [x] 3.10 — Store: ConversationStore   → `src/storage/contracts/conversation-store.ts`
 - [ ] 3.11 — Store: StreamBlockStore    → `src/storage/contracts/stream-block-store.ts`
 - [ ] 3.12 — Store: HealthStore         → `src/storage/contracts/health-store.ts`
 - [ ] 3.13 — Store impls: Phase 3 stores → `src/storage/impl/` (4 files)
