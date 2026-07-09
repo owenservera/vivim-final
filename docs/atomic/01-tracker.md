@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 19 | **Blocked:** 0 | **Pending:** 95
+**Total units:** 114 | **Done:** 25 | **Blocked:** 0 | **Pending:** 89
 
 ---
 
@@ -35,12 +35,12 @@
 
 - [x] 3.1 — ChromeGovernor (public API + boot) → `src/engines/chrome-governor.ts`
 - [x] 3.2 — Governor: LifecycleManager (spawn/kill/ensure/reap) → governor subsystem
-- [~] 3.3 — Governor: CDPProxy (send/capture/executeHarnessPlan) → governor subsystem
-- [ ] 3.4 — Governor: TraceLog (CDP tracing) → governor subsystem
-- [ ] 3.5 — Governor: HealthMonitor (liveness probes + circuit breaker) → governor subsystem
-- [ ] 3.6 — ConversationManager (8-step pipe) → `src/engines/conversation-manager.ts`
-- [ ] 3.7 — CapabilityEventBus (typed pub/sub) → `src/engines/capability-event-bus.ts`
-- [ ] 3.8 — StreamBlockStore (ContentBlock persistence) → `src/engines/stream-block-store.ts`
+- [x] 3.3 — Governor: CDPProxy (send/capture/executeHarnessPlan) → governor subsystem
+- [x] 3.4 — Governor: TraceLog (CDP tracing) → governor subsystem
+- [x] 3.5 — Governor: HealthMonitor (liveness probes + circuit breaker) → governor subsystem
+- [x] 3.6 — ConversationManager (8-step pipe) → `src/engines/conversation-manager.ts`
+- [x] 3.7 — CapabilityEventBus (typed pub/sub) → `src/engines/capability-event-bus.ts`
+- [x] 3.8 — StreamBlockStore (ContentBlock persistence) → `src/engines/stream-block-store.ts`
 - [ ] 3.9 — Store: GovernorStore        → `src/storage/contracts/governor-store.ts`
 - [ ] 3.10 — Store: ConversationStore   → `src/storage/contracts/conversation-store.ts`
 - [ ] 3.11 — Store: StreamBlockStore    → `src/storage/contracts/stream-block-store.ts`

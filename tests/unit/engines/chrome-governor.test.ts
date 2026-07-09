@@ -4,13 +4,20 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import {
   type AsyncMutex,
-  type CaptureResult,
   CDPProxy,
   type CDPTransport,
+  type CaptureResult,
   ChromeGovernor,
+  type CircuitBreaker,
   type FleetConfig,
   type GovernorEventBus,
+  HealthMonitor,
   type PageState,
+  TraceLog,
+  circuitRecordFailure,
+  circuitRecordSuccess,
+  circuitTryAcquire,
+  createCircuitBreaker,
 } from '../../../src/engines/chrome-governor.js'
 import type {
   CircuitBreakerStateRow,
@@ -90,7 +97,8 @@ function createMockStore() {
         return row
       },
       async getTrace(slaveId: string, limit?: number) {
-        const matching = traceEntries.filter((e) => e.slaveId === slaveId)
+        const matching =
+          slaveId === '*' ? [...traceEntries] : traceEntries.filter((e) => e.slaveId === slaveId)
         return limit ? matching.slice(-limit) : matching
       },
     } satisfies GovernorStore,
@@ -98,6 +106,7 @@ function createMockStore() {
     fleetEvents,
     healthTicks,
     traceEntries,
+    circuitStates,
   }
 }
 
@@ -368,12 +377,14 @@ describe('CDPProxy', () => {
       circuitState: 'closed',
       lastHealthCheck: Date.now(),
     })
-    const order: number[] = []
+    let concurrent = false
+    let active = false
     const slowTransport: CDPTransport = {
       async send() {
-        order.push(1)
+        if (active) concurrent = true
+        active = true
         await new Promise((r) => setTimeout(r, 10))
-        order.push(2)
+        active = false
         return 'done'
       },
       async capture() {
@@ -387,9 +398,292 @@ describe('CDPProxy', () => {
       },
     }
     const p = new CDPProxy(slaves, mutexes, slowTransport)
-    const p1 = p.send('s1', 'A').then(() => order.push(3))
-    const p2 = p.send('s1', 'B').then(() => order.push(4))
-    await Promise.all([p1, p2])
-    expect(order).toEqual([1, 2, 3, 4])
+    await Promise.all([p.send('s1', 'A'), p.send('s1', 'B')])
+    expect(concurrent).toBe(false)
+  })
+})
+
+// ── TraceLog tests ─────────────────────────────────────────────────────────
+
+describe('TraceLog', () => {
+  it('record() stores a trace entry', async () => {
+    const { store, traceEntries } = createMockStore()
+    const trace = new TraceLog(store)
+    const entry = await trace.record({
+      slaveId: 's1',
+      method: 'cdp:send',
+      durationMs: 42,
+    })
+    expect(entry.id).toStartWith('te_')
+    expect(entry.slaveId).toBe('s1')
+    expect(entry.method).toBe('cdp:send')
+    expect(entry.durationMs).toBe(42)
+    expect(traceEntries.length).toBe(1)
+  })
+
+  it('getTrace() returns entries filtered by slaveId', async () => {
+    const { store, traceEntries } = createMockStore()
+    traceEntries.push(
+      {
+        id: 'te_1',
+        slaveId: 's1',
+        conversationId: null,
+        method: 'a',
+        paramsJson: null,
+        resultJson: null,
+        durationMs: 1,
+        error: null,
+        ts: 1,
+      },
+      {
+        id: 'te_2',
+        slaveId: 's2',
+        conversationId: null,
+        method: 'b',
+        paramsJson: null,
+        resultJson: null,
+        durationMs: 2,
+        error: null,
+        ts: 2,
+      },
+    )
+    const trace = new TraceLog(store)
+    const results = await trace.getTrace('s1')
+    expect(results.length).toBe(1)
+    expect(results[0]?.slaveId).toBe('s1')
+  })
+
+  it('getConversationTrace() returns entries for a conversation', async () => {
+    const { store, traceEntries } = createMockStore()
+    traceEntries.push(
+      {
+        id: 'te_1',
+        slaveId: 's1',
+        conversationId: 'conv_1',
+        method: 'a',
+        paramsJson: null,
+        resultJson: null,
+        durationMs: 1,
+        error: null,
+        ts: 1,
+      },
+      {
+        id: 'te_2',
+        slaveId: 's1',
+        conversationId: 'conv_2',
+        method: 'b',
+        paramsJson: null,
+        resultJson: null,
+        durationMs: 2,
+        error: null,
+        ts: 2,
+      },
+    )
+    const trace = new TraceLog(store)
+    const results = await trace.getConversationTrace('conv_1')
+    expect(results.length).toBe(1)
+    expect(results[0]?.conversationId).toBe('conv_1')
+  })
+})
+
+// ── CircuitBreaker tests ───────────────────────────────────────────────────
+
+describe('CircuitBreaker', () => {
+  it('starts in closed state', () => {
+    const cb = createCircuitBreaker()
+    expect(cb.state).toBe('closed')
+    expect(cb.failureCount).toBe(0)
+  })
+
+  it('opens after consecutive failures >= threshold', () => {
+    const cb = createCircuitBreaker()
+    circuitRecordFailure(cb, 3, 1000)
+    circuitRecordFailure(cb, 3, 1000)
+    expect(cb.state).toBe('closed')
+    circuitRecordFailure(cb, 3, 1000)
+    expect(cb.state).toBe('open')
+    expect(cb.failureCount).toBe(3)
+  })
+
+  it('transitions to half_open after resetMs', () => {
+    const cb = createCircuitBreaker()
+    cb.state = 'open'
+    cb.openedAt = Date.now() - 2000
+    const acquired = circuitTryAcquire(cb, 1000)
+    expect(acquired).toBe(true)
+    expect(cb.state as string).toBe('half_open')
+  })
+
+  it('closes from half_open on success', () => {
+    const cb = createCircuitBreaker()
+    cb.state = 'half_open'
+    cb.failureCount = 2
+    circuitRecordSuccess(cb, 3, 1000)
+    expect(cb.state as string).toBe('closed')
+    expect(cb.failureCount).toBe(0)
+  })
+
+  it('reopens from half_open on failure', () => {
+    const cb = createCircuitBreaker()
+    cb.state = 'half_open'
+    circuitRecordFailure(cb, 3, 1000)
+    expect(cb.state as string).toBe('open')
+  })
+
+  it('tryAcquire returns false when open and resetMs not elapsed', () => {
+    const cb = createCircuitBreaker()
+    cb.state = 'open'
+    cb.openedAt = Date.now()
+    expect(circuitTryAcquire(cb, 5000)).toBe(false)
+  })
+})
+
+// ── HealthMonitor tests ────────────────────────────────────────────────────
+
+describe('HealthMonitor', () => {
+  const defaultConfig: FleetConfig = {
+    portRange: [9222, 9333],
+    healthProbeIntervalMs: 1000,
+    healthProbeTimeoutMs: 500,
+    autoRestart: true,
+    maxRestarts: 3,
+    circuitBreakerThreshold: 3,
+    circuitBreakerResetMs: 5000,
+  }
+
+  function setup() {
+    const { store, fleetEvents, healthTicks, circuitStates } = createMockStore()
+    const { bus, events } = createMockEventBus()
+    const slaves = new Map<string, import('../../../src/engines/chrome-governor.js').ChromeSlave>()
+    const circuitBreakers = new Map<string, CircuitBreaker>()
+    const mutexes = new Map<string, AsyncMutex>()
+
+    slaves.set('s1', {
+      slaveId: 's1',
+      providerId: 'claude',
+      accountId: 'acc1',
+      debugPort: 9222,
+      profileDir: '/tmp/test',
+      status: 'running',
+      superState: 'idle',
+      pid: null,
+      consecutiveFailures: 0,
+      circuitState: 'closed',
+      lastHealthCheck: Date.now(),
+    })
+
+    const transport = {
+      async send() {
+        return { Browser: { protocolVersion: '1.3' } }
+      },
+      async capture() {
+        return { url: '', body: '', headers: {}, status: 200 }
+      },
+      async getPageState() {
+        return { url: '', title: '', readyState: '' }
+      },
+      async captureScreenshot() {
+        return ''
+      },
+    }
+
+    const proxy = new CDPProxy(slaves, mutexes, transport, bus)
+    const monitor = new HealthMonitor(store, slaves, circuitBreakers, proxy, defaultConfig, bus)
+
+    return {
+      store,
+      bus,
+      events,
+      slaves,
+      circuitBreakers,
+      monitor,
+      proxy,
+      fleetEvents,
+      healthTicks,
+      circuitStates,
+    }
+  }
+
+  it('probe() returns true for live Chrome', async () => {
+    const { monitor, slaves } = setup()
+    const ok = await monitor.probe('s1')
+    expect(ok).toBe(true)
+    expect(slaves.get('s1')?.status).toBe('running')
+    expect(slaves.get('s1')?.consecutiveFailures).toBe(0)
+  })
+
+  it('probe() returns false and records failure for unreachable Chrome', async () => {
+    const { store, slaves, circuitBreakers } = setup()
+    // Replace transport with failing one
+    const failingProxy = new CDPProxy(slaves, new Map(), {
+      async send() {
+        throw new Error('ECONNREFUSED')
+      },
+      async capture() {
+        return { url: '', body: '', headers: {}, status: 200 }
+      },
+      async getPageState() {
+        return { url: '', title: '', readyState: '' }
+      },
+      async captureScreenshot() {
+        return ''
+      },
+    })
+    const monitor2 = new HealthMonitor(store, slaves, circuitBreakers, failingProxy, defaultConfig)
+    const ok = await monitor2.probe('s1')
+    expect(ok).toBe(false)
+    expect(slaves.get('s1')?.consecutiveFailures).toBe(1)
+    expect(slaves.get('s1')?.status).toBe('error')
+  })
+
+  it('emits fleet:slave_status on status change', async () => {
+    const { store, slaves, circuitBreakers, proxy } = setup()
+    const { bus, events } = createMockEventBus()
+    const monitor2 = new HealthMonitor(store, slaves, circuitBreakers, proxy, defaultConfig, bus)
+    // First probe: running → running (no event since already running)
+    const s1 = slaves.get('s1')
+    if (s1) s1.status = 'error'
+    await monitor2.probe('s1')
+    const statusEvents = events.filter((e) => e.event === 'fleet:slave_status')
+    expect(statusEvents.length).toBe(1)
+    expect((statusEvents[0]?.data as { status: string }).status).toBe('running')
+  })
+
+  it('emits fleet:crash_detected after threshold failures', async () => {
+    const { store, slaves, circuitBreakers } = setup()
+    const { bus, events } = createMockEventBus()
+    const failingProxy = new CDPProxy(slaves, new Map(), {
+      async send() {
+        throw new Error('fail')
+      },
+      async capture() {
+        return { url: '', body: '', headers: {}, status: 200 }
+      },
+      async getPageState() {
+        return { url: '', title: '', readyState: '' }
+      },
+      async captureScreenshot() {
+        return ''
+      },
+    })
+    const monitor = new HealthMonitor(
+      store,
+      slaves,
+      circuitBreakers,
+      failingProxy,
+      defaultConfig,
+      bus,
+    )
+    for (let i = 0; i < 3; i++) await monitor.probe('s1')
+    const crashEvents = events.filter((e) => e.event === 'fleet:crash_detected')
+    expect(crashEvents.length).toBe(1)
+  })
+
+  it('start/stop manages the probe interval', async () => {
+    const { monitor } = setup()
+    monitor.start(50)
+    expect(monitor.isRunning).toBe(true)
+    monitor.stop()
+    expect(monitor.isRunning).toBe(false)
   })
 })

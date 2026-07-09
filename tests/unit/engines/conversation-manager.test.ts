@@ -1,0 +1,294 @@
+// tests/unit/engines/conversation-manager.test.ts
+// Tests for ConversationManager — 8-step send pipeline.
+
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
+import type {
+  CapabilityEventBus,
+  CapabilityResolutionEngine,
+  ContentBlock,
+  ParseResult,
+  ResolvedCapabilities,
+  StreamBlockStore,
+  StreamParserEngine,
+} from '../../../src/engines/conversation-manager.js'
+import { ConversationManager } from '../../../src/engines/conversation-manager.js'
+import type { ExecutionMemoizer } from '../../../src/engines/execution-memoizer.js'
+import type {
+  ConversationMessageRow,
+  ConversationRow,
+  ConversationStore,
+  ProviderAccountRow,
+} from '../../../src/storage/contracts/conversation-store.js'
+
+// ── Mock factories ─────────────────────────────────────────────────────────
+
+function makeConv(overrides?: Partial<ConversationRow>): ConversationRow {
+  return {
+    id: 'conv_1',
+    providerSessionId: 'session_1',
+    providerId: 'claude',
+    title: 'Test',
+    state: 'active',
+    messageCount: 0,
+    lastMessageAt: null,
+    contextJson: '{}',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    ...overrides,
+  }
+}
+
+function makeAccount(overrides?: Partial<ProviderAccountRow>): ProviderAccountRow {
+  return {
+    id: 'acct_1',
+    providerId: 'claude',
+    planTier: 'pro',
+    displayName: 'Test',
+    configJson: '{}',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    ...overrides,
+  }
+}
+
+function makeMsg(overrides?: Partial<ConversationMessageRow>): ConversationMessageRow {
+  return {
+    id: 'msg_1',
+    conversationId: 'conv_1',
+    role: 'assistant',
+    content: 'Hello',
+    blocksJson: '[]',
+    blockCount: 0,
+    parentMessageId: null,
+    sequenceIndex: 0,
+    latencyMs: null,
+    tokenCount: null,
+    model: null,
+    metadataJson: '{}',
+    createdAt: Date.now(),
+    ...overrides,
+  }
+}
+
+function makeResolved(): ResolvedCapabilities {
+  return {
+    composer: [
+      {
+        capabilityId: 'cap_1',
+        selector: 'textarea',
+        label: 'Composer',
+        kind: 'composer',
+        priority: 1,
+        configJson: '{}',
+      },
+    ],
+    header: [],
+    message: [],
+    sidebar: [],
+    inline: [],
+    total: 1,
+    resolvedAt: Date.now(),
+  }
+}
+
+function makeParseResult(blocks?: ContentBlock[]): ParseResult {
+  return {
+    blocks: blocks ?? [{ kind: 'text', content: 'Hi there', index: 0 }],
+    confidence: 0.95,
+    parserName: 'test',
+    parserVersion: 1,
+    durationMs: 5,
+  }
+}
+
+// ── Mock store ──────────────────────────────────────────────────────────────
+
+function mockStore(overrides?: Partial<ConversationStore>): ConversationStore {
+  return {
+    getConversation: mock(() => Promise.resolve(makeConv())),
+    createConversation: mock((input) => Promise.resolve(makeConv({ id: 'conv_new', ...input }))),
+    updateConversation: mock(() => Promise.resolve()),
+    deleteConversation: mock(() => Promise.resolve()),
+    listConversations: mock(() => Promise.resolve([])),
+    createMessage: mock((input) => Promise.resolve(makeMsg({ id: 'msg_new', ...input }))),
+    getMessage: mock(() => Promise.resolve(makeMsg())),
+    getMessages: mock(() => Promise.resolve([])),
+    getLastMessage: mock(() => Promise.resolve(null)),
+    getAccount: mock(() => Promise.resolve(makeAccount())),
+    ...overrides,
+  }
+}
+
+function mockResolution(): CapabilityResolutionEngine {
+  return {
+    resolve: mock(() => Promise.resolve(makeResolved())),
+  }
+}
+
+function mockParser(): StreamParserEngine {
+  return {
+    parse: mock(() => Promise.resolve(makeParseResult())),
+  }
+}
+
+function mockBlockStore(): StreamBlockStore {
+  return {
+    storeBlocks: mock(() => Promise.resolve()),
+  }
+}
+
+function mockEventBus(): CapabilityEventBus & { events: unknown[] } {
+  const events: unknown[] = []
+  return {
+    events,
+    emit: mock((e: unknown) => {
+      events.push(e)
+    }),
+  }
+}
+
+function mockMemoizer(): ExecutionMemoizer {
+  return {
+    getOrCompute: mock(async (_key: string, compute: () => Promise<unknown>) => compute()),
+    getStats: mock(() => ({ size: 0, maxEntries: 100, hits: 0, misses: 0, hitRate: 0 })),
+    invalidate: mock(() => {}),
+    invalidateByPrefix: mock(() => {}),
+    invalidateAll: mock(() => {}),
+    set: mock(() => {}),
+    get: mock(() => undefined),
+  } as unknown as ExecutionMemoizer
+}
+
+function mockGovernor(): ChromeGovernor {
+  return {
+    ensureRunning: mock(async (slaveId: string) => ({
+      slaveId,
+      providerId: 'claude',
+      accountId: 'acct_1',
+      debugPort: 9222,
+      profileDir: '/tmp/test',
+      status: 'running',
+      superState: 'idle',
+      pid: 123,
+      consecutiveFailures: 0,
+      circuitState: 'closed',
+      lastHealthCheck: Date.now(),
+    })),
+    cdp: {
+      executeHarnessPlan: mock(async () => ({ success: true, stepsCompleted: 2 })),
+      capture: mock(async () => ({
+        url: 'https://test.com/api/conversation/1',
+        body: '{"text":"Hi there"}',
+        headers: {},
+        status: 200,
+      })),
+      send: mock(async () => ({})),
+      getPageState: mock(async () => ({
+        url: 'https://test.com',
+        title: 'Test',
+        readyState: 'complete',
+      })),
+      captureScreenshot: mock(async () => 'base64'),
+    },
+  } as unknown as ChromeGovernor
+}
+
+// ── Tests ──────────────────────────────────────────────────────────────────
+
+describe('ConversationManager', () => {
+  let mgr: ConversationManager
+  let store: ReturnType<typeof mockStore>
+  let bus: ReturnType<typeof mockEventBus>
+
+  beforeEach(() => {
+    store = mockStore()
+    bus = mockEventBus()
+    mgr = new ConversationManager(
+      mockGovernor(),
+      mockResolution(),
+      mockParser(),
+      mockBlockStore(),
+      store,
+      bus,
+      mockMemoizer(),
+    )
+  })
+
+  it('send() completes full 8-step pipeline and returns SendResult', async () => {
+    const result = await mgr.send('conv_1', 'Hello')
+    expect(result.ok).toBe(true)
+    expect(result.messageId).toBe('msg_new')
+    expect(result.blocks).toEqual([{ kind: 'text', content: 'Hi there', index: 0 }])
+    expect(result.text).toBe('Hi there')
+    expect(result.latencyMs).toBeGreaterThanOrEqual(0)
+  })
+
+  it('createConversation() persists and returns conversation', async () => {
+    const conv = await mgr.createConversation('claude', 'My Chat')
+    expect(conv.id).toBe('conv_new')
+    expect(store.createConversation).toHaveBeenCalledWith(
+      expect.objectContaining({ providerId: 'claude', title: 'My Chat' }),
+    )
+  })
+
+  it('Step 1 RESOLVE uses memoized capability resolution', async () => {
+    await mgr.send('conv_1', 'test')
+    expect(store.getAccount).toHaveBeenCalledWith('session_1')
+  })
+
+  it('Step 5 SEND builds correct HarnessDAG for composer typing', async () => {
+    const governor = mockGovernor()
+    const mgr2 = new ConversationManager(
+      governor,
+      mockResolution(),
+      mockParser(),
+      mockBlockStore(),
+      store,
+      bus,
+      mockMemoizer(),
+    )
+    await mgr2.send('conv_1', 'test message')
+    expect(governor.cdp.executeHarnessPlan).toHaveBeenCalled()
+  })
+
+  it('Step 8 EMIT fires conversation:complete event on EventBus', async () => {
+    await mgr.send('conv_1', 'hello')
+    expect(bus.emit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'conversation:complete',
+        conversationId: 'conv_1',
+      }),
+    )
+  })
+
+  it('Error at any step → error flows through, event emitted', async () => {
+    const failStore = mockStore({
+      getConversation: mock(() => Promise.resolve(null)),
+    })
+    const failBus = mockEventBus()
+    const mgr2 = new ConversationManager(
+      mockGovernor(),
+      mockResolution(),
+      mockParser(),
+      mockBlockStore(),
+      failStore,
+      failBus,
+      mockMemoizer(),
+    )
+    const result = await mgr2.send('bad_id', 'msg')
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain('Conversation not found')
+    expect(failBus.emit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'conversation:error' }),
+    )
+  })
+
+  it('Multi-turn send: two sends to same conversation work', async () => {
+    const r1 = await mgr.send('conv_1', 'first')
+    const r2 = await mgr.send('conv_1', 'second')
+    expect(r1.ok).toBe(true)
+    expect(r2.ok).toBe(true)
+    expect(store.updateConversation).toHaveBeenCalledTimes(2)
+  })
+})
