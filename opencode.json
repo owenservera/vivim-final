@@ -6,20 +6,21 @@
   "logLevel": "INFO",
   "share": "manual",
   "autoupdate": true,
-  "snapshot": true,
-  "instructions": ["AGENTS.md"],
-
+  "snapshot": false,
+  "instructions": [
+    "AGENTS.md"
+  ],
   "skills": {
-    "paths": [".opencode/skill"]
+    "paths": [
+      ".opencode/skill"
+    ]
   },
-
   "references": {
     "docs": {
       "path": "./docs/merged-design-v2",
       "description": "Complete design docs: epic, architecture, schema (54 tables), engines (13), seeds, API, implementation plan. Read in doc order 00-08, then SOTA-00 through SOTA-09."
     }
   },
-
   "agent": {
     "build": {
       "description": "Primary development agent. Full tool access for implementing features, writing code, running tests, and shipping.",
@@ -46,7 +47,6 @@
       "mode": "subagent"
     }
   },
-
   "command": {
     "migrate": {
       "description": "Run Prisma migration",
@@ -84,18 +84,19 @@
       "template": "Load the devops skill and run the agentic DevOps orchestrator loop: read docs/atomic/01-tracker.md, then repeatedly `bun run devops select` to get the next unit, implement it per its atomic file, run `bun run devops gate`, and on pass run `bun run devops mark <id> done` + commit. Continue until all units are done or only blocked units remain. Never pause to ask."
     }
   },
-
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp"],
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp"
+      ],
       "enabled": true,
       "env": {
         "BROWSER": "chromium"
       }
     }
   },
-
-  "permission": "allow",
-
+  "permission": "allow"
 }

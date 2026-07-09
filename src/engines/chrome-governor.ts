@@ -2,7 +2,11 @@
 // ChromeGovernor — single I/O authority for all Chrome interaction.
 // Manages ChromeSlave lifecycle, CDP proxy, trace logging, and health monitoring.
 
-import type { GovernorStore } from '../storage/contracts/governor-store.js'
+import type {
+  GovernorStore,
+  TraceEntryInput,
+  TraceEntryRow,
+} from '../storage/contracts/governor-store.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -162,7 +166,7 @@ export class CDPProxy {
     }
   }
 
-  async executeHarnessPlan(slaveId: string, dag: HarnessDAG): Promise<HarnessResult> {
+  async executeHarnessPlan(slaveId: string, _dag: HarnessDAG): Promise<HarnessResult> {
     const slave = this.slaves.get(slaveId)
     if (!slave) throw new Error(`Slave not found: ${slaveId}`)
 
@@ -170,7 +174,7 @@ export class CDPProxy {
     await mutex.acquire()
     try {
       // Stub: full harness execution in Phase 9
-      return { ok: true, outputs: {}, progress: [], telemetry: [], durationMs: 0 }
+      return { success: true, stepsCompleted: 0 }
     } finally {
       mutex.release()
     }
@@ -200,13 +204,265 @@ export class CDPProxy {
   }
 }
 
+// ── TraceLog (3.4) ───────────────────────────────────────────────────────
+
+export class TraceLog {
+  constructor(private store: GovernorStore) {}
+
+  async record(entry: TraceEntryInput): Promise<TraceEntryRow> {
+    return this.store.createTraceEntry(entry)
+  }
+
+  async getTrace(slaveId: string, limit?: number): Promise<TraceEntryRow[]> {
+    return this.store.getTrace(slaveId, limit)
+  }
+
+  async getConversationTrace(conversationId: string): Promise<TraceEntryRow[]> {
+    // Store only supports getTrace by slaveId; scan is acceptable for v1
+    // Full implementation would add a conversationId index in Phase 6
+    const all = await this.store.getTrace('*', 1000)
+    return all.filter((e) => e.conversationId === conversationId)
+  }
+}
+
+// ── CircuitBreaker (3.4) ────────────────────────────────────────────────
+
+export interface CircuitBreaker {
+  state: CircuitState
+  failureCount: number
+  lastFailureAt: number | null
+  lastSuccessAt: number | null
+  openedAt: number | null
+}
+
+export function createCircuitBreaker(): CircuitBreaker {
+  return {
+    state: 'closed',
+    failureCount: 0,
+    lastFailureAt: null,
+    lastSuccessAt: null,
+    openedAt: null,
+  }
+}
+
+export function circuitRecordSuccess(cb: CircuitBreaker, threshold: number, resetMs: number): void {
+  const now = Date.now()
+  cb.lastSuccessAt = now
+  cb.failureCount = 0
+  if (cb.state === 'half_open') {
+    cb.state = 'closed'
+    cb.openedAt = null
+  }
+  void threshold
+  void resetMs
+}
+
+export function circuitRecordFailure(
+  cb: CircuitBreaker,
+  threshold: number,
+  _resetMs: number,
+): CircuitState {
+  const now = Date.now()
+  cb.failureCount++
+  cb.lastFailureAt = now
+
+  if (cb.state === 'half_open') {
+    cb.state = 'open'
+    cb.openedAt = now
+    return 'open'
+  }
+
+  if (cb.failureCount >= threshold) {
+    cb.state = 'open'
+    cb.openedAt = now
+    return 'open'
+  }
+
+  return cb.state
+}
+
+export function circuitTryAcquire(cb: CircuitBreaker, resetMs: number): boolean {
+  if (cb.state === 'closed') return true
+  if (cb.state === 'half_open') return true
+  // open → check if reset window has elapsed
+  if (cb.openedAt && Date.now() - cb.openedAt >= resetMs) {
+    cb.state = 'half_open'
+    return true
+  }
+  return false
+}
+
+// ── HealthMonitor (3.4) ─────────────────────────────────────────────────
+
+export class HealthMonitor {
+  private timerHandle: ReturnType<typeof setInterval> | null = null
+
+  constructor(
+    private store: GovernorStore,
+    private slaves: Map<string, ChromeSlave>,
+    private circuitBreakers: Map<string, CircuitBreaker>,
+    private cdpProxy: CDPProxy,
+    private config: FleetConfig,
+    private eventBus?: GovernorEventBus,
+  ) {}
+
+  start(intervalMs?: number): void {
+    this.stop()
+    const interval = intervalMs ?? this.config.healthProbeIntervalMs
+    this.timerHandle = setInterval(() => {
+      void this.probeAll()
+    }, interval)
+  }
+
+  stop(): void {
+    if (this.timerHandle !== null) {
+      clearInterval(this.timerHandle)
+      this.timerHandle = null
+    }
+  }
+
+  async probe(slaveId: string): Promise<boolean> {
+    const slave = this.slaves.get(slaveId)
+    if (!slave) return false
+
+    try {
+      await this.cdpProxy.send(slaveId, 'Browser.getVersion')
+      const prevStatus = slave.status
+      slave.status = 'running'
+      slave.lastHealthCheck = Date.now()
+      slave.consecutiveFailures = 0
+
+      const cb = this.getOrCreateCircuit(slaveId)
+      circuitRecordSuccess(
+        cb,
+        this.config.circuitBreakerThreshold,
+        this.config.circuitBreakerResetMs,
+      )
+      await this.store.upsertCircuitState({
+        id: `cb_${slaveId}`,
+        slaveId,
+        state: cb.state,
+        failureCount: cb.failureCount,
+        lastFailureAt: cb.lastFailureAt,
+        lastSuccessAt: cb.lastSuccessAt,
+        openedAt: cb.openedAt,
+      })
+
+      await this.store.createHealthTick({
+        slaveId,
+        providerId: slave.providerId,
+        status: 'running',
+        responseMs: Date.now() - slave.lastHealthCheck,
+        error: null,
+        ts: Date.now(),
+      })
+
+      if (prevStatus !== 'running') {
+        this.eventBus?.emit('fleet:slave_status', { slaveId, status: 'running' })
+      }
+      return true
+    } catch (err) {
+      const prevStatus = slave.status
+      slave.consecutiveFailures++
+      slave.lastHealthCheck = Date.now()
+      slave.status = 'error'
+
+      const cb = this.getOrCreateCircuit(slaveId)
+      const newState = circuitRecordFailure(
+        cb,
+        this.config.circuitBreakerThreshold,
+        this.config.circuitBreakerResetMs,
+      )
+      slave.circuitState = newState
+
+      await this.store.upsertCircuitState({
+        id: `cb_${slaveId}`,
+        slaveId,
+        state: cb.state,
+        failureCount: cb.failureCount,
+        lastFailureAt: cb.lastFailureAt,
+        lastSuccessAt: cb.lastSuccessAt,
+        openedAt: cb.openedAt,
+      })
+
+      await this.store.createHealthTick({
+        slaveId,
+        providerId: slave.providerId,
+        status: 'error',
+        responseMs: null,
+        error: err instanceof Error ? err.message : String(err),
+        ts: Date.now(),
+      })
+
+      if (prevStatus !== 'error') {
+        this.eventBus?.emit('fleet:slave_status', { slaveId, status: 'error' })
+      }
+
+      if (slave.consecutiveFailures >= this.config.circuitBreakerThreshold) {
+        this.eventBus?.emit('fleet:crash_detected', {
+          slaveId,
+          failures: slave.consecutiveFailures,
+        })
+      }
+
+      if (newState !== cb.state || newState === 'open') {
+        this.eventBus?.emit('fleet:circuit_changed', { slaveId, state: newState })
+      }
+
+      return false
+    }
+  }
+
+  async recalculateCircuit(slaveId: string): Promise<void> {
+    const cb = this.getOrCreateCircuit(slaveId)
+    const resetMs = this.config.circuitBreakerResetMs
+    if (cb.state === 'open' && cb.openedAt && Date.now() - cb.openedAt >= resetMs) {
+      cb.state = 'half_open'
+      const slave = this.slaves.get(slaveId)
+      if (slave) slave.circuitState = 'half_open'
+      this.eventBus?.emit('fleet:circuit_changed', { slaveId, state: 'half_open' })
+      await this.store.upsertCircuitState({
+        id: `cb_${slaveId}`,
+        slaveId,
+        state: cb.state,
+        failureCount: cb.failureCount,
+        lastFailureAt: cb.lastFailureAt,
+        lastSuccessAt: cb.lastSuccessAt,
+        openedAt: cb.openedAt,
+      })
+    }
+  }
+
+  private async probeAll(): Promise<void> {
+    for (const slaveId of this.slaves.keys()) {
+      await this.probe(slaveId)
+    }
+  }
+
+  private getOrCreateCircuit(slaveId: string): CircuitBreaker {
+    let cb = this.circuitBreakers.get(slaveId)
+    if (!cb) {
+      cb = createCircuitBreaker()
+      this.circuitBreakers.set(slaveId, cb)
+    }
+    return cb
+  }
+
+  get isRunning(): boolean {
+    return this.timerHandle !== null
+  }
+}
+
 // ── ChromeGovernor ─────────────────────────────────────────────────────────
 
 export class ChromeGovernor {
   private slaves = new Map<string, ChromeSlave>()
   private mutexes = new Map<string, AsyncMutex>()
+  private circuitBreakers = new Map<string, CircuitBreaker>()
   private nextPort: number
   private cdpProxy: CDPProxy
+  private traceLog: TraceLog
+  private healthMonitor: HealthMonitor
 
   constructor(
     _store: GovernorStore,
@@ -216,6 +472,15 @@ export class ChromeGovernor {
   ) {
     this.nextPort = config.portRange[0]
     this.cdpProxy = new CDPProxy(this.slaves, this.mutexes, transport, eventBus)
+    this.traceLog = new TraceLog(_store)
+    this.healthMonitor = new HealthMonitor(
+      _store,
+      this.slaves,
+      this.circuitBreakers,
+      this.cdpProxy,
+      config,
+      eventBus,
+    )
   }
 
   // ── Boot ───────────────────────────────────────────────────────────────
@@ -223,6 +488,9 @@ export class ChromeGovernor {
   async boot(): Promise<void> {
     await this.reapOrphanedPorts()
     await this.seedAccounts()
+    if (this.config.autoRestart) {
+      this.healthMonitor.start()
+    }
   }
 
   // ── Lifecycle (3.2 LifecycleManager) ───────────────────────────────────
@@ -341,17 +609,33 @@ export class ChromeGovernor {
     }
   }
 
-  // ── Trace (stub — full impl in3.4 TraceHealth) ────────────────────────
+  // ── Trace (3.4 TraceLog) ─────────────────────────────────────────────
 
-  async getTrace(_slaveId: string, _limit?: number): Promise<unknown[]> {
-    return []
+  async recordTrace(entry: TraceEntryInput): Promise<TraceEntryRow> {
+    return this.traceLog.record(entry)
   }
 
-  async getConversationTrace(_conversationId: string): Promise<unknown[]> {
-    return []
+  async getTrace(slaveId: string, limit?: number): Promise<TraceEntryRow[]> {
+    return this.traceLog.getTrace(slaveId, limit)
   }
 
-  // ── Health (stub — full impl in3.4 TraceHealth) ────────────────────────
+  async getConversationTrace(conversationId: string): Promise<TraceEntryRow[]> {
+    return this.traceLog.getConversationTrace(conversationId)
+  }
+
+  // ── Health (3.4 HealthMonitor) ──────────────────────────────────────
+
+  startHealthProbe(intervalMs?: number): void {
+    this.healthMonitor.start(intervalMs)
+  }
+
+  stopHealthProbe(): void {
+    this.healthMonitor.stop()
+  }
+
+  async probeHealth(slaveId: string): Promise<boolean> {
+    return this.healthMonitor.probe(slaveId)
+  }
 
   async getHealth(slaveId: string): Promise<SlaveHealth> {
     const slave = this.slaves.get(slaveId)
