@@ -79,6 +79,14 @@ export type CapabilityEvent =
   | { type: 'conversation:created'; conversationId: string; providerId: string; accountId: string }
   | { type: 'provider:seeded'; providerId: string; capabilities: number }
   | { type: 'provider:health_changed'; providerId: string; from: string; to: string; score: number }
+  | {
+      type: 'binding:status_changed'
+      bindingId: string
+      from: string
+      to: string
+      programId: string
+      trigger: string
+    }
   | { type: 'config:changed'; engineId: string; actor: string }
   | {
       type: 'telemetry:cycle_complete'

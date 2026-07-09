@@ -2,8 +2,24 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
 import { type ProviderHealth, ProviderHealthKernel } from '../../../src/engines/provider-health.js'
+import { newId } from '../../../src/ids.js'
 import type { CircuitBreakerStateRow } from '../../../src/storage/contracts/governor-store.js'
-import type { HealthStore } from '../../../src/storage/contracts/health-store.js'
+import type { DriftEvent, HealthStore } from '../../../src/storage/contracts/health-store.js'
+
+function drift(resolved: number, detectedAt: number): DriftEvent {
+  return {
+    id: newId(),
+    providerId: 'openai',
+    capabilityId: null,
+    bindingId: null,
+    driftType: 'selector',
+    severity: 'low',
+    description: null,
+    resolved,
+    detectedAt,
+    resolvedAt: null,
+  }
+}
 
 type Cap = {
   capabilityId: string
@@ -13,14 +29,13 @@ type Cap = {
   bindingStatus: string
 }
 type Win = { capabilityId: string; window1hExecutions: number; window1hSuccessCount: number }
-type Drift = { resolved: number; detectedAt: number }
 
 function makeStore(
   over: Partial<{
     caps: Cap[]
     wins: Win[]
     circuits: CircuitBreakerStateRow[]
-    drifts: Drift[]
+    drifts: DriftEvent[]
     providers: string[]
   }> = {},
 ) {
@@ -32,11 +47,10 @@ function makeStore(
     providers: over.providers ?? ['openai'],
   }
   const store = {
-    data,
     getCapabilityHealth: async () => data.caps,
     getParserWindows: async () => data.wins,
     getCircuitStates: async () => data.circuits,
-    getRecentDrifts: async () => data.drifts,
+    getRecentDrifts: async (providerId: string, windowMs: number) => data.drifts,
     getActiveProviders: async () => data.providers,
     upsertProviderHealth: async (_r: unknown) => {},
     getProviderHealth: async () => null,
@@ -122,7 +136,7 @@ describe('ProviderHealthKernel — scoring', () => {
           openedAt: null,
         },
       ],
-      drifts: [{ resolved: 0, detectedAt: Date.now() }],
+      drifts: [drift(0, Date.now())],
     })
     const kernel = new ProviderHealthKernel({
       governor: makeGovernor([{ providerId: 'openai', accountId: 'a', status: 'error' }]),
@@ -193,7 +207,7 @@ describe('ProviderHealthKernel — scoring', () => {
       caps: [],
       wins: [],
       circuits: [],
-      drifts: Array.from({ length: 5 }, () => ({ resolved: 0, detectedAt: Date.now() })),
+      drifts: Array.from({ length: 5 }, () => drift(0, Date.now())),
     })
     const kernel = new ProviderHealthKernel({ governor: makeGovernor([]), store, eventBus: bus })
     const h = await kernel.computeProvider('openai')
