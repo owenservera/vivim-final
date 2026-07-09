@@ -38,29 +38,16 @@ export interface CapabilityResolutionEngine {
   resolve(providerId: string, planTier: string): Promise<ResolvedCapabilities>
 }
 
-/** Unit 4.1 — StreamParserEngine (stub interface) */
-export interface StreamParserEngine {
-  parse(rawBody: string, providerId: string): Promise<ParseResult>
-}
+/** Unit 4.1 — StreamParserEngine + shared parse types (real impl in stream-parser.ts) */
+import type { ContentBlock, StreamParserEngine } from './stream-parser.js'
 
-export interface ParseResult {
-  blocks: ContentBlock[]
-  confidence: number
-  parserName: string
-  parserVersion: number
-  durationMs: number
-}
-
-export type ContentBlock =
-  | { kind: 'text'; content: string; index: number }
-  | { kind: 'thinking'; content: string; index: number }
-  | { kind: 'code'; content: string; language?: string; index: number }
-  | { kind: 'artifact'; content: string; artifactType?: string; index: number }
-  | { kind: 'image'; url: string; alt?: string; index: number }
-  | { kind: 'citation'; content: string; source?: string; index: number }
-  | { kind: 'tool_use'; toolName: string; input: Record<string, unknown>; index: number }
-  | { kind: 'error'; message: string; code?: string; index: number }
-  | { kind: 'meta'; key: string; value: unknown; index: number }
+export type {
+  ContentBlock,
+  ParserConfig,
+  ParserModule,
+  ParseResult,
+  StreamParserEngine,
+} from './stream-parser.js'
 
 /** Unit 3.7 — StreamBlockStore (stub interface) */
 export interface StreamBlockStore {

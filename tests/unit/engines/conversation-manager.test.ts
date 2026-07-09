@@ -129,7 +129,10 @@ function mockResolution(): CapabilityResolutionEngine {
 function mockParser(): StreamParserEngine {
   return {
     parse: mock(() => Promise.resolve(makeParseResult())),
-  }
+    detectCompletion: mock(() => Promise.resolve(true)),
+    reloadParser: mock(() => Promise.resolve()),
+    preloadAll: mock(() => Promise.resolve()),
+  } as unknown as StreamParserEngine
 }
 
 function mockBlockStore(): StreamBlockStore {
