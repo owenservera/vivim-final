@@ -14,4 +14,5 @@ Format: `[ISO-timestamp] <unit-id> <unit-name> -> <done|blocked> [git-sha] <gate
 [2026-07-09] 3.13 Store impls: Phase 3 stores -> done [ce60282] PASS typecheck | PASS lint | PASS test
 [2026-07-09] 3.14 ConversationManager context injection -> done [bcc7263] PASS typecheck | PASS lint | PASS test
 [2026-07-09] 4.1 StreamParserEngine -> done [b7994a4] PASS typecheck | PASS lint | PASS test
+[2026-07-09] 4.2 CapabilityEngine -> done [2c11059] PASS typecheck | PASS lint | PASS test
 
