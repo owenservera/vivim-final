@@ -1,6 +1,6 @@
 # Atomic Master Plan — vivim-final Implementation
 
-**Total units:** 115 | **Phases:** 10 (v1: 1-6, SOTA v2: 7-10)
+**Total units:** 114 | **Phases:** 10 (v1: 1-6, SOTA v2: 7-10)
 **Source:** `docs/merged-design-v2/` (20 design docs)
 **Tracker:** `docs/atomic/01-tracker.md`
 
@@ -110,19 +110,21 @@ Phase 10 (SOTA: Memory + MCP + Harness Protocol) ─── depends on: Phase 1-9
 
 ## Phase Unit Counts
 
-| Phase | Name | Units | Status |
-|-------|------|-------|--------|
-| 1 | Skeleton | 5 | ✓ Done |
-| 2 | Provider KG | 12 | [ ] Pending |
-| 3 | Governor + Manager | 14 | [ ] Pending |
-| 4 | Core Engines | 31 | [ ] Pending |
-| 5 | Server + SDK + CLI | 13 | [ ] Pending |
-| 6 | Ship | 3 | [ ] Pending |
-| 7 | SOTA: Priority Pipe | 8 | [ ] Pending |
-| 8 | SOTA: Shape-Agnostic Registration | 6 | [ ] Pending |
-| 9 | SOTA: Workflow + Browser | 10 | [ ] Pending |
-| 10 | SOTA: Memory + MCP + HPE | 13 | [ ] Pending |
-| **Total** | | **115** | **5 done** |
+> **Live status is in `01-tracker.md` (authoritative).** The counts below are structural (unit totals per phase) and must not be hand-edited for progress.
+
+| Phase | Name | Units |
+|-------|------|-------|
+| 1 | Skeleton | 5 |
+| 2 | Provider KG | 12 |
+| 3 | Governor + Manager | 14 |
+| 4 | Core Engines | 31 |
+| 5 | Server + SDK + CLI | 12 |
+| 6 | Ship | 3 |
+| 7 | SOTA: Priority Pipe | 8 |
+| 8 | SOTA: Shape-Agnostic Registration | 6 |
+| 9 | SOTA: Workflow + Browser | 10 |
+| 10 | SOTA: Memory + MCP + HPE | 13 |
+| **Total** | | **114** |
 
 ## Implementation Note
 
