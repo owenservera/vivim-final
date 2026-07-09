@@ -4,7 +4,12 @@
 import type { ProviderHealthReport } from '../../schema/health.js'
 import type { HealthHistoryRow } from '../../schema/types.js'
 import type { CircuitBreakerStateRow } from '../contracts/governor-store.js'
-import type { DriftEvent, HealthStore } from '../contracts/health-store.js'
+import type {
+  CapabilityHealthRow,
+  DriftEvent,
+  HealthStore,
+  ParserWindowRow,
+} from '../contracts/health-store.js'
 import type { CapStoreDb } from '../db.js'
 
 // ── Prisma row shapes (subset used) ─────────────────────────────────────────
@@ -167,5 +172,48 @@ export class HealthStoreImpl implements HealthStore {
       where: { overallStatus: { not: 'unknown' } },
     })
     return rows.map((r) => (r as unknown as PrismaProviderHealth).providerId)
+  }
+
+  async getCapabilityHealth(providerId: string): Promise<CapabilityHealthRow[]> {
+    const [caps, bindings] = await Promise.all([
+      this.db.prisma.providerCapability.findMany({ where: { providerId } }),
+      this.db.prisma.capabilityBinding.findMany({ where: { providerId } }),
+    ])
+    const statusByGlobalId = new Map<string, string>()
+    for (const b of bindings) {
+      const row = b as unknown as { globalId: string; status: string }
+      statusByGlobalId.set(row.globalId, row.status)
+    }
+    return caps.map((c) => {
+      const row = c as unknown as {
+        globalCapabilityId: string
+        confidence: number
+        selectorHitCount: number
+        selectorMissCount: number
+      }
+      return {
+        capabilityId: row.globalCapabilityId,
+        confidence: row.confidence,
+        selectorHitCount: row.selectorHitCount,
+        selectorMissCount: row.selectorMissCount,
+        bindingStatus: statusByGlobalId.get(row.globalCapabilityId) ?? 'prospect',
+      }
+    })
+  }
+
+  async getParserWindows(providerId: string): Promise<ParserWindowRow[]> {
+    const rows = await this.db.prisma.capabilityTelemetry.findMany({ where: { providerId } })
+    return rows.map((r) => {
+      const row = r as unknown as {
+        capabilityId: string
+        window1hExecutions: number
+        window1hSuccessCount: number
+      }
+      return {
+        capabilityId: row.capabilityId,
+        window1hExecutions: row.window1hExecutions,
+        window1hSuccessCount: row.window1hSuccessCount,
+      }
+    })
   }
 }
