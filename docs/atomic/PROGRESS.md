@@ -25,3 +25,4 @@ Format: `[ISO-timestamp] <unit-id> <unit-name> -> <done|blocked> [git-sha] <gate
 
 [2026-07-09] 4.5 VersionManager -> done [95f9d8a] PASS typecheck | PASS lint | PASS test (7 new tests)
 [2026-07-09] 4.5 NOTE: implementation faithful to 05-merged-lifecycles.md §2. Added inding:status_changed event (capability-event-bus) for auto-promotion/auto-degradation transitions (cleaner than overloading capability:status_changed, which requires capabilityId/providerId the binding scope lacks). VersionStore contract + VersionManager interface match the design 1:1. Reprogrammable via ConfigManager (registerSchema + updateConfig).
+[2026-07-09] 4.6 TelemetryAggregator -> done [ff588c0] PASS typecheck | PASS lint | PASS test (8 tests); fixed alasql INSERT syntax, renamed schema_version to db_version, reduced cycleIntervalMs to 50ms for testability
