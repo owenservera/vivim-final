@@ -180,7 +180,7 @@ export class GovernorStoreImpl implements GovernorStore {
         providerId: event.providerId,
         eventType: event.eventType,
         eventDataJson: event.detailJson ?? '{}',
-        ts: Date.now(),
+        ts: event.ts ?? Date.now(),
       },
     })
     return toFleetRow(row as unknown as PrismaFleetEvent)

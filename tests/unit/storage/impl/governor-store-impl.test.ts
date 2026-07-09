@@ -84,8 +84,18 @@ describe('GovernorStoreImpl', () => {
   })
 
   it('createFleetEvent + getFleetEvents returns newest-first', async () => {
-    await store.createFleetEvent({ slaveId: 's1', providerId: 'claude', eventType: 'spawned' })
-    await store.createFleetEvent({ slaveId: 's1', providerId: 'claude', eventType: 'killed' })
+    await store.createFleetEvent({
+      slaveId: 's1',
+      providerId: 'claude',
+      eventType: 'spawned',
+      ts: 1000,
+    })
+    await store.createFleetEvent({
+      slaveId: 's1',
+      providerId: 'claude',
+      eventType: 'killed',
+      ts: 2000,
+    })
     const events = await store.getFleetEvents('s1')
     expect(events).toHaveLength(2)
     expect(events[0]?.eventType).toBe('killed')
