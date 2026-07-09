@@ -17,3 +17,8 @@ Format: `[ISO-timestamp] <unit-id> <unit-name> -> <done|blocked> [git-sha] <gate
 [2026-07-09] 4.2 CapabilityEngine -> done [2c11059] PASS typecheck | PASS lint | PASS test
 [2026-07-09] 4.3 DRIFT: capability-resolution-store.ts RawResolutionRow missing vCode columns (concurrency_safe, op_classification, requires_user_confirmation, max_result_size, result_component, result_layout, search_hints_json, aliases_json, availability_json, prefetch) required by 04-merged-engines.md §6 + atomic ResolvedCapability. Fixed store contract to match design before implementing.
 
+[2026-07-09] 4.3 CapabilityResolutionEngine -> done [2381c93] PASS typecheck | PASS lint | PASS test
+
+[2026-07-09] 4.4 DRIFT (source-doc): 04-merged-engines.md §8 ProviderHealthKernel Store Contract lists only 6 methods and exposes neither `provider_capability` nor `capability_telemetry`, yet its own 6-signal weighting model (parser confidence 30%, empty streams 1h 20%, selector hit rate 20%, chrome liveness 15%, circuit breaker 10%, drift 24h 5%) requires both. The named `parser_health` table does not exist in 03-merged-schema.md or Prisma — the real 1h window data lives in `capability_telemetry.window_1h_*`. Reconciled by extending the HealthStore contract with `getCapabilityHealth()` and `getParserWindows()` (backed by existing tables, no migration); kernel serializes the rich report to `signalsJson`. Also: `provider_capability` columns `confidence`/`selector_hit_count`/`selector_miss_count` already exist (populated by TelemetryAggregator 4.6, not a 4.4 dependency).
+
+[2026-07-09] 4.4 ProviderHealthKernel -> done [PENDING-COMMIT] PASS typecheck | PASS lint | PASS test (8 new tests)

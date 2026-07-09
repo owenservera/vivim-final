@@ -42,6 +42,27 @@ class ProviderHealthKernel {
 }
 ```
 
+## Store Contract (extended — DRIFT reconciliation)
+> DRIFT (source-doc): 04-merged-engines.md §8 lists only 6 `HealthStore` methods and
+> exposes neither `provider_capability` nor `capability_telemetry`, yet its own
+> weighting model requires both. The named `parser_health` table does **not** exist
+> in 03-merged-schema.md / Prisma — the real 1h window data lives in
+> `capability_telemetry.window_1h_*`. Reconciled by extending `HealthStore`:
+```typescript
+// additions to HealthStore contract (backed by existing tables, no migration)
+getCapabilityHealth(providerId: string): Promise<{
+  capabilityId: string; confidence: number;
+  selectorHitCount: number; selectorMissCount: number; bindingStatus: string;
+}[]>
+getParserWindows(providerId: string): Promise<{
+  capabilityId: string; window1hExecutions: number; window1hSuccessCount: number;
+}[]>
+```
+> Note: the runtime `ProviderHealth` type (defined locally in provider-health.ts) is
+> richer than the persisted `schema/health.ts ProviderHealthReport`; the kernel
+> serializes `signals` → `signalsJson` on upsert. The atomic `ProviderHealthReport`
+> interface above is the design intent; the persisted shape stays the 3.12/3.13 subset.
+
 ## Weighted Scoring Model
 | Signal | Weight | Source |
 |--------|--------|--------|
