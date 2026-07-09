@@ -50,7 +50,7 @@ function makeStore(
     getCapabilityHealth: async () => data.caps,
     getParserWindows: async () => data.wins,
     getCircuitStates: async () => data.circuits,
-    getRecentDrifts: async (providerId: string, windowMs: number) => data.drifts,
+    getRecentDrifts: async (_providerId: string, _windowMs: number) => data.drifts,
     getActiveProviders: async () => data.providers,
     upsertProviderHealth: async (_r: unknown) => {},
     getProviderHealth: async () => null,

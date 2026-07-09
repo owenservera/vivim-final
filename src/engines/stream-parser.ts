@@ -110,23 +110,6 @@ function builtinGeneric(): ParserModule {
   }
 }
 
-function builtinSystemFallback(): ParserModule {
-  return {
-    name: 'system/001_fallback',
-    version: 1,
-    providerId: 'system',
-    parse(rawBody: string): ContentBlock[] {
-      return [{ kind: 'text', content: rawBody, index: 0 }]
-    },
-    detectCompletion(): boolean {
-      return true
-    },
-    getConfidence(): number {
-      return 0.3
-    },
-  }
-}
-
 const BUILTIN = {
   claude: builtinClaude,
   gemini: builtinGeneric,
