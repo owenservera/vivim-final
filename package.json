@@ -1,0 +1,46 @@
+{
+  "name": "vivim-final",
+  "version": "1.0.0",
+  "description": "cap-store v1 Knowledge Graph Rebuild — local-first AI conversation platform",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "vivim": "src/cli/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/cli/index.ts serve",
+    "serve": "bun run src/cli/index.ts serve",
+    "build": "tsup src/index.ts --format esm --dts",
+    "migrate": "bun run src/cli/index.ts migrate --source all",
+    "test": "bun test",
+    "test:unit": "bun test tests/unit",
+    "test:integration": "bun test tests/integration",
+    "test:e2e": "bun test tests/e2e",
+    "typecheck": "bunx tsc --noEmit",
+    "seed": "bun run src/cli/index.ts seed all",
+    "lint": "biome check src/ tests/ seeds/",
+    "format": "biome check --write src/ tests/ seeds/",
+    "prisma:migrate:dev": "bunx prisma migrate dev",
+    "prisma:migrate:prod": "bunx prisma migrate deploy",
+    "prisma:generate": "bunx prisma generate",
+    "prisma:studio": "bunx prisma studio",
+    "prisma:push": "bunx prisma db push",
+    "devops": "bun run devops/index.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "ulid": "^2.3.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "latest",
+    "lefthook": "^1.11.3",
+    "prisma": "^6.5.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.6.0"
+  },
+  "trustedDependencies": [
+    "@biomejs/biome"
+  ]
+}
