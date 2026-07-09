@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 27 | **Blocked:** 0 | **Pending:** 87
+**Total units:** 114 | **Done:** 28 | **Blocked:** 0 | **Pending:** 86
 
 ---
 
@@ -43,7 +43,7 @@
 - [x] 3.8 — StreamBlockStore (ContentBlock persistence) → `src/engines/stream-block-store.ts`
 - [x] 3.9 — Store: GovernorStore        → `src/storage/contracts/governor-store.ts`
 - [x] 3.10 — Store: ConversationStore   → `src/storage/contracts/conversation-store.ts`
-- [ ] 3.11 — Store: StreamBlockStore    → `src/storage/contracts/stream-block-store.ts`
+- [x] 3.11 — Store: StreamBlockStore    → `src/storage/contracts/stream-block-store.ts`
 - [ ] 3.12 — Store: HealthStore         → `src/storage/contracts/health-store.ts`
 - [ ] 3.13 — Store impls: Phase 3 stores → `src/storage/impl/` (4 files)
 - [ ] 3.14 — ConversationManager context injection → add to 3.6 pipeline
