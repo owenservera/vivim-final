@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 29 | **Blocked:** 0 | **Pending:** 85
+**Total units:** 114 | **Done:** 30 | **Blocked:** 0 | **Pending:** 84
 
 ---
 
@@ -45,7 +45,7 @@
 - [x] 3.10 — Store: ConversationStore   → `src/storage/contracts/conversation-store.ts`
 - [x] 3.11 — Store: StreamBlockStore    → `src/storage/contracts/stream-block-store.ts`
 - [x] 3.12 — Store: HealthStore         → `src/storage/contracts/health-store.ts`
-- [ ] 3.13 — Store impls: Phase 3 stores → `src/storage/impl/` (4 files)
+- [x] 3.13 — Store impls: Phase 3 stores → `src/storage/impl/` (4 files)
 - [ ] 3.14 — ConversationManager context injection → add to 3.6 pipeline
 
 ---
