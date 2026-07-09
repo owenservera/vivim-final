@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 32 | **Blocked:** 0 | **Pending:** 82
+**Total units:** 114 | **Done:** 33 | **Blocked:** 0 | **Pending:** 81
 
 ---
 
@@ -53,7 +53,7 @@
 ## Phase 4: Core Engines (31 units)
 
 - [x] 4.1 — StreamParserEngine          → `src/engines/stream-parser.ts`
-- [ ] 4.2 — CapabilityEngine            → `src/engines/capability.ts`
+- [x] 4.2 — CapabilityEngine            → `src/engines/capability.ts`
 - [ ] 4.3 — CapabilityResolutionEngine  → `src/engines/capability-resolution.ts`
 - [ ] 4.4 — ProviderHealthKernel        → `src/engines/provider-health.ts`
 - [ ] 4.5 — VersionManager              → `src/engines/version-manager.ts`
