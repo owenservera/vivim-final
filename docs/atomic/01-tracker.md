@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 36 | **Blocked:** 0 | **Pending:** 78
+**Total units:** 114 | **Done:** 37 | **Blocked:** 0 | **Pending:** 77
 
 ---
 
@@ -57,7 +57,7 @@
 - [x] 4.3 — CapabilityResolutionEngine  → `src/engines/capability-resolution.ts`
 - [x] 4.4 — ProviderHealthKernel        → `src/engines/provider-health.ts`
 - [x] 4.5 — VersionManager              → `src/engines/version-manager.ts`
-- [ ] 4.6 — TelemetryAggregator         → `src/engines/telemetry-aggregator.ts`
+- [x] 4.6 — TelemetryAggregator         → `src/engines/telemetry-aggregator.ts`
 - [ ] 4.7 — HarnessRuntime              → `src/engines/harness-runtime.ts`
 - [ ] 4.8 — Parser Seed: claude/sse     → `seeds/parsers/claude/001_streaming_sse.ts`
 - [ ] 4.9 — Parser Seed: gemini/batch   → `seeds/parsers/gemini/001_batchexecute.ts`
