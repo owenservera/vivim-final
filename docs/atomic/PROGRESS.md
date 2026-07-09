@@ -12,4 +12,5 @@ Format: `[ISO-timestamp] <unit-id> <unit-name> -> <done|blocked> [git-sha] <gate
 [2026-07-09] 3.11 Store: StreamBlockStore contract -> done [d2be2ba] PASS typecheck | PASS lint | PASS test
 [2026-07-09] 3.12 Store: HealthStore -> done [22594fb] PASS typecheck | PASS lint | PASS test
 [2026-07-09] 3.13 Store impls: Phase 3 stores -> done [ce60282] PASS typecheck | PASS lint | PASS test
+[2026-07-09] 3.14 ConversationManager context injection -> done [bcc7263] PASS typecheck | PASS lint | PASS test
 
