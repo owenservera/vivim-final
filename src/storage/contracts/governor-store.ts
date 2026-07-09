@@ -63,6 +63,7 @@ export interface FleetEventInput {
   providerId: string
   eventType: string
   detailJson?: string | null
+  ts?: number
 }
 
 export interface TraceEntryInput {

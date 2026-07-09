@@ -289,6 +289,52 @@ describe('ConversationManager', () => {
     const r2 = await mgr.send('conv_1', 'second')
     expect(r1.ok).toBe(true)
     expect(r2.ok).toBe(true)
-    expect(store.updateConversation).toHaveBeenCalledTimes(2)
+    // each send calls updateConversation twice: [1.5] context injection + [8] counters
+    expect(store.updateConversation).toHaveBeenCalledTimes(4)
+  })
+
+  it('Step 1.5 INJECT CONTEXT populates conversation.contextJson with valid JSON', async () => {
+    await mgr.send('conv_1', 'Hello')
+    const updater = store.updateConversation as unknown as {
+      mock: { calls: Array<[string, { contextJson?: string; messageCount?: number }]> }
+    }
+    const ctxCall = updater.mock.calls.find((c) => c[1] && 'contextJson' in c[1])
+    expect(ctxCall).toBeDefined()
+    if (!ctxCall) throw new Error('context injection was not called')
+    const ctxJson = ctxCall[1].contextJson
+    if (!ctxJson) throw new Error('contextJson missing')
+
+    const ctx = JSON.parse(ctxJson)
+    expect(ctx.provider.slug).toBe('claude')
+    expect(ctx.account.email).toBe('acct_1')
+    expect(ctx.account.planTier).toBe('pro')
+    expect(ctx.chrome.status).toBe('running')
+    expect(ctx.chrome.circuitState).toBe('closed')
+    expect(ctx.capabilities.total).toBe(1)
+    expect(ctx.capabilities.available).toBe(1)
+  })
+
+  it('Context injection uses graceful defaults for unavailable fields', async () => {
+    await mgr.send('conv_1', 'Hello')
+    const updater = store.updateConversation as unknown as {
+      mock: { calls: Array<[string, { contextJson?: string }]> }
+    }
+    const ctxCall = updater.mock.calls.find((c) => c[1] && 'contextJson' in c[1])
+    expect(ctxCall).toBeDefined()
+    if (!ctxCall) throw new Error('context injection was not called')
+    const ctxJson = ctxCall[1].contextJson
+    if (!ctxJson) throw new Error('contextJson missing')
+
+    const ctx = JSON.parse(ctxJson)
+    expect(ctx.account.loginState).toBe('unknown')
+  })
+
+  it('Context injection does not break the 8-step pipeline', async () => {
+    const result = await mgr.send('conv_1', 'Hello')
+    expect(result.ok).toBe(true)
+    expect(result.messageId).toBe('msg_new')
+    expect(bus.emit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'conversation:complete' }),
+    )
   })
 })

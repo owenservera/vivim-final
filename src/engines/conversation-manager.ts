@@ -6,8 +6,9 @@ import type {
   ConversationMessageRow,
   ConversationRow,
   ConversationStore,
+  ProviderAccountRow,
 } from '../storage/contracts/conversation-store.js'
-import type { ChromeGovernor, HarnessDAG } from './chrome-governor.js'
+import type { ChromeGovernor, ChromeSlave, HarnessDAG } from './chrome-governor.js'
 import type { ExecutionMemoizer } from './execution-memoizer.js'
 
 // ── Forward-declared interfaces (implemented in future phases) ────────────
@@ -66,6 +67,28 @@ export interface StreamBlockStore {
   storeBlocks(conversationId: string, messageId: string, blocks: ContentBlock[]): Promise<void>
 }
 
+/** Unit 3.14 — context attached to a conversation before each send (04-merged-engines.md §Engine 2) */
+export interface ConversationContext {
+  provider: {
+    id: string
+    slug: string
+    displayName: string
+  }
+  account: {
+    email: string
+    planTier: string
+    loginState: string
+  }
+  chrome: {
+    status: string
+    circuitState: string
+  }
+  capabilities: {
+    total: number
+    available: number
+  }
+}
+
 /** Unit 3.6 — CapabilityEventBus (stub interface) */
 export interface CapabilityEventBus {
   emit(event: unknown): void
@@ -93,6 +116,36 @@ function extractText(blocks: ContentBlock[]): string {
     .filter((b): b is ContentBlock & { kind: 'text' } => b.kind === 'text')
     .map((b) => b.content)
     .join('')
+}
+
+// ── Context injection (unit 3.14) ─────────────────────────────────────────
+
+function buildConversationContext(
+  conv: ConversationRow,
+  account: ProviderAccountRow,
+  resolved: ResolvedCapabilities,
+  slave: ChromeSlave,
+): ConversationContext {
+  return {
+    provider: {
+      id: conv.providerId,
+      slug: conv.providerId,
+      displayName: conv.providerId,
+    },
+    account: {
+      email: account.id,
+      planTier: account.planTier,
+      loginState: 'unknown',
+    },
+    chrome: {
+      status: slave.status,
+      circuitState: slave.circuitState,
+    },
+    capabilities: {
+      total: resolved.total,
+      available: resolved.composer.length,
+    },
+  }
 }
 
 // ── ConversationManager ────────────────────────────────────────────────────
@@ -131,10 +184,16 @@ export class ConversationManager {
       // [2] DERIVE SLAVE
       const slaveId = deriveSlaveId(conv.providerId, account.id)
 
-      // [3] LOCK — Governor's CDPProxy handles mutex internally
+      // [4] ENSURE — Governor's CDPProxy handles mutex internally; returns slave state
+      const slave = await this.governor.ensureRunning(slaveId)
 
-      // [4] ENSURE
-      await this.governor.ensureRunning(slaveId)
+      // [1.5] INJECT CONTEXT — attach provider/account/chrome/capability state to the conversation
+      const context = buildConversationContext(conv, account, resolved, slave)
+      await this.store.updateConversation(conversationId, {
+        contextJson: JSON.stringify(context),
+      })
+
+      // [3] LOCK — CDPProxy mutex is handled inside ensureRunning
 
       // [5] SEND — build HarnessDAG for composer typing
       const dag: HarnessDAG = {
