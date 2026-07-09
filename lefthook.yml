@@ -5,11 +5,11 @@ pre-commit:
   parallel: true
   commands:
     lint:
-      glob: "*.{js,ts,json,md}"
-      run: bun run lint
+      glob: "*.ts"
+      run: bunx @biomejs/biome lint {staged_files}
     format:
       glob: "*.{js,ts,json,md}"
-      run: bun run format
+      run: bunx @biomejs/biome check --write {staged_files}
     typecheck:
       glob: "*.ts"
       run: bun run typecheck
