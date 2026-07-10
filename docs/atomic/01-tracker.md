@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 113 | **Blocked:** 0 | **Pending:** 1
+**Total units:** 114 | **Done:** 114 | **Blocked:** 0 | **Pending:** 0
 
 ---
 
@@ -164,7 +164,7 @@
 - [x] 10.10 — HarnessProtocolEngine: ActionRouter + feedback loop → HPE subsystem
 - [x] 10.11 — Schema delta: Phase 10 tables (~28 new) → SOTA-07 full schema delta
 - [x] 10.12 — Store impls: Phase 8-10    → `src/storage/impl/`
-- [ ] 10.13 — HPE hpe_session store contract → `src/storage/contracts/hpe-session-store.ts`
+- [x] 10.13 — HPE hpe_session store contract → `src/storage/contracts/hpe-session-store.ts`
 
 ---
 
