@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 39 | **Blocked:** 0 | **Pending:** 75
+**Total units:** 114 | **Done:** 44 | **Blocked:** 0 | **Pending:** 70
 
 ---
 
@@ -60,11 +60,11 @@
 - [x] 4.6 — TelemetryAggregator         → `src/engines/telemetry-aggregator.ts`
 - [x] 4.7 — HarnessRuntime              → `src/engines/harness-runtime.ts`
 - [x] 4.8 — Parser Seed: claude/sse     → `seeds/parsers/claude/001_streaming_sse.ts`
-- [ ] 4.9 — Parser Seed: gemini/batch   → `seeds/parsers/gemini/001_batchexecute.ts`
-- [ ] 4.10 — Parser Seed: chatgpt/sse   → `seeds/parsers/chatgpt/001_openai_sse.ts`
-- [ ] 4.11 — Parser Seed: generic/sse   → `seeds/parsers/generic/001_sse_frames.ts`
-- [ ] 4.12 — Parser Seed: generic/delta → `seeds/parsers/generic/002_openai_delta.ts`
-- [ ] 4.13 — Parser Seed: fallback      → `seeds/parsers/system/001_fallback.ts`
+- [x] 4.9 — Parser Seed: gemini/batch   → `seeds/parsers/gemini/001_batchexecute.ts`
+- [x] 4.10 — Parser Seed: chatgpt/sse   → `seeds/parsers/chatgpt/001_openai_sse.ts`
+- [x] 4.11 — Parser Seed: generic/sse   → `seeds/parsers/generic/001_sse_frames.ts`
+- [x] 4.12 — Parser Seed: generic/delta → `seeds/parsers/generic/002_openai_delta.ts`
+- [x] 4.13 — Parser Seed: fallback      → `seeds/parsers/system/001_fallback.ts`
 - [ ] 4.14 — Harness: composer.module   → `seeds/harness/composer.module.ts`
 - [ ] 4.15 — Harness: login.module      → `seeds/harness/login.module.ts`
 - [ ] 4.16 — Harness: navigation.module → `seeds/harness/navigation.module.ts`
