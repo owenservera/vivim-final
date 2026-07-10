@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 37 | **Blocked:** 0 | **Pending:** 77
+**Total units:** 114 | **Done:** 39 | **Blocked:** 0 | **Pending:** 75
 
 ---
 
@@ -58,8 +58,8 @@
 - [x] 4.4 — ProviderHealthKernel        → `src/engines/provider-health.ts`
 - [x] 4.5 — VersionManager              → `src/engines/version-manager.ts`
 - [x] 4.6 — TelemetryAggregator         → `src/engines/telemetry-aggregator.ts`
-- [ ] 4.7 — HarnessRuntime              → `src/engines/harness-runtime.ts`
-- [ ] 4.8 — Parser Seed: claude/sse     → `seeds/parsers/claude/001_streaming_sse.ts`
+- [x] 4.7 — HarnessRuntime              → `src/engines/harness-runtime.ts`
+- [x] 4.8 — Parser Seed: claude/sse     → `seeds/parsers/claude/001_streaming_sse.ts`
 - [ ] 4.9 — Parser Seed: gemini/batch   → `seeds/parsers/gemini/001_batchexecute.ts`
 - [ ] 4.10 — Parser Seed: chatgpt/sse   → `seeds/parsers/chatgpt/001_openai_sse.ts`
 - [ ] 4.11 — Parser Seed: generic/sse   → `seeds/parsers/generic/001_sse_frames.ts`
@@ -175,5 +175,5 @@
 ---
 
 ## Last Updated
- 2026-07-09
-2026-07-09
+ 2026-07-10
+2026-07-10
