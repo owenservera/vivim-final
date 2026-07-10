@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 101 | **Blocked:** 0 | **Pending:** 13
+**Total units:** 114 | **Done:** 102 | **Blocked:** 0 | **Pending:** 12
 
 ---
 
@@ -152,7 +152,7 @@
 
 ## Phase 10: SOTA Memory + MCP + Harness Protocol (13 units)
 
-- [ ] 10.1 — MemoryEngine (episodic)     → `src/engines/memory-engine.ts`
+- [x] 10.1 — MemoryEngine (episodic)     → `src/engines/memory-engine.ts`
 - [ ] 10.2 — MemoryEngine (semantic)     → memory-engine subsystem
 - [ ] 10.3 — MemoryEngine (procedural)   → memory-engine subsystem
 - [ ] 10.4 — TransferAccelerator         → `src/engines/transfer-accelerator.ts`
