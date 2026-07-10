@@ -56,7 +56,7 @@ describe('tracker.ts', () => {
     lines = updateHeader(lines, computeStats(parseUnits(lines)))
     expect(lines[0]).toContain('Done:** 2')
     expect(lines[0]).toContain('Pending:** 1')
-    expect(lines[lines.length - 1]).toBe(new Date().toISOString().slice(0, 10))
+    expect(lines[lines.length - 1]?.trim()).toBe(new Date().toISOString().slice(0, 10))
   })
 
   it('throws on unknown unit id', () => {

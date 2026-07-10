@@ -121,7 +121,7 @@ export function updateHeader(lines: string[], stats: Stats): string[] {
         `**Blocked:** ${stats.blocked} | **Pending:** ${stats.pending}`;
     }
     if (UPDATED_RE.test(out[i]!)) {
-      out[i + 1] = ` ${new Date().toISOString().slice(0, 10)}`;
+      out[i + 2] = new Date().toISOString().slice(0, 10);
     }
   }
   return out;
