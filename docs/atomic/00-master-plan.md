@@ -1,7 +1,7 @@
 # Atomic Master Plan — vivim-final Implementation
 
-**Total units:** 114 | **Phases:** 10 (v1: 1-6, SOTA v2: 7-10)
-**Source:** `docs/merged-design-v2/` (20 design docs)
+**Total units:** 127 | **Phases:** 12 (v1: 1-6, SOTA v2: 7-10, Truth v3: 11-12)
+**Source:** `docs/merged-design-v2/` (20 design docs) + `docs/roadmap/TRUTH-GAPS.md`
 **Tracker:** `docs/atomic/01-tracker.md`
 
 ---
@@ -100,12 +100,31 @@ Phase 9 (SOTA: Workflow + Browser) ─── depends on: Phase 1-8
   │
   ▼
 Phase 10 (SOTA: Memory + MCP + Harness Protocol) ─── depends on: Phase 1-9
-   ├─ MemoryEngine (episodic/semantic/procedural)
-   ├─ TransferAccelerator
-   ├─ StreamingProtocol
-   ├─ McpServerAdapter + McpClientAdapter
-   ├─ HarnessProtocolEngine
-   └─ Schema delta (~28 new tables)
+    ├─ MemoryEngine (episodic/semantic/procedural)
+    ├─ TransferAccelerator
+    ├─ StreamingProtocol
+    ├─ McpServerAdapter + McpClientAdapter
+    ├─ HarnessProtocolEngine
+    └─ Schema delta (~28 new tables)
+  │
+  ▼
+Phase 11 (Executor Porting) ─── depends on: Phase 1-10 (truth-grounded rebuild)
+  │  ├─ 11.1 CDP Client (port 542 lines from cap-store)     ←─ FOUNDATION
+  │  ├─ 11.2 Chrome Launcher (port 205 lines from cap-store)
+  │  ├─ 11.3 Profile Allocator (port 133 lines from cap-store)
+  │  ├─ 11.4 Port Reaper (port 181 lines from cap-store)    ←── depends: 11.3
+  │  ├─ 11.5 Fleet Supervisor (port 581 lines from cap-store) ←─ depends: 11.1-11.4
+  │  ├─ 11.6 Slave Write (port 87 lines from cap-store)     ←── depends: 11.1
+  │  ├─ 11.7 Slave Read (port 67 lines from cap-store)      ←── depends: 11.1
+  │  ├─ 11.8 Conversation Driver (port 221 lines)            ←── depends: 11.5, 11.6, 11.7
+  │  ├─ 11.9 Stream Capture (new)                            ←── depends: 11.1
+  │  ├─ 11.10 Network Capture (new)                          ←── depends: 11.1
+  │  └─ 11.11 Executor Barrel + Wiring                       ←── depends: 11.1-11.10
+  │
+  ▼
+Phase 12 (Stub Resolution) ─── depends on: Phase 11
+   ├─ 12.1 ChromeGovernor boot stubs (2 stubs → real)       ←── depends: 11.5
+   └─ 12.2 MirrorEngine action stubs (3 stubs → real)       ←── depends: 12.1
 ```
 
 ## Phase Unit Counts
@@ -124,7 +143,9 @@ Phase 10 (SOTA: Memory + MCP + Harness Protocol) ─── depends on: Phase 1-9
 | 8 | SOTA: Shape-Agnostic Registration | 6 |
 | 9 | SOTA: Workflow + Browser | 10 |
 | 10 | SOTA: Memory + MCP + HPE | 13 |
-| **Total** | | **114** |
+| 11 | Executor Porting | 11 |
+| 12 | Stub Resolution | 2 |
+| **Total** | | **127** |
 
 ## Implementation Note
 

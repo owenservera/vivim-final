@@ -5,6 +5,7 @@
 //   mark <id> <s>    -> transition state: pending|in_progress|done|blocked
 //   gate             -> run quality gate, print JSON, exit non-zero on fail
 //   report           -> print progress summary
+//   truth <sub>      -> truth grounding system (scan|compare|interfaces|full|report)
 
 import { audit } from './audit.ts'
 import { fmt } from './fmt.ts'
@@ -13,6 +14,7 @@ import { gc } from './gc.ts'
 import { markUnit } from './mark.ts'
 import { report } from './report.ts'
 import { selectNext } from './select.ts'
+import { runTruthCommand } from './truth/cli.ts'
 
 const [cmd, ...args] = process.argv.slice(2)
 
@@ -62,8 +64,12 @@ async function main() {
       console.log(await report())
       break
     }
+    case 'truth': {
+      await runTruthCommand(args)
+      break
+    }
     default: {
-      console.error('usage: bun run devops <select|mark|gate|fmt|audit|gc|report>')
+      console.error('usage: bun run devops <select|mark|gate|fmt|audit|gc|report|truth>')
       process.exit(1)
     }
   }

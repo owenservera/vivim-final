@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 114 | **Blocked:** 0 | **Pending:** 0
+**Total units:** 127 | **Done:** 115 | **Blocked:** 0 | **Pending:** 12
 
 ---
 
@@ -171,6 +171,35 @@
 ## Blocked Units
 
 (None yet — will be populated as blockers are discovered)
+
+---
+
+---
+
+## Phase 11: Executor Porting (11 units)
+
+Truth-grounded rebuild: port executor files from cap-store, fix design doc claims.
+
+- [x] 11.1 — CDP Client           → `src/executor/cdp.ts` (port from cap-store, 542 lines)
+- [ ] 11.2 — Chrome Launcher      → `src/executor/launcher.ts` (port from cap-store, 205 lines)
+- [ ] 11.3 — Profile Allocator    → `src/executor/profile-allocator.ts` (port from cap-store, 133 lines)
+- [ ] 11.4 — Port Reaper          → `src/executor/port-reaper.ts` (port from cap-store, 181 lines)
+- [ ] 11.5 — Fleet Supervisor     → `src/executor/fleet-supervisor.ts` (port from cap-store, 581 lines)
+- [ ] 11.6 — Slave Write          → `src/executor/slave-write.ts` (port from cap-store, 87 lines)
+- [ ] 11.7 — Slave Read           → `src/executor/slave-read.ts` (port from cap-store, 67 lines)
+- [ ] 11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (port from cap-store, 221 lines)
+- [ ] 11.9 — Stream Capture       → `src/executor/stream-capture.ts` (new file)
+- [ ] 11.10 — Network Capture     → `src/executor/network-capture.ts` (new file)
+- [ ] 11.11 — Executor Barrel     → `src/executor/index.ts` (wiring + factory)
+
+---
+
+## Phase 12: Stub Resolution (2 units)
+
+Fix stub methods in mixed-classification files.
+
+- [ ] 12.1 — ChromeGovernor boot stubs → `src/engines/chrome-governor.ts` (2 stubs → real)
+- [ ] 12.2 — MirrorEngine action stubs → `src/engines/mirror-engine.ts` (3 stubs → real)
 
 ---
 
