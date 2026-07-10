@@ -519,3 +519,43 @@ export interface ManifestDriftInput {
   seed_value?: string | null
   db_value?: string | null
 }
+
+// ── L12: Transfer & Routing ──────────────────────────────────────────────
+
+export interface RouteSpecRow {
+  id: string
+  name: string
+  provider_id: string
+  capability_id: string
+  is_active: number
+  config_json: string
+  created_at: number
+  updated_at: number
+}
+
+export interface RouteRequestRow {
+  id: string
+  route_spec_id: string
+  conversation_id: string | null
+  status: string
+  result_json: string | null
+  ts: number
+}
+
+export interface RouteTargetRow {
+  id: string
+  route_spec_id: string
+  provider_id: string
+  account_id: string | null
+  priority: number
+  is_active: number
+  created_at: number
+}
+
+export interface RouteEventRow {
+  id: string
+  route_request_id: string
+  event_type: string
+  event_data_json: string
+  ts: number
+}
