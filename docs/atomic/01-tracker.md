@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 110 | **Blocked:** 0 | **Pending:** 4
+**Total units:** 114 | **Done:** 111 | **Blocked:** 0 | **Pending:** 3
 
 ---
 
@@ -161,7 +161,7 @@
 - [x] 10.7 — McpClientAdapter (MCP providers) → `src/engines/mcp-client-adapter.ts`
 - [x] 10.8 — HarnessProtocolEngine: PromptAugmenter → `src/engines/harness-protocol-engine.ts`
 - [x] 10.9 — HarnessProtocolEngine: ResponseExtractor → HPE subsystem
-- [ ] 10.10 — HarnessProtocolEngine: ActionRouter + feedback loop → HPE subsystem
+- [x] 10.10 — HarnessProtocolEngine: ActionRouter + feedback loop → HPE subsystem
 - [ ] 10.11 — Schema delta: Phase 10 tables (~28 new) → SOTA-07 full schema delta
 - [ ] 10.12 — Store impls: Phase 8-10    → `src/storage/impl/`
 - [ ] 10.13 — HPE hpe_session store contract → `src/storage/contracts/hpe-session-store.ts`
