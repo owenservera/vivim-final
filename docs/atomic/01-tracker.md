@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 104 | **Blocked:** 0 | **Pending:** 10
+**Total units:** 114 | **Done:** 105 | **Blocked:** 0 | **Pending:** 9
 
 ---
 
@@ -155,7 +155,7 @@
 - [x] 10.1 — MemoryEngine (episodic)     → `src/engines/memory-engine.ts`
 - [x] 10.2 — MemoryEngine (semantic)     → memory-engine subsystem
 - [x] 10.3 — MemoryEngine (procedural)   → memory-engine subsystem
-- [ ] 10.4 — TransferAccelerator         → `src/engines/transfer-accelerator.ts`
+- [x] 10.4 — TransferAccelerator         → `src/engines/transfer-accelerator.ts`
 - [ ] 10.5 — StreamingProtocol (progressive blocks) → replace batch-only
 - [ ] 10.6 — McpServerAdapter (Governor as MCP server) → `src/engines/mcp-server-adapter.ts`
 - [ ] 10.7 — McpClientAdapter (MCP providers) → `src/engines/mcp-client-adapter.ts`
