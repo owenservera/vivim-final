@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 106 | **Blocked:** 0 | **Pending:** 8
+**Total units:** 114 | **Done:** 107 | **Blocked:** 0 | **Pending:** 7
 
 ---
 
@@ -157,7 +157,7 @@
 - [x] 10.3 — MemoryEngine (procedural)   → memory-engine subsystem
 - [x] 10.4 — TransferAccelerator         → `src/engines/transfer-accelerator.ts`
 - [x] 10.5 — StreamingProtocol (progressive blocks) → replace batch-only
-- [ ] 10.6 — McpServerAdapter (Governor as MCP server) → `src/engines/mcp-server-adapter.ts`
+- [x] 10.6 — McpServerAdapter (Governor as MCP server) → `src/engines/mcp-server-adapter.ts`
 - [ ] 10.7 — McpClientAdapter (MCP providers) → `src/engines/mcp-client-adapter.ts`
 - [ ] 10.8 — HarnessProtocolEngine: PromptAugmenter → `src/engines/harness-protocol-engine.ts`
 - [ ] 10.9 — HarnessProtocolEngine: ResponseExtractor → HPE subsystem
