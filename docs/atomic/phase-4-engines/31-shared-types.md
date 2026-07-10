@@ -1,16 +1,14 @@
 # Unit 4.31: Shared CapabilityEvent type + schema barrel exports
 
 **Phase:** 4 | **File:** `src/schema/index.ts` (barrel re-export)
-**Depends:** 3.7 CapabilityEventBus, 4.27-4.29 Survivors, 4.32 Schema domain files | **Produces:** Shared type barrel for all 30 engines
+**Depends:** 3.7 CapabilityEventBus, 4.27-4.29 Survivors | **Produces:** Shared type barrel for all 30 engines
 **Source:** `02-merged-architecture.md` §Module Layout (`src/schema/index.ts` = barrel re-export)
 
 ## Purpose
 
-Creates `src/schema/index.ts` — the barrel re-export file that all engines import from. Re-exports the `CapabilityEvent` union type (from 3.6), all 14 schema domain types (created by unit 4.32), the `ContentBlock` union (from executor/content-blocks.ts), and Row types (from types.ts). This prevents circular imports and gives every engine a single import point.
+Creates `src/schema/index.ts` — the barrel re-export file that all engines import from. Re-exports the `CapabilityEvent` union type (from 3.6), all schema domain types, the `ContentBlock` union (from executor/content-blocks.ts), and Row types (from types.ts). This prevents circular imports and gives every engine a single import point.
 
 Also creates `src/index.ts` — the public barrel that re-exports everything from `src/schema/index.ts` plus engine classes.
-
-> **Note:** The 14 individual schema domain files (core.ts, chrome.ts, provider.ts, routing.ts, session.ts, learning.ts, transfer.ts, automation.ts, health.ts, telemetry.ts, versioning.ts, config.ts, harness.ts) are created by **unit 4.32**. `src/schema/index.ts` re-exports all of them.
 
 ## Interface
 ```typescript

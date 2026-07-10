@@ -35,6 +35,12 @@ export class ConflictError extends CapStoreError {
   }
 }
 
+export class AuthRequired extends CapStoreError {
+  constructor(message: string) {
+    super('AuthRequired', message)
+  }
+}
+
 // Governor-specific errors
 export class SlaveNotRunningError extends CapStoreError {
   constructor(slaveId: string) {
