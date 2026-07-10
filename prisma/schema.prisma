@@ -1335,3 +1335,144 @@ model TestRun {
 
   @@map("test_run")
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// L14: SOTA — Shape-Agnostic Registration (Phase 8)
+// ═══════════════════════════════════════════════════════════════════
+
+model CapabilityShape {
+  id                      String @id
+  name                    String
+  expectedCapsJson        String @map("expected_caps_json")
+  discoveryHintsJson      String @map("discovery_hints_json")
+  projectionRulesJson     String @map("projection_rules_json")
+  parserExpectationsJson  String @map("parser_expectations_json")
+  isBuiltIn               Int    @default(0) @map("is_built_in")
+  createdAt               Int    @map("created_at")
+  updatedAt               Int    @map("updated_at")
+
+  @@map("capability_shape")
+}
+
+model CapabilityShapeBinding {
+  id            String @id
+  shapeId       String @map("shape_id")
+  providerId    String @map("provider_id")
+  capabilityId  String @map("capability_id")
+  mappingJson   String @map("mapping_json")
+  isActive      Int    @default(1) @map("is_active")
+  createdAt     Int    @map("created_at")
+
+  @@map("capability_shape_binding")
+}
+
+model ProviderArchetype {
+  id            String @id
+  shapeId       String @map("shape_id")
+  name          String
+  description   String?
+  manifestJson  String @map("manifest_json")
+  isDefault     Int    @default(0) @map("is_default")
+  createdAt     Int    @map("created_at")
+  updatedAt     Int    @map("updated_at")
+
+  @@map("provider_archetype")
+}
+
+model ProviderShapeBinding {
+  id            String @id
+  providerId    String @map("provider_id")
+  archetypeId   String @map("archetype_id")
+  shapeId       String @map("shape_id")
+  configJson    String? @map("config_json")
+  isActive      Int    @default(1) @map("is_active")
+  createdAt     Int    @map("created_at")
+
+  @@map("provider_shape_binding")
+}
+
+model DiscoverySession {
+  id                String  @id
+  url               String
+  status            String  @default("started")
+  shapeId           String? @map("shape_id")
+  confidence        Float   @default(0)
+  capabilitiesJson  String  @map("capabilities_json")
+  interactiveJson   String  @map("interactive_json")
+  parserFormat      String? @map("parser_format")
+  manifestDraftJson String? @map("manifest_draft_json")
+  error             String?
+  createdAt         Int     @map("created_at")
+  updatedAt         Int     @map("updated_at")
+
+  @@map("discovery_session")
+}
+
+model DiscoveryResult {
+  id              String  @id
+  sessionId       String  @map("session_id")
+  providerId      String? @map("provider_id")
+  approvedBy      String? @map("approved_by")
+  manifestJson    String? @map("manifest_json")
+  status          String  @default("pending")
+  createdAt       Int     @map("created_at")
+
+  @@map("discovery_result")
+}
+
+model MirrorState {
+  id              String  @id
+  conversationId  String  @unique @map("conversation_id")
+  chromeStateJson String? @map("chrome_state_json")
+  uiStateJson     String? @map("ui_state_json")
+  pendingOpsJson  String? @map("pending_ops_json")
+  lastSyncAt      Int     @map("last_sync_at")
+  createdAt       Int     @map("created_at")
+  updatedAt       Int     @map("updated_at")
+
+  @@map("mirror_state")
+}
+
+model OptimisticUpdate {
+  id                 String  @id
+  conversationId     String  @map("conversation_id")
+  action             String
+  expectedStateJson  String  @map("expected_state_json")
+  actualStateJson    String? @map("actual_state_json")
+  confirmed          Int     @default(0)
+  createdAt          Int     @map("created_at")
+  resolvedAt         Int?    @map("resolved_at")
+
+  @@map("optimistic_update")
+}
+
+model LatencyMeasurement {
+  id              String @id
+  conversationId  String @map("conversation_id")
+  stage           String
+  durationMs      Int    @map("duration_ms")
+  timestamp       Int
+
+  @@map("latency_measurement")
+}
+
+model MirrorSnapshot {
+  id              String @id
+  conversationId  String @map("conversation_id")
+  trigger         String
+  stateJson       String @map("state_json")
+  timestamp       Int
+
+  @@map("mirror_snapshot")
+}
+
+model ObservationEvent {
+  id              String @id
+  conversationId  String @map("conversation_id")
+  slaveId         String @map("slave_id")
+  eventType       String @map("event_type")
+  dataJson        String @map("data_json")
+  timestamp       Int
+
+  @@map("observation_event")
+}
