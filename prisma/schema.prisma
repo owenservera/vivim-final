@@ -1476,3 +1476,91 @@ model ObservationEvent {
 
   @@map("observation_event")
 }
+
+// ── Phase 9: SOTA Workflow ─────────────────────────────────────────────
+
+model WorkflowDefinition {
+  id              String @id
+  name            String
+  description     String?
+  nodesJson       String @map("nodes_json")
+  edgesJson       String @map("edges_json")
+  variablesJson   String? @map("variables_json")
+  createdAt       Int    @map("created_at")
+  updatedAt       Int    @map("updated_at")
+
+  @@map("workflow_definition")
+}
+
+model WorkflowNode {
+  id              String @id
+  workflowId      String @map("workflow_id")
+  nodeId          String @map("node_id")
+  type            String
+  category        String
+  configJson      String @map("config_json")
+  positionX       Int?   @map("position_x")
+  positionY       Int?   @map("position_y")
+
+  @@map("workflow_node")
+}
+
+model WorkflowEdge {
+  id              String @id
+  workflowId      String @map("workflow_id")
+  edgeId          String @map("edge_id")
+  source          String
+  target          String
+  condition       String?
+
+  @@map("workflow_edge")
+}
+
+model WorkflowExecution {
+  id              String @id
+  workflowId      String @map("workflow_id")
+  status          String
+  inputJson       String? @map("input_json")
+  outputJson      String? @map("output_json")
+  startedAt       Int    @map("started_at")
+  completedAt     Int?   @map("completed_at")
+
+  @@map("workflow_execution")
+}
+
+model WorkflowNodeExecution {
+  id                  String @id
+  executionId         String @map("execution_id")
+  nodeId              String @map("node_id")
+  status              String
+  inputJson           String? @map("input_json")
+  outputJson          String? @map("output_json")
+  error               String?
+  startedAt           Int?   @map("started_at")
+  completedAt         Int?   @map("completed_at")
+
+  @@map("workflow_node_execution")
+}
+
+model WorkflowWebhook {
+  id              String @id
+  workflowId      String @map("workflow_id")
+  path            String
+  method          String
+  active          Boolean @default(true)
+  secret          String?
+  createdAt       Int    @map("created_at")
+
+  @@map("workflow_webhook")
+}
+
+model WorkflowCredential {
+  id              String @id
+  workflowId      String @map("workflow_id")
+  name            String
+  type            String
+  valueEncrypted  String @map("value_encrypted")
+  createdAt       Int    @map("created_at")
+
+  @@map("workflow_credential")
+}
