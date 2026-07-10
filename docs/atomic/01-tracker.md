@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 99 | **Blocked:** 0 | **Pending:** 15
+**Total units:** 114 | **Done:** 100 | **Blocked:** 0 | **Pending:** 14
 
 ---
 
@@ -145,7 +145,7 @@
 - [x] 9.6 — Cross-origin frame support   → add to SemanticGroundingEngine
 - [x] 9.7 — Anti-detection stealth       → `seeds/harness/stealth.module.ts`
 - [x] 9.8 — Human-in-the-loop workflow   → add to WorkflowEngine
-- [ ] 9.9 — Webhook triggers             → add to WorkflowEngine
+- [x] 9.9 — Webhook triggers             → add to WorkflowEngine
 - [ ] 9.10 — Schema delta: Phase 9 tables → SOTA-07 new tables
 
 ---
