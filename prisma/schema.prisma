@@ -1564,3 +1564,126 @@ model WorkflowCredential {
 
   @@map("workflow_credential")
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// L10: MCP Integration
+// ═══════════════════════════════════════════════════════════════════
+
+model McpTool {
+  id              String @id
+  serverId        String @map("server_id")
+  name            String
+  description     String?
+  inputSchemaJson String @default("{}") @map("input_schema_json")
+  createdAt       Int    @map("created_at")
+
+  @@map("mcp_tool")
+}
+
+model McpToolCall {
+  id              String @id
+  serverId        String @map("server_id")
+  toolName        String @map("tool_name")
+  inputJson       String @map("input_json")
+  outputJson      String? @map("output_json")
+  success         Boolean
+  durationMs      Int    @map("duration_ms")
+  createdAt       Int    @map("created_at")
+
+  @@map("mcp_tool_call")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L12: Memory
+// ═══════════════════════════════════════════════════════════════════
+
+model EpisodicMemory {
+  id              String @id
+  providerId      String @map("provider_id")
+  capabilityId    String? @map("capability_id")
+  slaveId         String? @map("slave_id")
+  action          String
+  inputJson       String @map("input_json")
+  outputJson      String @map("output_json")
+  success         Boolean
+  durationMs      Int    @map("duration_ms")
+  tagsJson        String @default("[]") @map("tags_json")
+  timestamp       Int
+  createdAt       Int    @map("created_at")
+
+  @@map("episodic_memory")
+}
+
+model SemanticMemory {
+  id              String @id
+  subject         String
+  predicate       String
+  objectJson      String @map("object_json")
+  confidence      Float  @default(1.0)
+  source          String
+  timestamp       Int
+  expiresAt       Int?   @map("expires_at")
+  createdAt       Int    @map("created_at")
+
+  @@map("semantic_memory")
+}
+
+model ProceduralRule {
+  id              String @id
+  name            String
+  condition       String
+  action          String
+  confidence      Float  @default(0.5)
+  successCount    Int    @default(0) @map("success_count")
+  failureCount    Int    @default(0) @map("failure_count")
+  lastTriggered   Int?   @map("last_triggered")
+  createdAt       Int    @map("created_at")
+  updatedAt       Int    @map("updated_at")
+
+  @@map("procedural_rule")
+}
+
+model AgentDecisionLog {
+  id              String @id
+  agentId         String @map("agent_id")
+  decisionType    String @map("decision_type")
+  inputJson       String @map("input_json")
+  outputJson      String @map("output_json")
+  confidence      Float
+  reasoning       String?
+  timestamp       Int
+  createdAt       Int    @map("created_at")
+
+  @@map("agent_decision_log")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L15: Agent Loop
+// ═══════════════════════════════════════════════════════════════════
+
+model AgentLoopRun {
+  id              String @id
+  agentId         String @map("agent_id")
+  goal            String
+  status          String
+  inputJson       String? @map("input_json")
+  outputJson      String? @map("output_json")
+  startedAt       Int    @map("started_at")
+  completedAt     Int?   @map("completed_at")
+
+  @@map("agent_loop_run")
+}
+
+model AgentStep {
+  id              String @id
+  runId           String @map("run_id")
+  stepIndex       Int    @map("step_index")
+  actionType      String @map("action_type")
+  actionJson      String @map("action_json")
+  resultJson      String? @map("result_json")
+  success         Boolean
+  durationMs      Int    @map("duration_ms")
+  createdAt       Int    @map("created_at")
+
+  @@map("agent_step")
+}
