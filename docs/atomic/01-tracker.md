@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 91 | **Blocked:** 0 | **Pending:** 23
+**Total units:** 114 | **Done:** 92 | **Blocked:** 0 | **Pending:** 22
 
 ---
 
@@ -137,7 +137,7 @@
 
 ## Phase 9: SOTA Workflow + Browser Automation (10 units)
 
-- [ ] 9.1 — WorkflowEngine (DAG execution) → `src/engines/workflow-engine.ts`
+- [x] 9.1 — WorkflowEngine (DAG execution) → `src/engines/workflow-engine.ts`
 - [ ] 9.2 — WorkflowCompiler (visual JSON → HarnessDAG) → `src/engines/workflow-compiler.ts`
 - [ ] 9.3 — SemanticGroundingEngine (accessibility + visual) → `src/engines/semantic-grounding.ts`
 - [ ] 9.4 — SelectorHealer (LLM-powered repair) → `src/engines/selector-healer.ts`
