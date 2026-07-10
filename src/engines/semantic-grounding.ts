@@ -205,6 +205,10 @@ export class SemanticGroundingEngine {
 
   private async resolveCSS(slaveId: string, selector: string): Promise<ResolvedElement | null> {
     try {
+      if (selector.includes('>>>')) {
+        return this.resolveShadowCSS(slaveId, selector)
+      }
+
       const doc = (await this.transport.send(slaveId, 'DOM.getDocument')) as {
         root: { nodeId: number }
       }
@@ -227,8 +231,59 @@ export class SemanticGroundingEngine {
     }
   }
 
+  private async resolveShadowCSS(
+    slaveId: string,
+    selector: string,
+  ): Promise<ResolvedElement | null> {
+    const parts = selector.split('>>>').map((s) => s.trim())
+    let currentNodeId = 0
+
+    const doc = (await this.transport.send(slaveId, 'DOM.getDocument', {
+      depth: -1,
+      pierce: true,
+    })) as { root: { nodeId: number } }
+    currentNodeId = doc.root.nodeId
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]
+      const isLast = i === parts.length - 1
+
+      const result = (await this.transport.send(slaveId, 'DOM.querySelector', {
+        nodeId: currentNodeId,
+        selector: part,
+      })) as { nodeId: number } | null
+
+      if (!result?.nodeId) return null
+
+      if (isLast) {
+        return {
+          nodeId: result.nodeId,
+          backendNodeId: 0,
+          selector,
+          confidence: 1.0,
+          matchedBy: { type: 'css', selector },
+        }
+      }
+
+      const shadow = (await this.transport.send(slaveId, 'DOM.describeNode', {
+        nodeId: result.nodeId,
+      })) as { node?: { shadowRootType?: string; contentDocument?: { nodeId: number } } } | null
+
+      const childNodeId = shadow?.node?.contentDocument?.nodeId
+      if (!childNodeId) return null
+      currentNodeId = childNodeId
+    }
+
+    return null
+  }
+
   private async resolveAllCSS(slaveId: string, selector: string): Promise<ResolvedElement[]> {
     try {
+      if (selector.includes('>>>')) {
+        const single = await this.resolveShadowCSS(slaveId, selector)
+        return single ? [single] : []
+      }
+
       const doc = (await this.transport.send(slaveId, 'DOM.getDocument')) as {
         root: { nodeId: number }
       }
