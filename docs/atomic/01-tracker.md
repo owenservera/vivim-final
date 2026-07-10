@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 85 | **Blocked:** 0 | **Pending:** 29
+**Total units:** 114 | **Done:** 91 | **Blocked:** 0 | **Pending:** 23
 
 ---
 
@@ -126,12 +126,12 @@
 
 ## Phase 8: SOTA Shape-Agnostic Registration (6 units)
 
-- [ ] 8.1 — CapabilityShapeRegistry     → `src/engines/capability-shape-registry.ts`
-- [ ] 8.2 — ProviderDiscoveryEngine     → `src/engines/provider-discovery.ts`
-- [ ] 8.3 — ManifestInferenceEngine     → `src/engines/manifest-inference.ts`
-- [ ] 8.4 — Polymorphic resolution      → add to CapabilityResolutionEngine
-- [ ] 8.5 — Plugin system (self-describing providers) → `src/engines/plugin-system.ts`
-- [ ] 8.6 — Schema delta: Phase 8 tables → SOTA-07 new tables
+- [x] 8.1 — CapabilityShapeRegistry     → `src/engines/capability-shape-registry.ts`
+- [x] 8.2 — ProviderDiscoveryEngine     → `src/engines/provider-discovery.ts`
+- [x] 8.3 — ManifestInferenceEngine     → `src/engines/manifest-inference.ts`
+- [x] 8.4 — Polymorphic resolution      → add to CapabilityResolutionEngine
+- [x] 8.5 — Plugin system (self-describing providers) → `src/engines/plugin-system.ts`
+- [x] 8.6 — Schema delta: Phase 8 tables → SOTA-07 new tables
 
 ---
 
