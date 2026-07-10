@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 96 | **Blocked:** 0 | **Pending:** 18
+**Total units:** 114 | **Done:** 97 | **Blocked:** 0 | **Pending:** 17
 
 ---
 
@@ -142,7 +142,7 @@
 - [x] 9.3 — SemanticGroundingEngine (accessibility + visual) → `src/engines/semantic-grounding.ts`
 - [x] 9.4 — SelectorHealer (LLM-powered repair) → `src/engines/selector-healer.ts`
 - [x] 9.5 — Shadow DOM traversal         → add to SemanticGroundingEngine
-- [ ] 9.6 — Cross-origin frame support   → add to SemanticGroundingEngine
+- [x] 9.6 — Cross-origin frame support   → add to SemanticGroundingEngine
 - [ ] 9.7 — Anti-detection stealth       → `seeds/harness/stealth.module.ts`
 - [ ] 9.8 — Human-in-the-loop workflow   → add to WorkflowEngine
 - [ ] 9.9 — Webhook triggers             → add to WorkflowEngine
