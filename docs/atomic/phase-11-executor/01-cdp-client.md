@@ -2,7 +2,7 @@
 
 **Phase:** 11 | **File:** `src/executor/cdp.ts`
 **Depends:** 1.4 CapStoreDb | **Produces:** Real WebSocket CDP transport
-**Source:** cap-store `src/executor/cdp.ts` (542 lines, port to vivim-final)
+**Source:** vivim-final `src/executor/cdp.ts` (542 lines, port to vivim-final)
 
 ## Purpose
 Real WebSocket CDP client with auto-reconnect, session management, per-command timeouts, and event subscription. Currently a 21-line stub — must become 542-line production implementation.
@@ -63,4 +63,4 @@ export class CdpTimeoutError extends Error {}
 - CDP connects to real Chrome instance at port 9222 within 10s
 
 ## Port Notes
-Port from cap-store `src/executor/cdp.ts`. Adapt imports to vivim-final's structure (use `@/errors` not local error defs, use `@/ids` for ULID generation). Remove cap-store-specific logging, keep core CDP logic.
+Port from vivim-final `src/executor/cdp.ts`. Adapt imports to vivim-final's structure (use `@/errors` not local error defs, use `@/ids` for ULID generation). Remove cap-store-specific logging, keep core CDP logic.

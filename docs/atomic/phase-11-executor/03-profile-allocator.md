@@ -2,7 +2,7 @@
 
 **Phase:** 11 | **File:** `src/executor/profile-allocator.ts`
 **Depends:** 1.4 CapStoreDb | **Produces:** Chrome profile directory management
-**Source:** cap-store `src/executor/profile-allocator.ts` (133 lines, port to vivim-final)
+**Source:** vivim-final `src/executor/profile-allocator.ts` (133 lines, port to vivim-final)
 
 ## Purpose
 Manages Chrome profile directories in `chrome-profiles/{providerSlug}/{accountId}/`. Ensures each provider+account combo gets an isolated, dedicated Chrome profile that persists across sessions.
@@ -45,4 +45,4 @@ export const DEFAULT_PROFILE_BASE = 'chrome-profiles';
 - Profile directories created and cleaned correctly
 
 ## Port Notes
-Port from cap-store `src/executor/profile-allocator.ts`. Use standard node:fs/promises for directory operations. Adapt to vivim-final's base directory convention.
+Port from vivim-final `src/executor/profile-allocator.ts`. Use standard node:fs/promises for directory operations. Adapt to vivim-final's base directory convention.

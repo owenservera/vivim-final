@@ -2,7 +2,7 @@
 
 **Phase:** 11 | **File:** `src/executor/launcher.ts`
 **Depends:** 1.4 CapStoreDb | **Produces:** Cross-platform Chrome binary launcher
-**Source:** cap-store `src/executor/launcher.ts` (205 lines, port to vivim-final)
+**Source:** vivim-final `src/executor/launcher.ts` (205 lines, port to vivim-final)
 
 ## Purpose
 Cross-platform Chrome/Chromium binary discovery and process spawning. Auto-detects Chrome per OS (macOS, Windows, Linux) with configurable override. Supports headless, hidden (windowless), and visible modes. Manages profile isolation per provider+account.
@@ -61,4 +61,4 @@ export async function isChromeRunning(pid: number): Promise<boolean>;
 - Chrome launches and CDP port responds within 15s (requires Chrome installed)
 
 ## Port Notes
-Port from cap-store `src/executor/launcher.ts`. Use `Bun.spawn()` for process creation (cap-store uses Node's `child_process.spawn`). Adapt OS detection to use `process.platform`. Keep cross-platform Chrome path logic.
+Port from vivim-final `src/executor/launcher.ts`. Use `Bun.spawn()` for process creation (cap-store uses Node's `child_process.spawn`). Adapt OS detection to use `process.platform`. Keep cross-platform Chrome path logic.

@@ -2,7 +2,7 @@
 
 **Phase:** 11 | **File:** `src/executor/slave-write.ts`
 **Depends:** 11.1 CDP Client | **Produces:** CDP-based type/click/navigate operations
-**Source:** cap-store `src/executor/slave-write.ts` (87 lines, port to vivim-final)
+**Source:** vivim-final `src/executor/slave-write.ts` (87 lines, port to vivim-final)
 
 ## Purpose
 High-level CDP operations for browser interaction: typing text, clicking elements, navigating to URLs, and evaluating JavaScript. Wraps raw CDP commands into convenient methods.
@@ -46,4 +46,4 @@ export class SlaveWriteError extends Error {}
 - `bun test tests/unit/executor/slave-write.test.ts` passes
 
 ## Port Notes
-Port from cap-store `src/executor/slave-write.ts`. Adapt to use vivim-final's `BunCdpClient` type. Use vivim-final's error classes.
+Port from vivim-final `src/executor/slave-write.ts`. Adapt to use vivim-final's `BunCdpClient` type. Use vivim-final's error classes.

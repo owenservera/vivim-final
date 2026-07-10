@@ -85,6 +85,111 @@ seeds/          # Database seed files
 5. Write unit tests with mocked store contract
 6. Write integration tests for engine-to-engine interactions
 
+## Invariants (Boundary Conditions)
+
+**Full document:** `docs/roadmap/INVARIANTS.md`
+
+Non-negotiable constraints that govern all planning and development. Enforced by `bun run devops invariants check`.
+
+### Quick Reference
+
+| Category | Violation | Enforcement |
+|----------|-----------|-------------|
+| **A: Ground Truth** | Hard block | Research report required before `[~]`, classification mandatory |
+| **B: Architectural** | Hard block | No engine imports BunCdpClient, no `-impl` imports, seeds not code, relational first, config through ConfigManager, harness server-side, no raw `new Error()` |
+| **C: Planning** | Hard block | Phase gates, dependency gates, atomic specs required, design doc reference |
+| **D: Quality** | Soft warning | Engine tests with mocked stores, no `any` in engines, barrel exports |
+| **E: Goal Invariants** | Soft warning | Key results must have targets, goals must have owners, units should reference goals |
+
+### Commands
+
+```bash
+bun run devops invariants check              # check all invariants
+bun run devops invariants check --unit 11.5  # check for specific unit
+bun run devops invariants check --category B # check architectural only
+bun run devops invariants report             # compliance report
+bun run devops gate                          # includes invariant check as final step
+```
+
+### Critical Boundaries (Never Violate)
+
+1. **Governor Canon:** Only `ChromeGovernor` touches CDP. No engine imports `BunCdpClient`.
+2. **Store Contracts:** Engines depend on `src/storage/contracts/*.ts`, never `src/storage/impl/*.ts`.
+3. **Research-First:** No implementation without research report classification.
+4. **Phase Gates:** Phase N requires phase N-1 complete.
+
+## Architecture Decision Records (ADR)
+
+Standards-based decision tracking system in `docs/decisions/`. Separate from the interview protocol (which tracks discovery/approval of atomic units). ADRs track architectural decisions with multi-round review.
+
+### When to Use ADRs
+- **Architecture decisions** — transport layer, state management, error handling patterns
+- **Design trade-offs** — choosing between 2+ viable options
+- **Cross-cutting concerns** — logging, testing strategy, build tooling
+- **NOT for implementation details** — those go in atomic specs
+
+### Workflow
+
+```
+1. bun run devops decision create    # Create ADR with options
+2. bun run devops decision review    # Add AI/human review rounds (min 2)
+3. bun run devops decision decide    # Select option with rationale
+4. bun run devops decision approve   # Final approval
+```
+
+### Rules
+- **Minimum 2 options** must be considered
+- **Minimum 2 review rounds** (AI + human) before decision
+- ADRs are stored as markdown in `docs/decisions/ADR-NNN-title.md`
+- Status flow: PROPOSED → IN_REVIEW → REVISED → IN_REVIEW → DECIDED → APPROVED
+
+### Commands
+
+```bash
+bun run devops decision create --title "..." --author "..."  # Create new ADR
+bun run devops decision list                                   # List all ADRs
+bun run devops decision show ADR-001                           # Show ADR details
+bun run devops decision review ADR-001                         # Add review round
+bun run devops decision decide ADR-001 --option A --rationale "..."  # Select option
+bun run devops decision approve ADR-001                        # Approve decision
+```
+
+## Goals System (OKR Hierarchy)
+
+Goal → Objective → Key Result hierarchy for governing user journeys and product goals. Lives in `docs/goals/GOALS.md`.
+
+### Hierarchy
+
+```
+Goal (owner, timeframe, status, completion%)
+├── Objective (status, completion%)
+│   ├── Key Result (target, current, relatedUnits)
+│   └── Key Result (target, current, relatedUnits)
+└── Objective
+    └── Key Result
+```
+
+### How It Works
+
+- **Progress flows bottom-up:** Key Result → Objective → Goal (averages)
+- **Goal-aware selection:** Units prioritized by goal contribution (count of key results they contribute to)
+- **ADR integration:** `goalAlignment` scores (1-5) on ADR options, `relatedGoals` array
+- **File:** Single `docs/goals/GOALS.md` (single-developer project)
+
+### Commands
+
+```bash
+bun run devops goals list                  # Show all goals with progress
+bun run devops goals show G-001            # Show single goal detail
+bun run devops goals create --title "..." --description "..." --owner "..." --timeframe "..."
+bun run devops goals update G-001 --status achieved
+bun run devops goals progress              # Recalculate from atomic tracker
+bun run devops goals align G-001           # Show goal↔ADR alignment
+bun run devops goals score ADR-001         # Suggest alignment scores for ADR options
+bun run devops goals report                # Full progress report (markdown)
+bun run devops goals dashboard             # Goal health dashboard with invariants
+```
+
 ## Shell Environment (CRITICAL)
 
 **All commands MUST be PowerShell-compatible.** The default shell is PowerShell 7+.
@@ -209,6 +314,87 @@ Before starting any batch of atomic tasks (e.g., tasks 2.1–2.4, or a full phas
 - **ALWAYS read the atomic file before implementing** — it has the full interface
 - If a unit is already done (files exist + tests pass), mark it [x] and move on
 
+## DevOps Roadmap — Research-First Workflow
+
+**The devops-roadmap system is THE entry point for new atomic tasks** — both AI-recommended and user-suggested. Grounded in the atomic list + truth system.
+
+### When to Load
+
+**BEFORE the devops loop starts:**
+1. Starting a new devops session (before `bun run devops select`)
+2. Beginning a new phase (first unit of phase N)
+3. User says "what already exists?" or "research first"
+4. After completing a unit (to discover new gaps)
+5. User suggests a new feature or unit
+
+**Do NOT load when:**
+- Resuming an in-progress unit (just run devops loop)
+- Unit is already clearly defined and ready to implement
+
+### Commands
+
+| Command | Purpose |
+|---------|---------|
+| `bun run devops roadmap` | Full research cycle (scan + discover + report) |
+| `bun run devops roadmap --unit <id>` | Research single unit |
+| `bun run devops roadmap --domain <name>` | Research domain |
+| `bun run devops roadmap --discover` | Run discovery only (identify new unit candidates) |
+| `bun run devops roadmap --interview <GAP-id>` | Start interview for discovered unit |
+| `bun run devops roadmap --merge` | Merge enriched data into tracker (after review) |
+| `bun run devops roadmap --merge-unit <id>` | Merge specific new unit (after interview approval) |
+
+### Workflow
+
+```
+1. Run `bun run devops roadmap` — produces:
+   - docs/roadmap/RESEARCH-REPORT.md (per-unit research)
+   - docs/roadmap/DISCOVERED-UNITS.md (candidate future units)
+   - docs/roadmap/DOMAIN-HEALTH.md (truth scores per domain)
+
+2. Read research report before implementing each unit:
+   - Classification: DONE / PORT / CREATE / FIX
+   - Existing code analysis
+   - Cap-store reference (if porting)
+   - Gap analysis
+   - Effort estimate
+
+3. For discovered units:
+   - Run `bun run devops roadmap --interview <GAP-id>`
+   - Answer questions about the unit
+   - AI synthesizes atomic spec draft
+   - If approved → merge to tracker
+```
+
+### Unit Classification
+
+| Classification | Meaning | Action |
+|----------------|---------|--------|
+| DONE | Already fully implemented | Skip (don't re-implement) |
+| PORT | Exists in vivim-final core, needs adaptation | Implement against vivim-final source |
+| CREATE | Doesn't exist anywhere | Implement new |
+| FIX | Exists but has stubs | Complete stub methods |
+
+### Integration with DevOps Loop
+
+```
+LOOP:
+  1. sel = `bun run devops select`
+  2. `bun run devops mark <id> in_progress`
+  3. Read unit's atomic file
+  4. Fidelity:
+     a. Read docs/roadmap/RESEARCH-REPORT.md for this unit
+     b. If classification is DONE → skip (already implemented)
+     c. Cross-check against design docs
+     d. Log DRIFT if found
+  5. Implement + write tests
+  6. `bun run devops gate`
+     - PASS → commit, goto LOOP
+     - FAIL → fix, retry (max 3)
+     - >3 fails → mark blocked, goto LOOP
+  7. AFTER COMPLETION: Run `bun run devops roadmap --discover`
+     (Check if this unit's completion revealed new gaps)
+```
+
 ## Atomic Tracker System
 
 **File:** `docs/atomic/01-tracker.md` — single source of truth for implementation progress.
@@ -232,6 +418,111 @@ Before starting any batch of atomic tasks (e.g., tasks 2.1–2.4, or a full phas
 ✓ ChromeGovernor.boot() | done: 23/95 (Phase 3: 6/15) | next: CDPProxy
 ```
 
+## DevOps Workflows — AI Agent Orchestration
+
+**Full reference:** `docs/roadmap/DEVOPS-WORKFLOWS.md`
+
+5 core workflows that connect goals, decisions, tracker, invariants, and gate into a coherent loop.
+
+### Quick Decision Tree
+
+```
+What do you need to do?
+├── "implement next" / "keep going"     → Workflow 1: Implement a Unit
+├── "decide on X" / "Y or Z?"          → Workflow 2: Make an Architecture Decision
+├── "what's missing?" / "research first" → Workflow 3: Discover and Onboard New Units
+├── "check progress" / "how are goals?" → Workflow 4: Goal Review and Recalibration
+└── "run checks" / "verify"            → Workflow 5: Quality Assurance
+```
+
+### Workflow 1: Implement a Unit (Main Loop)
+
+```
+select → mark in_progress → read atomic file → fidelity cross-check
+→ implement → gate → mark done → goals progress → discover gaps → LOOP
+```
+
+Key commands:
+```bash
+bun run devops select                    # Get next unit
+bun run devops mark <id> in_progress     # Start work
+bun run devops gate                      # Validate (typecheck + lint + test + invariants)
+bun run devops mark <id> done            # Complete
+bun run devops goals progress            # Recalculate goal completion
+bun run devops roadmap --discover        # Check for new gaps
+```
+
+### Workflow 2: Make an Architecture Decision
+
+```
+create ADR → fill options → score goals → AI review → human review → decide → approve
+```
+
+Key commands:
+```bash
+bun run devops decision create --title "..." --author "..."
+bun run devops goals score ADR-NNN           # Suggest goal alignment
+bun run devops decision prompt ADR-NNN       # Generate review questions
+bun run devops decision review ADR-NNN --reviewer "..." --feedback "..."
+bun run devops decision decide ADR-NNN --option A --rationale "..."
+bun run devops decision approve ADR-NNN
+```
+
+### Workflow 3: Discover and Onboard New Units
+
+```
+discover → interview → merge to tracker → update dependencies
+```
+
+Key commands:
+```bash
+bun run devops roadmap --discover           # Find candidates
+bun run devops roadmap --interview <GAP-id> # Interview
+bun run devops roadmap --merge-unit <id>    # Add to tracker
+```
+
+### Workflow 4: Goal Review and Recalibration
+
+```
+list → dashboard → progress → align → report → update
+```
+
+Key commands:
+```bash
+bun run devops goals list                   # All goals
+bun run devops goals dashboard              # Health view
+bun run devops goals progress               # Recalculate
+bun run devops goals align G-001            # Goal↔ADR alignment
+bun run devops goals report                 # Full report
+bun run devops goals update G-XXX --status achieved
+```
+
+### Workflow 5: Quality Assurance
+
+```
+pre-commit hooks → pre-push tests → manual gate check
+```
+
+Key commands:
+```bash
+bun run devops gate                         # Full gate
+bun run devops gate --strict                # Strict (new issues = fail)
+bun run devops invariants check             # All categories
+bun run devops invariants check --category B # Architectural only
+bun run devops invariants report            # Compliance report
+```
+
+### Critical Rules
+
+- **NEVER ask "Should I continue?"** — just go to next unit
+- **NEVER pause between units** unless blocked
+- **ALWAYS report progress** after each unit: `✓ <name> | done: N/127 | next: <name>`
+- **ALWAYS read the atomic file** before implementing
+- **ALWAYS run gate** before marking done
+- **NEVER skip fidelity cross-check** — design drift is the enemy
+
+---
+
 ## Key Commands
 
 | Command | Purpose |
@@ -245,6 +536,8 @@ Before starting any batch of atomic tasks (e.g., tasks 2.1–2.4, or a full phas
 | `bun run seed` | Seed database |
 | `/check` | Full quality gate |
 | `/ship` | Pre-merge verification |
+| `bun run devops goals list` | Show all goals with progress |
+| `bun run devops goals dashboard` | Goal health dashboard with invariants |
 
 ### PowerShell Command Examples
 ```powershell

@@ -2,7 +2,7 @@
 
 **Phase:** 11 | **File:** `src/executor/port-reaper.ts`
 **Depends:** 11.3 Profile Allocator | **Produces:** Orphan Chrome process cleanup
-**Source:** cap-store `src/executor/port-reaper.ts` (181 lines, port to vivim-final)
+**Source:** vivim-final `src/executor/port-reaper.ts` (181 lines, port to vivim-final)
 
 ## Purpose
 Cleans up orphaned Chrome processes and their ports on startup and periodically. Detects zombie Chrome instances from previous sessions by scanning for processes listening on known debug ports and killing them.
@@ -55,4 +55,4 @@ export class PortReaperError extends Error {}
 - `bun test tests/unit/executor/port-reaper.test.ts` passes
 
 ## Port Notes
-Port from cap-store `src/executor/port-reaper.ts`. On Windows use `taskkill /F /PID <pid>` via `Bun.spawnSync`. On Unix use `process.kill(pid, 'SIGTERM')`. Keep OS-conditional logic.
+Port from vivim-final `src/executor/port-reaper.ts`. On Windows use `taskkill /F /PID <pid>` via `Bun.spawnSync`. On Unix use `process.kill(pid, 'SIGTERM')`. Keep OS-conditional logic.

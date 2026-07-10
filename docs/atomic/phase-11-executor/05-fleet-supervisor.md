@@ -3,7 +3,7 @@
 **Phase:** 11 | **File:** `src/executor/fleet-supervisor.ts`
 **Depends:** 11.1 CDP Client, 11.2 Chrome Launcher, 11.3 Profile Allocator, 11.4 Port Reaper
 **Produces:** Chrome instance lifecycle management with state machine + circuit breaker
-**Source:** cap-store `src/executor/fleet-supervisor.ts` (581 lines, port to vivim-final)
+**Source:** vivim-final `src/executor/fleet-supervisor.ts` (581 lines, port to vivim-final)
 
 ## Purpose
 Manages the lifecycle of all Chrome instances. Maintains a state machine for each slave (starting → running → stopping/stopped/crashed), implements circuit breakers for fault isolation, handles health probes, and coordinates reaping, launching, and shutdown.
@@ -111,4 +111,4 @@ crashed  ──[ensureRunning]──→ starting
 - Full lifecycle (spawn → health check → kill) works with real Chrome
 
 ## Port Notes
-Port from cap-store `src/executor/fleet-supervisor.ts`. Adapt to use vivim-final's `BunCdpClient` (not cap-store's). Replace cap-store's Node `child_process` with `Bun.spawn`. Use vivim-final's error classes. Remove cap-store-specific telemetry hooks.
+Port from vivim-final `src/executor/fleet-supervisor.ts`. Adapt to use vivim-final's `BunCdpClient` (not cap-store's). Replace cap-store's Node `child_process` with `Bun.spawn`. Use vivim-final's error classes. Remove cap-store-specific telemetry hooks.

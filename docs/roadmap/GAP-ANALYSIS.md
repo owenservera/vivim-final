@@ -56,23 +56,19 @@ When you say "deep dive on X":
 - `src/engines/chrome-governor.ts` — 572 lines, REAL structure but spawn/kill/ensureRunning are stubs
 - `CDPTransport` interface defined in chrome-governor.ts:116 — methods: send, capture, getPageState, captureScreenshot
 
-**What we NEED (from cap-store):**
-- `cap-store/src/executor/cdp.ts` — 542 lines, REAL WebSocket CDP client
+**What's needed (build against vivim-final core — cap-store is prior art only):**
+- `src/executor/cdp.ts` — REAL WebSocket CDP client (expand from current stub)
   - Auto-reconnection with exponential backoff
   - Session management (Target.attachToTarget)
   - Per-command timeouts
   - Event listener registration
   - Session re-attach after reconnect
-- `cap-store/src/executor/launcher.ts` — 205 lines, REAL Chrome launcher
-  - Cross-platform Chrome path detection
-  - Profile isolation via --user-data-dir
-  - Headless/hidden/offscreen modes
-  - Process lifecycle (spawn, check, terminate)
-- `cap-store/src/executor/fleet.ts` — 55 lines, Chrome path detection
-- `cap-store/src/executor/port-reaper.ts` — 181 lines, orphan cleanup
+- `src/executor/launcher.ts` — REAL Chrome launcher (cross-platform detection, profile isolation, headless/hidden, process lifecycle)
+- `src/executor/fleet.ts` — Chrome path detection
+- `src/executor/port-reaper.ts` — orphan cleanup
 
-**Gap:** ~960 lines of real code to port
-**Interview Q:** Should we port verbatim or refactor to match our interface signatures?
+**Gap:** real implementations to replace stubs in existing vivim-final files
+**Interview Q:** Should we port cap-store verbatim or refactor to match our interface signatures?
 
 ---
 
@@ -87,15 +83,15 @@ When you say "deep dive on X":
 - `deriveProfile()` — returns /tmp path, not real profile dir (chrome-governor.ts:561)
 - `allocatePort()` — sequential increment, no scan (chrome-governor.ts:565)
 
-**What we NEED (from cap-store):**
-- `cap-store/src/executor/profile-allocator.ts` — 133 lines, profile directory management
-- `cap-store/src/executor/fleet-supervisor.ts` — 514 lines, fleet lifecycle
-- `cap-store/src/executor/account-registry.ts` — 179 lines, account management
-- `cap-store/src/executor/health-probe.ts` — 32 lines, liveness checks
+**What's needed (build against vivim-final core — cap-store is prior art only):**
+- `src/executor/profile-allocator.ts` — profile directory management
+- `src/executor/fleet-supervisor.ts` — fleet lifecycle
+- `src/executor/account-registry.ts` — account management (if needed)
+- `src/executor/health-probe.ts` — liveness checks
 - Port scanning (not sequential)
 - Real Chrome process spawn via Bun.spawn
 
-**Gap:** ~900 lines of real code to port + refactor Governor methods
+**Gap:** real implementations to replace stubs in existing vivim-final files
 **Interview Q:** Do we keep ChromeGovernor as the orchestrator and inject real implementations, or restructure?
 
 ---
@@ -114,12 +110,12 @@ When you say "deep dive on X":
 
 **What we NEED:**
 - Real CDP transport (D1) to make Steps 5-6 work
-- `cap-store/src/executor/conversation-driver.ts` — 221 lines, send/capture orchestration
-- `cap-store/src/executor/slave-write.ts` — 87 lines, type/click/navigate
-- `cap-store/src/executor/slave-read.ts` — 67 lines, DOM read/screenshot
-- `cap-store/src/executor/stream-capture.ts` — 134 lines, streaming response capture
+- `src/executor/conversation-driver.ts` — send/capture orchestration (build against vivim-final core; cap-store = prior art)
+- `src/executor/slave-write.ts` — type/click/navigate (VERIFY if CDPProxy already covers this before creating a new file)
+- `src/executor/slave-read.ts` — DOM read/screenshot (VERIFY if CDPProxy already covers this before creating a new file)
+- `src/executor/stream-capture.ts` — streaming response capture
 
-**Gap:** ~500 lines to port + wire D1 into Governor.cdp
+**Gap:** real implementations to wire D1 into Governor.cdp (verify against existing core before creating new files)
 **Interview Q:** Do we keep our 8-step pipeline or adopt cap-store's conversation-driver pattern?
 
 ---
@@ -181,8 +177,8 @@ When you say "deep dive on X":
 
 **What we NEED:**
 - Bootstrap sequence: create stores → create engines → inject dependencies → boot
-- `cap-store/src/executor/index.ts` — 246 lines, wiring example
-- `cap-store/src/server/index.ts` — server bootstrap example
+- `src/executor/index.ts` — wiring example (cap-store = prior art)
+- `src/server/index.ts` — server bootstrap example (cap-store = prior art)
 
 **Gap:** ~300 lines of bootstrap code
 **Interview Q:** Should we create a dedicated bootstrap module or wire in server/index.ts?
@@ -285,7 +281,7 @@ D10: Integration Tests              ← depends on all
 ### Session 1: 2026-07-10
 - **Topic:** Initial gap analysis
 - **Findings:** Chrome automation is the critical path — all stubs
-- **Decision:** Port from cap-store, keep existing engine interfaces
+- **Decision:** Build against vivim-final core, keep existing engine interfaces (cap-store = prior art)
 - **Next:** Deep dive on D1 (Chrome Automation)
 
 ---

@@ -3,7 +3,7 @@
 **Phase:** 11 | **File:** `src/executor/conversation-driver.ts`
 **Depends:** 11.5 Fleet Supervisor, 11.6 Slave Write, 11.7 Slave Read
 **Produces:** Full send→capture→extract orchestration for AI conversations
-**Source:** cap-store `src/executor/conversation-driver.ts` (221 lines, port to vivim-final)
+**Source:** vivim-final `src/executor/conversation-driver.ts` (221 lines, port to vivim-final)
 
 ## Purpose
 Orchestrates the full send-capture cycle for AI conversations. Takes a user message, sends it through the browser UI (type into chat input, click send), captures the streaming response, and extracts the final text. Coordinates Fleet Supervisor for Chrome lifecycle and Slave Read/Write for browser interaction.
@@ -90,4 +90,4 @@ export class ConversationDriverError extends Error {}
 - `bun test tests/unit/executor/conversation-driver.test.ts` passes
 
 ## Port Notes
-Port from cap-store `src/executor/conversation-driver.ts`. Adapt to vivim-final's FleetSupervisor interface. Remove cap-store-specific event bus integration (vivim-final uses CapabilityEventBus instead). Selector strategies come from provider manifests.
+Port from vivim-final `src/executor/conversation-driver.ts`. Adapt to vivim-final's FleetSupervisor interface. Remove cap-store-specific event bus integration (vivim-final uses CapabilityEventBus instead). Selector strategies come from provider manifests.

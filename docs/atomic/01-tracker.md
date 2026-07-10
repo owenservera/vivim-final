@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 127 | **Done:** 115 | **Blocked:** 0 | **Pending:** 12
+**Total units:** 137 | **Done:** 118 | **Blocked:** 0 | **Pending:** 19
 
 ---
 
@@ -180,14 +180,14 @@
 
 Truth-grounded rebuild: port executor files from cap-store, fix design doc claims.
 
-- [x] 11.1 — CDP Client           → `src/executor/cdp.ts` (port from cap-store, 542 lines)
-- [ ] 11.2 — Chrome Launcher      → `src/executor/launcher.ts` (port from cap-store, 205 lines)
-- [ ] 11.3 — Profile Allocator    → `src/executor/profile-allocator.ts` (port from cap-store, 133 lines)
-- [ ] 11.4 — Port Reaper          → `src/executor/port-reaper.ts` (port from cap-store, 181 lines)
-- [ ] 11.5 — Fleet Supervisor     → `src/executor/fleet-supervisor.ts` (port from cap-store, 581 lines)
-- [ ] 11.6 — Slave Write          → `src/executor/slave-write.ts` (port from cap-store, 87 lines)
-- [ ] 11.7 — Slave Read           → `src/executor/slave-read.ts` (port from cap-store, 67 lines)
-- [ ] 11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (port from cap-store, 221 lines)
+- [x] 11.1 — CDP Client           → `src/executor/cdp.ts` (built against vivim-final core)
+- [x] 11.2 — Chrome Launcher      → `src/executor/launcher.ts` (built against vivim-final core)
+- [x] 11.3 — Profile Allocator    → `src/executor/profile-allocator.ts` (built against vivim-final core)
+- [x] 11.4 — Port Reaper          → `src/executor/port-reaper.ts` (built against vivim-final core)
+- [~] 11.5 — Fleet Supervisor     → `src/executor/fleet-supervisor.ts` (built against vivim-final core)
+- [ ] 11.6 — Slave Write          → `src/executor/slave-write.ts` (build against vivim-final core)
+- [ ] 11.7 — Slave Read           → `src/executor/slave-read.ts` (build against vivim-final core)
+- [ ] 11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (build against vivim-final core)
 - [ ] 11.9 — Stream Capture       → `src/executor/stream-capture.ts` (new file)
 - [ ] 11.10 — Network Capture     → `src/executor/network-capture.ts` (new file)
 - [ ] 11.11 — Executor Barrel     → `src/executor/index.ts` (wiring + factory)
@@ -200,6 +200,23 @@ Fix stub methods in mixed-classification files.
 
 - [ ] 12.1 — ChromeGovernor boot stubs → `src/engines/chrome-governor.ts` (2 stubs → real)
 - [ ] 12.2 — MirrorEngine action stubs → `src/engines/mirror-engine.ts` (3 stubs → real)
+
+---
+
+## Phase 13: Frontend Sandbox System (10 units)
+
+Frontend-native sandbox for testing backend capabilities. Enforces B8 (Agent-Addressable UI Actions).
+
+- [x] 13.1 — Monorepo Scaffold → `web/` workspace (Vite + React 19 + TS + Tailwind + Zustand)
+- [x] 13.2 — Shared tsconfig + Path Aliases → `web/tsconfig.base.json` + `@ui`, `@api-client` aliases
+- [x] 13.3 — web/api-client Typed SDK → `web/api-client/src/index.ts` (typed from 07-merged-api.md)
+- [x] 13.4 — ActionRegistry → `web/ui/src/actions/registry.ts` (registerAction / dispatch / listActions)
+- [x] 13.5 — AgentBridge → `web/ui/src/actions/agent-bridge.ts` (WS agent:command / agent:discover)
+- [ ] 13.6 — Capability API Endpoints → `src/server/routes/capabilities.ts` (GET /capabilities, POST /execute)
+- [x] 13.7 — WS Agent Command Channel → `src/server/websocket.ts` (agent:command / agent:discover routing)
+- [~] 13.8 — Sandbox App MVP → `web/sandbox/` (catalog + harness + debug panel)
+- [ ] 13.9 — Shared UI Registry + Promotion Ledger → `web/ui/src/registry/` + `docs/sandbox/PROMOTED.md`
+- [ ] 13.10 — First Feature E2E → proof that sandbox system works end-to-end
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Phase:** 11 | **File:** `src/executor/slave-read.ts`
 **Depends:** 11.1 CDP Client | **Produces:** CDP-based DOM read/screenshot operations
-**Source:** cap-store `src/executor/slave-read.ts` (67 lines, port to vivim-final)
+**Source:** vivim-final `src/executor/slave-read.ts` (67 lines, port to vivim-final)
 
 ## Purpose
 High-level CDP operations for reading browser state: getting page content, extracting DOM elements, reading attributes, and capturing screenshots.
@@ -48,4 +48,4 @@ export class SlaveReadError extends Error {}
 - `bun test tests/unit/executor/slave-read.test.ts` passes
 
 ## Port Notes
-Port from cap-store `src/executor/slave-read.ts`. Adapt to vivim-final's `BunCdpClient`.
+Port from vivim-final `src/executor/slave-read.ts`. Adapt to vivim-final's `BunCdpClient`.

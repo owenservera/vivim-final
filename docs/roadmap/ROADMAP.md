@@ -18,10 +18,10 @@
 | MVP UX | Consumer chat, per-turn provider routing | Per-message provider switching |
 | Remux model | Per-message provider routing | Switch provider per turn within one conversation |
 | Version strategy | Ship fast, iterate | MVP ASAP, layer capabilities |
-| CDP Transport | Raw WebSocket | Port `BunCdpClient` from cap-store |
+| CDP Transport | Raw WebSocket | Port `BunCdpClient` against vivim-final source |
 | Chrome process mgmt | Profile isolation | Port `launcher.ts` — per provider+account combo |
-| Chrome binary | Auto-detect + config | Port `detectChromePath()` from cap-store |
-| Port allocation | Scan for available | Port `findAvailablePort()` from cap-store |
+| Chrome binary | Auto-detect + config | Port `detectChromePath()` against vivim-final source |
+| Port allocation | Scan for available | Port `findAvailablePort()` against vivim-final source |
 | Streaming | WebSocket | Bidirectional — server pushes chunks from Chrome |
 | API style | Hybrid | REST for CRUD + dispatch for actions |
 | Selector strategy | Hybrid (already designed) | Static selectors + recovery strategies + drift detection |
@@ -86,33 +86,31 @@ Launch App → See chat UI → Pick provider (Claude/ChatGPT/Gemini) → Pick mo
 
 ## Phase 11: Chrome Automation Layer (Critical Path)
 
-**Goal:** Port working Chrome automation from cap-store. Launch Chrome, connect via CDP, send commands, capture responses. Fully CLI-testable.
+**Goal:** Port working Chrome automation against vivim-final source. Launch Chrome, connect via CDP, send commands, capture responses. Fully CLI-testable.
 
 **Exit criteria:** `bun run cli chrome-launch --provider claude --account user@gmail.com` → Chrome launches → CDP connects → can type message and capture response.
 
-**Source:** `C:\0-BlackBoxProject-0\vivim-app-og\vivim-app\edge-pwa\cap-store\src\executor\`
+**Source of truth:** vivim-final `src/executor/` + atomic specs. cap-store (`C:\0-BlackBoxProject-0\vivim-app-og\vivim-app\edge-pwa\cap-store`) is prior-art reference only.
 
 | Unit | Description | Source File | Est. | Dependencies |
 |------|-------------|-------------|------|--------------|
 | 11.1 | `CDPClient` — raw WebSocket CDP client, auto-reconnect, session mgmt, per-command timeouts | `cdp.ts` (621 lines) | L | None |
 | 11.2 | `ChromeLauncher` — cross-platform Chrome launch, profile isolation, headless/hidden modes | `launcher.ts` (237 lines) | M | None |
-| 11.3 | `ChromePathDetector` — auto-detect Chrome binary per OS, config override | `fleet.ts` (68 lines) | S | None |
-| 11.4 | `ProfileAllocator` — create/reuse Chrome profiles per provider+account combo | `profile-allocator.ts` | M | 11.2 |
-| 11.5 | `PortReaper` — kill orphaned Chrome processes on startup | `port-reaper.ts` | S | 11.2 |
-| 11.6 | `HealthProbe` — Chrome liveness checks, auto-restart | `health-probe.ts` | S | 11.1 |
+| 11.3 | `ProfileAllocator` — create/reuse Chrome profiles per provider+account combo | `profile-allocator.ts` | M | 11.2 |
+| 11.4 | `PortReaper` — kill orphaned Chrome processes on startup | `port-reaper.ts` | S | 11.2 |
+| 11.5 | `FleetSupervisor` — manage Chrome fleet lifecycle, provider profiles | `fleet-supervisor.ts` | M | 11.1-11.4 |
+| 11.6 | `SlaveWrite` — type text, click elements, navigate in Chrome | `slave-write.ts` | M | 11.1 |
 | 11.7 | `SlaveRead` — read DOM, take screenshots, extract content from Chrome | `slave-read.ts` | M | 11.1 |
-| 11.8 | `SlaveWrite` — type text, click elements, navigate in Chrome | `slave-write.ts` | M | 11.1 |
-| 11.9 | `FleetSupervisor` — manage Chrome fleet lifecycle, provider profiles | `fleet-supervisor.ts` | M | 11.1-11.8 |
-| 11.10 | Wire into `ChromeGovernor` — replace stub `spawn()` with real implementation | — | M | 11.1-11.9 |
-| 11.11 | CLI commands — `chrome-launch`, `chrome-status`, `chrome-kill` | — | S | 11.10 |
-| 11.12 | Unit tests — CDP client, launcher, profile allocator | — | M | 11.1-11.4 |
-| 11.13 | Integration test — launch Chrome, connect, send command, capture response | — | L | All above |
+| 11.8 | `ConversationDriver` — send message, capture response, parse blocks | `conversation-driver.ts` | M | 11.1-11.7 |
+| 11.9 | `StreamCapture` — capture streaming responses from Chrome | `stream-capture.ts` | M | 11.1 |
+| 11.10 | `NetworkCapture` — intercept network traffic from Chrome | `network-capture.ts` | M | 11.1 |
+| 11.11 | Executor barrel — wiring + factory (`src/executor/index.ts`) | `index.ts` | S | All above |
 
 ### Critical Design Decisions (Phase 11)
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| CDP Transport | Raw WebSocket | Port `BunCdpClient` from cap-store — full control, no dependencies |
+| CDP Transport | Raw WebSocket | Port `BunCdpClient` against vivim-final source — full control, no dependencies |
 | Chrome launch | `Bun.spawn()` | Cross-platform, already works in cap-store |
 | Profile isolation | `data/chrome-profiles/{providerSlug}/{accountId}/` | Unique per provider+account, persistent cookies |
 | Port allocation | Scan range 9220-9250 for available | Not sequential, not random |
@@ -362,14 +360,14 @@ Phase 20 (Platform)              ░░░░░░░░░░██  ~2 weeks
 
 | # | Question | Answer | Rationale |
 |---|----------|--------|-----------|
-| 1 | CDP Transport | Raw WebSocket | Port `BunCdpClient` from cap-store — full control, no deps |
+| 1 | CDP Transport | Raw WebSocket | Port `BunCdpClient` against vivim-final source — full control, no deps |
 | 2 | Chrome Process Management | Profile isolation per provider+account | Port `launcher.ts` — cross-platform, persistent cookies |
 | 3 | Selector Strategy | Hybrid (already designed) | Static selectors + recovery strategies + drift detection |
 | 4 | Frontend Source | Build new | Learn chrome slave mechanism from vivim-app-og, don't port 66+ components |
 | 5 | API Style | Hybrid (REST + dispatch) | REST for CRUD, dispatch for actions — matches cap-store pattern |
 | 6 | Streaming | WebSocket | Bidirectional — server pushes chunks from Chrome |
-| 7 | Chrome binary | Auto-detect + config override | Port `detectChromePath()` from cap-store |
-| 8 | Port allocation | Scan for available | Port `findAvailablePort()` from cap-store |
+| 7 | Chrome binary | Auto-detect + config override | Port `detectChromePath()` against vivim-final source |
+| 8 | Port allocation | Scan for available | Port `findAvailablePort()` against vivim-final source |
 | 9 | MVP scope | MVP-D: Remux + agent mode | Full value prop from day one |
 | 10 | Build order | Full backend first | CLI-testable, UI component registry for frontend contracts |
 
@@ -411,9 +409,9 @@ Phase 16: Integration           ░░░░████░░░░  ~1.5 weeks
 
 ---
 
-## Working Prototype (cap-store) — Porting Source
+## Reference Implementation (cap-store) — Prior Art Only
 
-The cap-store at `C:\0-BlackBoxProject-0\vivim-app-og\vivim-app\edge-pwa\cap-store` has a **fully working** Chrome automation system. Key files to port:
+The cap-store at `C:\0-BlackBoxProject-0\vivim-app-og\vivim-app\edge-pwa\cap-store` is a **prior-art reference** for a working Chrome automation system. Key files to learn from — do NOT port verbatim; build against vivim-final source:
 
 ### Chrome Automation (Critical Path)
 

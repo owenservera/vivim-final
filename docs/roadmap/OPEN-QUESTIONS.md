@@ -11,10 +11,10 @@ All technical decisions have been made. See `ROADMAP.md` for full details.
 
 | # | Question | Answer | Source |
 |---|----------|--------|--------|
-| 1 | CDP Transport | Raw WebSocket | Port `BunCdpClient` from cap-store |
-| 2 | Chrome process mgmt | Profile isolation per provider+account | Port `launcher.ts` from cap-store |
-| 3 | Chrome binary detection | Auto-detect + config override | Port `detectChromePath()` from cap-store |
-| 4 | Port allocation | Scan for available | Port `findAvailablePort()` from cap-store |
+| 1 | CDP Transport | Raw WebSocket | Port `BunCdpClient` against vivim-final source |
+| 2 | Chrome process mgmt | Profile isolation per provider+account | Port `launcher.ts` against vivim-final source |
+| 3 | Chrome binary detection | Auto-detect + config override | Port `detectChromePath()` against vivim-final source |
+| 4 | Port allocation | Scan for available | Port `findAvailablePort()` against vivim-final source |
 | 5 | Streaming protocol | WebSocket | Bidirectional — server pushes chunks |
 | 6 | API style | Hybrid (REST + dispatch) | Matches cap-store pattern |
 | 7 | Selector strategy | Hybrid (already designed) | Static + recovery + drift detection |
@@ -37,7 +37,7 @@ All technical decisions have been made. See `ROADMAP.md` for full details.
 ## Design History
 
 ### Round 1: Architecture (2026-07-10)
-- CDP Transport: Raw WebSocket (port from cap-store)
+- CDP Transport: Raw WebSocket (port against vivim-final source)
 - Chrome profile isolation: Per provider+account combo
 - Selector strategy: Hybrid (static + recovery + drift detection)
 

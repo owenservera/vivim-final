@@ -110,7 +110,7 @@ GATE 0: Storage Layer              [✓] PASS
 
 **Verify:** `bun run typecheck && bun test tests/unit/executor/cdp.test.ts`
 
-**Source to port from:** `cap-store/src/executor/cdp.ts` (542 lines)
+**Source of truth (vivim-final):** `src/executor/cdp.ts` (already implemented — cap-store is prior art)
 
 **Interview Questions:**
 1. Should we port the 542-line cap-store CDP client verbatim, or refactor to match our interface signatures?
@@ -148,7 +148,7 @@ GATE 0: Storage Layer              [✓] PASS
 
 **Verify:** `bun run typecheck && bun test tests/unit/executor/launcher.test.ts`
 
-**Source to port from:** `cap-store/src/executor/launcher.ts` (205 lines)
+**Source of truth (vivim-final):** `src/executor/launcher.ts` (already implemented — cap-store is prior art)
 
 **Interview Questions:**
 1. Do we support headless mode for testing, or always visible Chrome?
@@ -182,7 +182,7 @@ GATE 0: Storage Layer              [✓] PASS
 
 **Verify:** `bun run typecheck && bun test tests/unit/executor/profile-allocator.test.ts`
 
-**Source to port from:** `cap-store/src/executor/profile-allocator.ts` (133 lines)
+**Source of truth (vivim-final):** `src/executor/profile-allocator.ts` (already implemented — cap-store is prior art)
 
 ---
 
@@ -206,7 +206,7 @@ GATE 0: Storage Layer              [✓] PASS
 
 **Verify:** `bun run typecheck && bun test tests/unit/executor/port-reaper.test.ts`
 
-**Source to port from:** `cap-store/src/executor/port-reaper.ts` (181 lines)
+**Source of truth (vivim-final):** `src/executor/port-reaper.ts` (already implemented — cap-store is prior art)
 
 ---
 
@@ -240,7 +240,7 @@ GATE 0: Storage Layer              [✓] PASS
 
 **Verify:** `bun run typecheck && bun test tests/unit/executor/fleet-supervisor.test.ts`
 
-**Source to port from:** `cap-store/src/executor/fleet-supervisor.ts` (581 lines)
+**Source of truth (vivim-final):** `src/executor/fleet-supervisor.ts` (already implemented — cap-store is prior art)
 
 ---
 
@@ -306,7 +306,7 @@ GATE 0: Storage Layer              [✓] PASS
 
 **Verify:** `bun run typecheck && bun test tests/unit/bootstrap.test.ts`
 
-**Source to reference:** `cap-store/src/executor/index.ts` (278 lines) — their wiring pattern
+**Source of truth (vivim-final):** `src/executor/index.ts` — wiring pattern (cap-store is prior art)
 
 ---
 
