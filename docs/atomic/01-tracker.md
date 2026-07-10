@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 108 | **Blocked:** 0 | **Pending:** 6
+**Total units:** 114 | **Done:** 109 | **Blocked:** 0 | **Pending:** 5
 
 ---
 
@@ -159,7 +159,7 @@
 - [x] 10.5 — StreamingProtocol (progressive blocks) → replace batch-only
 - [x] 10.6 — McpServerAdapter (Governor as MCP server) → `src/engines/mcp-server-adapter.ts`
 - [x] 10.7 — McpClientAdapter (MCP providers) → `src/engines/mcp-client-adapter.ts`
-- [ ] 10.8 — HarnessProtocolEngine: PromptAugmenter → `src/engines/harness-protocol-engine.ts`
+- [x] 10.8 — HarnessProtocolEngine: PromptAugmenter → `src/engines/harness-protocol-engine.ts`
 - [ ] 10.9 — HarnessProtocolEngine: ResponseExtractor → HPE subsystem
 - [ ] 10.10 — HarnessProtocolEngine: ActionRouter + feedback loop → HPE subsystem
 - [ ] 10.11 — Schema delta: Phase 10 tables (~28 new) → SOTA-07 full schema delta
