@@ -15,6 +15,7 @@ export type SemanticSelector =
     }
   | { type: 'css'; selector: string }
   | { type: 'composite'; primary: SemanticSelector; fallbacks: SemanticSelector[] }
+  | { type: 'frame'; frameChain: string[]; inner: SemanticSelector }
 
 export interface AccessibilityNode {
   nodeId: number
@@ -65,6 +66,10 @@ export class SemanticGroundingEngine {
 
     if (selector.type === 'visual') {
       return this.resolveByVisual(slaveId, selector.screenshotRegion, selector.description)
+    }
+
+    if (selector.type === 'frame') {
+      return this.resolveFrameAware(slaveId, selector)
     }
 
     const tree = await this.getAccessibilityTree(slaveId)
@@ -171,6 +176,61 @@ export class SemanticGroundingEngine {
     } catch {
       return null
     }
+  }
+
+  private async resolveFrameAware(
+    slaveId: string,
+    selector: Extract<SemanticSelector, { type: 'frame' }>,
+  ): Promise<ResolvedElement | null> {
+    const { frameChain, inner } = selector
+
+    let frameNodeId = 0
+    const doc = (await this.transport.send(slaveId, 'DOM.getDocument', {
+      depth: 0,
+      pierce: true,
+    })) as { root: { nodeId: number } }
+    frameNodeId = doc.root.nodeId
+
+    for (const frameUrl of frameChain) {
+      const frameTree = (await this.transport.send(slaveId, 'Page.getFrameTree')) as {
+        frameTree: { childFrames?: Array<{ frame: { id: string; url: string } }> }
+      }
+
+      const frame = frameTree.frameTree.childFrames?.find((f) => f.frame.url.includes(frameUrl))
+      if (!frame) return null
+
+      const evalResult = (await this.transport.send(slaveId, 'Runtime.evaluate', {
+        expression: `document.querySelector('iframe[src*="${frameUrl}"]')`,
+      })) as { result?: { objectId?: string } } | null
+
+      if (evalResult?.result?.objectId) {
+        const resolved = (await this.transport.send(slaveId, 'DOM.describeNode', {
+          objectId: evalResult.result.objectId,
+        })) as { node?: { contentDocument?: { nodeId: number } } } | null
+
+        frameNodeId = resolved?.node?.contentDocument?.nodeId ?? 0
+        if (!frameNodeId) return null
+      }
+    }
+
+    if (inner.type === 'css') {
+      const result = (await this.transport.send(slaveId, 'DOM.querySelector', {
+        nodeId: frameNodeId,
+        selector: inner.selector,
+      })) as { nodeId: number } | null
+
+      if (!result?.nodeId) return null
+
+      return {
+        nodeId: result.nodeId,
+        backendNodeId: 0,
+        selector: `frame(${frameChain.join('/')}) > ${inner.selector}`,
+        confidence: 0.9,
+        matchedBy: selector,
+      }
+    }
+
+    return null
   }
 
   async resolveByVisual(
