@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 114 | **Done:** 94 | **Blocked:** 0 | **Pending:** 20
+**Total units:** 114 | **Done:** 95 | **Blocked:** 0 | **Pending:** 19
 
 ---
 
@@ -140,7 +140,7 @@
 - [x] 9.1 — WorkflowEngine (DAG execution) → `src/engines/workflow-engine.ts`
 - [x] 9.2 — WorkflowCompiler (visual JSON → HarnessDAG) → `src/engines/workflow-compiler.ts`
 - [x] 9.3 — SemanticGroundingEngine (accessibility + visual) → `src/engines/semantic-grounding.ts`
-- [ ] 9.4 — SelectorHealer (LLM-powered repair) → `src/engines/selector-healer.ts`
+- [x] 9.4 — SelectorHealer (LLM-powered repair) → `src/engines/selector-healer.ts`
 - [ ] 9.5 — Shadow DOM traversal         → add to SemanticGroundingEngine
 - [ ] 9.6 — Cross-origin frame support   → add to SemanticGroundingEngine
 - [ ] 9.7 — Anti-detection stealth       → `seeds/harness/stealth.module.ts`
