@@ -102,7 +102,7 @@ function gapsFromScanner(scan: ScanResult): Omit<Gap, 'severity' | 'id'>[] {
         summary: `Stub file: ${file.relativePath}`,
         detail: `File is a stub with ${file.stubCount} stub markers and 0 real logic. ${file.lines} lines.`,
         file: file.relativePath,
-        recommendedAction: `Implement ${file.relativePath} — port from cap-store or write new implementation`,
+        recommendedAction: `Implement ${file.relativePath} — build against vivim-final or write new implementation`,
         estimatedEffort: 'M',
       })
     } else if (file.classification === 'MIXED') {
