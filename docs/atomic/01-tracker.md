@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 193 | **Done:** 145 | **Blocked:** 3 | **Pending:** 45
+**Total units:** 193 | **Done:** 146 | **Blocked:** 3 | **Pending:** 44
 
 > Phases 1-13: v1 core + SOTA + executor + frontend (139 units)
 > Phases 14-20: Sovereign AI OS Upgrade (60 units) — all pending
@@ -245,7 +245,7 @@ Ingest, extract, search, and synthesize knowledge across all conversations.
 - [x] 15.5 — KnowledgeExtractor (facts, decisions, patterns, entities) → `src/engines/knowledge-extractor.ts`
 - [x] 15.6 — SemanticSearchEngine + Embedding Store → `src/engines/semantic-search.ts`
 - [x] 15.7 — CrossConversationSynthesisEngine → `src/engines/cross-conversation-synthesis.ts`
-- [ ] 15.8 — Full Export Engine (JSON/CSV) → `src/engines/full-export.ts`
+- [x] 15.8 — Full Export Engine (JSON/CSV) → `src/engines/full-export.ts`
 - [ ] 15.9 — Schema: Memory Intelligence Tables → `prisma/schema.prisma`
 - [ ] 15.10 — Memory Engine ULID Fix + 10-type expansion → `src/engines/memory-engine.ts`
 - [ ] 15.11 — Topic/Project Organization → `src/engines/conversation-organization.ts`
