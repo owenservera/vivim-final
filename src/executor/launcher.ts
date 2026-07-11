@@ -114,7 +114,12 @@ export function buildChromeArgs(opts: ChromeLaunchOptions): string[] {
 export async function launchChrome(opts?: ChromeLaunchOptions): Promise<LaunchResult> {
   const binary = await findChromeBinary()
   const debugPort = opts?.debugPort ?? 0
-  const profileDir = opts?.profileDir ?? `/tmp/chrome-profile-${Date.now()}`
+  // Use opts.profileDir or fall back to platform-appropriate temp location
+  const profileDir =
+    opts?.profileDir ??
+    (process.platform === 'win32'
+      ? `${process.env.LOCALAPPDATA}\\Temp\\chrome-profile-${Date.now()}`
+      : `/tmp/chrome-profile-${Date.now()}`)
 
   const args = buildChromeArgs({ ...opts, debugPort, profileDir })
 

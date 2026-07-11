@@ -13,6 +13,9 @@ pre-commit:
     typecheck:
       glob: "*.ts"
       run: bun run typecheck
+    invariants:
+      glob: "src/engines/*.ts"
+      run: bun run devops invariants check --category B
 
 pre-push:
   commands:

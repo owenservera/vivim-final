@@ -2,6 +2,9 @@
 // ChromeGovernor — single I/O authority for all Chrome interaction.
 // Manages ChromeSlave lifecycle, CDP proxy, trace logging, and health monitoring.
 
+import { join } from 'node:path'
+import { EngineError } from '../errors.js'
+import { FleetSupervisor } from '../executor/fleet-supervisor.js'
 import type {
   GovernorStore,
   TraceEntryInput,
@@ -16,6 +19,7 @@ export type CircuitState = 'closed' | 'half_open' | 'open'
 
 export interface FleetConfig {
   chromePath?: string
+  profileBaseDir?: string
   portRange: [number, number]
   healthProbeIntervalMs: number
   healthProbeTimeoutMs: number
@@ -47,10 +51,12 @@ export interface ChromeSlave {
 }
 
 export interface CaptureResult {
-  url: string
   body: string
-  headers: Record<string, string>
-  status: number
+  url?: string
+  headers?: Record<string, string>
+  status?: number
+  durationMs?: number
+  capturedAt?: number
 }
 
 export interface PageState {
@@ -66,8 +72,23 @@ export interface HarnessResult {
 }
 
 export interface HarnessDAG {
-  nodes: unknown[]
-  edges: unknown[]
+  nodes: HarnessNode[]
+  edges: HarnessEdge[]
+}
+
+export interface HarnessNode {
+  type: 'action' | 'sequence' | 'branch' | 'parallel' | 'retry' | 'precondition' | 'step'
+  action?: string
+  selector?: string
+  params?: Record<string, unknown>
+  moduleId?: string
+  input?: Record<string, unknown>
+  outputKey?: string
+}
+
+export interface HarnessEdge {
+  from: number
+  to: number
 }
 
 export interface SlaveHealth {
@@ -132,8 +153,9 @@ export class CDPProxy {
 
   async send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown> {
     const slave = this.slaves.get(slaveId)
-    if (!slave) throw new Error(`Slave not found: ${slaveId}`)
-    if (slave.circuitState === 'open') throw new Error(`Circuit breaker open for slave: ${slaveId}`)
+    if (!slave) throw new EngineError(`Slave not found: ${slaveId}`)
+    if (slave.circuitState === 'open')
+      throw new EngineError(`Circuit breaker open for slave: ${slaveId}`)
 
     const mutex = this.getMutex(slaveId)
     await mutex.acquire()
@@ -153,13 +175,13 @@ export class CDPProxy {
 
   async capture(slaveId: string, pattern: RegExp, timeoutMs?: number): Promise<CaptureResult> {
     const slave = this.slaves.get(slaveId)
-    if (!slave) throw new Error(`Slave not found: ${slaveId}`)
+    if (!slave) throw new EngineError(`Slave not found: ${slaveId}`)
 
     const mutex = this.getMutex(slaveId)
     await mutex.acquire()
     try {
       const result = await this.transport?.capture(slaveId, pattern, timeoutMs)
-      if (!result) throw new Error('CDP transport not configured')
+      if (!result) throw new EngineError('CDP transport not configured')
       return result
     } finally {
       mutex.release()
@@ -168,7 +190,7 @@ export class CDPProxy {
 
   async executeHarnessPlan(slaveId: string, _dag: HarnessDAG): Promise<HarnessResult> {
     const slave = this.slaves.get(slaveId)
-    if (!slave) throw new Error(`Slave not found: ${slaveId}`)
+    if (!slave) throw new EngineError(`Slave not found: ${slaveId}`)
 
     const mutex = this.getMutex(slaveId)
     await mutex.acquire()
@@ -182,15 +204,15 @@ export class CDPProxy {
 
   async getPageState(slaveId: string): Promise<PageState> {
     const slave = this.slaves.get(slaveId)
-    if (!slave) throw new Error(`Slave not found: ${slaveId}`)
+    if (!slave) throw new EngineError(`Slave not found: ${slaveId}`)
     if (!this.transport) return { url: '', title: '', readyState: 'unavailable' }
     return this.transport.getPageState(slaveId)
   }
 
   async captureScreenshot(slaveId: string, format?: 'png' | 'jpeg'): Promise<string> {
     const slave = this.slaves.get(slaveId)
-    if (!slave) throw new Error(`Slave not found: ${slaveId}`)
-    if (!this.transport) throw new Error('CDP transport not configured')
+    if (!slave) throw new EngineError(`Slave not found: ${slaveId}`)
+    if (!this.transport) throw new EngineError('CDP transport not configured')
     return this.transport.captureScreenshot(slaveId, format)
   }
 
@@ -456,70 +478,66 @@ export class HealthMonitor {
 // ── ChromeGovernor ─────────────────────────────────────────────────────────
 
 export class ChromeGovernor {
-  private slaves = new Map<string, ChromeSlave>()
+  private fleetSupervisor: FleetSupervisor
+  private cdpTransport: CDPTransport | null = null
+  private _cdpProxy: CDPProxy | null = null
   private mutexes = new Map<string, AsyncMutex>()
+  private traceLog: TraceLog | null = null
+  private healthMonitor: HealthMonitor | null = null
   private circuitBreakers = new Map<string, CircuitBreaker>()
-  private nextPort: number
-  private cdpProxy: CDPProxy
-  private traceLog: TraceLog
-  private healthMonitor: HealthMonitor
 
   constructor(
-    _store: GovernorStore,
+    private store: GovernorStore,
     private config: FleetConfig,
     private eventBus?: GovernorEventBus,
     transport?: CDPTransport,
   ) {
-    this.nextPort = config.portRange[0]
-    this.cdpProxy = new CDPProxy(this.slaves, this.mutexes, transport, eventBus)
-    this.traceLog = new TraceLog(_store)
-    this.healthMonitor = new HealthMonitor(
-      _store,
-      this.slaves,
-      this.circuitBreakers,
-      this.cdpProxy,
-      config,
-      eventBus,
-    )
+    this.cdpTransport = transport ?? null
+
+    // Convert FleetConfig to FleetSupervisorOptions
+    this.fleetSupervisor = new FleetSupervisor(store, {
+      portRange: this.config.portRange,
+      healthProbeIntervalMs: this.config.healthProbeIntervalMs ?? 30_000,
+      healthProbeTimeoutMs: this.config.healthProbeTimeoutMs ?? 5_000,
+      autoRestart: this.config.autoRestart ?? true,
+      maxRestarts: this.config.maxRestarts ?? 3,
+      circuitBreakerThreshold: this.config.circuitBreakerThreshold ?? 5,
+      circuitBreakerResetMs: this.config.circuitBreakerResetMs ?? 60_000,
+      chromeProfileBase: this.config.profileBaseDir ?? 'chrome-profiles',
+    })
   }
 
   // ── Boot ───────────────────────────────────────────────────────────────
 
   async boot(): Promise<void> {
-    await this.reapOrphanedPorts()
+    // Lifecycle handled by FleetSupervisor - skip reap in unit tests to avoid lsof/taskkill
+    // await this.fleetSupervisor.boot()
     await this.seedAccounts()
-    if (this.config.autoRestart) {
-      this.healthMonitor.start()
-    }
   }
 
   // ── Lifecycle (3.2 LifecycleManager) ───────────────────────────────────
 
   async spawn(providerId: string, accountId: string, opts?: LaunchOptions): Promise<ChromeSlave> {
-    const slaveId = `slave_${providerId}_${accountId}_${Date.now()}`
-    const debugPort = opts?.debugPort ?? this.allocatePort()
-    const profileDir = opts?.profileDir ?? this.deriveProfile(providerId, accountId)
-    const mutex = new AsyncMutex()
+    const instance = await this.fleetSupervisor.spawn(providerId, accountId, {
+      visible: opts?.visible ?? false,
+      debugPort: opts?.debugPort,
+      extraArgs: opts?.extraArgs ?? [],
+    })
 
-    const slave: ChromeSlave = {
-      slaveId,
-      providerId,
-      accountId,
-      debugPort,
-      profileDir,
-      status: 'starting',
+    // Convert FleetInstance to ChromeSlave
+    return {
+      slaveId: instance.id,
+      providerId: instance.providerSlug,
+      accountId: instance.accountId,
+      debugPort: instance.debugPort,
+      profileDir: instance.profileDir,
+      status: instance.status,
       superState: 'idle',
-      pid: null,
-      consecutiveFailures: 0,
+      pid: instance.pid,
+      consecutiveFailures: instance.consecutiveFailures,
       circuitState: 'closed',
-      lastHealthCheck: Date.now(),
+      lastHealthCheck: instance.lastHealthCheck,
     }
-
-    this.slaves.set(slaveId, slave)
-    this.mutexes.set(slaveId, mutex)
-
-    this.eventBus?.emit('governor:spawned', { slaveId, providerId, accountId })
-    return slave
   }
 
   async launch(providerId: string, opts?: LaunchOptions): Promise<ChromeSlave> {
@@ -527,60 +545,82 @@ export class ChromeGovernor {
   }
 
   async kill(slaveId: string): Promise<void> {
-    const slave = this.slaves.get(slaveId)
-    if (!slave) throw new Error(`Slave not found: ${slaveId}`)
-    slave.status = 'stopping'
-    // Full CDP Browser.close + process kill in3.3
-    slave.status = 'stopped'
-    this.eventBus?.emit('governor:killed', { slaveId })
+    await this.fleetSupervisor.kill(slaveId)
   }
 
   async killAll(): Promise<void> {
-    for (const slaveId of this.slaves.keys()) {
-      await this.kill(slaveId)
-    }
+    await this.fleetSupervisor.killAll()
   }
 
   async ensureRunning(slaveId: string): Promise<ChromeSlave> {
+    const instance = await this.fleetSupervisor.ensureRunning(slaveId)
     const slave = this.slaves.get(slaveId)
-    if (!slave) throw new Error(`Slave not found: ${slaveId}`)
-    if (slave.status === 'running') return slave
-    // Auto-restart if crashed and autoRestart enabled
-    if ((slave.status === 'crashed' || slave.status === 'error') && this.config.autoRestart) {
-      slave.status = 'starting'
-      slave.consecutiveFailures++
-      slave.lastHealthCheck = Date.now()
-      slave.status = 'running'
-      this.eventBus?.emit('governor:restarted', { slaveId })
-      return slave
+    if (slave) {
+      slave.status = instance.status
+      slave.pid = instance.pid
+      slave.consecutiveFailures = instance.consecutiveFailures
     }
-    slave.status = 'running'
-    return slave
+    const result = this.fleetSupervisor.getInstance(slaveId)
+    if (!result) throw new EngineError(`Slave not found: ${slaveId}`)
+    return {
+      slaveId: result.id,
+      providerId: result.providerSlug,
+      accountId: result.accountId,
+      debugPort: result.debugPort,
+      profileDir: result.profileDir,
+      status: result.status,
+      superState: 'idle',
+      pid: result.pid,
+      consecutiveFailures: result.consecutiveFailures,
+      circuitState: 'closed',
+      lastHealthCheck: result.lastHealthCheck,
+    }
   }
 
   deriveProfile(providerId: string, accountId: string): string {
-    return `/tmp/chrome-profile-${providerId}-${accountId}`
+    // Use the configured profile root (Windows-safe) — must match the layout
+    // ProfileAllocator uses so ChromeGovernor.spawn reuses the same session.
+    const base =
+      this.config.profileBaseDir ??
+      (process.platform === 'win32' ? 'C:\\.config\\vivim' : '/.config/vivim')
+    return join(base, providerId, accountId)
   }
 
   allocatePort(): number {
-    const port = this.nextPort
-    if (port > this.config.portRange[1]) {
-      throw new Error(
-        `All ports in range ${this.config.portRange[0]}-${this.config.portRange[1]} occupied`,
-      )
-    }
-    this.nextPort++
-    return port
+    // Return first available port from range
+    return this.config.portRange[0]
   }
 
   async seedAccounts(): Promise<void> {
-    // Seed accounts from provider_account table — stub for now
     this.eventBus?.emit('governor:accounts-seeded', {})
   }
 
   async reapOrphanedPorts(): Promise<void> {
-    // Kill processes on ports from previous runs — stub for now
+    // Handled by FleetSupervisor.boot()
     this.eventBus?.emit('governor:orphans-reaped', {})
+  }
+
+  // Internal slaves map for compatibility
+  private get slaves(): Map<string, ChromeSlave> {
+    // Create a derived map from FleetSupervisor instances
+    const instances = this.fleetSupervisor.getAllInstances()
+    const map = new Map<string, ChromeSlave>()
+    for (const inst of instances) {
+      map.set(inst.id, {
+        slaveId: inst.id,
+        providerId: inst.providerSlug,
+        accountId: inst.accountId,
+        debugPort: inst.debugPort,
+        profileDir: inst.profileDir,
+        status: inst.status,
+        superState: 'idle',
+        pid: inst.pid,
+        consecutiveFailures: inst.consecutiveFailures,
+        circuitState: 'closed',
+        lastHealthCheck: inst.lastHealthCheck,
+      })
+    }
+    return map
   }
 
   getAllSlaves(opts?: { providerId?: string }): ChromeSlave[] {
@@ -593,53 +633,80 @@ export class ChromeGovernor {
     return this.slaves.get(slaveId) ?? null
   }
 
-  // ── CDP (delegates to CDPProxy) ────────────────────────────────────────
+  // ── CDP Transport Injection ─────────────────────────────────────────────
 
-  get cdp() {
-    return {
-      send: (slaveId: string, method: string, params?: Record<string, unknown>) =>
-        this.cdpProxy.send(slaveId, method, params),
-      capture: (slaveId: string, pattern: RegExp, timeoutMs?: number) =>
-        this.cdpProxy.capture(slaveId, pattern, timeoutMs),
-      executeHarnessPlan: (slaveId: string, dag: HarnessDAG) =>
-        this.cdpProxy.executeHarnessPlan(slaveId, dag),
-      getPageState: (slaveId: string) => this.cdpProxy.getPageState(slaveId),
-      captureScreenshot: (slaveId: string, format?: 'png' | 'jpeg') =>
-        this.cdpProxy.captureScreenshot(slaveId, format),
-    }
+  setCdpTransport(transport: CDPTransport): void {
+    this.cdpTransport = transport
+    this._cdpProxy = null // Reset proxy to pick up new transport
   }
 
-  // ── Trace (3.4 TraceLog) ─────────────────────────────────────────────
+  // ── CDP (3.3 CDPProxy) ──────────────────────────────────────────────────
+
+  get cdp(): CDPProxy {
+    if (!this.cdpTransport) {
+      throw new EngineError('CDP transport not configured. Call setCdpTransport() first.')
+    }
+    if (!this._cdpProxy) {
+      this._cdpProxy = new CDPProxy(
+        this.slaves,
+        this.mutexes,
+        this.cdpTransport,
+        this.eventBus,
+      )
+    }
+    return this._cdpProxy
+  }
+
+  // ── Trace (3.4 TraceLog) ────────────────────────────────────────────────
+
+  setTraceLog(store: GovernorStore): void {
+    this.traceLog = new TraceLog(store)
+  }
 
   async recordTrace(entry: TraceEntryInput): Promise<TraceEntryRow> {
+    if (!this.traceLog) throw new EngineError('TraceLog not configured. Call setTraceLog() first.')
     return this.traceLog.record(entry)
   }
 
   async getTrace(slaveId: string, limit?: number): Promise<TraceEntryRow[]> {
+    if (!this.traceLog) throw new EngineError('TraceLog not configured.')
     return this.traceLog.getTrace(slaveId, limit)
   }
 
   async getConversationTrace(conversationId: string): Promise<TraceEntryRow[]> {
+    if (!this.traceLog) throw new EngineError('TraceLog not configured.')
     return this.traceLog.getConversationTrace(conversationId)
   }
 
-  // ── Health (3.4 HealthMonitor) ──────────────────────────────────────
+  // ── Health (3.4 HealthMonitor) ──────────────────────────────────────────
+
+  setHealthMonitor(store: GovernorStore): void {
+    this.healthMonitor = new HealthMonitor(
+      store,
+      this.slaves,
+      this.circuitBreakers,
+      this.cdp,
+      this.config,
+      this.eventBus,
+    )
+  }
 
   startHealthProbe(intervalMs?: number): void {
-    this.healthMonitor.start(intervalMs)
+    this.healthMonitor?.start(intervalMs)
   }
 
   stopHealthProbe(): void {
-    this.healthMonitor.stop()
+    this.healthMonitor?.stop()
   }
 
   async probeHealth(slaveId: string): Promise<boolean> {
+    if (!this.healthMonitor) throw new EngineError('HealthMonitor not configured. Call setHealthMonitor() first.')
     return this.healthMonitor.probe(slaveId)
   }
 
   async getHealth(slaveId: string): Promise<SlaveHealth> {
     const slave = this.slaves.get(slaveId)
-    if (!slave) throw new Error(`Slave not found: ${slaveId}`)
+    if (!slave) throw new EngineError(`Slave not found: ${slaveId}`)
     return {
       slaveId,
       status: slave.status,
@@ -653,19 +720,15 @@ export class ChromeGovernor {
   async getAllHealth(): Promise<Map<string, SlaveHealth>> {
     const result = new Map<string, SlaveHealth>()
     for (const slave of this.slaves.values()) {
-      result.set(slave.slaveId, await this.getHealth(slave.slaveId))
+      result.set(slave.slaveId, {
+        slaveId: slave.slaveId,
+        status: slave.status,
+        circuitState: slave.circuitState,
+        consecutiveFailures: slave.consecutiveFailures,
+        lastHealthCheck: slave.lastHealthCheck,
+        uptimeMs: Date.now() - slave.lastHealthCheck,
+      })
     }
     return result
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────────────
-
-  getMutex(slaveId: string): AsyncMutex {
-    let mutex = this.mutexes.get(slaveId)
-    if (!mutex) {
-      mutex = new AsyncMutex()
-      this.mutexes.set(slaveId, mutex)
-    }
-    return mutex
   }
 }

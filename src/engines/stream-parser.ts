@@ -3,6 +3,7 @@
 // Loads parser modules from .ts seed files via dynamic import(); falls back to built-in
 // generic/system parsers when a seed is unavailable, preserving the spec's fallback chain.
 
+import { EngineError } from '../errors.js'
 import type { ParserStore } from '../storage/contracts/parser-store.js'
 
 export type ContentBlock =
@@ -233,7 +234,7 @@ export class StreamParserEngine {
       const imported = await import(filePath)
       const candidate = (imported.default ?? imported) as Partial<ParserModule>
       if (typeof candidate.parse !== 'function') {
-        throw new Error(`Parser module at ${filePath} has no parse() method`)
+        throw new EngineError(`Parser module at ${filePath} has no parse() method`)
       }
       return candidate as ParserModule
     }

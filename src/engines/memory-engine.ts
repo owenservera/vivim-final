@@ -203,12 +203,14 @@ export class MemoryEngine {
       })
 
       if (existingRules.length > 0) {
-        const rule = existingRules[0]!
-        rule.successCount++
-        rule.confidence = Math.min(1.0, rule.confidence + 0.05)
-        rule.lastTriggered = Date.now()
-        rule.updatedAt = Date.now()
-        await this.procedural.save(rule)
+        const rule = existingRules[0]
+        if (rule) {
+          rule.successCount++
+          rule.confidence = Math.min(1.0, rule.confidence + 0.05)
+          rule.lastTriggered = Date.now()
+          rule.updatedAt = Date.now()
+          await this.procedural.save(rule)
+        }
       } else {
         await this.createRule({
           name: `auto_${episode.providerId}_${episode.action}`,

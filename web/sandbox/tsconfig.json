@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "ESNext"],
+    "strict": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@ui/*": ["../ui/src/*"],
+      "@api-client/*": ["../api-client/src/*"]
+    }
+  },
+  "include": ["src/**/*", "src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    { "path": "../ui" },
+    { "path": "../api-client" }
+  ]
+}

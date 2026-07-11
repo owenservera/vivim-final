@@ -1,6 +1,7 @@
 // src/engines/capability.ts
 // CapabilityEngine — execute capabilities via Governor CDP (04-merged-engines.md §4).
 
+import { EngineError } from '../errors.js'
 import { deriveSlaveId, newId } from '../ids.js'
 import type {
   CapabilityBindingRow,
@@ -184,14 +185,14 @@ export class CapabilityEngine {
       indicators.push({ type: 'selector_found', value: 'login-form', matched: false })
     }
 
-    const urlMatch = /(chat|app|dashboard|conversations)/.test(page.url)
-    indicators.push({ type: 'url_match', value: page.url, matched: urlMatch })
+    const urlMatch = /(chat|app|dashboard|conversations)/.test(page?.url ?? '')
+    indicators.push({ type: 'url_match', value: page?.url ?? '', matched: urlMatch })
 
     const loginFormFound = indicators.some((i) => i.type === 'selector_found' && i.matched)
     const isLoggedIn = urlMatch && !loginFormFound
     const confidence = isLoggedIn ? 0.9 : 0.2
 
-    return { isLoggedIn, confidence, pageUrl: page.url, indicators }
+    return { isLoggedIn, confidence, pageUrl: page?.url ?? '', indicators }
   }
 
   async sendMessage(
@@ -212,7 +213,7 @@ export class CapabilityEngine {
     const found = await this.governor.cdp.send(slaveId, 'DOM.querySelector', {
       selector: selector.selector,
     })
-    if (found == null) throw new Error(`selector missed: ${selector.selector}`)
+    if (found == null) throw new EngineError(`selector missed: ${selector.selector}`)
     return { selector: selector.selector, found: true, input: input ?? {} }
   }
 

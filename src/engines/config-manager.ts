@@ -3,6 +3,7 @@
 // Handles schema registration, scoped config read/write, audit trail, and event emission.
 
 import type { z } from 'zod'
+import { EngineError } from '../errors.js'
 import type { ConfigScope, ConfigStore } from '../storage/contracts/config-store.js'
 
 // ── Event bus ──────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ export class ConfigManager {
 
     const registration = this.schemas.get(engineId)
     if (!registration) {
-      throw new Error(`No schema registered for engine: ${engineId}`)
+      throw new EngineError(`No schema registered for engine: ${engineId}`)
     }
 
     return registration.defaults as T
@@ -75,7 +76,7 @@ export class ConfigManager {
     const { scopeType, scopeId } = this.resolveScope(scope)
     const registration = this.schemas.get(engineId)
     if (!registration) {
-      throw new Error(`No schema registered for engine: ${engineId}`)
+      throw new EngineError(`No schema registered for engine: ${engineId}`)
     }
 
     const current = this.getConfig<T>(engineId, scope)

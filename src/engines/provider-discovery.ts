@@ -1,6 +1,7 @@
 // src/engines/provider-discovery.ts
 // ProviderDiscoveryEngine — navigate→infer→generate draft manifest
 
+import { EngineError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { CapabilityShape, CapabilityShapeRegistry } from './capability-shape-registry.js'
 import type { ChromeGovernor } from './chrome-governor.js'
@@ -130,9 +131,9 @@ export class ProviderDiscoveryEngine {
     approver = 'system',
   ): Promise<RegisterResult> {
     const session = this.sessions.get(sessionId)
-    if (!session) throw new Error(`Session ${sessionId} not found`)
-    if (session.status !== 'complete') throw new Error(`Session ${sessionId} not complete`)
-    if (!session.manifestDraft) throw new Error(`No manifest draft for session ${sessionId}`)
+    if (!session) throw new EngineError(`Session ${sessionId} not found`)
+    if (session.status !== 'complete') throw new EngineError(`Session ${sessionId} not complete`)
+    if (!session.manifestDraft) throw new EngineError(`No manifest draft for session ${sessionId}`)
 
     const manifest = { ...session.manifestDraft }
     if (edits) {

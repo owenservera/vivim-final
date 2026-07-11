@@ -67,4 +67,41 @@ describe('selectFrom', () => {
     const sel = selectFrom(units, deps)
     expect(sel?.id).toBe('3.5')
   })
+
+  it('tooling phase (>=90) units are selectable even when product phases are incomplete', () => {
+    const units = [
+      unit('1.1', 1, 'done'),
+      unit('11.1', 11, 'pending'), // product work still open
+      unit('90.1', 90, 'pending', 'sandbox tooling'),
+    ]
+    const sel = selectFrom(units, new Map())
+    // product phase 11 is open (phase 1 done), so 11.1 wins on phase order;
+    // the point is 90.1 is NOT gated out — verify it is a candidate.
+    expect(sel?.id).toBe('11.1')
+
+    // With all product phases done except a later one, tooling still selectable.
+    const units2 = [
+      unit('1.1', 1, 'done'),
+      unit('11.1', 11, 'in_progress'),
+      unit('90.1', 90, 'pending', 'sandbox tooling'),
+    ]
+    // in_progress product unit resumes first, tooling remains available next.
+    expect(selectFrom(units2, new Map())?.id).toBe('11.1')
+  })
+
+  it('tooling phase units do NOT block a product phase from opening', () => {
+    const units = [
+      unit('1.1', 1, 'done'),
+      unit('90.1', 90, 'pending'), // incomplete tooling must not gate product
+      unit('2.1', 2, 'pending'),
+    ]
+    const sel = selectFrom(units, new Map())
+    expect(sel?.id).toBe('2.1')
+  })
+
+  it('a lone pending tooling unit is selectable when no product work remains', () => {
+    const units = [unit('1.1', 1, 'done'), unit('2.1', 2, 'done'), unit('90.1', 90, 'pending')]
+    const sel = selectFrom(units, new Map())
+    expect(sel?.id).toBe('90.1')
+  })
 })
