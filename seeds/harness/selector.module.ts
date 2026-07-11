@@ -40,7 +40,7 @@ const selectorModule: HarnessModule = {
     try {
       switch (action) {
         case 'query': {
-          const el = ctx.query(selector)
+          const el = await ctx.query(selector)
           if (!el) {
             ctx.emitTelemetry({
               type: 'selector_miss',
@@ -65,7 +65,7 @@ const selectorModule: HarnessModule = {
           }
         }
         case 'query_all': {
-          const els = ctx.queryAll(selector)
+          const els = await ctx.queryAll(selector)
           ctx.emitTelemetry({
             type: 'selector_hit',
             moduleId: 'selector',
@@ -104,7 +104,7 @@ const selectorModule: HarnessModule = {
           return { ok: true, output: { action: 'wait_for' } }
         }
         case 'click': {
-          const el = ctx.query(selector)
+          const el = await ctx.query(selector)
           if (!el) {
             ctx.emitTelemetry({
               type: 'selector_miss',
@@ -123,14 +123,14 @@ const selectorModule: HarnessModule = {
           return { ok: true, output: { action: 'click' } }
         }
         case 'get_text': {
-          const el = ctx.query(selector)
+          const el = await ctx.query(selector)
           if (!el) return { ok: false, output: {}, error: `Element not found: ${selector}` }
           return { ok: true, output: { action: 'get_text', text: el.text } }
         }
         case 'get_attribute': {
           if (!attribute)
             return { ok: false, output: {}, error: 'attribute required for get_attribute' }
-          const el = ctx.query(selector)
+          const el = await ctx.query(selector)
           if (!el) return { ok: false, output: {}, error: `Element not found: ${selector}` }
           const value = el.attributes[attribute] ?? null
           return { ok: true, output: { action: 'get_attribute', attribute, value } }

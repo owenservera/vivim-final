@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 193 | **Done:** 136 | **Blocked:** 3 | **Pending:** 54
+**Total units:** 193 | **Done:** 137 | **Blocked:** 3 | **Pending:** 53
 
 > Phases 1-13: v1 core + SOTA + executor + frontend (139 units)
 > Phases 14-20: Sovereign AI OS Upgrade (60 units) — all pending
@@ -229,7 +229,7 @@ Replace stub implementations with real CDP transport and wiring.
 - [x] 14.4 — ChromeGovernor Health Probe Real → governor subsystem
 - [x] 14.5 — ConversationManager EventBus Fix → `src/engines/conversation-manager.ts`
 - [x] 14.6 — Server → ConversationManager Wiring → `src/server/index.ts`
-- [ ] 14.7 — HarnessRuntime Real Context → `src/engines/harness-runtime.ts`
+- [x] 14.7 — HarnessRuntime Real Context → `src/engines/harness-runtime.ts`
 - [ ] 14.8 — Router listRequests/getEvents + RouterStore → `src/router/`
 
 ---
