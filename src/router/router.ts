@@ -179,14 +179,12 @@ export class Router {
     return this.store.createTarget(row)
   }
 
-  async listRequests(_specId: string, _opts?: { limit?: number }): Promise<RouteRequestRow[]> {
-    // Store doesn't have a listRequests method; return empty for v1
-    return []
+  async listRequests(specId: string, opts?: { limit?: number }): Promise<RouteRequestRow[]> {
+    return this.store.listRequests(specId, opts)
   }
 
-  async getEvents(_requestId: string): Promise<RouteEventRow[]> {
-    // Store doesn't have a listEvents method; return empty for v1
-    return []
+  async getEvents(requestId: string): Promise<RouteEventRow[]> {
+    return this.store.listEvents(requestId)
   }
 
   private async recordEvent(
