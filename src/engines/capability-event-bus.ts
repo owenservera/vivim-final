@@ -89,6 +89,14 @@ export type CapabilityEvent =
     }
   | { type: 'config:changed'; engineId: string; actor: string }
   | {
+      type: 'knowledge:imported'
+      jobId: string
+      source: string
+      conversationsImported: number
+      messagesImported: number
+      durationMs: number
+    }
+  | {
       type: 'telemetry:cycle_complete'
       scheduleName: string
       rowsWritten: number
