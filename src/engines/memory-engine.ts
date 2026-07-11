@@ -2,6 +2,7 @@
 // MemoryEngine — episodic, semantic, and procedural memory with learning
 
 import type { CapabilityEventBus } from './capability-event-bus.js'
+import { newId } from '../ids.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -119,13 +120,6 @@ export interface ProceduralMemoryStore {
   findByContext(ctx: RuleContext): Promise<ProceduralRule[]>
   findAll(): Promise<ProceduralRule[]>
   delete(id: string): Promise<void>
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────
-
-let idCounter = 0
-function newId(): string {
-  return `mem_${Date.now()}_${++idCounter}`
 }
 
 // ── Engine ──────────────────────────────────────────────────────────────
@@ -295,6 +289,44 @@ export class MemoryEngine {
     this.eventBus.emit({
       type: 'memory:consolidated',
       data: { rulesPruned: rules.length },
+    } as never)
+  }
+
+  // ── Knowledge types (Phase 15) ────────────────────────────────────────
+
+  async recordEntity(input: { name: string; type: string; description?: string; conversationId?: string; messageId?: string }): Promise<void> {
+    this.eventBus.emit({
+      type: 'memory:entity_recorded',
+      data: { name: input.name, type: input.type },
+    } as never)
+  }
+
+  async recordDecision(input: { conversationId: string; messageId: string; decisionText: string; rationale?: string; alternatives?: string[] }): Promise<void> {
+    this.eventBus.emit({
+      type: 'memory:decision_recorded',
+      data: { conversationId: input.conversationId, decisionText: input.decisionText },
+    } as never)
+  }
+
+  async recordPattern(input: { name: string; description: string; patternType: string }): Promise<void> {
+    this.eventBus.emit({
+      type: 'memory:pattern_recorded',
+      data: { name: input.name, patternType: input.patternType },
+    } as never)
+  }
+
+  async getTopics(): Promise<Array<{ id: string; name: string; description: string | null }>> {
+    return []
+  }
+
+  async getProjects(): Promise<Array<{ id: string; name: string; description: string | null; status: string }>> {
+    return []
+  }
+
+  async assignTopic(conversationId: string, topicId: string): Promise<void> {
+    this.eventBus.emit({
+      type: 'memory:topic_assigned',
+      data: { conversationId, topicId },
     } as never)
   }
 
