@@ -58,17 +58,17 @@ interface ChatGPTRawConversation {
 export class ChatGPTExportParserImpl implements ChatGPTExportParser {
   parse(rawJson: string): ParsedConversation[] {
     const data = JSON.parse(rawJson) as ChatGPTRawConversation[]
-    return data.map(conv => this.parseConversation(conv))
+    return data.map((conv) => this.parseConversation(conv))
   }
 
   private parseConversation(conv: ChatGPTRawConversation): ParsedConversation {
     const messages = Object.values(conv.mapping)
-      .filter(node => node.message)
-      .map(node => this.parseMessage(node))
+      .filter((node) => node.message)
+      .map((node) => this.parseMessage(node))
       .sort((a, b) => a.createdAt - b.createdAt)
 
     return {
-      externalId: conv.title + '_' + conv.create_time,
+      externalId: `${conv.title}_${conv.create_time}`,
       title: conv.title,
       source: 'chatgpt',
       createdAt: conv.create_time * 1000,
@@ -78,7 +78,12 @@ export class ChatGPTExportParserImpl implements ChatGPTExportParser {
   }
 
   private parseMessage(node: ChatGPTRawNode): ParsedMessage {
-    const msg = node.message!
+    const msg = node.message ?? {
+      id: node.id,
+      author: undefined,
+      content: undefined,
+      model: undefined,
+    }
     const parts = msg.content?.parts ?? []
     const content = parts.filter((p): p is string => typeof p === 'string').join('\n')
     return {

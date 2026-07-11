@@ -1,0 +1,56 @@
+{
+  "$schema": "https://vivim.app/cap-store/v1/provider-manifest.schema.json",
+  "provider": {
+    "slug": "z-ai",
+    "display_name": "Z AI",
+    "description": "Z.AI — Z.ai's multimodal AI assistant",
+    "category": "ai",
+    "provider_type": "llm",
+    "website_url": "https://z.ai",
+    "auth_type": "api",
+    "has_multi_account": false,
+    "profile_strategy": "shared",
+    "capabilities": ["send_message", "select_model"]
+  },
+  "endpoints": [
+    {
+      "label": "API",
+      "url": "https://api.z.ai/v1",
+      "endpoint_type": "api",
+      "is_default": true
+    }
+  ],
+  "parsers": [
+    {
+      "name": "Z AI SSE Parser",
+      "file": "generic/002_openai_delta.ts",
+      "version": 1,
+      "is_active": true
+    }
+  ],
+  "models": [
+    {
+      "slug": "z-ai-default",
+      "display_name": "Z AI Default",
+      "is_default": true,
+      "context_window": 128000,
+      "max_output_tokens": 4096,
+      "supports_streaming": true
+    }
+  ],
+  "capabilities_config": [
+    {
+      "global_capability_id": "send_message",
+      "recovery_strategies": [{ "type": "retry_selector" }],
+      "ui_component_override": "text_input",
+      "ui_label_override": "Send to Z AI",
+      "ui_icon_override": "arrow-up-circle",
+      "ui_position_override": "composer",
+      "ui_priority_override": "primary"
+    }
+  ],
+  "config": [
+    { "key": "base_url", "value": "https://api.z.ai/v1" },
+    { "key": "auth_type", "value": "api_key" }
+  ]
+}

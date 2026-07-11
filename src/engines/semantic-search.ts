@@ -2,8 +2,8 @@
 // SemanticSearchEngine — embedding-based semantic search across knowledge.
 
 import { createHash } from 'node:crypto'
-import type { SemanticSearchStore } from '../storage/contracts/semantic-search-store.js'
 import { newId } from '../ids.js'
+import type { SemanticSearchStore } from '../storage/contracts/semantic-search-store.js'
 
 export interface SearchQuery {
   text: string
@@ -28,16 +28,6 @@ export interface EmbeddingProvider {
   embedBatch(texts: string[]): Promise<number[][]>
 }
 
-function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0, magA = 0, magB = 0
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i]! * b[i]!
-    magA += a[i]! ** 2
-    magB += b[i]! ** 2
-  }
-  return dot / (Math.sqrt(magA) * Math.sqrt(magB))
-}
-
 export class SemanticSearchEngine {
   constructor(
     private store: SemanticSearchStore,
@@ -60,20 +50,27 @@ export class SemanticSearchEngine {
     })
   }
 
-  async indexBatch(items: Array<{ text: string; entityType: string; entityId: string }>): Promise<void> {
-    const texts = items.map(i => i.text)
+  async indexBatch(
+    items: Array<{ text: string; entityType: string; entityId: string }>,
+  ): Promise<void> {
+    const texts = items.map((i) => i.text)
     const embeddings = await this.embeddingProvider.embedBatch(texts)
-    const contentHashes = texts.map(t => createHash('sha256').update(t).digest('hex'))
+    const contentHashes = texts.map((t) => createHash('sha256').update(t).digest('hex'))
 
     for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      const embedding = embeddings[i]
+      const contentHash = contentHashes[i]
+      if (!item || !embedding || !contentHash) continue
+
       await this.store.upsertEmbedding({
         id: newId(),
-        entityType: items[i]!.entityType,
-        entityId: items[i]!.entityId,
-        embedding: JSON.stringify(embeddings[i]!),
+        entityType: item.entityType,
+        entityId: item.entityId,
+        embedding: JSON.stringify(embedding),
         model: this.embeddingProvider.name,
         dimensions: this.embeddingProvider.dimensions,
-        contentHash: contentHashes[i]!,
+        contentHash,
         createdAt: Date.now(),
       })
     }
@@ -89,7 +86,7 @@ export class SemanticSearchEngine {
       threshold,
     })
 
-    return results.map(r => ({
+    return results.map((r) => ({
       type: r.entityType as SearchResult['type'],
       id: r.entityId,
       score: r.score,

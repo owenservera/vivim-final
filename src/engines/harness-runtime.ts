@@ -4,6 +4,7 @@
 // Governor's CDPProxy. Never blocks Chrome's event loop. Modules are composable
 // server-side functions registered by capability slug.
 
+import { EngineError } from '../errors.js'
 import type { CapabilityEvent, CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 
@@ -82,9 +83,10 @@ export class HarnessRuntime {
     const telemetry: HarnessTelemetryEvent[] = []
     let stepsCompleted = 0
 
-    const context: HarnessContext = this.governor && this.slaveId
-      ? this.createRealContext(this.slaveId, telemetry)
-      : this.createStubContext(telemetry)
+    const context: HarnessContext =
+      this.governor && this.slaveId
+        ? this.createRealContext(this.slaveId, telemetry)
+        : this.createStubContext(telemetry)
 
     const {
       outputs,
@@ -204,16 +206,25 @@ export class HarnessRuntime {
   }
 
   private createRealContext(slaveId: string, telemetry: HarnessTelemetryEvent[]): HarnessContext {
-    const gov = this.governor!
+    if (!this.governor) {
+      throw new EngineError('Governor required for real context')
+    }
+    const gov = this.governor
     return {
       query: async (selector: string) => {
-        const result = await gov.cdp.send(slaveId, 'DOM.querySelector', { selector }) as { nodeId: number } | null
+        const result = (await gov.cdp.send(slaveId, 'DOM.querySelector', { selector })) as {
+          nodeId: number
+        } | null
         if (!result?.nodeId) return null
-        const desc = await gov.cdp.send(slaveId, 'DOM.describeNode', { nodeId: result.nodeId }) as Record<string, unknown> | undefined
+        const desc = (await gov.cdp.send(slaveId, 'DOM.describeNode', { nodeId: result.nodeId })) as
+          | Record<string, unknown>
+          | undefined
         return this.nodeToElement(desc)
       },
       queryAll: async (selector: string) => {
-        const result = await gov.cdp.send(slaveId, 'DOM.querySelectorAll', { selector }) as { nodeIds: number[] } | null
+        const result = (await gov.cdp.send(slaveId, 'DOM.querySelectorAll', { selector })) as {
+          nodeIds: number[]
+        } | null
         if (!result?.nodeIds) return []
         return Promise.all(
           result.nodeIds.map((id) =>

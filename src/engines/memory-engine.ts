@@ -1,8 +1,8 @@
 // src/engines/memory-engine.ts
 // MemoryEngine — episodic, semantic, and procedural memory with learning
 
-import type { CapabilityEventBus } from './capability-event-bus.js'
 import { newId } from '../ids.js'
+import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -294,21 +294,37 @@ export class MemoryEngine {
 
   // ── Knowledge types (Phase 15) ────────────────────────────────────────
 
-  async recordEntity(input: { name: string; type: string; description?: string; conversationId?: string; messageId?: string }): Promise<void> {
+  async recordEntity(input: {
+    name: string
+    type: string
+    description?: string
+    conversationId?: string
+    messageId?: string
+  }): Promise<void> {
     this.eventBus.emit({
       type: 'memory:entity_recorded',
       data: { name: input.name, type: input.type },
     } as never)
   }
 
-  async recordDecision(input: { conversationId: string; messageId: string; decisionText: string; rationale?: string; alternatives?: string[] }): Promise<void> {
+  async recordDecision(input: {
+    conversationId: string
+    messageId: string
+    decisionText: string
+    rationale?: string
+    alternatives?: string[]
+  }): Promise<void> {
     this.eventBus.emit({
       type: 'memory:decision_recorded',
       data: { conversationId: input.conversationId, decisionText: input.decisionText },
     } as never)
   }
 
-  async recordPattern(input: { name: string; description: string; patternType: string }): Promise<void> {
+  async recordPattern(input: {
+    name: string
+    description: string
+    patternType: string
+  }): Promise<void> {
     this.eventBus.emit({
       type: 'memory:pattern_recorded',
       data: { name: input.name, patternType: input.patternType },
@@ -319,7 +335,9 @@ export class MemoryEngine {
     return []
   }
 
-  async getProjects(): Promise<Array<{ id: string; name: string; description: string | null; status: string }>> {
+  async getProjects(): Promise<
+    Array<{ id: string; name: string; description: string | null; status: string }>
+  > {
     return []
   }
 

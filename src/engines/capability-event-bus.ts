@@ -12,6 +12,7 @@ export type CapabilityEvent =
       traceId: string
       ok: boolean
       latencyMs: number
+      bindingId?: string
     }
   | {
       type: 'capability:failed'
@@ -20,6 +21,7 @@ export type CapabilityEvent =
       traceId: string
       error: string
       recoveryBehavior: string
+      bindingId?: string
     }
   | {
       type: 'capability:confidence_changed'

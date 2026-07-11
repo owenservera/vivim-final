@@ -26,7 +26,7 @@ function parseTs(ts: string | number): number {
 function extractText(msg: ClaudeRawMessage): string {
   if (msg.text) return msg.text
   if (Array.isArray(msg.content)) {
-    return msg.content.map(c => c.text ?? '').join('\n')
+    return msg.content.map((c) => c.text ?? '').join('\n')
   }
   if (typeof msg.content === 'string') return msg.content
   return ''
@@ -36,7 +36,7 @@ export class ClaudeExportParserImpl {
   parse(rawJson: string): ParsedConversation[] {
     const data = JSON.parse(rawJson)
     const arr: ClaudeRawConversation[] = Array.isArray(data) ? data : []
-    return arr.map(conv => this.parseConversation(conv))
+    return arr.map((conv) => this.parseConversation(conv))
   }
 
   private parseConversation(conv: ClaudeRawConversation): ParsedConversation {

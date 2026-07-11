@@ -2,13 +2,13 @@
 // KnowledgeIngestionEngine — import external conversation exports into local DB.
 
 import { existsSync, readFileSync } from 'node:fs'
-import type { CapabilityEventBus } from './capability-event-bus.js'
-import type { KnowledgeExtractor } from './knowledge-extractor.js'
+import { CapStoreError } from '../errors.js'
+import { newId } from '../ids.js'
 import type { ConversationStore } from '../storage/contracts/conversation-store.js'
 import type { KnowledgeIngestionStore } from '../storage/contracts/knowledge-ingestion-store.js'
 import type { StreamBlockStoreContract } from '../storage/contracts/stream-block-store.js'
-import { CapStoreError } from '../errors.js'
-import { newId } from '../ids.js'
+import type { CapabilityEventBus } from './capability-event-bus.js'
+import type { KnowledgeExtractor } from './knowledge-extractor.js'
 
 export type ImportSource = 'chatgpt' | 'claude' | 'gemini' | 'deepseek' | 'generic' | 'manual'
 
@@ -61,7 +61,11 @@ export class KnowledgeIngestionEngine {
     let duplicatesSkipped = 0
     const errors: Array<{ conversationId: string; error: string }> = []
 
-    let parsed: Array<{ externalId: string; title?: string; messages: Array<{ role: string; content: string; index: number }> }>
+    let parsed: Array<{
+      externalId: string
+      title?: string
+      messages: Array<{ role: string; content: string; index: number }>
+    }>
     try {
       parsed = this.parseFile(config.filePath, config.source)
     } catch (err) {
@@ -85,7 +89,7 @@ export class KnowledgeIngestionEngine {
 
         const conversationId = existingId ?? newId()
         if (!existingId) {
-          const created = await this.conversationStore.createConversation({
+          const _created = await this.conversationStore.createConversation({
             providerSessionId: conv.externalId,
             providerId: config.providerId ?? config.source,
             title: conv.title ?? null,
@@ -112,7 +116,7 @@ export class KnowledgeIngestionEngine {
     }
 
     let entitiesExtracted = 0
-    let decisionsExtracted = 0
+    const decisionsExtracted = 0
 
     if (config.extractEntities) {
       const result = await this.extractor.batchExtract([])
@@ -124,7 +128,12 @@ export class KnowledgeIngestionEngine {
     await this.store.updateImportJob(jobId, {
       status: 'complete',
       resultJson: JSON.stringify({
-        conversationsImported, messagesImported, entitiesExtracted, decisionsExtracted, duplicatesSkipped, errors,
+        conversationsImported,
+        messagesImported,
+        entitiesExtracted,
+        decisionsExtracted,
+        duplicatesSkipped,
+        errors,
       }),
       completedAt: end,
     })
@@ -162,22 +171,38 @@ export class KnowledgeIngestionEngine {
     })
   }
 
-  async getJobStatus(jobId: string): Promise<{ jobId: string; phase: string; current: number; total: number } | null> {
+  async getJobStatus(
+    jobId: string,
+  ): Promise<{ jobId: string; phase: string; current: number; total: number } | null> {
     const job = await this.store.getImportJob(jobId)
     if (!job) return null
     return { jobId: job.id, phase: job.status, current: 0, total: 0 }
   }
 
-  async listJobs(opts?: { limit?: number }): Promise<Array<{ id: string; source: string; status: string; startedAt: number }>> {
+  async listJobs(opts?: { limit?: number }): Promise<
+    Array<{ id: string; source: string; status: string; startedAt: number }>
+  > {
     const jobs = await this.store.listImportJobs(opts)
-    return jobs.map(j => ({ id: j.id, source: j.source, status: j.status, startedAt: j.startedAt }))
+    return jobs.map((j) => ({
+      id: j.id,
+      source: j.source,
+      status: j.status,
+      startedAt: j.startedAt,
+    }))
   }
 
   async cancelJob(jobId: string): Promise<void> {
     await this.store.updateImportJob(jobId, { status: 'cancelled' })
   }
 
-  private parseFile(filePath: string, source: ImportSource): Array<{ externalId: string; title?: string; messages: Array<{ role: string; content: string; index: number }> }> {
+  private parseFile(
+    filePath: string,
+    source: ImportSource,
+  ): Array<{
+    externalId: string
+    title?: string
+    messages: Array<{ role: string; content: string; index: number }>
+  }> {
     if (!existsSync(filePath)) {
       throw new CapStoreError('FileNotFoundError', `File not found: ${filePath}`)
     }
@@ -194,36 +219,43 @@ export class KnowledgeIngestionEngine {
   }
 
   private normalizeParsed(
-    source: ImportSource, data: unknown,
-  ): Array<{ externalId: string; title?: string; messages: Array<{ role: string; content: string; index: number }> }> {
+    source: ImportSource,
+    data: unknown,
+  ): Array<{
+    externalId: string
+    title?: string
+    messages: Array<{ role: string; content: string; index: number }>
+  }> {
     if (source === 'chatgpt') {
       const arr = data as Array<Record<string, unknown>>
       return arr.map((conv: Record<string, unknown>) => ({
         externalId: String(conv.id ?? conv.conversation_id ?? ''),
         title: conv.title as string | undefined,
-        messages: ((conv.messages ?? conv.message_list ?? []) as Array<Record<string, unknown>>).map(
-          (m: Record<string, unknown>, i: number) => ({
-            role: String(m.role ?? m.author ?? 'user'),
-            content: String(m.content ?? m.text ?? ''),
-            index: i,
-          }),
-        ),
+        messages: (
+          (conv.messages ?? conv.message_list ?? []) as Array<Record<string, unknown>>
+        ).map((m: Record<string, unknown>, i: number) => ({
+          role: String(m.role ?? m.author ?? 'user'),
+          content: String(m.content ?? m.text ?? ''),
+          index: i,
+        })),
       }))
     }
 
     if (source === 'claude') {
       const root = data as Record<string, unknown>
-      const conversations = (root.conversations ?? root.accounts ?? []) as Array<Record<string, unknown>>
+      const conversations = (root.conversations ?? root.accounts ?? []) as Array<
+        Record<string, unknown>
+      >
       return conversations.map((conv: Record<string, unknown>) => ({
         externalId: String(conv.uuid ?? conv.id ?? ''),
         title: (conv.name ?? conv.title) as string | undefined,
-        messages: ((conv.chat_messages ?? conv.messages ?? []) as Array<Record<string, unknown>>).map(
-          (m: Record<string, unknown>, i: number) => ({
-            role: String(m.sender ?? m.role ?? 'user'),
-            content: String(m.text ?? m.content ?? m.message ?? ''),
-            index: i,
-          }),
-        ),
+        messages: (
+          (conv.chat_messages ?? conv.messages ?? []) as Array<Record<string, unknown>>
+        ).map((m: Record<string, unknown>, i: number) => ({
+          role: String(m.sender ?? m.role ?? 'user'),
+          content: String(m.text ?? m.content ?? m.message ?? ''),
+          index: i,
+        })),
       }))
     }
 

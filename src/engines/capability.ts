@@ -144,8 +144,11 @@ export class CapabilityEngine {
       this.eventBus?.emit({
         type: 'capability:executed',
         capabilityId: cap.id,
+        providerId,
         bindingId: binding.id,
         traceId,
+        ok: true,
+        latencyMs,
       })
     } else {
       await this.store.updateBindingHealth(binding.id, {
@@ -155,8 +158,11 @@ export class CapabilityEngine {
       this.eventBus?.emit({
         type: 'capability:failed',
         capabilityId: cap.id,
+        providerId,
         bindingId: binding.id,
         traceId,
+        error: 'all recovery strategies exhausted',
+        recoveryBehavior: 'none',
       })
     }
 

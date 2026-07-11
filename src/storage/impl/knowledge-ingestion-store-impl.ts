@@ -8,8 +8,12 @@ export class KnowledgeIngestionStoreImpl implements KnowledgeIngestionStore {
   constructor(private db: CapStoreDb) {}
 
   async createImportJob(job: {
-    id: string; source: string; filePath: string; status: string;
-    configJson: string; startedAt: number;
+    id: string
+    source: string
+    filePath: string
+    status: string
+    configJson: string
+    startedAt: number
   }): Promise<void> {
     await this.db.prisma.importJob.create({
       data: {
@@ -23,9 +27,15 @@ export class KnowledgeIngestionStoreImpl implements KnowledgeIngestionStore {
     })
   }
 
-  async updateImportJob(id: string, patch: {
-    status?: string; resultJson?: string; completedAt?: number; error?: string;
-  }): Promise<void> {
+  async updateImportJob(
+    id: string,
+    patch: {
+      status?: string
+      resultJson?: string
+      completedAt?: number
+      error?: string
+    },
+  ): Promise<void> {
     const data: Record<string, unknown> = {}
     if (patch.status !== undefined) data.status = patch.status
     if (patch.resultJson !== undefined) data.resultJson = patch.resultJson
@@ -35,33 +45,55 @@ export class KnowledgeIngestionStoreImpl implements KnowledgeIngestionStore {
   }
 
   async getImportJob(id: string): Promise<{
-    id: string; source: string; filePath: string; status: string;
-    configJson: string; resultJson: string | null; startedAt: number; completedAt: number | null;
+    id: string
+    source: string
+    filePath: string
+    status: string
+    configJson: string
+    resultJson: string | null
+    startedAt: number
+    completedAt: number | null
   } | null> {
     const r = await this.db.prisma.importJob.findUnique({ where: { id } })
     if (!r) return null
     return {
-      id: r.id, source: r.source, filePath: r.filePath,
-      status: r.status, configJson: r.configJson,
-      resultJson: r.resultJson, startedAt: r.startedAt,
+      id: r.id,
+      source: r.source,
+      filePath: r.filePath,
+      status: r.status,
+      configJson: r.configJson,
+      resultJson: r.resultJson,
+      startedAt: r.startedAt,
       completedAt: r.completedAt,
     }
   }
 
-  async listImportJobs(opts?: { limit?: number }): Promise<Array<{
-    id: string; source: string; status: string; startedAt: number; completedAt: number | null;
-  }>> {
+  async listImportJobs(opts?: { limit?: number }): Promise<
+    Array<{
+      id: string
+      source: string
+      status: string
+      startedAt: number
+      completedAt: number | null
+    }>
+  > {
     const rows = await this.db.prisma.importJob.findMany({
       orderBy: { startedAt: 'desc' },
       take: opts?.limit ?? 50,
     })
-    return rows.map(r => ({
-      id: r.id, source: r.source, status: r.status,
-      startedAt: r.startedAt, completedAt: r.completedAt,
+    return rows.map((r) => ({
+      id: r.id,
+      source: r.source,
+      status: r.status,
+      startedAt: r.startedAt,
+      completedAt: r.completedAt,
     }))
   }
 
-  async findExistingConversation(sourceProviderId: string, externalId: string): Promise<string | null> {
+  async findExistingConversation(
+    sourceProviderId: string,
+    externalId: string,
+  ): Promise<string | null> {
     const row = await this.db.prisma.conversation.findFirst({
       where: { source: sourceProviderId, externalId },
       select: { id: true },

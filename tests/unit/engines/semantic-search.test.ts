@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'bun:test'
+import {
+  type EmbeddingProvider,
+  SemanticSearchEngine,
+} from '../../../src/engines/semantic-search.js'
 import type { SemanticSearchStore } from '../../../src/storage/contracts/semantic-search-store.js'
-import { SemanticSearchEngine, type EmbeddingProvider } from '../../../src/engines/semantic-search.js'
 
 function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0, magA = 0, magB = 0
+  let dot = 0
+  let magA = 0
+  let magB = 0
   for (let i = 0; i < a.length; i++) {
     dot += a[i]! * b[i]!
     magA += a[i]! ** 2
@@ -19,7 +24,7 @@ function mockEmbeddingProvider(): EmbeddingProvider {
       vec[i % 8]! += text.charCodeAt(i)
     }
     const mag = Math.sqrt(vec.reduce((s, v) => s + v * v, 0))
-    return mag > 0 ? vec.map(v => v / mag) : vec
+    return mag > 0 ? vec.map((v) => v / mag) : vec
   }
 
   return {
@@ -31,7 +36,17 @@ function mockEmbeddingProvider(): EmbeddingProvider {
 }
 
 function mockStore(): SemanticSearchStore {
-  const embeddings = new Map<string, { id: string; entityType: string; entityId: string; embedding: string; model: string; dimensions: number }>()
+  const embeddings = new Map<
+    string,
+    {
+      id: string
+      entityType: string
+      entityId: string
+      embedding: string
+      model: string
+      dimensions: number
+    }
+  >()
   return {
     upsertEmbedding: async (input) => {
       embeddings.set(`${input.entityType}:${input.entityId}`, input)
@@ -65,7 +80,7 @@ describe('SemanticSearchEngine', () => {
 
     const results = await engine.search({ text: 'fox jumps', limit: 5 })
     expect(results.length).toBeGreaterThanOrEqual(1)
-    expect(results[0]!.score).toBeGreaterThan(0)
+    expect(results[0]?.score).toBeGreaterThan(0)
   })
 
   it('finds related concepts with high score', async () => {
@@ -86,7 +101,7 @@ describe('SemanticSearchEngine', () => {
     await engine.index('TypeScript types', 'message', 'msg-2')
 
     const results = await engine.search({ text: 'React', limit: 5, threshold: 0.9 })
-    expect(results.every(r => r.score >= 0.9)).toBe(true)
+    expect(results.every((r) => r.score >= 0.9)).toBe(true)
   })
 
   it('reindexAll returns stats without error', async () => {

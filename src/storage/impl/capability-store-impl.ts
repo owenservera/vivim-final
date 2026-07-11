@@ -124,6 +124,7 @@ export class CapabilityStoreImpl implements CapabilityStore {
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: Prisma escape hatch
+  // biome-ignore lint/style/noNonNullAssertion: Array access within bounds
   private get p(): any {
     return this.db.prisma
   }

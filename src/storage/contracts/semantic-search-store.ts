@@ -3,16 +3,32 @@
 
 export interface SemanticSearchStore {
   upsertEmbedding(input: {
-    id: string; entityType: string; entityId: string;
-    embedding: string; model: string; dimensions: number;
-    contentHash: string; createdAt: number;
+    id: string
+    entityType: string
+    entityId: string
+    embedding: string
+    model: string
+    dimensions: number
+    contentHash: string
+    createdAt: number
   }): Promise<void>
-  getEmbedding(entityType: string, entityId: string): Promise<{
-    id: string; embedding: string; model: string; dimensions: number;
+  getEmbedding(
+    entityType: string,
+    entityId: string,
+  ): Promise<{
+    id: string
+    embedding: string
+    model: string
+    dimensions: number
   } | null>
-  searchByEmbedding(embedding: number[], opts: {
-    limit?: number; threshold?: number; entityType?: string;
-  }): Promise<Array<{ entityId: string; entityType: string; score: number }>>
+  searchByEmbedding(
+    embedding: number[],
+    opts: {
+      limit?: number
+      threshold?: number
+      entityType?: string
+    },
+  ): Promise<Array<{ entityId: string; entityType: string; score: number }>>
   deleteEmbedding(entityType: string, entityId: string): Promise<void>
   countEmbeddings(opts?: { entityType?: string }): Promise<number>
 }

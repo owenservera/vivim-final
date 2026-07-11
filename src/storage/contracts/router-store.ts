@@ -22,6 +22,9 @@ export interface RouterStore {
   createRequest(input: RouteRequestRow): Promise<RouteRequestRow>
   updateRequest(id: string, patch: Partial<RouteRequestRow>): Promise<void>
   createEvent(input: RouteEventRow): Promise<RouteEventRow>
-  listRequests(specId: string, opts?: { limit?: number; offset?: number }): Promise<RouteRequestRow[]>
+  listRequests(
+    specId: string,
+    opts?: { limit?: number; offset?: number },
+  ): Promise<RouteRequestRow[]>
   listEvents(requestId: string): Promise<RouteEventRow[]>
 }

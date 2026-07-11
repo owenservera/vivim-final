@@ -7,8 +7,8 @@ import type {
   RouteSpecRow,
   RouteTargetRow,
 } from '../../schema/types.js'
-import type { CapStoreDb } from '../db.js'
 import type { RouterStore } from '../contracts/router-store.js'
+import type { CapStoreDb } from '../db.js'
 
 export class RouterStoreImpl implements RouterStore {
   constructor(private db: CapStoreDb) {}
@@ -167,7 +167,10 @@ export class RouterStoreImpl implements RouterStore {
     return input
   }
 
-  async listRequests(specId: string, opts?: { limit?: number; offset?: number }): Promise<RouteRequestRow[]> {
+  async listRequests(
+    specId: string,
+    opts?: { limit?: number; offset?: number },
+  ): Promise<RouteRequestRow[]> {
     const rows = await this.db.prisma.routeRequest.findMany({
       where: { routeSpecId: specId },
       orderBy: { ts: 'desc' },

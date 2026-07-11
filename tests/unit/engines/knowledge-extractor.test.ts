@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'bun:test'
-import type { KnowledgeExtractorStore } from '../../../src/storage/contracts/knowledge-extractor-store.js'
 import { KnowledgeExtractor } from '../../../src/engines/knowledge-extractor.js'
+import type { KnowledgeExtractorStore } from '../../../src/storage/contracts/knowledge-extractor-store.js'
 
 function mockStore(): KnowledgeExtractorStore {
   const entities = new Map<string, any>()
   return {
-    createEntity: async (input) => { entities.set(input.id, input) },
-    updateEntity: async (id, patch) => { const e = entities.get(id); if (e) Object.assign(e, patch) },
+    createEntity: async (input) => {
+      entities.set(input.id, input)
+    },
+    updateEntity: async (id, patch) => {
+      const e = entities.get(id)
+      if (e) Object.assign(e, patch)
+    },
     findEntityByName: async (name) => {
       for (const e of entities.values()) {
         if (e.name === name) return { id: e.id, name: e.name, type: e.type }
@@ -33,27 +38,45 @@ const defaultConfig = {
 describe('KnowledgeExtractor', () => {
   it('extracts technology entity from message', async () => {
     const extractor = new KnowledgeExtractor(mockStore(), defaultConfig)
-    const results = await extractor.extractFromMessage('conv-1', 'msg-1', 'user', 'I am using React and TypeScript', '')
+    const results = await extractor.extractFromMessage(
+      'conv-1',
+      'msg-1',
+      'user',
+      'I am using React and TypeScript',
+      '',
+    )
 
-    const techResults = results.filter(r => r.type === 'entity_technology')
+    const techResults = results.filter((r) => r.type === 'entity_technology')
     expect(techResults.length).toBeGreaterThanOrEqual(2)
-    expect(techResults.some(r => r.subject === 'React')).toBe(true)
-    expect(techResults.some(r => r.subject === 'TypeScript')).toBe(true)
+    expect(techResults.some((r) => r.subject === 'React')).toBe(true)
+    expect(techResults.some((r) => r.subject === 'TypeScript')).toBe(true)
   })
 
   it('extracts decision from "We decided to use PostgreSQL"', async () => {
     const extractor = new KnowledgeExtractor(mockStore(), defaultConfig)
-    const results = await extractor.extractFromMessage('conv-1', 'msg-1', 'user', 'We decided to use PostgreSQL', '')
+    const results = await extractor.extractFromMessage(
+      'conv-1',
+      'msg-1',
+      'user',
+      'We decided to use PostgreSQL',
+      '',
+    )
 
-    const decisions = results.filter(r => r.type === 'decision')
+    const decisions = results.filter((r) => r.type === 'decision')
     expect(decisions.length).toBeGreaterThanOrEqual(1)
   })
 
   it('extracts fact from statement', async () => {
     const extractor = new KnowledgeExtractor(mockStore(), defaultConfig)
-    const results = await extractor.extractFromMessage('conv-1', 'msg-1', 'user', 'React hooks were introduced in v16.8.', '')
+    const results = await extractor.extractFromMessage(
+      'conv-1',
+      'msg-1',
+      'user',
+      'React hooks were introduced in v16.8.',
+      '',
+    )
 
-    const facts = results.filter(r => r.type === 'fact')
+    const facts = results.filter((r) => r.type === 'fact')
     expect(facts.length).toBeGreaterThanOrEqual(1)
   })
 
@@ -66,7 +89,7 @@ describe('KnowledgeExtractor', () => {
 
     const entity = await store.findEntityByName('React', 'entity_technology')
     expect(entity).not.toBeNull()
-    expect(entity!.name).toBe('React')
+    expect(entity?.name).toBe('React')
   })
 
   it('processes multiple conversations via batchExtract', async () => {
@@ -81,9 +104,7 @@ describe('KnowledgeExtractor', () => {
       },
       {
         id: 'conv-2',
-        messages: [
-          { id: 'm3', role: 'user', content: 'We chose PostgreSQL' },
-        ],
+        messages: [{ id: 'm3', role: 'user', content: 'We chose PostgreSQL' }],
       },
     ])
 
@@ -95,7 +116,7 @@ describe('KnowledgeExtractor', () => {
     const extractor = new KnowledgeExtractor(mockStore(), config)
     const results = await extractor.extractFromMessage('conv-1', 'msg-1', 'user', 'Hello there', '')
 
-    const facts = results.filter(r => r.type === 'fact')
-    expect(facts.every(r => r.confidence >= 0.9)).toBe(true)
+    const facts = results.filter((r) => r.type === 'fact')
+    expect(facts.every((r) => r.confidence >= 0.9)).toBe(true)
   })
 })

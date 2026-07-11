@@ -6,12 +6,17 @@
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
 import { CapabilityEventBus } from '../engines/capability-event-bus.js'
+import type { CapabilityResolutionEngine } from '../engines/capability-resolution.js'
 import type { ChromeGovernor } from '../engines/chrome-governor.js'
 import type { ConversationManager } from '../engines/conversation-manager.js'
-import type { CapabilityResolutionEngine } from '../engines/capability-resolution.js'
+import type { CrossConversationSynthesizer } from '../engines/cross-conversation-synthesis.js'
+import type { ExportEngine } from '../engines/export.js'
+import type { KnowledgeIngestionEngine } from '../engines/knowledge-ingestion.js'
+import type { SemanticSearchEngine } from '../engines/semantic-search.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { createAuthMiddleware } from './auth-gate.js'
 import { createConversationRouter } from './conversation-router.js'
+import { createKnowledgeRouter } from './knowledge-router.js'
 import { errorResponse, json } from './response.js'
 import { createSetupRouter } from './setup-router.js'
 import { handleWebSocket } from './websocket.js'
@@ -23,6 +28,10 @@ export interface ServerContext {
   conversationManager?: ConversationManager
   resolutionEngine?: CapabilityResolutionEngine
   governor?: ChromeGovernor
+  knowledgeIngestion?: KnowledgeIngestionEngine
+  semanticSearch?: SemanticSearchEngine
+  synthesizer?: CrossConversationSynthesizer
+  exportEngine?: ExportEngine
 }
 
 /** Shutdown hooks registered during server lifetime */
@@ -58,6 +67,7 @@ export async function createServer(port = 9420): Promise<ServerContext> {
 
   const auth = createAuthMiddleware()
   const conversationRouter = createConversationRouter(ctx)
+  const knowledgeRouter = createKnowledgeRouter(ctx)
   const setupRouter = createSetupRouter(ctx)
 
   // Track readiness — becomes true after server boots
@@ -100,6 +110,11 @@ export async function createServer(port = 9420): Promise<ServerContext> {
       // Auth gate
       const authResult = auth(req)
       if (authResult) return authResult
+
+      // Knowledge routes
+      if (url.pathname.startsWith('/api/knowledge/')) {
+        return knowledgeRouter(req)
+      }
 
       return conversationRouter(req)
     },
@@ -144,11 +159,15 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const { MemoryEngine } = await import('../engines/memory-engine.js')
   const { ConversationStoreImpl } = await import('../storage/impl/conversation-store-impl.js')
   const { GovernorStoreImpl } = await import('../storage/impl/governor-store-impl.js')
-  const { CapabilityResolutionStoreImpl } = await import('../storage/impl/capability-resolution-store-impl.js')
+  const { CapabilityResolutionStoreImpl } = await import(
+    '../storage/impl/capability-resolution-store-impl.js'
+  )
   const { ParserStoreImpl } = await import('../storage/impl/parser-store-impl.js')
   const { EpisodicMemoryStoreImpl } = await import('../storage/impl/episodic-memory-store-impl.js')
   const { SemanticMemoryStoreImpl } = await import('../storage/impl/semantic-memory-store-impl.js')
-  const { ProceduralMemoryStoreImpl } = await import('../storage/impl/procedural-memory-store-impl.js')
+  const { ProceduralMemoryStoreImpl } = await import(
+    '../storage/impl/procedural-memory-store-impl.js'
+  )
 
   // Store instances
   const convStore = new ConversationStoreImpl(db)
@@ -197,6 +216,84 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   // Boot governor (seeds accounts, starts fleet)
   await governor.boot()
 
+  // Knowledge engines (optional — wired if stores are available)
+  let knowledgeIngestion:
+    | import('../engines/knowledge-ingestion.js').KnowledgeIngestionEngine
+    | undefined
+  let semanticSearch: import('../engines/semantic-search.js').SemanticSearchEngine | undefined
+  let synthesizer:
+    | import('../engines/cross-conversation-synthesis.js').CrossConversationSynthesizer
+    | undefined
+  let exportEngine: import('../engines/export.js').ExportEngine | undefined
+
+  try {
+    const { KnowledgeIngestionEngine } = await import('../engines/knowledge-ingestion.js')
+    const { KnowledgeIngestionStoreImpl } = await import(
+      '../storage/impl/knowledge-ingestion-store-impl.js'
+    )
+    const { KnowledgeExtractor } = await import('../engines/knowledge-extractor.js')
+    const { KnowledgeExtractorStoreImpl } = await import(
+      '../storage/impl/knowledge-extractor-store-impl.js'
+    )
+    const kexStore = new KnowledgeExtractorStoreImpl(db)
+    const extractor = new KnowledgeExtractor(kexStore, {
+      batchSize: 50,
+      confidenceThreshold: 0.3,
+      enableEntityExtraction: true,
+      enableDecisionExtraction: true,
+      enablePatternMining: false,
+    })
+    const kiStore = new KnowledgeIngestionStoreImpl(db)
+    knowledgeIngestion = new KnowledgeIngestionEngine(
+      kiStore,
+      convStore,
+      streamBlocks,
+      extractor,
+      eventBus,
+    )
+  } catch {
+    /* knowledge ingestion not available */
+  }
+
+  try {
+    const { SemanticSearchEngine } = await import('../engines/semantic-search.js')
+    const { SemanticSearchStoreImpl } = await import(
+      '../storage/impl/semantic-search-store-impl.js'
+    )
+    const ssStore = new SemanticSearchStoreImpl(db)
+    const noopEmbedding = {
+      name: 'noop',
+      dimensions: 384,
+      embed: async (_t: string) => new Array(384).fill(0),
+      embedBatch: async (ts: string[]) => ts.map(() => new Array(384).fill(0)),
+    }
+    semanticSearch = new SemanticSearchEngine(ssStore, noopEmbedding)
+  } catch {
+    /* semantic search not available */
+  }
+
+  try {
+    const { CrossConversationSynthesizer } = await import(
+      '../engines/cross-conversation-synthesis.js'
+    )
+    const { CrossConversationSynthesizerStoreImpl } = await import(
+      '../storage/impl/cross-conversation-synth-store-impl.js'
+    )
+    const synthStore = new CrossConversationSynthesizerStoreImpl(db)
+    const noopLlm = { synthesize: async () => ({ text: 'LLM not configured', confidence: 0 }) }
+    if (semanticSearch)
+      synthesizer = new CrossConversationSynthesizer(synthStore, semanticSearch, noopLlm)
+  } catch {
+    /* synthesizer not available */
+  }
+
+  try {
+    const { ExportEngine } = await import('../engines/export.js')
+    exportEngine = new ExportEngine(db)
+  } catch {
+    /* export engine not available */
+  }
+
   const ctx: ServerContext = {
     port,
     db,
@@ -204,10 +301,15 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     conversationManager,
     resolutionEngine,
     governor,
+    knowledgeIngestion,
+    semanticSearch,
+    synthesizer,
+    exportEngine,
   }
 
   const auth = createAuthMiddleware()
   const conversationRouter = createConversationRouter(ctx)
+  const knowledgeRouter = createKnowledgeRouter(ctx)
   const setupRouter = createSetupRouter(ctx)
 
   let ready = false
@@ -243,6 +345,10 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
       const authResult = auth(req)
       if (authResult) return authResult
+
+      if (url.pathname.startsWith('/api/knowledge/')) {
+        return knowledgeRouter(req)
+      }
 
       return conversationRouter(req)
     },
