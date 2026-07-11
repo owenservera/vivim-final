@@ -9,12 +9,16 @@ import type {
   ConversationStore,
   ProviderAccountRow,
 } from '../storage/contracts/conversation-store.js'
+import type { CapabilityEventBus } from './capability-event-bus.js'
+import type {
+  CapabilityResolutionEngine,
+  PlanTier,
+  ResolvedCapabilities,
+} from './capability-resolution.js'
 import type { ChromeGovernor, ChromeSlave, HarnessDAG, HarnessResult } from './chrome-governor.js'
 import type { ExecutionMemoizer } from './execution-memoizer.js'
 import type { AgentMemoryContext, MemoryEngine } from './memory-engine.js'
-import type { CapabilityResolutionEngine, ResolvedCapabilities } from './capability-resolution.js'
 import type { StreamBlockStore } from './stream-block-store.js'
-import { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── StreamParserEngine + shared parse types (real impl in stream-parser.ts) ─
 
@@ -162,7 +166,7 @@ export class ConversationManager {
       const cacheKey = `resolve:${conv.providerId}:${planTier}`
       const resolved = await this.memoizer.getOrCompute(
         cacheKey,
-        () => this.resolution.resolve(conv.providerId, planTier),
+        () => this.resolution.resolve(conv.providerId, planTier as PlanTier),
         5_000,
       )
 
@@ -189,7 +193,11 @@ export class ConversationManager {
           {
             type: 'action',
             action: 'type_text',
-            params: { text: message, selector: resolved.composer[0]?.selector ?? 'textarea' },
+            params: {
+              text: message,
+              selector:
+                (resolved.composer[0] as unknown as { selector?: string })?.selector ?? 'textarea',
+            },
           },
           { type: 'action', action: 'submit', params: { key: 'Enter' } },
         ],

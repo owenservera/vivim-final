@@ -1,8 +1,8 @@
 // src/engines/cross-conversation-synthesis.ts
 // CrossConversationSynthesizer — synthesize answers across conversations.
 
-import type { SemanticSearchEngine } from './semantic-search.js'
 import type { CrossConversationSynthesizerStore } from '../storage/contracts/cross-conversation-synthesis-store.js'
+import type { SemanticSearchEngine } from './semantic-search.js'
 
 export interface SynthesisQuery {
   question: string
@@ -36,7 +36,12 @@ export class CrossConversationSynthesizer {
       threshold: 0.3,
     })
 
-    const sources: Array<{ conversationId: string; messageId: string; snippet: string; relevance: number }> = []
+    const sources: Array<{
+      conversationId: string
+      messageId: string
+      snippet: string
+      relevance: number
+    }> = []
     const contextParts: string[] = []
 
     for (const sr of searchResults.slice(0, query.maxSources)) {
@@ -52,17 +57,20 @@ export class CrossConversationSynthesizer {
       const entities = await this.store.getEntitiesForConversation(sr.conversationId ?? '')
 
       if (facts.length > 0) {
-        contextParts.push(`Facts: ${facts.map(f => `${f.subject} ${f.predicate} ${f.object}`).join(', ')}`)
+        contextParts.push(
+          `Facts: ${facts.map((f) => `${f.subject} ${f.predicate} ${f.object}`).join(', ')}`,
+        )
       }
       if (decisions.length > 0) {
-        contextParts.push(`Decisions: ${decisions.map(d => d.decisionText).join(', ')}`)
+        contextParts.push(`Decisions: ${decisions.map((d) => d.decisionText).join(', ')}`)
       }
       if (entities.length > 0) {
-        contextParts.push(`Entities: ${entities.map(e => `${e.name} (${e.type})`).join(', ')}`)
+        contextParts.push(`Entities: ${entities.map((e) => `${e.name} (${e.type})`).join(', ')}`)
       }
     }
 
-    const contextBlock = contextParts.length > 0 ? `\nRelevant context:\n${contextParts.join('\n')}` : ''
+    const contextBlock =
+      contextParts.length > 0 ? `\nRelevant context:\n${contextParts.join('\n')}` : ''
     const prompt = `Question: ${query.question}\n\nBased on the following information from my conversation history, provide a synthesized answer.${contextBlock}\n\nSynthesized answer:`
 
     let answer: string

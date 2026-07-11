@@ -5,11 +5,17 @@ import type { SemanticSearchStore } from '../contracts/semantic-search-store.js'
 import type { CapStoreDb } from '../db.js'
 
 function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0, magA = 0, magB = 0
+  let dot = 0
+  let magA = 0
+  let magB = 0
   for (let i = 0; i < a.length; i++) {
-    dot += a[i]! * b[i]!
-    magA += a[i]! ** 2
-    magB += b[i]! ** 2
+    const av = a[i]
+    const bv = b[i]
+    if (av !== undefined && bv !== undefined) {
+      dot += av * bv
+      magA += av ** 2
+      magB += bv ** 2
+    }
   }
   return dot / (Math.sqrt(magA) * Math.sqrt(magB))
 }
@@ -18,26 +24,45 @@ export class SemanticSearchStoreImpl implements SemanticSearchStore {
   constructor(private db: CapStoreDb) {}
 
   async upsertEmbedding(input: {
-    id: string; entityType: string; entityId: string;
-    embedding: string; model: string; dimensions: number;
-    contentHash: string; createdAt: number;
+    id: string
+    entityType: string
+    entityId: string
+    embedding: string
+    model: string
+    dimensions: number
+    contentHash: string
+    createdAt: number
   }): Promise<void> {
     await this.db.prisma.memoryEmbedding.upsert({
       where: { entityType_entityId: { entityType: input.entityType, entityId: input.entityId } },
       create: {
-        id: input.id, entityType: input.entityType, entityId: input.entityId,
-        embedding: input.embedding, model: input.model, dimensions: input.dimensions,
-        contentHash: input.contentHash, createdAt: input.createdAt,
+        id: input.id,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        embedding: input.embedding,
+        model: input.model,
+        dimensions: input.dimensions,
+        contentHash: input.contentHash,
+        createdAt: input.createdAt,
       },
       update: {
-        embedding: input.embedding, model: input.model, dimensions: input.dimensions,
-        contentHash: input.contentHash, createdAt: input.createdAt,
+        embedding: input.embedding,
+        model: input.model,
+        dimensions: input.dimensions,
+        contentHash: input.contentHash,
+        createdAt: input.createdAt,
       },
     })
   }
 
-  async getEmbedding(entityType: string, entityId: string): Promise<{
-    id: string; embedding: string; model: string; dimensions: number;
+  async getEmbedding(
+    entityType: string,
+    entityId: string,
+  ): Promise<{
+    id: string
+    embedding: string
+    model: string
+    dimensions: number
   } | null> {
     const r = await this.db.prisma.memoryEmbedding.findUnique({
       where: { entityType_entityId: { entityType, entityId } },
@@ -46,9 +71,14 @@ export class SemanticSearchStoreImpl implements SemanticSearchStore {
     return { id: r.id, embedding: r.embedding, model: r.model, dimensions: r.dimensions }
   }
 
-  async searchByEmbedding(queryEmbedding: number[], opts: {
-    limit?: number; threshold?: number; entityType?: string;
-  }): Promise<Array<{ entityId: string; entityType: string; score: number }>> {
+  async searchByEmbedding(
+    queryEmbedding: number[],
+    opts: {
+      limit?: number
+      threshold?: number
+      entityType?: string
+    },
+  ): Promise<Array<{ entityId: string; entityType: string; score: number }>> {
     const where: Record<string, unknown> = {}
     if (opts.entityType !== undefined) where.entityType = opts.entityType
     const rows = await this.db.prisma.memoryEmbedding.findMany({ where })

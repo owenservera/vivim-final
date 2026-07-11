@@ -19,7 +19,7 @@ export class GeminiExportParserImpl {
   parse(rawJson: string): ParsedConversation[] {
     const data = JSON.parse(rawJson)
     const arr: GeminiRawConversation[] = Array.isArray(data) ? data : []
-    return arr.map(conv => this.parseConversation(conv))
+    return arr.map((conv) => this.parseConversation(conv))
   }
 
   private parseConversation(conv: GeminiRawConversation): ParsedConversation {
@@ -27,10 +27,15 @@ export class GeminiExportParserImpl {
       externalId: `${conv.id}_${i}`,
       role: m.author === 'model' ? 'assistant' : 'user',
       content: m.content,
-      createdAt: typeof m.timestamp === 'number' ? m.timestamp : m.timestamp ? new Date(m.timestamp).getTime() : Date.now(),
+      createdAt:
+        typeof m.timestamp === 'number'
+          ? m.timestamp
+          : m.timestamp
+            ? new Date(m.timestamp).getTime()
+            : Date.now(),
     }))
 
-    const ts = messages.length > 0 ? messages[0]!.createdAt : Date.now()
+    const ts = messages.length > 0 && messages[0]?.createdAt ? messages[0]?.createdAt : Date.now()
     return {
       externalId: conv.id,
       title: conv.title ?? '',

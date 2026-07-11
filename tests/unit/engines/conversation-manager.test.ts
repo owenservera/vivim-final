@@ -89,7 +89,7 @@ function makeResolved(): ResolvedCapabilities {
     inline: [],
     total: 1,
     resolvedAt: Date.now(),
-  }
+  } as unknown as ResolvedCapabilities
 }
 
 function makeParseResult(blocks?: ContentBlock[]): ParseResult {
@@ -123,7 +123,10 @@ function mockStore(overrides?: Partial<ConversationStore>): ConversationStore {
 function mockResolution(): CapabilityResolutionEngine {
   return {
     resolve: mock(() => Promise.resolve(makeResolved())),
-  }
+    search: mock(() => Promise.resolve([])),
+    buildResult: mock(() => makeResolved()),
+    mapRow: mock(() => undefined),
+  } as unknown as CapabilityResolutionEngine
 }
 
 function mockParser(): StreamParserEngine {
@@ -138,7 +141,11 @@ function mockParser(): StreamParserEngine {
 function mockBlockStore(): StreamBlockStore {
   return {
     storeBlocks: mock(() => Promise.resolve()),
-  }
+    getBlocksByConversation: mock(() => Promise.resolve([])),
+    getBlocksByMessage: mock(() => Promise.resolve([])),
+    getBlock: mock(() => Promise.resolve(null)),
+    deleteBlocks: mock(() => Promise.resolve()),
+  } as unknown as StreamBlockStore
 }
 
 function mockEventBus(): CapabilityEventBus & { events: unknown[] } {
@@ -148,7 +155,15 @@ function mockEventBus(): CapabilityEventBus & { events: unknown[] } {
     emit: mock((e: unknown) => {
       events.push(e)
     }),
-  }
+    on: mock(() => () => {}),
+    once: mock(() => () => {}),
+    subscribe: mock(() => {}),
+    unsubscribe: mock(() => {}),
+    unsubscribeAll: mock(() => {}),
+    removeAllListeners: mock(() => {}),
+    getInstance: mock(() => mockEventBus()),
+    resetInstance: mock(() => {}),
+  } as unknown as CapabilityEventBus & { events: unknown[] }
 }
 
 function mockMemoizer(): ExecutionMemoizer {

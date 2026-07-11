@@ -5,6 +5,7 @@
 import { join } from 'node:path'
 import { EngineError } from '../errors.js'
 import { FleetSupervisor } from '../executor/fleet-supervisor.js'
+import type { FleetSupervisor as FleetSupervisorContract } from '../storage/contracts/fleet-supervisor.js'
 import type {
   GovernorStore,
   TraceEntryInput,
@@ -478,7 +479,7 @@ export class HealthMonitor {
 // ── ChromeGovernor ─────────────────────────────────────────────────────────
 
 export class ChromeGovernor {
-  private fleetSupervisor: FleetSupervisor
+  private fleetSupervisor: FleetSupervisorContract
   private cdpTransport: CDPTransport | null = null
   private _cdpProxy: CDPProxy | null = null
   private mutexes = new Map<string, AsyncMutex>()
@@ -491,20 +492,23 @@ export class ChromeGovernor {
     private config: FleetConfig,
     private eventBus?: GovernorEventBus,
     transport?: CDPTransport,
+    fleetSupervisor?: FleetSupervisorContract,
   ) {
     this.cdpTransport = transport ?? null
 
-    // Convert FleetConfig to FleetSupervisorOptions
-    this.fleetSupervisor = new FleetSupervisor(store, {
-      portRange: this.config.portRange,
-      healthProbeIntervalMs: this.config.healthProbeIntervalMs ?? 30_000,
-      healthProbeTimeoutMs: this.config.healthProbeTimeoutMs ?? 5_000,
-      autoRestart: this.config.autoRestart ?? true,
-      maxRestarts: this.config.maxRestarts ?? 3,
-      circuitBreakerThreshold: this.config.circuitBreakerThreshold ?? 5,
-      circuitBreakerResetMs: this.config.circuitBreakerResetMs ?? 60_000,
-      chromeProfileBase: this.config.profileBaseDir ?? 'chrome-profiles',
-    })
+    // Use injected fleetSupervisor or create real one
+    this.fleetSupervisor =
+      fleetSupervisor ??
+      new FleetSupervisor(store, {
+        portRange: this.config.portRange,
+        healthProbeIntervalMs: this.config.healthProbeIntervalMs ?? 30_000,
+        healthProbeTimeoutMs: this.config.healthProbeTimeoutMs ?? 5_000,
+        autoRestart: this.config.autoRestart ?? true,
+        maxRestarts: this.config.maxRestarts ?? 3,
+        circuitBreakerThreshold: this.config.circuitBreakerThreshold ?? 5,
+        circuitBreakerResetMs: this.config.circuitBreakerResetMs ?? 60_000,
+        chromeProfileBase: this.config.profileBaseDir ?? 'chrome-profiles',
+      })
   }
 
   // ── Boot ───────────────────────────────────────────────────────────────
@@ -647,12 +651,7 @@ export class ChromeGovernor {
       throw new EngineError('CDP transport not configured. Call setCdpTransport() first.')
     }
     if (!this._cdpProxy) {
-      this._cdpProxy = new CDPProxy(
-        this.slaves,
-        this.mutexes,
-        this.cdpTransport,
-        this.eventBus,
-      )
+      this._cdpProxy = new CDPProxy(this.slaves, this.mutexes, this.cdpTransport, this.eventBus)
     }
     return this._cdpProxy
   }
@@ -700,7 +699,8 @@ export class ChromeGovernor {
   }
 
   async probeHealth(slaveId: string): Promise<boolean> {
-    if (!this.healthMonitor) throw new EngineError('HealthMonitor not configured. Call setHealthMonitor() first.')
+    if (!this.healthMonitor)
+      throw new EngineError('HealthMonitor not configured. Call setHealthMonitor() first.')
     return this.healthMonitor.probe(slaveId)
   }
 

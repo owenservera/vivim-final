@@ -1,5 +1,5 @@
 // tests/unit/engines/chrome-governor.test.ts
-// Unit tests for ChromeGovernor — uses mock GovernorStore + CDPTransport.
+// Unit tests for ChromeGovernor — uses mock GovernorStore + CDPTransport + MockFleetSupervisor.
 
 import { beforeEach, describe, expect, it } from 'bun:test'
 import {
@@ -19,6 +19,7 @@ import {
   circuitTryAcquire,
   createCircuitBreaker,
 } from '../../../src/engines/chrome-governor.js'
+import type { FleetSupervisor } from '../../../src/storage/contracts/fleet-supervisor.js'
 import type {
   CircuitBreakerStateRow,
   FleetEventInput,
@@ -110,6 +111,72 @@ function createMockStore() {
   }
 }
 
+// ── Mock FleetSupervisor ─────────────────────────────────────────────────────
+
+function createMockFleetSupervisor() {
+  const instances = new Map<
+    string,
+    import('../../../src/executor/fleet-supervisor.js').FleetInstance
+  >()
+  let portCounter = 9222
+
+  return {
+    supervisor: {
+      async spawn(providerSlug: string, accountId: string) {
+        const id = `${providerSlug}_${accountId}_${Date.now()}`
+        const instance = {
+          id,
+          providerSlug,
+          accountId,
+          debugPort: portCounter++,
+          profileDir: `/tmp/${providerSlug}/${accountId}`,
+          status: 'running' as const,
+          pid: null,
+          consecutiveFailures: 0,
+          lastHealthCheck: Date.now(),
+          createdAt: Date.now(),
+        }
+        instances.set(id, instance)
+        return instance
+      },
+      async kill(instanceId: string) {
+        const inst = instances.get(instanceId)
+        if (inst) inst.status = 'stopped'
+      },
+      async killAll() {
+        for (const inst of instances.values()) inst.status = 'stopped'
+      },
+      async ensureRunning(instanceId: string) {
+        const inst = instances.get(instanceId)
+        if (!inst) throw new Error(`Slave not found: ${instanceId}`)
+        if (inst.status !== 'running') inst.status = 'running'
+        return inst
+      },
+      getInstance(instanceId: string) {
+        return instances.get(instanceId) ?? null
+      },
+      getAllInstances() {
+        return [...instances.values()]
+      },
+      getInstancesByProvider(providerSlug: string) {
+        return [...instances.values()].filter((i) => i.providerSlug === providerSlug)
+      },
+      async healthCheck(_instanceId: string) {
+        return { ok: true, latencyMs: 0, status: 'running' as const }
+      },
+      async healthCheckAll() {
+        return new Map()
+      },
+      getCircuitState(_instanceId: string) {
+        return 'closed'
+      },
+      startHealthProbe() {},
+      stopHealthProbe() {},
+    } satisfies FleetSupervisor,
+    instances,
+  }
+}
+
 function createMockEventBus() {
   const events: Array<{ event: string; data: unknown }> = []
   return {
@@ -167,17 +234,20 @@ describe('ChromeGovernor', () => {
   let mockStore: ReturnType<typeof createMockStore>
   let mockBus: ReturnType<typeof createMockEventBus>
   let mockTransport: ReturnType<typeof createMockTransport>
+  let mockFleetSupervisor: ReturnType<typeof createMockFleetSupervisor>
   let governor: ChromeGovernor
 
   beforeEach(() => {
     mockStore = createMockStore()
     mockBus = createMockEventBus()
     mockTransport = createMockTransport()
+    mockFleetSupervisor = createMockFleetSupervisor()
     governor = new ChromeGovernor(
       mockStore.store,
       DEFAULT_CONFIG,
       mockBus.bus,
       mockTransport.transport,
+      mockFleetSupervisor.supervisor,
     )
   })
 
@@ -209,7 +279,10 @@ describe('ChromeGovernor', () => {
 
   it('ensureRunning() restarts crashed slave', async () => {
     const slave = await governor.launch('claude')
-    slave.status = 'crashed'
+    // Directly manipulate the mock instance's status to simulate crash
+    const inst = mockFleetSupervisor.instances.get(slave.slaveId)
+    expect(inst).toBeDefined()
+    if (inst) inst.status = 'crashed'
     const result = await governor.ensureRunning(slave.slaveId)
     expect(result.status).toBe('running')
   })
@@ -235,7 +308,7 @@ describe('ChromeGovernor', () => {
     const slave = await governor.launch('claude')
     const health = await governor.getHealth(slave.slaveId)
     expect(health.slaveId).toBe(slave.slaveId)
-    expect(health.status).toBe('starting')
+    expect(health.status).toBe('running')
   })
 
   it('getHealth() throws for unknown slave', async () => {

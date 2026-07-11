@@ -4,10 +4,7 @@
 import { describe, expect, test } from 'bun:test'
 import { CapabilityEventBus } from '../../src/engines/capability-event-bus.js'
 import { ConversationManager } from '../../src/engines/conversation-manager.js'
-import type {
-  CapabilityResolutionEngine,
-  ResolvedCapabilities,
-} from '../../src/engines/conversation-manager.js'
+import type { ResolvedCapabilities } from '../../src/engines/conversation-manager.js'
 import type { ExecutionMemoizer } from '../../src/engines/execution-memoizer.js'
 
 const mockResolved: ResolvedCapabilities = {
@@ -20,7 +17,7 @@ const mockResolved: ResolvedCapabilities = {
   resolvedAt: Date.now(),
 }
 
-const mockResolution: CapabilityResolutionEngine = {
+const mockResolution = {
   resolve: async () => mockResolved,
 }
 
@@ -57,7 +54,7 @@ describe('E2E Claude Send', () => {
   test('create conversation', async () => {
     const manager = new ConversationManager(
       mockGovernor as never,
-      mockResolution,
+      mockResolution as never,
       mockParser as never,
       mockBlocks as never,
       mockStore as never,

@@ -1,7 +1,7 @@
 // tests/unit/storage/slave-setup-store-impl.test.ts
 // Unit tests for workspace hint + profile management.
 
-import { describe, it, expect } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { ProfileAllocator } from '../../../src/executor/profile-allocator.js'
 
 describe('ProfileAllocator', () => {

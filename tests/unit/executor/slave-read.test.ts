@@ -20,7 +20,10 @@ class FakeCdp {
   }
 
   on(event: string, handler: (p: unknown) => void): void {
-    ;(this.handlers[event] ??= []).push(handler)
+    if (!this.handlers[event]) {
+      this.handlers[event] = []
+    }
+    this.handlers[event].push(handler)
   }
 
   off(): void {}

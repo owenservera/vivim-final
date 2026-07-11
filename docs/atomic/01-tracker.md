@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 208 | **Done:** 148 | **Blocked:** 3 | **Pending:** 57
+**Total units:** 208 | **Done:** 150 | **Blocked:** 3 | **Pending:** 55
 
 > Phases 1-13: v1 core + SOTA + executor + frontend (139 units)
 > Phases 14-20: Sovereign AI OS Upgrade (60 units) — all pending
@@ -246,11 +246,11 @@ Ingest, extract, search, and synthesize knowledge across all conversations.
 - [x] 15.5 — KnowledgeExtractor (facts, decisions, patterns, entities) → `src/engines/knowledge-extractor.ts`
 - [x] 15.6 — SemanticSearchEngine + Embedding Store → `src/engines/semantic-search.ts`
 - [x] 15.7 — CrossConversationSynthesisEngine → `src/engines/cross-conversation-synthesis.ts`
-- [x] 15.8 — Full Export Engine (JSON/CSV) → `src/engines/full-export.ts`
+- [x] 15.8 — MemoryEngine ULID Fix + 10-type expansion → `src/engines/memory-engine.ts`
 - [x] 15.9 — Schema: Memory Intelligence Tables → `prisma/schema.prisma`
-- [x] 15.10 — Memory Engine ULID Fix + 10-type expansion → `src/engines/memory-engine.ts`
-- [ ] 15.11 — Topic/Project Organization → `src/engines/conversation-organization.ts`
-- [ ] 15.12 — Memory Consolidation Daemon → `src/engines/memory-consolidation.ts`
+- [x] 15.10 — Store Impls: Knowledge → `src/storage/impl/knowledge-*-store-impl.ts`
+- [x] 15.11 — Server Routes — Knowledge → `src/server/knowledge-router.ts`
+- [x] 15.12 — Full Export Engine (JSON/CSV) → `src/engines/export.ts`
 
 ---
 
@@ -258,7 +258,7 @@ Ingest, extract, search, and synthesize knowledge across all conversations.
 
 Multi-provider mux, round-robin, failover, cost optimization.
 
-- [ ] 16.1 — ProviderMuxEngine + Store → `src/engines/provider-mux.ts`
+- [~] 16.1 — ProviderMuxEngine + Store → `src/engines/provider-mux.ts`
 - [ ] 16.2 — Round-Robin Deep Research → mux subsystem
 - [ ] 16.3 — Response Synthesis Engine → `src/engines/response-synthesis.ts`
 - [ ] 16.4 — Automatic Failover → mux subsystem

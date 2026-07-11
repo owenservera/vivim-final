@@ -1,19 +1,28 @@
-import { describe, expect, it, beforeAll, afterAll } from 'bun:test'
-import { unlinkSync, writeFileSync, mkdirSync } from 'node:fs'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { mkdirSync, unlinkSync, writeFileSync } from 'node:fs'
 import type { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
 import type { KnowledgeExtractor } from '../../../src/engines/knowledge-extractor.js'
-import type { ConversationStore, ConversationRow, ConversationMessageRow } from '../../../src/storage/contracts/conversation-store.js'
+import { KnowledgeIngestionEngine } from '../../../src/engines/knowledge-ingestion.js'
+import type {
+  ConversationMessageRow,
+  ConversationRow,
+  ConversationStore,
+} from '../../../src/storage/contracts/conversation-store.js'
 import type { KnowledgeIngestionStore } from '../../../src/storage/contracts/knowledge-ingestion-store.js'
 import type { StreamBlockStoreContract } from '../../../src/storage/contracts/stream-block-store.js'
-import { KnowledgeIngestionEngine } from '../../../src/engines/knowledge-ingestion.js'
 
-const FIXTURE_DIR = import.meta.dir + '/fixtures'
+const FIXTURE_DIR = `${import.meta.dir}/fixtures`
 
 function mockStore(): KnowledgeIngestionStore {
   const jobs = new Map<string, any>()
   return {
-    createImportJob: async (job) => { jobs.set(job.id, { ...job, resultJson: null, completedAt: null }) },
-    updateImportJob: async (id, patch) => { const j = jobs.get(id); if (j) Object.assign(j, patch) },
+    createImportJob: async (job) => {
+      jobs.set(job.id, { ...job, resultJson: null, completedAt: null })
+    },
+    updateImportJob: async (id, patch) => {
+      const j = jobs.get(id)
+      if (j) Object.assign(j, patch)
+    },
     getImportJob: async (id) => jobs.get(id) ?? null,
     listImportJobs: async (opts) => Array.from(jobs.values()).slice(0, opts?.limit),
     findExistingConversation: async () => null,
@@ -25,13 +34,16 @@ function mockConversationStore(): ConversationStore {
     getConversation: async () => null,
     createConversation: async (input) => {
       const row: ConversationRow = {
-        id: 'conv-' + Date.now(),
+        id: `conv-${Date.now()}`,
         providerSessionId: input.providerSessionId,
         providerId: input.providerId,
         title: input.title ?? null,
         state: input.state ?? 'active',
-        messageCount: 0, lastMessageAt: null, contextJson: '{}',
-        createdAt: Date.now(), updatedAt: Date.now(),
+        messageCount: 0,
+        lastMessageAt: null,
+        contextJson: '{}',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
       }
       return row
     },
@@ -40,32 +52,51 @@ function mockConversationStore(): ConversationStore {
     listConversations: async () => [],
     createMessage: async (input) => {
       const row: ConversationMessageRow = {
-        id: 'msg-' + Date.now(), conversationId: input.conversationId,
-        role: input.role, content: input.content ?? null,
-        blocksJson: input.blocksJson ?? '[]', blockCount: input.blockCount ?? 0,
-        parentMessageId: null, sequenceIndex: input.sequenceIndex ?? 0,
-        latencyMs: null, tokenCount: null, model: null,
-        metadataJson: '{}', createdAt: Date.now(),
+        id: `msg-${Date.now()}`,
+        conversationId: input.conversationId,
+        role: input.role,
+        content: input.content ?? null,
+        blocksJson: input.blocksJson ?? '[]',
+        blockCount: input.blockCount ?? 0,
+        parentMessageId: null,
+        sequenceIndex: input.sequenceIndex ?? 0,
+        latencyMs: null,
+        tokenCount: null,
+        model: null,
+        metadataJson: '{}',
+        createdAt: Date.now(),
       }
       return row
     },
-    getMessage: async () => null, getMessages: async () => [],
-    getLastMessage: async () => null, getAccount: async () => null,
+    getMessage: async () => null,
+    getMessages: async () => [],
+    getLastMessage: async () => null,
+    getAccount: async () => null,
   }
 }
 
 function mockBlockStore(): StreamBlockStoreContract {
-  return { storeBlocks: async () => {}, getBlocksByConversation: async () => [], getBlocksByMessage: async () => [] }
+  return {
+    storeBlocks: async () => {},
+    getBlocksByConversation: async () => [],
+    getBlocksByMessage: async () => [],
+  }
 }
 
 function mockExtractor(): KnowledgeExtractor {
-  return { extractFromMessage: async () => [], extractFromConversation: async () => [], batchExtract: async () => ({ totalExtracted: 0, byType: {} as any }) } as unknown as KnowledgeExtractor
+  return {
+    extractFromMessage: async () => [],
+    extractFromConversation: async () => [],
+    batchExtract: async () => ({ totalExtracted: 0, byType: {} as any }),
+  } as unknown as KnowledgeExtractor
 }
 
 function mockEventBus(): CapabilityEventBus {
   const captured: any[] = []
   return {
-    emit: (e: any) => { captured.push(e) },
+    emit: (e: any) => {
+      captured.push(e)
+    },
     on: () => () => {},
     once: () => () => {},
     subscribe: () => {},
@@ -73,38 +104,71 @@ function mockEventBus(): CapabilityEventBus {
     unsubscribeAll: () => {},
     removeAllListeners: () => {},
     resetInstance: () => {},
-    getInstance: () => ({} as any),
+    getInstance: () => ({}) as any,
     captured,
   } as unknown as CapabilityEventBus & { captured: any[] }
 }
 
 const sampleConversations = [
-  { id: 'c1', title: 'First Chat', messages: [{ role: 'user', content: 'Hello' }, { role: 'assistant', content: 'Hi there' }] },
+  {
+    id: 'c1',
+    title: 'First Chat',
+    messages: [
+      { role: 'user', content: 'Hello' },
+      { role: 'assistant', content: 'Hi there' },
+    ],
+  },
 ]
 
 beforeAll(() => {
-  try { mkdirSync(FIXTURE_DIR, { recursive: true }) } catch {}
-  writeFileSync(FIXTURE_DIR + '/generic-import.json', JSON.stringify(sampleConversations), 'utf-8')
-  writeFileSync(FIXTURE_DIR + '/chatgpt-export.json', JSON.stringify([
-    { id: 'c1', title: 'ChatGPT Chat', messages: [{ role: 'user', content: 'Hello', create_time: 1000 }, { role: 'assistant', content: 'Hi', create_time: 1001 }] },
-  ]), 'utf-8')
+  try {
+    mkdirSync(FIXTURE_DIR, { recursive: true })
+  } catch {}
+  writeFileSync(`${FIXTURE_DIR}/generic-import.json`, JSON.stringify(sampleConversations), 'utf-8')
+  writeFileSync(
+    `${FIXTURE_DIR}/chatgpt-export.json`,
+    JSON.stringify([
+      {
+        id: 'c1',
+        title: 'ChatGPT Chat',
+        messages: [
+          { role: 'user', content: 'Hello', create_time: 1000 },
+          { role: 'assistant', content: 'Hi', create_time: 1001 },
+        ],
+      },
+    ]),
+    'utf-8',
+  )
 })
 
 afterAll(() => {
-  try { unlinkSync(FIXTURE_DIR + '/generic-import.json') } catch {}
-  try { unlinkSync(FIXTURE_DIR + '/chatgpt-export.json') } catch {}
+  try {
+    unlinkSync(`${FIXTURE_DIR}/generic-import.json`)
+  } catch {}
+  try {
+    unlinkSync(`${FIXTURE_DIR}/chatgpt-export.json`)
+  } catch {}
 })
 
 describe('KnowledgeIngestionEngine', () => {
   it('ingests a ChatGPT export file', async () => {
     const store = mockStore()
     const convStore = mockConversationStore()
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
     const result = await engine.ingest({
       source: 'chatgpt',
-      filePath: FIXTURE_DIR + '/chatgpt-export.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
+      filePath: `${FIXTURE_DIR}/chatgpt-export.json`,
+      deduplicate: true,
+      extractEntities: false,
+      extractDecisions: false,
+      generateEmbeddings: false,
     })
 
     expect(result.conversationsImported).toBe(1)
@@ -115,12 +179,21 @@ describe('KnowledgeIngestionEngine', () => {
   it('creates conversations with source=imported via providerId', async () => {
     const store = mockStore()
     const convStore = mockConversationStore()
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
     const result = await engine.ingest({
       source: 'generic',
-      filePath: FIXTURE_DIR + '/generic-import.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: false,
+      extractDecisions: false,
+      generateEmbeddings: false,
     })
 
     expect(result.conversationsImported).toBe(1)
@@ -134,17 +207,31 @@ describe('KnowledgeIngestionEngine', () => {
       findExistingConversation: async (src, extId) => seen.get(`${src}:${extId}`) ?? null,
     }
     const convStore = mockConversationStore()
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
     const r1 = await engine.ingest({
-      source: 'generic', filePath: FIXTURE_DIR + '/generic-import.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
+      source: 'generic',
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: false,
+      extractDecisions: false,
+      generateEmbeddings: false,
     })
     seen.set('generic:c1', 'existing-conv-id')
 
     const r2 = await engine.ingest({
-      source: 'generic', filePath: FIXTURE_DIR + '/generic-import.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
+      source: 'generic',
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: false,
+      extractDecisions: false,
+      generateEmbeddings: false,
     })
 
     expect(r1.conversationsImported).toBe(1)
@@ -155,11 +242,21 @@ describe('KnowledgeIngestionEngine', () => {
   it('records job status transitions: pending -> importing -> complete', async () => {
     const store = mockStore()
     const convStore = mockConversationStore()
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
     const result = await engine.ingest({
-      source: 'generic', filePath: FIXTURE_DIR + '/generic-import.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
+      source: 'generic',
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: false,
+      extractDecisions: false,
+      generateEmbeddings: false,
     })
 
     const job = await store.getImportJob(result.jobId)
@@ -170,13 +267,25 @@ describe('KnowledgeIngestionEngine', () => {
     const store = mockStore()
     const convStore: ConversationStore = {
       ...mockConversationStore(),
-      createConversation: async () => { throw new Error('db error') },
+      createConversation: async () => {
+        throw new Error('db error')
+      },
     }
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
     const result = await engine.ingest({
-      source: 'generic', filePath: FIXTURE_DIR + '/generic-import.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
+      source: 'generic',
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: false,
+      extractDecisions: false,
+      generateEmbeddings: false,
     })
 
     expect(result.errors.length).toBeGreaterThan(0)
@@ -186,27 +295,49 @@ describe('KnowledgeIngestionEngine', () => {
   it('rejects file-not-found error', async () => {
     const store = mockStore()
     const convStore = mockConversationStore()
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
-    await expect(engine.ingest({
-      source: 'generic', filePath: '/nonexistent/file.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
-    })).rejects.toThrow()
+    await expect(
+      engine.ingest({
+        source: 'generic',
+        filePath: '/nonexistent/file.json',
+        deduplicate: true,
+        extractEntities: false,
+        extractDecisions: false,
+        generateEmbeddings: false,
+      }),
+    ).rejects.toThrow()
   })
 
   it('lists jobs and gets job status', async () => {
     const store = mockStore()
     const convStore = mockConversationStore()
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
     const result = await engine.ingest({
-      source: 'generic', filePath: FIXTURE_DIR + '/generic-import.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
+      source: 'generic',
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: false,
+      extractDecisions: false,
+      generateEmbeddings: false,
     })
 
     const status = await engine.getJobStatus(result.jobId)
     expect(status).not.toBeNull()
-    expect(status!.jobId).toBe(result.jobId)
+    expect(status?.jobId).toBe(result.jobId)
 
     const jobs = await engine.listJobs()
     expect(jobs.length).toBeGreaterThan(0)
@@ -215,11 +346,21 @@ describe('KnowledgeIngestionEngine', () => {
   it('cancels a job', async () => {
     const store = mockStore()
     const convStore = mockConversationStore()
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
     const result = await engine.ingest({
-      source: 'generic', filePath: FIXTURE_DIR + '/generic-import.json',
-      deduplicate: true, extractEntities: false, extractDecisions: false, generateEmbeddings: false,
+      source: 'generic',
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: false,
+      extractDecisions: false,
+      generateEmbeddings: false,
     })
 
     await engine.cancelJob(result.jobId)
@@ -230,9 +371,15 @@ describe('KnowledgeIngestionEngine', () => {
   it('ingestFile delegates to ingest with defaults', async () => {
     const store = mockStore()
     const convStore = mockConversationStore()
-    const engine = new KnowledgeIngestionEngine(store, convStore, mockBlockStore(), mockExtractor(), mockEventBus())
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      mockExtractor(),
+      mockEventBus(),
+    )
 
-    const result = await engine.ingestFile(FIXTURE_DIR + '/generic-import.json', 'generic')
+    const result = await engine.ingestFile(`${FIXTURE_DIR}/generic-import.json`, 'generic')
     expect(result.source).toBe('generic')
     expect(result.conversationsImported).toBe(1)
   })

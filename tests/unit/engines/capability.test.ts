@@ -80,7 +80,15 @@ function mockEventBus(): CapabilityEventBus & { events: unknown[] } {
     emit: mock((e: unknown) => {
       events.push(e)
     }),
-  }
+    on: mock(() => () => {}),
+    once: mock(() => () => {}),
+    subscribe: mock(() => {}),
+    unsubscribe: mock(() => {}),
+    unsubscribeAll: mock(() => {}),
+    removeAllListeners: mock(() => {}),
+    getInstance: mock(() => mockEventBus()),
+    resetInstance: mock(() => {}),
+  } as unknown as CapabilityEventBus & { events: unknown[] }
 }
 
 function mockGovernor(sendImpl?: (...a: unknown[]) => unknown): ChromeGovernor {

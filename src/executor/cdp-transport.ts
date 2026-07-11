@@ -11,10 +11,10 @@ export class CdpTransportImpl implements CDPTransport {
   async connect(slaveId: string, debugPort: number): Promise<void> {
     if (this.clients.has(slaveId)) return
 
-    const client = new BunCdpClient(
-      `ws://127.0.0.1:${debugPort}/devtools/browser`,
-      { timeoutMs: 30_000, maxRetries: 3 },
-    )
+    const client = new BunCdpClient(`ws://127.0.0.1:${debugPort}/devtools/browser`, {
+      timeoutMs: 30_000,
+      maxRetries: 3,
+    })
     await client.connect()
     this.clients.set(slaveId, client)
   }
@@ -45,20 +45,12 @@ export class CdpTransportImpl implements CDPTransport {
     return client
   }
 
-  async send(
-    slaveId: string,
-    method: string,
-    params?: Record<string, unknown>,
-  ): Promise<unknown> {
+  async send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown> {
     const client = this.getClient(slaveId)
     return client.send(method, params)
   }
 
-  async capture(
-    slaveId: string,
-    pattern: RegExp,
-    timeoutMs = 30_000,
-  ): Promise<CaptureResult> {
+  async capture(slaveId: string, pattern: RegExp, timeoutMs = 30_000): Promise<CaptureResult> {
     const client = this.getClient(slaveId)
     const start = Date.now()
 
@@ -72,7 +64,9 @@ export class CdpTransportImpl implements CDPTransport {
       }, timeoutMs)
 
       const handler = (params: unknown) => {
-        const event = params as { response?: { url?: string; status?: number; headers?: Record<string, string> } }
+        const event = params as {
+          response?: { url?: string; status?: number; headers?: Record<string, string> }
+        }
         const url = event.response?.url ?? ''
         if (!pattern.test(url)) return
 
@@ -86,7 +80,8 @@ export class CdpTransportImpl implements CDPTransport {
           return
         }
 
-        client.send<{ body: string }>('Network.getResponseBody', { requestId })
+        client
+          .send<{ body: string }>('Network.getResponseBody', { requestId })
           .then((result) => {
             resolve({
               body: result.body,
@@ -107,13 +102,10 @@ export class CdpTransportImpl implements CDPTransport {
   }
 
   async getPageState(slaveId: string): Promise<PageState> {
-    const result = await this.send(
-      slaveId,
-      'Runtime.evaluate',
-      {
-        expression: 'JSON.stringify({url: location.href, title: document.title, readyState: document.readyState})',
-      },
-    ) as { result?: { value?: string } }
+    const result = (await this.send(slaveId, 'Runtime.evaluate', {
+      expression:
+        'JSON.stringify({url: location.href, title: document.title, readyState: document.readyState})',
+    })) as { result?: { value?: string } }
 
     try {
       const state = JSON.parse(result?.result?.value ?? '{}') as PageState
@@ -127,11 +119,10 @@ export class CdpTransportImpl implements CDPTransport {
     }
   }
 
-  async captureScreenshot(
-    slaveId: string,
-    format: 'png' | 'jpeg' = 'png',
-  ): Promise<string> {
-    const result = await this.send(slaveId, 'Page.captureScreenshot', { format }) as { data?: string }
+  async captureScreenshot(slaveId: string, format: 'png' | 'jpeg' = 'png'): Promise<string> {
+    const result = (await this.send(slaveId, 'Page.captureScreenshot', { format })) as {
+      data?: string
+    }
     return result?.data ?? ''
   }
 }
