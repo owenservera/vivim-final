@@ -344,6 +344,34 @@ export class CapStoreDb {
     })
     return entry?.configJson ?? null
   }
+
+  // ── Setup: Workspace + Profile ──────────────────────────────────────────
+
+  async getWorkspaceHint(): Promise<string | null> {
+    const { SlaveSetupStoreImpl } = await import('../storage/impl/slave-setup-store-impl.js')
+    const store = new SlaveSetupStoreImpl(this)
+    return store.getWorkspaceHint()
+  }
+
+  async setWorkspaceHint(path: string): Promise<void> {
+    const { SlaveSetupStoreImpl } = await import('../storage/impl/slave-setup-store-impl.js')
+    const store = new SlaveSetupStoreImpl(this)
+    return store.setWorkspaceHint(path)
+  }
+
+  async listAccounts(): Promise<
+    Array<{
+      providerId: string
+      accountSlug: string
+      loginState: string
+      profileDir: string | null
+      debugPort: number | null
+    }>
+  > {
+    const { SlaveSetupStoreImpl } = await import('../storage/impl/slave-setup-store-impl.js')
+    const store = new SlaveSetupStoreImpl(this)
+    return store.listAccounts()
+  }
 }
 
 // Singleton instance

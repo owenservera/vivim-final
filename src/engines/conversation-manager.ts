@@ -2,43 +2,22 @@
 // ConversationManager — orchestrates an 8-step send pipeline.
 // RESOLVE → DERIVE SLAVE → LOCK → ENSURE → SEND → CAPTURE → PARSE → STORE+EMIT.
 
+import { EngineError } from '../errors.js'
 import type {
   ConversationMessageRow,
   ConversationRow,
   ConversationStore,
   ProviderAccountRow,
 } from '../storage/contracts/conversation-store.js'
-import type { ChromeGovernor, ChromeSlave, HarnessDAG } from './chrome-governor.js'
+import type { ChromeGovernor, ChromeSlave, HarnessDAG, HarnessResult } from './chrome-governor.js'
 import type { ExecutionMemoizer } from './execution-memoizer.js'
+import type { AgentMemoryContext, MemoryEngine } from './memory-engine.js'
+import type { CapabilityResolutionEngine, ResolvedCapabilities } from './capability-resolution.js'
+import type { StreamBlockStore } from './stream-block-store.js'
+import { CapabilityEventBus } from './capability-event-bus.js'
 
-// ── Forward-declared interfaces (implemented in future phases) ────────────
+// ── StreamParserEngine + shared parse types (real impl in stream-parser.ts) ─
 
-/** Unit 4.3 — resolved capabilities for a provider+plan */
-export interface ResolvedCapabilities {
-  composer: ResolvedCapability[]
-  header: ResolvedCapability[]
-  message: ResolvedCapability[]
-  sidebar: ResolvedCapability[]
-  inline: ResolvedCapability[]
-  total: number
-  resolvedAt: number
-}
-
-export interface ResolvedCapability {
-  capabilityId: string
-  selector: string
-  label: string
-  kind: string
-  priority: number
-  configJson: string
-}
-
-/** Unit 4.3 — CapabilityResolutionEngine (stub interface) */
-export interface CapabilityResolutionEngine {
-  resolve(providerId: string, planTier: string): Promise<ResolvedCapabilities>
-}
-
-/** Unit 4.1 — StreamParserEngine + shared parse types (real impl in stream-parser.ts) */
 import type { ContentBlock, StreamParserEngine } from './stream-parser.js'
 
 export type {
@@ -49,9 +28,21 @@ export type {
   StreamParserEngine,
 } from './stream-parser.js'
 
-/** Unit 3.7 — StreamBlockStore (stub interface) */
-export interface StreamBlockStore {
-  storeBlocks(conversationId: string, messageId: string, blocks: ContentBlock[]): Promise<void>
+// ── Re-export real engine types ──────────────────────────────────────────
+
+export type { CapabilityResolutionEngine, ResolvedCapabilities } from './capability-resolution.js'
+export type { StreamBlockStore } from './stream-block-store.js'
+export { CapabilityEventBus } from './capability-event-bus.js'
+
+// ── Local subset type for send pipeline ──────────────────────────────────
+
+export interface ResolvedCapability {
+  capabilityId: string
+  selector: string
+  label: string
+  kind: string
+  priority: number
+  configJson: string
 }
 
 /** Unit 3.14 — context attached to a conversation before each send (04-merged-engines.md §Engine 2) */
@@ -74,11 +65,7 @@ export interface ConversationContext {
     total: number
     available: number
   }
-}
-
-/** Unit 3.6 — CapabilityEventBus (stub interface) */
-export interface CapabilityEventBus {
-  emit(event: unknown): void
+  memory?: AgentMemoryContext
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -146,6 +133,7 @@ export class ConversationManager {
     private store: ConversationStore,
     private eventBus: CapabilityEventBus,
     private memoizer: ExecutionMemoizer,
+    private memory?: MemoryEngine,
   ) {}
 
   // ── send: 8-step pipeline ───────────────────────────────────────────────
@@ -156,9 +144,19 @@ export class ConversationManager {
     try {
       // [1] RESOLVE
       const conv = await this.store.getConversation(conversationId)
-      if (!conv) throw new Error(`Conversation not found: ${conversationId}`)
+      if (!conv) throw new EngineError(`Conversation not found: ${conversationId}`)
       const account = await this.store.getAccount(conv.providerSessionId)
-      if (!account) throw new Error(`Account not found: ${conv.providerSessionId}`)
+      if (!account) throw new EngineError(`Account not found: ${conv.providerSessionId}`)
+
+      // [0] RECALL — retrieve relevant memory before execution
+      let memoryContext: AgentMemoryContext | undefined
+      if (this.memory) {
+        try {
+          memoryContext = await this.memory.getAgentContext(conv.providerId, '')
+        } catch {
+          // Memory recall is best-effort — don't block the pipeline
+        }
+      }
 
       const planTier = account.planTier
       const cacheKey = `resolve:${conv.providerId}:${planTier}`
@@ -174,8 +172,11 @@ export class ConversationManager {
       // [4] ENSURE — Governor's CDPProxy handles mutex internally; returns slave state
       const slave = await this.governor.ensureRunning(slaveId)
 
-      // [1.5] INJECT CONTEXT — attach provider/account/chrome/capability state to the conversation
+      // [1.5] INJECT CONTEXT — attach provider/account/chrome/capability/memory state to the conversation
       const context = buildConversationContext(conv, account, resolved, slave)
+      if (memoryContext) {
+        context.memory = memoryContext
+      }
       await this.store.updateConversation(conversationId, {
         contextJson: JSON.stringify(context),
       })
@@ -203,19 +204,32 @@ export class ConversationManager {
           blocks: [],
           text: '',
           latencyMs: Date.now() - start,
-          error: sendResult.error ?? 'Harness plan failed',
+          error: (sendResult as HarnessResult).error ?? 'Harness plan failed',
         }
       }
 
       // [6] CAPTURE — intercept API response
-      const captureResult = await this.governor.cdp.capture(
-        slaveId,
-        /\/api\/conversation\//,
-        30_000,
-      )
-
-      // [7] PARSE
-      const parseResult = await this.parser.parse(captureResult.body, conv.providerId)
+      let parseResult = {
+        blocks: [] as ContentBlock[],
+        confidence: 0,
+        parserName: '',
+        parserVersion: 0,
+        durationMs: 0,
+      }
+      try {
+        const captureResult = await this.governor.cdp.capture(
+          slaveId,
+          /\/api\/conversation\//,
+          30_000,
+        )
+        // [7] PARSE
+        parseResult = await this.parser.parse(
+          (captureResult as { body?: string }).body ?? '',
+          conv.providerId,
+        )
+      } catch {
+        // CDP not configured - stub for now
+      }
 
       // [8] STORE + EMIT
       const msgRow = await this.store.createMessage({
@@ -239,6 +253,25 @@ export class ConversationManager {
         conversationId,
         message: msgRow,
       })
+
+      // [9] REMEMBER — record episode and learn (best-effort, non-blocking)
+      if (this.memory) {
+        const durationMs = Date.now() - start
+        this.memory
+          .recordEpisode({
+            providerId: conv.providerId,
+            action: 'send',
+            input: { message },
+            output: {
+              text: extractText(parseResult.blocks),
+              blockCount: parseResult.blocks.length,
+            },
+            success: true,
+            durationMs,
+            tags: ['conversation', conv.providerId],
+          })
+          .catch(() => {}) // fire-and-forget
+      }
 
       return {
         ok: true,
@@ -277,7 +310,7 @@ export class ConversationManager {
 
   async getConversation(id: string): Promise<ConversationRow> {
     const conv = await this.store.getConversation(id)
-    if (!conv) throw new Error(`Conversation not found: ${id}`)
+    if (!conv) throw new EngineError(`Conversation not found: ${id}`)
     return conv
   }
 

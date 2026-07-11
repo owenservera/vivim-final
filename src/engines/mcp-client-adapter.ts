@@ -1,6 +1,8 @@
 // src/engines/mcp-client-adapter.ts
 // McpClientAdapter — consume external MCP servers as capability providers
 
+import { EngineError } from '../errors.js'
+
 // ── Types ───────────────────────────────────────────────────────────────
 
 export interface ToolDefinition {
@@ -49,7 +51,7 @@ export class McpClientAdapter {
   async listTools(serverId: string): Promise<ToolDefinition[]> {
     const conn = this.connections.get(serverId)
     if (!conn || conn.status !== 'connected') {
-      throw new Error(`Server not connected: ${serverId}`)
+      throw new EngineError(`Server not connected: ${serverId}`)
     }
     return conn.tools
   }
@@ -61,12 +63,12 @@ export class McpClientAdapter {
   ): Promise<ToolResult> {
     const conn = this.connections.get(serverId)
     if (!conn || conn.status !== 'connected') {
-      throw new Error(`Server not connected: ${serverId}`)
+      throw new EngineError(`Server not connected: ${serverId}`)
     }
 
     const tool = conn.tools.find((t) => t.name === toolName)
     if (!tool) {
-      throw new Error(`Tool not found: ${toolName} on server ${serverId}`)
+      throw new EngineError(`Tool not found: ${toolName} on server ${serverId}`)
     }
 
     return { content: { acknowledged: true, toolName, input } }

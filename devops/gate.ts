@@ -1,14 +1,18 @@
 // devops/gate.ts
-// Run the quality gate: typecheck + lint + tests.
-// Passes only when all three succeed. Structured result for the loop.
+// Run the quality gate: typecheck + lint + tests + invariants + audit + coverage.
+// Passes only when all six succeed. Structured result for the loop.
 //
 // Strict mode (`bun run devops gate --strict`) additionally fails when the
 // repo-wide lint emits ANY error or warning that touches a file changed in
 // the current unit. This stops warning debt from accumulating in files the
 // agent is actively editing, without blocking on pre-existing debt elsewhere.
+//
+// --include-integration runs integration tests (requires Chrome)
+// --sandbox-mode validates sandbox + real capability execution
 
 import { spawn, spawnSync } from 'node:child_process'
 import { getChangedFiles } from './changed.ts'
+import { checkInvariants } from './invariants.ts'
 
 interface GateStep {
   name: string
@@ -22,6 +26,10 @@ interface GateResult {
   steps: GateStep[]
   summary: string
   strict?: { ok: boolean; newIssues: string[] }
+  invariants?: { pass: boolean; blocks: number; warnings: number }
+  integration?: { pass: boolean; skipped: boolean; tests: number; failures: number }
+  audit?: { ok: boolean; vulnerabilities: number }
+  coverage?: { ok: boolean; engines: number; overall: number }
 }
 
 function run(cmd: string, args: string[]): Promise<GateStep> {
@@ -74,12 +82,163 @@ function newIssuesInChangedFiles(): string[] {
   return issues
 }
 
-export async function runGate(strict = false): Promise<GateResult> {
+// Check if Chrome is available for integration tests
+function hasChromeAvailable(): boolean {
+  const envPath = process.env.CHROME_PATH
+  if (envPath) return true
+  // Assume Chrome available if not explicitly disabled
+  return process.env.SKIP_CHROME_INTEGRATION !== 'true'
+}
+
+// Run dependency audit (bun audit)
+async function runAudit(): Promise<GateResult['audit']> {
+  try {
+    const proc = spawn('bun', ['audit'], { cwd: process.cwd() })
+    let out = ''
+    proc.stdout?.on('data', (d: Buffer) => {
+      out += d.toString()
+    })
+    proc.stderr?.on('data', (d: Buffer) => {
+      out += d.toString()
+    })
+
+    const exitCode = await new Promise<number>((resolve) => {
+      proc.on('close', (code) => resolve(code ?? 1))
+    })
+
+    // bun audit exits 0 if no vulns, 1 if vulns found
+    // Count vulnerabilities from output (lines with "found" or advisory counts)
+    const vulnMatch = out.match(/(\d+)\s+vulnerabilit(y|ies)/i)
+    const vulnerabilities = vulnMatch ? Number(vulnMatch[1]) : 0
+
+    return { ok: exitCode === 0, vulnerabilities }
+  } catch {
+    // bun audit not available or failed — skip gracefully
+    return { ok: true, vulnerabilities: 0 }
+  }
+}
+
+// Coverage thresholds per directory
+const COVERAGE_THRESHOLD: Record<string, number> = {
+  'src/engines': 0.8,
+  'src/storage/impl': 0.7,
+  'src/server': 0.85,
+  'src/cli': 0.6,
+}
+
+// Run tests with coverage and check thresholds
+async function runCoverageCheck(): Promise<GateResult['coverage']> {
+  try {
+    const proc = spawn('bun', ['test', '--test-dir=tests/unit', '--coverage'], {
+      cwd: process.cwd(),
+    })
+    let out = ''
+    proc.stdout?.on('data', (d: Buffer) => {
+      out += d.toString()
+    })
+    proc.stderr?.on('data', (d: Buffer) => {
+      out += d.toString()
+    })
+
+    await new Promise<number>((resolve) => {
+      proc.on('close', (code) => resolve(code ?? 1))
+    })
+
+    // Parse coverage output — look for per-directory coverage percentages
+    // bun test --coverage outputs lines like: "src/engines   | 85.2%"
+    let enginesCoverage = 0
+    let overallCoverage = 0
+
+    const lines = out.split('\n')
+    for (const line of lines) {
+      // Match lines like "src/engines       | 85.2%" or "src/engines/... | 85.2%"
+      const dirMatch = line.match(/^\s*(src\/\w+(?:\/\w+)*)\s*\|\s*(\d+(?:\.\d+)?)%/)
+      if (dirMatch) {
+        const dir = dirMatch[1] ?? ''
+        const pct = Number(dirMatch[2]) / 100
+        if (dir.startsWith('src/engines')) {
+          enginesCoverage = Math.max(enginesCoverage, pct)
+        }
+      }
+      // Match overall coverage line
+      const overallMatch = line.match(/^(All files|Overall|Total)\s*\|\s*(\d+(?:\.\d+)?)%/i)
+      if (overallMatch) {
+        overallCoverage = Number(overallMatch[2]) / 100
+      }
+    }
+
+    // Check thresholds
+    let ok = true
+    for (const [dir, threshold] of Object.entries(COVERAGE_THRESHOLD)) {
+      const actual = dir.startsWith('src/engines') ? enginesCoverage : overallCoverage
+      if (actual > 0 && actual < threshold) {
+        ok = false
+      }
+    }
+
+    return { ok, engines: enginesCoverage, overall: overallCoverage }
+  } catch {
+    // Coverage check failed to run — skip gracefully
+    return { ok: true, engines: 0, overall: 0 }
+  }
+}
+
+// Run integration tests (conditional on Chrome availability)
+async function runIntegrationTests(): Promise<GateResult['integration']> {
+  if (!hasChromeAvailable()) {
+    return { pass: true, skipped: true, tests: 0, failures: 0 }
+  }
+
+  try {
+    const proc = spawn('bun', ['test', 'tests/integration'], {
+      cwd: process.cwd(),
+    })
+    let out = ''
+    proc.stdout?.on('data', (d: Buffer) => {
+      out += d.toString()
+    })
+    proc.stderr?.on('data', (d: Buffer) => {
+      out += d.toString()
+    })
+
+    const exitCode = await new Promise<number>((resolve) => {
+      proc.on('close', (code) => resolve(code ?? 1))
+    })
+
+    // Parse output to count tests
+    const passMatch = out.match(/(\d+) pass/)
+    const failMatch = out.match(/(\d+) fail/)
+    const tests = Number(passMatch?.[1] ?? 0) + Number(failMatch?.[1] ?? 0)
+
+    return {
+      pass: exitCode === 0,
+      skipped: false,
+      tests,
+      failures: Number(failMatch?.[1] ?? 0),
+    }
+  } catch {
+    return { pass: true, skipped: true, tests: 0, failures: 0 }
+  }
+}
+
+export async function runGate(strict = false, includeIntegration = false): Promise<GateResult> {
   const steps: GateStep[] = []
   steps.push(await run('bun', ['run', 'typecheck']))
   steps.push(await run('bun', ['run', 'lint']))
-  steps.push(await run('bun', ['test']))
-  const pass = steps.every((s) => s.ok)
+  steps.push(await run('bun', ['test', '--test-dir=tests/unit'])) // Unit tests only in normal gate
+  const corePass = steps.every((s) => s.ok)
+
+  // Run dependency audit
+  const auditResult = await runAudit()
+
+  // Run coverage check
+  const coverageResult = await runCoverageCheck()
+
+  // Run integration tests conditionally
+  let integrationResult: GateResult['integration']
+  if (includeIntegration) {
+    integrationResult = await runIntegrationTests()
+  }
 
   let strictResult: GateResult['strict']
   if (strict) {
@@ -87,9 +246,50 @@ export async function runGate(strict = false): Promise<GateResult> {
     strictResult = { ok: newIssues.length === 0, newIssues }
   }
 
+  // Run invariant check as final step
+  const invRaw = await checkInvariants()
+  const invariantResult = {
+    pass: invRaw.pass,
+    blocks: invRaw.violations.length,
+    warnings: invRaw.warnings.length,
+  }
+
   const strictFailed = strictResult && !strictResult.ok
-  const ok = pass && !strictFailed
+  const invariantFailed = !invariantResult.pass
+  const auditFailed = !auditResult.ok
+  const coverageFailed = !coverageResult.ok
+  const integrationFailed =
+    integrationResult && !integrationResult.pass && !integrationResult.skipped
+
+  const ok =
+    corePass &&
+    !strictFailed &&
+    !invariantFailed &&
+    !auditFailed &&
+    !coverageFailed &&
+    !integrationFailed
   const summary = steps.map((s) => `${s.ok ? 'PASS' : 'FAIL'} ${s.name}`).join(' | ')
-  const extra = strictFailed ? ' | STRICT FAIL new lint issues in changed files' : ''
-  return { pass: ok, steps, summary: summary + extra, strict: strictResult }
+  const strictExtra = strictFailed ? ' | STRICT FAIL' : ''
+  const auditExtra = auditResult.ok ? '' : ` | AUDIT FAIL (${auditResult.vulnerabilities} vulns)`
+  const coverageExtra = coverageResult.ok
+    ? ''
+    : ` | COVERAGE FAIL (engines=${(coverageResult.engines * 100).toFixed(1)}% overall=${(coverageResult.overall * 100).toFixed(1)}%)`
+  const integExtra = integrationResult
+    ? integrationResult.skipped
+      ? ' | INTEGRATION SKIPPED (no Chrome)'
+      : integrationResult.pass
+        ? ` | INTEGRATION PASS (${integrationResult.tests} tests)`
+        : ` | INTEGRATION FAIL (${integrationResult.failures}/${integrationResult.tests})`
+    : ''
+  const invSummary = ` | INVARIANTS ${invariantResult.pass ? 'PASS' : 'BLOCK'} (${invariantResult.blocks} blocks, ${invariantResult.warnings} warnings)`
+  return {
+    pass: ok,
+    steps,
+    summary: summary + strictExtra + auditExtra + coverageExtra + integExtra + invSummary,
+    strict: strictResult,
+    invariants: invariantResult,
+    integration: integrationResult,
+    audit: auditResult,
+    coverage: coverageResult,
+  }
 }

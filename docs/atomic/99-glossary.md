@@ -28,6 +28,31 @@
 | **Capability** | Atomic user action (send message, select model, upload file). Has 21-field UI contract. |
 | **Plan Tier** | Account billing tier: `free`, `pro`, `max`, `enterprise`. Gates capability availability. |
 
+## Sovereign AI OS Upgrade Terms (Phases 14-20)
+
+| Term | Definition |
+|------|-----------|
+| **CDPTransport** | Abstraction layer over BunCdpClient. Provides typed CDP operations without direct Chrome dependency. |
+| **KnowledgeIngestionEngine** | Imports conversation history from external providers (ChatGPT, Claude, Gemini) into local database. |
+| **KnowledgeExtractor** | Extracts facts, decisions, patterns, and entities from conversation text. |
+| **SemanticSearchEngine** | Vector-based semantic search over conversation history using embeddings. |
+| **CrossConversationSynthesisEngine** | Synthesizes insights across multiple conversations to find patterns and themes. |
+| **ProviderMuxEngine** | Multi-provider multiplexer — distributes requests across providers with round-robin, failover, cost optimization. |
+| **CostOptimizer** | Minimizes API costs by routing requests to cheapest capable provider within latency budgets. |
+| **SituationDetector** | Detects current conversation situation (coding, research, writing, debugging) for context assembly. |
+| **ContextAssemblyEngine** | 5-stage pipeline: detect situation → select context → assemble prompt → allocate tokens → validate. |
+| **UnifiedCapabilityRegistry** | Single registry exposing all capabilities across CLI, API, and UI. |
+| **PluginHotReload** | Hot-reload system for capability plugins without server restart. |
+| **AdaptiveWorkspaceEngine** | Adapts workspace layout and available tools based on current task and user preferences. |
+| **ConversationOrganizer** | Organizes conversations into projects, topics, and tags for knowledge management. |
+| **AutonomousExecutionEngine** | Full autonomous execution with HITL gates, self-healing, and observability. |
+| **ExecutionPolicyEngine** | Defines policies for what actions can be executed autonomously vs. requiring human approval. |
+| **EncryptionEngine** | AES-256-GCM encryption for all data at rest. Wraps SQLite writes with encryption layer. |
+| **AirGapEngine** | Air-gap mode — blocks all outbound network calls, serves from local data and local models only. |
+| **LocalModelAdapter** | Integrates Ollama/llama.cpp for local inference when air-gap mode is enabled. |
+| **SyncEngine** | E2E-encrypted sync between VIVIM instances. Uses EncryptionEngine for all payloads. |
+| **TelemetryAuditEngine** | Zero-cloud proof — intercepts and logs all outbound requests for compliance audit. |
+
 ## Schema Layers
 
 | Layer | Name | Tables |
@@ -46,6 +71,12 @@
 | L11 | Operations | health_tick, circuit_breaker_state, drift_event, fleet_event, provider_health, automation_schedule, automation_run, alert_condition, alert_event, route_spec, route_request, route_target, route_event |
 | L12 | Transfer & Learning | transfer_pattern, transfer_candidate, transfer_attempt, learning_event, rule, binding_event, failure_classification |
 | L13 | Testing | test_run |
+| L14 | Sovereign Intelligence | import_job, knowledge_entity, knowledge_decision, knowledge_pattern, embedding, memory_organization |
+| L15 | Mux & Routing | mux_session, mux_strategy, cost_record, routing_preference |
+| L16 | Context | context_snapshot, situation_log, token_budget, prewarming_cache |
+| L17 | Workspace | workspace_mode, conversation_project, conversation_topic, plugin_manifest |
+| L18 | Autonomous | execution_plan, execution_step, hitl_approval, self_healing_log, observability_span |
+| L19 | Sovereign Data | encryption_key, airgap_config, sync_payload, telemetry_audit_log |
 
 ## Key Validation Commands
 

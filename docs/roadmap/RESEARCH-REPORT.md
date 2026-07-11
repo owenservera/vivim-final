@@ -1,16 +1,16 @@
 # Research Report
 
-**Generated:** 2026-07-10T12:04:14.281Z
-**Truth Score:** 91%
+**Generated:** 2026-07-10T21:38:57.110Z
+**Truth Score:** 93%
 
 ---
 
 ## Executive Summary
 
-- **Total units:** 137 (was 127)
-- Done: 123 (was 115)
+- Total units: 138
+- Done: 128
 - Need port: 0
-- Need create: 12
+- Need create: 10
 - Need fix: 0
 
 ---
@@ -951,7 +951,7 @@
 
 ### Phase 11
 
-#### 11.1 — CDP Client           → `src/executor/cdp.ts` (implement against vivim-final (cap-store prior art), 542 lines)
+#### 11.1 — CDP Client           → `src/executor/cdp.ts` (built against vivim-final core)
 
 - **Status:** done
 - **File:** `N/A`
@@ -959,59 +959,49 @@
 - **Source:** N/A
 - **Effort:** S
 
-#### 11.2 — Chrome Launcher      → `src/executor/launcher.ts` (implement against vivim-final (cap-store prior art), 205 lines)
+#### 11.2 — Chrome Launcher      → `src/executor/launcher.ts` (built against vivim-final core)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 11.3 — Profile Allocator    → `src/executor/profile-allocator.ts` (built against vivim-final core)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 11.4 — Port Reaper          → `src/executor/port-reaper.ts` (built against vivim-final core)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 11.5 — Fleet Supervisor     → `src/executor/fleet-supervisor.ts` (built against vivim-final core)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 11.6 — Slave Write          → `src/executor/slave-write.ts` (built against vivim-final core)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 11.7 — Slave Read           → `src/executor/slave-read.ts` (build against vivim-final core)
 
 - **Status:** in_progress
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-
-#### 11.3 — Profile Allocator    → `src/executor/profile-allocator.ts` (implement against vivim-final (cap-store prior art), 133 lines)
-
-- **Status:** pending
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-- **Gaps:** 1
-  - Create class: ProfileAllocator
-
-#### 11.4 — Port Reaper          → `src/executor/port-reaper.ts` (implement against vivim-final (cap-store prior art), 181 lines)
-
-- **Status:** pending
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-- **Gaps:** 1
-  - Create class: PortReaper
-
-#### 11.5 — Fleet Supervisor     → `src/executor/fleet-supervisor.ts` (implement against vivim-final (cap-store prior art), 581 lines)
-
-- **Status:** pending
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-- **Gaps:** 1
-  - Create class: FleetSupervisor
-- **Vivim API:** BunCdpClient.send()
-
-#### 11.6 — Slave Write          → `src/executor/slave-write.ts` (implement against vivim-final (cap-store prior art), 87 lines)
-
-- **Status:** pending
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-- **Gaps:** 1
-  - Create class: SlaveWrite
-- **Vivim API:** BunCdpClient.send()
-
-#### 11.7 — Slave Read           → `src/executor/slave-read.ts` (implement against vivim-final (cap-store prior art), 67 lines)
-
-- **Status:** pending
 - **File:** `N/A`
 - **Classification:** CREATE
 - **Source:** N/A
@@ -1020,7 +1010,7 @@
   - Create class: SlaveRead
 - **Vivim API:** BunCdpClient.send()
 
-#### 11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (implement against vivim-final (cap-store prior art), 221 lines)
+#### 11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (build against vivim-final core)
 
 - **Status:** pending
 - **File:** `N/A`
@@ -1061,6 +1051,14 @@
 - **Effort:** M
 - **Vivim API:** BunCdpClient.send()
 
+#### 11.12 — Slave Setup Script   → `scripts/setup-slaves.ts` (bootstrap logged-in profiles for chatgpt/claude/gemini; manual login + headless reuse)
+
+- **Status:** pending
+- **File:** `N/A`
+- **Classification:** CREATE
+- **Source:** N/A
+- **Effort:** M
+
 ### Phase 12
 
 #### 12.1 — ChromeGovernor boot stubs → `src/engines/chrome-governor.ts` (2 stubs → real)
@@ -1084,7 +1082,7 @@
 #### 13.1 — Monorepo Scaffold → `web/` workspace (Vite + React 19 + TS + Tailwind + Zustand)
 
 - **Status:** done
-- **File:** `web/` (monorepo workspace)
+- **File:** `N/A`
 - **Classification:** DONE
 - **Source:** N/A
 - **Effort:** S
@@ -1092,7 +1090,7 @@
 #### 13.2 — Shared tsconfig + Path Aliases → `web/tsconfig.base.json` + `@ui`, `@api-client` aliases
 
 - **Status:** done
-- **File:** `web/*/tsconfig.json`
+- **File:** `N/A`
 - **Classification:** DONE
 - **Source:** N/A
 - **Effort:** S
@@ -1100,7 +1098,7 @@
 #### 13.3 — web/api-client Typed SDK → `web/api-client/src/index.ts` (typed from 07-merged-api.md)
 
 - **Status:** done
-- **File:** `web/api-client/src/index.ts`
+- **File:** `N/A`
 - **Classification:** DONE
 - **Source:** N/A
 - **Effort:** S
@@ -1108,7 +1106,7 @@
 #### 13.4 — ActionRegistry → `web/ui/src/actions/registry.ts` (registerAction / dispatch / listActions)
 
 - **Status:** done
-- **File:** `web/ui/src/actions/registry.ts`
+- **File:** `N/A`
 - **Classification:** DONE
 - **Source:** N/A
 - **Effort:** S
@@ -1116,39 +1114,39 @@
 #### 13.5 — AgentBridge → `web/ui/src/actions/agent-bridge.ts` (WS agent:command / agent:discover)
 
 - **Status:** done
-- **File:** `web/ui/src/actions/agent-bridge.ts`
+- **File:** `N/A`
 - **Classification:** DONE
 - **Source:** N/A
 - **Effort:** S
 
 #### 13.6 — Capability API Endpoints → `src/server/routes/capabilities.ts` (GET /capabilities, POST /execute)
 
-- **Status:** pending
-- **File:** `src/server/`
-- **Classification:** CREATE
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
 - **Source:** N/A
-- **Effort:** M
+- **Effort:** S
 
 #### 13.7 — WS Agent Command Channel → `src/server/websocket.ts` (agent:command / agent:discover routing)
 
 - **Status:** done
-- **File:** `src/server/websocket.ts`
+- **File:** `N/A`
 - **Classification:** DONE
 - **Source:** N/A
 - **Effort:** S
 
 #### 13.8 — Sandbox App MVP → `web/sandbox/` (catalog + harness + debug panel)
 
-- **Status:** in_progress
-- **File:** `web/sandbox/src/`
-- **Classification:** CREATE
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
 - **Source:** N/A
-- **Effort:** M
+- **Effort:** S
 
-#### 13.9 — Shared UI Registry + Promotion Ledger → `web/ui/src/registry/` + `docs/sandbox/PROMOTED.md`
+#### 13.9 — Shared UI Registry + Promotion Ledger
 
 - **Status:** pending
-- **File:** `web/ui/src/registry/`, `docs/sandbox/PROMOTED.md`
+- **File:** `web/ui/src/registry/` + `docs/sandbox/PROMOTED.md`
 - **Classification:** CREATE
 - **Source:** N/A
 - **Effort:** M
@@ -1156,7 +1154,7 @@
 #### 13.10 — First Feature E2E → proof that sandbox system works end-to-end
 
 - **Status:** pending
-- **File:** `tests/e2e/sandbox-feature.test.ts`
+- **File:** `N/A`
 - **Classification:** CREATE
 - **Source:** N/A
 - **Effort:** M
@@ -1165,15 +1163,13 @@
 
 ## Implementation Order
 
-1. **11.2 — Chrome Launcher      → `src/executor/launcher.ts` (implement against vivim-final (cap-store prior art), 205 lines)** (CREATE, M)
-1. **11.3 — Profile Allocator    → `src/executor/profile-allocator.ts` (implement against vivim-final (cap-store prior art), 133 lines)** (CREATE, M)
-1. **11.4 — Port Reaper          → `src/executor/port-reaper.ts` (implement against vivim-final (cap-store prior art), 181 lines)** (CREATE, M)
-1. **11.5 — Fleet Supervisor     → `src/executor/fleet-supervisor.ts` (implement against vivim-final (cap-store prior art), 581 lines)** (CREATE, M)
-1. **11.6 — Slave Write          → `src/executor/slave-write.ts` (implement against vivim-final (cap-store prior art), 87 lines)** (CREATE, M)
-1. **11.7 — Slave Read           → `src/executor/slave-read.ts` (implement against vivim-final (cap-store prior art), 67 lines)** (CREATE, M)
-1. **11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (implement against vivim-final (cap-store prior art), 221 lines)** (CREATE, M)
+1. **11.7 — Slave Read           → `src/executor/slave-read.ts` (build against vivim-final core)** (CREATE, M)
+1. **11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (build against vivim-final core)** (CREATE, M)
 1. **11.9 — Stream Capture       → `src/executor/stream-capture.ts` (new file)** (CREATE, M)
 1. **11.10 — Network Capture     → `src/executor/network-capture.ts` (new file)** (CREATE, M)
 1. **11.11 — Executor Barrel     → `src/executor/index.ts` (wiring + factory)** (CREATE, M)
+1. **11.12 — Slave Setup Script   → `scripts/setup-slaves.ts` (bootstrap logged-in profiles for chatgpt/claude/gemini; manual login + headless reuse)** (CREATE, M)
 1. **12.1 — ChromeGovernor boot stubs → `src/engines/chrome-governor.ts` (2 stubs → real)** (CREATE, M)
 1. **12.2 — MirrorEngine action stubs → `src/engines/mirror-engine.ts` (3 stubs → real)** (CREATE, M)
+1. **13.9 — Shared UI Registry + Promotion Ledger** (CREATE, M)
+1. **13.10 — First Feature E2E → proof that sandbox system works end-to-end** (CREATE, M)

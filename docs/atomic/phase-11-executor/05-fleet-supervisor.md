@@ -108,7 +108,13 @@ crashed  ──[ensureRunning]──→ starting
 ## Gate
 - `bun run typecheck` passes
 - `bun test tests/unit/executor/fleet-supervisor.test.ts` passes
+- `bun test tests/integration/executor/fleet-integration.test.ts` passes (fake Chrome satisfies real execution)
 - Full lifecycle (spawn → health check → kill) works with real Chrome
+
+## Integration Milestone
+- **Milestone 1:** Real Chrome spawn + health check + kill (`tests/integration/executor/fleet-integration.test.ts`)
+- Must pass before 11.5 can be marked done
+- Fake Chrome mock (`tests/integration/helpers/fake-chrome.ts`) satisfies requirement when real Chrome unavailable
 
 ## Port Notes
 Port from vivim-final `src/executor/fleet-supervisor.ts`. Adapt to use vivim-final's `BunCdpClient` (not cap-store's). Replace cap-store's Node `child_process` with `Bun.spawn`. Use vivim-final's error classes. Remove cap-store-specific telemetry hooks.

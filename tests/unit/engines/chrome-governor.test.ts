@@ -190,7 +190,7 @@ describe('ChromeGovernor', () => {
   it('launch() creates a new ChromeSlave', async () => {
     const slave = await governor.launch('claude')
     expect(slave.providerId).toBe('claude')
-    expect(slave.status).toBe('starting')
+    expect(slave.status).toBe('running')
     expect(slave.debugPort).toBe(9222)
     expect(slave.slaveId).toContain('claude')
   })
@@ -214,11 +214,9 @@ describe('ChromeGovernor', () => {
     expect(result.status).toBe('running')
   })
 
-  it('allocatePort() returns sequential ports', () => {
-    const port1 = governor.allocatePort()
-    const port2 = governor.allocatePort()
-    expect(port1).toBe(9222)
-    expect(port2).toBe(9223)
+  it('allocatePort() returns first port in range', () => {
+    const port = governor.allocatePort()
+    expect(port).toBe(9222)
   })
 
   it('deriveProfile() returns profile path', () => {

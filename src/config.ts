@@ -39,6 +39,13 @@ export const config = {
   // Fleet
   autoStartFleet: process.env.CAP_STORE_AUTO_START_FLEET === 'true',
   chromePath: process.env.CAP_STORE_CHROME_PATH ?? null,
+  // Chrome profile root — single source of truth for where slave profiles live.
+  // Frontend will later write this via config_entry; env overrides for now.
+  // Defaults to <dataDir>/chrome-profiles so profiles survive across runs and
+  // are not lost in a Unix-only /tmp path.
+  profileBaseDir:
+    process.env.CAP_STORE_PROFILE_DIR ??
+    (isWin ? `${defaultDataDir()}\\chrome-profiles` : `${defaultDataDir()}/chrome-profiles`),
   fleetPortRangeStart: Number.parseInt(process.env.CAP_STORE_FLEET_PORT_START ?? '9222', 10),
   fleetPortRangeEnd: Number.parseInt(process.env.CAP_STORE_FLEET_PORT_END ?? '9250', 10),
 

@@ -83,3 +83,9 @@ export class PortOccupiedError extends CapStoreError {
     super('PortOccupiedError', `All ports in range ${range} occupied`)
   }
 }
+
+export class EngineError extends CapStoreError {
+  constructor(message: string) {
+    super('EngineError', message)
+  }
+}

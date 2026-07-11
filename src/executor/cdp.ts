@@ -1,7 +1,7 @@
 // src/executor/cdp.ts
 // Real WebSocket CDP client with auto-reconnect, session management, per-command timeouts, and event subscription.
 
-import { CdpConnectionError, CdpTimeoutError } from '@/errors.ts'
+import { CdpConnectionError, CdpTimeoutError } from '../errors.js'
 import type { CdpClientOptions, CommandOptions } from './cdp-types.ts'
 
 export type { CdpClientOptions, CommandOptions }

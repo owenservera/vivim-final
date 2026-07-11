@@ -1,7 +1,7 @@
 # INVARIANTS.md — Architectural Boundary Conditions
 
 **Status:** ACTIVE — enforced by `bun run devops invariants check`
-**Date:** 2026-07-10
+**Date:** 2026-07-11
 **Purpose:** Non-negotiable constraints that govern all planning and development. Violations are tiered: architectural (Category B) are hard blocks, quality (Category D) are soft warnings.
 
 ---
@@ -182,6 +182,82 @@ grep "agent:discover" src/server/websocket.ts → must match
 ```
 Heuristic (soft warning): UI `onClick` handlers performing side effects MUST reference `@ui/actions`.
 
+### B9: Encryption Required for At-Rest Data
+
+**Rule:** All user data at rest (conversation history, knowledge base, exported data, sync payloads) MUST be encrypted using AES-256-GCM via `EncryptionEngine`. No plaintext user data may be written to SQLite without encryption wrapping.
+
+**Enforcement:** `devops/invariants.ts` checks that `src/engines/encryption.ts` exists and that Phase 20 storage writes go through encryption layer.
+
+**Check:**
+```
+src/engines/encryption.ts must exist and export EncryptionEngine
+Phase 20 storage writes must use encrypt() before INSERT
+grep -r "\.create\|\.upsert" src/storage/impl/ | grep -v "encrypt" in sovereign-data files → warning
+```
+
+### B10: HITL Gate for Destructive Actions
+
+**Rule:** Any autonomous action that modifies external state (delete, send, publish, deploy) MUST pass through a Human-in-the-Loop gate. The `AutonomousExecutionEngine` must pause and await explicit human approval before executing destructive operations.
+
+**Enforcement:** `devops/invariants.ts` checks that `src/engines/hitl-gates.ts` exists and that `AutonomousExecutionEngine` routes destructive actions through HITL.
+
+**Check:**
+```
+src/engines/hitl-gates.ts must exist and export HitlGateSystem
+AutonomousExecutionEngine must call hitlGates.check() before destructive ops
+grep -r "delete\|send\|publish\|deploy" src/engines/autonomous-execution.ts → must have HITL gate call
+```
+
+### B11: Air-Gap Mode — No Outbound Calls
+
+**Rule:** When Air-Gap mode is enabled, VIVIM must make zero outbound network calls. All operations must be served from local data and local models. The `AirGapEngine` must be the single authority for network access decisions.
+
+**Enforcement:** `devops/invariants.ts` checks that `src/engines/airgap-engine.ts` exists and that no engine makes direct `fetch()` or HTTP calls without going through `AirGapEngine.isAllowed()`.
+
+**Check:**
+```
+src/engines/airgap-engine.ts must exist and export AirGapEngine
+grep -r "fetch(" src/engines/ → must go through AirGapEngine
+grep -r "axios\|http\.request\|https\.request" src/engines/ → must go through AirGapEngine
+```
+
+### B12: Telemetry Audit — Zero-Cloud Proof
+
+**Rule:** VIVIM must be able to prove it sends zero telemetry to external services. The `TelemetryAuditEngine` must intercept and log all outbound network requests, providing a complete audit trail. Audit logs must be exportable for compliance review.
+
+**Enforcement:** `devops/invariants.ts` checks that `src/engines/telemetry-audit.ts` exists and that all outbound requests are logged.
+
+**Check:**
+```
+src/engines/telemetry-audit.ts must exist and export TelemetryAuditEngine
+TelemetryAuditEngine must expose getAuditLog() and exportAuditLog()
+All outbound requests must be logged with timestamp, destination, payload size
+```
+
+### B13: Config Through ConfigManager — No Direct Environment Reads
+
+**Rule:** All engine configuration flows through `ConfigManager`. No engine reads config from environment variables or files directly. (Reinforced from B5 for upgrade engines.)
+
+**Enforcement:** `devops/invariants.ts` scans upgrade engine files for `process.env` or direct file reads for config.
+
+**Check:**
+```
+grep -r "process\.env\|readFile.*config" src/engines/ (upgrade engines only)
+Must return zero matches
+```
+
+### B14: Store Contract Isolation — Upgrade Engines
+
+**Rule:** Upgrade engines (Phase 14-20) depend only on store contracts (`src/storage/contracts/*.ts`), never on concrete implementations. (Reinforced from B2 for upgrade engines.)
+
+**Enforcement:** `devops/invariants.ts` scans upgrade engine files for imports containing `-impl` or `src/storage/impl`.
+
+**Check:**
+```
+grep -r "storage/impl\|-impl" src/engines/ (upgrade engines only)
+Must return zero matches
+```
+
 ---
 
 ## Category C: Planning Invariants
@@ -347,6 +423,18 @@ For each goal in GOALS.md, owner must be non-empty
 ```
 For each unit in tracker, check if its ID appears in any key result's relatedUnits
 Units not contributing to any goal → soft warning
+```
+
+### E5: Integration Test Parity — Real Chrome Execution Required
+
+**Rule:** At least one capability-related unit must have passing integration tests with real Chrome (or fake Chrome mock) before the unit can be marked done.
+
+**Enforcement:** `devops/invariants.ts` checks that `tests/integration/` contains tests for executor or capability modules when units 11.5-13.10 are in scope.
+
+**Check:**
+```
+For units 11.5-13.10, check if tests/integration/executor/ or tests/integration/capabilities/ exists
+If Chrome unavailable, fake Chrome mock tests satisfy this requirement
 ```
 
 ---

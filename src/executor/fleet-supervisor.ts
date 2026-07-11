@@ -6,13 +6,11 @@ import { BunCdpClient } from './cdp.js'
 import {
   type ChromeLaunchOptions,
   type LaunchResult,
-  findChromeBinary,
   killChrome,
-  isChromeRunning,
   launchChrome,
 } from './launcher.js'
-import { ProfileAllocator } from './profile-allocator.js'
 import { PortReaper } from './port-reaper.js'
+import { ProfileAllocator } from './profile-allocator.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -97,7 +95,10 @@ export class PortOccupiedError extends Error {
 
 export class FleetSupervisor {
   private instances = new Map<string, FleetInstance>()
-  private circuits = new Map<string, { state: CircuitState; failures: number; openedAt: number | null }>()
+  private circuits = new Map<
+    string,
+    { state: CircuitState; failures: number; openedAt: number | null }
+  >()
   private healthTimer: ReturnType<typeof setInterval> | null = null
   private nextPort: number
   private profileAllocator: ProfileAllocator
@@ -356,17 +357,17 @@ export class FleetSupervisor {
   private allocatePort(): number {
     const port = this.nextPort
     if (port > this.opts.portRange[1]) {
-      throw new PortOccupiedError(
-        `${this.opts.portRange[0]}-${this.opts.portRange[1]}`,
-      )
+      throw new PortOccupiedError(`${this.opts.portRange[0]}-${this.opts.portRange[1]}`)
     }
     this.nextPort++
     return port
   }
 
-  private getCircuit(
-    instanceId: string,
-  ): { state: CircuitState; failures: number; openedAt: number | null } {
+  private getCircuit(instanceId: string): {
+    state: CircuitState
+    failures: number
+    openedAt: number | null
+  } {
     let cb = this.circuits.get(instanceId)
     if (!cb) {
       cb = { state: 'closed', failures: 0, openedAt: null }

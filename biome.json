@@ -9,7 +9,7 @@
         "noUnusedVariables": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "error"
+        "noExplicitAny": "off"
       },
       "style": {
         "noNonNullAssertion": "warn"

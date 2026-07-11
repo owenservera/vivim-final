@@ -28,6 +28,7 @@ export { HarnessCheckpointEngine } from './engines/harness-checkpoint.js'
 export { CapabilityMacroEngine } from './engines/capability-macro.js'
 export { SessionCheckpointEngine } from './engines/session-checkpoint.js'
 export { StateTransitionEngine } from './engines/state-transition.js'
+export { MemoryEngine } from './engines/memory-engine.js'
 
 // Executor
 export { AsyncMutex } from './executor/async-mutex.js'

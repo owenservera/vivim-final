@@ -1,6 +1,7 @@
 // src/engines/manifest-inference.ts
 // ManifestInferenceEngine — transform discovery results → valid ProviderManifest JSON
 
+import { EngineError } from '../errors.js'
 import type {
   DiscoverySession,
   ManifestEdits,
@@ -47,7 +48,7 @@ export class ManifestInferenceEngine {
     const requiredEdits: string[] = []
 
     if (!session.manifestDraft) {
-      throw new Error(`No manifest draft for session ${session.id}`)
+      throw new EngineError(`No manifest draft for session ${session.id}`)
     }
 
     const draft = session.manifestDraft

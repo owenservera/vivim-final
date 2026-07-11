@@ -1,0 +1,44 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "default_agent": "build",
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "skills": {
+    "paths": [
+      ".kilo/skill"
+    ]
+  },
+  "references": {
+    "docs": {
+      "path": "./docs/merged-design-v2",
+      "description": "Complete design docs: epic, architecture, schema (54 tables), engines (13), seeds, API, implementation plan. Read in doc order 00-08, then SOTA-00 through SOTA-09."
+    }
+  },
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp"
+      ],
+      "enabled": true,
+      "environment": {
+        "BROWSER": "chromium"
+      }
+    }
+  },
+  "permission": {
+    "bash": "allow",
+    "edit": "allow",
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "skill": "allow",
+    "external_directory": "ask"
+  },
+  "snapshot": false
+}

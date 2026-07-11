@@ -1,6 +1,7 @@
 // src/engines/workflow-engine.ts
 // WorkflowEngine — execute visual workflow DAGs with human-in-the-loop
 
+import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
@@ -90,7 +91,7 @@ export class WorkflowEngine {
     patch: Partial<WorkflowDefinition>,
   ): Promise<WorkflowDefinition> {
     const existing = await this.store.getWorkflow(id)
-    if (!existing) throw new Error(`Workflow ${id} not found`)
+    if (!existing) throw new EngineError(`Workflow ${id} not found`)
     const updated = { ...existing, ...patch, id, updatedAt: Date.now() }
     await this.store.saveWorkflow(updated)
     return updated
@@ -106,7 +107,7 @@ export class WorkflowEngine {
 
   async execute(workflowId: string, input?: Record<string, unknown>): Promise<WorkflowExecution> {
     const workflow = await this.store.getWorkflow(workflowId)
-    if (!workflow) throw new Error(`Workflow ${workflowId} not found`)
+    if (!workflow) throw new EngineError(`Workflow ${workflowId} not found`)
 
     const execution: WorkflowExecution = {
       id: newId(),
@@ -143,7 +144,7 @@ export class WorkflowEngine {
 
   async cancelExecution(executionId: string): Promise<void> {
     const exec = this.executions.get(executionId)
-    if (!exec) throw new Error(`Execution ${executionId} not found`)
+    if (!exec) throw new EngineError(`Execution ${executionId} not found`)
     exec.status = 'cancelled'
     exec.completedAt = Date.now()
     await this.store.saveExecution(exec)
@@ -154,7 +155,7 @@ export class WorkflowEngine {
     _opts?: { fromNode?: string },
   ): Promise<WorkflowExecution> {
     const prev = await this.store.getExecution(executionId)
-    if (!prev) throw new Error(`Execution ${executionId} not found`)
+    if (!prev) throw new EngineError(`Execution ${executionId} not found`)
     return this.execute(prev.workflowId, prev.input)
   }
 

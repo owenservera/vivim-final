@@ -1,7 +1,7 @@
-# Unit 12.2: MirrorEngine Action Stubs
+# Unit 11.13: MirrorEngine Action Stubs
 
-**Phase:** 12 | **File:** `src/engines/mirror-engine.ts`
-**Depends:** 12.1 ChromeGovernor Boot Stubs | **Produces:** Real UI mirror action execution
+**Phase:** 11 | **File:** `src/engines/mirror-engine.ts`
+**Depends:** 11.12 ChromeGovernor Boot Stubs | **Produces:** Real UI mirror action execution
 
 ## Purpose
 Fixes the 3 stub methods in MirrorEngine: action execution (type/click/navigate via Governor CDP) and observation start/stop. Currently these return empty or hardcoded values.

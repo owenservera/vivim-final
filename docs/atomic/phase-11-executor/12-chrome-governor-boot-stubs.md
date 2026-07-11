@@ -1,6 +1,6 @@
-# Unit 12.1: ChromeGovernor Boot Stubs
+# Unit 11.12: ChromeGovernor Boot Stubs
 
-**Phase:** 12 | **File:** `src/engines/chrome-governor.ts`
+**Phase:** 11 | **File:** `src/engines/chrome-governor.ts`
 **Depends:** 11.5 Fleet Supervisor | **Produces:** Real boot sequence for ChromeGovernor
 
 ## Purpose

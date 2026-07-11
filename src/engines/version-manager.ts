@@ -4,6 +4,7 @@
 // ConfigManager (snapshot strategy, auto-promotion + degradation rules).
 
 import { z } from 'zod'
+import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import type {
   ProgramMetricRow,
@@ -155,7 +156,7 @@ export class VersionManager {
 
   async getCapabilityAtVersion(capabilityId: string, version: number): Promise<TaxonomyVersionRow> {
     const row = await this.store.getTaxonomyVersion(capabilityId, version)
-    if (!row) throw new Error(`No taxonomy version ${version} for capability ${capabilityId}`)
+    if (!row) throw new EngineError(`No taxonomy version ${version} for capability ${capabilityId}`)
     return row
   }
 
@@ -182,7 +183,9 @@ export class VersionManager {
   }> {
     const target = await this.store.getTaxonomyVersion(capabilityId, targetVersion)
     if (!target)
-      throw new Error(`Cannot rollback: version ${targetVersion} not found for ${capabilityId}`)
+      throw new EngineError(
+        `Cannot rollback: version ${targetVersion} not found for ${capabilityId}`,
+      )
     const latest = await this.store.getLatestTaxonomyVersion(capabilityId)
     const restoredVersion = (latest?.version ?? 0) + 1
     await this.store.createTaxonomyVersion({

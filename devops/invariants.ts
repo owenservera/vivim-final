@@ -28,7 +28,7 @@ const INDEX_PATH = join(PROJECT_ROOT, 'src', 'index.ts')
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
-export type InvariantCategory = 'A' | 'B' | 'C' | 'D'
+export type InvariantCategory = 'A' | 'B' | 'C' | 'D' | 'E'
 
 export interface Violation {
   id: string
@@ -513,6 +513,59 @@ async function checkD4_BarrelExport(): Promise<Violation[]> {
   return violations
 }
 
+// ── Category E: Goals ─────────────────────────────────────────────────────────
+
+async function checkE5_IntegrationTestParity(unitId?: string): Promise<Violation[]> {
+  const violations: Violation[] = []
+
+  // Check for units in Phase 11 (executor) and Phase 13 (sandbox) that need integration tests
+  if (!unitId) return violations
+
+  const unitNum = Number(unitId.split('.')[0])
+  if (unitNum < 11 || unitNum > 13) return violations
+
+  // Check if integration tests exist for executor units
+  const executorTestsDir = join(PROJECT_ROOT, 'tests', 'integration', 'executor')
+  const capabilityTestsDir = join(PROJECT_ROOT, 'tests', 'integration', 'capabilities')
+
+  const hasExecutorTests = (await readdir(executorTestsDir).catch(() => [] as any)).length > 0
+  const hasCapabilityTests = (await readdir(capabilityTestsDir).catch(() => [] as any)).length > 0
+
+  if (unitId === '11.5' && !hasExecutorTests) {
+    violations.push({
+      id: 'E5',
+      category: 'E',
+      severity: 'warning',
+      message: `Executor unit ${unitId} requires integration tests in tests/integration/executor/`,
+    })
+  }
+
+  if (unitId.startsWith('11.') && !hasExecutorTests) {
+    violations.push({
+      id: 'E5',
+      category: 'E',
+      severity: 'warning',
+      message: `Executor unit ${unitId} requires integration tests in tests/integration/executor/`,
+    })
+  }
+
+  if (unitId.startsWith('13.') && !hasCapabilityTests) {
+    // For sandbox units, integration tests are in tests/integration/capabilities/ or tests/integration/sandbox/
+    const sandboxTestsDir = join(PROJECT_ROOT, 'tests', 'integration', 'sandbox')
+    const hasSandboxTests = (await readdir(sandboxTestsDir).catch(() => [] as any)).length > 0
+    if (!hasSandboxTests) {
+      violations.push({
+        id: 'E5',
+        category: 'E',
+        severity: 'warning',
+        message: `Sandbox unit ${unitId} requires integration tests in tests/integration/sandbox/`,
+      })
+    }
+  }
+
+  return violations
+}
+
 // ── Main API ──────────────────────────────────────────────────────────────
 
 export async function checkInvariants(
@@ -562,12 +615,18 @@ export async function checkInvariants(
     }
   }
 
-  // Category D: Quality
+// Category D: Quality
   if (!category || category === 'D') {
     checked.push('D1', 'D2', 'D4')
     allViolations.push(...await checkD1_EngineTests())
     allViolations.push(...await checkD2_TypeSafety())
     allViolations.push(...await checkD4_BarrelExport())
+  }
+
+  // Category E: Goals
+  if (!category || (category === 'E' as InvariantCategory)) {
+    checked.push('E5')
+    allViolations.push(...await checkE5_IntegrationTestParity(unitId))
   }
 
   const blockViolations = allViolations.filter(v => v.severity === 'block')
