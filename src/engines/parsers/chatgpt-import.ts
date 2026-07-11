@@ -10,10 +10,12 @@ export interface ParsedMessage {
   parentExternalId?: string
 }
 
+export type ParserSource = 'chatgpt' | 'claude' | 'gemini' | 'generic'
+
 export interface ParsedConversation {
   externalId: string
   title: string
-  source: 'chatgpt'
+  source: ParserSource
   createdAt: number
   updatedAt: number
   messages: ParsedMessage[]
