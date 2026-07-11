@@ -523,6 +523,11 @@ model Conversation {
   contextJson       String  @default("{}") @map("context_json")
   createdAt         Int     @map("created_at")
   updatedAt         Int     @map("updated_at")
+  projectId         String? @map("project_id")
+  topicId           String? @map("topic_id")
+  source            String  @default("live")
+  externalId        String? @map("external_id")
+  importJobId       String? @map("import_job_id")
 
   providerSession ProviderSession       @relation(fields: [providerSessionId], references: [id], onDelete: Cascade)
   provider        ProviderDefinition    @relation(fields: [providerId], references: [id], onDelete: Cascade)
@@ -531,6 +536,9 @@ model Conversation {
 
   @@index([providerSessionId], map: "idx_conv_session")
   @@index([providerId], map: "idx_conv_provider")
+  @@index([source])
+  @@index([externalId])
+  @@index([importJobId])
   @@map("conversation")
 }
 
@@ -1686,4 +1694,136 @@ model AgentStep {
   createdAt       Int    @map("created_at")
 
   @@map("agent_step")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L16: Sovereign Intelligence (Phase 15)
+// ═══════════════════════════════════════════════════════════════════
+
+model Entity {
+  id           String  @id
+  name         String
+  type         String  @map("entity_type")
+  description  String?
+  confidence   Float   @default(0.5)
+  mentionCount Int     @default(0) @map("mention_count")
+  firstSeenAt  Int     @map("first_seen_at")
+  lastSeenAt   Int     @map("last_seen_at")
+  createdAt    Int     @map("created_at")
+  updatedAt    Int     @map("updated_at")
+  mentions     EntityMention[]
+
+  @@unique([name, type])
+  @@index([type])
+  @@map("entity")
+}
+
+model EntityMention {
+  id             String  @id
+  entityId       String  @map("entity_id")
+  conversationId String  @map("conversation_id")
+  messageId      String  @map("message_id")
+  context        String
+  confidence     Float   @default(0.5)
+  ts             Int
+
+  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@index([entityId])
+  @@index([conversationId])
+  @@map("entity_mention")
+}
+
+model DecisionRecord {
+  id               String  @id
+  conversationId   String  @map("conversation_id")
+  messageId        String  @map("message_id")
+  decisionText     String  @map("decision_text")
+  rationale        String?
+  alternativesJson String  @default("[]") @map("alternatives_json")
+  confidence       Float   @default(0.5)
+  ts               Int
+
+  @@index([conversationId])
+  @@map("decision_record")
+}
+
+model PatternExtract {
+  id           String  @id
+  name         String
+  description  String
+  patternType  String  @map("pattern_type")
+  occurrences  Int     @default(1)
+  confidence   Float   @default(0.5)
+  firstSeenAt  Int     @map("first_seen_at")
+  lastSeenAt   Int     @map("last_seen_at")
+  createdAt    Int     @map("created_at")
+  updatedAt    Int     @map("updated_at")
+
+  @@unique([name, patternType])
+  @@map("pattern_extract")
+}
+
+model Topic {
+  id                String  @id
+  name              String
+  description       String?
+  color             String?
+  conversationCount Int     @default(0) @map("conversation_count")
+  createdAt         Int     @map("created_at")
+  updatedAt         Int     @map("updated_at")
+  @@map("topic")
+}
+
+model Project {
+  id                String  @id
+  name              String
+  description       String?
+  status            String  @default("active")
+  conversationCount Int     @default(0) @map("conversation_count")
+  createdAt         Int     @map("created_at")
+  updatedAt         Int     @map("updated_at")
+
+  @@map("project")
+}
+
+model ConversationTopic {
+  id             String @id
+  conversationId String @map("conversation_id")
+  topicId        String @map("topic_id")
+  confidence     Float  @default(0.5)
+  assignedAt     Int    @map("assigned_at")
+  assignedBy     String @default("auto") @map("assigned_by")
+
+  @@unique([conversationId, topicId])
+  @@map("conversation_topic")
+}
+
+model ImportJob {
+  id          String  @id
+  source      String  @map("import_source")
+  filePath    String  @map("file_path")
+  status      String  @default("pending")
+  configJson  String  @default("{}") @map("config_json")
+  resultJson  String? @map("result_json")
+  error       String?
+  startedAt   Int     @map("started_at")
+  completedAt Int?    @map("completed_at")
+
+  @@index([source])
+  @@map("import_job")
+}
+
+model MemoryEmbedding {
+  id          String @id
+  entityType  String @map("entity_type")
+  entityId    String @map("entity_id")
+  embedding   String
+  model       String
+  dimensions  Int
+  contentHash String @map("content_hash")
+  createdAt   Int    @map("created_at")
+
+  @@unique([entityType, entityId])
+  @@map("memory_embedding")
 }

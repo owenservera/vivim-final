@@ -1,10 +1,11 @@
 # Atomic Implementation Tracker
 
-**Total units:** 193 | **Done:** 146 | **Blocked:** 3 | **Pending:** 44
+**Total units:** 208 | **Done:** 147 | **Blocked:** 3 | **Pending:** 58
 
 > Phases 1-13: v1 core + SOTA + executor + frontend (139 units)
 > Phases 14-20: Sovereign AI OS Upgrade (60 units) — all pending
 > Phase 21: v1 Gap Closure (41 units) — all pending
+> Phase 22: Agentic Discovery Tooling (15 units) — all pending
 
 ---
 
@@ -246,7 +247,7 @@ Ingest, extract, search, and synthesize knowledge across all conversations.
 - [x] 15.6 — SemanticSearchEngine + Embedding Store → `src/engines/semantic-search.ts`
 - [x] 15.7 — CrossConversationSynthesisEngine → `src/engines/cross-conversation-synthesis.ts`
 - [x] 15.8 — Full Export Engine (JSON/CSV) → `src/engines/full-export.ts`
-- [ ] 15.9 — Schema: Memory Intelligence Tables → `prisma/schema.prisma`
+- [x] 15.9 — Schema: Memory Intelligence Tables → `prisma/schema.prisma`
 - [ ] 15.10 — Memory Engine ULID Fix + 10-type expansion → `src/engines/memory-engine.ts`
 - [ ] 15.11 — Topic/Project Organization → `src/engines/conversation-organization.ts`
 - [ ] 15.12 — Memory Consolidation Daemon → `src/engines/memory-consolidation.ts`
@@ -387,6 +388,36 @@ Close all 41 remaining gaps from the original v1 gap analysis that were NOT addr
 - [ ] 21.5.23 — Router tests → `tests/unit/engines/router.test.ts`
 - [ ] 21.5.24 — Alerter tests → `tests/unit/engines/alerter.test.ts`
 - [ ] 21.5.25 — Scheduler tests → `tests/unit/engines/scheduler.test.ts`
+
+---
+
+## Phase 22: Agentic Discovery Tooling (15 units)
+
+MCP server exposing provider discovery as agent-callable tools. Agent drives the full loop: URL → DOM inspection → shape matching → capability inference → manifest generation → registration.
+
+### 22.1–22.4: Store Contracts + Impls
+
+- [ ] 22.1 — DiscoveryStore contract → `src/storage/contracts/discovery-store.ts`
+- [ ] 22.2 — DiscoveryStore Prisma impl → `src/storage/impl/discovery-store-impl.ts`
+- [ ] 22.3 — ShapeBindingStore contract → `src/storage/contracts/shape-binding-store.ts`
+- [ ] 22.4 — ShapeBindingStore Prisma impl → `src/storage/impl/shape-binding-store-impl.ts`
+
+### 22.5–22.8: Engine Enhancements
+
+- [ ] 22.5 — Enhanced ProviderDiscoveryEngine → `src/engines/provider-discovery.ts` (persistence, CDP ops, network obs, interactive probing)
+- [ ] 22.6 — Enhanced ManifestInferenceEngine → `src/engines/manifest-inference.ts` (confidence scoring, needsReview, llmInferred)
+- [ ] 22.7 — Enhanced CapabilityShapeRegistry → `src/engines/capability-shape-registry.ts` (adapter loading, shape inheritance)
+- [ ] 22.8 — Adapter seed modules (4 files) → `seeds/adapters/` (chat_app, coding_ide, search_engine, custom)
+
+### 22.9–22.15: MCP Server + Tools
+
+- [ ] 22.9 — MCP Server scaffold → `src/mcp/server.ts` (stdio transport, tool registry, engine wiring)
+- [ ] 22.10 — MCP tools: Session + Navigation (6 tools) → `src/mcp/discovery-tools.ts`
+- [ ] 22.11 — MCP tools: DOM + Interaction (7 tools) → `src/mcp/discovery-tools.ts`
+- [ ] 22.12 — MCP tools: Network Observation (4 tools) → `src/mcp/discovery-tools.ts`
+- [ ] 22.13 — MCP tools: Analysis + Manifest (6 tools) → `src/mcp/discovery-tools.ts`
+- [ ] 22.14 — MCP tools: Parser Testing (2 tools) → `src/mcp/discovery-tools.ts`
+- [ ] 22.15 — MCP tools: Registration (2 tools) → `src/mcp/discovery-tools.ts`
 
 ---
 
