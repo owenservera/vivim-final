@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 193 | **Done:** 142 | **Blocked:** 3 | **Pending:** 48
+**Total units:** 193 | **Done:** 143 | **Blocked:** 3 | **Pending:** 47
 
 > Phases 1-13: v1 core + SOTA + executor + frontend (139 units)
 > Phases 14-20: Sovereign AI OS Upgrade (60 units) — all pending
@@ -242,7 +242,7 @@ Ingest, extract, search, and synthesize knowledge across all conversations.
 - [x] 15.2 — ChatGPT Export Parser → `seeds/parsers/chatgpt/export.ts`
 - [x] 15.3 — Claude Export Parser → `seeds/parsers/claude/export.ts`
 - [x] 15.4 — Gemini Export Parser → `seeds/parsers/gemini/export.ts`
-- [ ] 15.5 — KnowledgeExtractor (facts, decisions, patterns, entities) → `src/engines/knowledge-extractor.ts`
+- [x] 15.5 — KnowledgeExtractor (facts, decisions, patterns, entities) → `src/engines/knowledge-extractor.ts`
 - [ ] 15.6 — SemanticSearchEngine + Embedding Store → `src/engines/semantic-search.ts`
 - [ ] 15.7 — CrossConversationSynthesisEngine → `src/engines/cross-conversation-synthesis.ts`
 - [ ] 15.8 — Full Export Engine (JSON/CSV) → `src/engines/full-export.ts`
