@@ -5,6 +5,7 @@
 // server-side functions registered by capability slug.
 
 import type { CapabilityEvent, CapabilityEventBus } from './capability-event-bus.js'
+import type { ChromeGovernor } from './chrome-governor.js'
 
 // ── Harness Types ───────────────────────────────────────────────────────────
 
@@ -22,10 +23,10 @@ export interface HarnessCondition {
 }
 
 export interface HarnessContext {
-  query(selector: string): Element | null
-  queryAll(selector: string): Element[]
+  query(selector: string): Promise<Element | null>
+  queryAll(selector: string): Promise<Element[]>
   waitFor(selector: string, timeoutMs?: number): Promise<Element | null>
-  getPageState(): { url: string; title: string; readyState: string }
+  getPageState(): Promise<{ url: string; title: string; readyState: string }>
   intercept(pattern: RegExp): Promise<string>
   emitTelemetry(event: HarnessTelemetryEvent): void
 }
@@ -65,7 +66,11 @@ export class HarnessRuntime {
   private modules: Map<string, HarnessModule> = new Map()
   private eventBus?: CapabilityEventBus
 
-  constructor(eventBus?: CapabilityEventBus) {
+  constructor(
+    eventBus?: CapabilityEventBus,
+    private governor?: ChromeGovernor,
+    private slaveId?: string,
+  ) {
     this.eventBus = eventBus
   }
 
@@ -77,14 +82,9 @@ export class HarnessRuntime {
     const telemetry: HarnessTelemetryEvent[] = []
     let stepsCompleted = 0
 
-    const context: HarnessContext = {
-      query: () => null,
-      queryAll: () => [],
-      waitFor: async () => null,
-      getPageState: () => ({ url: '', title: '', readyState: '' }),
-      intercept: async () => '',
-      emitTelemetry: (e) => telemetry.push(e),
-    }
+    const context: HarnessContext = this.governor && this.slaveId
+      ? this.createRealContext(this.slaveId, telemetry)
+      : this.createStubContext(telemetry)
 
     const {
       outputs,
@@ -189,6 +189,68 @@ export class HarnessRuntime {
         // For now, preconditions are ignored — full implementation in Phase 9
         return this.executeNode(node.step, ctx, 1, 1)
       }
+    }
+  }
+
+  private createStubContext(telemetry: HarnessTelemetryEvent[]): HarnessContext {
+    return {
+      query: async () => null,
+      queryAll: async () => [],
+      waitFor: async () => null,
+      getPageState: async () => ({ url: '', title: '', readyState: '' }),
+      intercept: async () => '',
+      emitTelemetry: (e) => telemetry.push(e),
+    }
+  }
+
+  private createRealContext(slaveId: string, telemetry: HarnessTelemetryEvent[]): HarnessContext {
+    const gov = this.governor!
+    return {
+      query: async (selector: string) => {
+        const result = await gov.cdp.send(slaveId, 'DOM.querySelector', { selector }) as { nodeId: number } | null
+        if (!result?.nodeId) return null
+        const desc = await gov.cdp.send(slaveId, 'DOM.describeNode', { nodeId: result.nodeId }) as Record<string, unknown> | undefined
+        return this.nodeToElement(desc)
+      },
+      queryAll: async (selector: string) => {
+        const result = await gov.cdp.send(slaveId, 'DOM.querySelectorAll', { selector }) as { nodeIds: number[] } | null
+        if (!result?.nodeIds) return []
+        return Promise.all(
+          result.nodeIds.map((id) =>
+            gov.cdp
+              .send(slaveId, 'DOM.describeNode', { nodeId: id })
+              .then((d) => this.nodeToElement(d as Record<string, unknown> | undefined)),
+          ),
+        )
+      },
+      waitFor: async (selector: string, timeoutMs = 10_000) => {
+        const deadline = Date.now() + timeoutMs
+        while (Date.now() < deadline) {
+          const el = await this.createRealContext(slaveId, telemetry).query(selector)
+          if (el) return el
+          await new Promise((r) => setTimeout(r, 200))
+        }
+        return null
+      },
+      getPageState: async () => {
+        const state = await gov.cdp.getPageState(slaveId)
+        return { url: state.url, title: state.title, readyState: state.readyState }
+      },
+      intercept: async (pattern: RegExp) => {
+        const result = await gov.cdp.capture(slaveId, pattern, 30_000)
+        return result.body
+      },
+      emitTelemetry: (e) => telemetry.push(e),
+    }
+  }
+
+  private nodeToElement(desc: Record<string, unknown> | undefined): Element {
+    if (!desc) return { tagName: '', text: '', attributes: {} }
+    const node = desc.node as Record<string, unknown> | undefined
+    return {
+      tagName: String(node?.nodeName ?? '').toLowerCase(),
+      text: String(node?.nodeValue ?? ''),
+      attributes: (node?.attributes as Record<string, string>) ?? {},
     }
   }
 

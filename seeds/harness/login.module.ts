@@ -75,7 +75,7 @@ const loginModule: HarnessModule = {
           return { ok: true, output: { action: 'submit' } }
         }
         case 'detect_login_state': {
-          const pageState = ctx.getPageState()
+          const pageState = await ctx.getPageState()
           const loggedIn = !pageState.url.includes('login') && !pageState.url.includes('auth')
           ctx.emitTelemetry({
             type: 'dom_interaction',

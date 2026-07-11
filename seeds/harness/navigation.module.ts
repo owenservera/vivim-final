@@ -51,7 +51,7 @@ const navigationModule: HarnessModule = {
           return { ok: true, output: { action: 'wait_for' } }
         }
         case 'get_current_url': {
-          const pageState = ctx.getPageState()
+          const pageState = await ctx.getPageState()
           return { ok: true, output: { action: 'get_current_url', url: pageState.url } }
         }
         default: {
