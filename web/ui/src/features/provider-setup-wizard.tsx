@@ -103,18 +103,19 @@ export function ProviderSetupWizard({ onComplete }: { onComplete?: () => void })
         </h2>
 
         {step === 'workspace' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Workspace Path (Chrome profiles will be saved here)
-              </label>
-              <input
-                type="text"
-                value={workspacePath}
-                onChange={(e) => setWorkspacePath(e.target.value)}
-                placeholder={DEFAULT_WORKSPACE}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-              />
+<div className="space-y-4">
+             <div>
+               <label htmlFor="workspace-input" className="block text-sm font-medium text-gray-700 mb-1">
+                 Workspace Path (Chrome profiles will be saved here)
+               </label>
+               <input
+                 id="workspace-input"
+                 type="text"
+                 value={workspacePath}
+                 onChange={(e) => setWorkspacePath(e.target.value)}
+                 placeholder={DEFAULT_WORKSPACE}
+                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+               />
               <p className="mt-1 text-xs text-gray-500">
                 Default: {DEFAULT_WORKSPACE}
                 <br />
