@@ -312,6 +312,7 @@ Before starting any batch of atomic tasks (e.g., tasks 2.1–2.4, or a full phas
 - **NEVER pause between units** unless blocked
 - **ALWAYS report progress**: "✓ unit-name | done: 23/95 | next: next-unit-name"
 - **ALWAYS read the atomic file before implementing** — it has the full interface
+- **ATOMIC FILE = EXACT SPEC.** The atomic file defines interfaces, imports, store contracts, and tests verbatim. Do NOT invent new interfaces, add extra methods, or generate your own interpretation. If the atomic file says `import X from '../contracts/x-store.ts'`, you import from that exact path. If it defines a method signature, you implement that exact signature. Period.
 - If a unit is already done (files exist + tests pass), mark it [x] and move on
 
 ## DevOps Roadmap — Research-First Workflow
