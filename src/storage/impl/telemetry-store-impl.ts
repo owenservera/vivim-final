@@ -26,8 +26,13 @@ export class TelemetryStoreImpl implements TelemetryStore {
     return this.prisma as unknown as any
   }
 
+  private toSqlite(sql: string): string {
+    // SQLite Prisma uses `?` positional placeholders, not Postgres `$N`.
+    return sql.replace(/\$(\d+)/g, '?')
+  }
+
   async executeAggregationQuery(sql: string, params: unknown[]): Promise<Row[]> {
-    const rows = (await this.p.$queryRawUnsafe(sql, ...params)) as Row[] | null
+    const rows = (await this.p.$queryRawUnsafe(this.toSqlite(sql), ...params)) as Row[] | null
     return rows ?? []
   }
 
@@ -36,11 +41,11 @@ export class TelemetryStoreImpl implements TelemetryStore {
     let inserted = 0
     for (const row of rows) {
       const cols = columns.map((c) => `"${c}"`)
-      const placeholders = columns.map((_, i) => `$${i + 1}`)
-      const updates = columns.map((c) => `"${c}" = EXCLUDED."${c}"`).join(', ')
+      const placeholders = columns.map(() => '?')
+      const updates = columns.map((c) => `"${c}" = excluded."${c}"`).join(', ')
       const sql =
         `INSERT INTO "${table}" (${cols.join(', ')}) VALUES (${placeholders.join(', ')}) ` +
-        `ON CONFLICT DO NOTHING ON CONSTRAINT "${table}_pkey" DO UPDATE SET ${updates}`
+        `ON CONFLICT DO UPDATE SET ${updates}`
       await this.p.$executeRawUnsafe(sql, ...columns.map((c) => row[c] ?? null))
       inserted++
     }
@@ -50,7 +55,7 @@ export class TelemetryStoreImpl implements TelemetryStore {
   async countRows(table: string, where?: string, params?: unknown[]): Promise<number> {
     const w = where ? ` WHERE ${where}` : ''
     const rows = (await this.p.$queryRawUnsafe(
-      `SELECT COUNT(*)::int AS n FROM "${table}"${w}`,
+      `SELECT COUNT(*) AS n FROM "${table}"${w}`,
       ...(params ?? []),
     )) as Row[]
     return Number((rows[0]?.n as number) ?? 0)
@@ -62,8 +67,8 @@ export class TelemetryStoreImpl implements TelemetryStore {
     params: unknown[],
     maxRows?: number,
   ): Promise<number> {
-    let sql = `DELETE FROM "${table}" WHERE ${where}`
-    if (maxRows != null) sql += ` LIMIT ${maxRows}`
+    const inner = `SELECT rowid FROM "${table}" WHERE ${where}`
+    const sql = `DELETE FROM "${table}" WHERE rowid IN (${inner}${maxRows != null ? ` LIMIT ${maxRows}` : ''})`
     return await this.p.$executeRawUnsafe(sql, ...params)
   }
 
@@ -86,7 +91,7 @@ export class TelemetryStoreImpl implements TelemetryStore {
       params.push(opts.limit)
       sql += ` LIMIT $${params.length}`
     }
-    const rows = (await this.p.$queryRawUnsafe(sql, ...params)) as HealthHistoryRow[]
+    const rows = (await this.p.$queryRawUnsafe(this.toSqlite(sql), ...params)) as HealthHistoryRow[]
     return rows ?? []
   }
 
@@ -100,7 +105,10 @@ export class TelemetryStoreImpl implements TelemetryStore {
       params.push(opts.limit)
       sql += ` LIMIT $${params.length}`
     }
-    const rows = (await this.p.$queryRawUnsafe(sql, ...params)) as SelectorHealthRow[]
+    const rows = (await this.p.$queryRawUnsafe(
+      this.toSqlite(sql),
+      ...params,
+    )) as SelectorHealthRow[]
     return rows ?? []
   }
 
@@ -118,7 +126,7 @@ export class TelemetryStoreImpl implements TelemetryStore {
       params.push(opts.to)
       sql += ` AND "day_ts" <= $${params.length}`
     }
-    const rows = (await this.p.$queryRawUnsafe(sql, ...params)) as DailySummaryRow[]
+    const rows = (await this.p.$queryRawUnsafe(this.toSqlite(sql), ...params)) as DailySummaryRow[]
     return rows ?? []
   }
 
@@ -136,7 +144,7 @@ export class TelemetryStoreImpl implements TelemetryStore {
       params.push(opts.to)
       sql += `${opts.from ? ' AND' : ' WHERE'} "day_ts" <= $${params.length}`
     }
-    const rows = (await this.p.$queryRawUnsafe(sql, ...params)) as DailySummaryRow[]
+    const rows = (await this.p.$queryRawUnsafe(this.toSqlite(sql), ...params)) as DailySummaryRow[]
     const list = rows ?? []
     const sum = (k: keyof DailySummaryRow) =>
       list.reduce((a, r) => a + (typeof r[k] === 'number' ? (r[k] as number) : 0), 0)

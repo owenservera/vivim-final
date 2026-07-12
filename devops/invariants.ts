@@ -19,8 +19,8 @@ import { parseUnits, type Unit } from './tracker.ts'
 import { loadDeps } from './deps.ts'
 
 const PROJECT_ROOT = join(import.meta.dir, '..')
-const TRACKER_PATH = join(PROJECT_ROOT, 'docs', 'atomic', '01-tracker.md')
-const ATOMIC_DIR = join(PROJECT_ROOT, 'docs', 'atomic')
+const TRACKER_PATH = join(PROJECT_ROOT, 'docs', 'atomic-v3-fork-canon', '01-tracker.md')
+const ATOMIC_DIR = join(PROJECT_ROOT, 'docs', 'atomic-v3-fork-canon')
 const RESEARCH_REPORT_PATH = join(PROJECT_ROOT, 'docs', 'roadmap', 'RESEARCH-REPORT.md')
 const TRUTH_GAPS_PATH = join(PROJECT_ROOT, 'docs', 'roadmap', 'TRUTH-GAPS.md')
 const ENGINES_DIR = join(PROJECT_ROOT, 'src', 'engines')

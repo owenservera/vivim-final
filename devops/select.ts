@@ -22,12 +22,16 @@ import { join } from "node:path";
 import { parseUnits, type Unit } from "./tracker.ts";
 import { loadDeps } from "./deps.ts";
 
-export const TRACKER = join(process.cwd(), "docs/atomic/01-tracker.md");
-export const ATOMIC_DIR = join(process.cwd(), "docs/atomic");
+export const TRACKER = join(process.cwd(), "docs/atomic-v3-fork-canon/01-tracker.md");
+export const ATOMIC_DIR = join(process.cwd(), "docs/atomic-v3-fork-canon");
 
 // Phases at or above this number are cross-cutting tooling tracks, exempt
 // from the sequential product-phase gate.
 export const TOOLING_PHASE_MIN = 90;
+
+// The canonical tracker is docs/atomic-v3-fork-canon/01-tracker.md (127 units).
+// Deprecated: docs/atomic-v3/, docs/atomic-v4/, docs/atomic-v5/.
+export const PLAN_PAUSED = false;
 
 export interface Selection {
   id: string;
@@ -88,6 +92,13 @@ export function selectFrom(
 }
 
 export async function selectNext(): Promise<Selection | null> {
+  if (PLAN_PAUSED) {
+    console.error(
+      "[devops] plan PAUSED — atomic-v3-fork-canon is mid-flight. " +
+        "Selection halted. Resume by setting PLAN_PAUSED=false in devops/select.ts.",
+    );
+    return null;
+  }
   const content = await readFile(TRACKER, "utf8");
   const units = parseUnits(content.split("\n"));
   const deps = await loadDeps(ATOMIC_DIR);

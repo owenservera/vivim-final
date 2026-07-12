@@ -6,6 +6,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { newId } from '../ids.js'
 import { type ProviderManifest, ProviderManifestSchema } from '../schema/provider-manifest.js'
+import { computeParserHash } from './stream-align.js'
 import type {
   ProviderCapabilityRow,
   ProviderConfigRow,
@@ -116,7 +117,10 @@ export class ProviderRegistrar {
         label: ep.label,
         endpoint_type: ep.endpoint_type,
         is_default: ep.is_default ? 1 : 0,
-        selector_json: JSON.stringify(ep.selector ?? {}),
+        selectors_json: JSON.stringify(ep.selector ?? {}),
+        composer_type: ep.composer_type ?? 'textarea',
+        send_method: ep.send_method ?? 'both',
+        content_editable: ep.content_editable ? 1 : 0,
         created_at: now,
         updated_at: now,
       }
@@ -133,9 +137,13 @@ export class ProviderRegistrar {
         provider_id: providerId,
         parser_name: parser.name,
         parser_version: parser.version,
-        parser_logic_type: 'file',
+        parser_logic_type: parser.logic_type ?? 'file',
         parser_file_path: parser.file ?? null,
-        parser_hash: null,
+        parser_logic_code: parser.logic_code ?? null,
+        // Unit 2.15 — autocompute a stable hash so the parser cache stays in sync.
+        parser_hash: computeParserHash(
+          parser.logic_code ?? parser.file ?? `${parser.name}:${parser.version}`,
+        ),
         is_active: parser.is_active ? 1 : 0,
         fallback_parser_id: null,
         created_at: now,

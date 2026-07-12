@@ -11,17 +11,23 @@
 // Profile root resolution (highest priority first):
 //   1. --profile-base <dir>      CLI flag
 //   2. CAP_STORE_PROFILE_DIR     env var
-//   3. config.profileBaseDir     platform default (<dataDir>/chrome-profiles)
+//   3. <cwd>/data/chrome-profiles/by-provider-then-account
+//      (relative to the current working directory; the default for this repo)
 //
-// Layout: <root>/<provider>/<account>  — the exact path ProfileAllocator uses,
-// so later ChromeGovernor.spawn(provider, account) reuses the authed session.
+// Account naming: you are prompted for the email you will use to log in, and
+// the profile folder is named <provider>_<emaillocalpart>, e.g. for
+// chatgpt logging in as owservera@x.com the folder is chatgpt_owservera.
+//
+// Layout: <root>/<provider>/<provider>_<emaillocalpart>
+//   — the exact path ProfileAllocator uses, so later
+//     ChromeGovernor.spawn(provider, account) reuses the authed session.
 //
 // Usage:
 //   bun run scripts/setup-slaves.ts
-//       Spawn a VISIBLE Chrome per account at its login URL. Log in by hand
-//       (credentials + 2FA). Cookies persist in the profile dir. Then the
-//       script relaunches HEADLESS reusing the same profile to prove the
-//       session survives.
+//       For each provider, prompt for your login email, then spawn a VISIBLE
+//       Chrome at its login URL. Log in by hand (credentials + 2FA). Cookies
+//       persist in the named profile dir. Then the script relaunches HEADLESS
+//       reusing the same profile to prove the session survives.
 //
 //   bun run scripts/setup-slaves.ts --verify
 //       Relaunch HEADLESS from existing profiles only; confirm auth persists.
@@ -36,17 +42,26 @@ import { type LaunchResult, killChrome, launchChrome } from '../src/executor/lau
 import { ProfileAllocator } from '../src/executor/profile-allocator.js'
 import { config } from '../src/config.js'
 
-interface SetupAccount {
+interface SetupProvider {
   provider: string
-  account: string
   loginUrl: string
 }
 
-const ACCOUNTS: SetupAccount[] = [
-  { provider: 'chatgpt', account: 'default', loginUrl: 'https://chat.openai.com/' },
-  { provider: 'claude', account: 'default', loginUrl: 'https://claude.ai/login' },
-  { provider: 'gemini', account: 'default', loginUrl: 'https://gemini.google.com/' },
+const PROVIDERS: SetupProvider[] = [
+  { provider: 'chatgpt', loginUrl: 'https://chat.openai.com/' },
+  { provider: 'claude', loginUrl: 'https://claude.ai/login' },
+  { provider: 'gemini', loginUrl: 'https://gemini.google.com/' },
 ]
+
+// Derive the profile folder name from the login email, e.g.
+//   "owservera@gmail.com" + provider "chatgpt" -> "chatgpt_owservera"
+function accountFromEmail(provider: string, email: string): string {
+  const local = email
+    .toLowerCase()
+    .split('@')[0]
+    .replace(/[^a-z0-9]+/g, '')
+  return `${provider}_${local || 'default'}`
+}
 
 // ── Arg parsing ─────────────────────────────────────────────────────────────
 
@@ -59,16 +74,21 @@ function readFlag(name: string): string | undefined {
   return undefined
 }
 
-const PROFILE_BASE = readFlag('--profile-base') ?? config.profileBaseDir
+const PROFILE_BASE =
+  readFlag('--profile-base') ??
+  process.env.CAP_STORE_PROFILE_DIR ??
+  join(process.cwd(), 'data', 'chrome-profiles', 'by-provider-then-account')
+
 const BASE_PORT = 9222
 
 const allocator = new ProfileAllocator(PROFILE_BASE)
 
-interface Launched {
-  account: SetupAccount
-  profileDir: string
+interface Session {
+  provider: string
+  account: string
   port: number
-  result: LaunchResult
+  profileDir: string
+  visiblePid?: number
 }
 
 function ask(question: string): Promise<string> {
@@ -76,21 +96,26 @@ function ask(question: string): Promise<string> {
   return Bun.readLine(Bun.stdin).then((l) => (l ?? '').toString().trim())
 }
 
-async function launchVisible(account: SetupAccount, port: number): Promise<Launched> {
-  const profileDir = await allocator.allocate(account.provider, account.account)
+async function launchVisible(
+  provider: string,
+  account: string,
+  loginUrl: string,
+  port: number,
+): Promise<Session> {
+  const profileDir = await allocator.allocate(provider, account)
   const result = await launchChrome({
     visible: true,
     debugPort: port,
     profileDir,
-    extraArgs: [account.loginUrl],
+    extraArgs: [loginUrl],
   })
-  return { account, profileDir, port, result }
+  return { provider, account, port, profileDir, visiblePid: result.pid }
 }
 
-async function launchHeadless(account: SetupAccount, port: number): Promise<Launched> {
-  const profileDir = await allocator.allocate(account.provider, account.account)
-  const result = await launchChrome({ visible: false, debugPort: port, profileDir })
-  return { account, profileDir, port, result }
+async function launchHeadless(provider: string, account: string, port: number): Promise<Session> {
+  const profileDir = await allocator.allocate(provider, account)
+  await launchChrome({ visible: false, debugPort: port, profileDir })
+  return { provider, account, port, profileDir }
 }
 
 interface VerifyResult {
@@ -156,30 +181,38 @@ async function run(): Promise<void> {
   console.log(
     VERIFY_ONLY
       ? 'Mode: --verify (relaunch headless from existing profiles)\n'
-      : 'Mode: interactive (log in manually, then headless reuse is verified)\n',
+      : 'Mode: interactive (enter login email, log in manually, then headless reuse is verified)\n',
   )
 
-  const launched: Launched[] = []
+  const sessions: Session[] = []
 
   if (!VERIFY_ONLY) {
-    for (let i = 0; i < ACCOUNTS.length; i++) {
-      const account = ACCOUNTS[i]
+    for (let i = 0; i < PROVIDERS.length; i++) {
+      const p = PROVIDERS[i]
       const port = BASE_PORT + i
+      const email = await ask(`Email you will use to log in to ${p.provider} (e.g. you@domain.com):`)
+      const account = accountFromEmail(p.provider, email)
       console.log(
-        `[${i + 1}/${ACCOUNTS.length}] Launching VISIBLE Chrome for ${account.provider}/${account.account} → ${account.loginUrl}`,
+        `[${i + 1}/${PROVIDERS.length}] Launching VISIBLE Chrome for ${p.provider}/${account} → ${p.loginUrl}`,
       )
-      const l = await launchVisible(account, port)
-      launched.push(l)
-      console.log(`  profile: ${l.profileDir}\n  debugPort: ${port}  pid: ${l.result.pid}`)
+      const s = await launchVisible(p.provider, account, p.loginUrl, port)
+      sessions.push(s)
+      console.log(`  profile: ${s.profileDir}\n  debugPort: ${port}  pid: ${s.visiblePid}`)
       await ask('  >> Log in to the provider in the opened window, then press ENTER:')
     }
   }
 
   if (VERIFY_ONLY) {
-    for (let i = 0; i < ACCOUNTS.length; i++) {
-      const account = ACCOUNTS[i]
+    const existing = await allocator.list()
+    if (existing.length === 0) {
+      console.log('No existing profiles found under the profile root. Run without --verify first.')
+      process.exitCode = 1
+      return
+    }
+    for (let i = 0; i < existing.length; i++) {
+      const e = existing[i]
       const port = BASE_PORT + i
-      launched.push(await launchHeadless(account, port))
+      sessions.push(await launchHeadless(e.providerSlug, e.accountId, port))
     }
   }
 
@@ -187,27 +220,25 @@ async function run(): Promise<void> {
   // the authenticated session survives.
   console.log('\n--- Verifying headless reuse (persisted auth) ---')
   let pass = 0
-  for (let i = 0; i < ACCOUNTS.length; i++) {
-    const account = ACCOUNTS[i]
-    const port = BASE_PORT + i
-    if (!VERIFY_ONLY) {
-      const vis = launched[i]
-      await killChrome(vis.result.pid)
+  for (let i = 0; i < sessions.length; i++) {
+    const s = sessions[i]
+    if (!VERIFY_ONLY && s.visiblePid !== undefined) {
+      await killChrome(s.visiblePid)
       await Bun.sleep(800)
-      launched[i] = await launchHeadless(account, port)
+      sessions[i] = await launchHeadless(s.provider, s.account, s.port)
     }
-    const v = await verifySlave(port)
+    const v = await verifySlave(s.port)
     const status = v.alive && v.loggedIn ? 'PASS' : 'FAIL'
     if (status === 'PASS') pass++
     console.log(
-      `  [${status}] ${account.provider}/${account.account}  alive=${v.alive} cookies=${v.cookieCount ?? '?'} url=${v.url ?? '-'}`,
+      `  [${status}] ${s.provider}/${s.account}  alive=${v.alive} cookies=${v.cookieCount ?? '?'} url=${v.url ?? '-'}`,
     )
   }
 
-  console.log(`\n=== Done: ${pass}/${ACCOUNTS.length} slaves verified ===\n`)
-  if (pass < ACCOUNTS.length) {
+  console.log(`\n=== Done: ${pass}/${sessions.length} slaves verified ===\n`)
+  if (pass < sessions.length) {
     console.log('Some slaves did not verify. Re-run and log in again, or use --verify once')
-    console.log(`profiles exist under ${join(PROFILE_BASE, '<provider>', '<account>')}.\n`)
+    console.log(`profiles exist under ${join(PROFILE_BASE, '<provider>', '<provider>_<email>')}.\n`)
     process.exitCode = 1
   } else {
     console.log('Profiles are authenticated and persist for headless test runs.')

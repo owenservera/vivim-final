@@ -7,7 +7,12 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-const DEPENDS_RE = /^\*\*Depends:\*\*\s*(.*?)\s*\|\s*\*\*Produces:/m;
+// v1/v2 atomic files use `**Depends:**`; v3 files use `**Depends on:**`.
+// Accept both forms so the dependency graph survives the v3 migration.
+// v1 keeps `**Depends:** <deps> | **Produces:**` on one line; v3 splits them
+// across two lines with no `|`. Use `[\s\S]` (not `.`) so the pattern spans
+// newlines, and make the `|` optional.
+const DEPENDS_RE = /^\*\*Depends(?: on)?:\*\*\s*([\s\S]*?)\s*(?:\|\s*)?\*\*Produces:/m;
 const ID_RE = /(\d+)\.(\d+)/g;
 const RANGE_RE = /(\d+)\.(\d+)\s*-\s*(\d+)\.(\d+)/g;
 

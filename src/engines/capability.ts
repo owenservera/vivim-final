@@ -217,10 +217,10 @@ export class CapabilityEngine {
     input?: Record<string, unknown>,
   ): Promise<Record<string, unknown>> {
     const found = await this.governor.cdp.send(slaveId, 'DOM.querySelector', {
-      selector: selector.selector,
+      selector: selector.selectorValue,
     })
-    if (found == null) throw new EngineError(`selector missed: ${selector.selector}`)
-    return { selector: selector.selector, found: true, input: input ?? {} }
+    if (found == null) throw new EngineError(`selector missed: ${selector.selectorValue}`)
+    return { selector: selector.selectorValue, found: true, input: input ?? {} }
   }
 
   private async applyStrategy(

@@ -1,5 +1,11 @@
 // src/engines/capability-shape-registry.ts
-// CapabilityShapeRegistry — meta-registry of known capability archetypes
+// CapabilityShapeRegistry — Phase 22.7: Enhanced with shape inheritance + adapter loading
+
+import { readdir } from 'node:fs/promises'
+import { join } from 'node:path'
+import { NotFoundError } from '../errors.js'
+
+// ── Types ─────────────────────────────────────────────────────────────────
 
 export interface DomIndicator {
   selector: string
@@ -38,6 +44,8 @@ export interface CapabilityShape {
     parserArchetype: string
     fallbackStrategy: 'plain_text' | 'html_extract' | 'raw'
   }
+  extendsShape?: string
+  overrides?: Partial<Omit<CapabilityShape, 'id' | 'extendsShape' | 'overrides'>>
 }
 
 export interface CapabilityAdapter {
@@ -294,6 +302,41 @@ export class CapabilityShapeRegistry {
 
   registerAdapter(adapter: CapabilityAdapter): void {
     this.adapters.set(adapter.shapeId, adapter)
+  }
+
+  async loadAdaptersFromDir(adapterDir: string): Promise<void> {
+    const files = await readdir(adapterDir).catch(() => [] as string[])
+    for (const file of files) {
+      if (!file.endsWith('.adapter.ts')) continue
+      const mod = await import(join(adapterDir, file))
+      if (mod.default?.shapeId) {
+        this.registerAdapter(mod.default as CapabilityAdapter)
+      }
+    }
+  }
+
+  getChildShapes(parentShapeId: string): CapabilityShape[] {
+    const children: CapabilityShape[] = []
+    for (const shape of this.shapes.values()) {
+      if (shape.extendsShape === parentShapeId) {
+        children.push(shape)
+      }
+    }
+    return children
+  }
+
+  getEffectiveShape(shapeId: string): CapabilityShape {
+    const shape = this.shapes.get(shapeId)
+    if (!shape) throw new NotFoundError(`Shape ${shapeId} not found`)
+    if (!shape.extendsShape) return shape
+
+    const parent = this.getEffectiveShape(shape.extendsShape)
+    return {
+      ...parent,
+      ...shape,
+      ...(shape.overrides ?? {}),
+      id: shape.id,
+    }
   }
 
   matchShape(domIndicators: DomIndicator[]): { shapeId: string; confidence: number } | null {

@@ -3,9 +3,14 @@
 
 import { CommandRegistry } from './command-registry.js'
 import { OutputFormatter, type OutputMode } from './output-formatter.js'
+import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import { syncCliFromUnified } from './commands/registry-bridge.js'
 
 const registry = new CommandRegistry()
 const formatter = new OutputFormatter()
+
+// Registry for capability-bridged commands
+export let capabilityRegistry: UnifiedCapabilityRegistry | null = null
 
 function parseArgs(argv: string[]): {
   command: string
@@ -30,6 +35,39 @@ function parseArgs(argv: string[]): {
   }
 
   return { command, args, flags }
+}
+
+// Register built-in non-capability commands
+import { registerVersionCommands } from './commands/version.js'
+import { registerHealthCommands } from './commands/health.js'
+import { registerSystemCommands } from './commands/system.js'
+import { registerFleetCommands } from './commands/fleet.js'
+import { registerProvidersCommands } from './commands/providers.js'
+import { registerConfigCommands } from './commands/config.js'
+import { registerKernelCommands } from './commands/kernel.js'
+import { registerDiscoveryCommands } from './commands/discovery.js'
+
+// Initialize registry with built-in commands
+function initializeRegistry(): void {
+  registerVersionCommands(registry, { baseUrl: process.env.CAPSTORE_URL ?? 'http://localhost:9420' })
+  registerHealthCommands(registry, { baseUrl: process.env.CAPSTORE_URL ?? 'http://localhost:9420' })
+  registerSystemCommands(registry)
+  registerFleetCommands(registry)
+  registerProvidersCommands(registry)
+  // Discovery commands run locally against a logged-in profile (no server needed)
+  registerDiscoveryCommands(registry)
+  // Config commands use HTTP bridge (for remote config API)
+  registerConfigCommands(registry, { baseUrl: process.env.CAPSTORE_URL ?? 'http://localhost:9420' })
+  // Kernel commands use universal config surface (local-only, no HTTP needed)
+  registerKernelCommands(registry, { kernel: null as any, configSurface: null as any })
+}
+
+initializeRegistry()
+
+// Called by server bootstrap after capability registry is constructed
+export function connectCapabilityRegistry(reg: UnifiedCapabilityRegistry): void {
+  capabilityRegistry = reg
+  syncCliFromUnified(reg, registry)
 }
 
 async function main(): Promise<void> {
@@ -60,4 +98,4 @@ main().catch((err) => {
   process.exit(1)
 })
 
-export { registry }
+export { registry, connectCapabilityRegistry }

@@ -166,9 +166,25 @@ const CLAUDE_MANIFEST: ProviderManifest = {
     capabilities: ['send_message'],
   },
   endpoints: [
-    { label: 'Chat', url: 'https://claude.ai/chat', endpoint_type: 'chat', is_default: true },
+    {
+      label: 'Chat',
+      url: 'https://claude.ai/chat',
+      endpoint_type: 'chat',
+      is_default: true,
+      composer_type: 'prosemirror' as const,
+      send_method: 'both' as const,
+      content_editable: true,
+    },
   ],
-  parsers: [{ name: 'Claude SSE Parser', file: 'claude/001.ts', version: 1, is_active: true }],
+  parsers: [
+    {
+      name: 'Claude SSE Parser',
+      file: 'claude/001.ts',
+      version: 1,
+      is_active: true,
+      logic_type: 'file' as const,
+    },
+  ],
   models: [
     {
       slug: 'claude-sonnet-4',

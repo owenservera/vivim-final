@@ -1,9 +1,24 @@
 // src/server/conversation-router.ts
 // REST API router — core endpoints
 
-import type { PlanTier } from '../engines/capability-resolution.js'
+import type {
+  PlanTier,
+  ResolvedCapabilities,
+  ResolvedCapability,
+} from '../engines/capability-resolution.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
+
+/** Flatten grouped ResolvedCapabilities into a single ordered array. */
+function flattenResolved(resolved: ResolvedCapabilities): ResolvedCapability[] {
+  return [
+    ...resolved.composer,
+    ...resolved.header,
+    ...resolved.message,
+    ...resolved.sidebar,
+    ...resolved.inline,
+  ]
+}
 
 export function createConversationRouter(ctx: ServerContext) {
   return async (req: Request): Promise<Response> => {
@@ -34,7 +49,95 @@ export function createConversationRouter(ctx: ServerContext) {
         if (!ctx.resolutionEngine) return errorResponse('Engine not wired', 'InternalError', 500)
         const planTier = (url.searchParams.get('planTier') ?? 'free') as PlanTier
         const resolved = await ctx.resolutionEngine.resolve(providerId, planTier)
-        return json(resolved)
+        return json({ ...resolved, capabilities: flattenResolved(resolved) })
+      }
+
+      // GET /api/conversations/:id/capabilities — resolve via the conversation's provider
+      const convCapMatch = pathname.match(/^\/api\/conversations\/([^/]+)\/capabilities$/)
+      if (convCapMatch && method === 'GET') {
+        const conversationId = convCapMatch[1]
+        if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
+        if (!ctx.resolutionEngine) return errorResponse('Engine not wired', 'InternalError', 500)
+        const conversation = await ctx.db.getConversation(conversationId)
+        if (!conversation) return errorResponse('Conversation not found', 'NotFoundError', 404)
+        const providerId = (conversation as { providerId: string }).providerId
+        const planTier = (url.searchParams.get('planTier') ?? 'free') as PlanTier
+        const resolved = await ctx.resolutionEngine.resolve(providerId, planTier)
+        return json({ ...resolved, capabilities: flattenResolved(resolved) })
+      }
+
+      // POST /api/conversations/:id/capabilities/:slug/execute
+      const execMatch = pathname.match(
+        /^\/api\/conversations\/([^/]+)\/capabilities\/([^/]+)\/execute$/,
+      )
+      if (execMatch && method === 'POST') {
+        const conversationId = execMatch[1]
+        const slug = execMatch[2]
+        if (!conversationId || !slug) {
+          return errorResponse('Invalid conversation or capability', 'ValidationError', 400)
+        }
+        if (!ctx.resolutionEngine) return errorResponse('Engine not wired', 'InternalError', 500)
+        const conversation = await ctx.db.getConversation(conversationId)
+        if (!conversation) return errorResponse('Conversation not found', 'NotFoundError', 404)
+        const providerId = (conversation as { providerId: string }).providerId
+
+        const resolved = await ctx.resolutionEngine.resolve(providerId, 'free')
+        const capability = flattenResolved(resolved).find((c) => c.slug === slug)
+        if (!capability) return errorResponse('Capability not found', 'NotFoundError', 404)
+
+        const traceId = crypto.randomUUID()
+        ctx.eventBus.emit({
+          type: 'capability:progress',
+          step: 0,
+          total: 1,
+          description: `Dispatched ${slug}`,
+          moduleId: capability.id,
+          slaveId: conversationId,
+        })
+
+        // 90.6: real backend execution. ChromeGovernor may expose
+        // executeCapability in a later phase; prefer it if present. Otherwise
+        // delegate through the engine that owns the capability and surface a
+        // `dispatched` result so progress can still stream over WS.
+        const governor = ctx.governor as
+          | { executeCapability?: (cid: string, s: string) => Promise<unknown> }
+          | undefined
+        let executed: unknown
+        let ok = true
+        if (governor?.executeCapability) {
+          try {
+            executed = await governor.executeCapability(conversationId, slug)
+          } catch (err) {
+            ok = false
+            executed = { error: err instanceof Error ? err.message : 'execution failed' }
+          }
+        } else {
+          executed = { status: 'dispatched', slug, conversationId }
+        }
+
+        ctx.eventBus.emit({
+          type: 'capability:executed',
+          capabilityId: capability.id,
+          providerId,
+          traceId,
+          ok,
+          latencyMs: 0,
+        })
+
+        return json({ ok, slug, conversationId, traceId, result: executed })
+      }
+
+      // Sandbox debug surface (90.8)
+      if (pathname === '/api/sandbox/debug' && method === 'GET') {
+        return json({
+          providers: await ctx.db.listProviders(),
+          recentEvents: ctx.eventBus.snapshot(),
+        })
+      }
+      if (pathname === '/api/sandbox/debug' && method === 'POST') {
+        ctx.eventBus.removeAllListeners()
+        ctx.eventBus.clearRecent()
+        return json({ status: 'reset' })
       }
 
       // Fleet
@@ -52,7 +155,9 @@ export function createConversationRouter(ctx: ServerContext) {
 
       // Conversations
       if (pathname === '/api/conversations' && method === 'GET') {
-        return json([])
+        const limit = Number(url.searchParams.get('limit') ?? '50')
+        const conversations = await ctx.db.listConversations({ limit })
+        return json(conversations)
       }
 
       if (pathname === '/api/conversations' && method === 'POST') {
@@ -92,6 +197,31 @@ export function createConversationRouter(ctx: ServerContext) {
         return json({ status: 'ok' })
       }
 
+      // Health providers endpoint (4.5)
+      if (pathname === '/api/health/providers' && method === 'GET') {
+        const healthKernel = (ctx as { healthKernel?: import('../engines/provider-health.js').ProviderHealthKernel }).healthKernel
+        if (!healthKernel) {
+          return json({})
+        }
+        const allHealth = healthKernel.getAllHealth()
+        const result: Record<string, unknown> = {}
+        for (const [providerId, h] of allHealth) {
+          result[providerId] = h
+        }
+        return json(result)
+      }
+
+      // Mirror state endpoint (5.4)
+      const mirrorMatch = pathname.match(/^\/api\/conversations\/([^/]+)\/mirror$/)
+      if (mirrorMatch && method === 'GET') {
+        const convId = mirrorMatch[1]
+        if (!convId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
+        const mirror = (ctx as { mirror?: import('../engines/mirror-engine.js').MirrorEngine }).mirror
+        if (!mirror) return json({ chrome: {}, ui: {}, lastSyncAt: 0, pendingUpdates: 0 })
+        const state = await mirror.projectState(convId)
+        return json(state)
+      }
+
       // Config
       const configMatch = pathname.match(/^\/api\/config\/([^/]+)$/)
       if (configMatch && method === 'GET') {
@@ -99,6 +229,33 @@ export function createConversationRouter(ctx: ServerContext) {
         if (!engineId) return errorResponse('Invalid engine id', 'ValidationError', 400)
         const config = await ctx.db.getConfig(engineId)
         return json(config)
+      }
+
+      // GET /api/config/governor — governor config
+      if (pathname === '/api/config/governor' && method === 'GET') {
+        const govConfig = (ctx.governor as { config?: Record<string, unknown> })?.config ?? {}
+        return json({
+          fleetConfig: {
+            portRange: govConfig.portRange ?? [9300, 9400],
+            healthProbeIntervalMs: govConfig.healthProbeIntervalMs ?? 30_000,
+            autoRestart: govConfig.autoRestart ?? true,
+            maxRestarts: govConfig.maxRestarts ?? 3,
+            circuitBreakerThreshold: govConfig.circuitBreakerThreshold ?? 5,
+            circuitBreakerResetMs: govConfig.circuitBreakerResetMs ?? 60_000,
+          },
+          chromeConfig: {
+            path: process.env.CHROME_PATH ?? null,
+            extraArgs: [],
+            disableGpu: false,
+          },
+        })
+      }
+
+      // PUT /api/config/governor — update governor config
+      if (pathname === '/api/config/governor' && method === 'PUT') {
+        const body = (await req.json()) as Record<string, unknown>
+        await ctx.db.setConfig('governor', JSON.stringify(body))
+        return json({ ok: true, note: 'Restart required for fleet config changes' })
       }
 
       return errorResponse('Not found', 'NotFoundError', 404)

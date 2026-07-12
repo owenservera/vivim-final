@@ -20,6 +20,8 @@ Thumbs.db
 
 # Prisma
 prisma/*.db
+prisma/*.db-shm
+prisma/*.db-wal
 
 # Logs
 *.log
@@ -35,3 +37,17 @@ yarn-error.log*
 
 # Bun
 .bunv/
+
+# Harvest targets
+harvest-targets/
+
+# Local tool config
+.opencode/
+
+# Temporary files
+tmp-debug.ts
+
+# Web workspace artifacts
+web/*/node_modules/
+web/*/bun.lock
+web/*/scripts/

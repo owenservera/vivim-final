@@ -1,28 +1,22 @@
-# Promoted Capabilities — Real Execution Verified
+# Capability Promotion Ledger
 
-This ledger tracks capabilities that have been validated with real Chrome execution in the sandbox system.
+Sandbox-proven bespoke renderers are promoted into `web/ui/src/registry/`.
+The sandbox always falls back to the generic contract-driven renderer
+(`web/sandbox/src/features/generic-capability-renderer.tsx`) for any slug
+without a bespoke entry.
 
-## Format
+| Slug | Status | Component Path | Best Practice Note |
+|------|--------|----------------|-------------------|
+| `capability.execute` | generic | `web/ui/src/registry/index.ts` (generic fallback) | All execution funnels through `ActionRegistry` (`capability.execute`); agents perform the same step via `agent:command`. Never call `fetch` directly from a button. |
 
-- Date of verification
-- Capability slug
-- Action ID that drove it
-- Human path verified
-- Agent path verified
-- Latency metrics
-- Notes/best practices discovered
+## Promotion process
 
-## Entries
+1. Iterate on a harness in `web/sandbox/src/features/harnesses/` (scaffold via `bun run sandbox new <slug>`).
+2. Codify the best practice discovered during iteration into the note column above.
+3. When a bespoke renderer is warranted, register it in `CapabilityRegistry` and add a row here.
 
-| Date | Capability | Action ID | Human Path | Agent Path | Latency (ms) | Notes |
-|------|------------|-----------|------------|------------|--------------|-------|
-| - | - | - | - | - | - | - |
+## B8 parity
 
----
-
-## Milestone Tracking
-
-- **Milestone 1 (Executor Integration)** — Tests: `tests/integration/executor/`
-- **Milestone 2 (Capability Execution)** — Tests: `tests/integration/capabilities/`
-- **Milestone 3 (Sandbox Real Mode)** — Tests: `tests/integration/sandbox/`
-- **Milestone 4 (Full Loop Verification)** — Tests: `tests/e2e/sandbox-full-loop.test.ts`
+Every action a human can trigger in the sandbox is an entry in `ActionRegistry`.
+The agent reaches the identical action through the `agent:command` WebSocket
+message, so no human-only action exists.

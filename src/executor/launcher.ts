@@ -95,6 +95,11 @@ export function buildChromeArgs(opts: ChromeLaunchOptions): string[] {
     args.push('--disable-gpu')
   }
 
+  // Visible mode: position window on-screen and focused
+  if (opts.visible === true) {
+    args.push('--window-position=100,100')
+  }
+
   // Hidden mode on Windows (off-screen positioning)
   if (opts.visible === false && process.platform === 'win32') {
     args.push('--window-position=-32000,-32000')
@@ -111,15 +116,35 @@ export function buildChromeArgs(opts: ChromeLaunchOptions): string[] {
   return args
 }
 
+async function isPortInUse(port: number): Promise<boolean> {
+  try {
+    const resp = await fetch(`http://127.0.0.1:${port}/json/version`, { signal: AbortSignal.timeout(1000) })
+    return resp.ok
+  } catch {
+    return false
+  }
+}
+
 export async function launchChrome(opts?: ChromeLaunchOptions): Promise<LaunchResult> {
   const binary = await findChromeBinary()
-  const debugPort = opts?.debugPort ?? 0
+  let debugPort = opts?.debugPort ?? 0
   // Use opts.profileDir or fall back to platform-appropriate temp location
   const profileDir =
     opts?.profileDir ??
     (process.platform === 'win32'
       ? `${process.env.LOCALAPPDATA}\\Temp\\chrome-profile-${Date.now()}`
       : `/tmp/chrome-profile-${Date.now()}`)
+
+  // Port conflict detection: if requested port is in use, find an alternative
+  if (debugPort !== 0 && await isPortInUse(debugPort)) {
+    // Try next ports in range
+    for (let tryPort = debugPort + 1; tryPort < debugPort + 100; tryPort++) {
+      if (!(await isPortInUse(tryPort))) {
+        debugPort = tryPort
+        break
+      }
+    }
+  }
 
   const args = buildChromeArgs({ ...opts, debugPort, profileDir })
 

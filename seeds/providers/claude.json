@@ -40,7 +40,10 @@
       "label": "Chat",
       "url": "https://claude.ai/chat",
       "endpoint_type": "chat",
-      "selector": { "composer": "[contenteditable]", "send_button": "[aria-label='Send Message']" }
+      "selector": { "composer": "[contenteditable]", "send_button": "[aria-label='Send Message']" },
+      "composer_type": "prosemirror",
+      "send_method": "both",
+      "content_editable": true
     },
     {
       "label": "Login",
@@ -54,10 +57,11 @@
   ],
   "parsers": [
     {
-      "name": "Claude SSE Streaming Parser",
-      "file": "claude/001_streaming_sse.ts",
+      "name": "claude/001_streaming_sse",
       "version": 1,
-      "is_active": true
+      "is_active": true,
+      "logic_type": "inline",
+      "logic_code": "var parse = function(rawBody) { var blocks = []; var index = 0; var lines = rawBody.split('\\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (!trimmed.startsWith('data:')) continue; var payload = trimmed.slice(5).trim(); if (payload === '[DONE]') break; try { var json = JSON.parse(payload); if (json.type === 'content_block_start' && json.content_block) { var cb = json.content_block; if (cb.type === 'thinking') { blocks.push({ kind: 'thinking', content: '', index: index++ }); } else if (cb.type === 'tool_use') { blocks.push({ kind: 'tool_use', toolName: cb.name, input: cb.input || {}, index: index++ }); } else if (cb.type === 'image') { blocks.push({ kind: 'image', url: cb.url, alt: cb.alt, index: index++ }); } } if (json.type === 'content_block_delta' && json.delta && json.delta.text) { var lastBlock = blocks[blocks.length - 1]; if (lastBlock && lastBlock.kind === 'text') { lastBlock.content += json.delta.text; } else { blocks.push({ kind: 'text', content: json.delta.text, index: index++ }); } } else if (json.delta && json.delta.thinking) { var lastThink = blocks[blocks.length - 1]; if (lastThink && lastThink.kind === 'thinking') { lastThink.content += json.delta.thinking; } } } if (json.type === 'message_start') { blocks.push({ kind: 'meta', key: 'message_id', value: json.message && json.message.id, index: index++ }); } if (json.type === 'message_stop' || json.type === 'error') { var last = blocks[blocks.length - 1]; if (last && last.kind !== 'meta') { blocks.push({ kind: 'meta', key: 'stopped', value: json.type, index: index++ }); } } } catch (e) { } } if (blocks.length === 0 && rawBody.length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } return blocks; }; var detectCompletion = function(rawBody) { return rawBody.indexOf('message_stop') !== -1 || rawBody.indexOf('[DONE]') !== -1; }; var getConfidence = function(rawBody) { var hasDataLines = false; var hasContentBlock = false; var hasMessageStop = false; var lines = rawBody.split('\\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (trimmed.startsWith('data:')) { hasDataLines = true; if (trimmed.indexOf('content_block') !== -1) hasContentBlock = true; if (trimmed.indexOf('message_stop') !== -1) hasMessageStop = true; } } if (!hasDataLines) return 0; if (!hasMessageStop) return hasContentBlock ? 0.7 : 0.3; return 1; }; exports.default = { name: 'claude/001_streaming_sse', version: 1, providerId: 'claude', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };"
     }
   ],
   "models": [

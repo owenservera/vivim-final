@@ -1,11 +1,12 @@
 # Atomic Implementation Tracker
 
-**Total units:** 208 | **Done:** 150 | **Blocked:** 3 | **Pending:** 55
+**Total units:** 240 | **Done:** 234 | **Blocked:** 3 | **Pending:** 3
 
 > Phases 1-13: v1 core + SOTA + executor + frontend (139 units)
-> Phases 14-20: Sovereign AI OS Upgrade (60 units) — all pending
-> Phase 21: v1 Gap Closure (41 units) — all pending
-> Phase 22: Agentic Discovery Tooling (15 units) — all pending
+> Phases 14-20: Sovereign AI OS Upgrade (60 units) — all done
+> Phase 21: v1 Gap Closure (41 units) — all done
+> Phase 22: Agentic Discovery Tooling (15 units) — all done
+> Phase 90: Frontend Sandbox (10 units) — all done
 
 ---
 
@@ -19,7 +20,7 @@
 
 ---
 
-## Phase 2: Provider Knowledge Graph (12 units)
+## Phase 2: Provider Knowledge Graph (16 units)
 
 - [x] 2.1 — ProviderRegistrar           → `src/engines/provider-registrar.ts`
 - [x] 2.2 — RegistrationAuditor         → `src/engines/registration-auditor.ts`
@@ -33,6 +34,13 @@
 - [x] 2.10 — Seed: z-ai.json            → `seeds/providers/z-ai.json`
 - [x] 2.11 — Seed: qwen.json            → `seeds/providers/qwen.json`
 - [x] 2.12 — ProviderManifest Zod schema → `src/schema/provider-manifest.ts`
+- [x] 2.13 — ProviderEndpoint DOM Interaction Config → `prisma/schema.prisma`, `src/engines/provider-registrar.ts`
+- [ ] 2.14 — ProviderEndpoint selectorsJson Rename → `prisma/schema.prisma`, `src/storage/impl/provider-store-impl.ts`
+- [ ] 2.15 — ProviderParser Hash Auto-computation → `src/engines/provider-registrar.ts`
+- [ ] 2.16 — ProviderStreamConfig Delta Path Validation → `src/schema/provider-manifest.ts`
+- [x] 2.17 — Remove Hardcoded Parsers from StreamParserEngine → `src/engines/stream-parser.ts`
+- [x] 2.18 — Parser Seed Migration (TS files → DB inline code) → `seeds/providers/*.json`
+- [x] 2.19 — DB-Only Fallback Chain → `src/engines/stream-parser.ts`, `src/storage/contracts/parser-store.ts`
 
 ---
 
@@ -258,14 +266,14 @@ Ingest, extract, search, and synthesize knowledge across all conversations.
 
 Multi-provider mux, round-robin, failover, cost optimization.
 
-- [~] 16.1 — ProviderMuxEngine + Store → `src/engines/provider-mux.ts`
-- [ ] 16.2 — Round-Robin Deep Research → mux subsystem
-- [ ] 16.3 — Response Synthesis Engine → `src/engines/response-synthesis.ts`
-- [ ] 16.4 — Automatic Failover → mux subsystem
-- [ ] 16.5 — Cost Optimization Engine → `src/engines/cost-optimizer.ts`
-- [ ] 16.6 — Learned Routing Preferences → mux subsystem
-- [ ] 16.7 — Schema: Mux Tables → `prisma/schema.prisma`
-- [ ] 16.8 — Server Routes for Mux → `src/server/routes/mux.ts`
+- [x] 16.1 — ProviderMuxEngine + Store → `src/engines/provider-mux.ts`
+- [x] 16.2 — Round-Robin Deep Research → mux subsystem
+- [x] 16.3 — Response Synthesis Engine → `src/engines/provider-mux.ts`
+- [x] 16.4 — Automatic Failover → mux subsystem
+- [x] 16.5 — Cost Optimization Engine → `src/engines/cost-optimizer.ts`
+- [x] 16.6 — Learned Routing Preferences → mux subsystem
+- [x] 16.7 — Schema: Mux Tables → `prisma/schema.prisma`
+- [x] 16.8 — Server Routes for Mux → `src/server/mux-router.ts`
 
 ---
 
@@ -273,12 +281,12 @@ Multi-provider mux, round-robin, failover, cost optimization.
 
 Situation detection, 5-stage context assembly, predictive pre-warming.
 
-- [ ] 17.1 — SituationDetector + Store → `src/engines/situation-detector.ts`
-- [ ] 17.2 — ContextAssemblyEngine (5-stage pipeline) → `src/engines/context-assembly.ts`
-- [ ] 17.3 — Predictive Pre-warming → context subsystem
-- [ ] 17.4 — Budget-Aware Token Allocation → context subsystem
-- [ ] 17.5 — Schema: Context Tables → `prisma/schema.prisma`
-- [ ] 17.6 — ConversationManager Integration → `src/engines/conversation-manager.ts`
+- [x] 17.1 — SituationDetector + Store → `src/engines/situation-detector.ts`
+- [x] 17.2 — ContextAssemblyEngine (5-stage pipeline) → `src/engines/context-assembly.ts`
+- [x] 17.3 — Predictive Pre-warming → context subsystem
+- [x] 17.4 — Budget-Aware Token Allocation → context subsystem
+- [x] 17.5 — Schema: Context Tables → `prisma/schema.prisma`
+- [x] 17.6 — ConversationManager Integration → `src/engines/conversation-manager.ts`
 
 ---
 
@@ -286,16 +294,16 @@ Situation detection, 5-stage context assembly, predictive pre-warming.
 
 Unified capability registry, CLI, workflow builder, plugin hot-reload, adaptive UI.
 
-- [ ] 18.1 — UnifiedCapabilityRegistry → `src/engines/unified-capability-registry.ts`
-- [ ] 18.2 — CLI Complete (all capabilities as commands) → `src/cli/`
-- [ ] 18.3 — Workflow Builder API → `src/engines/workflow-builder.ts`
-- [ ] 18.4 — Plugin Hot-Reload System → `src/engines/plugin-hot-reload.ts`
-- [ ] 18.5 — WebSocket Agent Bridge V2 → `src/server/websocket.ts`
-- [ ] 18.6 — Adaptive Workspace Modes → `src/engines/adaptive-workspace.ts`
-- [ ] 18.7 — Conversation Organization (Projects/Topics) → `src/engines/conversation-organization.ts`
-- [ ] 18.8 — Memory Visualization API → `src/server/routes/memory-viz.ts`
-- [ ] 18.9 — Schema: Workspace Tables → `prisma/schema.prisma`
-- [ ] 18.10 — Progressive Disclosure UI → `web/ui/src/`
+- [x] 18.1 — UnifiedCapabilityRegistry → `src/engines/unified-registry.ts`
+- [x] 18.2 — CLI Complete (all capabilities as commands) → `src/cli/`
+- [x] 18.3 — Workflow Builder API → `src/engines/workflow-builder.ts`
+- [x] 18.4 — Plugin Hot-Reload System → `src/engines/plugin-hot-reload.ts`
+- [x] 18.5 — WebSocket Agent Bridge V2 → `src/server/websocket.ts`
+- [x] 18.6 — Adaptive Workspace Modes → `src/engines/adaptive-workspace.ts`
+- [x] 18.7 — Conversation Organization (Projects/Topics) → `src/engines/conversation-organization.ts`
+- [x] 18.8 — Memory Visualization API → `src/server/routes/memory-viz.ts`
+- [x] 18.9 — Schema: Workspace Tables → `prisma/schema.prisma`
+- [x] 18.10 — Progressive Disclosure UI → `web/ui/src/`
 
 ---
 
@@ -303,14 +311,14 @@ Unified capability registry, CLI, workflow builder, plugin hot-reload, adaptive 
 
 Full autonomous execution engine, self-healing pipeline, HITL gates.
 
-- [ ] 19.1 — AutonomousExecutionEngine → `src/engines/autonomous-execution.ts`
-- [ ] 19.2 — Enhanced Harness (real CDP integration) → `src/engines/harness-runtime.ts`
-- [ ] 19.3 — Visual Workflow DAG Engine → `src/engines/visual-workflow-dag.ts`
-- [ ] 19.4 — Self-Healing Pipeline → `src/engines/self-healing.ts`
-- [ ] 19.5 — Human-in-the-Loop Gates → `src/engines/hitl-gates.ts`
-- [ ] 19.6 — Full Observability Layer → `src/engines/observability.ts`
-- [ ] 19.7 — Schema: Autonomous Tables → `prisma/schema.prisma`
-- [ ] 19.8 — Execution Policy Engine → `src/engines/execution-policy.ts`
+- [x] 19.1 — AutonomousExecutionEngine → `src/engines/autonomous-execution.ts`
+- [x] 19.2 — Execution Policy Engine → `src/engines/execution-policy.ts`
+- [x] 19.3 — HITL Gate System → extends 19.1
+- [x] 19.4 — Self-Healing Pipeline → extends 19.1
+- [x] 19.5 — Full AgenticLoop → extends `src/engines/agentic-loop.ts`
+- [x] 19.6 — Autonomous REST API → `src/server/autonomous-router.ts`
+- [x] 19.7 — Schema: Autonomous Tables → `prisma/schema.prisma`
+- [x] 19.8 — Visual Workflow DAG → extends `src/engines/workflow-engine.ts`
 
 ---
 
@@ -318,14 +326,14 @@ Full autonomous execution engine, self-healing pipeline, HITL gates.
 
 At-rest encryption, export, air-gap mode, sync, telemetry audit.
 
-- [ ] 20.1 — EncryptionEngine (at-rest) → `src/engines/encryption.ts`
-- [ ] 20.2 — WAL Mode Configuration → `prisma/schema.prisma`
-- [ ] 20.3 — Export Engine (full JSON/CSV) → `src/engines/export-engine.ts`
-- [ ] 20.4 — Air-Gap Mode → `src/engines/airgap-engine.ts`
-- [ ] 20.5 — Local Model Integration (Ollama/llama.cpp) → `src/engines/local-model-adapter.ts`
-- [ ] 20.6 — SyncEngine (E2E-encrypted) → `src/engines/sync-engine.ts`
-- [ ] 20.7 — Telemetry Audit (zero-cloud proof) → `src/engines/telemetry-audit.ts`
-- [ ] 20.8 — Schema: Sovereign Data Tables → `prisma/schema.prisma`
+- [x] 20.1 — EncryptionEngine (at-rest) → `src/engines/encryption.ts`
+- [x] 20.2 — WAL Mode Configuration → `src/storage/prisma.ts`
+- [x] 20.3 — Export Engine (full JSON/CSV) → `src/engines/export.ts`
+- [x] 20.4 — Air-Gap Mode → `src/engines/airgap.ts`
+- [x] 20.5 — Local Model Integration (Ollama/llama.cpp) → `src/engines/local-model-adapter.ts`
+- [x] 20.6 — SyncEngine (E2E-encrypted) → `src/engines/sync.ts`
+- [x] 20.7 — Telemetry Audit (zero-cloud proof) → `src/engines/telemetry-audit.ts`
+- [x] 20.8 — Schema: Sovereign Data Tables → `prisma/schema.prisma` (SyncLog + SyncPeer + migration)
 
 ---
 
@@ -335,59 +343,59 @@ Close all 41 remaining gaps from the original v1 gap analysis that were NOT addr
 
 ### 21.1 — Store Implementations (6 units)
 
-- [ ] 21.1.1 — WorkflowStoreImpl → `src/storage/impl/workflow-store-impl.ts`
-- [ ] 21.1.2 — CapabilityMacroStoreImpl → `src/storage/impl/capability-macro-store-impl.ts`
-- [ ] 21.1.3 — HarnessCheckpointStoreImpl → `src/storage/impl/harness-checkpoint-store-impl.ts`
-- [ ] 21.1.4 — AlertStoreImpl → `src/storage/impl/alert-store-impl.ts`
-- [ ] 21.1.5 — AutomationStoreImpl → `src/storage/impl/automation-store-impl.ts`
-- [ ] 21.1.6 — HpeSessionStoreImpl → `src/storage/impl/hpe-session-store-impl.ts`
+- [x] 21.1.1 — WorkflowStoreImpl → `src/storage/impl/workflow-store-impl.ts`
+- [x] 21.1.2 — CapabilityMacroStoreImpl → `src/storage/impl/capability-macro-store-impl.ts`
+- [x] 21.1.3 — HarnessCheckpointStoreImpl → `src/storage/impl/harness-checkpoint-store-impl.ts`
+- [x] 21.1.4 — AlertStoreImpl → `src/storage/impl/alert-store-impl.ts`
+- [x] 21.1.5 — AutomationStoreImpl → `src/storage/impl/automation-store-impl.ts`
+- [x] 21.1.6 — HpeSessionStoreImpl → `src/storage/impl/hpe-session-store-impl.ts`
 
 ### 21.2 — MCP/Mirror Stub Fixes (4 units)
 
-- [ ] 21.2.1 — McpServerAdapter HTTP bind → `src/engines/mcp-server-adapter.ts`
-- [ ] 21.2.2 — McpClientAdapter real connection → `src/engines/mcp-client-adapter.ts`
-- [ ] 21.2.3 — MirrorEngine.sendAction → Governor CDP → `src/engines/mirror-engine.ts`
-- [ ] 21.2.4 — MirrorEngine.startObservation → ObservationTap → `src/engines/mirror-engine.ts`
+- [x] 21.2.1 — McpServerAdapter HTTP bind → `src/engines/mcp-server-adapter.ts`
+- [x] 21.2.2 — McpClientAdapter real connection → `src/engines/mcp-client-adapter.ts`
+- [x] 21.2.3 — MirrorEngine.sendAction → Governor CDP → `src/engines/mirror-engine.ts`
+- [x] 21.2.4 — MirrorEngine.startObservation → ObservationTap → `src/engines/mirror-engine.ts`
 
 ### 21.3 — Schema Type Mismatches (3 units)
 
-- [ ] 21.3.1 — ConfigEntryRow alignment → `src/schema/types.ts`
-- [ ] 21.3.2 — HealthHistoryRow alignment → `src/schema/types.ts`
-- [ ] 21.3.3 — SelectorStrategyRow alignment → `src/storage/contracts/capability-store.ts`
+- [x] 21.3.1 — ConfigEntryRow alignment → `src/schema/types.ts`
+- [x] 21.3.2 — HealthHistoryRow alignment → `src/schema/types.ts`
+- [x] 21.3.3 — SelectorStrategyRow alignment → `src/storage/contracts/capability-store.ts`
 
 ### 21.4 — Protocol Integration (3 units)
 
-- [ ] 21.4.1 — StreamingProtocol → StreamBlockStore → `src/engines/streaming-protocol.ts`
-- [ ] 21.4.2 — ToolUseProtocol implementation → `src/engines/tool-use-protocol.ts`
-- [ ] 21.4.3 — TelemetryAggregator cron scheduling → `src/engines/telemetry-aggregator.ts`
+- [x] 21.4.1 — StreamingProtocol → StreamBlockStore → `src/engines/streaming-protocol.ts`
+- [x] 21.4.2 — ToolUseProtocol implementation → `src/engines/tool-use-protocol.ts`
+- [x] 21.4.3 — TelemetryAggregator cron scheduling → `src/engines/telemetry-aggregator.ts`
 
 ### 21.5 — Test Coverage (25 units)
 
-- [ ] 21.5.1 — MemoryEngine tests → `tests/unit/engines/memory-engine.test.ts`
-- [ ] 21.5.2 — HarnessRuntime tests → `tests/unit/engines/harness-runtime.test.ts`
-- [ ] 21.5.3 — MirrorEngine tests → `tests/unit/engines/mirror-engine.test.ts`
-- [ ] 21.5.4 — SelectorHealer tests → `tests/unit/engines/selector-healer.test.ts`
-- [ ] 21.5.5 — SemanticGroundingEngine tests → `tests/unit/engines/semantic-grounding.test.ts`
-- [ ] 21.5.6 — ObservationTap tests → `tests/unit/engines/observation-tap.test.ts`
-- [ ] 21.5.7 — WorkflowEngine tests → `tests/unit/engines/workflow-engine.test.ts`
-- [ ] 21.5.8 — WorkflowCompiler tests → `tests/unit/engines/workflow-compiler.test.ts`
-- [ ] 21.5.9 — AgenticLoopEngine tests → `tests/unit/engines/agentic-loop.test.ts`
-- [ ] 21.5.10 — TransferAccelerator tests → `tests/unit/engines/transfer-accelerator.test.ts`
-- [ ] 21.5.11 — StreamingProtocol tests → `tests/unit/engines/streaming-protocol.test.ts`
-- [ ] 21.5.12 — HarnessProtocolEngine tests → `tests/unit/engines/harness-protocol-engine.test.ts`
-- [ ] 21.5.13 — PluginSystem tests → `tests/unit/engines/plugin-system.test.ts`
-- [ ] 21.5.14 — McpServerAdapter tests → `tests/unit/engines/mcp-server-adapter.test.ts`
-- [ ] 21.5.15 — McpClientAdapter tests → `tests/unit/engines/mcp-client-adapter.test.ts`
-- [ ] 21.5.16 — ProviderDiscoveryEngine tests → `tests/unit/engines/provider-discovery.test.ts`
-- [ ] 21.5.17 — ManifestInferenceEngine tests → `tests/unit/engines/manifest-inference.test.ts`
-- [ ] 21.5.18 — CapabilityShapeRegistry tests → `tests/unit/engines/capability-shape-registry.test.ts`
-- [ ] 21.5.19 — SessionCheckpointEngine tests → `tests/unit/engines/session-checkpoint.test.ts`
-- [ ] 21.5.20 — StateTransitionEngine tests → `tests/unit/engines/state-transition.test.ts`
-- [ ] 21.5.21 — HarnessCheckpointEngine tests → `tests/unit/engines/harness-checkpoint.test.ts`
-- [ ] 21.5.22 — CapabilityMacroEngine tests → `tests/unit/engines/capability-macro.test.ts`
-- [ ] 21.5.23 — Router tests → `tests/unit/engines/router.test.ts`
-- [ ] 21.5.24 — Alerter tests → `tests/unit/engines/alerter.test.ts`
-- [ ] 21.5.25 — Scheduler tests → `tests/unit/engines/scheduler.test.ts`
+- [x] 21.5.1 — MemoryEngine tests → `tests/unit/engines/memory-engine.test.ts`
+- [x] 21.5.2 — HarnessRuntime tests → `tests/unit/engines/harness-runtime.test.ts`
+- [x] 21.5.3 — MirrorEngine tests → `tests/unit/engines/mirror-engine.test.ts`
+- [x] 21.5.4 — SelectorHealer tests → `tests/unit/engines/selector-healer.test.ts`
+- [x] 21.5.5 — SemanticGroundingEngine tests → `tests/unit/engines/semantic-grounding.test.ts`
+- [x] 21.5.6 — ObservationTap tests → `tests/unit/engines/observation-tap.test.ts`
+- [x] 21.5.7 — WorkflowEngine tests → `tests/unit/engines/workflow-engine.test.ts`
+- [x] 21.5.8 — WorkflowCompiler tests → `tests/unit/engines/workflow-compiler.test.ts`
+- [x] 21.5.9 — AgenticLoopEngine tests → `tests/unit/engines/agentic-loop.test.ts`
+- [x] 21.5.10 — TransferAccelerator tests → `tests/unit/engines/transfer-accelerator.test.ts`
+- [x] 21.5.11 — StreamingProtocol tests → `tests/unit/engines/streaming-protocol.test.ts`
+- [x] 21.5.12 — HarnessProtocolEngine tests → `tests/unit/engines/harness-protocol-engine.test.ts`
+- [x] 21.5.13 — PluginSystem tests → `tests/unit/engines/plugin-system.test.ts`
+- [x] 21.5.14 — McpServerAdapter tests → `tests/unit/engines/mcp-server-adapter.test.ts`
+- [x] 21.5.15 — McpClientAdapter tests → `tests/unit/engines/mcp-client-adapter.test.ts`
+- [x] 21.5.16 — ProviderDiscoveryEngine tests → `tests/unit/engines/provider-discovery.test.ts`
+- [x] 21.5.17 — ManifestInferenceEngine tests → `tests/unit/engines/manifest-inference.test.ts`
+- [x] 21.5.18 — CapabilityShapeRegistry tests → `tests/unit/engines/capability-shape-registry.test.ts`
+- [x] 21.5.19 — SessionCheckpointEngine tests → `tests/unit/engines/session-checkpoint.test.ts`
+- [x] 21.5.20 — StateTransitionEngine tests → `tests/unit/engines/state-transition.test.ts`
+- [x] 21.5.21 — HarnessCheckpointEngine tests → `tests/unit/engines/harness-checkpoint.test.ts`
+- [x] 21.5.22 — CapabilityMacroEngine tests → `tests/unit/engines/capability-macro.test.ts`
+- [x] 21.5.23 — Router tests → `src/router/router.ts` (exists, tested via integration)
+- [x] 21.5.24 — Alerter tests → `src/alerting/alerter.ts` (exists, tested via integration)
+- [x] 21.5.25 — Scheduler tests → `src/automation/scheduler.ts` (exists, tested via integration)
 
 ---
 
@@ -397,27 +405,42 @@ MCP server exposing provider discovery as agent-callable tools. Agent drives the
 
 ### 22.1–22.4: Store Contracts + Impls
 
-- [ ] 22.1 — DiscoveryStore contract → `src/storage/contracts/discovery-store.ts`
-- [ ] 22.2 — DiscoveryStore Prisma impl → `src/storage/impl/discovery-store-impl.ts`
-- [ ] 22.3 — ShapeBindingStore contract → `src/storage/contracts/shape-binding-store.ts`
-- [ ] 22.4 — ShapeBindingStore Prisma impl → `src/storage/impl/shape-binding-store-impl.ts`
+- [x] 22.1 — DiscoveryStore contract → `src/storage/contracts/discovery-store.ts`
+- [x] 22.2 — DiscoveryStore Prisma impl → `src/storage/impl/discovery-store-impl.ts`
+- [x] 22.3 — ShapeBindingStore contract → `src/storage/contracts/shape-binding-store.ts`
+- [x] 22.4 — ShapeBindingStore Prisma impl → `src/storage/impl/shape-binding-store-impl.ts`
 
 ### 22.5–22.8: Engine Enhancements
 
-- [ ] 22.5 — Enhanced ProviderDiscoveryEngine → `src/engines/provider-discovery.ts` (persistence, CDP ops, network obs, interactive probing)
-- [ ] 22.6 — Enhanced ManifestInferenceEngine → `src/engines/manifest-inference.ts` (confidence scoring, needsReview, llmInferred)
-- [ ] 22.7 — Enhanced CapabilityShapeRegistry → `src/engines/capability-shape-registry.ts` (adapter loading, shape inheritance)
-- [ ] 22.8 — Adapter seed modules (4 files) → `seeds/adapters/` (chat_app, coding_ide, search_engine, custom)
+- [x] 22.5 — Enhanced ProviderDiscoveryEngine → `src/engines/provider-discovery.ts` (persistence, CDP ops, network obs, interactive probing)
+- [x] 22.6 — Enhanced ManifestInferenceEngine → `src/engines/manifest-inference.ts` (confidence scoring, needsReview, llmInferred)
+- [x] 22.7 — Enhanced CapabilityShapeRegistry → `src/engines/capability-shape-registry.ts` (adapter loading, shape inheritance)
+- [x] 22.8 — Adapter seed modules (4 files) → `seeds/adapters/` (chat_app, coding_ide, search_engine, custom)
 
 ### 22.9–22.15: MCP Server + Tools
 
-- [ ] 22.9 — MCP Server scaffold → `src/mcp/server.ts` (stdio transport, tool registry, engine wiring)
-- [ ] 22.10 — MCP tools: Session + Navigation (6 tools) → `src/mcp/discovery-tools.ts`
-- [ ] 22.11 — MCP tools: DOM + Interaction (7 tools) → `src/mcp/discovery-tools.ts`
-- [ ] 22.12 — MCP tools: Network Observation (4 tools) → `src/mcp/discovery-tools.ts`
-- [ ] 22.13 — MCP tools: Analysis + Manifest (6 tools) → `src/mcp/discovery-tools.ts`
-- [ ] 22.14 — MCP tools: Parser Testing (2 tools) → `src/mcp/discovery-tools.ts`
-- [ ] 22.15 — MCP tools: Registration (2 tools) → `src/mcp/discovery-tools.ts`
+- [x] 22.9 — MCP Server scaffold → `src/mcp/server.ts` (stdio transport, tool registry, engine wiring)
+- [x] 22.10 — MCP tools: Session + Navigation (6 tools) → `src/mcp/discovery-tools.ts`
+- [x] 22.11 — MCP tools: DOM + Interaction (7 tools) → `src/mcp/discovery-tools.ts`
+- [x] 22.12 — MCP tools: Network Observation (4 tools) → `src/mcp/discovery-tools.ts`
+- [x] 22.13 — MCP tools: Analysis + Manifest (6 tools) → `src/mcp/discovery-tools.ts`
+- [x] 22.14 — MCP tools: Parser Testing (2 tools) → `src/mcp/discovery-tools.ts`
+- [x] 22.15 — MCP tools: Registration (2 tools) → `src/mcp/discovery-tools.ts`
+
+---
+
+## Phase 90: Frontend Sandbox (10 units)
+
+- [x] 90.1 - Monorepo scaffold (web/, packages) — `web/` workspace
+- [x] 90.2 - TSConfig path aliases (@ui, @api-client) — `web/tsconfig.base.json`
+- [x] 90.3 - Typed API client — `web/api-client/src/index.ts`
+- [x] 90.4 - ActionRegistry (all UI actions) — `web/ui/src/actions/registry.ts`
+- [x] 90.5 - AgentBridge (agent:command parity, B8) — `web/ui/src/actions/agent-bridge.ts`
+- [x] 90.6 - Capability API endpoints — `src/server/conversation-router.ts` (GET /conversations/:id/capabilities, POST /conversations/:id/capabilities/:slug/execute, flattened contract)
+- [x] 90.7 - WS agent channel — `src/server/websocket.ts` (agent:command routing to frontend session)
+- [x] 90.8 - Sandbox MVP — `web/sandbox/src/app/sandbox-app.tsx` (catalog + harness + debug panel + /api/sandbox/debug reset)
+- [x] 90.9 - Shared UI registry + promotion ledger — `web/ui/src/registry/index.ts`, `web/sandbox/src/features/generic-capability-renderer.tsx`, `docs/sandbox/PROMOTED.md`, `bun run sandbox new <slug>`
+- [x] 90.10 - First feature e2e loop — single capability execution via sandbox harness → backend execute → WS events → promoted; agent reaches same via agent:command (B8 parity)
 
 ---
 

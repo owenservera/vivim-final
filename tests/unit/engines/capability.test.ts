@@ -43,13 +43,16 @@ function makeBinding(): CapabilityBindingRow {
 function makeSelector(): SelectorStrategyRow {
   return {
     id: 'sel_1',
+    name: 'primary',
     capabilityId: 'cap_send',
     providerId: 'claude',
-    selector: 'textarea',
+    selectorValue: 'textarea',
     priority: 1,
     strategyType: 'css',
+    isActive: true,
     hitCount: 0,
     missCount: 0,
+    lastUsedAt: null,
     createdAt: 0,
     updatedAt: 0,
   }

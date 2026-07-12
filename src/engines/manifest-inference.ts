@@ -1,5 +1,5 @@
 // src/engines/manifest-inference.ts
-// ManifestInferenceEngine — transform discovery results → valid ProviderManifest JSON
+// ManifestInferenceEngine — Phase 22.6: Enhanced with per-field confidence scoring
 
 import { EngineError } from '../errors.js'
 import type {
@@ -32,6 +32,9 @@ export interface ProviderManifest {
 export interface InferredManifest {
   manifest: ProviderManifest
   confidence: number
+  fieldConfidence: Record<string, number>
+  needsReview: string[]
+  llmInferred: string[]
   warnings: string[]
   requiredEdits: string[]
 }
@@ -46,6 +49,9 @@ export class ManifestInferenceEngine {
   async infer(session: DiscoverySession): Promise<InferredManifest> {
     const warnings: string[] = []
     const requiredEdits: string[] = []
+    const fieldConfidence: Record<string, number> = {}
+    const llmInferred: string[] = []
+    const needsReview: string[] = []
 
     if (!session.manifestDraft) {
       throw new EngineError(`No manifest draft for session ${session.id}`)
@@ -53,6 +59,26 @@ export class ManifestInferenceEngine {
 
     const draft = session.manifestDraft
     const manifest = this.draftToManifest(draft, session)
+
+    const baseConfidence = session.confidence
+
+    // Slug: high confidence if from URL
+    fieldConfidence.slug = baseConfidence > 0.7 ? 0.9 : 0.5
+
+    // DisplayName: from shape name (medium) or LLM (high)
+    fieldConfidence.displayName = session.shapeId ? 0.7 : 0.4
+    if (!session.shapeId) llmInferred.push('displayName')
+
+    // Capabilities: from DOM evidence
+    fieldConfidence.capabilities = baseConfidence
+
+    // Parser format: from network observation
+    fieldConfidence.parserFormat = session.parserFormat ? 0.8 : 0.3
+
+    // Identify fields needing review
+    for (const [field, conf] of Object.entries(fieldConfidence)) {
+      if (conf < 0.7) needsReview.push(field)
+    }
 
     if (manifest.slug === 'unknown') {
       requiredEdits.push('slug')
@@ -69,10 +95,16 @@ export class ManifestInferenceEngine {
       )
     }
 
+    const generatedWarnings = this.generateWarnings(session, fieldConfidence)
+    warnings.push(...generatedWarnings)
+
     return {
       manifest,
       confidence: session.confidence,
-      warnings,
+      fieldConfidence,
+      needsReview,
+      llmInferred,
+      warnings: [...new Set(warnings)],
       requiredEdits,
     }
   }
@@ -84,6 +116,7 @@ export class ManifestInferenceEngine {
     if (edits.displayName) result.displayName = edits.displayName
     if (edits.description) result.description = edits.description
     if (edits.capabilities) result.capabilities = [...edits.capabilities]
+    if (edits.endpoints) result.endpoints = edits.endpoints.map((e) => ({ ...e }))
 
     return result
   }
@@ -126,6 +159,20 @@ export class ManifestInferenceEngine {
     }
   }
 
+  private generateWarnings(
+    session: DiscoverySession,
+    fieldConfidence: Record<string, number>,
+  ): string[] {
+    const warnings: string[] = []
+    if (session.confidence < 0.5) {
+      warnings.push('Low overall discovery confidence — verify all fields')
+    }
+    if (!session.manifestDraft?.capabilities.length) {
+      warnings.push('No capabilities detected — manual review required')
+    }
+    return warnings
+  }
+
   private draftToManifest(
     draft: ProviderManifestDraft,
     session: DiscoverySession,
@@ -141,13 +188,13 @@ export class ManifestInferenceEngine {
       endpoints: draft.endpoints,
       parser: {
         format: draft.parserFormat,
-        archetype: session.shape?.parserExpectations.parserArchetype ?? 'generic',
-        fallbackStrategy: session.shape?.parserExpectations.fallbackStrategy ?? 'raw',
+        archetype: 'generic',
+        fallbackStrategy: 'raw',
       },
       discovery: {
-        urlPatterns: session.shape?.discoveryHints.urlPatterns ?? [],
-        domIndicators: session.shape?.discoveryHints.domIndicators ?? [],
-        interactiveElements: session.shape?.discoveryHints.interactiveElementPatterns ?? [],
+        urlPatterns: [],
+        domIndicators: [],
+        interactiveElements: [],
       },
     }
   }

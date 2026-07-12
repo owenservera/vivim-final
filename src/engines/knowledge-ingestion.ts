@@ -79,22 +79,35 @@ export class KnowledgeIngestionEngine {
 
     await this.store.updateImportJob(jobId, { status: 'importing' })
 
+    let entitiesExtracted = 0
+    let decisionsExtracted = 0
+
+    // Track imported conversation IDs for extraction.
+    const importedConversationIds: Array<{
+      externalId: string
+      conversationId: string
+    }> = []
+
     for (const conv of parsed) {
       try {
         const existingId = await this.store.findExistingConversation(config.source, conv.externalId)
+        let conversationId: string
+
         if (existingId && config.deduplicate) {
           duplicatesSkipped++
           continue
         }
 
-        const conversationId = existingId ?? newId()
-        if (!existingId) {
-          const _created = await this.conversationStore.createConversation({
+        if (existingId) {
+          conversationId = existingId
+        } else {
+          const created = await this.conversationStore.createConversation({
             providerSessionId: conv.externalId,
             providerId: config.providerId ?? config.source,
             title: conv.title ?? null,
             state: 'imported',
           })
+          conversationId = created.id
         }
 
         for (const msg of conv.messages) {
@@ -110,17 +123,38 @@ export class KnowledgeIngestionEngine {
         }
 
         conversationsImported++
+        importedConversationIds.push({ externalId: conv.externalId, conversationId })
       } catch (err) {
         errors.push({ conversationId: conv.externalId, error: String(err) })
       }
     }
 
-    let entitiesExtracted = 0
-    const decisionsExtracted = 0
+    if (config.extractEntities || config.extractDecisions) {
+      // Collect the messages we just imported, grouped by conversation.
+      const conversationMessages: Array<{
+        id: string
+        messages: Array<{ id: string; role: string; content: string }>
+      }> = []
 
-    if (config.extractEntities) {
-      const result = await this.extractor.batchExtract([])
-      entitiesExtracted = result.totalExtracted
+      for (const { conversationId } of importedConversationIds) {
+        try {
+          const msgs = await this.conversationStore.getMessages(conversationId, { limit: 1000 })
+          conversationMessages.push({
+            id: conversationId,
+            messages: msgs.map((m) => ({ id: m.id, role: m.role, content: m.content ?? '' })),
+          })
+        } catch (err) {
+          errors.push({ conversationId, error: `extract-prep: ${String(err)}` })
+        }
+      }
+
+      try {
+        const extractResult = await this.extractor.batchExtract(conversationMessages)
+        entitiesExtracted = extractResult.totalExtracted
+        decisionsExtracted = (extractResult.byType as Record<string, number>)?.decision ?? 0
+      } catch (err) {
+        errors.push({ conversationId: '(extraction)', error: String(err) })
+      }
     }
 
     const end = Date.now()

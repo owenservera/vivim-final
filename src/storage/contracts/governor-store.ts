@@ -11,6 +11,8 @@ export interface ProviderAccountRow {
   planTier: string
   apiKeyRef: string | null
   isActive: number
+  profileDir: string | null
+  debugPort: number | null
   createdAt: number
   updatedAt: number
 }

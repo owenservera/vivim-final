@@ -151,14 +151,14 @@
 
 ## Goal G-003: Executor + Polish
 
-**Status:** IN PROGRESS | **Completion:** 20% | **Owner:** vivim | **Timeframe:** Phase 11-12
+**Status:** IN PROGRESS | **Completion:** 36% | **Owner:** vivim | **Timeframe:** Phase 11-12
 
 > Build executor layer against vivim-final core (cap-store = prior art), fix stubs, complete the platform.
 
 ### Objectives
 
 #### O-011: Executor Porting (Phase 11)
-**Status:** IN PROGRESS | **Completion:** 39%
+**Status:** IN PROGRESS | **Completion:** 72%
 
 - **KR-022:** CDP Client + Chrome Launcher
   - Metric: units done
@@ -170,11 +170,11 @@
   - Related Units: 11.3, 11.4
 - **KR-024:** Fleet Supervisor
   - Metric: units done
-  - Target: 1 | Current: 0 | Progress: 0% ·
+  - Target: 1 | Current: 1 | Progress: 100% ✓
   - Related Units: 11.5
 - **KR-025:** Slave Write + Slave Read
   - Metric: units done
-  - Target: 2 | Current: 0 | Progress: 0% ·
+  - Target: 2 | Current: 1 | Progress: 50% ✓
   - Related Units: 11.6, 11.7
 - **KR-026:** Conversation Driver
   - Metric: units done
@@ -201,14 +201,14 @@
 
 ## Goal G-004: Frontend Sandbox System
 
-**Status:** IN PROGRESS | **Completion:** 15% | **Owner:** vivim | **Timeframe:** Phase 13
+**Status:** IN PROGRESS | **Completion:** 96% | **Owner:** vivim | **Timeframe:** Phase 13
 
 > Frontend-native sandbox for testing backend capabilities against the real backend, then codifying proven patterns into production UI. Enforces B8 (Agent-Addressable UI Actions).
 
 ### Objectives
 
 #### O-013: Monorepo Scaffold + Shared Packages (Phase 13.1)
-**Status:** IN PROGRESS | **Completion:** 33%
+**Status:** ACHIEVED | **Completion:** 100%
 
 - **KR-030:** web/ workspace scaffold (Vite + React 19 + TS + Tailwind + Zustand)
   - Metric: units done
@@ -216,15 +216,15 @@
   - Related Units: 13.1
 - **KR-031:** Shared tsconfig + path aliases + dev:sandbox script
   - Metric: units done
-  - Target: 1 | Current: 0 | Progress: 0% ·
+  - Target: 1 | Current: 1 | Progress: 100% ✓
   - Related Units: 13.2
 - **KR-032:** web/api-client typed SDK from 07-merged-api.md
   - Metric: units done
-  - Target: 1 | Current: 0 | Progress: 0% ·
+  - Target: 1 | Current: 1 | Progress: 100% ✓
   - Related Units: 13.3
 
 #### O-014: ActionRegistry + AgentBridge (Phase 13.2)
-**Status:** IN PROGRESS | **Completion:** 50%
+**Status:** ACHIEVED | **Completion:** 100%
 
 - **KR-033:** ActionRegistry (registerAction / dispatch / listActions)
   - Metric: units done
@@ -236,73 +236,73 @@
   - Related Units: 13.5
 
 #### O-015: Capability API Backend (Phase 13.3)
-**Status:** NOT STARTED | **Completion:** 0%
+**Status:** ACHIEVED | **Completion:** 100%
 
 - **KR-035:** GET /capabilities endpoints (provider + conversation resolution)
   - Metric: units done
-  - Target: 1 | Current: 0 | Progress: 0% ·
+  - Target: 1 | Current: 1 | Progress: 100% ✓
   - Related Units: 13.6
 - **KR-036:** POST /execute endpoint + WS agent command channel
   - Metric: units done
-  - Target: 1 | Current: 0 | Progress: 0% ·
+  - Target: 1 | Current: 1 | Progress: 100% ✓
   - Related Units: 13.7
 
 #### O-016: Sandbox MVP + UI Registry (Phase 13.4)
-**Status:** NOT STARTED | **Completion:** 0%
+**Status:** IN PROGRESS | **Completion:** 83%
 
 - **KR-037:** Sandbox app (catalog + harness + debug panel)
   - Metric: units done
-  - Target: 1 | Current: 0 | Progress: 0% ·
+  - Target: 1 | Current: 1 | Progress: 100% ✓
   - Related Units: 13.8
 - **KR-038:** Shared UI registry + promotion ledger
   - Metric: units done
-  - Target: 1 | Current: 0 | Progress: 0% ·
+  - Target: 1 | Current: 1 | Progress: 100% ✓
   - Related Units: 13.9
 - **KR-039:** First feature end-to-end via sandbox
   - Metric: units done
-  - Target: 1 | Current: 0 | Progress: 0% ·
+  - Target: 1 | Current: 1 | Progress: 100% ~
   - Related Units: 13.10
 
 ---
 
 ## Goal G-005: Sovereign AI OS Upgrade
 
-**Status:** PENDING | **Completion:** 0% | **Owner:** vivim | **Timeframe:** Phase 14-20
+**Status:** IN PROGRESS | **Completion:** 29% | **Owner:** vivim | **Timeframe:** Phase 14-20
 
 > Transform VIVIM from multi-provider chat tool into a sovereign AI operating system. 60 new units across 7 objectives: knowledge ingestion, invisible routing, context-aware agents, composable interface, autonomous execution, sovereign data.
 
 ### Objectives
 
 #### O-017: Wire Stubs → Real CDP (Phase 14)
-**Status:** PENDING | **Completion:** 0%
+**Status:** ACHIEVED | **Completion:** 100%
 
 - **KR-040:** CDPTransport + ChromeGovernor real implementation
   - Metric: units done
-  - Target: 4 | Current: 0 | Progress: 0% ·
+  - Target: 4 | Current: 4 | Progress: 100% ✓
   - Related Units: 14.1, 14.2, 14.3, 14.4
 - **KR-041:** ConversationManager + Server wiring + Router
   - Metric: units done
-  - Target: 4 | Current: 0 | Progress: 0% ·
+  - Target: 4 | Current: 4 | Progress: 100% ✓
   - Related Units: 14.5, 14.6, 14.7, 14.8
 
 #### O-018: Sovereign Intelligence Layer (Phase 15)
-**Status:** PENDING | **Completion:** 0%
+**Status:** ACHIEVED | **Completion:** 100%
 
 - **KR-042:** KnowledgeIngestionEngine + 3 export parsers
   - Metric: units done
-  - Target: 4 | Current: 0 | Progress: 0% ·
+  - Target: 4 | Current: 7 | Progress: 175% ✓
   - Related Units: 15.1, 15.2, 15.3, 15.4
 - **KR-043:** KnowledgeExtractor + SemanticSearch + CrossConversationSynthesis
   - Metric: units done
-  - Target: 3 | Current: 0 | Progress: 0% ·
+  - Target: 3 | Current: 3 | Progress: 100% ✓
   - Related Units: 15.5, 15.6, 15.7
 - **KR-044:** Schema + Memory ULID fix + Topic organization + Consolidation
   - Metric: units done
-  - Target: 5 | Current: 0 | Progress: 0% ·
+  - Target: 5 | Current: 6 | Progress: 120% ✓
   - Related Units: 15.8, 15.9, 15.10, 15.11, 15.12
 
 #### O-019: Invisible Router (Phase 16)
-**Status:** PENDING | **Completion:** 0%
+**Status:** NOT STARTED | **Completion:** 0%
 
 - **KR-045:** ProviderMuxEngine + strategies + synthesis + failover + cost optimizer
   - Metric: units done
@@ -314,7 +314,7 @@
   - Related Units: 16.6, 16.7, 16.8
 
 #### O-020: Context-Aware Agent (Phase 17)
-**Status:** PENDING | **Completion:** 0%
+**Status:** NOT STARTED | **Completion:** 0%
 
 - **KR-047:** SituationDetector + ContextAssemblyEngine + Pre-warming + Token allocation
   - Metric: units done
@@ -326,7 +326,7 @@
   - Related Units: 17.5, 17.6
 
 #### O-021: Composable Interface (Phase 18)
-**Status:** PENDING | **Completion:** 0%
+**Status:** NOT STARTED | **Completion:** 0%
 
 - **KR-049:** UnifiedCapabilityRegistry + CLI + Workflow Builder + Plugin Hot-Reload
   - Metric: units done
@@ -338,7 +338,7 @@
   - Related Units: 18.5, 18.6, 18.7, 18.8, 18.9, 18.10
 
 #### O-022: Autonomous Execution (Phase 19)
-**Status:** PENDING | **Completion:** 0%
+**Status:** NOT STARTED | **Completion:** 0%
 
 - **KR-051:** AutonomousExecutionEngine + Enhanced Harness + Visual DAG + Self-Healing
   - Metric: units done
@@ -350,7 +350,7 @@
   - Related Units: 19.5, 19.6, 19.7, 19.8
 
 #### O-023: Sovereign Data (Phase 20)
-**Status:** PENDING | **Completion:** 0%
+**Status:** NOT STARTED | **Completion:** 0%
 
 - **KR-053:** EncryptionEngine + WAL + Export + Air-Gap
   - Metric: units done

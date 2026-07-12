@@ -144,7 +144,7 @@ export class MemoryEngine {
       timestamp: Date.now(),
     }
     await this.episodic.save(episode)
-    this.eventBus.emit({ type: 'memory:episode_recorded', data: { id: episode.id } } as never)
+    this.eventBus.emit({ type: 'memory:episode_recorded', data: { id: episode.id } })
   }
 
   async assertFact(input: SemanticMemoryInput): Promise<void> {
@@ -155,7 +155,7 @@ export class MemoryEngine {
       timestamp: Date.now(),
     }
     await this.semantic.save(fact)
-    this.eventBus.emit({ type: 'memory:fact_asserted', data: { id: fact.id } } as never)
+    this.eventBus.emit({ type: 'memory:fact_asserted', data: { id: fact.id } })
   }
 
   async createRule(input: ProceduralRuleInput): Promise<void> {
@@ -169,7 +169,7 @@ export class MemoryEngine {
       updatedAt: Date.now(),
     }
     await this.procedural.save(rule)
-    this.eventBus.emit({ type: 'memory:rule_created', data: { id: rule.id } } as never)
+    this.eventBus.emit({ type: 'memory:rule_created', data: { id: rule.id } })
   }
 
   // ── Querying ────────────────────────────────────────────────────────────
@@ -289,7 +289,7 @@ export class MemoryEngine {
     this.eventBus.emit({
       type: 'memory:consolidated',
       data: { rulesPruned: rules.length },
-    } as never)
+    })
   }
 
   // ── Knowledge types (Phase 15) ────────────────────────────────────────
@@ -304,7 +304,7 @@ export class MemoryEngine {
     this.eventBus.emit({
       type: 'memory:entity_recorded',
       data: { name: input.name, type: input.type },
-    } as never)
+    })
   }
 
   async recordDecision(input: {
@@ -317,7 +317,7 @@ export class MemoryEngine {
     this.eventBus.emit({
       type: 'memory:decision_recorded',
       data: { conversationId: input.conversationId, decisionText: input.decisionText },
-    } as never)
+    })
   }
 
   async recordPattern(input: {
@@ -328,7 +328,7 @@ export class MemoryEngine {
     this.eventBus.emit({
       type: 'memory:pattern_recorded',
       data: { name: input.name, patternType: input.patternType },
-    } as never)
+    })
   }
 
   async getTopics(): Promise<Array<{ id: string; name: string; description: string | null }>> {
@@ -345,7 +345,7 @@ export class MemoryEngine {
     this.eventBus.emit({
       type: 'memory:topic_assigned',
       data: { conversationId, topicId },
-    } as never)
+    })
   }
 
   // ── Agent support ─────────────────────────────────────────────────────

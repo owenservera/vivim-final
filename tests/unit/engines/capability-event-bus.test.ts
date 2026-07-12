@@ -3,8 +3,8 @@
 
 import { beforeEach, describe, expect, it } from 'bun:test'
 import {
-  type CapabilityEvent,
   CapabilityEventBus,
+  type EngineEvent,
   type WsLike,
 } from '../../../src/engines/capability-event-bus.js'
 
@@ -23,7 +23,7 @@ describe('CapabilityEventBus', () => {
   })
 
   it('emit() delivers event to all registered handlers', () => {
-    const received: CapabilityEvent[] = []
+    const received: EngineEvent[] = []
     bus.on('conversation:complete', (e) => received.push(e))
     bus.on('conversation:complete', (e) => received.push(e))
 
@@ -37,7 +37,7 @@ describe('CapabilityEventBus', () => {
   })
 
   it('on() registers handler, returns unsubscribe function', () => {
-    const received: CapabilityEvent[] = []
+    const received: EngineEvent[] = []
     const unsub = bus.on('provider:seeded', (e) => received.push(e))
 
     bus.emit({ type: 'provider:seeded', providerId: 'claude', capabilities: 5 })
@@ -49,7 +49,7 @@ describe('CapabilityEventBus', () => {
   })
 
   it('once() fires handler once then auto-removes', () => {
-    const received: CapabilityEvent[] = []
+    const received: EngineEvent[] = []
     bus.once('config:changed', (e) => received.push(e))
 
     bus.emit({ type: 'config:changed', engineId: 'eng_1', actor: 'admin' })

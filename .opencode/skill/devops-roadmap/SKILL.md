@@ -70,12 +70,12 @@ bun run devops truth full
 ```bash
 bun run devops select
 # Gets next unit JSON
-# Read docs/atomic/01-tracker.md for all unit states
+# Read docs/atomic-v3-fork-canon/01-tracker.md for all unit states
 ```
 
 ### Phase 3: Per-Unit Research
 For each pending/in_progress unit:
-1. Read atomic spec (`docs/atomic/phase-*/<id>-*.md`)
+1. Read atomic spec (`docs/atomic-v3/phase-*/<id>-*.md`)
 2. Read existing vivim-final code — the file is the source of truth (if it exists)
 3. Compare: spec vs existing vivim-final code
 4. cap-store / vivim-app-og are optional prior-art references ONLY — never a harvest mandate

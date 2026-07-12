@@ -1,5 +1,5 @@
 // devops/audit.ts
-// Append a single audit line to docs/atomic/PROGRESS.md for a completed unit,
+// Append a single audit line to docs/atomic-v3-fork-canon/PROGRESS.md for a completed unit,
 // resolving the real commit sha in one step (no [PENDING-COMMIT] placeholder
 // commit). Intended to run right after `git commit`:
 //
@@ -15,7 +15,7 @@ import { readFileSync, writeFile } from 'node:fs'
 import { TRACKER } from './select.ts'
 import { parseUnits } from './tracker.ts'
 
-const PROGRESS = 'docs/atomic/PROGRESS.md'
+const PROGRESS = 'docs/atomic-v3-fork-canon/PROGRESS.md'
 
 function sha(): string {
   return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()

@@ -1,0 +1,246 @@
+{
+  "topic": "SOTA Deterministic NLU Systems for Agentic Intent Resolution",
+  "collected": "2026-07-12",
+  "sources": [
+    {
+      "id": "snips-nlu-intro",
+      "title": "An Introduction to Snips NLU",
+      "url": "https://medium.com/snips-ai/an-introduction-to-snips-nlu-the-open-source-library-behind-snips-embedded-voice-platform-b12b1a60a41a",
+      "type": "official",
+      "date": "2018",
+      "confidence": "high",
+      "keyClaim": "Two-phase NLU: deterministic regex parser first, then probabilistic logistic regression + CRF. Deep learning showed no significant gain over CRFs.",
+      "usedIn": ["report:nlcl-nlu-systems", "brief:nlcl-nlu-systems"]
+    },
+    {
+      "id": "rasa-diet",
+      "title": "Introducing DIET: State-of-the-art architecture",
+      "url": "https://rasa.com/blog/introducing-dual-intent-and-entity-transformer-diet-state-of-the-art-performance-on-a-lightweight-architecture",
+      "type": "official",
+      "date": "2020",
+      "confidence": "high",
+      "keyClaim": "DIET: Dual Intent and Entity Transformer. Shared transformer for intent + entity, 6x faster to train than BERT, comparable accuracy.",
+      "usedIn": ["report:nlcl-nlu-systems", "brief:nlcl-nlu-systems"]
+    },
+    {
+      "id": "reic-amazon",
+      "title": "REIC: RAG-Enhanced Intent Classification at Scale",
+      "url": "https://arxiv.org/abs/2506.00210",
+      "type": "academic",
+      "date": "2025",
+      "confidence": "high",
+      "keyClaim": "Hierarchical intent ontology + RAG retrieval + constrained decoding. 8x cost reduction vs proprietary LLMs. Outperforms fine-tuning, zero-shot, few-shot.",
+      "usedIn": ["report:nlcl-nlu-systems", "brief:nlcl-nlu-systems"]
+    },
+    {
+      "id": "agentic-routing",
+      "title": "Routing in agentic AI — how agents choose their path",
+      "url": "https://www.labo-llm.fr/en/techniques/routing-ia-agentique/",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Four routing mechanisms: LLM-based, embedding-based, rule-based, ML classifier. Each with distinct cost/speed/flexibility trade-offs.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "intent-recognition-routing",
+      "title": "Agent Series (5): Intent Recognition and Routing",
+      "url": "https://dev.to/wonderlab/agent-series-5-intent-recognition-and-routing-making-agents-actually-understand-users-3174",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Confidence threshold routing: >0.8 execute, >0.6 ML classify, <0.6 clarify or LLM fallback. Production pattern validated.",
+      "usedIn": ["report:nlcl-nlu-systems", "brief:nlcl-nlu-systems"]
+    },
+    {
+      "id": "js-nlp-landscape",
+      "title": "NLP Libraries for Node.js and JavaScript",
+      "url": "https://www.kommunicate.io/blog/nlp-libraries-node-javascript/",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Three-tier JS NLP: Tier 1 Classical (wink, natural, compromise), Tier 2 ML (NLP.js, brain.js), Tier 3 Transformer (transformers.js v4).",
+      "usedIn": ["report:nlcl-nlu-systems", "brief:nlcl-nlu-systems"]
+    },
+    {
+      "id": "wink-nlp",
+      "title": "WinkNLP - NLP in Node.js",
+      "url": "https://winkjs.org/wink-nlp",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "2M tokens/sec, ~100% test coverage, zero dependencies, full TypeScript support, runs in browsers. Best-in-class for preprocessing.",
+      "usedIn": ["report:nlcl-nlu-systems", "brief:nlcl-nlu-systems"]
+    },
+    {
+      "id": "vex-intent-classifier",
+      "title": "Hybrid Intent Classifier in TypeScript",
+      "url": "https://github.com/cookieukw/vex-intent-classifier",
+      "type": "blog",
+      "date": "2025",
+      "confidence": "high",
+      "keyClaim": "Two-step TypeScript classifier: Levenshtein string similarity for typos, then TF-IDF cosine for semantic matching. Runs 100% client-side.",
+      "usedIn": ["report:nlcl-nlu-systems", "brief:nlcl-nlu-systems"]
+    },
+    {
+      "id": "intent-classification-guide",
+      "title": "Intent Classification: A Comprehensive Guide for 2025",
+      "url": "https://www.shadecoder.com/topics/intent-classification-a-comprehensive-guide-for-2025",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Three stages: preprocessing, model inference, post-processing. Classical approaches still in use for simple/high-precision needs.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "nlp-entity-matching",
+      "title": "NLP Entity Matching with Fuzzy Search",
+      "url": "https://subhajitbhar.com/blog/archive/nlp-entity-matching-with-fuzzy-search/",
+      "type": "blog",
+      "date": "2025",
+      "confidence": "high",
+      "keyClaim": "Three-stage pipeline: TF-IDF cosine (candidate gen) → Jaro-Winkler (re-ranking) → embeddings (tie-breaking). Thresholds: auto-accept ≥0.8, manual 0.6-0.8, reject <0.6.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "rasa-nlu-2026",
+      "title": "Rasa NLU | Structured Intent Recognition with LLM Flexibility",
+      "url": "https://rasa.com/nlu",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Co-existence Router decides NLU vs LLM per-turn. Classify with structured NLU, fall back to LLMs only when confidence is low.",
+      "usedIn": ["report:nlcl-nlu-systems", "brief:nlcl-nlu-systems"]
+    },
+    {
+      "id": "deterministic-probabilistic-agents",
+      "title": "Deterministic and probabilistic agents",
+      "url": "https://www.scalong.com/blog/deterministic-and-probabilistic-agents",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "95% of AI pilots fail because teams hand entire workflow to LLM when only part needs LLM. Deterministic agent: same input → same output, predictable cost.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "openautonlu",
+      "title": "OpenAutoNLU: Open Source AutoML Library for NLU",
+      "url": "https://beta.hyper.ai/en/papers/2603.01824",
+      "type": "academic",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "AutoML for NLU: matches/outperforms AutoGluon on intent classification, unsupervised OOD detection without labeled OOD data.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "intent-classification-techniques",
+      "title": "Intent Classification: 2026 Techniques for NLP Models",
+      "url": "https://labelyourdata.com/articles/machine-learning/intent-classification",
+      "type": "blog",
+      "date": "2025",
+      "confidence": "high",
+      "keyClaim": "Paraphrasing examples boosts accuracy 78%→86%. Active learning with entropy/margin sampling for continuous improvement.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "nlp-conversational-ai-2025",
+      "title": "NLP for Conversational AI in 2025",
+      "url": "https://www.resemble.ai/resources/nlp-transforming-conversational-ai",
+      "type": "blog",
+      "date": "2025",
+      "confidence": "medium",
+      "keyClaim": "Context-aware NLU: coreference resolution, ellipsis handling, context carryover across turns.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "elasticsearch-entity-resolution",
+      "title": "Elasticsearch entity resolution: Match entities with LLMs & semantic search",
+      "url": "https://www.elastic.co/search-labs/blog/elasticsearch-entity-resolution-llm-semantic-search",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Three-step matching: exact → alias → semantic search (hybrid with RRF). LLM as final match evaluator with explainability.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "agent-as-router",
+      "title": "Agent-as-a-Router: Agentic Model Routing for Coding Tasks",
+      "url": "https://arxiv.org/abs/2606.22902",
+      "type": "academic",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "C-A-F loop: Context → Action → Feedback → Context. Accumulates execution-grounded experience during deployment.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "intent-detection-age-llm",
+      "title": "Intent Detection in the Age of LLMs",
+      "url": "https://arxiv.org/html/2410.01627v1",
+      "type": "academic",
+      "date": "2024",
+      "confidence": "high",
+      "keyClaim": "Hybrid system: uncertainty-based routing between SetFit (sentence transformers) and LLMs. Within 2% of LLM accuracy with 50% less latency.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "structured-nlp-vs-llm",
+      "title": "What Structured NLP Does That LLMs Still Can't",
+      "url": "https://www.johnsnowlabs.com/what-structured-nlp-does-that-llms-still-cant-precision-extraction-at-billion-document-scale",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Specialized NLP reduces processing costs by 80% vs per-token cloud APIs at petabyte scale. Deterministic entity recognition with clinical context.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "rasa-alternatives-2026",
+      "title": "Rasa Alternatives in 2026",
+      "url": "https://dasha.ai/tips/rasa-alternatives",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Rasa remains king of on-premise control. Botpress for visual wrapper. Dialogflow CX for contact center. Microsoft Bot Framework for Azure ecosystem.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "snips-nlu-github",
+      "title": "Snips NLU GitHub Repository",
+      "url": "https://github.com/snipsco/snips-nlu",
+      "type": "official",
+      "date": "2020",
+      "confidence": "high",
+      "keyClaim": "Python/Rust NLU library. Deterministic parser (regex) + probabilistic parser (logistic regression + CRF). 100-200MB RAM. Entity resolution built-in.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "rag-intent-detection",
+      "title": "Beyond Prompt Engineering: Deep-Dive RAG for Intent Detection",
+      "url": "https://www.aimastery.page/guides/rag-intent-detection-ai-agents",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "RAG-driven NLU: decouple intent dataset from LLM prompt. Scale to hundreds of intents, reduce latency and API costs.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "scaling-intent-understanding",
+      "title": "Scaling Intent Understanding: A Framework for Classification",
+      "url": "https://aclanthology.org/2026.eacl-industry.14",
+      "type": "academic",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Domain-agnostic framework: lightweight open-source LLMs + clarifying questions. 8X cost reduction, 8% misrouting reduction in e-commerce.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    },
+    {
+      "id": "query-classifier-reic",
+      "title": "Intent Classifier — REIC Implementation",
+      "url": "https://pypi.org/project/query-classifier/",
+      "type": "official",
+      "date": "2025",
+      "confidence": "medium",
+      "keyClaim": "Semantic routing (SentenceTransformers) + RAG for few-shot evidence + hierarchical routing + multi-turn conversation support.",
+      "usedIn": ["report:nlcl-nlu-systems"]
+    }
+  ]
+}

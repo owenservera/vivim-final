@@ -1,6 +1,6 @@
 # Atomic Master Plan — vivim-final Implementation
 
-**Total units:** 240 | **Phases:** 20 (v1: 1-11, SOTA v2: 7-10, Truth v3: 11, Frontend v4: 13, Upgrade v5: 14-20, Gap Closure: 21)
+**Total units:** 243 | **Phases:** 20 (v1: 1-11, SOTA v2: 7-10, Truth v3: 11, Frontend v4: 13, Upgrade v5: 14-20, Gap Closure: 21)
 **Source:** `docs/merged-design-v2/` (20 design docs) + `docs/roadmap/TRUTH-GAPS.md` + `docs/merged-design-v2/upgrade/` (11 upgrade docs)
 **Tracker:** `docs/atomic/01-tracker.md`
 

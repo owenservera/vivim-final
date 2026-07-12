@@ -39,7 +39,10 @@
       "label": "Chat",
       "url": "https://chatgpt.com",
       "endpoint_type": "chat",
-      "selector": { "composer": "#prompt-textarea", "send_button": "[data-testid='send-button']" }
+      "selector": { "composer": "#prompt-textarea", "send_button": "[data-testid='send-button']" },
+      "composer_type": "textarea",
+      "send_method": "both",
+      "content_editable": false
     },
     {
       "label": "Login",
@@ -53,10 +56,11 @@
   ],
   "parsers": [
     {
-      "name": "ChatGPT SSE Parser",
-      "file": "chatgpt/001_openai_sse.ts",
+      "name": "chatgpt/001_openai_sse",
       "version": 1,
-      "is_active": true
+      "is_active": true,
+      "logic_type": "inline",
+      "logic_code": "var parse = function(rawBody) { var blocks = []; var index = 0; var lines = rawBody.split('\\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (!trimmed.startsWith('data:')) continue; var payload = trimmed.slice(5).trim(); if (payload === '[DONE]') break; try { var json = JSON.parse(payload); var delta = json.choices && json.choices[0] && json.choices[0].delta; if (delta && delta.content) { var lastBlock = blocks[blocks.length - 1]; if (lastBlock && lastBlock.kind === 'text') { lastBlock.content += delta.content; } else { blocks.push({ kind: 'text', content: delta.content, index: index++ }); } } if (delta && delta.tool_calls) { for (var j = 0; j < delta.tool_calls.length; j++) { var tc = delta.tool_calls[j]; blocks.push({ kind: 'tool_use', toolName: (tc.function && tc.function.name) || 'unknown', input: (tc.function && tc.function.arguments) || {}, index: index++ }); } } } catch (e) { } } if (blocks.length === 0 && rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } return blocks; }; var detectCompletion = function(rawBody) { return rawBody.indexOf('[DONE]') !== -1 || /\"finish_reason\"\\s*:\\s*\"stop\"/.test(rawBody); }; var getConfidence = function(rawBody) { var hasDone = rawBody.indexOf('[DONE]') !== -1; var hasDelta = rawBody.indexOf('choices') !== -1 && rawBody.indexOf('delta') !== -1; if (hasDone) return 1; if (hasDelta) return 0.7; return 0; }; exports.default = { name: 'chatgpt/001_openai_sse', version: 1, providerId: 'chatgpt', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };"
     }
   ],
   "models": [

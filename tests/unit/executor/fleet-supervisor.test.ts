@@ -16,6 +16,8 @@ function createMockStore(): GovernorStore {
       planTier: 'free',
       apiKeyRef: null,
       isActive: 1,
+      profileDir: null,
+      debugPort: null,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     }),

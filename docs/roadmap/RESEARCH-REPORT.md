@@ -1,16 +1,16 @@
 # Research Report
 
-**Generated:** 2026-07-10T21:38:57.110Z
-**Truth Score:** 93%
+**Generated:** 2026-07-12T06:26:03.641Z
+**Truth Score:** 98%
 
 ---
 
 ## Executive Summary
 
-- Total units: 138
-- Done: 128
-- Need port: 0
-- Need create: 10
+- Total units: 225
+- Done: 220
+- Need port: 1
+- Need create: 4
 - Need fix: 0
 
 ---
@@ -153,6 +153,64 @@
 
 - **Status:** done
 - **File:** `src/schema/provider-manifest.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 2.13 — ProviderEndpoint DOM Interaction Config
+
+- **Status:** done
+- **File:** `prisma/schema.prisma`, `src/engines/provider-registrar.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 2.14 — ProviderEndpoint selectorsJson Rename
+
+- **Status:** pending
+- **File:** `prisma/schema.prisma`, `src/storage/impl/provider-store-impl.ts`
+- **Classification:** CREATE
+- **Source:** N/A
+- **Effort:** M
+
+#### 2.15 — ProviderParser Hash Auto-computation
+
+- **Status:** pending
+- **File:** `src/engines/provider-registrar.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+- **Vivim ref:** `src/engines/provider-registrar.ts`
+
+#### 2.16 — ProviderStreamConfig Delta Path Validation
+
+- **Status:** pending
+- **File:** `src/schema/provider-manifest.ts`
+- **Classification:** PORT
+- **Source:** N/A
+- **Effort:** M
+- **Vivim ref:** `src/schema/provider-manifest.ts`
+
+#### 2.17 — Remove Hardcoded Parsers from StreamParserEngine
+
+- **Status:** done
+- **File:** `src/engines/stream-parser.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 2.18 — Parser Seed Migration (TS files → DB inline code)
+
+- **Status:** done
+- **File:** `seeds/providers/*.json`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 2.19 — DB-Only Fallback Chain
+
+- **Status:** done
+- **File:** `src/engines/stream-parser.ts`, `src/storage/contracts/parser-store.ts`
 - **Classification:** DONE
 - **Source:** N/A
 - **Effort:** S
@@ -999,83 +1057,30 @@
 - **Source:** N/A
 - **Effort:** S
 
-#### 11.7 — Slave Read           → `src/executor/slave-read.ts` (build against vivim-final core)
-
-- **Status:** in_progress
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-- **Gaps:** 1
-  - Create class: SlaveRead
-- **Vivim API:** BunCdpClient.send()
-
-#### 11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (build against vivim-final core)
-
-- **Status:** pending
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-- **Gaps:** 1
-  - Create class: ConversationDriver
-
-#### 11.9 — Stream Capture       → `src/executor/stream-capture.ts` (new file)
-
-- **Status:** pending
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-- **Gaps:** 1
-  - Create class: StreamCapture
-- **Vivim API:** BunCdpClient.send()
-
-#### 11.10 — Network Capture     → `src/executor/network-capture.ts` (new file)
-
-- **Status:** pending
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
-- **Gaps:** 1
-  - Create class: NetworkCapture
-- **Vivim API:** BunCdpClient.send()
-
 #### 11.11 — Executor Barrel     → `src/executor/index.ts` (wiring + factory)
 
-- **Status:** pending
+- **Status:** blocked
 - **File:** `N/A`
 - **Classification:** CREATE
 - **Source:** N/A
 - **Effort:** M
 - **Vivim API:** BunCdpClient.send()
 
-#### 11.12 — Slave Setup Script   → `scripts/setup-slaves.ts` (bootstrap logged-in profiles for chatgpt/claude/gemini; manual login + headless reuse)
+#### 11.13 — MirrorEngine Action Stubs → `src/engines/mirror-engine.ts` (3 stubs → real)
 
-- **Status:** pending
+- **Status:** blocked
 - **File:** `N/A`
 - **Classification:** CREATE
 - **Source:** N/A
 - **Effort:** M
 
-### Phase 12
+#### 11.14 — Slave Setup Script   → `scripts/setup-slaves.ts` (bootstrap logged-in profiles for chatgpt/claude/gemini; manual login + headless reuse)
 
-#### 12.1 — ChromeGovernor boot stubs → `src/engines/chrome-governor.ts` (2 stubs → real)
-
-- **Status:** pending
+- **Status:** done
 - **File:** `N/A`
-- **Classification:** CREATE
+- **Classification:** DONE
 - **Source:** N/A
-- **Effort:** M
-
-#### 12.2 — MirrorEngine action stubs → `src/engines/mirror-engine.ts` (3 stubs → real)
-
-- **Status:** pending
-- **File:** `N/A`
-- **Classification:** CREATE
-- **Source:** N/A
-- **Effort:** M
+- **Effort:** S
 
 ### Phase 13
 
@@ -1143,33 +1148,726 @@
 - **Source:** N/A
 - **Effort:** S
 
-#### 13.9 — Shared UI Registry + Promotion Ledger
+#### 13.9 — Provider Setup Wizard → `web/ui/src/features/provider-setup-wizard.tsx` (workspace selection + Chrome login UI)
 
-- **Status:** pending
-- **File:** `web/ui/src/registry/` + `docs/sandbox/PROMOTED.md`
-- **Classification:** CREATE
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
 - **Source:** N/A
-- **Effort:** M
+- **Effort:** S
 
 #### 13.10 — First Feature E2E → proof that sandbox system works end-to-end
 
-- **Status:** pending
+- **Status:** blocked
 - **File:** `N/A`
 - **Classification:** CREATE
 - **Source:** N/A
 - **Effort:** M
 
+### Phase 14
+
+#### 14.1 — CDPTransport Implementation
+
+- **Status:** done
+- **File:** `src/executor/cdp-transport.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 14.2 — ChromeGovernor CDP Real
+
+- **Status:** done
+- **File:** `src/engines/chrome-governor.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 14.3 — ChromeGovernor Trace Real → governor subsystem
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 14.4 — ChromeGovernor Health Probe Real → governor subsystem
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 14.5 — ConversationManager EventBus Fix
+
+- **Status:** done
+- **File:** `src/engines/conversation-manager.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 14.6 — Server → ConversationManager Wiring
+
+- **Status:** done
+- **File:** `src/server/index.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 14.7 — HarnessRuntime Real Context
+
+- **Status:** done
+- **File:** `src/engines/harness-runtime.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 14.8 — Router listRequests/getEvents + RouterStore
+
+- **Status:** done
+- **File:** `src/router/`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+### Phase 15
+
+#### 15.1 — KnowledgeIngestionEngine + Store
+
+- **Status:** done
+- **File:** `src/engines/knowledge-ingestion.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.2 — ChatGPT Export Parser
+
+- **Status:** done
+- **File:** `seeds/parsers/chatgpt/export.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.3 — Claude Export Parser
+
+- **Status:** done
+- **File:** `seeds/parsers/claude/export.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.4 — Gemini Export Parser
+
+- **Status:** done
+- **File:** `seeds/parsers/gemini/export.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.5 — KnowledgeExtractor (facts, decisions, patterns, entities)
+
+- **Status:** done
+- **File:** `src/engines/knowledge-extractor.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.6 — SemanticSearchEngine + Embedding Store
+
+- **Status:** done
+- **File:** `src/engines/semantic-search.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.7 — CrossConversationSynthesisEngine
+
+- **Status:** done
+- **File:** `src/engines/cross-conversation-synthesis.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.8 — MemoryEngine ULID Fix + 10-type expansion
+
+- **Status:** done
+- **File:** `src/engines/memory-engine.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.9 — Schema: Memory Intelligence Tables
+
+- **Status:** done
+- **File:** `prisma/schema.prisma`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.10 — Store Impls: Knowledge
+
+- **Status:** done
+- **File:** `src/storage/impl/knowledge-*-store-impl.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.11 — Server Routes — Knowledge
+
+- **Status:** done
+- **File:** `src/server/knowledge-router.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 15.12 — Full Export Engine (JSON/CSV)
+
+- **Status:** done
+- **File:** `src/engines/export.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+### Phase 16
+
+#### 16.1 — ProviderMuxEngine + Store
+
+- **Status:** done
+- **File:** `src/engines/provider-mux.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 16.2 — Round-Robin Deep Research → mux subsystem
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 16.3 — Response Synthesis Engine
+
+- **Status:** done
+- **File:** `src/engines/provider-mux.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 16.4 — Automatic Failover → mux subsystem
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 16.5 — Cost Optimization Engine
+
+- **Status:** done
+- **File:** `src/engines/cost-optimizer.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 16.6 — Learned Routing Preferences → mux subsystem
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 16.7 — Schema: Mux Tables
+
+- **Status:** done
+- **File:** `prisma/schema.prisma`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 16.8 — Server Routes for Mux
+
+- **Status:** done
+- **File:** `src/server/mux-router.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+### Phase 17
+
+#### 17.1 — SituationDetector + Store
+
+- **Status:** done
+- **File:** `src/engines/situation-detector.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 17.2 — ContextAssemblyEngine (5-stage pipeline)
+
+- **Status:** done
+- **File:** `src/engines/context-assembly.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 17.3 — Predictive Pre-warming → context subsystem
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 17.4 — Budget-Aware Token Allocation → context subsystem
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 17.5 — Schema: Context Tables
+
+- **Status:** done
+- **File:** `prisma/schema.prisma`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 17.6 — ConversationManager Integration
+
+- **Status:** done
+- **File:** `src/engines/conversation-manager.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+### Phase 18
+
+#### 18.1 — UnifiedCapabilityRegistry
+
+- **Status:** done
+- **File:** `src/engines/unified-registry.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.2 — CLI Complete (all capabilities as commands)
+
+- **Status:** done
+- **File:** `src/cli/`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.3 — Workflow Builder API
+
+- **Status:** done
+- **File:** `src/engines/workflow-builder.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.4 — Plugin Hot-Reload System
+
+- **Status:** done
+- **File:** `src/engines/plugin-hot-reload.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.5 — WebSocket Agent Bridge V2
+
+- **Status:** done
+- **File:** `src/server/websocket.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.6 — Adaptive Workspace Modes
+
+- **Status:** done
+- **File:** `src/engines/adaptive-workspace.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.7 — Conversation Organization (Projects/Topics)
+
+- **Status:** done
+- **File:** `src/engines/conversation-organization.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.8 — Memory Visualization API
+
+- **Status:** done
+- **File:** `src/server/routes/memory-viz.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.9 — Schema: Workspace Tables
+
+- **Status:** done
+- **File:** `prisma/schema.prisma`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 18.10 — Progressive Disclosure UI
+
+- **Status:** done
+- **File:** `web/ui/src/`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+### Phase 19
+
+#### 19.1 — AutonomousExecutionEngine
+
+- **Status:** done
+- **File:** `src/engines/autonomous-execution.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 19.2 — Execution Policy Engine
+
+- **Status:** done
+- **File:** `src/engines/execution-policy.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 19.3 — HITL Gate System → extends 19.1
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 19.4 — Self-Healing Pipeline → extends 19.1
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 19.5 — Full AgenticLoop → extends `src/engines/agentic-loop.ts`
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 19.6 — Autonomous REST API
+
+- **Status:** done
+- **File:** `src/server/autonomous-router.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 19.7 — Schema: Autonomous Tables
+
+- **Status:** done
+- **File:** `prisma/schema.prisma`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 19.8 — Visual Workflow DAG → extends `src/engines/workflow-engine.ts`
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+### Phase 20
+
+#### 20.1 — EncryptionEngine (at-rest)
+
+- **Status:** done
+- **File:** `src/engines/encryption.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 20.2 — WAL Mode Configuration
+
+- **Status:** done
+- **File:** `src/storage/prisma.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 20.3 — Export Engine (full JSON/CSV)
+
+- **Status:** done
+- **File:** `src/engines/export.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 20.4 — Air-Gap Mode
+
+- **Status:** done
+- **File:** `src/engines/airgap.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 20.5 — Local Model Integration (Ollama/llama.cpp)
+
+- **Status:** done
+- **File:** `src/engines/local-model-adapter.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 20.6 — SyncEngine (E2E-encrypted)
+
+- **Status:** done
+- **File:** `src/engines/sync.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 20.7 — Telemetry Audit (zero-cloud proof)
+
+- **Status:** done
+- **File:** `src/engines/telemetry-audit.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 20.8 — Schema: Sovereign Data Tables → `prisma/schema.prisma` (SyncLog + SyncPeer + migration)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+### Phase 22
+
+#### 22.1 — DiscoveryStore contract
+
+- **Status:** done
+- **File:** `src/storage/contracts/discovery-store.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.2 — DiscoveryStore Prisma impl
+
+- **Status:** done
+- **File:** `src/storage/impl/discovery-store-impl.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.3 — ShapeBindingStore contract
+
+- **Status:** done
+- **File:** `src/storage/contracts/shape-binding-store.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.4 — ShapeBindingStore Prisma impl
+
+- **Status:** done
+- **File:** `src/storage/impl/shape-binding-store-impl.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.5 — Enhanced ProviderDiscoveryEngine → `src/engines/provider-discovery.ts` (persistence, CDP ops, network obs, interactive probing)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.6 — Enhanced ManifestInferenceEngine → `src/engines/manifest-inference.ts` (confidence scoring, needsReview, llmInferred)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.7 — Enhanced CapabilityShapeRegistry → `src/engines/capability-shape-registry.ts` (adapter loading, shape inheritance)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.8 — Adapter seed modules (4 files) → `seeds/adapters/` (chat_app, coding_ide, search_engine, custom)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.9 — MCP Server scaffold → `src/mcp/server.ts` (stdio transport, tool registry, engine wiring)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.10 — MCP tools: Session + Navigation (6 tools)
+
+- **Status:** done
+- **File:** `src/mcp/discovery-tools.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.11 — MCP tools: DOM + Interaction (7 tools)
+
+- **Status:** done
+- **File:** `src/mcp/discovery-tools.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.12 — MCP tools: Network Observation (4 tools)
+
+- **Status:** done
+- **File:** `src/mcp/discovery-tools.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.13 — MCP tools: Analysis + Manifest (6 tools)
+
+- **Status:** done
+- **File:** `src/mcp/discovery-tools.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.14 — MCP tools: Parser Testing (2 tools)
+
+- **Status:** done
+- **File:** `src/mcp/discovery-tools.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 22.15 — MCP tools: Registration (2 tools)
+
+- **Status:** done
+- **File:** `src/mcp/discovery-tools.ts`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+### Phase 90
+
+#### 90.1 — Monorepo scaffold (web/, packages) — `web/` workspace
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.2 — TSConfig path aliases (@ui, @api-client) — `web/tsconfig.base.json`
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.3 — Typed API client — `web/api-client/src/index.ts`
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.4 — ActionRegistry (all UI actions) — `web/ui/src/actions/registry.ts`
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.5 — AgentBridge (agent:command parity, B8) — `web/ui/src/actions/agent-bridge.ts`
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.6 — Capability API endpoints — `src/server/conversation-router.ts` (GET /conversations/:id/capabilities, POST /conversations/:id/capabilities/:slug/execute, flattened contract)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.7 — WS agent channel — `src/server/websocket.ts` (agent:command routing to frontend session)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.8 — Sandbox MVP — `web/sandbox/src/app/sandbox-app.tsx` (catalog + harness + debug panel + /api/sandbox/debug reset)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.9 — Shared UI registry + promotion ledger — `web/ui/src/registry/index.ts`, `web/sandbox/src/features/generic-capability-renderer.tsx`, `docs/sandbox/PROMOTED.md`, `bun run sandbox new <slug>`
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
+#### 90.10 — First feature e2e loop — single capability execution via sandbox harness → backend execute → WS events → promoted; agent reaches same via agent:command (B8 parity)
+
+- **Status:** done
+- **File:** `N/A`
+- **Classification:** DONE
+- **Source:** N/A
+- **Effort:** S
+
 ---
 
 ## Implementation Order
 
-1. **11.7 — Slave Read           → `src/executor/slave-read.ts` (build against vivim-final core)** (CREATE, M)
-1. **11.8 — Conversation Driver  → `src/executor/conversation-driver.ts` (build against vivim-final core)** (CREATE, M)
-1. **11.9 — Stream Capture       → `src/executor/stream-capture.ts` (new file)** (CREATE, M)
-1. **11.10 — Network Capture     → `src/executor/network-capture.ts` (new file)** (CREATE, M)
+1. **2.14 — ProviderEndpoint selectorsJson Rename** (CREATE, M)
+1. **2.16 — ProviderStreamConfig Delta Path Validation** (PORT, M)
 1. **11.11 — Executor Barrel     → `src/executor/index.ts` (wiring + factory)** (CREATE, M)
-1. **11.12 — Slave Setup Script   → `scripts/setup-slaves.ts` (bootstrap logged-in profiles for chatgpt/claude/gemini; manual login + headless reuse)** (CREATE, M)
-1. **12.1 — ChromeGovernor boot stubs → `src/engines/chrome-governor.ts` (2 stubs → real)** (CREATE, M)
-1. **12.2 — MirrorEngine action stubs → `src/engines/mirror-engine.ts` (3 stubs → real)** (CREATE, M)
-1. **13.9 — Shared UI Registry + Promotion Ledger** (CREATE, M)
+1. **11.13 — MirrorEngine Action Stubs → `src/engines/mirror-engine.ts` (3 stubs → real)** (CREATE, M)
 1. **13.10 — First Feature E2E → proof that sandbox system works end-to-end** (CREATE, M)

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIVIM Unified</title>
+    <meta name="description" content="VIVIM — A self-building living canvas.">
+
+    <!-- 
+        VIVIM META-SYSTEM MANIFEST
+        This object describes the file's own structure to help AI agents understand and modify it.
+    -->
+    <script id="vivim-manifest">
+        window.VIVIM_MANIFEST = {
+            version: "2.0.0-alpha.1",
+            regions: {
+                "kernel": { description: "System primitives (Event Bus, State, Loader)" },
+                "assets": { description: "SVG Icons and Theme definitions" },
+                "system": { description: "Core+ Services (Files, API, Threads)" },
+                "userland": { description: "UI and Tools" }
+            }
+        };
+    </script>
+
+    <!-- THEME ENGINE: CSS Variables -->
+    <style id="theme-vars">
+        :root {
+            /* Core Colors (Stealth/Ninja Palette) */
+            --bg-app: #0f1419;
+            --bg-panel: #1b242c;
+            --bg-card: #222b36;
+            --border-subtle: #2f3c47;
+            --border-focus: #1ac8a0;
+
+            /* Text */
+            --text-main: #f5f7fa;
+            --text-muted: #96a0aa;
+
+            /* Accents */
+            --accent-primary: #1ac8a0;
+            --accent-danger: #ff6b6b;
+            --accent-warn: #f4b400;
+
+            /* Spacing & Radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+
+            /* Typography */
+            --font-main: "Inter", system-ui, -apple-system, sans-serif;
+            --font-mono: "JetBrains Mono", monospace;
+        }
+    </style>
+
+    <!-- CRITICAL CSS -->
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: var(--bg-app);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            overflow: hidden;
+        }
+
+        #app {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- @region: kernel/bootloader -->
+    <script id="bootloader">
+        (function () {
+            console.log("[VIVIM] Booting Kernel...");
+            window.sys = window.sys || {};
+
+            // --- Intelligent Database (IndexedDB) ---
+            const DB_NAME = 'vivim-source';
+            const DB_VERSION = 1;
+            const STORE_NAME = 'regions';
+
+            function openDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onerror = (e) => reject("DB Error: " + e.target.error);
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                    };
+                    request.onsuccess = (e) => resolve(e.target.result);
+                });
+            }
+
+            // --- Hydration Logic ---
+            async function hydrate() {
+                try {
+                    const db = await openDB();
+                    console.log("[DB] Connected to Intelligent Database.");
+
+                    // 1. Parse Own Source (The Seed)
+                    const htmlContent = document.documentElement.outerHTML;
+
+                    // 2. Check DB State
+                    const tx = db.transaction([STORE_NAME], 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+
+                    // Simple "Seed" logic: If DB is empty, populate it. 
+                    const countReq = store.count();
+
+                    countReq.onsuccess = () => {
+                        if (countReq.result === 0) {
+                            console.log("[HYDRATION] DB empty. Seeding from HTML...");
+                            // In a real scenario, we would parse the @region tags here.
+                            // For now, we store the whole file as 'root' to prove the concept.
+                            store.put({ id: 'root', content: htmlContent, timestamp: Date.now() });
+                            console.log("[HYDRATION] Seeding complete.");
+                        } else {
+                            console.log("[HYDRATION] DB exists. System is alive.");
+                        }
+                    };
+
+                } catch (e) {
+                    console.error("[HYDRATION] Failed:", e);
+                }
+            }
+
+            // Start Hydration
+            hydrate();
+
+            // Error Trap
+            window.onerror = function (msg, url, line, col, error) {
+                console.error("[KERNEL PANIC]", { msg, line, error });
+                return false;
+            };
+        })();
+    </script>
+    <!-- @end: kernel/bootloader -->
+
+    <!-- @region: assets/svg-sprite -->
+    <div style="display: none;" aria-hidden="true">
+        <svg id="vivim-sprite" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <style>
+                    .ge {
+                        fill: none;
+                        stroke: currentColor;
+                        stroke-width: 2;
+                        stroke-linecap: round;
+                        stroke-linejoin: round
+                    }
+
+                    .gf {
+                        fill: currentColor;
+                        stroke: none
+                    }
+                </style>
+
+                <!-- SK-001: Skippy Mark -->
+                <symbol id="skLogo" viewBox="0 0 24 24">
+                    <circle class="ge" cx="12" cy="12" r="9" />
+                    <ellipse class="ge" cx="12" cy="12" rx="5.5" ry="3" />
+                    <circle class="ge" cx="12" cy="12" r="2.2" />
+                </symbol>
+
+                <!-- Icon: Chat Message -->
+                <symbol id="icon-chat" viewBox="0 0 24 24">
+                    <rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"
+                        fill="none" />
+                    <circle cx="12" cy="12" r="3" fill="currentColor" />
+                </symbol>
+
+                <!-- Icon: Folder -->
+                <symbol id="icon-folder" viewBox="0 0 24 24">
+                    <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                        stroke="currentColor" stroke-width="2" fill="none" />
+                </symbol>
+            </defs>
+        </svg>
+    </div>
+    <!-- @end: assets/svg-sprite -->
+
+    <!-- APP ROOT -->
+    <div id="app">
+        <!-- UI will be injected here by Userland plugins -->
+        <div style="margin: auto; text-align: center; opacity: 0.5;">
+            <svg width="64" height="64">
+                <use href="#skLogo"></use>
+            </svg>
+            <p>VIVIM Kernel Loaded</p>
+            <p style="font-size: 0.8em; color: var(--text-muted);">Intelligent DB Active</p>
+        </div>
+    </div>
+
+    <!-- @region: kernel/core -->
+    <script id="kernel-core">
+        (function () {
+            // --- Event Bus ---
+            const listeners = new Map();
+
+            window.sys.on = (event, callback) => {
+                if (!listeners.has(event)) listeners.set(event, new Set());
+                listeners.get(event).add(callback);
+                return () => listeners.get(event).delete(callback);
+            };
+
+            window.sys.emit = (event, payload) => {
+                // console.debug(`[BUS] ${event}`, payload);
+                if (listeners.has(event)) {
+                    listeners.get(event).forEach(cb => {
+                        try { cb(payload); } catch (e) { console.error(e); }
+                    });
+                }
+            };
+
+            // --- State Store (Simple Proxy) ---
+            const stateTarget = {
+                version: window.VIVIM_MANIFEST.version,
+                activePlugin: null
+            };
+
+            window.sys.state = new Proxy(stateTarget, {
+                set(target, prop, value) {
+                    target[prop] = value;
+                    window.sys.emit('state:changed', { prop, value });
+                    return true;
+                }
+            });
+
+            // --- Plugin Loader ---
+            window.sys.plugins = new Map();
+            window.sys.registerPlugin = (name, initFn) => {
+                console.log(`[PLUGIN] Registering: ${name}`);
+                try {
+                    const api = initFn(window.sys);
+                    window.sys.plugins.set(name, api);
+                    window.sys.emit('plugin:loaded', { name });
+                } catch (e) {
+                    console.error(`[PLUGIN] Failed to load ${name}`, e);
+                }
+            };
+
+            // Helper to get DB
+            function getDB() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open(DB_NAME, 1);
+                    req.onupgradeneeded = e => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        }
+                    };
+                    req.onsuccess = e => resolve(e.target.result);
+                    req.onerror = e => reject(e);
+                });
+            }
+
+            window.sys.identity = {
+                profile: null,
+                keyPair: null,
+
+                async init() {
+                    console.log("[IDENTITY] Initializing...");
+                    const db = await getDB();
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.get('main');
+
+                    return new Promise((resolve) => {
+                        req.onsuccess = async () => {
+                            if (req.result) {
+                                console.log("[IDENTITY] Profile loaded.");
+                                this.profile = req.result.profile;
+                                this.keyPair = req.result.keyPair; // In real app, unwrap this
+                            } else {
+                                console.log("[IDENTITY] No profile found. Creating new...");
+                                await this.create();
+                            }
+                            window.sys.emit('identity:ready', this.profile);
+                            resolve(this.profile);
+                        };
+                    });
+                },
+
+                async create(handle = "User-" + Math.floor(Math.random() * 10000)) {
+                    // 1. Generate KeyPair (ECDH P-256 for WebRTC/Encryption)
+                    const keyPair = await window.crypto.subtle.generateKey(
+                        {
+                            name: "ECDH",
+                            namedCurve: "P-256"
+                        },
+                        true, // extractable
+                        ["deriveKey", "deriveBits"]
+                    );
+
+                    // 2. Create Profile
+                    const profile = {
+                        id: crypto.randomUUID(),
+                        handle: handle,
+                        created: Date.now(),
+                        publicKey: await window.crypto.subtle.exportKey("jwk", keyPair.publicKey)
+                    };
+
+                    // 3. Save
+                    const db = await getDB();
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    tx.objectStore(STORE_NAME).put({
+                        id: 'main',
+                        profile: profile,
+                        keyPair: keyPair // Storing CryptoKey objects directly in IDB is supported
+                    });
+
+                    this.profile = profile;
+                    this.keyPair = keyPair;
+                    console.log("[IDENTITY] Created:", profile.handle);
+                    window.sys.emit('identity:created', profile);
+                    return profile;
+                },
+
+                getPublicKey() {
+                    return this.profile ? this.profile.publicKey : null;
+                }
+            };
+
+            // Auto-init
+            window.sys.identity.init();
+
+        })();
+    </script>
+    <!-- @end: system/identity -->
+
+    <!-- @region: system/net -->
+    <script id="system-net">
+        (function () {
+            // Simple Local Signaling using BroadcastChannel (for Tab-to-Tab P2P)
+            const signal = new BroadcastChannel('vivim-signal');
+            const peers = new Map(); // peerId -> { conn, dc }
+
+            window.sys.net = {
+                peers: peers,
+
+                init() {
+                    console.log("[NET] Initializing P2P Layer...");
+
+                    // Handle Signaling Messages
+                    signal.onmessage = async (e) => {
+                        const { type, sender, target, payload } = e.data;
+                        const myId = window.sys.identity.profile?.id;
+
+                        if (target && target !== myId) return; // Not for me
+                        if (sender === myId) return; // From me
+
+                        console.log(`[NET] Signal ${type} from ${sender}`);
+
+                        switch (type) {
+                            case 'offer':
+                                await this.handleOffer(sender, payload);
+                                break;
+                            case 'answer':
+                                await this.handleAnswer(sender, payload);
+                                break;
+                            case 'candidate':
+                                await this.handleCandidate(sender, payload);
+                                break;
+                            case 'announce':
+                                // Peer announced presence, try to connect if we are "older" or just log
+                                console.log(`[NET] Peer Discovered: ${sender}`);
+                                window.sys.emit('net:peer-discovered', { id: sender });
+                                break;
+                        }
+                    };
+
+                    // Announce self
+                    setTimeout(() => {
+                        this.announce();
+                    }, 1000);
+                },
+
+                announce() {
+                    const myId = window.sys.identity.profile?.id;
+                    if (myId) {
+                        signal.postMessage({ type: 'announce', sender: myId });
+                    }
+                },
+
+                // Connect to a peer
+                async connect(targetId) {
+                    const myId = window.sys.identity.profile.id;
+                    console.log(`[NET] Connecting to ${targetId}...`);
+
+                    const conn = new RTCPeerConnection();
+                    const dc = conn.createDataChannel("vivim-data");
+
+                    this.setupDC(dc, targetId);
+                    this.setupConn(conn, targetId);
+
+                    peers.set(targetId, { conn, dc });
+
+                    const offer = await conn.createOffer();
+                    await conn.setLocalDescription(offer);
+
+                    signal.postMessage({
+                        type: 'offer',
+                        sender: myId,
+                        target: targetId,
+                        payload: offer
+                    });
+                },
+
+                // Handle incoming offer
+                async handleOffer(senderId, offer) {
+                    const myId = window.sys.identity.profile.id;
+                    const conn = new RTCPeerConnection();
+
+                    conn.ondatachannel = (e) => {
+                        this.setupDC(e.channel, senderId);
+                    };
+                    this.setupConn(conn, senderId);
+
+                    peers.set(senderId, { conn }); // DC will be set in ondatachannel
+
+                    await conn.setRemoteDescription(offer);
+                    const answer = await conn.createAnswer();
+                    await conn.setLocalDescription(answer);
+
+                    signal.postMessage({
+                        type: 'answer',
+                        sender: myId,
+                        target: senderId,
+                        payload: answer
+                    });
+                },
+
+                async handleAnswer(senderId, answer) {
+                    const peer = peers.get(senderId);
+                    if (peer) {
+                        await peer.conn.setRemoteDescription(answer);
+                    }
+                },
+
+                async handleCandidate(senderId, candidate) {
+                    const peer = peers.get(senderId);
+                    if (peer) {
+                        await peer.conn.addIceCandidate(candidate);
+                    }
+                },
+
+                setupConn(conn, peerId) {
+                    const myId = window.sys.identity.profile.id;
+                    conn.onicecandidate = (e) => {
+                        if (e.candidate) {
+                            signal.postMessage({
+                                type: 'candidate',
+                                sender: myId,
+                                target: peerId,
+                                payload: e.candidate
+                            });
+                        }
+                    };
+                    conn.onconnectionstatechange = () => {
+                        console.log(`[NET] Connection to ${peerId}: ${conn.connectionState}`);
+                        window.sys.emit('net:connection-change', { peerId, state: conn.connectionState });
+                    };
+                },
+
+                setupDC(dc, peerId) {
+                    dc.onopen = () => {
+                        console.log(`[NET] DataChannel OPEN with ${peerId}`);
+                        window.sys.emit('net:connected', { peerId });
+                        // Update peer record
+                        const peer = peers.get(peerId);
+                        if (peer) peer.dc = dc;
+                    };
+                    dc.onmessage = (e) => {
+                        console.log(`[NET] Message from ${peerId}:`, e.data);
+                        window.sys.emit('net:message', { peerId, data: e.data });
+                    };
+                },
+
+                send(peerId, data) {
+                    const peer = peers.get(peerId);
+                    if (peer && peer.dc && peer.dc.readyState === 'open') {
+                        peer.dc.send(data);
+                    } else {
+                        console.warn(`[NET] Cannot send to ${peerId} (Not connected)`);
+                    }
+                },
+
+                broadcast(data) {
+                    peers.forEach(({ dc }) => {
+                        if (dc && dc.readyState === 'open') dc.send(data);
+                    });
+                }
+            };
+
+            // Wait for identity, then init
+            window.sys.on('identity:ready', () => {
+                window.sys.net.init();
+            });
+            const STORE_NAME = 'regions';
+
+            // Helper to get DB
+            function getDB() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open(DB_NAME, 1);
+                    req.onsuccess = e => resolve(e.target.result);
+                    req.onerror = e => reject(e);
+                });
+            }
+
+            // --- 1. File Registry (VFS) ---
+            window.sys.files = {
+                // Read a file/region
+                async read(id) {
+                    const db = await getDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(STORE_NAME, 'readonly');
+                        const req = tx.objectStore(STORE_NAME).get(id);
+                        req.onsuccess = () => resolve(req.result ? req.result.content : null);
+                        req.onerror = () => reject(req.error);
+                    });
+                },
+
+                // Write a file/region
+                async write(id, content) {
+                    const db = await getDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(STORE_NAME, 'readwrite');
+                        const req = tx.objectStore(STORE_NAME).put({
+                            id,
+                            content,
+                            timestamp: Date.now()
+                        });
+                        req.onsuccess = () => {
+                            window.sys.emit('file:changed', { id });
+                            resolve(true);
+                        };
+                        req.onerror = () => reject(req.error);
+                    });
+                },
+
+                // List all files
+                async list() {
+                    const db = await getDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(STORE_NAME, 'readonly');
+                        const req = tx.objectStore(STORE_NAME).getAllKeys();
+                        req.onsuccess = () => resolve(req.result);
+                        req.onerror = () => reject(req.error);
+                    });
+                }
+            };
+
+            // --- 2. Snapshot Engine (Self-Replication) ---
+            window.sys.snapshot = {
+                async create() {
+                    console.log("[SNAPSHOT] Creating system snapshot...");
+                    try {
+                        // 1. Get all regions from DB
+                        const db = await getDB();
+                        const regions = await new Promise((resolve) => {
+                            const tx = db.transaction(STORE_NAME, 'readonly');
+                            const req = tx.objectStore(STORE_NAME).getAll();
+                            req.onsuccess = () => resolve(req.result);
+                        });
+
+                        // 2. Reconstruct HTML
+                        // For Phase 1, we assume 'root' contains the base HTML.
+                        // In a real granular system, we would stitch regions.
+                        // But our Hydration logic currently saves the WHOLE file as 'root'.
+                        // So we just read 'root' and maybe apply patches if we had granular regions.
+
+                        const rootFile = regions.find(r => r.id === 'root');
+                        if (!rootFile) throw new Error("Root seed not found in DB");
+
+                        let html = rootFile.content;
+
+                        // 3. Create Blob & Download
+                        const blob = new Blob([html], { type: 'text/html' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `vivim-snapshot-${Date.now()}.html`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+
+                        console.log("[SNAPSHOT] Success.");
+                        return true;
+                    } catch (e) {
+                        console.error("[SNAPSHOT] Failed:", e);
+                        return false;
+                    }
+                }
+            };
+
+            // --- 3. LLM Client (Multi-Model Manager) ---
+            window.sys.llm = {
+                provider: 'openai', // default
+                apiKey: localStorage.getItem('vivim.llm.key') || '',
+
+                setProvider(provider, key) {
+                    this.provider = provider;
+                    this.apiKey = key;
+                    localStorage.setItem('vivim.llm.provider', provider);
+                    localStorage.setItem('vivim.llm.key', key);
+                },
+
+                async complete(prompt, system = "You are a helpful AI.") {
+                    if (!this.apiKey) throw new Error("No API Key set");
+
+                    console.log(`[LLM] Calling ${this.provider}...`);
+                    // Stub implementation - to be expanded
+                    return `[${this.provider}] Response to: ${prompt}`;
+                }
+            };
+
+            console.log("[SYSTEM] Services Loaded (Files, Snapshot, LLM).");
+            window.sys.emit('system:ready');
+        })();
+    </script>
+    <!-- @end: system/core-plus -->
+
+    <!-- @region: userland/stealth-ui -->
+    <script id="userland-ui">
+        (function () {
+            console.log("[USERLAND] Booting Stealth UI...");
+
+            // 1. Inject UI Structure
+            const app = document.getElementById('app');
+            app.innerHTML = `
+            <div id="canvas">
+                <!-- Infinite Grid Background -->
+                <div class="connection-lines"></div>
+                
+                <!-- System Visualizer (Dashboard) -->
+                <div id="system-visualizer" class="glass-panel" style="position: absolute; top: 20px; right: 20px; width: 300px; padding: 15px; z-index: 100;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 14px; color: var(--accent-primary);">SYSTEM STATUS</h3>
+                    <div id="viz-content" style="font-size: 12px; font-family: var(--font-mono);">
+                        <div>KERNEL: <span style="color: var(--accent-primary)">ONLINE</span></div>
+                        <div>DB: <span style="color: var(--accent-primary)">CONNECTED</span></div>
+                        <div>FILES: <span id="file-count">0</span> indexed</div>
+                        <div style="margin-top: 5px; border-top: 1px solid var(--border-subtle); padding-top: 5px;">
+                            <div>ID: <span id="my-handle" style="color: var(--text-main)">Loading...</span></div>
+                            <div>NET: <span id="net-status" style="color: var(--text-muted)">Offline</span></div>
+                            <div>PEERS: <span id="peer-count">0</span></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 5px; margin-top: 10px;">
+                        <button onclick="window.sys.net.announce()" style="flex: 1; padding: 5px; background: var(--bg-card); border: 1px solid var(--border-focus); color: var(--text-main); cursor: pointer;">
+                            📡 Signal
+                        </button>
+                        <button onclick="window.sys.snapshot.create()" style="flex: 1; padding: 5px; background: var(--bg-card); border: 1px solid var(--border-focus); color: var(--text-main); cursor: pointer;">
+                            📸 Save
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Bubble (Main Interface) -->
+                <div class="chat-bubble" style="position: absolute; bottom: 40px; left: 40px; width: 500px; height: 400px; display: flex; flex-direction: column;">
+                    <div class="bubble-header" style="padding: 10px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px;">
+                        <div class="status-dot" style="width: 8px; height: 8px; background: var(--accent-primary); border-radius: 50%;"></div>
+                        <span style="font-weight: bold; font-size: 13px;">VIVIM UNIFIED</span>
+                    </div>
+                    
+                    <!-- Code Editor / Chat Area -->
+                    <div class="bubble-content" style="flex: 1; padding: 10px; overflow: hidden; display: flex; flex-direction: column;">
+                        <div id="editor-toolbar" style="margin-bottom: 5px; display: flex; gap: 5px;">
+                            <button id="btn-load-self" style="font-size: 11px; padding: 3px 8px;">Load Self</button>
+                            <button id="btn-save-file" style="font-size: 11px; padding: 3px 8px;">Save to DB</button>
+                        </div>
+                        <textarea id="code-editor" style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); color: var(--text-main); font-family: var(--font-mono); padding: 10px; resize: none;" placeholder="// Code Editor Ready..."></textarea>
+                    </div>
+                </div>
+            </div>
+            `;
+
+            // 2. Add CSS for Userland
+            const style = document.createElement('style');
+            style.textContent = `
+            .glass-panel {
+                background: rgba(27, 36, 44, 0.8);
+                backdrop-filter: blur(10px);
+                border: 1px solid var(--border-subtle);
+                border-radius: var(--radius-md);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+            .chat-bubble {
+                background: var(--bg-panel);
+                border: 1px solid var(--border-subtle);
+                border-radius: var(--radius-lg);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+            button {
+                background: var(--bg-card);
+                border: 1px solid var(--border-subtle);
+                color: var(--text-main);
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            button:hover {
+                border-color: var(--accent-primary);
+            }
+            `;
+            document.head.appendChild(style);
+
+            // 3. Bind Code Editor Logic
+            const editor = document.getElementById('code-editor');
+            const btnLoad = document.getElementById('btn-load-self');
+            const btnSave = document.getElementById('btn-save-file');
+            const fileCountDisplay = document.getElementById('file-count');
+            const handleDisplay = document.getElementById('my-handle');
+            const netStatusDisplay = document.getElementById('net-status');
+            const peerCountDisplay = document.getElementById('peer-count');
+
+            // Network UI Updates
+            window.sys.on('identity:ready', (profile) => {
+                if (handleDisplay) handleDisplay.textContent = profile.handle;
+                if (netStatusDisplay) {
+                    netStatusDisplay.textContent = "Listening";
+                    netStatusDisplay.style.color = "var(--accent-primary)";
+                }
+            });
+
+            window.sys.on('net:peer-discovered', ({ id }) => {
+                // Auto-connect for demo purposes
+                window.sys.net.connect(id);
+            });
+
+            window.sys.on('net:connected', ({ peerId }) => {
+                if (peerCountDisplay) peerCountDisplay.textContent = window.sys.net.peers.size;
+                if (netStatusDisplay) netStatusDisplay.textContent = "Connected";
+            });
+
+            window.sys.on('net:connection-change', () => {
+                if (peerCountDisplay) peerCountDisplay.textContent = window.sys.net.peers.size;
+            });
+
+            // Load Self (The Seed)
+            btnLoad.addEventListener('click', async () => {
+                try {
+                    editor.value = "Loading...";
+                    // In Phase 1, we just read the 'root' file which is the whole HTML
+                    const content = await window.sys.files.read('root');
+                    editor.value = content || "// Error: Root seed not found in DB";
+                } catch (e) {
+                    editor.value = "// Error loading file: " + e.message;
+                }
+            });
+
+            // Save to DB
+            btnSave.addEventListener('click', async () => {
+                try {
+                    const content = editor.value;
+                    await window.sys.files.write('root', content);
+                    alert("Saved to Intelligent DB! Ready to Snapshot.");
+                    updateStats();
+                } catch (e) {
+                    alert("Save failed: " + e.message);
+                }
+            });
+
+            // Update Stats
+            async function updateStats() {
+                try {
+                    const files = await window.sys.files.list();
+                    fileCountDisplay.textContent = files.length;
+                } catch (e) { }
+            }
+
+            // Initialize
+            updateStats();
+            window.sys.emit('userland:ready');
+
+        })();
+    </script>
+    <!-- @end: userland/stealth-ui -->
+
+</body>
+
+</html>

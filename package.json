@@ -25,7 +25,8 @@
     "prisma:generate": "bunx prisma generate",
     "prisma:studio": "bunx prisma studio",
     "prisma:push": "bunx prisma db push",
-    "devops": "bun run devops/index.ts"
+    "devops": "bun run devops/index.ts",
+    "taxonomy:generate": "bun run scripts/taxonomy-gen/run.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",

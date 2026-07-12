@@ -11,9 +11,12 @@ interface PrismaParserRow {
   providerId: string
   name: string
   version: number
-  filePath: string
-  hash: string
+  parserLogicType: string
+  parserFilePath: string | null
+  parserLogicCode: string | null
+  parserHash: string | null
   isActive: number
+  fallbackParserId: string | null
   createdAt: number
   updatedAt: number
 }
@@ -24,9 +27,12 @@ function toParserRow(r: PrismaParserRow): ProviderParserRow {
     providerId: r.providerId,
     name: r.name,
     version: r.version,
-    filePath: r.filePath,
-    hash: r.hash,
+    logicType: r.parserLogicType,
+    filePath: r.parserFilePath,
+    logicCode: r.parserLogicCode,
+    hash: r.parserHash ?? '',
     isActive: r.isActive,
+    fallbackParserId: r.fallbackParserId,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   }
@@ -68,18 +74,24 @@ export class ParserStoreImpl implements ParserStore {
         providerId: parser.providerId,
         name: parser.name,
         version: parser.version,
-        filePath: parser.filePath,
-        hash: parser.hash,
+        parserLogicType: parser.logicType,
+        parserFilePath: parser.filePath,
+        parserLogicCode: parser.logicCode,
+        parserHash: parser.hash,
         isActive: parser.isActive,
+        fallbackParserId: parser.fallbackParserId,
         createdAt: parser.createdAt || now,
         updatedAt: now,
       },
       update: {
         name: parser.name,
         version: parser.version,
-        filePath: parser.filePath,
-        hash: parser.hash,
+        parserLogicType: parser.logicType,
+        parserFilePath: parser.filePath,
+        parserLogicCode: parser.logicCode,
+        parserHash: parser.hash,
         isActive: parser.isActive,
+        fallbackParserId: parser.fallbackParserId,
         updatedAt: now,
       },
     })
@@ -95,7 +107,28 @@ export class ParserStoreImpl implements ParserStore {
 
   async getParserByFile(filePath: string): Promise<ProviderParserRow | null> {
     const r = await this.p.providerParser.findFirst({
-      where: { filePath },
+      where: { parserFilePath: filePath },
+    })
+    return r ? toParserRow(r as PrismaParserRow) : null
+  }
+
+  async getParserByHash(hash: string): Promise<ProviderParserRow | null> {
+    const r = await this.p.providerParser.findFirst({
+      where: { parserHash: hash },
+    })
+    return r ? toParserRow(r as PrismaParserRow) : null
+  }
+
+  async getGenericParser(): Promise<ProviderParserRow | null> {
+    const r = await this.p.providerParser.findFirst({
+      where: { providerId: 'generic', isActive: 1 },
+    })
+    return r ? toParserRow(r as PrismaParserRow) : null
+  }
+
+  async getSystemFallbackParser(): Promise<ProviderParserRow | null> {
+    const r = await this.p.providerParser.findFirst({
+      where: { providerId: 'system', isActive: 1 },
     })
     return r ? toParserRow(r as PrismaParserRow) : null
   }

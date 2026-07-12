@@ -5,6 +5,8 @@ import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { CapabilityResolutionEngine } from './capability-resolution.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { ExecutionMemoizer } from './execution-memoizer.js'
+import type { ObservationTap } from './observation-tap.js'
+import type { ObservationOptions as ObservationTapOptions } from './observation-tap.js'
 
 // ── Store contract ───────────────────────────────────────────────────────
 
@@ -88,6 +90,7 @@ export interface MirrorStore {
 
 export interface MirrorAction {
   type: 'click' | 'type' | 'navigate' | 'scroll' | 'custom'
+  slaveId?: string
   target?: string
   value?: string
   conversationId: string
@@ -137,20 +140,60 @@ const _LATENCY_BUDGETS: Record<string, number> = {
 // ── MirrorEngine ────────────────────────────────────────────────────────
 
 export class MirrorEngine {
+  private observationTap?: ObservationTap
+
   constructor(
     private governor: ChromeGovernor,
     private resolution: CapabilityResolutionEngine,
     private store: MirrorStore,
     private eventBus: CapabilityEventBus,
     private memoizer: ExecutionMemoizer,
-  ) {}
+    observationTap?: ObservationTap,
+  ) {
+    this.observationTap = observationTap
+  }
 
   async sendAction(action: MirrorAction): Promise<ActionResult> {
     try {
-      // Execute action via Governor CDP — stub for v1
-      const result = { action: action.type, target: action.target }
+      const slaveId = action.slaveId
+      if (!slaveId) {
+        return { success: false, error: 'slaveId required for CDP routing' }
+      }
 
-      // Update mirror state
+      switch (action.type) {
+        case 'navigate':
+          await this.governor.cdp.send(slaveId, 'Page.navigate', {
+            url: action.value ?? action.target ?? '',
+          })
+          break
+        case 'click':
+          await this.governor.cdp.send(slaveId, 'Runtime.evaluate', {
+            expression: `document.querySelector('${action.target ?? ''}')?.click()`,
+          })
+          break
+        case 'type':
+          await this.governor.cdp.send(slaveId, 'Runtime.evaluate', {
+            expression: `document.querySelector('${action.target ?? ''}').value = '${action.value ?? ''}'`,
+          })
+          break
+        case 'scroll':
+          await this.governor.cdp.send(slaveId, 'Input.dispatchMouseEvent', {
+            type: 'mouseWheel',
+            x: 0,
+            y: 0,
+            deltaX: 0,
+            deltaY: Number(action.value ?? '-100'),
+          })
+          break
+        case 'custom':
+          await this.governor.cdp.send(slaveId, 'Runtime.evaluate', {
+            expression: action.value ?? '',
+          })
+          break
+      }
+
+      const result = { action: action.type, target: action.target, slaveId }
+
       const state = await this.store.getMirrorState(action.conversationId)
       if (state) {
         await this.store.upsertMirrorState({
@@ -167,14 +210,20 @@ export class MirrorEngine {
   }
 
   async startObservation(slaveId: string, opts?: ObservationOptions): Promise<void> {
-    // Start observation via Governor — stub for v1
-    void slaveId
-    void opts
+    if (!this.observationTap) return
+    const tapOpts: ObservationTapOptions = {
+      domMutations: opts?.domMutations,
+      networkEvents: opts?.networkEvents,
+      consoleLogs: opts?.consoleLogs,
+      pageLifecycle: opts?.pageLifecycle,
+      throttleMs: opts?.throttleMs,
+    }
+    await this.observationTap.start(slaveId, tapOpts)
   }
 
   async stopObservation(slaveId: string): Promise<void> {
-    // Stop observation — stub for v1
-    void slaveId
+    if (!this.observationTap) return
+    await this.observationTap.stop(slaveId)
   }
 
   async projectState(conversationId: string): Promise<MirrorState> {

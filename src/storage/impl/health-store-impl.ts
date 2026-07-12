@@ -51,8 +51,26 @@ interface PrismaHealthHistory {
   id: string
   providerId: string
   runtimeState: string
+  activeSessions: number
+  totalConversations: number
+  totalMessages: number
+  capabilityExecutions: number
+  capabilitySuccesses: number
+  capabilityFailures: number
+  errorCount: number
+  parserConfidenceAvg: number | null
   selectorHitRateAvg: number | null
+  avgResponseLatencyMs: number | null
+  p50ResponseLatencyMs: number | null
+  p95ResponseLatencyMs: number | null
+  p99ResponseLatencyMs: number | null
+  circuitBreakerState: string | null
+  fleetRestarts: number
+  driftEventsUnresolved: number
+  windowStartTs: number
+  windowEndTs: number
   snapshotTs: number
+  schemaVersion: number
 }
 
 // ── Mappers ──────────────────────────────────────────────────────────────
@@ -98,11 +116,28 @@ function toReport(r: PrismaProviderHealth): ProviderHealthReport {
 function toHistoryRow(r: PrismaHealthHistory): HealthHistoryRow {
   return {
     id: r.id,
-    provider_id: r.providerId,
-    overall_status: r.runtimeState,
-    overall_score: r.selectorHitRateAvg ?? 0,
-    signals_json: '{}',
-    ts: r.snapshotTs,
+    providerId: r.providerId,
+    runtimeState: r.runtimeState,
+    activeSessions: r.activeSessions,
+    totalConversations: r.totalConversations,
+    totalMessages: r.totalMessages,
+    capabilityExecutions: r.capabilityExecutions,
+    capabilitySuccesses: r.capabilitySuccesses,
+    capabilityFailures: r.capabilityFailures,
+    errorCount: r.errorCount,
+    parserConfidenceAvg: r.parserConfidenceAvg,
+    selectorHitRateAvg: r.selectorHitRateAvg,
+    avgResponseLatencyMs: r.avgResponseLatencyMs,
+    p50ResponseLatencyMs: r.p50ResponseLatencyMs,
+    p95ResponseLatencyMs: r.p95ResponseLatencyMs,
+    p99ResponseLatencyMs: r.p99ResponseLatencyMs,
+    circuitBreakerState: r.circuitBreakerState,
+    fleetRestarts: r.fleetRestarts,
+    driftEventsUnresolved: r.driftEventsUnresolved,
+    windowStartTs: r.windowStartTs,
+    windowEndTs: r.windowEndTs,
+    snapshotTs: r.snapshotTs,
+    schemaVersion: r.schemaVersion,
   }
 }
 

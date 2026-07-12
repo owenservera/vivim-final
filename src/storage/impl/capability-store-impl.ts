@@ -50,6 +50,7 @@ interface PrismaProgram {
 
 interface PrismaSelector {
   id: string
+  name?: string
   capabilityId: string
   providerId: string
   selector: string
@@ -58,6 +59,7 @@ interface PrismaSelector {
   hitCount: number
   missCount: number
   isActive: number
+  lastUsedAt?: number | null
   createdAt: number
   updatedAt: number
 }
@@ -104,13 +106,16 @@ function toProgramRow(r: PrismaProgram): CapabilityProgramRow {
 function toSelectorRow(r: PrismaSelector): SelectorStrategyRow {
   return {
     id: r.id,
+    name: r.name as string,
     capabilityId: r.capabilityId,
     providerId: r.providerId,
-    selector: r.selector,
+    selectorValue: r.selector,
     priority: r.priority,
-    strategyType: r.strategyType,
+    strategyType: r.strategyType as SelectorStrategyRow['strategyType'],
+    isActive: Boolean(r.isActive),
     hitCount: r.hitCount,
     missCount: r.missCount,
+    lastUsedAt: (r.lastUsedAt as number | null) ?? null,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   }

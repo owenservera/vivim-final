@@ -34,6 +34,8 @@ describe('GovernorStoreImpl', () => {
       planTier: 'pro',
       apiKeyRef: null,
       isActive: 1,
+      profileDir: null,
+      debugPort: null,
       createdAt: 0,
       updatedAt: 0,
     })
@@ -45,7 +47,7 @@ describe('GovernorStoreImpl', () => {
   })
 
   it('getAccountsByProvider filters by provider', async () => {
-    const base = { apiKeyRef: null, isActive: 1, createdAt: 0, updatedAt: 0 }
+    const base = { apiKeyRef: null, isActive: 1, profileDir: null, debugPort: null, createdAt: 0, updatedAt: 0 }
     await store.upsertAccount({
       id: 'a1',
       providerId: 'claude',
@@ -76,6 +78,8 @@ describe('GovernorStoreImpl', () => {
       planTier: 'free',
       apiKeyRef: null,
       isActive: 1,
+      profileDir: null,
+      debugPort: null,
       createdAt: 0,
       updatedAt: 0,
     })

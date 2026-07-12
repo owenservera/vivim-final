@@ -230,6 +230,42 @@ export const DEFAULT_TELEMETRY_PIPELINE: TelemetryPipelineConfig = {
 
 // ── Schedule SQL builder ────────────────────────────────────────────────────
 
+function stripAlias(col: string): string {
+  return col.replace(/\s+AS\s+\w+$/i, '').trim()
+}
+
+// Build a SQLite-compatible percentile expression via window functions.
+// SQLite has no P50/P95/P99 aggregate, so we rank each partition and average the
+// row(s) straddling the requested percentile.
+function percentileExpr(field: string, pct: number, table: string, groupRawCols: string[]): string {
+  const partCols = groupRawCols.length ? groupRawCols.map((c) => `${table}.${c}`).join(', ') : ''
+  const selCols = groupRawCols.length
+    ? groupRawCols.map((c) => `${table}.${c}`).join(', ') + ', '
+    : ''
+  const corr = groupRawCols.length
+    ? groupRawCols.map((c) => `w.${c} = src.${c}`).join(' AND ')
+    : '1=1'
+  return (
+    `(SELECT AVG(dm) FROM (` +
+    `SELECT ${selCols}${table}.${field} AS dm, ` +
+    `ROW_NUMBER() OVER (${groupRawCols.length ? `PARTITION BY ${partCols} ` : ''}ORDER BY ${table}.${field}) AS rn, ` +
+    `COUNT(*) OVER (${groupRawCols.length ? `PARTITION BY ${partCols}` : ''}) AS tot ` +
+    `FROM ${table}` +
+    `) w WHERE ${corr} AND w.rn BETWEEN w.tot * ${pct} / 100 AND w.tot * ${pct} / 100 + 1)`
+  )
+}
+
+function metricToSql(m: AggregationMetric, table: string, groupRawCols: string[]): string {
+  const fn = m.aggregation.toUpperCase()
+  if (fn === 'P50')
+    return `${percentileExpr(m.sourceField, 50, table, groupRawCols)} AS ${m.targetColumn}`
+  if (fn === 'P95')
+    return `${percentileExpr(m.sourceField, 95, table, groupRawCols)} AS ${m.targetColumn}`
+  if (fn === 'P99')
+    return `${percentileExpr(m.sourceField, 99, table, groupRawCols)} AS ${m.targetColumn}`
+  return `${fn}(${m.sourceField}) AS ${m.targetColumn}`
+}
+
 function buildScheduleSql(schedule: AggregationSchedule, extraWhere?: string): string {
   if (schedule.sourceQuery) {
     if (extraWhere) {
@@ -249,14 +285,15 @@ function buildScheduleSql(schedule: AggregationSchedule, extraWhere?: string): s
     return where ? `SELECT * FROM ${table} WHERE ${where}` : `SELECT * FROM ${table}`
   }
 
+  const groupRawCols = schedule.groupBy.map(stripAlias)
   const selectParts = [...schedule.groupBy]
   for (const m of schedule.metrics) {
-    selectParts.push(`${m.aggregation.toUpperCase()}(${m.sourceField}) AS ${m.targetColumn}`)
+    selectParts.push(metricToSql(m, table, groupRawCols))
   }
-  const groupCols = schedule.groupBy.join(', ')
+  const groupCols = groupRawCols.join(', ')
   const where = [schedule.sourceFilter, extraWhere].filter(Boolean).join(' AND ')
   const whereClause = where ? ` WHERE ${where}` : ''
-  return `SELECT ${selectParts.join(', ')} FROM ${table}${whereClause} GROUP BY ${groupCols}`
+  return `SELECT ${selectParts.join(', ')} FROM ${table} AS src${whereClause} GROUP BY ${groupCols}`
 }
 
 // ── TelemetryAggregator ─────────────────────────────────────────────────────
@@ -396,10 +433,11 @@ export class TelemetryAggregator {
       const limited: Record<string, unknown>[] = this.config.settings.maxRowsPerCycle
         ? rows.slice(0, this.config.settings.maxRowsPerCycle)
         : rows
-      const columns =
-        schedule.metrics.length === 0
-          ? Object.keys(limited[0] ?? {})
-          : [...schedule.groupBy, ...schedule.metrics.map((m) => m.targetColumn)]
+      const columns = limited.length
+        ? Object.keys(limited[0] ?? {})
+        : schedule.metrics.length === 0
+          ? []
+          : [...schedule.groupBy.map(stripAlias), ...schedule.metrics.map((m) => m.targetColumn)]
       const rowsWritten = limited.length
         ? await this.store.upsertRows(
             schedule.targetTable,

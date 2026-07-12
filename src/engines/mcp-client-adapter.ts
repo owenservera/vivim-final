@@ -27,25 +27,46 @@ export interface McpServerConnection {
 
 export class McpClientAdapter {
   private connections = new Map<string, McpServerConnection>()
+  private urls = new Map<string, string>()
 
-  async connect(serverId: string): Promise<void> {
+  async connect(serverId: string, url: string): Promise<void> {
     const existing = this.connections.get(serverId)
     if (existing?.status === 'connected') return
 
-    this.connections.set(serverId, {
-      id: serverId,
-      url: '',
-      status: 'connected',
-      tools: [],
-    })
+    this.urls.set(serverId, url)
+
+    try {
+      const res = await fetch(`${url}/tools`, { method: 'GET' })
+      if (!res.ok) {
+        this.connections.set(serverId, {
+          id: serverId,
+          url,
+          status: 'error',
+          tools: [],
+        })
+        return
+      }
+
+      const body = (await res.json()) as { tools: ToolDefinition[] }
+      this.connections.set(serverId, {
+        id: serverId,
+        url,
+        status: 'connected',
+        tools: body.tools ?? [],
+      })
+    } catch {
+      this.connections.set(serverId, {
+        id: serverId,
+        url,
+        status: 'error',
+        tools: [],
+      })
+    }
   }
 
   async disconnect(serverId: string): Promise<void> {
-    const conn = this.connections.get(serverId)
-    if (conn) {
-      conn.status = 'disconnected'
-      this.connections.delete(serverId)
-    }
+    this.connections.delete(serverId)
+    this.urls.delete(serverId)
   }
 
   async listTools(serverId: string): Promise<ToolDefinition[]> {
@@ -71,7 +92,27 @@ export class McpClientAdapter {
       throw new EngineError(`Tool not found: ${toolName} on server ${serverId}`)
     }
 
-    return { content: { acknowledged: true, toolName, input } }
+    const url = this.urls.get(serverId)
+    if (!url) {
+      throw new EngineError(`No URL for server: ${serverId}`)
+    }
+
+    try {
+      const res = await fetch(`${url}/tools/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: toolName, input }),
+      })
+      if (!res.ok) {
+        return { content: { error: `HTTP ${res.status}` }, isError: true }
+      }
+      return (await res.json()) as ToolResult
+    } catch (err) {
+      return {
+        content: { error: err instanceof Error ? err.message : String(err) },
+        isError: true,
+      }
+    }
   }
 
   getConnections(): McpServerConnection[] {

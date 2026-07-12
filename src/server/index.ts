@@ -5,21 +5,41 @@
 // and WebSocket bridge. Engine wiring is deferred to the full bootstrap
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
+import { registerDefaultCapabilities } from '../engines/capability-bootstrap.js'
+import {
+  registerDiscoveryCapabilities,
+  registerKernelCapabilities,
+  registerNlInterpretCapability,
+} from '../engines/capability-bootstrap.js'
 import { CapabilityEventBus } from '../engines/capability-event-bus.js'
 import type { CapabilityResolutionEngine } from '../engines/capability-resolution.js'
 import type { ChromeGovernor } from '../engines/chrome-governor.js'
 import type { ConversationManager } from '../engines/conversation-manager.js'
+import type { CostOptimizer } from '../engines/cost-optimizer.js'
 import type { CrossConversationSynthesizer } from '../engines/cross-conversation-synthesis.js'
 import type { ExportEngine } from '../engines/export.js'
+import type { IdempotencyGuard } from '../engines/idempotency-guard.js'
+import { bootstrapKernel } from '../engines/kernel/kernel-bootstrap.js'
+import type { Kernel } from '../engines/kernel/kernel-context.js'
 import type { KnowledgeIngestionEngine } from '../engines/knowledge-ingestion.js'
+import type { LockManager } from '../engines/lock-manager.js'
+import type { ProviderHealthKernel } from '../engines/provider-health.js'
+import { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
+import type { ProviderMuxEngine } from '../engines/provider-mux.js'
+import type { RetryEngine } from '../engines/retry-engine.js'
 import type { SemanticSearchEngine } from '../engines/semantic-search.js'
+import { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { createAuthMiddleware } from './auth-gate.js'
+import { createAutonomousRouter } from './autonomous-router.js'
+import { createCapabilityRouter } from './capability-router.js'
 import { createConversationRouter } from './conversation-router.js'
 import { createKnowledgeRouter } from './knowledge-router.js'
+import { createMuxRouter } from './mux-router.js'
+import { createNLCLRouter } from './nlcl-router.js'
 import { errorResponse, json } from './response.js'
 import { createSetupRouter } from './setup-router.js'
-import { handleWebSocket } from './websocket.js'
+import { handleWebSocket, registerConversationForwarder, setCanvasWsHandler } from './websocket.js'
 
 export interface ServerContext {
   port: number
@@ -32,6 +52,17 @@ export interface ServerContext {
   semanticSearch?: SemanticSearchEngine
   synthesizer?: CrossConversationSynthesizer
   exportEngine?: ExportEngine
+  providerMux?: ProviderMuxEngine
+  autonomousEngine?: import('../engines/autonomous-execution.js').AutonomousExecutionEngine
+  policyEngine?: import('../engines/execution-policy.js').ExecutionPolicyEngine
+  registry?: UnifiedCapabilityRegistry
+  costOptimizer?: CostOptimizer
+  nlclEngine?: NLCLEngine
+  kernel?: Kernel
+  healthKernel?: ProviderHealthKernel
+  lockManager?: LockManager
+  idempotencyGuard?: IdempotencyGuard
+  retryEngine?: RetryEngine
 }
 
 /** Shutdown hooks registered during server lifetime */
@@ -63,12 +94,17 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   const db = getDb()
   const eventBus = CapabilityEventBus.getInstance()
 
-  const ctx: ServerContext = { port, db, eventBus }
+  // NLCL works even in minimal mode — deterministic parser needs no external deps
+  const nlclEngine = new NLCLEngine({ db })
+
+  const ctx: ServerContext = { port, db, eventBus, nlclEngine }
 
   const auth = createAuthMiddleware()
   const conversationRouter = createConversationRouter(ctx)
   const knowledgeRouter = createKnowledgeRouter(ctx)
   const setupRouter = createSetupRouter(ctx)
+  const muxRouter = createMuxRouter(ctx)
+  const nlclRouter = createNLCLRouter(nlclEngine)
 
   // Track readiness — becomes true after server boots
   let ready = false
@@ -110,6 +146,16 @@ export async function createServer(port = 9420): Promise<ServerContext> {
       // Auth gate
       const authResult = auth(req)
       if (authResult) return authResult
+
+      // Mux routes
+      if (url.pathname.startsWith('/api/route/')) {
+        return muxRouter(req)
+      }
+
+      // NLCL — Natural Language Command Layer routes (available in minimal mode)
+      if (url.pathname.startsWith('/api/nlcl/')) {
+        return nlclRouter(req)
+      }
 
       // Knowledge routes
       if (url.pathname.startsWith('/api/knowledge/')) {
@@ -169,6 +215,19 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     '../storage/impl/procedural-memory-store-impl.js'
   )
 
+  // Seed providers at boot (idempotent upserts)
+  const { ProviderStoreImpl } = await import('../storage/impl/provider-store-impl.js')
+  const { ProviderRegistrar } = await import('../engines/provider-registrar.js')
+  const providerStore = new ProviderStoreImpl(db)
+  const registrar = new ProviderRegistrar(providerStore, undefined, eventBus)
+  const seedResult = await registrar.seedAll()
+  console.log(
+    `[boot] Seeded ${seedResult.seeded.length} providers, ${seedResult.errors.length} errors`,
+  )
+  if (seedResult.errors.length > 0) {
+    console.warn('[boot] Seed errors:', seedResult.errors)
+  }
+
   // Store instances
   const convStore = new ConversationStoreImpl(db)
   const govStore = new GovernorStoreImpl(db)
@@ -192,6 +251,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   })
   const memoryEngine = new MemoryEngine(episodicStore, semanticStore, proceduralStore, eventBus)
 
+  // Read workspace hint for profile base directory (set by setup wizard)
+  const workspaceHint = (await db.getWorkspaceHint()) ?? 'chrome-profiles'
+
   const governor = new ChromeGovernor(govStore, {
     portRange: [9300, 9400],
     healthProbeIntervalMs: 30_000,
@@ -200,6 +262,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     maxRestarts: 3,
     circuitBreakerThreshold: 5,
     circuitBreakerResetMs: 60_000,
+    profileBaseDir: workspaceHint,
   })
 
   const conversationManager = new ConversationManager(
@@ -212,6 +275,19 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     memoizer,
     memoryEngine,
   )
+
+  // Wire CDP transport, trace log, and health monitor into governor
+  const { CdpTransportImpl } = await import('../executor/cdp-transport.js')
+  const cdpTransport = new CdpTransportImpl()
+  governor.setCdpTransport(cdpTransport)
+  governor.setTraceLog(govStore)
+  governor.setHealthMonitor(govStore)
+
+  // Shutdown hook: disconnect CDP clients and kill Chrome instances
+  onShutdown(async () => {
+    await cdpTransport.disconnectAll()
+    await governor.killAll()
+  })
 
   // Boot governor (seeds accounts, starts fleet)
   await governor.boot()
@@ -289,10 +365,304 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
   try {
     const { ExportEngine } = await import('../engines/export.js')
-    exportEngine = new ExportEngine(db)
+    exportEngine = new ExportEngine({
+      async listConversations(opts) {
+        return db.prisma.conversation.findMany({
+          where:
+            opts?.dateFrom || opts?.dateTo
+              ? {
+                  createdAt: {
+                    ...(opts?.dateFrom ? { gte: opts.dateFrom } : {}),
+                    ...(opts?.dateTo ? { lte: opts.dateTo } : {}),
+                  },
+                }
+              : undefined,
+          select: { id: true, state: true, title: true },
+        })
+      },
+      async listMessages(conversationId) {
+        const rows = await db.prisma.conversationMessage.findMany({
+          where: { conversationId },
+          select: { id: true, role: true, content: true, createdAt: true },
+          orderBy: { sequenceIndex: 'asc' },
+        })
+        return rows.map((r) => ({
+          id: r.id,
+          role: r.role,
+          content: r.content ?? '',
+          ts: r.createdAt,
+        }))
+      },
+      async listMemory() {
+        // Export episodic + semantic memory as combined memory records
+        const episodic = await db.prisma.episodicMemory.findMany({
+          select: { id: true, action: true, inputJson: true, timestamp: true },
+        })
+        const semantic = await db.prisma.semanticMemory.findMany({
+          select: { id: true, subject: true, objectJson: true, timestamp: true },
+        })
+        const result: Array<{ id: string; key: string; value: string; namespace: string }> = []
+        for (const e of episodic) {
+          result.push({ id: e.id, key: e.action, value: e.inputJson, namespace: 'episodic' })
+        }
+        for (const s of semantic) {
+          result.push({ id: s.id, key: s.subject, value: s.objectJson, namespace: 'semantic' })
+        }
+        return result
+      },
+      async listProviders() {
+        return db.prisma.providerDefinition.findMany({
+          select: { id: true, slug: true, displayName: true },
+        })
+      },
+      async listConfig() {
+        return db.prisma.configEntry.findMany({
+          select: { id: true, engineId: true, configJson: true },
+        })
+      },
+    })
   } catch {
     /* export engine not available */
   }
+
+  // Mux engines (optional — wired if stores are available)
+  let providerMux: import('../engines/provider-mux.js').ProviderMuxEngine | undefined
+  let costOptimizer: import('../engines/cost-optimizer.js').CostOptimizer | undefined
+
+  try {
+    const { CostOptimizer } = await import('../engines/cost-optimizer.js')
+    const { CostStoreImpl } = await import('../storage/impl/cost-store-impl.js')
+    const costStore = new CostStoreImpl(db)
+    costOptimizer = new CostOptimizer(costStore)
+  } catch {
+    /* cost optimizer not available */
+  }
+
+  try {
+    const { ProviderMuxEngine } = await import('../engines/provider-mux.js')
+    const { MuxStoreImpl } = await import('../storage/impl/mux-store-impl.js')
+    const { Router } = await import('../router/router.js')
+    const { RouterStoreImpl } = await import('../storage/impl/router-store-impl.js')
+
+    const muxStore = new MuxStoreImpl(db)
+    const routerStore = new RouterStoreImpl(db)
+
+    // Real dispatcher for mux — creates transient conversations and routes to providers via ConversationManager
+    const muxDispatcher = {
+      async dispatchToProvider(
+        providerId: string,
+        message: string,
+        conversationId?: string,
+      ): Promise<{
+        ok: boolean
+        response: string
+        latencyMs: number
+        costCents: number
+        error?: string
+      }> {
+        const start = Date.now()
+        try {
+          let convId = conversationId
+
+          if (!convId) {
+            // Create a transient conversation for this mux response
+            const conv = await convStore.createConversation({
+              providerSessionId: `mux_${providerId}_${Date.now()}`,
+              providerId,
+              title: `Mux: ${message.slice(0, 50)}`,
+            })
+            convId = conv.id
+          }
+
+          const result = await conversationManager.send(convId, message)
+
+          const latencyMs = Date.now() - start
+          const estCost = await estimateCost(providerId, latencyMs)
+
+          if (costOptimizer) {
+            await costOptimizer.recordCost(providerId, estCost, 0, 0)
+          }
+
+          return {
+            ok: result.ok,
+            response: result.text || '',
+            latencyMs,
+            costCents: estCost,
+            error: result.error,
+          }
+        } catch (err: unknown) {
+          return {
+            ok: false,
+            response: '',
+            latencyMs: Date.now() - start,
+            costCents: 0,
+            error: err instanceof Error ? err.message : String(err),
+          }
+        }
+      },
+    }
+
+    async function estimateCost(providerId: string, latencyMs: number): Promise<number> {
+      if (costOptimizer) {
+        return costOptimizer.estimateCost(providerId, 1000) // rough: 1000-char message
+      }
+      return 0
+    }
+
+    const noopDispatcher = { dispatch: async () => ({ ok: true }) }
+    const router = new Router(routerStore, noopDispatcher)
+    providerMux = new ProviderMuxEngine(muxStore, muxDispatcher, router, eventBus)
+  } catch {
+    /* provider mux not available */
+  }
+
+  // Autonomous execution (optional — wired if stores are available)
+  let autonomousEngine:
+    | import('../engines/autonomous-execution.js').AutonomousExecutionEngine
+    | undefined
+  let policyEngine: import('../engines/execution-policy.js').ExecutionPolicyEngine | undefined
+  let registry: UnifiedCapabilityRegistry | undefined
+
+  try {
+    const { AutonomousExecutionEngine } = await import('../engines/autonomous-execution.js')
+    const { ExecutionPolicyEngine } = await import('../engines/execution-policy.js')
+    const { AutonomousStoreImpl } = await import('../storage/impl/autonomous-store-impl.js')
+    const { PolicyStoreImpl } = await import('../storage/impl/policy-store-impl.js')
+    const autonomousStore = new AutonomousStoreImpl()
+    const pStore = new PolicyStoreImpl()
+    registry = new UnifiedCapabilityRegistry()
+    registerDefaultCapabilities(registry, {
+      db,
+      conversationStore: convStore,
+      governor,
+      conversationManager,
+      memoryEngine,
+      semanticSearch,
+      knowledgeIngestion,
+      synthesizer,
+    })
+    policyEngine = new ExecutionPolicyEngine(pStore)
+    await policyEngine.initialize()
+    autonomousEngine = new AutonomousExecutionEngine(
+      autonomousStore,
+      registry,
+      policyEngine,
+      governor,
+      eventBus,
+    )
+  } catch {
+    /* autonomous execution not available */
+  }
+
+  // NLCL — Natural Language Command Layer (the "comms system")
+  // Deterministic parser by default; pluggable local LLM / provider LLM for fallback.
+  // Available on all surfaces: REST API, CLI, MCP, frontend.
+  const nlclEngine = new NLCLEngine({
+    governor,
+    conversationManager,
+    conversationStore: convStore,
+    registry,
+    db,
+  })
+  console.log(`[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`)
+
+  // 24.7 — register NLCL itself as a capability on the unified registry
+  if (registry) {
+    registerNlInterpretCapability(registry, nlclEngine)
+  }
+
+  // ── vivim-canvas (v7) — native composable layer system ────────────────
+  // Attaches to the existing server host; every canvas op is a capability
+  // (P5). Local-first store by default; primitives + oracle read from db.
+  let canvasRouter:
+    | ((req: Request, url: URL) => Promise<Response>)
+    | null = null
+  try {
+    const { CanvasEngine } = await import('../canvas/canvas-engine.js')
+    const { InMemoryCanvasStore } = await import('../canvas/in-memory-store.js')
+    const { createCanvasRouter } = await import('./canvas-router.js')
+    const {
+      attachCanvasWs,
+      ServerLayerHost,
+      corePrimitiveProviders,
+      createOracleVisibility,
+      RegistryCapabilityExecutor,
+    } = await import('./canvas-ws.js')
+    if (registry) {
+      const canvasStore = new InMemoryCanvasStore()
+      const host = new ServerLayerHost()
+      const executor = new RegistryCapabilityExecutor(registry)
+      const engine = new CanvasEngine({
+        store: canvasStore,
+        host,
+        executor,
+        oracle: createOracleVisibility(db),
+        primities: corePrimitiveProviders(db),
+      })
+      await engine.seedCoreLayers()
+      engine.registerCapabilities(registry)
+      canvasRouter = createCanvasRouter({ registry } as unknown as ServerContext)
+      setCanvasWsHandler(attachCanvasWs(engine))
+      console.log('[boot] vivim-canvas engine wired (store: in-memory, local-first)')
+    }
+  } catch (err) {
+    console.warn('[boot] vivim-canvas not available:', err)
+  }
+
+  // ── Kernel bootstrap ──────────────────────────────────────────────────
+  // Per 0.6a spec: create kernel AFTER all engines exist, register them,
+  // then start kernel + topology snapshots + shutdown hooks.
+  const kernel = bootstrapKernel({
+    eventBus,
+    governor,
+    conversationManager,
+    registry,
+    nlclEngine,
+    db,
+  })
+
+  const kctx = kernel.context()
+
+  // Start kernel (marks all registered engines as running)
+  await kernel.start()
+
+  // Periodic topology snapshots every 60s
+  const topologyTimer = setInterval(() => {
+    const snapshot = kctx.registry.describe()
+    kctx.logger.info('topology snapshot', { engines: snapshot.engines.length })
+  }, 60_000)
+
+  // Register kernel shutdown hook
+  onShutdown(async () => {
+    clearInterval(topologyTimer)
+    await kernel.stop()
+  })
+
+  // ── Health Kernel (4.5) ───────────────────────────────────────────────
+  const { ProviderHealthKernel } = await import('../engines/provider-health.js')
+  const { HealthStoreImpl } = await import('../storage/impl/health-store-impl.js')
+  const healthStore = new HealthStoreImpl(db)
+  const healthKernel = new ProviderHealthKernel({
+    governor,
+    store: healthStore,
+    eventBus,
+    intervalMs: 30_000,
+  })
+  healthKernel.start()
+  onShutdown(async () => { healthKernel.stop() })
+
+  // ── Phase 7: Reliability engines ──────────────────────────────────────
+  const { LockManager } = await import('../engines/lock-manager.js')
+  const { IdempotencyGuard } = await import('../engines/idempotency-guard.js')
+  const { RetryEngine } = await import('../engines/retry-engine.js')
+  const { configurePrisma: configureDbPragmas } = await import('../storage/db.js')
+
+  // Configure SQLite WAL mode for concurrent access
+  await configureDbPragmas(db)
+
+  const lockManager = new LockManager()
+  const idempotencyGuard = new IdempotencyGuard()
+  const retryEngine = new RetryEngine()
 
   const ctx: ServerContext = {
     port,
@@ -305,12 +675,33 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     semanticSearch,
     synthesizer,
     exportEngine,
+    providerMux,
+    costOptimizer,
+    autonomousEngine,
+    policyEngine,
+    registry,
+    nlclEngine,
+    kernel,
+    healthKernel,
+    lockManager,
+    idempotencyGuard,
+    retryEngine,
   }
 
   const auth = createAuthMiddleware()
   const conversationRouter = createConversationRouter(ctx)
   const knowledgeRouter = createKnowledgeRouter(ctx)
   const setupRouter = createSetupRouter(ctx)
+  const muxRouter = createMuxRouter(ctx)
+  const autonomousRouter =
+    autonomousEngine && policyEngine
+      ? createAutonomousRouter({ autonomousEngine, policyEngine })
+      : null
+  const nlclRouter = createNLCLRouter(nlclEngine)
+  const capabilityRouter = ctx.registry ? createCapabilityRouter(ctx) : null
+
+  // Unit 2.7 — forward conversation events to subscribed WebSocket frontends
+  registerConversationForwarder(eventBus)
 
   let ready = false
 
@@ -346,8 +737,33 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       const authResult = auth(req)
       if (authResult) return authResult
 
+      // Mux routes
+      if (url.pathname.startsWith('/api/route/')) {
+        return muxRouter(req)
+      }
+
+      // Autonomous execution routes
+      if (url.pathname.startsWith('/api/autonomous/') && autonomousRouter) {
+        return autonomousRouter(req, url).then((r) => r ?? conversationRouter(req))
+      }
+
+      // NLCL — Natural Language Command Layer routes
+      if (url.pathname.startsWith('/api/nlcl/')) {
+        return nlclRouter(req)
+      }
+
       if (url.pathname.startsWith('/api/knowledge/')) {
         return knowledgeRouter(req)
+      }
+
+      // vivim-canvas routes (v7.12) — capability plane over HTTP
+      if (url.pathname.startsWith('/api/canvas/') && canvasRouter) {
+        return canvasRouter(req, url)
+      }
+
+      // 24.1/24.2 — universal capability transport (execute + introspection)
+      if (url.pathname.startsWith('/api/capabilities/') && capabilityRouter) {
+        return capabilityRouter(req, url)
       }
 
       return conversationRouter(req)

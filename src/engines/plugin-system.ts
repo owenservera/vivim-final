@@ -40,7 +40,7 @@ export class PluginManagerImpl implements PluginManager {
     this.eventBus.emit({
       type: 'plugin:registered',
       data: { providerId: plugin.providerId },
-    } as never)
+    })
   }
 
   unregister(providerId: string): void {
@@ -48,7 +48,7 @@ export class PluginManagerImpl implements PluginManager {
     this.eventBus.emit({
       type: 'plugin:unregistered',
       data: { providerId },
-    } as never)
+    })
   }
 
   getPlugin(providerId: string): ProviderPlugin | null {
@@ -72,7 +72,7 @@ export class PluginManagerImpl implements PluginManager {
           hook: 'onRegister',
           error: err instanceof Error ? err.message : String(err),
         },
-      } as never)
+      })
     }
   }
 
@@ -92,7 +92,7 @@ export class PluginManagerImpl implements PluginManager {
           hook: 'onResolveCapabilities',
           error: err instanceof Error ? err.message : String(err),
         },
-      } as never)
+      })
       return null
     }
   }
@@ -113,7 +113,7 @@ export class PluginManagerImpl implements PluginManager {
           hook: 'onAction',
           error: err instanceof Error ? err.message : String(err),
         },
-      } as never)
+      })
       return null
     }
   }
@@ -134,7 +134,7 @@ export class PluginManagerImpl implements PluginManager {
           hook: 'onProjectState',
           error: err instanceof Error ? err.message : String(err),
         },
-      } as never)
+      })
       return rawState
     }
   }
@@ -152,7 +152,7 @@ export class PluginManagerImpl implements PluginManager {
           hook: 'onParse',
           error: err instanceof Error ? err.message : String(err),
         },
-      } as never)
+      })
       return null
     }
   }

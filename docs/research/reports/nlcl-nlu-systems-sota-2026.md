@@ -1,0 +1,347 @@
+# SOTA Deterministic NLU Systems for Agentic Intent Resolution: Research Report
+
+*Generated: 2026-07-12 | Sources: 24 | Confidence: High*
+
+## Executive Summary
+
+The state-of-the-art for deterministic NLU in agentic systems follows a **three-phase architecture**: (1) regex/keyword matching for exact patterns, (2) probabilistic ML classifiers (CRF, logistic regression, TF-IDF) for fuzzy matching, and (3) LLM fallback only for ambiguous edge cases. This "deterministic-first, LLM-fallback" pattern is validated by Snips NLU, Rasa DIET, Amazon's REIC, and every production agentic framework in 2026. For vivim-final's NLCL, the key gaps are: **fuzzy matching layer** (typo tolerance), **TF-IDF/semantic similarity** (paraphrase detection), **hierarchical intent classification** (scalability), and **entity resolution** (structured value extraction).
+
+---
+
+## 1. The Agentic NLU Architecture Pattern (2026)
+
+### 1.1 Four Routing Mechanisms
+
+Production agentic systems in 2026 use four routing mechanisms, each with distinct cost/speed/flexibility trade-offs ([Source](https://www.labo-llm.fr/en/techniques/routing-ia-agentique/)):
+
+| Mechanism | Speed | Cost | Flexibility | Best For |
+|-----------|-------|------|-------------|----------|
+| **Rule-based** | <1ms | $0 | Low | Exact commands, known patterns |
+| **Embedding-based** | 5-50ms | Low | Medium | Semantic similarity, large route spaces |
+| **ML Classifier** | 1-10ms | Low | Medium | Trained intent domains |
+| **LLM-based** | 100-2000ms | High | High | Ambiguous, multilingual, novel phrasings |
+
+**Key insight:** The 95/5 rule — 95% of commands are routine and handled by deterministic/ML layers; only 5% genuinely need LLM reasoning.
+
+### 1.2 The Confidence Threshold Pattern
+
+Every production system uses confidence thresholds for routing decisions ([Source](https://dev.to/wonderlab/agent-series-5-intent-recognition-and-routing-making-agents-actually-understand-users-3174)):
+
+```
+User Input → Deterministic Match → confidence > 0.8? → Execute
+                                    ↓ No
+                               ML Classifier → confidence > 0.6? → Execute
+                                    ↓ No
+                               Clarification Question (or LLM fallback)
+```
+
+This is exactly what vivim-final's `HybridResolver` already implements, but the research suggests adding an intermediate **fuzzy matching** layer before the LLM fallback.
+
+---
+
+## 2. Snips NLU: The Gold Standard for Deterministic NLU
+
+### 2.1 Architecture
+
+Snips NLU (Python/Rust, now archived but forked as `intently-nlu`) is the most referenced deterministic NLU system ([Source](https://medium.com/snips-ai/an-introduction-to-snips-nlu-the-open-source-library-behind-snips-embedded-voice-platform-b12b1a60a41a)):
+
+**Two-phase pipeline:**
+1. **Deterministic Parser** — regex patterns match exact training examples. Perfect accuracy on seen inputs, zero generalization.
+2. **Probabilistic Parser** — logistic regression for intent classification, Conditional Random Fields (CRF) for slot filling. Generalizes beyond training data.
+
+**Key findings:**
+- Deep learning showed "no significant gain" over CRFs for this task ([Source](https://medium.com/snips-ai/an-introduction-to-snips-nlu-the-open-source-library-behind-snips-embedded-voice-platform-b12b1a60a41a))
+- CRF chosen over deep learning for lightness and production reliability
+- Built-in entity resolution: datetime → ISO format, numbers → normalized values
+- ~100-200MB RAM, runs on embedded devices
+
+### 2.2 What vivim-final Can Learn from Snips
+
+| Snips Feature | vivim-final Equivalent | Gap |
+|---------------|----------------------|-----|
+| Deterministic parser (regex) | `DeterministicResolver` | ✅ Already implemented |
+| Probabilistic parser (CRF) | `NLCommandParser` (keyword scoring) | ⚠️ Partial — no ML classifier |
+| Built-in entity resolution | Zod schema validation | ⚠️ No value normalization |
+| Training data format | `CommandPattern` registration | ✅ Already implemented |
+
+---
+
+## 3. Rasa DIET: Dual Intent and Entity Transformer
+
+### 3.1 Architecture
+
+Rasa's DIET (Dual Intent and Entity Transformer) is the most production-deployed NLU architecture ([Source](https://rasa.com/blog/introducing-dual-intent-and-entity-transformer-diet-state-of-the-art-performance-on-a-lightweight-architecture)):
+
+- **Shared transformer** for both intent classification and entity extraction
+- **CRF tagging layer** on top for entity sequence prediction
+- **Dot-product loss** for intent label embedding space
+- **6x faster to train** than BERT, comparable accuracy
+- **Modular**: plug in BERT, GloVe, ConveRT, or custom embeddings
+
+### 3.2 Rasa's "Co-existence Router" (2026)
+
+Rasa's 2026 architecture introduces a **Co-existence Router** that decides between NLU and LLM per-turn ([Source](https://rasa.com/nlu)):
+
+```
+User Message → Co-existence Router → "NLU or LLM?"
+  ├── NLU Classifier (DIET) — fast, deterministic, trained
+  └── LLM Dialogue Understanding — flexible, expensive, general
+```
+
+This validates vivim-final's HybridResolver pattern but adds **per-turn routing** based on confidence.
+
+---
+
+## 4. Amazon REIC: RAG-Enhanced Intent Classification (2025)
+
+### 4.1 Architecture
+
+Amazon's REIC (accepted at EMNLP 2025 Industry Track) introduces a novel approach ([Source](https://arxiv.org/abs/2506.00210)):
+
+1. **Index Construction** — dense vector index of (query, intent) pairs using sentence transformers
+2. **Candidate Retrieval** — cosine similarity to retrieve top-k similar examples
+3. **Intent Probability** — fine-tuned LLM calculates probabilities over retrieved candidates using constrained decoding
+
+**Key findings:**
+- Outperforms traditional fine-tuning, zero-shot, and few-shot methods
+- **8x cost reduction** vs proprietary LLMs
+- Handles 1000+ intent scales via **hierarchical intent ontology** (coarse → fine)
+- Dynamic updates: just add new (query, intent) pairs to the index, no retraining
+
+### 4.2 Hierarchical Intent Classification
+
+REIC's hierarchical approach is critical for scaling ([Source](https://arxiv.org/html/2506.00210v2)):
+
+```
+Root
+├── System Commands (< 50 intents)
+│   ├── File Operations
+│   ├── Browser Actions
+│   └── Provider Management
+├── Conversation Commands (< 50 intents)
+│   ├── Create/Resume/Delete
+│   └── Search/Export
+└── Capability Commands (< 50 intents)
+    ├── CDP Methods
+    └── Provider Operations
+```
+
+Each classification head handles < 50 intents instead of 1000+ flat labels.
+
+---
+
+## 5. TypeScript/JavaScript NLP Libraries (2026 Landscape)
+
+### 5.1 Three-Tier Ecosystem
+
+The JavaScript NLP ecosystem in 2026 is organized into three tiers ([Source](https://www.kommunicate.io/blog/nlp-libraries-node-javascript/)):
+
+#### Tier 1: Classical NLP (Zero AI)
+| Library | Best For | Browser? | TypeScript? | Bundle Size |
+|---------|----------|----------|-------------|-------------|
+| **Wink NLP** | Full pipeline (tokenize, POS, NER, sentiment) | ✅ | ✅ | ~10KB gz |
+| **Natural** | Tokenization, stemming, TF-IDF | ❌ | ❌ | ~1MB |
+| **Compromise** | Lightweight parsing | ✅ | ❌ | ~200KB |
+
+**Wink NLP** is the standout: 2M+ tokens/sec, ~100% test coverage, zero dependencies, full TypeScript support, runs in browsers. Ideal for vivim-final's NLCL preprocessing.
+
+#### Tier 2: ML-Powered NLP
+| Library | Best For | Browser? | TypeScript? |
+|---------|----------|----------|-------------|
+| **NLP.js** | Intent classification, entity extraction | ✅ | ❌ |
+| **Brain.js** | Neural networks | ✅ | ❌ |
+
+**NLP.js** provides trained intent classification without external APIs — relevant for the 5-15% gap between regex and LLM.
+
+#### Tier 3: Transformer-Era NLP
+| Library | Best For | Browser? | TypeScript? |
+|---------|----------|----------|-------------|
+| **Transformers.js v4** | SOTA accuracy, WebGPU | ✅ | ✅ |
+| **LLM APIs** | Zero infrastructure overhead | ✅ | ✅ |
+
+### 5.2 Vex Intent Classifier: A Direct Reference
+
+The **Vex Intent Classifier** ([Source](https://github.com/cookieukw/vex-intent-classifier)) is a TypeScript-first hybrid intent classifier running 100% client-side:
+
+**Two-step pipeline:**
+1. **String Similarity (Levenshtein)** — typo-tolerant matching against training phrases
+2. **Semantic Similarity (Cosine)** — TF-IDF vectorization for semantic matching
+
+This is exactly the intermediate layer vivim-final needs between `DeterministicResolver` and LLM fallback.
+
+---
+
+## 6. Production Techniques for "Feels Like AI" Without LLM
+
+### 6.1 Fuzzy Matching for Typo Tolerance
+
+**Jaro-Winkler** is the industry standard for character-level similarity ([Source](https://subhajitbhar.com/blog/archive/nlp-entity-matching-with-fuzzy-search/)):
+
+```typescript
+// Stage 1: TF-IDF cosine for fast candidate generation
+// Stage 2: Jaro-Winkler for surface/character similarity re-ranking
+// Stage 3: Embeddings for semantic tie-breaking
+// Route through thresholds: auto-accept ≥ 0.8, manual 0.6-0.8, reject < 0.6
+```
+
+### 6.2 Paraphrase Detection via Embedding Similarity
+
+The most effective technique for making deterministic systems "feel intelligent" is **paraphrase detection** ([Source](https://labelyourdata.com/articles/machine-learning/intent-classification)):
+
+> "We boost clinical text classification from 78% to 86% accuracy just by paraphrasing labeled examples — rewriting phrases like 'patient experienced nausea' into variants like 'subject reported feeling nauseous.'"
+
+For vivim-final: pre-compute embeddings for each intent's example phrases, then use cosine similarity at runtime.
+
+### 6.3 Context-Aware Parsing
+
+Modern agentic NLU maintains **conversation context** across turns ([Source](https://www.resemble.ai/resources/nlp-transforming-conversational-ai)):
+
+- **Coreference resolution** — "it", "that", "the previous one"
+- **Ellipsis handling** — "and the price?" after "show me the product"
+- **Context carryover** — reuse entities from previous turns
+
+### 6.4 Active Learning Loop
+
+Production systems continuously improve via **active learning** ([Source](https://labelyourdata.com/articles/machine-learning/intent-classification)):
+
+```
+Classify input → confidence < threshold? → Flag for review
+  → Human annotates → Add to training data → Retrain/Update patterns
+```
+
+---
+
+## 7. Gaps in vivim-final's Current NLCL
+
+Based on the research, here are the specific gaps:
+
+### 7.1 Missing: Fuzzy Matching Layer
+**Current:** `DeterministicResolver` → regex exact match → fail
+**SOTA:** `DeterministicResolver` → regex exact match → fuzzy match (Levenshtein/Jaro-Winkler) → ML classifier → LLM fallback
+**Impact:** Handles typos, misspellings, colloquial variations
+
+### 7.2 Missing: TF-IDF/Semantic Similarity
+**Current:** Keyword scoring only (exact word match)
+**SOTA:** TF-IDF vectorization + cosine similarity for paraphrase detection
+**Impact:** "show me the logs" matches "display log output" semantically
+
+### 7.3 Missing: Hierarchical Intent Classification
+**Current:** Flat intent space
+**SOTA:** Coarse → fine hierarchy (domain → category → intent)
+**Impact:** Scales to 1000+ intents, improves accuracy
+
+### 7.4 Missing: Entity Resolution
+**Current:** Zod schema validation only
+**SOTA:** Value normalization (datetime → ISO, numbers → normalized, aliases → canonical)
+**Impact:** "tomorrow at 3pm" → `{ date: "2026-07-13", time: "15:00" }`
+
+### 7.5 Missing: Confidence Calibration
+**Current:** Simple scoring (coverage + capture groups)
+**SOTA:** Calibrated probabilities from ML models or embedding similarity
+**Impact:** Better routing decisions, fewer false positives
+
+---
+
+## 8. Recommended Architecture for vivim-final NLCL
+
+Based on all research, here is the recommended evolution:
+
+```
+User Input
+    │
+    ▼
+┌─────────────────────┐
+│ Normalization Layer  │  ← wink-nlp or custom (lowercase, strip, normalize)
+│ (compromise, wink)   │
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│ Deterministic Match  │  ← Existing DeterministicResolver (regex/keyword)
+│ (exact patterns)     │     confidence > 0.85 → Execute
+└─────────┬───────────┘
+          │ miss
+          ▼
+┌─────────────────────┐
+│ Fuzzy Match Layer    │  ← NEW: Levenshtein + Jaro-Winkler
+│ (typo tolerance)     │     confidence > 0.7 → Execute
+└─────────┬───────────┘
+          │ miss
+          ▼
+┌─────────────────────┐
+│ Semantic Similarity  │  ← NEW: TF-IDF cosine or embedding similarity
+│ (paraphrase detect)  │     confidence > 0.6 → Execute
+└─────────┬───────────┘
+          │ miss
+          ▼
+┌─────────────────────┐
+│ ML Classifier        │  ← Optional: NLP.js or custom CRF
+│ (trained intent)     │     confidence > 0.5 → Execute
+└─────────┬───────────┘
+          │ miss
+          ▼
+┌─────────────────────┐
+│ LLM Fallback         │  ← Existing LocalLLMResolver/ProviderLLMResolver
+│ (ambiguous cases)    │     confidence > 0.4 → Execute
+└─────────┬───────────┘
+          │ miss
+          ▼
+┌─────────────────────┐
+│ Clarification        │  ← "Did you mean X or Y?"
+│ (ask user)           │
+└─────────────────────┘
+```
+
+### Libraries to Add
+
+| Layer | Library | Why |
+|-------|---------|-----|
+| Normalization | `wink-nlp` | 2M tokens/sec, TypeScript, zero deps, POS/NER |
+| Fuzzy Matching | `jaro-winkler` (jellyfish port) or custom | Industry standard for typos |
+| Semantic Similarity | `wink-embeddings` or custom TF-IDF | Paraphrase detection |
+| ML Classifier | `NLP.js` (if needed) | Trained intent classification in JS |
+
+---
+
+## Key Takeaways
+
+1. **The Snips two-phase pattern is still SOTA** — deterministic first, probabilistic second, LLM last
+2. **Fuzzy matching is the cheapest win** — adds typo tolerance with <1ms latency
+3. **TF-IDF cosine similarity is the "feels like AI" layer** — paraphrase detection without ML training
+4. **Hierarchical intent classification** is required for scaling beyond 100 intents
+5. **Entity resolution** (value normalization) makes the system feel intelligent
+6. **wink-nlp** is the best TypeScript NLP library for preprocessing (zero deps, 2M tokens/sec)
+7. **Confidence threshold routing** with clarification fallback is the production standard
+
+---
+
+## Sources
+
+1. [Snips NLU Introduction](https://medium.com/snips-ai/an-introduction-to-snips-nlu-the-open-source-library-behind-snips-embedded-voice-platform-b12b1a60a41a) — Architecture overview, deterministic + probabilistic pipeline
+2. [Rasa DIET Architecture](https://rasa.com/blog/introducing-dual-intent-and-entity-transformer-diet-state-of-the-art-performance-on-a-lightweight-architecture) — Dual Intent Entity Transformer, 6x faster than BERT
+3. [REIC: RAG-Enhanced Intent Classification](https://arxiv.org/abs/2506.00210) — Amazon EMNLP 2025, hierarchical intent ontology, 8x cost reduction
+4. [Agentic Routing Patterns](https://www.labo-llm.fr/en/techniques/routing-ia-agentique/) — Four routing mechanisms for agentic AI
+5. [Intent Recognition and Routing](https://dev.to/wonderlab/agent-series-5-intent-recognition-and-routing-making-agents-actually-understand-users-3174) — Confidence threshold routing, clarification patterns
+6. [JavaScript NLP Libraries 2026](https://www.kommunicate.io/blog/nlp-libraries-node-javascript/) — Three-tier ecosystem: Classical, ML-powered, Transformer-era
+7. [Wink NLP](https://winkjs.org/wink-nlp) — 2M tokens/sec, TypeScript, zero deps, ~100% test coverage
+8. [Vex Intent Classifier](https://github.com/cookieukw/vex-intent-classifier) — TypeScript hybrid: Levenshtein + TF-IDF cosine
+9. [Intent Classification Guide 2025](https://www.shadecoder.com/topics/intent-classification-a-comprehensive-guide-for-2025) — Production best practices
+10. [NLP Entity Matching](https://subhajitbhar.com/blog/archive/nlp-entity-matching-with-fuzzy-search/) — Three-stage: TF-IDF → Jaro-Winkler → embeddings
+11. [Rasa NLU 2026](https://rasa.com/nlu) — Co-existence Router, NLU + LLM hybrid
+12. [Deterministic vs Probabilistic Agents](https://www.scalong.com/blog/deterministic-and-probabilistic-agents) — Architecture choice for production AI
+13. [OpenAutoNLU](https://beta.hyper.ai/en/papers/2603.01824) — AutoML for NLU, competitive with AutoGluon
+14. [Intent Classification Techniques](https://labelyourdata.com/articles/machine-learning/intent-classification) — Data augmentation, active learning, evaluation
+15. [NLP for Conversational AI 2025](https://www.resemble.ai/resources/nlp-transforming-conversational-ai) — Context-aware NLU, multilingual support
+16. [Elasticsearch Entity Resolution](https://www.elastic.co/search-labs/blog/elasticsearch-entity-resolution-llm-semantic-search) — Three-step matching pattern
+17. [Agent-as-a-Router](https://arxiv.org/abs/2606.22902) — C-A-F loop for routing, execution-grounded experience
+18. [Intent Detection in Age of LLMs](https://arxiv.org/html/2410.01627v1) — SetFit vs LLM comparison, hybrid routing
+19. [Structured NLP vs LLMs](https://www.johnsnowlabs.com/what-structured-nlp-does-that-llms-still-cant) — Precision extraction at scale
+20. [Rasa Alternatives 2026](https://dasha.ai/tips/rasa-alternatives) — On-premise vs cloud NLU comparison
+21. [Snips NLU GitHub](https://github.com/snipsco/snips-nlu) — Architecture, benchmarks, training data format
+22. [RAG for Intent Detection](https://www.aimastery.page/guides/rag-intent-detection-ai-agents) — RAG-driven NLU pipeline, dataset augmentation
+23. [Scaling Intent Understanding](https://aclanthology.org/2026.eacl-industry.14) — Domain-agnostic framework with clarifying questions
+24. [Query Classifier (REIC Implementation)](https://pypi.org/project/query-classifier/) — Semantic routing + RAG + hierarchical routing
+
+## Methodology
+
+Searched 8 queries across web, academic, and GitHub sources. Analyzed 24 unique sources spanning academic papers (EMNLP 2025, EACL 2026), production frameworks (Rasa, Snips), TypeScript libraries (wink-nlp, NLP.js), and agentic architecture patterns. Prioritized: academic > official > production-tested > blogs.
