@@ -2,6 +2,7 @@
 // StreamingProtocol — progressive block delivery during capture
 
 import type { ContentBlock } from '../schema/streaming.js'
+import type { StreamBlockStoreContract } from '../storage/contracts/stream-block-store.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -30,8 +31,13 @@ export interface ParserModule {
 export class StreamingProtocol {
   private handlers: StreamingEventHandler[] = []
   private blockBuffer: ContentBlock[] = []
+  private currentConversationId = ''
+  private currentMessageId = ''
 
-  constructor(private readonly parser: ParserModule) {}
+  constructor(
+    private readonly parser: ParserModule,
+    private readonly store?: StreamBlockStoreContract,
+  ) {}
 
   onEvent(handler: StreamingEventHandler): () => void {
     this.handlers.push(handler)
@@ -49,6 +55,8 @@ export class StreamingProtocol {
   async startConversation(conversationId: string): Promise<string> {
     const messageId = `msg_${Date.now()}`
     this.blockBuffer = []
+    this.currentConversationId = conversationId
+    this.currentMessageId = messageId
 
     this.emit({
       type: 'conversation:stream_start',
@@ -78,6 +86,10 @@ export class StreamingProtocol {
       })
     }
 
+    if (this.store && blocks.length > 0) {
+      await this.store.storeBlocks(conversationId, messageId, blocks)
+    }
+
     return blocks
   }
 
@@ -91,6 +103,10 @@ export class StreamingProtocol {
       blocks: allBlocks,
       timestamp: Date.now(),
     })
+
+    if (this.store && allBlocks.length > 0) {
+      await this.store.storeBlocks(conversationId, messageId, allBlocks)
+    }
 
     this.emit({
       type: 'conversation:complete',

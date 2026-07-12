@@ -1,0 +1,17 @@
+{
+  "capabilities": [
+    { "slug": "send_message", "label": "Send Message", "capabilityKind": "action", "description": "Compose and dispatch a message in the composer", "sourceConfidence": "high", "tags": ["compose"] },
+    { "slug": "read_response", "label": "Read Response", "capabilityKind": "state", "description": "Observe the assistant response stream render", "sourceConfidence": "high", "tags": ["observe"] },
+    { "slug": "new_chat", "label": "New Chat", "capabilityKind": "action", "description": "Start a new conversation", "sourceConfidence": "high", "tags": ["session"] }
+  ],
+  "protocols": [
+    { "slug": "cdp", "label": "Chrome DevTools Protocol", "transport": "cdp", "description": "Browser automation via CDP", "sourceConfidence": "high" },
+    { "slug": "sse", "label": "Server-Sent Events", "transport": "sse", "description": "HTTP streaming via SSE", "sourceConfidence": "high" }
+  ],
+  "webappTechStacks": [
+    { "slug": "prosemirror", "label": "ProseMirror", "family": "editor", "description": "Rich-text editor used by ChatGPT/Claude web UIs", "composerHint": ".ProseMirror[contenteditable='true']", "sendHint": "[data-testid='send-button']", "sourceConfidence": "high" }
+  ],
+  "parsers": [
+    { "slug": "sse_generic", "label": "Generic SSE", "parserType": "sse", "description": "Generic SSE delta stream", "sourceConfidence": "high" }
+  ]
+}

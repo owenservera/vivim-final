@@ -1,5 +1,5 @@
 // devops/tracker.ts
-// Deterministic parse/serialize of docs/atomic/01-tracker.md.
+// Deterministic parse/serialize of docs/atomic-v3-fork-canon/01-tracker.md.
 // The tracker is the single source of truth for implementation progress.
 // This module ONLY rewrites state markers, the header stats, and the
 // "Last Updated" line. It never alters section order, headings, or prose
@@ -41,8 +41,10 @@ export interface Stats {
 // Separator between id and name is inconsistent across the tracker:
 // some lines use an em-dash ("2.1 — Name"), others a hyphen
 // ("1.1 - Name"). Accept both so the authoritative "done" state parses.
+// Phase 2+ lines carry an optional origin tag after the id, e.g.
+// "2.1 (v5:0.0) — Name"; the (...) group is non-capturing and dropped.
 const UNIT_RE =
-  /^(\s*)-\s+\[([ x~!])\]\s+(\d+\.\d+)\s+(?:—|-)\s+(.+?)(?:\s+→\s+`(.+?)`)?\s*$/;
+  /^(\s*)-\s+\[([ x~!])\]\s+(\d+\.\d+)\s*(?:\([^)]*\))?\s+(?:—|-)\s+(.+?)(?:\s+→\s+`(.+?)`)?\s*$/;
 // Phase headers vary: "## Phase 1: Skeleton ✓" (done, no count) or
 // "## Phase 2: Provider Knowledge Graph (12 units)". Capture number + name;
 // tolerate an optional trailing "✓" and/or "(N units)" suffix.

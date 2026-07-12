@@ -105,7 +105,11 @@ export type CapabilityEvent =
       durationMs: number
     }
 
-export type EventHandler<T extends CapabilityEvent = CapabilityEvent> = (event: T) => void
+export type GenericEvent = { type: string; [key: string]: unknown }
+
+export type EngineEvent = CapabilityEvent | GenericEvent
+
+export type EventHandler<T extends EngineEvent = EngineEvent> = (event: T) => void
 
 /** Minimal WebSocket-like interface for subscriptions. */
 export interface WsLike {
@@ -119,6 +123,7 @@ export class CapabilityEventBus {
   private handlers = new Map<string, Set<EventHandler>>()
   private onceHandlers = new Map<string, Set<EventHandler>>()
   private wsSubscriptions = new Map<WsLike, Map<string, Set<string>>>()
+  private recent: EngineEvent[] = []
 
   static getInstance(): CapabilityEventBus {
     if (!CapabilityEventBus.instance) {
@@ -134,7 +139,7 @@ export class CapabilityEventBus {
 
   // ── Emit ───────────────────────────────────────────────────────────────
 
-  emit<T extends CapabilityEvent>(event: T): void {
+  emit<T extends EngineEvent>(event: T): void {
     const type = event.type
 
     // Fire regular handlers
@@ -153,6 +158,10 @@ export class CapabilityEventBus {
       }
       onceHandlers.clear()
     }
+
+    // Record in bounded ring buffer for /api/sandbox/debug inspection
+    this.recent.push(event)
+    if (this.recent.length > 200) this.recent.shift()
 
     // Deliver to WebSocket subscribers
     for (const [ws, entityMap] of this.wsSubscriptions) {
@@ -182,7 +191,7 @@ export class CapabilityEventBus {
 
   // ── Subscribe (persistent) ─────────────────────────────────────────────
 
-  on<T extends CapabilityEvent>(type: string, handler: EventHandler<T>): () => void {
+  on<T extends EngineEvent>(type: string, handler: EventHandler<T>): () => void {
     let set = this.handlers.get(type)
     if (!set) {
       set = new Set()
@@ -197,7 +206,7 @@ export class CapabilityEventBus {
 
   // ── Subscribe (once) ───────────────────────────────────────────────────
 
-  once<T extends CapabilityEvent>(type: string, handler: EventHandler<T>): () => void {
+  once<T extends EngineEvent>(type: string, handler: EventHandler<T>): () => void {
     let set = this.onceHandlers.get(type)
     if (!set) {
       set = new Set()
@@ -251,5 +260,15 @@ export class CapabilityEventBus {
       this.handlers.clear()
       this.onceHandlers.clear()
     }
+  }
+
+  /** Return a bounded copy of recently emitted events (for debug inspection). */
+  snapshot(): unknown[] {
+    return [...this.recent]
+  }
+
+  /** Clear the recent-event buffer (debug reset). */
+  clearRecent(): void {
+    this.recent = []
   }
 }

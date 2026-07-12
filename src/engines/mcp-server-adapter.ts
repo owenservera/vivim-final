@@ -1,7 +1,8 @@
 // src/engines/mcp-server-adapter.ts
-// McpServerAdapter — expose Governor + capabilities as MCP tools
+// McpServerAdapter — expose Governor + capabilities as MCP tools via WebSocket
 
 import type { ChromeGovernor } from './chrome-governor.js'
+import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -26,12 +27,17 @@ export interface McpServerConfig {
 export class McpServerAdapter {
   private tools: McpToolDefinition[] = []
   private running = false
+  private server?: ReturnType<typeof Bun.serve>
 
-  constructor(private readonly governor: ChromeGovernor) {
+  constructor(
+    private readonly governor: ChromeGovernor,
+    private readonly registry?: UnifiedCapabilityRegistry,
+  ) {
     this.registerTools()
   }
 
   private registerTools(): void {
+    // Base Chrome tools
     this.tools = [
       {
         name: 'chrome_launch',
@@ -131,16 +137,95 @@ export class McpServerAdapter {
         },
       },
     ]
+
+    // Add tools from UnifiedCapabilityRegistry (18.10)
+    if (this.registry) {
+      const mcpTools = this.registry.exportForMcp()
+      for (const tool of mcpTools) {
+        this.tools.push({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema,
+        })
+      }
+    }
   }
 
-  async start(port: number): Promise<void> {
+  async start(config: McpServerConfig): Promise<void> {
+    if (this.running) return
     this.running = true
-    // MCP server would bind here in production
-    void port
+
+    this.server = Bun.serve({
+      port: config.port,
+      hostname: config.hostname ?? '0.0.0.0',
+      fetch: async (req, server) => {
+        if (req.headers.get('upgrade') === 'websocket') {
+          const success = server.upgrade(req, { data: {} })
+          return success ? undefined : new Response('WebSocket upgrade failed', { status: 500 })
+        }
+
+        const url = new URL(req.url)
+
+        if (url.pathname === '/tools' && req.method === 'GET') {
+          return Response.json({ tools: this.tools })
+        }
+
+        if (url.pathname === '/tools/call' && req.method === 'POST') {
+          try {
+            const body = (await req.json()) as { name: string; input: Record<string, unknown> }
+            const result = await this.callTool(body.name, body.input)
+            return Response.json(result)
+          } catch (err) {
+            return Response.json(
+              { error: err instanceof Error ? err.message : String(err) },
+              { status: 400 },
+            )
+          }
+        }
+
+        return new Response('MCP Server', { status: 200 })
+      },
+      websocket: {
+        message: async (ws, message) => {
+          try {
+            const msg = JSON.parse(typeof message === 'string' ? message : message.toString())
+            if (msg.method === 'tools/list') {
+              ws.send(
+                JSON.stringify({
+                  jsonrpc: '2.0',
+                  id: msg.id,
+                  result: { tools: this.tools },
+                }),
+              )
+            } else if (msg.method === 'tools/call') {
+              const { name, arguments: args } = msg.params ?? {}
+              const result = await this.callTool(name, args ?? {})
+              ws.send(
+                JSON.stringify({
+                  jsonrpc: '2.0',
+                  id: msg.id,
+                  result,
+                }),
+              )
+            }
+          } catch {
+            // Ignore malformed messages
+          }
+        },
+      },
+    })
   }
 
   async stop(): Promise<void> {
+    if (this.server) {
+      this.server.stop()
+      this.server = undefined
+    }
     this.running = false
+  }
+
+  isRunning(): boolean {
+    return this.running
   }
 
   getTools(): McpToolDefinition[] {
@@ -148,6 +233,23 @@ export class McpServerAdapter {
   }
 
   async callTool(toolName: string, input: Record<string, unknown>): Promise<McpToolCallResult> {
+    // Route to UnifiedCapabilityRegistry if available (18.10)
+    if (this.registry) {
+      const cap = this.registry.list({ surface: 'mcp' }).find((c) => c.mcpToolName === toolName)
+      if (cap) {
+        try {
+          const result = await this.registry.execute(cap.id, input, { metadata: {} })
+          return { content: result }
+        } catch (err) {
+          return {
+            content: { error: err instanceof Error ? err.message : String(err) },
+            isError: true,
+          }
+        }
+      }
+    }
+
+    // Fallback to built-in Chrome tools
     switch (toolName) {
       case 'chrome_launch': {
         const result = await this.governor.launch(input.providerId as string)

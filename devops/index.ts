@@ -515,12 +515,12 @@ default:
        }
        break
      }
-     case 'context': {
-       const ctx = await getContext();
-       console.log(await formatContextReport(ctx));
-       break;
-     }
-     default: {
+      case 'context': {
+        const ctx = await getContext();
+        console.log(await formatContextReport(ctx));
+        break;
+      }
+      default: {
        console.error('usage: bun run devops <select|mark|gate|fmt|audit|gc|report|truth|roadmap|invariants|decision|goals|context>')
        process.exit(1)
      }

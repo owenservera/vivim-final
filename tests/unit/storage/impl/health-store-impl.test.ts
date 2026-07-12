@@ -145,9 +145,9 @@ describe('HealthStoreImpl', () => {
     })
     const history = await store.getHealthHistory('claude')
     expect(history).toHaveLength(2)
-    expect(history[0]?.ts).toBe(200)
-    expect(history[0]?.overall_status).toBe('degraded')
-    expect(history[0]?.overall_score).toBe(0.4)
+    expect(history[0]?.snapshotTs).toBe(200)
+    expect(history[0]?.runtimeState).toBe('degraded')
+    expect(history[0]?.selectorHitRateAvg).toBe(0.4)
   })
 
   it('getActiveProviders excludes unknown-status providers', async () => {

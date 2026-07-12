@@ -40,7 +40,10 @@ export interface ProviderEndpointRow {
   label: string
   endpoint_type: 'landing' | 'chat' | 'login' | 'api' | 'auth'
   is_default: number
-  selector_json: string
+  selectors_json: string
+  composer_type: string
+  send_method: string
+  content_editable: number
   created_at: number
   updated_at: number
 }
@@ -52,6 +55,7 @@ export interface ProviderParserRow {
   parser_version: number
   parser_logic_type: string
   parser_file_path: string | null
+  parser_logic_code: string | null // Inline TypeScript/JavaScript for DB-driven loading
   parser_hash: string | null
   is_active: number
   fallback_parser_id: string | null
@@ -458,22 +462,39 @@ export interface ProgramVersionMetricRow {
 
 export interface HealthHistoryRow {
   id: string
-  provider_id: string
-  overall_status: string
-  overall_score: number
-  signals_json: string
-  ts: number
+  providerId: string
+  runtimeState: string
+  activeSessions: number
+  totalConversations: number
+  totalMessages: number
+  capabilityExecutions: number
+  capabilitySuccesses: number
+  capabilityFailures: number
+  errorCount: number
+  parserConfidenceAvg: number | null
+  selectorHitRateAvg: number | null
+  avgResponseLatencyMs: number | null
+  p50ResponseLatencyMs: number | null
+  p95ResponseLatencyMs: number | null
+  p99ResponseLatencyMs: number | null
+  circuitBreakerState: string | null
+  fleetRestarts: number
+  driftEventsUnresolved: number
+  windowStartTs: number
+  windowEndTs: number
+  snapshotTs: number
+  schemaVersion: number
 }
 
 export interface ConfigEntryRow {
   id: string
-  engine_id: string
-  config_key: string
-  config_value: string
-  config_type: string
-  is_runtime: number
-  created_at: number
-  updated_at: number
+  engineId: string
+  scopeType: string
+  scopeId: string | null
+  configJson: string
+  schemaVersion: number
+  createdAt: number
+  updatedAt: number
 }
 
 export interface ConfigAuditRow {

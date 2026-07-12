@@ -22,6 +22,8 @@ interface PrismaAccount {
   providerId: string
   email: string
   planTier: string
+  profileDir: string | null
+  debugPort: number | null
   createdAt: number
   updatedAt: number
 }
@@ -78,6 +80,8 @@ function toAccountRow(r: PrismaAccount): ProviderAccountRow {
     planTier: r.planTier,
     apiKeyRef: null,
     isActive: 1,
+    profileDir: r.profileDir ?? null,
+    debugPort: r.debugPort ?? null,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   }

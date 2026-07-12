@@ -10,14 +10,22 @@ const EndpointSchema = z.object({
   endpoint_type: z.enum(['landing', 'chat', 'login', 'api', 'auth']),
   is_default: z.boolean().optional().default(false),
   selector: z.record(z.string()).optional(),
+  composer_type: z
+    .enum(['textarea', 'contenteditable', 'prosemirror', 'quill'])
+    .optional()
+    .default('textarea'),
+  send_method: z.enum(['enter_key', 'button_click', 'both']).optional().default('both'),
+  content_editable: z.boolean().optional().default(false),
 })
 
 const ParserSchema = z.object({
   name: z.string(),
-  file: z.string(),
+  file: z.string().optional(), // Optional for inline parsers
   version: z.number().int().positive(),
   is_active: z.boolean().optional().default(true),
   fallback: z.string().optional(),
+  logic_type: z.enum(['file', 'inline', 'composed']).optional().default('file'),
+  logic_code: z.string().optional(), // Inline TypeScript/JavaScript for DB-driven loading
 })
 
 const ModelSchema = z.object({
@@ -76,6 +84,66 @@ const ConfigEntrySchema = z.object({
   type: z.string().optional().default('string'),
   is_secret: z.boolean().optional().default(false),
 })
+
+// ── Provider stream config (unit 2.16) ──────────────────────────────────────
+// Validates ProviderStreamConfig rows: the wire transport, the SSE archetype,
+// and the delta path(s) used to extract streamed content.
+
+export const StreamTransportSchema = z.enum(['sse', 'batchexecute', 'websocket', 'sse-patch', 'json'])
+export const SseFormatSchema = z.enum(['openai', 'anthropic', 'gemini', 'generic'])
+
+export const StreamConfigSchema = z.object({
+  streamTransport: StreamTransportSchema,
+  streamTerminalJson: z.string().default('[]'),
+  sseFormat: SseFormatSchema.nullable().optional(),
+  deltaPathJson: z
+    .string()
+    .refine(
+      (v) => {
+        try {
+          const parsed = JSON.parse(v)
+          return Array.isArray(parsed) && parsed.every((p) => typeof p === 'string')
+        } catch {
+          return false
+        }
+      },
+      { message: 'deltaPathJson must be a JSON array of string paths' },
+    )
+    .nullable()
+    .optional(),
+  contentType: z.string().nullable().optional(),
+  completionDetectorsJson: z.string().default('[]'),
+  isActive: z.number().int().min(0).max(1).default(1),
+  version: z.number().int().positive().default(1),
+})
+
+export type StreamConfig = z.infer<typeof StreamConfigSchema>
+
+export interface StreamConfigValidation {
+  valid: boolean
+  errors: string[]
+  warnings: string[]
+}
+
+/** Unit 2.16 — validate a ProviderStreamConfig record against the schema. */
+export function validateStreamConfig(config: unknown): StreamConfigValidation {
+  const errors: string[] = []
+  const warnings: string[] = []
+  const result = StreamConfigSchema.safeParse(config)
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      errors.push(`${issue.path.join('.') || '(root)'}: ${issue.message}`)
+    }
+    return { valid: false, errors, warnings }
+  }
+  if (!result.data.deltaPathJson) {
+    warnings.push('No deltaPathJson set — parser must locate the response field itself.')
+  }
+  if (result.data.streamTransport === 'sse' && !result.data.sseFormat) {
+    warnings.push('SSE transport without an sseFormat archetype — parser may mis-detect framing.')
+  }
+  return { valid: errors.length === 0, errors, warnings }
+}
 
 export const ProviderManifestSchema = z.object({
   $schema: z.string().optional(),

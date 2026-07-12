@@ -69,4 +69,4 @@ export const useCapabilityStore = create<CapabilityState>()((set, get) => ({
       console.error('Execute failed:', err)
     }
   },
-))
+}))

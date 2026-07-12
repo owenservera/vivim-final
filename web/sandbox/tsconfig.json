@@ -14,13 +14,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "@ui": ["../ui/src/index.ts"],
       "@ui/*": ["../ui/src/*"],
+      "@api-client": ["../api-client/src/index.ts"],
       "@api-client/*": ["../api-client/src/*"]
     }
   },
-  "include": ["src/**/*", "src/**/*.ts", "src/**/*.tsx"],
-  "references": [
-    { "path": "../ui" },
-    { "path": "../api-client" }
-  ]
+  "include": ["src/**/*", "src/**/*.ts", "src/**/*.tsx"]
 }

@@ -2,7 +2,7 @@
 // Integration tests for capability execution through real (fake) Chrome
 
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import { createFakeChrome } from '../helpers/fake-chrome.js'
+import { createFakeChrome } from '../../helpers/mocks/chrome.mock.js'
 
 const TEST_PORT = 9340
 

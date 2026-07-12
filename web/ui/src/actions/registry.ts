@@ -6,9 +6,9 @@ export interface ActionSpec<TParams extends z.ZodSchema = z.ZodSchema> {
   run: (params: z.infer<TParams>) => Promise<void> | void
 }
 
-interface RegisteredAction<TParams extends z.ZodSchema = z.ZodSchema> {
+interface RegisteredAction {
   id: string
-  spec: ActionSpec<TParams>
+  spec: ActionSpec
 }
 
 const actions = new Map<string, RegisteredAction>()
@@ -21,7 +21,7 @@ export const ActionRegistry = {
     if (actions.has(id)) {
       throw new Error(`Action ${id} already registered`)
     }
-    actions.set(id, { id, spec })
+    actions.set(id, { id, spec: spec as unknown as ActionSpec })
   },
 
   dispatch<T>(id: string, params: T): Promise<void> {

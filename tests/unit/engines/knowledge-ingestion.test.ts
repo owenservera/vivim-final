@@ -383,4 +383,151 @@ describe('KnowledgeIngestionEngine', () => {
     expect(result.source).toBe('generic')
     expect(result.conversationsImported).toBe(1)
   })
+
+  it('extracts entities from imported messages', async () => {
+    const store = mockStore()
+    const messagesByConv = new Map<string, Array<{ id: string; role: string; content: string }>>()
+    const convStore = {
+      ...mockConversationStore(),
+      createConversation: async (input: any) => {
+        const id = `conv-${Date.now()}`
+        return {
+          id,
+          providerSessionId: input.providerSessionId,
+          providerId: input.providerId,
+          title: input.title ?? null,
+          state: input.state ?? 'active',
+          messageCount: 0,
+          lastMessageAt: null,
+          contextJson: '{}',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        }
+      },
+      createMessage: async (input: any) => {
+        const id = `msg-${Date.now()}`
+        const convMsgs = messagesByConv.get(input.conversationId) ?? []
+        convMsgs.push({ id, role: input.role, content: input.content ?? '' })
+        messagesByConv.set(input.conversationId, convMsgs)
+        return {
+          id,
+          conversationId: input.conversationId,
+          role: input.role,
+          content: input.content ?? null,
+          blocksJson: '[]',
+          blockCount: 0,
+          parentMessageId: null,
+          sequenceIndex: input.sequenceIndex ?? 0,
+          latencyMs: null,
+          tokenCount: null,
+          model: null,
+          metadataJson: '{}',
+          createdAt: Date.now(),
+        }
+      },
+      getMessages: async (convId: string) => messagesByConv.get(convId) ?? [],
+    } as any
+
+    const extractor = {
+      extractFromMessage: async () => [],
+      extractFromConversation: async () => [],
+      batchExtract: async () => ({
+        totalExtracted: 3,
+        byType: { entity_technology: 2, decision: 1 },
+      }),
+    } as any
+
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      extractor,
+      mockEventBus(),
+    )
+
+    const result = await engine.ingest({
+      source: 'generic',
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: true,
+      extractDecisions: true,
+      generateEmbeddings: false,
+    })
+
+    expect(result.entitiesExtracted).toBeGreaterThan(0)
+    expect(result.entitiesExtracted).toBe(3)
+  })
+
+  it('extraction failure does not fail import', async () => {
+    const store = mockStore()
+    const messagesByConv = new Map<string, Array<{ id: string; role: string; content: string }>>()
+    const convStore = {
+      ...mockConversationStore(),
+      createConversation: async (input: any) => {
+        const id = `conv-${Date.now()}`
+        return {
+          id,
+          providerSessionId: input.providerSessionId,
+          providerId: input.providerId,
+          title: input.title ?? null,
+          state: input.state ?? 'active',
+          messageCount: 0,
+          lastMessageAt: null,
+          contextJson: '{}',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        }
+      },
+      createMessage: async (input: any) => {
+        const id = `msg-${Date.now()}`
+        const convMsgs = messagesByConv.get(input.conversationId) ?? []
+        convMsgs.push({ id, role: input.role, content: input.content ?? '' })
+        messagesByConv.set(input.conversationId, convMsgs)
+        return {
+          id,
+          conversationId: input.conversationId,
+          role: input.role,
+          content: input.content ?? null,
+          blocksJson: '[]',
+          blockCount: 0,
+          parentMessageId: null,
+          sequenceIndex: input.sequenceIndex ?? 0,
+          latencyMs: null,
+          tokenCount: null,
+          model: null,
+          metadataJson: '{}',
+          createdAt: Date.now(),
+        }
+      },
+      getMessages: async (convId: string) => messagesByConv.get(convId) ?? [],
+    } as any
+
+    const extractor = {
+      extractFromMessage: async () => [],
+      extractFromConversation: async () => [],
+      batchExtract: async () => {
+        throw new Error('extraction failed')
+      },
+    } as any
+
+    const engine = new KnowledgeIngestionEngine(
+      store,
+      convStore,
+      mockBlockStore(),
+      extractor,
+      mockEventBus(),
+    )
+
+    const result = await engine.ingest({
+      source: 'generic',
+      filePath: `${FIXTURE_DIR}/generic-import.json`,
+      deduplicate: true,
+      extractEntities: true,
+      extractDecisions: true,
+      generateEmbeddings: false,
+    })
+
+    expect(result.conversationsImported).toBeGreaterThan(0)
+    expect(result.errors.some((e) => e.error.includes('extract'))).toBe(true)
+  })
 })

@@ -1,7 +1,7 @@
 // src/engines/stream-parser.ts
 // StreamParserEngine — parse raw provider responses into typed ContentBlock[] (04-merged-engines.md §3).
-// Loads parser modules from .ts seed files via dynamic import(); falls back to built-in
-// generic/system parsers when a seed is unavailable, preserving the spec's fallback chain.
+// All parser logic loaded from DB — engine is a loader/executor, not a parser repository.
+// Fallback chain: provider → generic → system → error (all from DB).
 
 import { EngineError } from '../errors.js'
 import type { ParserStore } from '../storage/contracts/parser-store.js'
@@ -38,89 +38,7 @@ export interface ParserConfig {
   fallbackTimeoutMs: number
   maxRetries: number
   confidenceMinThreshold: number
-  genericFilePath?: string
-  fallbackFilePath?: string
   preloadProviders?: string[]
-}
-
-// ── Built-in parsers (used when a seed module is unavailable) ───────────────
-
-function builtinClaude(): ParserModule {
-  return {
-    name: 'claude/001_streaming_sse',
-    version: 1,
-    providerId: 'claude',
-    parse(rawBody: string): ContentBlock[] {
-      const blocks: ContentBlock[] = []
-      let index = 0
-      for (const line of rawBody.split('\n')) {
-        const trimmed = line.trim()
-        if (!trimmed.startsWith('data:')) continue
-        const payload = trimmed.slice(5).trim()
-        if (payload === '[DONE]') break
-        try {
-          const json = JSON.parse(payload)
-          const delta = json.delta ?? {}
-          if (typeof delta.thinking === 'string') {
-            blocks.push({ kind: 'thinking', content: delta.thinking, index: index++ })
-          }
-          if (typeof delta.content === 'string') {
-            blocks.push({ kind: 'text', content: delta.content, index: index++ })
-          }
-        } catch {
-          // skip non-JSON data lines
-        }
-      }
-      if (blocks.length === 0) blocks.push({ kind: 'text', content: rawBody, index: 0 })
-      return blocks
-    },
-    detectCompletion(rawBody: string): boolean {
-      return rawBody.includes('[DONE]')
-    },
-    getConfidence(): number {
-      return 0.9
-    },
-  }
-}
-
-function builtinGeneric(): ParserModule {
-  return {
-    name: 'generic/001_sse_frames',
-    version: 1,
-    providerId: 'generic',
-    parse(rawBody: string): ContentBlock[] {
-      const blocks: ContentBlock[] = []
-      let index = 0
-      for (const frame of rawBody.split('\n\n')) {
-        for (const line of frame.split('\n')) {
-          const trimmed = line.trim()
-          if (trimmed.startsWith('data:')) {
-            blocks.push({ kind: 'text', content: trimmed.slice(5).trim(), index: index++ })
-          }
-        }
-      }
-      if (blocks.length === 0) blocks.push({ kind: 'text', content: rawBody, index: 0 })
-      return blocks
-    },
-    detectCompletion(rawBody: string): boolean {
-      return rawBody.length > 0
-    },
-    getConfidence(): number {
-      return 0.6
-    },
-  }
-}
-
-const BUILTIN = {
-  claude: builtinClaude,
-  gemini: builtinGeneric,
-  chatgpt: builtinGeneric,
-  generic: builtinGeneric,
-} as const
-
-function getBuiltin(key: string): () => ParserModule {
-  if (key in BUILTIN) return BUILTIN[key as keyof typeof BUILTIN]
-  return BUILTIN.generic
 }
 
 function errorBlock(_providerId: string, message: string): ContentBlock[] {
@@ -129,6 +47,7 @@ function errorBlock(_providerId: string, message: string): ContentBlock[] {
 
 export class StreamParserEngine {
   private parserCache = new Map<string, { module: ParserModule; hash: string }>()
+  private inlineCache = new Map<string, ParserModule>()
 
   constructor(
     private store: ParserStore,
@@ -145,14 +64,14 @@ export class StreamParserEngine {
       blocks = module.parse(rawBody)
     } catch {
       try {
-        module = await this.loadGenericFallback()
+        module = await this.loadGenericParser()
         blocks = module.parse(rawBody)
       } catch {
         try {
-          module = await this.loadSystemFallback()
+          module = await this.loadSystemFallbackParser()
           blocks = module.parse(rawBody)
         } catch {
-          blocks = errorBlock(providerId, 'all parsers failed')
+          blocks = errorBlock(providerId, 'all parsers failed — check provider_parser table')
           module = {
             name: 'error',
             version: 0,
@@ -183,9 +102,9 @@ export class StreamParserEngine {
       return module.detectCompletion(rawBody)
     } catch {
       try {
-        return (await this.loadGenericFallback()).detectCompletion(rawBody)
+        return (await this.loadGenericParser()).detectCompletion(rawBody)
       } catch {
-        return (await this.loadSystemFallback()).detectCompletion(rawBody)
+        return (await this.loadSystemFallbackParser()).detectCompletion(rawBody)
       }
     }
   }
@@ -196,7 +115,6 @@ export class StreamParserEngine {
   }
 
   async preloadAll(): Promise<void> {
-    await this.loadSystemFallback()
     for (const providerId of this.config?.preloadProviders ?? []) {
       try {
         await this.loadProviderParser(providerId)
@@ -210,39 +128,93 @@ export class StreamParserEngine {
 
   private async loadProviderParser(providerId: string): Promise<ParserModule> {
     const row = await this.store.getActiveParser(providerId)
-    if (!row) return this.loadBuiltin(providerId)
+    if (!row) throw new EngineError(`No active parser for provider '${providerId}' in DB`)
+
     const cached = this.parserCache.get(providerId)
     if (cached && cached.hash === row.hash) return cached.module
-    const module = await this.resolveModule(row.filePath, row.providerId)
+
+    let module: ParserModule
+
+    if (row.logicType === 'inline' && row.logicCode) {
+      module = await this.loadInlineParser(row.logicCode, row.hash)
+    } else if (row.logicType === 'file' && row.filePath) {
+      module = await this.loadFileParser(row.filePath)
+    } else {
+      throw new EngineError(`Parser for '${providerId}' has no logic (logicType=${row.logicType})`)
+    }
+
     this.parserCache.set(providerId, { module, hash: row.hash })
     return module
   }
 
-  private async loadGenericFallback(): Promise<ParserModule> {
-    return this.resolveModule(this.config?.genericFilePath, 'generic')
-  }
+  private async loadGenericParser(): Promise<ParserModule> {
+    const row = await this.store.getGenericParser()
+    if (!row) throw new EngineError('No generic parser in DB')
 
-  private async loadSystemFallback(): Promise<ParserModule> {
-    return this.resolveModule(this.config?.fallbackFilePath, 'system')
-  }
+    const cached = this.parserCache.get('generic')
+    if (cached && cached.hash === row.hash) return cached.module
 
-  private async resolveModule(
-    filePath: string | undefined,
-    builtinKey: string,
-  ): Promise<ParserModule> {
-    if (filePath) {
-      const imported = await import(filePath)
-      const candidate = (imported.default ?? imported) as Partial<ParserModule>
-      if (typeof candidate.parse !== 'function') {
-        throw new EngineError(`Parser module at ${filePath} has no parse() method`)
-      }
-      return candidate as ParserModule
+    let module: ParserModule
+    if (row.logicType === 'inline' && row.logicCode) {
+      module = await this.loadInlineParser(row.logicCode, row.hash)
+    } else if (row.logicType === 'file' && row.filePath) {
+      module = await this.loadFileParser(row.filePath)
+    } else {
+      throw new EngineError('Generic parser has no logic')
     }
-    const factory = getBuiltin(builtinKey)
-    return factory()
+
+    this.parserCache.set('generic', { module, hash: row.hash })
+    return module
   }
 
-  private loadBuiltin(providerId: string): ParserModule {
-    return getBuiltin(providerId)()
+  private async loadSystemFallbackParser(): Promise<ParserModule> {
+    const row = await this.store.getSystemFallbackParser()
+    if (!row) throw new EngineError('No system fallback parser in DB')
+
+    const cached = this.parserCache.get('system')
+    if (cached && cached.hash === row.hash) return cached.module
+
+    let module: ParserModule
+    if (row.logicType === 'inline' && row.logicCode) {
+      module = await this.loadInlineParser(row.logicCode, row.hash)
+    } else if (row.logicType === 'file' && row.filePath) {
+      module = await this.loadFileParser(row.filePath)
+    } else {
+      throw new EngineError('System fallback parser has no logic')
+    }
+
+    this.parserCache.set('system', { module, hash: row.hash })
+    return module
+  }
+
+  private async loadInlineParser(code: string, hash: string): Promise<ParserModule> {
+    const cached = this.inlineCache.get(hash)
+    if (cached) return cached
+
+    try {
+      const factory = new Function('module', 'exports', code)
+      const mod = { exports: {} as Record<string, unknown> }
+      factory(mod, mod.exports)
+
+      const candidate = (mod.exports.default ?? mod.exports) as Partial<ParserModule>
+      if (typeof candidate.parse !== 'function') {
+        throw new EngineError('Inline parser has no parse() method')
+      }
+
+      const module = candidate as ParserModule
+      this.inlineCache.set(hash, module)
+      return module
+    } catch (error) {
+      throw new EngineError(`Failed to compile inline parser: ${error}`)
+    }
+  }
+
+  private async loadFileParser(filePath: string): Promise<ParserModule> {
+    const imported = await import(filePath)
+    const candidate = (imported.default ?? imported) as Partial<ParserModule>
+    if (typeof candidate.parse !== 'function') {
+      throw new EngineError(`Parser at ${filePath} has no parse() method`)
+    }
+    return candidate as ParserModule
   }
 }

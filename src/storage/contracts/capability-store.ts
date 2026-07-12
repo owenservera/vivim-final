@@ -36,13 +36,16 @@ export interface CapabilityProgramRow {
 
 export interface SelectorStrategyRow {
   id: string
+  name: string
   capabilityId: string
   providerId: string
-  selector: string
+  strategyType: 'css' | 'xpath' | 'text' | 'aria' | 'data' | 'regex' | 'composite'
+  selectorValue: string
   priority: number
-  strategyType: string
+  isActive: boolean
   hitCount: number
   missCount: number
+  lastUsedAt: number | null
   createdAt: number
   updatedAt: number
 }

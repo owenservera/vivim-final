@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { EngineError } from '../errors.js'
 import { FleetSupervisor } from '../executor/fleet-supervisor.js'
 import type { FleetSupervisor as FleetSupervisorContract } from '../storage/contracts/fleet-supervisor.js'
+import { submitMessage, typeMessage } from './composer-typing.js'
 import type {
   GovernorStore,
   TraceEntryInput,
@@ -138,6 +139,14 @@ export class AsyncMutex {
 export interface CDPTransport {
   send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown>
   capture(slaveId: string, pattern: RegExp, timeoutMs?: number): Promise<CaptureResult>
+  // captureStream is optional on the transport contract — the governor itself
+  // never invokes it (streaming is driven via StreamingProtocol). Only the real
+  // CdpTransportImpl provides it; tests/mocks may omit it.
+  captureStream?(
+    slaveId: string,
+    pattern: RegExp,
+    timeoutMs?: number,
+  ): Promise<{ body: string; chunks: string[] }>
   getPageState(slaveId: string): Promise<PageState>
   captureScreenshot(slaveId: string, format?: 'png' | 'jpeg'): Promise<string>
 }
@@ -189,18 +198,88 @@ export class CDPProxy {
     }
   }
 
-  async executeHarnessPlan(slaveId: string, _dag: HarnessDAG): Promise<HarnessResult> {
+  async executeHarnessPlan(slaveId: string, dag: HarnessDAG): Promise<HarnessResult> {
     const slave = this.slaves.get(slaveId)
     if (!slave) throw new EngineError(`Slave not found: ${slaveId}`)
+    if (slave.circuitState === 'open')
+      throw new EngineError(`Circuit breaker open for slave: ${slaveId}`)
+    if (!this.transport) throw new EngineError('CDP transport not configured')
 
     const mutex = this.getMutex(slaveId)
     await mutex.acquire()
     try {
-      // Stub: full harness execution in Phase 9
-      return { success: true, stepsCompleted: 0 }
+      // Topological walk over node edges; fall back to declaration order.
+      const order = this.orderNodes(dag)
+      let stepsCompleted = 0
+
+      for (const idx of order) {
+        const node = dag.nodes[idx]
+        if (!node) continue
+
+        const action = node.action ?? node.moduleId ?? node.type
+        const params = { ...(node.params ?? {}), ...(node.input ?? {}) }
+
+        switch (action) {
+          case 'type_text': {
+            const selector = typeof params.selector === 'string' ? params.selector : 'textarea'
+            const text = typeof params.text === 'string' ? params.text : ''
+            const composerType = (typeof params.composerType === 'string'
+              ? params.composerType
+              : 'textarea') as 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
+            await typeMessage(this.transport, slaveId, selector, text, composerType)
+            stepsCompleted++
+            break
+          }
+          case 'submit': {
+            const sendSelector = typeof params.sendSelector === 'string' ? params.sendSelector : undefined
+            const key = typeof params.key === 'string' ? params.key : 'Enter'
+            await submitMessage(this.transport, slaveId, sendSelector, key)
+            stepsCompleted++
+            break
+          }
+          default:
+            // Unknown action — skip but count as attempted
+            stepsCompleted++
+        }
+
+        this.eventBus?.emit('harness:step', { slaveId, action, step: stepsCompleted })
+      }
+
+      return { success: true, stepsCompleted }
+    } catch (err) {
+      return {
+        success: false,
+        stepsCompleted: 0,
+        error: err instanceof Error ? err.message : String(err),
+      }
     } finally {
       mutex.release()
     }
+  }
+
+  /** Returns node indices in dependency order (edges) or declaration order. */
+  private orderNodes(dag: HarnessDAG): number[] {
+    if (!dag.edges.length) return dag.nodes.map((_, i) => i)
+    const indeg = new Array(dag.nodes.length).fill(0)
+    const adj = new Map<number, number[]>()
+    for (const e of dag.edges) {
+      indeg[e.to] = (indeg[e.to] ?? 0) + 1
+      const list = adj.get(e.from) ?? []
+      list.push(e.to)
+      adj.set(e.from, list)
+    }
+    const queue: number[] = []
+    for (let i = 0; i < indeg.length; i++) if (indeg[i] === 0) queue.push(i)
+    const out: number[] = []
+    while (queue.length) {
+      const n = queue.shift()!
+      out.push(n)
+      for (const m of adj.get(n) ?? []) {
+        indeg[m]--
+        if (indeg[m] === 0) queue.push(m)
+      }
+    }
+    return out.length === dag.nodes.length ? out : dag.nodes.map((_, i) => i)
   }
 
   async getPageState(slaveId: string): Promise<PageState> {
@@ -581,6 +660,24 @@ export class ChromeGovernor {
     }
   }
 
+  /**
+   * Find or spawn a Chrome slave for a specific provider+account.
+   * Used by ConversationManager to derive slave from conversation's provider/account.
+   */
+  async ensureRunningForAccount(
+    providerId: string,
+    accountId: string,
+    opts?: LaunchOptions,
+  ): Promise<ChromeSlave> {
+    // Check if any existing instance matches provider+account
+    const existing = this.getAllSlaves({ providerId }).find((s) => s.accountId === accountId)
+    if (existing) {
+      return this.ensureRunning(existing.slaveId)
+    }
+    // No existing slave — spawn one
+    return this.spawn(providerId, accountId, opts)
+  }
+
   deriveProfile(providerId: string, accountId: string): string {
     // Use the configured profile root (Windows-safe) — must match the layout
     // ProfileAllocator uses so ChromeGovernor.spawn reuses the same session.
@@ -642,6 +739,11 @@ export class ChromeGovernor {
   setCdpTransport(transport: CDPTransport): void {
     this.cdpTransport = transport
     this._cdpProxy = null // Reset proxy to pick up new transport
+  }
+
+  /** Returns the raw CDP transport (for advanced consumers like SelectorHealer). */
+  getTransport(): CDPTransport | null {
+    return this.cdpTransport
   }
 
   // ── CDP (3.3 CDPProxy) ──────────────────────────────────────────────────

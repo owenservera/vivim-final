@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ActionRegistry } from '@ui'
+import { ActionRegistry } from '../actions/registry.js'
 
 // Step type for wizard flow
 type SetupStep = 'workspace' | 'provider' | 'account' | 'login' | 'done'

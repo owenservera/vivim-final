@@ -1,0 +1,14 @@
+{
+  "skeletonDone": true,
+  "sharedPoolDone": true,
+  "platforms": [
+    {
+      "slug": "z-ai",
+      "category": "ai_chat",
+      "status": "skeleton",
+      "sectionsDone": [],
+      "sourceConfidence": "high"
+    }
+  ],
+  "probabilityTables": []
+}

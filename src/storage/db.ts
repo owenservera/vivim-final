@@ -388,6 +388,48 @@ export function setDb(db: CapStoreDb): void {
   _db = db
 }
 
+// ── SQLite pragma tuning (WAL mode) ───────────────────────────────────────
+
+export interface DbPragmaPolicy {
+  journalMode: 'DELETE' | 'WAL' | 'TRUNCATE' | 'MEMORY'
+  synchronous: 'OFF' | 'NORMAL' | 'FULL' | 'EXTRA'
+  cacheSize: number
+  tempStore: 'DEFAULT' | 'FILE' | 'MEMORY'
+  mmapSize: number
+  busyTimeoutMs: number
+  walAutocheckpoint: number
+  foreignKeys: boolean
+}
+
+const DEFAULT_PRAGMAS: DbPragmaPolicy = {
+  journalMode: 'WAL',
+  synchronous: 'NORMAL',
+  cacheSize: -64000,
+  tempStore: 'MEMORY',
+  mmapSize: 268435456,
+  busyTimeoutMs: 5000,
+  walAutocheckpoint: 1000,
+  foreignKeys: true,
+}
+
+export async function configurePrisma(db: CapStoreDb, policy?: Partial<DbPragmaPolicy>): Promise<void> {
+  const pragmas = { ...DEFAULT_PRAGMAS, ...policy }
+
+  await db.prisma.$executeRawUnsafe(`PRAGMA journal_mode = ${pragmas.journalMode}`)
+  await db.prisma.$executeRawUnsafe(`PRAGMA synchronous = ${pragmas.synchronous}`)
+  await db.prisma.$executeRawUnsafe(`PRAGMA cache_size = ${pragmas.cacheSize}`)
+  await db.prisma.$executeRawUnsafe(`PRAGMA temp_store = ${pragmas.tempStore}`)
+  await db.prisma.$executeRawUnsafe(`PRAGMA mmap_size = ${pragmas.mmapSize}`)
+  await db.prisma.$executeRawUnsafe(`PRAGMA busy_timeout = ${pragmas.busyTimeoutMs}`)
+  await db.prisma.$executeRawUnsafe(`PRAGMA wal_autocheckpoint = ${pragmas.walAutocheckpoint}`)
+  await db.prisma.$executeRawUnsafe(`PRAGMA foreign_keys = ${pragmas.foreignKeys ? 'ON' : 'OFF'}`)
+
+  const journalMode = await db.prisma.$queryRawUnsafe<{ journal_mode: string }[]>(
+    'PRAGMA journal_mode',
+  )
+  console.log(`[db] pragmas configured — journal_mode=${journalMode[0]?.journal_mode}`)
+}
+
 export async function closeDb(): Promise<void> {
   if (_db) {
     await _db.close()

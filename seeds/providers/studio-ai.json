@@ -30,15 +30,19 @@
       "selector": {
         "composer": "rich-textarea",
         "send_button": "button[aria-label='Send message']"
-      }
+      },
+      "composer_type": "textarea",
+      "send_method": "both",
+      "content_editable": false
     }
   ],
   "parsers": [
     {
-      "name": "Studio AI BatchExecute Parser",
-      "file": "gemini/001_batchexecute.ts",
+      "name": "studio-ai/001_batchexecute",
       "version": 1,
-      "is_active": true
+      "is_active": true,
+      "logic_type": "inline",
+      "logic_code": "var parse = function(rawBody) { var blocks = []; var index = 0; try { var parsed = JSON.parse(rawBody); if (!Array.isArray(parsed)) { return [{ kind: 'text', content: rawBody, index: 0 }]; } var innerArrays = parsed.flat(2); for (var i = 0; i < innerArrays.length; i++) { var item = innerArrays[i]; if (typeof item === 'string') { blocks.push({ kind: 'text', content: item, index: index++ }); } } } catch (e) { if (rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } } return blocks; }; var detectCompletion = function() { return true; }; var getConfidence = function() { return 0.8; }; exports.default = { name: 'studio-ai/001_batchexecute', version: 1, providerId: 'studio-ai', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };"
     }
   ],
   "models": [

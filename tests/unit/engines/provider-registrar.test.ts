@@ -96,9 +96,25 @@ const CLAUDE_MANIFEST: ProviderManifest = {
     capabilities: ['send_message', 'select_model'],
   },
   endpoints: [
-    { label: 'Chat', url: 'https://claude.ai/chat', endpoint_type: 'chat', is_default: true },
+    {
+      label: 'Chat',
+      url: 'https://claude.ai/chat',
+      endpoint_type: 'chat',
+      is_default: true,
+      composer_type: 'prosemirror' as const,
+      send_method: 'both' as const,
+      content_editable: true,
+    },
   ],
-  parsers: [{ name: 'Claude SSE Parser', file: 'claude/001.ts', version: 1, is_active: true }],
+  parsers: [
+    {
+      name: 'Claude SSE Parser',
+      file: 'claude/001.ts',
+      version: 1,
+      is_active: true,
+      logic_type: 'file' as const,
+    },
+  ],
   models: [
     {
       slug: 'claude-sonnet-4',
@@ -193,9 +209,9 @@ describe('ProviderRegistrar', () => {
     expect(slugs).toContain('qwen')
   })
 
-  it('seedAll() registers 7 providers', async () => {
+  it('seedAll() registers 8 providers', async () => {
     const result = await registrar.seedAll()
-    expect(result.seeded.length).toBe(7)
+    expect(result.seeded.length).toBe(8)
   })
 
   it('seedProvider() seeds a single provider by slug', async () => {
@@ -221,7 +237,7 @@ describe('ProviderRegistrar', () => {
     await registrar.seedAll()
     const result = await registrar.reloadFromSeeds()
 
-    expect(result.seeded.length).toBe(7)
+    expect(result.seeded.length).toBe(8)
     // All should be 'updated' since they already exist
     expect(result.seeded.every((r) => r.status === 'updated')).toBe(true)
   })

@@ -3,6 +3,8 @@
 
 import { ulid } from 'ulid'
 
+export { ulid }
+
 export function newId(): string {
   return ulid()
 }

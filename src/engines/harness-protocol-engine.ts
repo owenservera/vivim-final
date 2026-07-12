@@ -286,7 +286,7 @@ export class HarnessProtocolEngine {
     this.eventBus?.emit({
       type: 'hpe:outcome_recorded',
       data: { actionType: action.type, success },
-    } as never)
+    })
   }
 
   getFeedbackContext(): PromptContext {

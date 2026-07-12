@@ -5,6 +5,7 @@ import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
+import type { CapabilityContext, UnifiedCapabilityRegistry } from './unified-registry.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -14,6 +15,8 @@ export interface WorkflowNode {
   category: 'trigger' | 'action' | 'logic' | 'ai' | 'data'
   config: Record<string, unknown>
   position?: { x: number; y: number }
+  inputPorts?: Array<{ id: string; name: string; type: string }>
+  outputPorts?: Array<{ id: string; name: string; type: string }>
 }
 
 export interface WorkflowEdge {
@@ -21,6 +24,9 @@ export interface WorkflowEdge {
   source: string
   target: string
   condition?: string
+  sourcePort?: string
+  targetPort?: string
+  routingPath?: Array<{ x: number; y: number }>
 }
 
 export interface WorkflowDefinition {
@@ -78,6 +84,7 @@ export class WorkflowEngine {
     private readonly store: WorkflowStore,
     private readonly eventBus: CapabilityEventBus,
     private readonly mcpClient?: McpClientAdapter,
+    private readonly registry?: UnifiedCapabilityRegistry,
   ) {}
 
   async createWorkflow(def: WorkflowDefinition): Promise<WorkflowDefinition> {
@@ -127,7 +134,7 @@ export class WorkflowEngine {
     this.eventBus.emit({
       type: 'workflow:started',
       data: { executionId: execution.id, workflowId },
-    } as never)
+    })
 
     try {
       await this.executeNodes(workflow, execution, input)
@@ -173,7 +180,7 @@ export class WorkflowEngine {
         this.eventBus.emit({
           type: 'workflow:human_loop_resolved',
           data: { nodeExecutionId, decision },
-        } as never)
+        })
         return
       }
     }
@@ -183,7 +190,7 @@ export class WorkflowEngine {
     this.eventBus.emit({
       type: 'workflow:webhook_received',
       data: { webhookId },
-    } as never)
+    })
     return new Response(JSON.stringify({ ok: true, webhookId }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -223,7 +230,7 @@ export class WorkflowEngine {
             this.eventBus.emit({
               type: 'workflow:human_loop_pending',
               data: { nodeExecutionId: nodeExec.id, nodeId: node.id },
-            } as never)
+            })
             return
           }
           nodeExec.output = result as Record<string, unknown>
@@ -249,6 +256,17 @@ export class WorkflowEngine {
     variables: Record<string, unknown>,
     executionId: string,
   ): Promise<Record<string, unknown> | null> {
+    // New node types from 18.3
+    if (node.type === 'capability_call') {
+      return this.executeCapabilityCall(node, variables)
+    }
+    if (node.type === 'cli_command') {
+      return this.executeCliCommand(node, variables)
+    }
+    if (node.type === 'plugin_call') {
+      return this.executePluginCall(node, variables)
+    }
+
     switch (node.category) {
       case 'trigger':
         return this.executeTrigger(node, variables)
@@ -344,6 +362,76 @@ export class WorkflowEngine {
       return variables
     }
     return {}
+  }
+
+  // ── 18.3: New node types ─────────────────────────────────────────────
+
+  private async executeCapabilityCall(
+    node: WorkflowNode,
+    variables: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    if (!this.registry) {
+      throw new EngineError('capability_call requires UnifiedCapabilityRegistry')
+    }
+    const capId = node.config.capabilityId as string
+    const input = (node.config.input as Record<string, unknown>) ?? {}
+    const resolvedInput = this.resolveVariables(input, variables)
+    const ctx: CapabilityContext = {
+      metadata: { executionId: node.id, workflow: true },
+    }
+    const result = await this.registry.execute(capId, resolvedInput, ctx)
+    return { capabilityResult: result }
+  }
+
+  private async executeCliCommand(
+    node: WorkflowNode,
+    variables: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    const command = node.config.command as string
+    const args = (node.config.args as Record<string, unknown>) ?? {}
+    const resolvedArgs = this.resolveVariables(args, variables)
+    // CLI commands are executed via the registry if available
+    if (this.registry) {
+      const cap = this.registry.list({ surface: 'cli' }).find((c) => c.cliCommand?.name === command)
+      if (cap) {
+        const ctx: CapabilityContext = { metadata: { executionId: node.id, workflow: true } }
+        const result = await this.registry.execute(cap.id, resolvedArgs, ctx)
+        return { cliResult: result }
+      }
+    }
+    return { cliCommand: command, args: resolvedArgs, executed: true }
+  }
+
+  private async executePluginCall(
+    node: WorkflowNode,
+    variables: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
+    const pluginId = node.config.pluginId as string
+    const method = node.config.method as string
+    const args = (node.config.args as Record<string, unknown>) ?? {}
+    const resolvedArgs = this.resolveVariables(args, variables)
+    // Plugin calls go through MCP if available
+    if (this.mcpClient) {
+      const result = await this.mcpClient.callTool(`${pluginId}.${method}`, resolvedArgs)
+      return { pluginResult: result }
+    }
+    return { pluginId, method, args: resolvedArgs, executed: true }
+  }
+
+  private resolveVariables(
+    obj: Record<string, unknown>,
+    variables: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === 'string' && value.startsWith('{{') && value.endsWith('}}')) {
+        const varName = value.slice(2, -2)
+        result[key] = variables[varName] ?? value
+      } else {
+        result[key] = value
+      }
+    }
+    return result
   }
 
   private interpolate(template: string, vars: Record<string, unknown>): string {

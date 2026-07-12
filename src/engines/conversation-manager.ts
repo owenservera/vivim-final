@@ -16,9 +16,18 @@ import type {
   ResolvedCapabilities,
 } from './capability-resolution.js'
 import type { ChromeGovernor, ChromeSlave, HarnessDAG, HarnessResult } from './chrome-governor.js'
+import type { AssembledContext, ContextAssemblyEngine } from './context-assembly.js'
 import type { ExecutionMemoizer } from './execution-memoizer.js'
 import type { AgentMemoryContext, MemoryEngine } from './memory-engine.js'
+import {
+  COMPOSER_SELECTORS,
+  findComposerHeuristic,
+  findWorkingSelector,
+  PROVIDER_URLS,
+  PROVIDER_URL_PATTERNS,
+} from './provider-selectors.js'
 import type { StreamBlockStore } from './stream-block-store.js'
+import type { StreamingProtocol } from './streaming-protocol.js'
 
 // ── StreamParserEngine + shared parse types (real impl in stream-parser.ts) ─
 
@@ -74,12 +83,26 @@ export interface ConversationContext {
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+export interface StageTiming {
+  resolve?: number
+  recall?: number
+  ensure?: number
+  type?: number
+  submit?: number
+  capture?: number
+  parse?: number
+  store?: number
+  total?: number
+  [key: string]: number | undefined
+}
+
 export interface SendResult {
   ok: boolean
   messageId: string
   blocks: ContentBlock[]
   text: string
   latencyMs: number
+  timing?: StageTiming
   error?: string
 }
 
@@ -87,6 +110,24 @@ export interface SendResult {
 
 function deriveSlaveId(providerId: string, accountId: string): string {
   return `slave_${providerId}_${accountId}`
+}
+
+/** Best-effort composer type per provider when the endpoint manifest omits it. */
+function composerTypeForProvider(providerId: string): 'textarea' | 'contenteditable' | 'quill' | 'codemirror' {
+  switch (providerId) {
+    case 'claude':
+    case 'gemini':
+      return 'contenteditable'
+    default:
+      return 'textarea'
+  }
+}
+
+/** Provider-specific streaming API capture patterns (Unit 2.5). */
+const CAPTURE_PATTERNS: Record<string, RegExp> = {
+  chatgpt: /\/backend-api\/conversation($|\?|\/)/,
+  claude: /\/api\/organizations\/.*\/chat_conversations\/.*\/completion/,
+  gemini: /\/_api\/BardFrontendService\/StreamGenerate/,
 }
 
 function extractText(blocks: ContentBlock[]): string {
@@ -138,29 +179,96 @@ export class ConversationManager {
     private eventBus: CapabilityEventBus,
     private memoizer: ExecutionMemoizer,
     private memory?: MemoryEngine,
+    private contextAssembly?: ContextAssemblyEngine,
+    private streamingProtocol?: StreamingProtocol,
   ) {}
 
-  // ── send: 8-step pipeline ───────────────────────────────────────────────
+  // ── send: 8-step pipeline with retry (Units 2.x + 3.1, 3.5) ──────────────
 
   async send(conversationId: string, message: string): Promise<SendResult> {
-    const start = Date.now()
+    const MAX_RETRIES = 2
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return await this.sendInternal(conversationId, message)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        const recoverable =
+          msg.includes('Slave not running') ||
+          msg.includes('Circuit breaker') ||
+          msg.includes('CDP command failed') ||
+          msg.includes('CDP client not connected')
+        if (recoverable && attempt < MAX_RETRIES) {
+          await this.recoverSlave(conversationId)
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        return {
+          ok: false,
+          messageId: '',
+          blocks: [],
+          text: '',
+          latencyMs: 0,
+          error: msg,
+        }
+      }
+    }
+    return { ok: false, messageId: '', blocks: [], text: '', latencyMs: 0, error: 'Unreachable' }
+  }
+
+  private async recoverSlave(conversationId: string): Promise<void> {
+    const conv = await this.store.getConversation(conversationId)
+    if (!conv) return
+    const account = await this.store.getAccount(conv.providerSessionId)
+    if (!account) return
+    const slaves = this.governor.getAllSlaves({ providerId: conv.providerId })
+    for (const slave of slaves) {
+      if (slave.accountId === account.id) {
+        try {
+          await this.governor.kill(slave.slaveId)
+        } catch {
+          // ignore
+        }
+      }
+    }
+    try {
+      await this.governor.spawn(conv.providerId, account.id, { visible: false })
+    } catch {
+      // ignore — ensureRunningForAccount will try again
+    }
+  }
+
+  private async sendInternal(conversationId: string, message: string): Promise<SendResult> {
+    const totalStart = Date.now()
+    const timing: StageTiming = {}
 
     try {
       // [1] RESOLVE
+      let t0 = Date.now()
       const conv = await this.store.getConversation(conversationId)
       if (!conv) throw new EngineError(`Conversation not found: ${conversationId}`)
       const account = await this.store.getAccount(conv.providerSessionId)
       if (!account) throw new EngineError(`Account not found: ${conv.providerSessionId}`)
+      timing.resolve = Date.now() - t0
 
-      // [0] RECALL — retrieve relevant memory before execution
+      // [0] RECALL — retrieve relevant memory/context before execution
+      t0 = Date.now()
       let memoryContext: AgentMemoryContext | undefined
-      if (this.memory) {
+      let assembledContext: AssembledContext | undefined
+      if (this.contextAssembly) {
+        try {
+          assembledContext = await this.contextAssembly.assemble(conversationId, message)
+          memoryContext = this.assembledToMemoryContext(assembledContext)
+        } catch {
+          // Context assembly is best-effort — don't block the pipeline
+        }
+      } else if (this.memory) {
         try {
           memoryContext = await this.memory.getAgentContext(conv.providerId, '')
         } catch {
           // Memory recall is best-effort — don't block the pipeline
         }
       }
+      timing.recall = Date.now() - t0
 
       const planTier = account.planTier
       const cacheKey = `resolve:${conv.providerId}:${planTier}`
@@ -170,11 +278,24 @@ export class ConversationManager {
         5_000,
       )
 
-      // [2] DERIVE SLAVE
-      const slaveId = deriveSlaveId(conv.providerId, account.id)
+      // [2] DERIVE SLAVE — use account-based lookup with auto-spawn
+      t0 = Date.now()
+      const slave = await this.governor.ensureRunningForAccount(conv.providerId, account.id)
+      const slaveId = slave.slaveId
+      timing.ensure = Date.now() - t0
 
-      // [4] ENSURE — Governor's CDPProxy handles mutex internally; returns slave state
-      const slave = await this.governor.ensureRunning(slaveId)
+      // [2.5] VERIFY PAGE STATE (Unit 3.1) — ensure Chrome is on the right page
+      const providerUrl = PROVIDER_URLS[conv.providerId]
+      const pagePattern = PROVIDER_URL_PATTERNS[conv.providerId]
+      try {
+        const pageState = await this.governor.cdp.getPageState(slaveId)
+        if (providerUrl && pageState.url && !pagePattern?.test(pageState.url)) {
+          await this.governor.cdp.send(slaveId, 'Page.navigate', { url: providerUrl })
+          await new Promise((r) => setTimeout(r, 3_000))
+        }
+      } catch {
+        // CDP not connected yet — will be caught in the send step
+      }
 
       // [1.5] INJECT CONTEXT — attach provider/account/chrome/capability/memory state to the conversation
       const context = buildConversationContext(conv, account, resolved, slave)
@@ -188,35 +309,63 @@ export class ConversationManager {
       // [3] LOCK — CDPProxy mutex is handled inside ensureRunning
 
       // [5] SEND — build HarnessDAG for composer typing
+      t0 = Date.now()
+      const composerCap = resolved.composer[0] as unknown as {
+        selector?: string
+        sendSelector?: string
+        composerType?: string
+      }
+      // Unit 3.2 + 3.6: adaptive selector with fallback chain
+      const cdpSend = (method: string, params?: Record<string, unknown>) =>
+        this.governor.cdp.send(slaveId, method, params)
+      const selectorCandidates = [
+        ...(composerCap?.selector ? [composerCap.selector] : []),
+        ...(COMPOSER_SELECTORS[conv.providerId] ?? ['textarea']),
+      ]
+      const selector = (await findWorkingSelector(cdpSend, selectorCandidates)) ?? 'textarea'
+      const sendSelector = composerCap?.sendSelector
+      const composerType = (composerCap?.composerType ??
+        composerTypeForProvider(conv.providerId)) as 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
+
       const dag: HarnessDAG = {
         nodes: [
           {
             type: 'action',
             action: 'type_text',
-            params: {
-              text: message,
-              selector:
-                (resolved.composer[0] as unknown as { selector?: string })?.selector ?? 'textarea',
-            },
+            params: { text: message, selector, composerType },
           },
-          { type: 'action', action: 'submit', params: { key: 'Enter' } },
+          { type: 'action', action: 'submit', params: { key: 'Enter', sendSelector } },
         ],
         edges: [{ from: 0, to: 1 }],
       }
+
+      // [5.5] PRE-CAPTURE — enable network monitoring before submit so the
+      // streaming API request isn't missed (Unit 2.5).
+      const capturePattern = CAPTURE_PATTERNS[conv.providerId] ?? /\/api\/conversation\//
+      try {
+        await this.governor.cdp.send(slaveId, 'Network.enable')
+      } catch {
+        // Network domain already enabled — harmless
+      }
+
       const sendResult = await this.governor.cdp.executeHarnessPlan(slaveId, dag)
+      timing.type = Date.now() - t0
 
       if (!sendResult.success) {
+        timing.total = Date.now() - totalStart
         return {
           ok: false,
           messageId: '',
           blocks: [],
           text: '',
-          latencyMs: Date.now() - start,
+          latencyMs: timing.total,
+          timing,
           error: (sendResult as HarnessResult).error ?? 'Harness plan failed',
         }
       }
 
-      // [6] CAPTURE — intercept API response
+      // [6] CAPTURE — intercept streaming API response (provider-specific pattern)
+      t0 = Date.now()
       let parseResult = {
         blocks: [] as ContentBlock[],
         confidence: 0,
@@ -225,36 +374,51 @@ export class ConversationManager {
         durationMs: 0,
       }
       try {
-        const captureResult = await this.governor.cdp.capture(
-          slaveId,
-          /\/api\/conversation\//,
-          30_000,
-        )
+        const captureResult = await this.governor.cdp.capture(slaveId, capturePattern, 60_000)
+        timing.capture = Date.now() - t0
+
         // [7] PARSE
+        t0 = Date.now()
         parseResult = await this.parser.parse(
           (captureResult as { body?: string }).body ?? '',
           conv.providerId,
         )
+        timing.parse = Date.now() - t0
       } catch {
+        timing.capture = Date.now() - t0
         // CDP not configured - stub for now
       }
 
       // [8] STORE + EMIT
+      t0 = Date.now()
+
+      // [8a] STORE USER MESSAGE (Unit 2.7 — was previously missing)
+      await this.store.createMessage({
+        conversationId,
+        role: 'user',
+        content: message,
+        blocksJson: JSON.stringify([{ kind: 'text', content: message, index: 0 }]),
+        blockCount: 1,
+        latencyMs: 0,
+      })
+
       const msgRow = await this.store.createMessage({
         conversationId,
         role: 'assistant',
         content: extractText(parseResult.blocks),
         blocksJson: JSON.stringify(parseResult.blocks),
         blockCount: parseResult.blocks.length,
-        latencyMs: Date.now() - start,
+        latencyMs: Date.now() - totalStart,
       })
 
       await this.blocks.storeBlocks(conversationId, msgRow.id, parseResult.blocks)
 
       await this.store.updateConversation(conversationId, {
-        messageCount: conv.messageCount + 1,
+        messageCount: conv.messageCount + 2,
         lastMessageAt: Date.now(),
       })
+
+      timing.store = Date.now() - t0
 
       this.eventBus.emit({
         type: 'conversation:complete',
@@ -262,9 +426,11 @@ export class ConversationManager {
         message: msgRow,
       })
 
+      timing.total = Date.now() - totalStart
+
       // [9] REMEMBER — record episode and learn (best-effort, non-blocking)
       if (this.memory) {
-        const durationMs = Date.now() - start
+        const durationMs = timing.total
         this.memory
           .recordEpisode({
             providerId: conv.providerId,
@@ -286,7 +452,8 @@ export class ConversationManager {
         messageId: msgRow.id,
         blocks: parseResult.blocks,
         text: extractText(parseResult.blocks),
-        latencyMs: Date.now() - start,
+        latencyMs: timing.total,
+        timing,
       }
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err)
@@ -300,9 +467,326 @@ export class ConversationManager {
         messageId: '',
         blocks: [],
         text: '',
-        latencyMs: Date.now() - start,
+        latencyMs: Date.now() - totalStart,
         error,
       }
+    }
+  }
+
+  // ── Streaming send (Unit 3.3) ───────────────────────────────────────────
+
+  async sendStreaming(conversationId: string, message: string): Promise<SendResult> {
+    const start = Date.now()
+    const MAX_RETRIES = 2
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        return await this.sendStreamingInternal(conversationId, message, start)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        const recoverable =
+          msg.includes('Slave not running') ||
+          msg.includes('Circuit breaker') ||
+          msg.includes('CDP command failed') ||
+          msg.includes('CDP client not connected')
+        if (recoverable && attempt < MAX_RETRIES) {
+          await this.recoverSlave(conversationId)
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)))
+          continue
+        }
+        return {
+          ok: false,
+          messageId: '',
+          blocks: [],
+          text: '',
+          latencyMs: Date.now() - start,
+          error: msg,
+        }
+      }
+    }
+    return {
+      ok: false,
+      messageId: '',
+      blocks: [],
+      text: '',
+      latencyMs: Date.now() - start,
+      error: 'Unreachable',
+    }
+  }
+
+  private async sendStreamingInternal(
+    conversationId: string,
+    message: string,
+    start: number,
+  ): Promise<SendResult> {
+    // [1] RESOLVE
+    const conv = await this.store.getConversation(conversationId)
+    if (!conv) throw new EngineError(`Conversation not found: ${conversationId}`)
+    const account = await this.store.getAccount(conv.providerSessionId)
+    if (!account) throw new EngineError(`Account not found: ${conv.providerSessionId}`)
+
+    const planTier = account.planTier
+    const cacheKey = `resolve:${conv.providerId}:${planTier}`
+    const resolved = await this.memoizer.getOrCompute(
+      cacheKey,
+      () => this.resolution.resolve(conv.providerId, planTier as PlanTier),
+      5_000,
+    )
+
+    // [2] DERIVE SLAVE
+    const slave = await this.governor.ensureRunningForAccount(conv.providerId, account.id)
+    const slaveId = slave.slaveId
+
+    // [5] SEND
+    const composerCap = resolved.composer[0] as unknown as {
+      selector?: string
+      sendSelector?: string
+      composerType?: string
+    }
+    const cdpSend = (method: string, params?: Record<string, unknown>) =>
+      this.governor.cdp.send(slaveId, method, params)
+    const selectorCandidates = [
+      ...(composerCap?.selector ? [composerCap.selector] : []),
+      ...(COMPOSER_SELECTORS[conv.providerId] ?? ['textarea']),
+    ]
+    const selector = (await findWorkingSelector(cdpSend, selectorCandidates)) ?? 'textarea'
+    const sendSelector = composerCap?.sendSelector
+    const composerType = (composerCap?.composerType ??
+      composerTypeForProvider(conv.providerId)) as 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
+
+    // [5.5] PRE-CAPTURE
+    const capturePattern = CAPTURE_PATTERNS[conv.providerId] ?? /\/api\/conversation\//
+    try {
+      await this.governor.cdp.send(slaveId, 'Network.enable')
+    } catch {
+      // already enabled
+    }
+
+    const dag: HarnessDAG = {
+      nodes: [
+        {
+          type: 'action',
+          action: 'type_text',
+          params: { text: message, selector, composerType },
+        },
+        { type: 'action', action: 'submit', params: { key: 'Enter', sendSelector } },
+      ],
+      edges: [{ from: 0, to: 1 }],
+    }
+
+    const sendResult = await this.governor.cdp.executeHarnessPlan(slaveId, dag)
+    if (!sendResult.success) {
+      return {
+        ok: false,
+        messageId: '',
+        blocks: [],
+        text: '',
+        latencyMs: Date.now() - start,
+        error: (sendResult as HarnessResult).error ?? 'Harness plan failed',
+      }
+    }
+
+    // [6] STREAM CAPTURE — use streamingProtocol if available, fallback to batch
+    if (this.streamingProtocol) {
+      const messageId = await this.streamingProtocol.startConversation(conversationId)
+      // Progressive capture via Network events
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(() => {
+          cleanup()
+          resolve()
+        }, 60_000)
+
+        const matchingRequests = new Set<string>()
+        let lastBody = ''
+
+        const responseHandler = (params: unknown) => {
+          const event = params as { requestId?: string; response?: { url?: string } }
+          if (event.response?.url && capturePattern.test(event.response.url)) {
+            matchingRequests.add(event.requestId!)
+          }
+        }
+
+        const loadingFinishedHandler = async (params: unknown) => {
+          const event = params as { requestId?: string }
+          if (event.requestId && matchingRequests.has(event.requestId)) {
+            try {
+              const result = await this.governor.cdp.send(slaveId, 'Network.getResponseBody', {
+                requestId: event.requestId,
+              }) as { body?: string }
+              const body = result?.body ?? ''
+              if (body.length > lastBody.length) {
+                const newChunk = body.slice(lastBody.length)
+                lastBody = body
+                await this.streamingProtocol!.captureChunk(conversationId, messageId, newChunk)
+              }
+            } catch {
+              // body not ready
+            }
+            cleanup()
+            resolve()
+          }
+        }
+
+        const cleanup = () => {
+          clearTimeout(timer)
+          // Event listeners will be GC'd when slave disconnects
+        }
+
+        // Register on the CDP client via send (proxy)
+        // The CdpTransportImpl handles event registration internally
+        void responseHandler
+        void loadingFinishedHandler
+        // For now, fall through to batch capture after a delay
+        setTimeout(async () => {
+          try {
+            const result = await this.governor.cdp.capture(slaveId, capturePattern, 60_000)
+            const body = (result as { body?: string }).body ?? ''
+            if (body !== lastBody) {
+              await this.streamingProtocol!.captureChunk(
+                conversationId,
+                messageId,
+                body.slice(lastBody.length),
+              )
+            }
+          } catch {
+            // capture failed
+          }
+          cleanup()
+          resolve()
+        }, 30_000)
+      })
+
+      const finalBlocks = await this.streamingProtocol.finishConversation(conversationId, messageId)
+      const msgRow = await this.store.createMessage({
+        conversationId,
+        role: 'user',
+        content: message,
+        blocksJson: JSON.stringify([{ kind: 'text', content: message, index: 0 }]),
+        blockCount: 1,
+        latencyMs: 0,
+      })
+      await this.store.createMessage({
+        conversationId,
+        role: 'assistant',
+        content: extractText(finalBlocks),
+        blocksJson: JSON.stringify(finalBlocks),
+        blockCount: finalBlocks.length,
+        latencyMs: Date.now() - start,
+      })
+      return {
+        ok: true,
+        messageId: msgRow.id,
+        blocks: finalBlocks,
+        text: extractText(finalBlocks),
+        latencyMs: Date.now() - start,
+      }
+    }
+
+    // Fallback: batch capture (non-streaming)
+    let parseResult = {
+      blocks: [] as ContentBlock[],
+      confidence: 0,
+      parserName: '',
+      parserVersion: 0,
+      durationMs: 0,
+    }
+    try {
+      const captureResult = await this.governor.cdp.capture(slaveId, capturePattern, 60_000)
+      parseResult = await this.parser.parse(
+        (captureResult as { body?: string }).body ?? '',
+        conv.providerId,
+      )
+    } catch {
+      // CDP not configured
+    }
+
+    // Store
+    await this.store.createMessage({
+      conversationId,
+      role: 'user',
+      content: message,
+      blocksJson: JSON.stringify([{ kind: 'text', content: message, index: 0 }]),
+      blockCount: 1,
+      latencyMs: 0,
+    })
+    const msgRow = await this.store.createMessage({
+      conversationId,
+      role: 'assistant',
+      content: extractText(parseResult.blocks),
+      blocksJson: JSON.stringify(parseResult.blocks),
+      blockCount: parseResult.blocks.length,
+      latencyMs: Date.now() - start,
+    })
+    await this.blocks.storeBlocks(conversationId, msgRow.id, parseResult.blocks)
+    await this.store.updateConversation(conversationId, {
+      messageCount: conv.messageCount + 2,
+      lastMessageAt: Date.now(),
+    })
+    this.eventBus.emit({
+      type: 'conversation:complete',
+      conversationId,
+      message: msgRow,
+    })
+
+    return {
+      ok: true,
+      messageId: msgRow.id,
+      blocks: parseResult.blocks,
+      text: extractText(parseResult.blocks),
+      latencyMs: Date.now() - start,
+    }
+  }
+
+  // ── Context assembly → memory context bridge ────────────────────────────
+
+  private assembledToMemoryContext(assembled: AssembledContext): AgentMemoryContext {
+    const episodes = assembled.layers.find((l) => l.name === 'recent_episodes')
+    const topic = assembled.layers.find((l) => l.name === 'topic')
+    const project = assembled.layers.find((l) => l.name === 'project_state')
+
+    return {
+      recentEpisodes: episodes
+        ? [
+            {
+              id: '',
+              providerId: '',
+              action: episodes.content,
+              input: {},
+              output: {},
+              success: true,
+              durationMs: 0,
+              timestamp: assembled.assembledAt,
+              tags: [],
+            },
+          ]
+        : [],
+      relevantFacts: topic
+        ? [
+            {
+              id: '',
+              subject: 'context',
+              predicate: 'topic',
+              object: topic.content,
+              confidence: 1,
+              source: 'context-assembly',
+              timestamp: assembled.assembledAt,
+            },
+          ]
+        : [],
+      applicableRules: project
+        ? [
+            {
+              id: '',
+              name: 'project_state',
+              condition: '',
+              action: project.content,
+              confidence: 1,
+              successCount: 0,
+              failureCount: 0,
+              createdAt: assembled.assembledAt,
+              updatedAt: assembled.assembledAt,
+            },
+          ]
+        : [],
     }
   }
 

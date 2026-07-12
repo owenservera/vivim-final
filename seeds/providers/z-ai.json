@@ -17,15 +17,19 @@
       "label": "API",
       "url": "https://api.z.ai/v1",
       "endpoint_type": "api",
-      "is_default": true
+      "is_default": true,
+      "composer_type": "textarea",
+      "send_method": "both",
+      "content_editable": false
     }
   ],
   "parsers": [
     {
-      "name": "Z AI SSE Parser",
-      "file": "generic/002_openai_delta.ts",
+      "name": "z-ai/001_openai_delta",
       "version": 1,
-      "is_active": true
+      "is_active": true,
+      "logic_type": "inline",
+      "logic_code": "var parse = function(rawBody) { var blocks = []; var index = 0; var lines = rawBody.split('\\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (!trimmed.startsWith('data:')) continue; var payload = trimmed.slice(5).trim(); if (payload === '[DONE]') break; try { var json = JSON.parse(payload); var delta = json.choices && json.choices[0] && json.choices[0].delta; if (delta && delta.role) { blocks.push({ kind: 'meta', key: 'role', value: delta.role, index: index++ }); } if (delta && delta.content) { var lastBlock = blocks[blocks.length - 1]; if (lastBlock && lastBlock.kind === 'text') { lastBlock.content += delta.content; } else { blocks.push({ kind: 'text', content: delta.content, index: index++ }); } } if (delta && delta.function_call) { blocks.push({ kind: 'tool_use', toolName: (delta.function_call && delta.function_call.name) || 'unknown', input: delta.function_call.arguments ? JSON.parse(delta.function_call.arguments) : {}, index: index++ }); } if (delta && delta.tool_calls) { for (var j = 0; j < delta.tool_calls.length; j++) { var tc = delta.tool_calls[j]; blocks.push({ kind: 'tool_use', toolName: (tc.function && tc.function.name) || 'unknown', input: (tc.function && tc.function.arguments) || {}, index: index++ }); } } } catch (e) { } } if (blocks.length === 0 && rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } return blocks; }; var detectCompletion = function(rawBody) { return rawBody.indexOf('[DONE]') !== -1 || /\"finish_reason\"\\s*:\\s*\"stop\"/.test(rawBody); }; var getConfidence = function() { return 0.7; }; exports.default = { name: 'z-ai/001_openai_delta', version: 1, providerId: 'z-ai', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };"
     }
   ],
   "models": [

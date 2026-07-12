@@ -12,6 +12,14 @@ import {
 import { PortReaper } from './port-reaper.js'
 import { ProfileAllocator } from './profile-allocator.js'
 
+// Provider home URLs — headless slaves navigate here on spawn so the session
+// lands on the expected surface (and any re-auth redirect is surfaced).
+const PROVIDER_URLS: Record<string, string> = {
+  chatgpt: 'https://chatgpt.com/',
+  claude: 'https://claude.ai/',
+  gemini: 'https://gemini.google.com/',
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export type FleetInstanceStatus =
@@ -141,8 +149,15 @@ export class FleetSupervisor {
     opts?: Partial<FleetSpawnOptions>,
   ): Promise<FleetInstance> {
     const id = `${providerSlug}_${accountId}_${Date.now()}`
-    const debugPort = opts?.debugPort ?? this.allocatePort()
-    const profileDir = await this.profileAllocator.allocate(providerSlug, accountId)
+
+    // Check if account has a persisted profile from setup wizard
+    const compositeAccountId = `${providerSlug}_${accountId}`
+    const existingAccount = await this.store.getAccount(compositeAccountId)
+    const profileDir = existingAccount?.profileDir
+      ?? await this.profileAllocator.allocate(providerSlug, accountId)
+
+    // Use persisted debug port if available
+    const debugPort = opts?.debugPort ?? existingAccount?.debugPort ?? this.allocatePort()
 
     const instance: FleetInstance = {
       id,
@@ -172,6 +187,18 @@ export class FleetSupervisor {
       instance.status = 'running'
 
       this.portReaper.trackPid(result.debugPort, result.pid)
+
+      // Navigate the headless slave to the provider surface so the session
+      // lands on the expected page (honors the profile-reuse invariant).
+      const loginUrl = PROVIDER_URLS[providerSlug] ?? `https://${providerSlug}.com`
+      try {
+        const navCdp = new BunCdpClient(`ws://127.0.0.1:${result.debugPort}/devtools/browser`)
+        await navCdp.connect()
+        await navCdp.send('Target.createTarget', { url: loginUrl })
+        await navCdp.disconnect()
+      } catch {
+        // Navigation is best-effort — profile reuse is the invariant that matters
+      }
 
       await this.store.createFleetEvent({
         slaveId: id,

@@ -3,7 +3,7 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { FleetSupervisor } from '../../../src/executor/fleet-supervisor.js'
-import { createFakeChrome } from '../helpers/fake-chrome.js'
+import { createFakeChrome } from '../../helpers/mocks/chrome.mock.js'
 
 const TEST_PORT_RANGE: [number, number] = [9330, 9350]
 const FAKE_CHROME_PORT = TEST_PORT_RANGE[0]

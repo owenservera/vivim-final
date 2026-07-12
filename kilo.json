@@ -29,6 +29,12 @@
       }
     }
   },
+  "command": {
+    "research": {
+      "description": "Run deep research on a topic and wire findings into devops",
+      "template": "Load the devops-research skill and research the following topic: $ARGUMENTS. Steps: 1. Classify (unit/ADR/general). 2. Execute multi-source research (firecrawl + exa or web-search-prime fallback). 3. Produce full report, brief, and evidence. 4. Wire into devops (INDEX, FRESHNESS, CROSS-REF). 5. If unit-linked: update tracker. If ADR-linked: attach brief. 6. Report: paths + confidence + source count."
+    }
+  },
   "permission": {
     "bash": "allow",
     "edit": "allow",

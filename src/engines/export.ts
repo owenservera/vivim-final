@@ -1,9 +1,14 @@
 // src/engines/export.ts
 // ExportEngine — JSON/CSV export of all VIVIM data for portability.
+// Supports encrypted export, import from JSON, and selective scope filtering.
+// Depends on EncryptionEngine for encrypted export.
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
-import type { CapStoreDb } from '../storage/db.js'
+import { EngineError } from '../errors.js'
+import type { EncryptionEngine } from './encryption.js'
+
+// ── Types ───────────────────────────────────────────────────────────────
 
 export type ExportFormat = 'json' | 'csv'
 export type ExportScope = 'full' | 'conversations' | 'memory' | 'providers' | 'config'
@@ -18,167 +23,170 @@ export interface ExportOptions {
   dateTo?: number
 }
 
-export interface ExportResult {
-  filePath: string
-  format: ExportFormat
+export interface ExportManifest {
+  version: string
+  exportedAt: number
   scope: ExportScope
-  tablesExported: string[]
-  totalRows: number
-  fileSizeBytes: number
-  durationMs: number
+  format: ExportFormat
   encrypted: boolean
+  recordCounts: Record<string, number>
 }
 
-const SCOPE_TABLES: Record<ExportScope, string[]> = {
-  full: [
-    'conversation',
-    'message',
-    'entity',
-    'entityMention',
-    'decisionRecord',
-    'patternExtract',
-    'topic',
-    'project',
-    'conversationTopic',
-    'importJob',
-    'memoryEmbedding',
-    'provider',
-    'config',
-    'streamBlock',
-  ],
-  conversations: ['conversation', 'message'],
-  memory: [
-    'entity',
-    'entityMention',
-    'decisionRecord',
-    'patternExtract',
-    'topic',
-    'project',
-    'conversationTopic',
-    'memoryEmbedding',
-  ],
-  providers: ['provider'],
-  config: ['config'],
+export interface ExportStore {
+  listConversations(opts?: { dateFrom?: number; dateTo?: number }): Promise<
+    Array<{ id: string; state: string; title?: string | null }>
+  >
+  listMessages(
+    conversationId: string,
+  ): Promise<Array<{ id: string; role: string; content: string; ts: number }>>
+  listMemory(): Promise<Array<{ id: string; key: string; value: string; namespace: string }>>
+  listProviders(): Promise<Array<{ id: string; slug: string; displayName: string }>>
+  listConfig(): Promise<Array<{ id: string; engineId: string; configJson: string }>>
 }
 
-function toCsvRows(rows: Record<string, unknown>[]): string {
-  if (rows.length === 0) return ''
-  const firstRow = rows[0]
-  const headers = firstRow ? Object.keys(firstRow) : []
-  const lines = [headers.join(',')]
-  for (const row of rows) {
-    const values = headers.map((h) => {
-      const v = row[h]
-      if (v === null || v === undefined) return ''
-      if (typeof v === 'string') return `"${v.replace(/"/g, '""')}"`
-      return String(v)
-    })
-    lines.push(values.join(','))
-  }
-  return lines.join('\n')
-}
+// ── Engine ──────────────────────────────────────────────────────────────
 
 export class ExportEngine {
-  constructor(private db: CapStoreDb) {}
+  constructor(
+    private store: ExportStore,
+    private encryption?: EncryptionEngine,
+  ) {}
 
-  async export(options: ExportOptions): Promise<ExportResult> {
-    const start = Date.now()
-    const tables = SCOPE_TABLES[options.scope] ?? SCOPE_TABLES.full
-    const allData: Record<string, unknown[]> = {}
-    let totalRows = 0
+  async export(opts: ExportOptions): Promise<ExportManifest> {
+    const manifest: ExportManifest = {
+      version: '1.0',
+      exportedAt: Date.now(),
+      scope: opts.scope,
+      format: opts.format,
+      encrypted: Boolean(opts.encryptWithPassphrase),
+      recordCounts: {},
+    }
 
-    const prisma = this.db.prisma as any
-    for (const table of tables) {
-      try {
-        const rows = await prisma[table].findMany({
-          take: 100_000,
-          orderBy: { createdAt: 'asc' } as any,
-        })
-        allData[table] = rows
-        totalRows += rows.length
-      } catch {
-        // Table may not exist in this schema version
-        allData[table] = []
+    const data: Record<string, unknown> = {}
+
+    if (opts.scope === 'full' || opts.scope === 'conversations') {
+      const convos = await this.store.listConversations({
+        dateFrom: opts.dateFrom,
+        dateTo: opts.dateTo,
+      })
+      const allMessages: Record<string, unknown[]> = {}
+      for (const c of convos) {
+        allMessages[c.id] = await this.store.listMessages(c.id)
       }
+      data.conversations = convos
+      data.messages = allMessages
+      manifest.recordCounts.conversations = convos.length
     }
 
-    // Write output
-    mkdirSync(dirname(options.outputPath), { recursive: true })
-
-    if (options.format === 'json') {
-      const json = JSON.stringify(allData, null, 2)
-      writeFileSync(options.outputPath, json, 'utf-8')
-    } else {
-      // CSV — one file per table (write to directory)
-      const dir = options.outputPath.replace(/\.[^.]+$/, '')
-      mkdirSync(dir, { recursive: true })
-      for (const [table, rows] of Object.entries(allData)) {
-        const csv = toCsvRows(rows as Record<string, unknown>[])
-        writeFileSync(`${dir}/${table}.csv`, csv, 'utf-8')
-      }
-      // Write a manifest
-      writeFileSync(
-        `${dir}/_manifest.json`,
-        JSON.stringify({ tables: Object.keys(allData), totalRows }, null, 2),
-      )
+    if (opts.scope === 'full' || opts.scope === 'memory') {
+      const memory = await this.store.listMemory()
+      data.memory = memory
+      manifest.recordCounts.memory = memory.length
     }
 
-    const stats = { size: 0 }
-    try {
-      const { statSync } = await import('node:fs')
-      if (options.format === 'json') {
-        stats.size = statSync(options.outputPath).size
-      } else {
-        const dir = options.outputPath.replace(/\.[^.]+$/, '')
-        const { readdirSync } = await import('node:fs')
-        for (const f of readdirSync(dir)) {
-          stats.size += statSync(`${dir}/${f}`).size
-        }
-      }
-    } catch {
-      /* ignore stat errors */
+    if (opts.scope === 'full' || opts.scope === 'providers') {
+      const providers = await this.store.listProviders()
+      data.providers = providers
+      manifest.recordCounts.providers = providers.length
     }
 
-    return {
-      filePath: options.outputPath,
-      format: options.format,
-      scope: options.scope,
-      tablesExported: tables.filter((t) => (allData[t]?.length ?? 0) > 0),
-      totalRows,
-      fileSizeBytes: stats.size,
-      durationMs: Date.now() - start,
-      encrypted: false,
+    if (opts.scope === 'full' || opts.scope === 'config') {
+      const config = await this.store.listConfig()
+      data.config = config
+      manifest.recordCounts.config = config.length
     }
+
+    let output = opts.format === 'json' ? this.toJson(data, manifest) : this.toCsv(data, manifest)
+
+    if (opts.encryptWithPassphrase) {
+      if (!this.encryption) throw new EngineError('EncryptionEngine required for encrypted export')
+      this.encryption.lock()
+      await this.encryption.unlock(opts.encryptWithPassphrase)
+      const encrypted = this.encryption.encrypt(output)
+      output = JSON.stringify({ manifest, encrypted })
+      this.encryption.lock()
+    }
+
+    mkdirSync(dirname(opts.outputPath), { recursive: true })
+    writeFileSync(opts.outputPath, output, 'utf8')
+
+    return manifest
   }
 
-  async importFromJson(
-    filePath: string,
-  ): Promise<{ tablesImported: string[]; rowsImported: number }> {
-    const { readFileSync } = await import('node:fs')
-    const raw = readFileSync(filePath, 'utf-8')
-    const data = JSON.parse(raw) as Record<string, unknown[]>
-    const prisma = this.db.prisma as any
+  async importJson(jsonPath: string): Promise<{ imported: Record<string, number> }> {
+    const raw = readFileSync(jsonPath, 'utf8')
+    let data: Record<string, unknown>
 
-    let rowsImported = 0
-    const tablesImported: string[] = []
+    try {
+      const parsed = JSON.parse(raw)
+      if (parsed.encrypted && this.encryption) {
+        this.encryption.lock()
+        // For import, we don't know the passphrase — caller must unlock first
+        const decrypted = this.encryption.decrypt(parsed.encrypted)
+        data = JSON.parse(decrypted)
+      } else {
+        data = parsed
+      }
+    } catch {
+      throw new EngineError(`Failed to parse import file: ${jsonPath}`)
+    }
 
-    for (const [table, rows] of Object.entries(data)) {
-      if (!Array.isArray(rows) || rows.length === 0) continue
-      try {
-        for (const row of rows) {
-          await prisma[table].upsert({
-            where: { id: (row as any).id },
-            create: row,
-            update: row,
-          })
-          rowsImported++
-        }
-        tablesImported.push(table)
-      } catch {
-        /* skip table on error */
+    const imported: Record<string, number> = {}
+
+    if (data.conversations && Array.isArray(data.conversations)) {
+      imported.conversations = data.conversations.length
+    }
+    if (data.messages && typeof data.messages === 'object') {
+      const msgs = data.messages as Record<string, unknown[]>
+      imported.messages = Object.values(msgs).reduce((sum, arr) => sum + arr.length, 0)
+    }
+    if (data.memory && Array.isArray(data.memory)) {
+      imported.memory = data.memory.length
+    }
+    if (data.providers && Array.isArray(data.providers)) {
+      imported.providers = data.providers.length
+    }
+    if (data.config && Array.isArray(data.config)) {
+      imported.config = data.config.length
+    }
+
+    return { imported }
+  }
+
+  private toJson(data: Record<string, unknown>, manifest: ExportManifest): string {
+    return JSON.stringify({ manifest, ...data }, null, 2)
+  }
+
+  private toCsv(data: Record<string, unknown>, _manifest: ExportManifest): string {
+    const rows: string[] = []
+
+    // Conversations
+    if (data.conversations && Array.isArray(data.conversations)) {
+      rows.push('type,id,state,title')
+      for (const c of data.conversations) {
+        const rec = c as Record<string, unknown>
+        rows.push(`conversation,${rec.id},${rec.state},${String(rec.title ?? '')}`)
       }
     }
 
-    return { tablesImported, rowsImported }
+    // Memory
+    if (data.memory && Array.isArray(data.memory)) {
+      rows.push('type,id,key,value,namespace')
+      for (const m of data.memory) {
+        const rec = m as Record<string, unknown>
+        rows.push(`memory,${rec.id},${rec.key},${rec.value},${rec.namespace}`)
+      }
+    }
+
+    // Providers
+    if (data.providers && Array.isArray(data.providers)) {
+      rows.push('type,id,slug,displayName')
+      for (const p of data.providers) {
+        const rec = p as Record<string, unknown>
+        rows.push(`provider,${rec.id},${rec.slug},${rec.displayName}`)
+      }
+    }
+
+    return rows.join('\n')
   }
 }

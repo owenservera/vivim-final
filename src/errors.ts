@@ -89,3 +89,87 @@ export class EngineError extends CapStoreError {
     super('EngineError', message)
   }
 }
+
+// ── Agentic / Intent ─────────────────────────────────────────
+export class IntentDecompositionError extends CapStoreError {
+  constructor(message: string, details?: unknown) {
+    super('IntentDecompositionError', message, details)
+  }
+}
+
+export class CapabilityNotFoundError extends CapStoreError {
+  constructor(slug: string) {
+    super('CapabilityNotFoundError', `Capability not found: ${slug}`)
+  }
+}
+
+export class CapabilityCompositionError extends CapStoreError {
+  constructor(message: string, details?: unknown) {
+    super('CapabilityCompositionError', message, details)
+  }
+}
+
+// ── Canvas ────────────────────────────────────────────────────
+export class CanvasSpawnError extends CapStoreError {
+  constructor(message: string) {
+    super('CanvasSpawnError', message)
+  }
+}
+
+export class CanvasMutationError extends CapStoreError {
+  constructor(message: string) {
+    super('CanvasMutationError', message)
+  }
+}
+
+// ── Sandbox ──────────────────────────────────────────────────
+export class SandboxTimeoutError extends CapStoreError {
+  constructor(handlerSlug: string, budgetMs: number) {
+    super('SandboxTimeoutError', `Handler ${handlerSlug} exceeded ${budgetMs}ms budget`)
+  }
+}
+
+export class SandboxBudgetError extends CapStoreError {
+  constructor(handlerSlug: string, kind: 'cpu' | 'memory', used: number, budget: number) {
+    super('SandboxBudgetError', `${handlerSlug} ${kind} ${used} > ${budget}`)
+  }
+}
+
+export class SandboxPermissionError extends CapStoreError {
+  constructor(handlerSlug: string, denied: string) {
+    super('SandboxPermissionError', `${handlerSlug} denied: ${denied}`)
+  }
+}
+
+// ── Sovereign / Sync ─────────────────────────────────────────
+export class ConsentViolationError extends CapStoreError {
+  constructor(host: string) {
+    super('ConsentViolationError', `Outbound call to ${host} denied (no user consent)`)
+  }
+}
+
+export class SyncConflictError extends CapStoreError {
+  constructor(table: string, recordId: string) {
+    super('SyncConflictError', `Conflict on ${table}:${recordId}`)
+  }
+}
+
+// ── HITL ─────────────────────────────────────────────────────
+export class HitlGateExpiredError extends CapStoreError {
+  constructor(gateId: string) {
+    super('HitlGateExpiredError', `Gate ${gateId} expired without resolution`)
+  }
+}
+
+export class HitlGateDeniedError extends CapStoreError {
+  constructor(gateId: string, by: string) {
+    super('HitlGateDeniedError', `Gate ${gateId} denied by ${by}`)
+  }
+}
+
+// ── Budget ───────────────────────────────────────────────────
+export class BudgetExceededError extends CapStoreError {
+  constructor(budget: 'cost' | 'tokens' | 'iterations' | 'duration', used: number, limit: number) {
+    super('BudgetExceededError', `${budget} ${used} > ${limit}`)
+  }
+}
