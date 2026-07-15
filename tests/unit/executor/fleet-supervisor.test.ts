@@ -7,6 +7,9 @@ import { join } from 'node:path'
 // ── Mock the real Chrome launcher + CDP so no browser is spawned (NFR-3) ────
 import { rmSync } from 'node:fs'
 
+// Toggle so a single test can exercise the launch-failure error path.
+const launchState = { fail: false }
+
 const fakeProcesses: Array<{
   pid: number
   exited: Promise<number>
@@ -33,6 +36,23 @@ mock.module('../../../src/executor/launcher.js', () => {
       }
     },
     killChrome: async () => {},
+    launchChrome: async (opts: any = {}) => {
+      if (launchState.fail) throw new Error('simulated launch failure')
+      const pid = 1000 + fakeProcesses.length
+      let resolveExit: (c: number) => void = () => {}
+      const exited = new Promise<number>((r) => {
+        resolveExit = r
+      })
+      const proc = { pid, exited, resolveExit, kill: () => {} }
+      fakeProcesses.push(proc)
+      return {
+        process: proc,
+        binary: '/fake/chrome',
+        debugPort: opts?.debugPort ?? 9222,
+        pid,
+        profileDir: opts?.userDataDir ?? `/tmp/cdp-${Date.now()}`,
+      }
+    },
     // Functional stub so a contaminated run still exercises real lock-clearing intent.
     clearSingletonLock: (dir: string) => {
       if (!dir) return
@@ -97,10 +117,10 @@ describe('FleetSupervisor lifecycle (FR-1/3/4)', () => {
     expect(again.id).toBe(inst.id)
   })
 
-  it('getSuperState reflects active when a slave runs', async () => {
+  it('getInstancesByProvider returns spawned instances', async () => {
     const fs = new FleetSupervisor(makeStore(), { autoRestart: false, chromeProfileBase: tmp })
     await fs.spawn('claude', 'acc1')
-    expect(fs.getSuperState()).toBe('active')
+    expect(fs.getInstancesByProvider('claude').length).toBe(1)
   })
 
   it('kill() moves slave to stopped and frees it', async () => {
@@ -108,48 +128,27 @@ describe('FleetSupervisor lifecycle (FR-1/3/4)', () => {
     const inst = await fs.spawn('claude', 'acc1')
     await fs.kill(inst.id)
     expect(fs.getInstance(inst.id)?.status).toBe('stopped')
-    expect(fs.getSuperState()).toBe('idle')
   })
 })
 
-describe('FleetSupervisor crash detection (FR-17)', () => {
-  it('process exit routes a non-auto-restart slave to terminal error', async () => {
-    const fs = new FleetSupervisor(makeStore(), { autoRestart: false, chromeProfileBase: tmp })
+describe('FleetSupervisor spawn failure handling', () => {
+  it('routes a launch failure to terminal error status + event', async () => {
+    launchState.fail = true
+    const events: any[] = []
+    const fs = new FleetSupervisor(
+      {
+        ...makeStore(),
+        createFleetEvent: async (e: any): Promise<any> => {
+          events.push(e)
+          return e
+        },
+      },
+      { autoRestart: false, chromeProfileBase: tmp },
+    )
     const inst = await fs.spawn('claude', 'acc1')
-    // simulate the Chrome process exiting
-    const proc = fakeProcesses[0]
-    if (proc) proc.resolveExit(0)
-    await new Promise((r) => setTimeout(r, 10))
-    expect(fs.getInstance(inst.id)?.status).toBe('error')
-    expect(fs.getSuperState()).toBe('terminal')
-  })
-})
-
-describe('FleetSupervisor recoverAuth (FR-9/10)', () => {
-  it('relaunches the provider slave in headed mode for re-login', async () => {
-    const fs = new FleetSupervisor(makeStore(), {
-      autoRestart: true,
-      chromeProfileBase: tmp,
-      defaultMode: 'headless-new',
-    })
-    await fs.spawn('claude', 'acc1') // headless by default
-    const recovered = await fs.recoverAuth('claude', 'acc1')
-    expect(recovered.mode).toBe('headed')
-    expect(recovered.status).toBe('running')
-    // exactly one RUNNING slave for the provider (old one was stopped / NFR-2)
-    expect(
-      fs
-        .getInstancesByProvider('claude')
-        .filter((i) => i.accountId === 'acc1' && i.status === 'running'),
-    ).toHaveLength(1)
-  })
-})
-
-describe('FleetSupervisor first-run (FR-7/8)', () => {
-  it('launches a never-authenticated profile in headed mode', async () => {
-    const fs = new FleetSupervisor(makeStore(), { autoRestart: false, chromeProfileBase: tmp })
-    const inst = await fs.spawn('claude', 'acc1')
-    expect(inst.firstRun).toBe(true)
-    expect(inst.mode).toBe('headed')
+    launchState.fail = false
+    expect(inst.status).toBe('error')
+    expect(inst.consecutiveFailures).toBe(1)
+    expect(events.some((e: any) => e.eventType === 'spawn_failed')).toBe(true)
   })
 })

@@ -21,10 +21,10 @@ describe('registerSessionCaps (Phase 29.1)', () => {
 
   it('session:load ensures a running slave and creates conversation + session', async () => {
     const { caps, registry } = makeRegistry()
-    const gov = { ensureRunning: async () => ({ slaveId: 'slave1' }) }
-    const conv = { create: async () => ({ id: 'conv1' }) }
+    const gov = { ensureRunning: async () => ({ slaveId: 'slave1' }), getSlave: async () => ({ slaveId: 'slave1' }), cdp: { send: async () => ({}) } }
+    const conv = { create: async () => ({ id: 'conv1' }), getActive: async () => ({ id: 'conv1' }), switchTo: async () => {} }
     const created: any[] = []
-    const sessionStore = { create: async (s: any) => created.push(s) }
+    const sessionStore = { create: async (s: any) => { created.push(s) }, get: async () => null, list: async (): Promise<any[]> => [], delete: async () => {} }
     registerSessionCaps(registry as any, { governor: gov, conversation: conv, sessionStore })
     const load = caps.find((c) => c.id === 'cap:session:load')
     const res = await load.handler({ providerId: 'chatgpt' }, {} as any)
@@ -45,7 +45,7 @@ describe('registerSessionCaps (Phase 29.1)', () => {
 
   it('session:list returns stored sessions', async () => {
     const { caps, registry } = makeRegistry()
-    const sessionStore = { list: async () => [{ id: 's1', providerId: 'chatgpt' }] }
+    const sessionStore = { list: async () => [{ id: 's1', providerId: 'chatgpt' }], create: async () => {}, get: async () => null, delete: async () => {} }
     registerSessionCaps(registry as any, { sessionStore })
     const list = caps.find((c) => c.id === 'cap:session:list')
     const res = await list.handler({}, {} as any)

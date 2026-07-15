@@ -7,6 +7,12 @@ function makeFakePrisma(opts: { failJournalMode?: boolean } = {}) {
   const calls: string[] = []
   const prisma = {
     calls,
+    $executeRawUnsafe: async (sql: string) => {
+      calls.push(sql)
+      if (opts.failJournalMode && /PRAGMA journal_mode =/.test(sql)) {
+        throw new Error('mock journal_mode failure')
+      }
+    },
     $queryRawUnsafe: async (sql: string) => {
       calls.push(sql)
       if (opts.failJournalMode && /PRAGMA journal_mode =/.test(sql)) {

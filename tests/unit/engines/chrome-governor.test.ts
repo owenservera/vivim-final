@@ -116,7 +116,7 @@ function createMockStore() {
 function createMockFleetSupervisor() {
   const instances = new Map<
     string,
-    import('../../../src/executor/fleet-supervisor.js').FleetInstance
+    import('../../../src/storage/contracts/fleet-supervisor.js').FleetSupervisorInstance
   >()
   let portCounter = 9222
 
@@ -256,7 +256,7 @@ describe('ChromeGovernor', () => {
       DEFAULT_CONFIG,
       mockBus.bus,
       mockTransport.transport,
-      mockFleetSupervisor.supervisor,
+      mockFleetSupervisor.supervisor as import('../../../src/storage/contracts/fleet-supervisor.js').FleetSupervisor,
     )
   })
 
