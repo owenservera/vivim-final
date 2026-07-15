@@ -26,7 +26,7 @@ describe('SlaMonitor (Unit 9.5)', () => {
     ;(m as any).metrics = { histogram: (name: string, value: number) => histograms.push({ name, value }) }
     m.record('op.x', 150)
     expect(histograms.length).toBe(1)
-    expect(histograms[0].name).toBe('sla_latency_ms')
+    expect(histograms[0]!.name).toBe('sla_latency_ms')
   })
 
   it('emits a violation when p50 exceeds target', () => {

@@ -21,7 +21,7 @@ describe('CapabilityDiscoveryLoop', () => {
     const loop = new CapabilityDiscoveryLoop(bus, makeRegistry(caps))
     const discovered = await loop.scan()
     expect(discovered.length).toBe(1)
-    expect(discovered[0].id).toBe('cap:a')
+    expect(discovered[0]!.id).toBe('cap:a')
     expect(emitted.some((e) => e.type === 'capability:discovered' && e.capabilityId === 'cap:a')).toBe(true)
   })
 

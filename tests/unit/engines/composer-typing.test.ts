@@ -21,8 +21,8 @@ describe('composer-typing', () => {
     const { calls, transport } = mockTransport()
     await typeMessage(transport, 'slave1', '#prompt', 'hello', 'textarea')
     expect(calls.length).toBe(1)
-    expect(calls[0].method).toBe('Runtime.evaluate')
-    const expr = (calls[0].params as any).expression as string
+    expect(calls[0]!.method).toBe('Runtime.evaluate')
+    const expr = (calls[0]!.params as any).expression as string
     expect(expr).toContain('"hello"')
     expect(expr).toContain('HTMLTextAreaElement')
     expect(expr).toContain("dispatchEvent(new Event('input'")
@@ -31,7 +31,7 @@ describe('composer-typing', () => {
   it('types into contenteditable via execCommand insertText', async () => {
     const { calls, transport } = mockTransport()
     await typeMessage(transport, 's', '#ce', 'yo', 'contenteditable')
-    const expr = (calls[0].params as any).expression as string
+    const expr = (calls[0]!.params as any).expression as string
     expect(expr).toContain('execCommand')
     expect(expr).toContain('"yo"')
   })
@@ -39,7 +39,7 @@ describe('composer-typing', () => {
   it('types into quill via the quill instance when present', async () => {
     const { calls, transport } = mockTransport()
     await typeMessage(transport, 's', '#q', 'hi', 'quill')
-    const expr = (calls[0].params as any).expression as string
+    const expr = (calls[0]!.params as any).expression as string
     expect(expr).toContain('__quill')
     expect(expr).toContain('insertText')
   })
@@ -47,7 +47,7 @@ describe('composer-typing', () => {
   it('types into codemirror via setValue when present', async () => {
     const { calls, transport } = mockTransport()
     await typeMessage(transport, 's', '#cm', 'x', 'codemirror')
-    const expr = (calls[0].params as any).expression as string
+    const expr = (calls[0]!.params as any).expression as string
     expect(expr).toContain('CodeMirror')
     expect(expr).toContain('setValue')
   })
@@ -56,17 +56,17 @@ describe('composer-typing', () => {
     const { calls, transport } = mockTransport()
     await submitMessage(transport, 's', '[data-testid="send-button"]')
     expect(calls.length).toBe(1)
-    expect(calls[0].method).toBe('Runtime.evaluate')
-    expect(((calls[0].params as any).expression as string)).toContain('click()')
+    expect(calls[0]!.method).toBe('Runtime.evaluate')
+    expect(((calls[0]!.params as any).expression as string)).toContain('click()')
   })
 
   it('submitMessage dispatches Enter key events when no selector given', async () => {
     const { calls, transport } = mockTransport()
     await submitMessage(transport, 's')
     expect(calls.length).toBe(2)
-    expect(calls[0].method).toBe('Input.dispatchKeyEvent')
-    expect((calls[0].params as any).type).toBe('keyDown')
-    expect((calls[0].params as any).key).toBe('Enter')
-    expect((calls[1].params as any).type).toBe('keyUp')
+    expect(calls[0]!.method).toBe('Input.dispatchKeyEvent')
+    expect((calls[0]!.params as any).type).toBe('keyDown')
+    expect((calls[0]!.params as any).key).toBe('Enter')
+    expect((calls[1]!.params as any).type).toBe('keyUp')
   })
 })
