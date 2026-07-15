@@ -66,28 +66,28 @@ describe('Unit 1.2 — Autonomous router endpoints', () => {
       goal: { description: 'do a thing' },
     })
     expect(res).not.toBeNull()
-    expect(res!.status).toBe(200)
-    const body = (await res!.json()) as { taskId: string; status: string }
+    expect(res?.status).toBe(200)
+    const body = (await res?.json()) as { taskId: string; status: string }
     expect(body.taskId).toBe('t1')
     expect(body.status).toBe('planning')
   })
 
   it('POST /api/autonomous/execute returns 400 when goal.description missing', async () => {
     const res = await call(router, '/api/autonomous/execute', 'POST', {})
-    expect(res!.status).toBe(400)
+    expect(res?.status).toBe(400)
   })
 
   it('GET /api/autonomous/tasks returns 200', async () => {
     const res = await call(router, '/api/autonomous/tasks')
-    expect(res!.status).toBe(200)
-    const body = (await res!.json()) as { tasks: unknown[] }
+    expect(res?.status).toBe(200)
+    const body = (await res?.json()) as { tasks: unknown[] }
     expect(Array.isArray(body.tasks)).toBe(true)
   })
 
   it('GET /api/autonomous/gates returns 200', async () => {
     const res = await call(router, '/api/autonomous/gates')
-    expect(res!.status).toBe(200)
-    const body = (await res!.json()) as { gates: unknown[] }
+    expect(res?.status).toBe(200)
+    const body = (await res?.json()) as { gates: unknown[] }
     expect(Array.isArray(body.gates)).toBe(true)
   })
 })

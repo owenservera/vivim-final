@@ -33,4 +33,18 @@ export class CommandRegistry {
     if (subsystem) return all.filter((c) => c.subsystem === subsystem)
     return all
   }
+
+  /**
+   * Resolve a command from a list of argv tokens by matching the longest
+   * registered name that is a space-joined prefix of `tokens`. Capability
+   * CLI names can be multi-word (e.g. "kernel oracle query").
+   * Returns the command and how many tokens it consumed.
+   */
+  resolve(tokens: string[]): { command: CliCommand | undefined; consumed: number } {
+    for (let i = Math.min(tokens.length, 4); i >= 1; i--) {
+      const cmd = this.commands.get(tokens.slice(0, i).join(' '))
+      if (cmd) return { command: cmd, consumed: i }
+    }
+    return { command: undefined, consumed: 0 }
+  }
 }

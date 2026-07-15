@@ -1,7 +1,7 @@
 // tests/e2e/mutation-safety-audit.test.ts
 // Unit 5.6 — Mutation Safety Audit: verify VIVIM doesn't leave artifacts in provider pages.
 
-import { describe, test, expect } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 
 interface DomSnapshot {
   bodyChildCount: number
@@ -20,7 +20,10 @@ function findVivimArtifacts(snapshot: DomSnapshot): string[] {
   return violations
 }
 
-function diffSnapshots(before: DomSnapshot, after: DomSnapshot): { added: string[]; removed: string[] } {
+function diffSnapshots(
+  before: DomSnapshot,
+  after: DomSnapshot,
+): { added: string[]; removed: string[] } {
   const added: string[] = []
   const removed: string[] = []
 

@@ -1,37 +1,19 @@
 # Phase 16: Kernel Surfaces — Phase Index
 
-**Units:** 6 | **Status:** [ ] pending | **Domain:** Expose kernel to REST, MCP, CLI, frontend, server integration
+**Units:** 6 | **Status:** 3 done, 2 partial, 1 pending | **Domain:** Expose kernel to REST, MCP, CLI, frontend
 
-## Overview
-
-Kernel surfaces: expose the kernel to all user/system surfaces — REST API,
-MCP tools, CLI commands, frontend dashboard, MCP server integration, CLI kernel commands.
+**Implemented as v9/v10 — kernel-router.ts serves API + CLI. Frontend dashboard not built.**
 
 ## Units
 
 | ID | Name | Priority | Status |
 |----|------|----------|--------|
-| 16.1 | Kernel REST API | HIGH | [ ] |
-| 16.2 | Kernel MCP Tools | HIGH | [ ] |
-| 16.3 | Kernel CLI | MEDIUM | [ ] |
-| 16.4 | Kernel Frontend Surface | MEDIUM | [ ] |
-| 16.5 | MCP Server Integration | HIGH | [ ] |
-| 16.6 | CLI Kernel Commands | MEDIUM | [ ] |
-
-## Dependency Chain
-
-```
-16.1 → 16.2 → 16.3 → 16.4 → 16.5 → 16.6
-```
-
-## Key Design Decisions
-
-1. **REST API** — `/api/kernel/*` routes for HTTP access
-2. **MCP tools** — system.describe/diagnose/heal/explain
-3. **CLI** — kernel status/diagnose/trace/config commands
-4. **Frontend** — OracleDashboard in UI
-5. **Server integration** — Register kernel tools with MCP server
-6. **CLI integration** — bun run kernel status/diagnose/trace
+| 16.1 | Kernel REST API (kernel-router.ts) | HIGH | [x] |
+| 16.2 | Kernel MCP Tools | HIGH | [~] |
+| 16.3 | Kernel CLI | MEDIUM | [x] |
+| 16.4 | Kernel Frontend Surface (OracleDashboard) | MEDIUM | [ ] |
+| 16.5 | MCP Server Integration | HIGH | [~] |
+| 16.6 | CLI Kernel Commands (bun run kernel) | MEDIUM | [x] |
 
 ## Spec References
 
@@ -45,7 +27,7 @@ MCP tools, CLI commands, frontend dashboard, MCP server integration, CLI kernel 
 ## Completion Criteria
 
 - [ ] All 6 units marked [x] in tracker
-- [ ] Kernel accessible via REST API
-- [ ] Kernel tools available via MCP
-- [ ] Kernel CLI commands work
+- [x] Kernel accessible via REST API
+- [~] Kernel tools available via MCP (partial)
+- [x] Kernel CLI commands work
 - [ ] Kernel frontend dashboard renders

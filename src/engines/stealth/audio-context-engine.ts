@@ -1,7 +1,7 @@
 // src/engines/stealth/audio-context-engine.ts
 // Unit 12.3 — AudioContextEngine: audio fingerprint perturbation.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 export class AudioContextModule implements StealthModule {
   name = 'audio_context'

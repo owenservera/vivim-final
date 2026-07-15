@@ -1,19 +1,61 @@
 // src/server/response.ts
-// CORS middleware + JSON response helpers
+// CORS middleware + JSON response helpers + ETag cache (Unit 1.5)
+
+// Unit 1.5 — Map-backed cache for safe reads
+type CacheEntry = { etag: string; body: unknown; expires: number }
+const cache = new Map<string, CacheEntry>()
+const CACHE_TTL_MS = 5_000
 
 export function corsHeaders(): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   }
 }
 
 export function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
+  const etag = `"${Date.now()}"`
+  // Handle BigInt serialization
+  const replacer = (_key: string, value: unknown) =>
+    typeof value === 'bigint' ? value.toString() : value
+  return new Response(JSON.stringify(data, replacer), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+    headers: { 'Content-Type': 'application/json', ETag: etag, ...corsHeaders() },
   })
+}
+
+// Unit 1.5 — Cached response with ETag support
+export function sendJson(
+  cacheKey: string,
+  data: unknown,
+  opts?: { ifNoneMatch?: string; cacheTtlMs?: number },
+): Response {
+  const now = Date.now()
+
+  // Check cache+ETag
+  const cached = cache.get(cacheKey)
+  if (cached && cached.expires > now && opts?.ifNoneMatch === cached.etag) {
+    return new Response(null, { status: 304, headers: corsHeaders() })
+  }
+
+  const etag = `"${Date.now()}"`
+  cache.set(cacheKey, { etag, body: data, expires: now + (opts?.cacheTtlMs ?? CACHE_TTL_MS) })
+
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      ETag: etag,
+      'Cache-Control': `max-age=${Math.floor((opts?.cacheTtlMs ?? CACHE_TTL_MS) / 1000)}`,
+      ...corsHeaders(),
+    },
+  })
+}
+
+// Unit 1.5 — Invalidate cache entry (bust on write)
+export function bustCache(cacheKey: string): void {
+  cache.delete(cacheKey)
 }
 
 export function errorResponse(

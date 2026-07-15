@@ -1,6 +1,8 @@
 // src/engines/retry-engine.ts
 // Unit 7.7 — Configurable retry policy engine.
 
+import { EngineError } from '../errors.js'
+
 export interface RetryPolicy {
   maxAttempts: number
   backoffStrategy: 'fixed' | 'linear' | 'exponential' | 'exponential_jitter'
@@ -18,7 +20,14 @@ const DEFAULT_POLICY: RetryPolicy = {
   initialDelayMs: 1000,
   maxDelayMs: 30_000,
   multiplier: 2,
-  retryableErrors: ['Slave not running', 'Circuit breaker', 'CDP command failed', 'CDP client not connected', 'ECONNRESET', 'ETIMEDOUT'],
+  retryableErrors: [
+    'Slave not running',
+    'Circuit breaker',
+    'CDP command failed',
+    'CDP client not connected',
+    'ECONNRESET',
+    'ETIMEDOUT',
+  ],
   nonRetryableErrors: ['Conversation not found', 'Account not found', 'Capability not found'],
   onRetry: 'log',
 }
@@ -46,7 +55,7 @@ export class RetryEngine {
       try {
         return await fn()
       } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err))
+        lastError = err instanceof Error ? err : new EngineError(String(err))
         const errorMsg = lastError.message
 
         // Check non-retryable
@@ -63,14 +72,16 @@ export class RetryEngine {
         if (attempt < policy.maxAttempts) {
           const delay = this.computeDelay(attempt, policy)
           if (policy.onRetry === 'log') {
-            console.log(`[retry] ${operationKey} attempt ${attempt} failed: ${errorMsg}, retrying in ${delay}ms`)
+            console.log(
+              `[retry] ${operationKey} attempt ${attempt} failed: ${errorMsg}, retrying in ${delay}ms`,
+            )
           }
           await new Promise((r) => setTimeout(r, delay))
         }
       }
     }
 
-    throw lastError ?? new Error('Retry failed')
+    throw lastError ?? new EngineError('Retry failed')
   }
 
   private computeDelay(attempt: number, policy: RetryPolicy): number {
@@ -80,7 +91,10 @@ export class RetryEngine {
       case 'linear':
         return Math.min(policy.initialDelayMs * attempt, policy.maxDelayMs)
       case 'exponential':
-        return Math.min(policy.initialDelayMs * policy.multiplier ** (attempt - 1), policy.maxDelayMs)
+        return Math.min(
+          policy.initialDelayMs * policy.multiplier ** (attempt - 1),
+          policy.maxDelayMs,
+        )
       case 'exponential_jitter': {
         const base = policy.initialDelayMs * policy.multiplier ** (attempt - 1)
         const jitter = base * 0.2 * Math.random()

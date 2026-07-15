@@ -6,10 +6,7 @@
 // from new *compositions* of these, never from new *frameworks*. Each
 // primitive is a read surface the oracle and layers draw from.
 
-import type {
-  PrimitiveKind,
-  PrimitiveReader,
-} from './types.js'
+import type { PrimitiveKind, PrimitiveReader } from './types.js'
 import { PRIMITIVE_KINDS } from './types.js'
 
 export type { PrimitiveKind } from './types.js'

@@ -2,10 +2,10 @@
 // BrowserExecutor — Chrome/browser operations via ChromeGovernor CDP.
 // navigate, search, extract content, screenshot, type, click.
 
-import type { CommandExecutor, CommandResult, ParsedIntent, NLCContext } from '../types.js'
 import { newId } from '../../../ids.js'
 import type { ChromeGovernor } from '../../chrome-governor.js'
 import type { ConversationManager } from '../../conversation-manager.js'
+import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 export class BrowserExecutor implements CommandExecutor {
   readonly id = 'browser' as const
@@ -132,11 +132,12 @@ export class BrowserExecutor implements CommandExecutor {
         returnByValue: true,
       })
       bodyText = (result as { result?: { value?: string } })?.result?.value ?? ''
-    } catch { /* extraction best-effort */ }
+    } catch {
+      /* extraction best-effort */
+    }
 
-    const truncated = bodyText.length > 50000
-      ? `${bodyText.slice(0, 50000)}... (truncated)`
-      : bodyText
+    const truncated =
+      bodyText.length > 50000 ? `${bodyText.slice(0, 50000)}... (truncated)` : bodyText
 
     return {
       ok: true,
@@ -241,12 +242,7 @@ export class BrowserExecutor implements CommandExecutor {
     })
   }
 
-  private fail(
-    intent: ParsedIntent,
-    traceId: string,
-    start: number,
-    error: string,
-  ): CommandResult {
+  private fail(intent: ParsedIntent, traceId: string, start: number, error: string): CommandResult {
     return {
       ok: false,
       intent: intent.intent,

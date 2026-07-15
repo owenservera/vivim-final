@@ -3,11 +3,11 @@
 // Chrome extension (via content script) and the host. Inbound extension
 // commands are routed to registered handlers; responses are posted back.
 
+import { EngineError } from '../../errors.js'
 import type { StealthProfileStore } from '../../storage/contracts/stealth-store.js'
 import type { CapabilityEventBus } from '../capability-event-bus.js'
 import type { StructuredLogger } from '../logger.js'
 import type { StealthCdpProxy } from './stealth-module.js'
-import { EngineError } from '../../errors.js'
 
 export interface ExtensionCommand {
   cmd: string
@@ -65,7 +65,10 @@ export class ExtensionBridgeEngine {
       return { client: command.client, success: false, error: `No handler for cmd: ${command.cmd}` }
     }
     try {
-      const payload = await handler(command.args, { client: command.client, frameId: command.frameId })
+      const payload = await handler(command.args, {
+        client: command.client,
+        frameId: command.frameId,
+      })
       this.eventBus?.emit({
         type: 'extension:command_handled',
         cmd: command.cmd,
@@ -116,7 +119,15 @@ export class ExtensionBridgeEngine {
   /** Inject the bridge listener into the page. */
   async applyBridge(slaveId: string): Promise<void> {
     const cdp = this.resolveCdp(slaveId)
-    const source = `(function(key,inbound,outbound){if(window[key])return;window[key]=true;window.addEventListener('message',function(e){var data=e.data;if(!data||data.__vivim!=='ext-to-host')return;var cmd={cmd:data.cmd,client:data.client,frameId:data.frameId,args:data.args||{}};console.log(inbound+JSON.stringify(cmd))})})('${BRIDGE_INJECT_KEY}','${MAGIC_INBOUND}','${MAGIC_OUTBOUND}')`
+    const source = `(function(){
+      if(window[${JSON.stringify(BRIDGE_INJECT_KEY)}])return;
+      window[${JSON.stringify(BRIDGE_INJECT_KEY)}]=true;
+      window.addEventListener('message',function(e){
+        if(e.data&&e.data.__vivim==='ext-to-host'){
+          console.log(${JSON.stringify(MAGIC_INBOUND)}+JSON.stringify(e.data.cmd));
+        }
+      });
+    })()`
     await cdp.send(slaveId, 'Page.addScriptToEvaluateOnNewDocument', { source })
   }
 

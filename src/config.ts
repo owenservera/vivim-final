@@ -2,9 +2,46 @@
 // Centralized configuration — reads from environment variables.
 // All engines read config through this module; no scattered process.env reads.
 
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 // ── Platform detection ──────────────────────────────────────────────────────
 
 const isWin = process.platform === 'win32'
+
+// ── Runtime port handshake ───────────────────────────────────────────────────
+//
+// The dev loop keeps one server alive across many agent turns. When the default
+// port (9420) is held by a Windows zombie socket (a dead PID still LISTENING),
+// the launcher falls back to the next free port and records it in
+// `.runtime/backend.port`. Every client must resolve the port the same way so
+// the loop never hard-binds to a dead port. Precedence: CAP_STORE_PORT env →
+// `.runtime/backend.port` → 9420.
+
+export function getServerPort(): number {
+  const env = process.env.CAP_STORE_PORT
+  if (env && /^\d+$/.test(env.trim())) return Number.parseInt(env.trim(), 10)
+  try {
+    const p = join(process.cwd(), '.runtime', 'backend.port')
+    if (existsSync(p)) {
+      const v = readFileSync(p, 'utf8').trim()
+      if (/^\d+$/.test(v)) return Number.parseInt(v, 10)
+    }
+  } catch {
+    // ignore — fall through to default
+  }
+  return 9420
+}
+
+export function writeServerPortFile(port: number): void {
+  try {
+    const dir = join(process.cwd(), '.runtime')
+    if (!existsSync(dir)) return
+    writeFileSync(join(dir, 'backend.port'), String(port), 'utf8')
+  } catch {
+    // non-fatal — clients fall back to env/default
+  }
+}
 
 function defaultDataDir(): string {
   if (isWin) {
@@ -58,6 +95,11 @@ export const config = {
 
   // HPE retention
   hpeRetentionDays: Number.parseInt(process.env.CAP_STORE_HPE_RETENTION_DAYS ?? '30', 10),
+
+  // Storage hardening (Unit 36.1)
+  storage: {
+    encryptDb: process.env.CAP_STORE_ENCRYPT_DB === 'true',
+  },
 } as const
 
 export function isAuthenticated(): boolean {

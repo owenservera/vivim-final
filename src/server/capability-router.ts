@@ -2,10 +2,14 @@
 // Unit 24.1 (universal execute route) + 24.2 (introspection route)
 // The single execution transport for every capability across all surfaces.
 // Mounted in createServerWithEngines after the auth gate.
+//
+// PRINCIPLE: FRONTEND = BACKEND
+// Every request is tagged with its source via X-Source header for audit logging.
 
 import type { CapabilityContext, UnifiedCapability } from '../engines/unified-registry.js'
-import { errorResponse, json } from './response.js'
 import type { ServerContext } from './index.js'
+import { errorResponse, json } from './response.js'
+import { extractSource } from './source-middleware.js'
 
 function toDetail(cap: UnifiedCapability): Record<string, unknown> {
   return {
@@ -31,6 +35,7 @@ function toDetail(cap: UnifiedCapability): Record<string, unknown> {
 export function createCapabilityRouter(ctx: ServerContext) {
   return async function capabilityRouter(req: Request, url: URL): Promise<Response> {
     const registry = ctx.registry
+    const source = extractSource(req)
     if (!registry) {
       return errorResponse('Capability registry not available', 'NotAvailable', 503)
     }

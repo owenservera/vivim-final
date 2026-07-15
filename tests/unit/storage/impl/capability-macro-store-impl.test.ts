@@ -61,8 +61,8 @@ describe('CapabilityMacroStoreImpl', () => {
     await store.create(row)
     const result = await store.get('cm-1')
     expect(result).not.toBeNull()
-    expect(result!.name).toBe('Test Macro')
-    expect(result!.isActive).toBe(true)
+    expect(result?.name).toBe('Test Macro')
+    expect(result?.isActive).toBe(true)
   })
 
   test('list returns all macros', async () => {
@@ -105,7 +105,7 @@ describe('CapabilityMacroStoreImpl', () => {
     })
     await store.update('cm-1', { name: 'New' })
     const result = await store.get('cm-1')
-    expect(result!.name).toBe('New')
+    expect(result?.name).toBe('New')
   })
 
   test('delete removes macro', async () => {

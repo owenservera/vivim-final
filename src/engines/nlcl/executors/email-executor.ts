@@ -3,11 +3,15 @@
 // Uses system mailto: protocol by default; pluggable mail adapter for SMTP/API.
 
 export interface MailAdapter {
-  send(opts: { to: string; subject: string; body: string }): Promise<{ ok: boolean; messageId?: string; error?: string }>
+  send(opts: { to: string; subject: string; body: string }): Promise<{
+    ok: boolean
+    messageId?: string
+    error?: string
+  }>
 }
 
-import type { CommandExecutor, CommandResult, ParsedIntent, NLCContext } from '../types.js'
 import { newId } from '../../../ids.js'
+import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 export class EmailExecutor implements CommandExecutor {
   readonly id = 'email' as const
@@ -37,7 +41,7 @@ export class EmailExecutor implements CommandExecutor {
 
   private async sendEmail(
     intent: ParsedIntent,
-    ctx: NLCContext,
+    _ctx: NLCContext,
     traceId: string,
     start: number,
   ): Promise<CommandResult> {
@@ -80,7 +84,7 @@ export class EmailExecutor implements CommandExecutor {
 
   private async composeEmail(
     intent: ParsedIntent,
-    ctx: NLCContext,
+    _ctx: NLCContext,
     traceId: string,
     start: number,
   ): Promise<CommandResult> {

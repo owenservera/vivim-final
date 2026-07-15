@@ -12,7 +12,7 @@
 
 import { execSync } from 'node:child_process'
 import { readFileSync, writeFile } from 'node:fs'
-import { TRACKER } from './select.ts'
+import { getTracker } from './select.ts'
 import { parseUnits } from './tracker.ts'
 
 const PROGRESS = 'docs/atomic-v3-fork-canon/PROGRESS.md'
@@ -22,12 +22,13 @@ function sha(): string {
 }
 
 function trackerRaw(): string {
+  const trackerPath = getTracker()
   // Prefer the working-tree tracker (it may be untracked / ahead of HEAD);
   // fall back to HEAD so audit still works for committed trackers.
   try {
-    return readFileSync(TRACKER, 'utf8')
+    return readFileSync(trackerPath, 'utf8')
   } catch {
-    return execSync(`git show HEAD:${TRACKER}`, { encoding: 'utf8' })
+    return execSync(`git show HEAD:${trackerPath}`, { encoding: 'utf8' })
   }
 }
 

@@ -1,136 +1,155 @@
 // tests/unit/executor/fleet-supervisor.test.ts
-// Unit tests for FleetSupervisor - uses mocked store
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
-import { FleetSupervisor } from '../../../src/executor/fleet-supervisor.js'
-import type { GovernorStore } from '../../../src/storage/contracts/governor-store.js'
+// ── Mock the real Chrome launcher + CDP so no browser is spawned (NFR-3) ────
+import { rmSync } from 'node:fs'
 
-// Mock store
-function createMockStore(): GovernorStore {
+const fakeProcesses: Array<{
+  pid: number
+  exited: Promise<number>
+  resolveExit: (c: number) => void
+  kill: () => void
+}> = []
+
+mock.module('../../../src/executor/launcher.js', () => {
   return {
-    getAccount: async () => ({
-      id: 'acc-1',
-      providerId: 'claude',
-      accountSlug: 'test-account',
-      displayName: 'Test',
-      planTier: 'free',
-      apiKeyRef: null,
-      isActive: 1,
-      profileDir: null,
-      debugPort: null,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }),
-    getAccountsByProvider: async () => [],
-    upsertAccount: async () => {},
-    deleteAccount: async () => {},
-    createFleetEvent: async () => ({
-      id: `event-${Date.now()}`,
-      slaveId: 'test',
-      providerId: 'claude',
-      eventType: 'test',
-      detailJson: null,
-      ts: Date.now(),
-    }),
-    getFleetEvents: async () => [],
-    getCircuitState: async () => ({
-      id: 'cb-1',
-      slaveId: 'test',
-      state: 'closed',
-      failureCount: 0,
-      lastFailureAt: null,
-      lastSuccessAt: null,
-      openedAt: null,
-    }),
-    upsertCircuitState: async () => {},
-    createHealthTick: async () => ({
-      id: 'tick-1',
-      slaveId: 'test',
-      providerId: 'claude',
-      status: 'running',
-      responseMs: 0,
-      error: null,
-      ts: Date.now(),
-    }),
-    createTraceEntry: async () => ({
-      id: 'trace-1',
-      slaveId: 'test',
-      conversationId: null,
-      method: 'test',
-      paramsJson: null,
-      resultJson: null,
-      durationMs: null,
-      error: null,
-      ts: Date.now(),
-    }),
-    getTrace: async () => [],
-  } as const
+    launchProfile: async (profile: { userDataDir: string; debugPort?: number }) => {
+      const pid = 1000 + fakeProcesses.length
+      let resolveExit: (c: number) => void = () => {}
+      const exited = new Promise<number>((r) => {
+        resolveExit = r
+      })
+      const proc = { pid, exited, resolveExit, kill: () => {} }
+      fakeProcesses.push(proc)
+      return {
+        process: proc,
+        binary: '/fake/chrome',
+        debugPort: profile.debugPort ?? 9222,
+        pid,
+        profileDir: profile.userDataDir,
+      }
+    },
+    killChrome: async () => {},
+    // Functional stub so a contaminated run still exercises real lock-clearing intent.
+    clearSingletonLock: (dir: string) => {
+      if (!dir) return
+      for (const n of ['SingletonLock', 'SingletonCookie', 'SingletonSocket']) {
+        try {
+          rmSync(`${dir}/${n}`, { force: true })
+        } catch {}
+      }
+    },
+  }
+})
+
+mock.module('../../../src/executor/cdp.js', () => {
+  class BunCdpClient {
+    async connect() {}
+    async send() {
+      return {}
+    }
+    async disconnect() {}
+    on() {}
+  }
+  return { BunCdpClient }
+})
+
+const { FleetSupervisor } = await import('../../../src/executor/fleet-supervisor.js')
+
+let store: { getAccount: () => Promise<null>; events: unknown[] }
+let tmp: string
+
+beforeEach(() => {
+  fakeProcesses.length = 0
+  tmp = mkdtempSync(join(tmpdir(), 'vivim-fs-'))
+  store = {
+    getAccount: async () => null,
+    events: [] as unknown[],
+  }
+})
+
+afterEach(() => {
+  rmSync(tmp, { recursive: true, force: true })
+})
+
+function makeStore() {
+  return {
+    getAccount: store.getAccount,
+    createFleetEvent: async (e: unknown) => {
+      store.events.push(e)
+      return e
+    },
+  } as unknown as ConstructorParameters<typeof FleetSupervisor>[0]
 }
 
-describe('FleetSupervisor', () => {
-  let supervisor: FleetSupervisor
-  let mockStore: ReturnType<typeof createMockStore>
+describe('FleetSupervisor lifecycle (FR-1/3/4)', () => {
+  it('spawn() brings a slave to running with a stable port', async () => {
+    const fs = new FleetSupervisor(makeStore(), { autoRestart: false, chromeProfileBase: tmp })
+    const inst = await fs.spawn('claude', 'acc1')
+    expect(inst.status).toBe('running')
+    expect(inst.debugPort).toBeGreaterThan(0)
+    expect(fs.getInstancesByProvider('claude')).toHaveLength(1)
+    // idempotency: ensureRunning on a running slave returns same
+    const again = await fs.ensureRunning(inst.id)
+    expect(again.id).toBe(inst.id)
+  })
 
-  beforeEach(() => {
-    mockStore = createMockStore()
-    supervisor = new FleetSupervisor(mockStore, {
-      portRange: [9222, 9232],
-      healthProbeIntervalMs: 30000,
-      healthProbeTimeoutMs: 5000,
-      autoRestart: false,
-      maxRestarts: 3,
-      circuitBreakerThreshold: 5,
-      circuitBreakerResetMs: 60000,
-      chromeProfileBase: '/tmp/test-profiles',
+  it('getSuperState reflects active when a slave runs', async () => {
+    const fs = new FleetSupervisor(makeStore(), { autoRestart: false, chromeProfileBase: tmp })
+    await fs.spawn('claude', 'acc1')
+    expect(fs.getSuperState()).toBe('active')
+  })
+
+  it('kill() moves slave to stopped and frees it', async () => {
+    const fs = new FleetSupervisor(makeStore(), { autoRestart: false, chromeProfileBase: tmp })
+    const inst = await fs.spawn('claude', 'acc1')
+    await fs.kill(inst.id)
+    expect(fs.getInstance(inst.id)?.status).toBe('stopped')
+    expect(fs.getSuperState()).toBe('idle')
+  })
+})
+
+describe('FleetSupervisor crash detection (FR-17)', () => {
+  it('process exit routes a non-auto-restart slave to terminal error', async () => {
+    const fs = new FleetSupervisor(makeStore(), { autoRestart: false, chromeProfileBase: tmp })
+    const inst = await fs.spawn('claude', 'acc1')
+    // simulate the Chrome process exiting
+    const proc = fakeProcesses[0]
+    if (proc) proc.resolveExit(0)
+    await new Promise((r) => setTimeout(r, 10))
+    expect(fs.getInstance(inst.id)?.status).toBe('error')
+    expect(fs.getSuperState()).toBe('terminal')
+  })
+})
+
+describe('FleetSupervisor recoverAuth (FR-9/10)', () => {
+  it('relaunches the provider slave in headed mode for re-login', async () => {
+    const fs = new FleetSupervisor(makeStore(), {
+      autoRestart: true,
+      chromeProfileBase: tmp,
+      defaultMode: 'headless-new',
     })
+    await fs.spawn('claude', 'acc1') // headless by default
+    const recovered = await fs.recoverAuth('claude', 'acc1')
+    expect(recovered.mode).toBe('headed')
+    expect(recovered.status).toBe('running')
+    // exactly one RUNNING slave for the provider (old one was stopped / NFR-2)
+    expect(
+      fs
+        .getInstancesByProvider('claude')
+        .filter((i) => i.accountId === 'acc1' && i.status === 'running'),
+    ).toHaveLength(1)
   })
+})
 
-  afterEach(async () => {
-    // Clean up any spawned instances (skip if no Chrome)
-    try {
-      await supervisor.killAll()
-    } catch {
-      // ignore
-    }
-  })
-
-  test('boot initializes without error (skips reap - requires external tools)', () => {
-    // boot() calls portReaper.reap() which requires lsof/taskkill
-    // Unit tests don't spawn real Chrome so reap is a no-op anyway
-    // The boot call itself is fast, but reap() takes time looking for orphan processes
-    // We skip actually calling it in unit tests
-    expect(supervisor.getAllInstances()).toHaveLength(0)
-  })
-
-  test('initial state has no instances', () => {
-    expect(supervisor.getAllInstances()).toHaveLength(0)
-  })
-
-  test('getInstance returns null for unknown ID', () => {
-    expect(supervisor.getInstance('unknown')).toBeNull()
-  })
-
-  test('getInstancesByProvider filters correctly', () => {
-    expect(supervisor.getInstancesByProvider('claude')).toHaveLength(0)
-  })
-
-  test('getCircuitState returns closed for unknown instance', () => {
-    expect(supervisor.getCircuitState('unknown')).toBe('closed')
-  })
-
-  test('allocatePort throws PortOccupiedError when exhausted', () => {
-    const smallRange = new FleetSupervisor(mockStore, {
-      portRange: [9222, 9222] as [number, number], // Only one port
-      healthProbeIntervalMs: 30000,
-      healthProbeTimeoutMs: 5000,
-      autoRestart: false,
-      maxRestarts: 3,
-      circuitBreakerThreshold: 5,
-      circuitBreakerResetMs: 60000,
-      chromeProfileBase: '/tmp/test-profiles',
-    })
-
-    // First allocation should work (port 9222)
-    expect(smallRange.getInstance('any')).toBeNull()
+describe('FleetSupervisor first-run (FR-7/8)', () => {
+  it('launches a never-authenticated profile in headed mode', async () => {
+    const fs = new FleetSupervisor(makeStore(), { autoRestart: false, chromeProfileBase: tmp })
+    const inst = await fs.spawn('claude', 'acc1')
+    expect(inst.firstRun).toBe(true)
+    expect(inst.mode).toBe('headed')
   })
 })

@@ -89,7 +89,13 @@ const ConfigEntrySchema = z.object({
 // Validates ProviderStreamConfig rows: the wire transport, the SSE archetype,
 // and the delta path(s) used to extract streamed content.
 
-export const StreamTransportSchema = z.enum(['sse', 'batchexecute', 'websocket', 'sse-patch', 'json'])
+export const StreamTransportSchema = z.enum([
+  'sse',
+  'batchexecute',
+  'websocket',
+  'sse-patch',
+  'json',
+])
 export const SseFormatSchema = z.enum(['openai', 'anthropic', 'gemini', 'generic'])
 
 export const StreamConfigSchema = z.object({

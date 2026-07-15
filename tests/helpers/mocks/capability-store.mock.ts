@@ -2,12 +2,12 @@
 // Canonical mock for CapabilityStore contract.
 import { mock } from 'bun:test'
 import type {
-  CapabilityStore,
-  CapabilityTaxonomyRow,
   CapabilityBindingRow,
   CapabilityProgramRow,
-  SelectorStrategyRow,
+  CapabilityStore,
+  CapabilityTaxonomyRow,
   OutcomeRow,
+  SelectorStrategyRow,
 } from '../../../src/storage/contracts/capability-store.js'
 
 export function createMockCapabilityStore(
@@ -15,17 +15,18 @@ export function createMockCapabilityStore(
 ): CapabilityStore {
   const capabilities = new Map<string, CapabilityTaxonomyRow>()
   const bindings = new Map<string, CapabilityBindingRow>()
-  const programs = new Map<string, CapabilityProgramRow[]>()
-  const selectors = new Map<string, SelectorStrategyRow[]>()
+  const _programs = new Map<string, CapabilityProgramRow[]>()
+  const _selectors = new Map<string, SelectorStrategyRow[]>()
   const outcomes: OutcomeRow[] = []
 
   return {
     getCapability: mock((id: string) => capabilities.get(id) ?? null),
-    getCapabilityBySlug: mock((slug: string) =>
-      [...capabilities.values()].find((c) => c.slug === slug) ?? null,
+    getCapabilityBySlug: mock(
+      (slug: string) => [...capabilities.values()].find((c) => c.slug === slug) ?? null,
     ),
-    getBinding: mock((capabilityId: string, providerId: string) =>
-      bindings.get(`${capabilityId}:${providerId}`) ?? null,
+    getBinding: mock(
+      (capabilityId: string, providerId: string) =>
+        bindings.get(`${capabilityId}:${providerId}`) ?? null,
     ),
     getProgram: mock(() => null),
     getPrograms: mock(() => []),

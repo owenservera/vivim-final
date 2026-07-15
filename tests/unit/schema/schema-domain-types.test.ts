@@ -156,13 +156,21 @@ describe('schema/core', () => {
 })
 
 describe('schema/chrome', () => {
-  it('defines SlaveStatus as union', () => {
-    const statuses: SlaveStatus[] = ['launching', 'ready', 'busy', 'stale', 'dead']
-    expect(statuses).toContain('ready')
+  it('defines SlaveStatus as canonical lifecycle union', () => {
+    const statuses: SlaveStatus[] = [
+      'stopped',
+      'starting',
+      'running',
+      'unhealthy',
+      'restarting',
+      'error',
+      'circuit_open',
+    ]
+    expect(statuses).toContain('running')
   })
 
-  it('defines SuperState as union', () => {
-    const states: SuperState[] = ['active', 'sleep', 'error', 'recovering']
+  it('defines SuperState as canonical fleet super-state union', () => {
+    const states: SuperState[] = ['idle', 'active', 'degraded', 'terminal']
     expect(states).toContain('active')
   })
 
@@ -171,7 +179,8 @@ describe('schema/chrome', () => {
       id: 's1',
       providerId: 'prov1',
       accountId: 'a1',
-      status: 'ready',
+      status: 'running',
+      superState: 'active',
       port: 9222,
       profileDir: '/tmp/chrome/prov1',
       pid: 12345,

@@ -45,7 +45,10 @@ export class ErrorTracker {
   private policy: ErrorTrackingPolicy = DEFAULT_POLICY
   private flushTimer: ReturnType<typeof setInterval> | null = null
 
-  constructor(policy?: Partial<ErrorTrackingPolicy>, private logger?: StructuredLogger) {
+  constructor(
+    policy?: Partial<ErrorTrackingPolicy>,
+    private logger?: StructuredLogger,
+  ) {
     if (policy) this.policy = { ...DEFAULT_POLICY, ...policy }
     this.flushTimer = setInterval(() => void this.flush(), 5000)
   }
@@ -96,7 +99,9 @@ export class ErrorTracker {
     for (const reporter of this.reporters) {
       if (reporter.report) {
         for (const error of this.seen.values()) {
-          try { await reporter.report(error) } catch {}
+          try {
+            await reporter.report(error)
+          } catch {}
         }
       }
     }

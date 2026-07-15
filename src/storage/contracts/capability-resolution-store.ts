@@ -34,6 +34,8 @@ export interface RawResolutionRow {
   max_result_size: number
   result_component: string
   result_layout: string
+  // joined provider_capability override (per-slot hot-swap map, FRONTEND=BACKEND, H6)
+  ui_component_override: string | null
   search_hints_json: string
   aliases_json: string
   availability_json: string

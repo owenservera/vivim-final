@@ -25,8 +25,14 @@
     "prisma:generate": "bunx prisma generate",
     "prisma:studio": "bunx prisma studio",
     "prisma:push": "bunx prisma db push",
+    "bench": "bun run bench/index.ts",
+    "docs:openapi": "bun run scripts/openapi-gen.ts",
+    "docs:manual": "bun run scripts/manual-gen.ts",
     "devops": "bun run devops/index.ts",
-    "taxonomy:generate": "bun run scripts/taxonomy-gen/run.ts"
+    "providers:smoke": "bun run scripts/provider-harness.ts",
+    "taxonomy:generate": "bun run scripts/taxonomy-gen/run.ts",
+    "taxonomy-gen": "bun run scripts/taxonomy-gen/run.ts",
+    "generate-skills": "bun run scripts/generate-skills.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",

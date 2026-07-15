@@ -1,9 +1,13 @@
 // src/server/kernel-router.ts
 // Kernel / Config REST routes — expose kernel oracle + universal config over HTTP.
 // All routes under /api/kernel with Bearer token auth.
+//
+// PRINCIPLE: FRONTEND = BACKEND
+// Every request is tagged with its source via X-Source header for audit logging.
 
-import type { ServerContext } from './index.js'
 import type { ConfigUniversalSurface } from '../engines/config-universal-surface.js'
+import type { ServerContext } from './index.js'
+import { extractSource } from './source-middleware.js'
 
 export interface KernelRouterDeps {
   kernel: ServerContext['kernel']
@@ -44,24 +48,39 @@ const DEFAULT_POLICY: AutoHealPolicy = {
 type SystemQueryType = 'health' | 'topology' | 'capability' | 'config' | 'all'
 
 function asQueryType(op: string): SystemQueryType {
-  if (op === 'health' || op === 'topology' || op === 'capability' || op === 'config' || op === 'all') {
+  if (
+    op === 'health' ||
+    op === 'topology' ||
+    op === 'capability' ||
+    op === 'config' ||
+    op === 'all'
+  ) {
     return op
   }
   return 'all'
 }
 
-export function createKernelRouter(deps: KernelRouterDeps): (req: Request, url: URL) => Promise<Response | null> {
+export function createKernelRouter(
+  deps: KernelRouterDeps,
+): (req: Request, url: URL) => Promise<Response | null> {
   const { kernel, configSurface } = deps
 
   return async (req: Request, url: URL): Promise<Response | null> => {
+    const source = extractSource(req)
+
     // Oracle query endpoint
     if (url.pathname === '/api/kernel/oracle/query' && req.method === 'POST') {
       const body = await req.json().catch(() => ({}))
-      const { op = 'all', filter, limit } = body as {
+      const {
+        op = 'all',
+        filter,
+        limit,
+      } = body as {
         op?: string
         filter?: Record<string, unknown>
         limit?: number
       }
+
 
       if (!kernel?.context()?.oracle?.query) {
         return new Response(JSON.stringify({ error: 'Oracle not available' }), {
@@ -70,7 +89,7 @@ export function createKernelRouter(deps: KernelRouterDeps): (req: Request, url: 
         })
       }
 
-      const result = await kernel.context()!.oracle!.query!.query({
+      const result = await kernel.context()?.oracle?.query?.query({
         type: asQueryType(op),
         filter,
         limit,
@@ -100,7 +119,7 @@ export function createKernelRouter(deps: KernelRouterDeps): (req: Request, url: 
         })
       }
 
-      const result = await kernel.context()!.oracle!.actuator!.heal(issueId)
+      const result = await kernel.context()?.oracle?.actuator?.heal(issueId)
       return new Response(JSON.stringify(result), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -116,7 +135,7 @@ export function createKernelRouter(deps: KernelRouterDeps): (req: Request, url: 
         })
       }
 
-      const result = await kernel.context()!.oracle!.diagnostic!.scan()
+      const result = await kernel.context()?.oracle?.diagnostic?.scan()
       return new Response(JSON.stringify(result), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -134,7 +153,7 @@ export function createKernelRouter(deps: KernelRouterDeps): (req: Request, url: 
         })
       }
 
-      const events = await kernel.context()!.oracle!.events!.getRecentEvents(limit)
+      const events = await kernel.context()?.oracle?.events?.getRecentEvents(limit)
       return new Response(JSON.stringify(events), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -150,7 +169,7 @@ export function createKernelRouter(deps: KernelRouterDeps): (req: Request, url: 
         })
       }
 
-      const result = await kernel.context()!.oracle!.query!.query({ type: 'all' })
+      const result = await kernel.context()?.oracle?.query?.query({ type: 'all' })
       return new Response(JSON.stringify(result), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -194,7 +213,11 @@ export function createKernelRouter(deps: KernelRouterDeps): (req: Request, url: 
     }
 
     // Config get endpoint
-    if (configSurface && url.pathname.match(/^\/api\/kernel\/config\/[^/]+\/[^/]+$/) && req.method === 'GET') {
+    if (
+      configSurface &&
+      url.pathname.match(/^\/api\/kernel\/config\/[^/]+\/[^/]+$/) &&
+      req.method === 'GET'
+    ) {
       const parts = url.pathname.split('/').filter(Boolean)
       const scope = parts[2]
       const key = parts[3]
@@ -214,7 +237,11 @@ export function createKernelRouter(deps: KernelRouterDeps): (req: Request, url: 
     }
 
     // Config set endpoint
-    if (configSurface && url.pathname.match(/^\/api\/kernel\/config\/[^/]+\/[^/]+$/) && req.method === 'PUT') {
+    if (
+      configSurface &&
+      url.pathname.match(/^\/api\/kernel\/config\/[^/]+\/[^/]+$/) &&
+      req.method === 'PUT'
+    ) {
       const parts = url.pathname.split('/').filter(Boolean)
       const scope = parts[2]
       const key = parts[3]

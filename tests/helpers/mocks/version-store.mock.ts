@@ -14,11 +14,13 @@ export function createMockVersionStore(overrides: Partial<VersionStore> = {}): V
       versions.push(row)
       return row
     }),
-    getTaxonomyVersion: mock((capabilityId: string, version: number) =>
-      versions.find((v) => v.capabilityId === capabilityId && v.version === version) ?? null,
+    getTaxonomyVersion: mock(
+      (capabilityId: string, version: number) =>
+        versions.find((v) => v.capabilityId === capabilityId && v.version === version) ?? null,
     ),
-    getLatestTaxonomyVersion: mock((capabilityId: string) =>
-      [...versions].reverse().find((v) => v.capabilityId === capabilityId) ?? null,
+    getLatestTaxonomyVersion: mock(
+      (capabilityId: string) =>
+        [...versions].reverse().find((v) => v.capabilityId === capabilityId) ?? null,
     ),
     getTaxonomyVersionHistory: mock((capabilityId: string) =>
       versions.filter((v) => v.capabilityId === capabilityId),
@@ -32,8 +34,9 @@ export function createMockVersionStore(overrides: Partial<VersionStore> = {}): V
     getStatusHistory: mock((bindingId: string) =>
       statusLogs.filter((s) => s.bindingId === bindingId),
     ),
-    getLastStatusChange: mock((bindingId: string) =>
-      [...statusLogs].reverse().find((s) => s.bindingId === bindingId) ?? null,
+    getLastStatusChange: mock(
+      (bindingId: string) =>
+        [...statusLogs].reverse().find((s) => s.bindingId === bindingId) ?? null,
     ),
     upsertProgramMetric: mock((input: any) => {
       const row = { id: crypto.randomUUID(), ...input }

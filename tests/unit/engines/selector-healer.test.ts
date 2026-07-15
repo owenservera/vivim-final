@@ -38,8 +38,8 @@ describe('SelectorHealer', () => {
       providerId: 'prov1',
     })
     expect(result).not.toBeNull()
-    expect(result!.strategy).toBe('aria_relaxed')
-    expect(result!.healed.type).toBe('aria')
+    expect(result?.strategy).toBe('aria_relaxed')
+    expect(result?.healed.type).toBe('aria')
   })
 
   test('heal returns null for text selectors without grounding match', async () => {

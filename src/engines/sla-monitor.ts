@@ -2,8 +2,8 @@
 // Unit 9.5 — Latency SLA monitoring + alerting.
 
 import type { CapabilityEventBus } from './capability-event-bus.js'
-import type { MetricsRegistry } from './metrics.js'
 import type { StructuredLogger } from './logger.js'
+import type { MetricsRegistry } from './metrics.js'
 
 export interface SlaTarget {
   p50Ms: number
@@ -24,9 +24,7 @@ export interface SlaPolicy {
 }
 
 const DEFAULT_POLICY: SlaPolicy = {
-  operations: [
-    { name: 'conversation.send', target: { p50Ms: 500, p95Ms: 2000, p99Ms: 5000 } },
-  ],
+  operations: [{ name: 'conversation.send', target: { p50Ms: 500, p95Ms: 2000, p99Ms: 5000 } }],
   evaluationWindowMs: 60_000,
   alertThreshold: 0.1,
   cooldownMs: 300_000,
@@ -68,7 +66,7 @@ export class SlaMonitor {
     samples.push(latencyMs)
 
     // Keep only window
-    const cutoff = Date.now() - this.policy.evaluationWindowMs
+    const _cutoff = Date.now() - this.policy.evaluationWindowMs
     while (samples.length > 0 && samples.length > 10000) {
       samples.shift()
     }
@@ -97,7 +95,14 @@ export class SlaMonitor {
         if (now - lastAlert > this.policy.cooldownMs) {
           this.alertCooldowns.set(op.name, now)
           this.logger?.warn(`SLA violation: ${op.name}`, { violations, p50, p95, p99 })
-          this.eventBus?.emit({ type: 'sla:violation', operation: op.name, violations, p50, p95, p99 } as any)
+          this.eventBus?.emit({
+            type: 'sla:violation',
+            operation: op.name,
+            violations,
+            p50,
+            p95,
+            p99,
+          } as any)
         }
       }
     }

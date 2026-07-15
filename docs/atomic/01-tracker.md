@@ -1,6 +1,6 @@
 # Atomic Implementation Tracker
 
-**Total units:** 240 | **Done:** 234 | **Blocked:** 3 | **Pending:** 3
+**Total units:** 225 | **Done:** 219 | **Blocked:** 3 | **Pending:** 3
 
 > Phases 1-13: v1 core + SOTA + executor + frontend (139 units)
 > Phases 14-20: Sovereign AI OS Upgrade (60 units) — all done
@@ -35,7 +35,7 @@
 - [x] 2.11 — Seed: qwen.json            → `seeds/providers/qwen.json`
 - [x] 2.12 — ProviderManifest Zod schema → `src/schema/provider-manifest.ts`
 - [x] 2.13 — ProviderEndpoint DOM Interaction Config → `prisma/schema.prisma`, `src/engines/provider-registrar.ts`
-- [ ] 2.14 — ProviderEndpoint selectorsJson Rename → `prisma/schema.prisma`, `src/storage/impl/provider-store-impl.ts`
+- [~] 2.14 — ProviderEndpoint selectorsJson Rename → `prisma/schema.prisma`, `src/storage/impl/provider-store-impl.ts`
 - [ ] 2.15 — ProviderParser Hash Auto-computation → `src/engines/provider-registrar.ts`
 - [ ] 2.16 — ProviderStreamConfig Delta Path Validation → `src/schema/provider-manifest.ts`
 - [x] 2.17 — Remove Hardcoded Parsers from StreamParserEngine → `src/engines/stream-parser.ts`
@@ -446,4 +446,4 @@ MCP server exposing provider discovery as agent-callable tools. Agent drives the
 
 ## Last Updated
  2026-07-11
-2026-07-11
+2026-07-13

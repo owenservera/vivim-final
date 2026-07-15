@@ -1,15 +1,20 @@
 // src/server/knowledge-router.ts
 // REST API router — knowledge endpoints (ingest, search, synthesize, export)
+//
+// PRINCIPLE: FRONTEND = BACKEND
+// Every request is tagged with its source via X-Source header for audit logging.
 
 import { newId } from '../ids.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
+import { extractSource } from './source-middleware.js'
 
 export function createKnowledgeRouter(ctx: ServerContext) {
   return async (req: Request): Promise<Response> => {
     const url = new URL(req.url)
     const { pathname } = url
     const method = req.method
+    const _source = extractSource(req)
 
     try {
       // POST /api/knowledge/ingest

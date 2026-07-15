@@ -1,6 +1,8 @@
 // src/engines/request-queue.ts
 // Unit 8.3 — Request queueing + backpressure with policy.
 
+import { EngineError } from '../errors.js'
+
 export interface BackpressurePolicy {
   maxConcurrent: number
   maxQueued: number
@@ -55,9 +57,9 @@ export class RequestQueue<T = unknown> {
       const providerCount = this.perProviderInFlight.get(opts.providerId) ?? 0
       if (providerCount >= this.policy.perProviderMaxConcurrent) {
         if (this.policy.onShed === 'reject') {
-          throw new Error(`Provider ${opts.providerId} at capacity`)
+          throw new EngineError(`Provider ${opts.providerId} at capacity`)
         }
-        throw new Error(`Provider ${opts.providerId} at capacity`)
+        throw new EngineError(`Provider ${opts.providerId} at capacity`)
       }
     }
 
@@ -71,7 +73,7 @@ export class RequestQueue<T = unknown> {
         const timeout = setTimeout(() => {
           const idx = this.queue.findIndex((r) => r.id === id)
           if (idx !== -1) this.queue.splice(idx, 1)
-          reject(new Error('Queue timeout'))
+          reject(new EngineError('Queue timeout'))
         }, opts?.timeoutMs ?? this.policy.queueTimeoutMs)
 
         const id = `q_${++this.idCounter}`
@@ -79,8 +81,14 @@ export class RequestQueue<T = unknown> {
           id,
           priority,
           enqueuedAt: Date.now(),
-          resolve: (v) => { clearTimeout(timeout); resolve(v) },
-          reject: (e) => { clearTimeout(timeout); reject(e) },
+          resolve: (v) => {
+            clearTimeout(timeout)
+            resolve(v)
+          },
+          reject: (e) => {
+            clearTimeout(timeout)
+            reject(e)
+          },
           execute,
           providerId: opts?.providerId,
         })
@@ -127,18 +135,18 @@ export class RequestQueue<T = unknown> {
     switch (this.policy.shedStrategy) {
       case 'reject_newest': {
         const newest = this.queue.pop()
-        newest?.reject(new Error('Queue full — shedding newest'))
+        newest?.reject(new EngineError('Queue full — shedding newest'))
         break
       }
       case 'reject_oldest': {
         const oldest = this.queue.shift()
-        oldest?.reject(new Error('Queue full — shedding oldest'))
+        oldest?.reject(new EngineError('Queue full — shedding oldest'))
         break
       }
       case 'reject_lowest_priority': {
         this.queue.sort((a, b) => a.priority - b.priority)
         const lowest = this.queue.shift()
-        lowest?.reject(new Error('Queue full — shedding lowest priority'))
+        lowest?.reject(new EngineError('Queue full — shedding lowest priority'))
         break
       }
     }

@@ -8,10 +8,10 @@
 
 import { EngineError } from '../errors.js'
 import type { ChromeGovernor } from './chrome-governor.js'
-import type { ProviderDiscoveryEngine, DiscoverySession } from './provider-discovery.js'
+import { type ComposerType, submitMessage, typeMessage } from './composer-typing.js'
+import type { DiscoverySession, ProviderDiscoveryEngine } from './provider-discovery.js'
+import type { AlignmentReport, StreamAlignmentEngine, StreamFormat } from './stream-align.js'
 import type { StreamParserEngine } from './stream-parser.js'
-import type { StreamAlignmentEngine, AlignmentReport, StreamFormat } from './stream-align.js'
-import { typeMessage, submitMessage, type ComposerType } from './composer-typing.js'
 
 export interface CaptureOptions {
   urlPattern: string
@@ -105,7 +105,11 @@ export class DiscoverySessionRunner {
     const bodies = await this.deps.captureStream.collect(slaveId, captureOpts)
 
     // 6. Align the captured stream against the parser.
-    const alignment = await this.deps.align.alignCaptured(bodies, providerId, this.toFormat(session.parserFormat))
+    const alignment = await this.deps.align.alignCaptured(
+      bodies,
+      providerId,
+      this.toFormat(session.parserFormat),
+    )
 
     // 7. Persist + emit manifest draft.
     await this.deps.discovery.updateSession(session.id, {
@@ -119,7 +123,7 @@ export class DiscoverySessionRunner {
     const manifest = await this.deps.discovery.generateManifest(session.id)
     await this.deps.discovery.updateSession(session.id, { manifestDraft: manifest })
 
-    return { session: await this.deps.discovery.getSession(session.id)!, alignment }
+    return { session: finalSession, alignment }
   }
 
   private toFormat(value: string | null | undefined): StreamFormat | null {

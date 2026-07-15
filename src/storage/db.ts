@@ -206,6 +206,14 @@ export class CapStoreDb {
     return this.prisma.conversation.findUnique({ where: { id } })
   }
 
+  async listConversations(opts?: { providerId?: string; limit?: number }) {
+    return this.prisma.conversation.findMany({
+      where: opts?.providerId ? { providerId: opts.providerId } : undefined,
+      orderBy: { createdAt: 'desc' },
+      take: opts?.limit ?? 50,
+    })
+  }
+
   async createConversation(input: {
     id: string
     providerSessionId: string
@@ -333,6 +341,28 @@ export class CapStoreDb {
   async getConfig(engineId: string) {
     return this.prisma.configEntry.findMany({
       where: { engineId },
+    })
+  }
+
+  async setConfig(engineId: string, configJson: string) {
+    const existing = await this.prisma.configEntry.findFirst({ where: { engineId } })
+    const now = Date.now()
+    if (existing) {
+      return this.prisma.configEntry.update({
+        where: { id: existing.id },
+        data: { configJson },
+      })
+    }
+    return this.prisma.configEntry.create({
+      data: {
+        id: `cfg_${engineId}_${Date.now()}`,
+        engineId,
+        configJson,
+        scopeType: 'global',
+        scopeId: undefined,
+        createdAt: BigInt(now),
+        updatedAt: BigInt(now),
+      },
     })
   }
 

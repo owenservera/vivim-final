@@ -388,7 +388,7 @@ export class ContextAssemblyEngine {
   private async recall(
     conversationId: string,
     userMessage: string,
-    taskType: TaskType,
+    _taskType: TaskType,
   ): Promise<ContextLayer[]> {
     const layers: ContextLayer[] = []
 
@@ -466,7 +466,7 @@ export class ContextAssemblyEngine {
     return layers
   }
 
-  private async recallIdentity(conversationId: string): Promise<ContextLayer[]> {
+  private async recallIdentity(_conversationId: string): Promise<ContextLayer[]> {
     try {
       const facts = await this.memory.recallFacts('user')
       const content = facts.map((f) => `${f.predicate}: ${JSON.stringify(f.object)}`).join('\n')
@@ -485,7 +485,7 @@ export class ContextAssemblyEngine {
     }
   }
 
-  private async recallPreferences(conversationId: string): Promise<ContextLayer[]> {
+  private async recallPreferences(_conversationId: string): Promise<ContextLayer[]> {
     try {
       const rules = await this.memory.findRules({})
       const content = rules.map((r) => `${r.action} (confidence: ${r.confidence})`).join('\n')
@@ -504,7 +504,7 @@ export class ContextAssemblyEngine {
     }
   }
 
-  private async recallProjectState(conversationId: string): Promise<ContextLayer[]> {
+  private async recallProjectState(_conversationId: string): Promise<ContextLayer[]> {
     try {
       const rules = await this.memory.findRules({})
       const content = rules.map((r) => r.action).join('\n')
@@ -562,7 +562,7 @@ export class ContextAssemblyEngine {
       } else {
         // Partial inclusion — truncate content to fit
         const maxChars = allowedTokens * CHARS_PER_TOKEN
-        const truncatedContent = layer.content.slice(0, maxChars) + '…'
+        const truncatedContent = `${layer.content.slice(0, maxChars)}…`
         included.push({
           ...layer,
           content: truncatedContent,

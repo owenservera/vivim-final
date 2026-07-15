@@ -1,0 +1,285 @@
+openapi: 3.1.0
+info:
+  # Capability registry source:
+    # - cap:conversation:list
+    # - cap:conversation:create
+    # - cap:conversation:send
+    # - cap:conversation:delete
+    # - cap:knowledge:search
+    # - cap:knowledge:ingest
+    # - cap:knowledge:synthesize
+    # - cap:memory:query
+    # - cap:memory:assert
+    # - cap:memory:forget
+    # - cap:admin:seed
+    # - cap:admin:config_get
+    # - cap:admin:config_set
+    # - cap:system:health
+    # - cap:system:version
+    # - cap:provider:health_get
+    # - cap:admin:config_history
+    # - cap:admin:audit
+    # - cap:admin:drift
+    # - cap:telemetry:summary
+    # - cap:telemetry:compare
+    # - cap:nlcl:interpret
+    # - cap:oracle:query
+    # - cap:oracle:heal
+    # - cap:oracle:scan
+    # - cap:oracle:events
+    # - cap:oracle:visibility
+    # - cap:oracle:manifest
+    # - cap:discovery:run
+    # - cap:discovery:interact
+    # - cap:discovery:align
+    # - cap:discovery:list
+    # - cap:discovery:show
+    # - cap:discovery:manifest
+    # - cap:schedule:register
+    # - cap:schedule:list
+    # - cap:schedule:run_now
+    # - cap:knowledge:distill
+  x-capability-count: 38
+  title: vivim Universal Capability API (v11)
+  version: "11.0.0"
+  description: >
+    The v10/v11 "one entry point" contract: every operation is a UnifiedCapability.
+    Clients (CLI, web, MCP) are thin NL shells that call the universal routes below.
+    All work funnels through `/api/interpret` (NL -> capability) and
+    `/api/capabilities/{id}/execute` (capability -> result stream).
+servers:
+  - url: http://localhost:8787
+    description: local dev (CapStoreServer)
+tags:
+  - name: universal
+    description: v10 canonical routes used by all surfaces
+paths:
+  /api/interpret:
+    post:
+      tags: [universal]
+      operationId: interpret
+      summary: Map natural-language text to a capability + params.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  description: Natural-language intent (e.g. "summarize this page").
+                surface:
+                  type: string
+                  enum: [cli, ui, api, mcp]
+                  description: Calling surface, influences default capability selection.
+      responses:
+        "200":
+          description: Resolved capability + normalized params.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterpretResult"
+  /api/capabilities:
+    get:
+      tags: [universal]
+      operationId: listCapabilities
+      summary: List registered capabilities (v10 registry).
+      parameters:
+        - name: surface
+          in: query
+          schema:
+            type: string
+            enum: [cli, ui, api, mcp]
+      responses:
+        "200":
+          description: Capability catalog.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CapabilitySummary"
+  /api/capabilities/{capabilityId}:
+    get:
+      tags: [universal]
+      operationId: getCapability
+      summary: Describe a single capability.
+      parameters:
+        - name: capabilityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Capability detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilitySummary"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/capabilities/{capabilityId}/execute:
+    post:
+      tags: [universal]
+      operationId: executeCapability
+      summary: Execute a capability. Streams Server-Sent Events.
+      parameters:
+        - name: capabilityId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Capability-specific args (validated by the capability's Zod schema).
+      responses:
+        "200":
+          description: >
+            Execution result. Capabilities that stream emit `text/plain` Server-Sent
+            Events (`event: delta` / `event: done`); non-streaming return JSON.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecuteResult"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/conversations/{id}:
+    get:
+      tags: [universal]
+      operationId: getConversation
+      summary: Fetch a conversation (L4 ConversationManager).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Conversation with messages.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/providers/{id}:
+    get:
+      tags: [universal]
+      operationId: getProvider
+      summary: Fetch provider health + status (L0 ProviderRegistrar).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Provider detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  responses:
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationError:
+      description: Capability arg validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    InterpretResult:
+      type: object
+      required: [capabilityId, params]
+      properties:
+        capabilityId:
+          type: string
+          description: Resolved UnifiedCapability id.
+        params:
+          type: object
+          description: Normalized parameters for the capability.
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+    CapabilitySummary:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        surfaces:
+          type: array
+          items:
+            type: string
+            enum: [cli, ui, api, mcp]
+        cliCommand:
+          type: string
+        mcpToolName:
+          type: string
+    ExecuteResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        data:
+          type: object
+        error:
+          type: string
+    Conversation:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        messages:
+          type: array
+          items:
+            type: object
+    Provider:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [healthy, degraded, down, unknown]
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        code:
+          type: string

@@ -3,9 +3,7 @@
 import { mock } from 'bun:test'
 import type { DiscoveryStore } from '../../../src/storage/contracts/discovery-store.js'
 
-export function createMockDiscoveryStore(
-  overrides: Partial<DiscoveryStore> = {},
-): DiscoveryStore {
+export function createMockDiscoveryStore(overrides: Partial<DiscoveryStore> = {}): DiscoveryStore {
   const sessions = new Map<string, any>()
   const observations = new Map<string, any[]>()
 

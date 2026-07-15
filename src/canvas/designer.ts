@@ -7,19 +7,16 @@
 // canvas op is a capability (P5), a human designer and an agent designer
 // use the identical path. The canvas builds the canvas.
 
+import type { CanvasRegistry } from './canvas-registry.js'
+import { defaultSandbox, validateDefinition } from './schema.js'
 import type {
   CanvasDefinition,
   CanvasLayout,
+  LayerAuthor,
   LayerBinding,
   LayerCategory,
-  LayerAuthor,
   SandboxPolicy,
 } from './types.js'
-import {
-  defaultSandbox,
-  validateDefinition,
-} from './schema.js'
-import type { CanvasRegistry } from './canvas-registry.js'
 
 /** A draft is the visual/declarative intent before it becomes a definition. */
 export interface LayerDraft {
@@ -42,9 +39,7 @@ export class CanvasDesigner {
   /** Compute the least-privilege sandbox for a draft. */
   static sandboxFor(draft: LayerDraft): SandboxPolicy {
     // A designer-authored layer starts with ONLY the capabilities it bound to.
-    const boundCaps = draft.bindings
-      .map((b) => b.capabilitySlug)
-      .filter((c): c is string => !!c)
+    const boundCaps = draft.bindings.map((b) => b.capabilitySlug).filter((c): c is string => !!c)
     return defaultSandbox({
       allowCapabilities: Array.from(new Set(boundCaps)),
       ...draft.sandbox,
@@ -55,10 +50,7 @@ export class CanvasDesigner {
    * Publish a draft as a CanvasDefinition. The draft itself is validated
    * (closed: no inline script, well-formed bindings) before it lands.
    */
-  async publish(
-    draft: LayerDraft,
-    author: LayerAuthor = 'user',
-  ): Promise<CanvasDefinition> {
+  async publish(draft: LayerDraft, author: LayerAuthor = 'user'): Promise<CanvasDefinition> {
     const sandbox = CanvasDesigner.sandboxFor(draft)
     const input = {
       slug: draft.slug,

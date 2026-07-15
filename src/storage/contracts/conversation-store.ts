@@ -69,6 +69,18 @@ export interface MessageInput {
 
 // ── Contract ───────────────────────────────────────────────────────────────
 
+export interface MessageAttachmentRow {
+  id: string
+  messageId: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+  storagePath: string
+  thumbnailPath: string | null
+  metadataJson: string
+  createdAt: number
+}
+
 export interface ConversationStore {
   getConversation(id: string): Promise<ConversationRow | null>
   createConversation(input: ConversationInput): Promise<ConversationRow>
@@ -86,5 +98,21 @@ export interface ConversationStore {
     opts?: { limit?: number; before?: string },
   ): Promise<ConversationMessageRow[]>
   getLastMessage(conversationId: string): Promise<ConversationMessageRow | null>
+  updateMessage(
+    id: string,
+    patch: Partial<Pick<ConversationMessageRow, 'content' | 'blocksJson' | 'metadataJson'>>,
+  ): Promise<void>
   getAccount(sessionId: string): Promise<ProviderAccountRow | null>
+  createAttachment(input: {
+    messageId: string
+    filename: string
+    mimeType: string
+    sizeBytes: number
+    storagePath: string
+    thumbnailPath?: string
+    metadataJson?: string
+  }): Promise<MessageAttachmentRow>
+  getAttachments(messageId: string): Promise<MessageAttachmentRow[]>
+  getAttachment(id: string): Promise<MessageAttachmentRow | null>
+  deleteAttachment(id: string): Promise<void>
 }

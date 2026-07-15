@@ -324,7 +324,7 @@ export class SituationDetector {
   }
 
   async learnFromCorrection(
-    conversationId: string,
+    _conversationId: string,
     detectedType: TaskType,
     actualType: TaskType,
   ): Promise<void> {

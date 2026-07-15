@@ -2,10 +2,10 @@
 // OracleEventStream — real-time system state over WebSocket. Broadcasts oracle
 // events (health changes, issue detection, healing actions) to all subscribers.
 
-import type { OracleDiagnosticEngine, DiagnosticIssue } from './oracle-diagnostic.js'
-import type { OracleActuator, HealAction } from './oracle-actuator.js'
-import type { KernelRegistry } from './kernel-registry.js'
 import type { CapabilityEventBus } from '../capability-event-bus.js'
+import type { KernelRegistry } from './kernel-registry.js'
+import type { HealAction, OracleActuator } from './oracle-actuator.js'
+import type { DiagnosticIssue, OracleDiagnosticEngine } from './oracle-diagnostic.js'
 
 export type OracleEventKind =
   | 'health-changed'
@@ -44,7 +44,9 @@ export class OracleEventStream {
 
   subscribe(callback: (event: OracleEvent) => void): () => void {
     this.subscribers.add(callback)
-    return () => { this.subscribers.delete(callback) }
+    return () => {
+      this.subscribers.delete(callback)
+    }
   }
 
   getRecentEvents(limit = 10): OracleEvent[] {
@@ -72,10 +74,18 @@ export class OracleEventStream {
       this.recent = this.recent.slice(-Math.floor(this.recentCapacity / 2))
     }
     for (const cb of this.subscribers) {
-      try { cb(full) } catch { /* ignore subscriber errors */ }
+      try {
+        cb(full)
+      } catch {
+        /* ignore subscriber errors */
+      }
     }
     if (this.eventBus) {
-      try { this.eventBus.emit({ type: 'kernel:oracle', ...full }) } catch { /* ignore */ }
+      try {
+        this.eventBus.emit({ type: 'kernel:oracle', ...full })
+      } catch {
+        /* ignore */
+      }
     }
   }
 

@@ -1,9 +1,9 @@
 // src/engines/capability-discovery-loop.ts
 // CapabilityDiscoveryLoop — auto-discovers capabilities and stores them in registry.
 
+import type { KernelStore } from '../storage/contracts/kernel-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
-import type { KernelStore } from '../storage/contracts/kernel-store.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -65,7 +65,7 @@ export class CapabilityDiscoveryLoop {
 
     for (const cap of caps) {
       const id = cap.id
-      const existing = this.discovered.find(c => c.id === id)
+      const existing = this.discovered.find((c) => c.id === id)
 
       if (!existing) {
         const discovered: DiscoveredCapability = {
@@ -99,7 +99,11 @@ export class CapabilityDiscoveryLoop {
   }
 
   // Generate a discovery report
-  report(): { total: number; byCategory: Record<string, number>; bySurface: Record<string, number> } {
+  report(): {
+    total: number
+    byCategory: Record<string, number>
+    bySurface: Record<string, number>
+  } {
     const byCategory: Record<string, number> = {}
     const bySurface: Record<string, number> = {}
 

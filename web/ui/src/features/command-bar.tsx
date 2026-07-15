@@ -2,8 +2,12 @@
 // NLCL Command Bar — the consumer-facing natural language input.
 // User types "open my resume" or "go to cnn and summarize the news"
 // and the system deterministically parses + executes — no AI needed.
+//
+// PRINCIPLE: FRONTEND = BACKEND
+// Uses the shared api/client.ts which sets X-Source: frontend on every request.
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { nlclApi, type InterpretResult } from '../api/client.js'
 
 export interface CommandBarResult {
   ok: boolean
@@ -46,18 +50,11 @@ export function CommandBar({
     setHistoryIndex(-1)
 
     try {
-      const response = await fetch(`${apiBase}/api/nlcl/interpret`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          input: rawInput,
-          surface: 'frontend',
-          providerId,
-          conversationId,
-        }),
+      const data = await nlclApi.interpret(rawInput, {
+        surface: 'frontend',
+        providerId,
+        conversationId,
       })
-
-      const data = (await response.json()) as CommandBarResult
       setResult(data)
       onResult?.(data)
     } catch (err) {
@@ -162,9 +159,8 @@ function HelpPanel({ apiBase }: { apiBase: string }) {
   const [help, setHelp] = useState<{ categories: Record<string, string[]>; totalCommands: number } | null>(null)
 
   useEffect(() => {
-    fetch(`${apiBase}/api/nlcl/help`)
-      .then((r) => r.json())
-      .then(setHelp)
+    nlclApi.help()
+      .then((data) => setHelp(data as { categories: Record<string, string[]>; totalCommands: number }))
       .catch(() => {})
   }, [apiBase])
 

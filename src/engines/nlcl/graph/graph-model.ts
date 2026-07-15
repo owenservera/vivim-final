@@ -6,6 +6,8 @@
 // synonyms/normalization). Regex + execute logic stays in code (catalog.ts).
 // Expansion = addNode/addEdge, no code edits. Hydrates from a DB store or seed.
 
+import { EngineError } from '../../../errors.js'
+
 export type NlclNodeKind =
   | 'category'
   | 'intent'
@@ -152,7 +154,11 @@ export class NlclGraph {
 
   // ── Expansion API (mutates in-memory; persist via store) ───────────────
 
-  private upsertNode(kind: NlclNodeKind, label: string, data?: Record<string, unknown>): NlclGraphNode {
+  private upsertNode(
+    kind: NlclNodeKind,
+    label: string,
+    data?: Record<string, unknown>,
+  ): NlclGraphNode {
     const id = nodeId(kind, label)
     const existing = this.nodes.get(id)
     if (existing) return existing
@@ -181,8 +187,11 @@ export class NlclGraph {
 
   addAlias(intent: string, aliasText: string): NlclGraphNode {
     const intentId = nodeId('intent', intent)
-    if (!this.nodes.has(intentId)) throw new Error(`Unknown intent: ${intent}`)
-    const aliasNode = this.upsertNode('alias', `${intent}|${aliasText}`, { text: aliasText, intent })
+    if (!this.nodes.has(intentId)) throw new EngineError(`Unknown intent: ${intent}`)
+    const aliasNode = this.upsertNode('alias', `${intent}|${aliasText}`, {
+      text: aliasText,
+      intent,
+    })
     this.link(intentId, aliasNode.id, 'hasAlias')
     return aliasNode
   }
@@ -190,7 +199,7 @@ export class NlclGraph {
   addSynonym(aliasText: string, intent: string, synonymText: string): void {
     const aliasId = nodeId('alias', `${intent}|${aliasText}`)
     const aliasNode = this.nodes.get(aliasId)
-    if (!aliasNode) throw new Error(`Unknown alias: ${aliasText} for intent ${intent}`)
+    if (!aliasNode) throw new EngineError(`Unknown alias: ${aliasText} for intent ${intent}`)
     const synNode = this.upsertNode('synonym', `${aliasId}|${synonymText}`, { text: synonymText })
     this.link(aliasNode.id, synNode.id, 'hasSynonym')
   }

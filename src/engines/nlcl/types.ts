@@ -30,6 +30,10 @@ export type ExecutorId =
   | 'conversation'
   | 'workflow'
   | 'app'
+  | 'canvas'
+  | 'memory'
+  | 'llm'
+  | 'web'
 
 export interface NLCContext {
   workspacePath?: string
@@ -40,6 +44,20 @@ export interface NLCContext {
   userId?: string
   surface: NLCLSurface
   metadata: Record<string, unknown>
+  canvasState?: Record<string, unknown>
+  activeSessionId?: string
+}
+
+/** Raw request context from HTTP/CLI transport for bindContext. */
+export interface RawRequestContext {
+  conversationId?: string
+  providerId?: string
+  slaveId?: string
+  userId?: string
+  surface?: NLCLSurface
+  metadata?: Record<string, unknown>
+  canvasState?: Record<string, unknown>
+  activeSessionId?: string
 }
 
 export interface CommandResult {
@@ -53,6 +71,18 @@ export interface CommandResult {
   followUp?: string
   requiresConfirmation?: boolean
   classification: ActionClassification
+  /** Unit 25.1 — resolved UnifiedCapability id (or slug) so downstream transports can act directly. */
+  capabilityId?: string
+  confirmation?: {
+    token: string
+    prompt: string
+  }
+  clarification?: {
+    prompt: string
+    missing?: string[]
+    ambiguous?: string[]
+    options?: string[]
+  }
 }
 
 export interface ParsedIntent {
@@ -64,6 +94,10 @@ export interface ParsedIntent {
   matchedPattern: string
   alternatives: ParsedIntent[]
   resolvedAt: number
+  /** Unit 25.1 — resolved UnifiedCapability id for registry execution. */
+  capabilityId?: string
+  /** Action classification of the matched capability (drives HITL approval gating). */
+  classification?: ActionClassification
 }
 
 export interface NLPattern {
@@ -90,6 +124,8 @@ export interface CommandPattern {
   classification: ActionClassification
   aiFallback: boolean
   tags: string[]
+  /** Unit 25.1 — target UnifiedCapability id (slug or id) for direct registry execution. */
+  capabilityId?: string
 }
 
 // ── Resolver Interface (Pluggable AI) ─────────────────────────────────────
@@ -161,8 +197,5 @@ export function classificationAtLeast(
   classification: ActionClassification,
   threshold: ActionClassification,
 ): boolean {
-  return (
-    (CLASSIFICATION_PRIORITY[classification] ?? 0) >=
-    (CLASSIFICATION_PRIORITY[threshold] ?? 0)
-  )
+  return (CLASSIFICATION_PRIORITY[classification] ?? 0) >= (CLASSIFICATION_PRIORITY[threshold] ?? 0)
 }

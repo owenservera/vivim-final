@@ -138,8 +138,8 @@ describe('CostOptimizer', () => {
     const report = await optimizer.getCostReport('claude', now - 10000, now + 10000)
     const dayEntry = report.byDay[today]
     expect(dayEntry).toBeDefined()
-    expect(dayEntry!.costCents).toBe(8)
-    expect(dayEntry!.requests).toBe(2)
+    expect(dayEntry?.costCents).toBe(8)
+    expect(dayEntry?.requests).toBe(2)
   })
 
   it('getCostReport returns empty for no data', async () => {
@@ -171,7 +171,7 @@ describe('CostOptimizer', () => {
 
   it('getCheapestProvider returns provider with lowest avg cost', async () => {
     const now = Date.now()
-    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000
+    const _thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000
     store.costLogs.push(
       // claude: avg 10 cents
       {
@@ -254,13 +254,13 @@ describe('CostOptimizer', () => {
 
     const claude = summaries.find((s) => s.providerId === 'claude')
     expect(claude).toBeDefined()
-    expect(claude!.totalCostCents).toBe(10)
-    expect(claude!.requestCount).toBe(1)
+    expect(claude?.totalCostCents).toBe(10)
+    expect(claude?.requestCount).toBe(1)
 
     const chatgpt = summaries.find((s) => s.providerId === 'chatgpt')
     expect(chatgpt).toBeDefined()
-    expect(chatgpt!.totalCostCents).toBe(5)
-    expect(chatgpt!.requestCount).toBe(2)
-    expect(chatgpt!.avgCostPerRequest).toBe(3)
+    expect(chatgpt?.totalCostCents).toBe(5)
+    expect(chatgpt?.requestCount).toBe(2)
+    expect(chatgpt?.avgCostPerRequest).toBe(3)
   })
 })

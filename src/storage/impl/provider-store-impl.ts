@@ -30,7 +30,7 @@ export class ProviderStoreImpl {
   async upsertDefinition(def: ProviderDefinitionRow): Promise<void> {
     const now = Date.now()
     await this.p.providerDefinition.upsert({
-      where: { id: def.id },
+      where: { slug: def.slug },
       create: {
         id: def.id,
         slug: def.slug,
@@ -381,5 +381,117 @@ export class ProviderStoreImpl {
 
   async deleteProviderModels(providerId: string): Promise<void> {
     await this.p.providerModel.deleteMany({ where: { providerId } })
+  }
+
+  // ── 1.3 Provider Taxonomy Layer ────────────────────────────────────────────
+
+  async registerCapability(input: {
+    providerId: string
+    slug: string
+    title: string
+    description?: string
+    category?: string
+    intent?: string
+    selector?: string
+    version?: string
+  }): Promise<{ id: string }> {
+    const now = Date.now()
+    // Create or reuse capability_taxonomy row (keyed by providerId.slug.version)
+    const taxonomyId = `${input.providerId}.${input.slug}.${input.version ?? 'v1'}`
+    await this.p.capabilityTaxonomy.upsert({
+      where: { slug: taxonomyId },
+      create: {
+        id: taxonomyId,
+        slug: taxonomyId,
+        name: input.title,
+        category: input.category ?? 'general',
+        description: input.description ?? null,
+        inputType: 'void',
+        uiComponent: 'action_button',
+        createdAt: now,
+        updatedAt: now,
+      },
+      update: {
+        name: input.title,
+        description: input.description ?? null,
+        updatedAt: now,
+      },
+    })
+
+    // Link to provider via capability_binding
+    await this.p.capabilityBinding.upsert({
+      where: { globalId_providerId: { globalId: taxonomyId, providerId: input.providerId } },
+      create: {
+        id: `${taxonomyId}_${input.providerId}`,
+        globalId: taxonomyId,
+        providerId: input.providerId,
+        createdAt: now,
+        updatedAt: now,
+      },
+      update: { updatedAt: now },
+    })
+
+    // Record intent if provided
+    if (input.intent) {
+      await this.p.capabilityIntent.create({
+        data: {
+          id: `${taxonomyId}_intent_${now}`,
+          capabilityId: taxonomyId,
+          intentText: input.intent,
+          patternsJson: JSON.stringify([]),
+          createdAt: now,
+        },
+      })
+    }
+
+    return { id: taxonomyId }
+  }
+
+  async overrideCapability(input: {
+    providerId: string
+    capabilityId: string
+    overrideType: string
+    overrideJson: string
+  }): Promise<void> {
+    const now = Date.now()
+    await this.p.providerOverride.upsert({
+      where: {
+        providerId_capabilityId_overrideType: {
+          providerId: input.providerId,
+          capabilityId: input.capabilityId,
+          overrideType: input.overrideType,
+        },
+      },
+      create: {
+        id: `${input.providerId}_${input.capabilityId}_${input.overrideType}_${now}`,
+        providerId: input.providerId,
+        capabilityId: input.capabilityId,
+        overrideType: input.overrideType,
+        overrideJson: input.overrideJson,
+        createdAt: now,
+      },
+      update: { overrideJson: input.overrideJson },
+    })
+  }
+
+  async listCapabilities(
+    providerId: string,
+  ): Promise<
+    Array<{ id: string; slug: string; title: string; description?: string; version?: string }>
+  > {
+    const bindings = await this.p.capabilityBinding.findMany({
+      where: { providerId },
+      include: { capability: true },
+    })
+    return bindings.map(
+      (b: {
+        capability: { id: string; slug: string; name: string; description: string | null }
+      }) => ({
+        id: b.capability.id,
+        slug: b.capability.slug,
+        title: b.capability.name,
+        description: b.capability.description ?? undefined,
+      }),
+    )
   }
 }

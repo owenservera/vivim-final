@@ -84,8 +84,8 @@ describe('AutomationStoreImpl', () => {
     await store.save(auto)
     const result = await store.findById('auto-1')
     expect(result).not.toBeNull()
-    expect(result!.name).toBe('Test Auto')
-    expect(result!.config).toEqual({ key: 'val' })
+    expect(result?.name).toBe('Test Auto')
+    expect(result?.config).toEqual({ key: 'val' })
   })
 
   test('listEnabled returns only enabled', async () => {
@@ -107,7 +107,7 @@ describe('AutomationStoreImpl', () => {
     })
     const result = await store.listEnabled()
     expect(result).toHaveLength(1)
-    expect(result[0]!.name).toBe('On')
+    expect(result[0]?.name).toBe('On')
   })
 
   test('updateLastRun sets timestamp', async () => {
@@ -121,7 +121,7 @@ describe('AutomationStoreImpl', () => {
     })
     await store.updateLastRun('a1', 99999)
     const result = await store.findById('a1')
-    expect(result!.lastRunAt).toBe(99999)
+    expect(result?.lastRunAt).toBe(99999)
   })
 
   test('delete removes automation', async () => {

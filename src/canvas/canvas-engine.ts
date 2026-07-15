@@ -7,23 +7,20 @@
 // plugin-ready: every surface is a contract, every layer is data, every
 // op is a capability.
 
-import { CanvasRegistry } from './canvas-registry.js'
-import { LayerMounter, type LayerHost } from './layer-mounter.js'
+import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import type { CanvasStore } from '../storage/contracts/canvas-store.js'
+import { registerCanvasCapabilities } from './canvas-agent-tools.js'
 import { CanvasMirror, InMemoryCanvasMirrorStore } from './canvas-mirror.js'
+import type { CanvasMirrorStore } from './canvas-mirror.js'
+import { CanvasRegistry } from './canvas-registry.js'
 import { SandboxBridge } from './capability-bridge.js'
+import { CanvasDesigner } from './designer.js'
+import { type LayerHost, LayerMounter } from './layer-mounter.js'
+import { registerCanvasMutationCaps } from './mutation-caps.js'
 import { OracleReader, type OracleSources } from './oracle-reader.js'
 import { CorePrimitiveRegistry, type PrimitiveProvider } from './primitives.js'
-import { CanvasDesigner } from './designer.js'
-import { registerCanvasCapabilities } from './canvas-agent-tools.js'
-import type {
-  CanvasDefinition,
-  CapabilityExecutor,
-  OracleReadProvider,
-} from './types.js'
-import type { CanvasStore } from '../storage/contracts/canvas-store.js'
-import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import { defaultSandbox } from './schema.js'
-import type { CanvasMirrorStore } from './canvas-mirror.js'
+import type { CanvasDefinition, CapabilityExecutor, OracleReadProvider } from './types.js'
 
 export interface CanvasEngineDeps {
   store: CanvasStore
@@ -32,6 +29,7 @@ export interface CanvasEngineDeps {
   oracle: OracleReadProvider
   primities?: PrimitiveProvider[]
   mirrorStore?: CanvasMirrorStore
+  eventBus?: import('../engines/capability-event-bus.js').CapabilityEventBus
 }
 
 export class CanvasEngine {
@@ -44,10 +42,14 @@ export class CanvasEngine {
   readonly designer: CanvasDesigner
   private readonly store: CanvasStore
   private readonly host: LayerHost
+  private readonly eventBus:
+    | import('../engines/capability-event-bus.js').CapabilityEventBus
+    | undefined
 
   constructor(deps: CanvasEngineDeps) {
     this.store = deps.store
     this.host = deps.host
+    this.eventBus = deps.eventBus
     this.registry = new CanvasRegistry(deps.store)
     this.mounter = new LayerMounter(deps.store, deps.host, this.registry)
     this.mirror = new CanvasMirror(deps.mirrorStore ?? new InMemoryCanvasMirrorStore())
@@ -75,6 +77,13 @@ export class CanvasEngine {
       oracle: this.oracle,
       designer: this.designer,
     })
+    registerCanvasMutationCaps(registry, {
+      registry: this.registry,
+      mounter: this.mounter,
+      mirror: this.mirror,
+      designer: this.designer,
+      eventBus: this.eventBus,
+    })
   }
 
   /** Seed the closed core layer set if absent (vision §3.2 seed table). */
@@ -101,7 +110,12 @@ const CORE_LAYER_SEED: Omit<CanvasDefinition, 'id' | 'version' | 'createdAt' | '
     html: '<div data-region="system-map" role="system-map"></div>',
     css: '',
     bindings: [
-      { regionId: 'system-map', role: 'system-map', selector: '[data-region="system-map"]', direction: 'read' },
+      {
+        regionId: 'system-map',
+        role: 'system-map',
+        selector: '[data-region="system-map"]',
+        direction: 'read',
+      },
     ],
     layout: { x: 0, y: 0, z: 0, w: 480, h: 360 },
     author: 'system',
@@ -117,8 +131,20 @@ const CORE_LAYER_SEED: Omit<CanvasDefinition, 'id' | 'version' | 'createdAt' | '
     html: '<div data-region="chat-thread" role="chat-thread"></div><textarea data-region="chat-input" role="chat-input"></textarea>',
     css: '',
     bindings: [
-      { regionId: 'chat-thread', role: 'chat-thread', selector: '[data-region="chat-thread"]', primitive: 'conversations', direction: 'bidirectional' },
-      { regionId: 'chat-input', role: 'chat-input', selector: '[data-region="chat-input"]', capabilitySlug: 'conversation_create', direction: 'write' },
+      {
+        regionId: 'chat-thread',
+        role: 'chat-thread',
+        selector: '[data-region="chat-thread"]',
+        primitive: 'conversations',
+        direction: 'bidirectional',
+      },
+      {
+        regionId: 'chat-input',
+        role: 'chat-input',
+        selector: '[data-region="chat-input"]',
+        capabilitySlug: 'conversation_create',
+        direction: 'write',
+      },
     ],
     layout: { x: 520, y: 0, z: 1, w: 480, h: 520 },
     author: 'system',
@@ -134,7 +160,13 @@ const CORE_LAYER_SEED: Omit<CanvasDefinition, 'id' | 'version' | 'createdAt' | '
     html: '<form data-region="designer-form" role="designer-form"></form>',
     css: '',
     bindings: [
-      { regionId: 'designer-form', role: 'designer-form', selector: '[data-region="designer-form"]', capabilitySlug: 'canvas_define', direction: 'write' },
+      {
+        regionId: 'designer-form',
+        role: 'designer-form',
+        selector: '[data-region="designer-form"]',
+        capabilitySlug: 'canvas_define',
+        direction: 'write',
+      },
     ],
     layout: { x: 0, y: 400, z: 2, w: 480, h: 420 },
     author: 'system',
@@ -144,4 +176,4 @@ const CORE_LAYER_SEED: Omit<CanvasDefinition, 'id' | 'version' | 'createdAt' | '
   },
 ]
 
-export { OracleSources }
+export type { OracleSources }

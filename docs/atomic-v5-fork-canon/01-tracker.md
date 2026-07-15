@@ -1,6 +1,6 @@
 # vivim-final v5-fork-canon — Atomic Tracker (MASTER for kernel+CDP)
 
-**Total units:** 90 | **Done:** 16 | **Blocked:** 0 | **Pending:** 64
+**Total units:** 90 | **Done:** 43 | **Blocked:** 0 | **Pending:** 36 | **Exists:** 11
 
 > **MASTER TRACKER for kernel+CDP work.** v5 = v4 + Kernel.
 > States: `[ ]` pending · `[~]` exists (have code, needs FIX) · `[x]` done · `[!]` blocked.
@@ -125,25 +125,31 @@
 - [x] 11.3 — StealthProfile store: per-provider profile config from DB → `docs/atomic-v5-fork-canon/phase-11-stealth-core/11.3-stealth-profile-store.md`
 - [x] 11.4 — ExtensionBridgeEngine: browser extension interaction mode → `docs/atomic-v5-fork-canon/phase-11-stealth-core/11.4-extension-bridge.md`
 
-## Phase 12: Fingerprint Spoofing Engines (4 units)
+## Phase 12: Fingerprint Spoofing Engines (4 units — COMPLETE)
 
-- [ ] 12.1 — CanvasNoiseEngine: canvas fingerprint perturbation → `docs/atomic-v5-fork-canon/phase-12-fingerprint-engines/12.1-canvas-noise.md`
-- [ ] 12.2 — WebGlSpoofEngine: GPU renderer + vendor spoofing → `docs/atomic-v5-fork-canon/phase-12-fingerprint-engines/12.2-webgl-spoof.md`
-- [ ] 12.3 — AudioContextEngine: audio fingerprint perturbation → `docs/atomic-v5-fork-canon/phase-12-fingerprint-engines/12.3-audio-context.md`
-- [ ] 12.4 — FontScreenEngine: font list + screen resolution spoofing → `docs/atomic-v5-fork-canon/phase-12-fingerprint-engines/12.4-font-screen.md`
+> All code exists in `src/engines/stealth/`. Implemented as part of stealth engine suite.
 
-## Phase 13: Human Simulation Engines (3 units)
+- [x] 12.1 — CanvasNoiseEngine: canvas fingerprint perturbation → `docs/atomic-v5-fork-canon/phase-12-fingerprint-engines/12.1-canvas-noise.md`
+- [x] 12.2 — WebGlSpoofEngine: GPU renderer + vendor spoofing → `docs/atomic-v5-fork-canon/phase-12-fingerprint-engines/12.2-webgl-spoof.md`
+- [x] 12.3 — AudioContextEngine: audio fingerprint perturbation → `docs/atomic-v5-fork-canon/phase-12-fingerprint-engines/12.3-audio-context.md`
+- [x] 12.4 — FontScreenEngine: font list + screen resolution spoofing → `docs/atomic-v5-fork-canon/phase-12-fingerprint-engines/12.4-font-screen.md`
 
-- [ ] 13.1 — HumanMouseEngine: bezier-curve mouse movement → `docs/atomic-v5-fork-canon/phase-13-human-simulation/13.1-human-mouse.md`
-- [ ] 13.2 — HumanKeyboardEngine: variable rhythm typing → `docs/atomic-v5-fork-canon/phase-13-human-simulation/13.2-human-keyboard.md`
-- [ ] 13.3 — HumanScrollEngine: natural scroll velocity curves → `docs/atomic-v5-fork-canon/phase-13-human-simulation/13.3-human-scroll.md`
+## Phase 13: Human Simulation Engines (3 units — COMPLETE)
 
-## Phase 14: Profile & Trace Stealth (4 units)
+> All code exists in `src/engines/stealth/`. Implemented as part of stealth engine suite.
 
-- [ ] 14.1 — ProfileWarmupEngine: history/cookie/trust building → `docs/atomic-v5-fork-canon/phase-14-profile-trace/14.1-profile-warmup.md`
-- [ ] 14.2 — CDPArtifactCleaner: remove CDP traces from page → `docs/atomic-v5-fork-canon/phase-14-profile-trace/14.2-cdp-artifact-cleaner.md`
-- [ ] 14.3 — NetworkFingerprintEngine: TLS + HTTP header preservation → `docs/atomic-v5-fork-canon/phase-14-profile-trace/14.3-network-fingerprint.md`
-- [ ] 14.4 — BehavioralPatternEngine: request timing + interaction rhythm → `docs/atomic-v5-fork-canon/phase-14-profile-trace/14.4-behavioral-pattern.md`
+- [x] 13.1 — HumanMouseEngine: bezier-curve mouse movement → `docs/atomic-v5-fork-canon/phase-13-human-simulation/13.1-human-mouse.md`
+- [x] 13.2 — HumanKeyboardEngine: variable rhythm typing → `docs/atomic-v5-fork-canon/phase-13-human-simulation/13.2-human-keyboard.md`
+- [x] 13.3 — HumanScrollEngine: natural scroll velocity curves → `docs/atomic-v5-fork-canon/phase-13-human-simulation/13.3-human-scroll.md`
+
+## Phase 14: Profile & Trace Stealth (4 units — COMPLETE)
+
+> All code exists in `src/engines/stealth/`. Implemented as part of stealth engine suite.
+
+- [x] 14.1 — ProfileWarmupEngine: history/cookie/trust building → `docs/atomic-v5-fork-canon/phase-14-profile-trace/14.1-profile-warmup.md`
+- [x] 14.2 — CDPArtifactCleaner: remove CDP traces from page → `docs/atomic-v5-fork-canon/phase-14-profile-trace/14.2-cdp-artifact-cleaner.md`
+- [x] 14.3 — NetworkFingerprintEngine: TLS + HTTP header preservation → `docs/atomic-v5-fork-canon/phase-14-profile-trace/14.3-network-fingerprint.md`
+- [x] 14.4 — BehavioralPatternEngine: request timing + interaction rhythm → `docs/atomic-v5-fork-canon/phase-14-profile-trace/14.4-behavioral-pattern.md`
 
 ---
 
@@ -156,42 +162,42 @@ The system's self-understanding layer — queryable self-model.
 - [x] 15.3 — OracleActuator: self-healing actions (restart, heal, reconfig) → `docs/atomic-v5-fork-canon/phase-15-kernel-oracle/15.3-oracle-actuator.md`
 - [x] 15.4 — OracleEventStream: real-time system state over WebSocket → `docs/atomic-v5-fork-canon/phase-15-kernel-oracle/15.4-oracle-event-stream.md`
 
-## Phase 16: Kernel Surfaces (6 units)
+## Phase 16: Kernel Surfaces (6 units — 3 done, 2 partial, 1 pending)
 
-Expose the kernel to all user/system surfaces.
+Expose the kernel to all user/system surfaces. Implemented as v9/v10.
 
-- [ ] 16.1 — Kernel REST API: /api/kernel/* routes → `docs/atomic-v5-fork-canon/phase-16-kernel-surfaces/16.1-kernel-rest.md`
-- [ ] 16.2 — Kernel MCP Tools: system.describe/diagnose/heal/explain → `docs/atomic-v5-fork-canon/phase-16-kernel-surfaces/16.2-kernel-mcp.md`
-- [ ] 16.3 — Kernel CLI: kernel status/diagnose/trace/config commands → `docs/atomic-v5-fork-canon/phase-16-kernel-surfaces/16.3-kernel-cli.md`
+- [x] 16.1 — Kernel REST API: /api/kernel/* routes → `docs/atomic-v5-fork-canon/phase-16-kernel-surfaces/16.1-kernel-rest.md`
+- [~] 16.2 — Kernel MCP Tools: system.describe/diagnose/heal/explain → `docs/atomic-v5-fork-canon/phase-16-kernel-surfaces/16.2-kernel-mcp.md` — EXISTS in `mcp/nlcl-tools.ts`, partial coverage
+- [x] 16.3 — Kernel CLI: kernel status/diagnose/trace/config commands → `docs/atomic-v5-fork-canon/phase-16-kernel-surfaces/16.3-kernel-cli.md`
 - [ ] 16.4 — Kernel Frontend Surface: OracleDashboard in UI → `docs/atomic-v5-fork-canon/phase-16-kernel-surfaces/16.4-kernel-frontend.md`
-- [ ] 16.5 — MCP Server Kernel Integration: register kernel tools → `docs/atomic-v5-fork-canon/phase-00-surgical-edit/16.5-mcp-server-integration.md`
-- [ ] 16.6 — CLI Kernel Commands: bun run kernel status/diagnose/trace → `docs/atomic-v5-fork-canon/phase-00-surgical-edit/16.6-cli-kernel-commands.md`
+- [~] 16.5 — MCP Server Kernel Integration: register kernel tools → `docs/atomic-v5-fork-canon/phase-00-surgical-edit/16.5-mcp-server-integration.md` — EXISTS in `mcp/nlcl-tools.ts`
+- [x] 16.6 — CLI Kernel Commands: bun run kernel status/diagnose/trace → `docs/atomic-v5-fork-canon/phase-00-surgical-edit/16.6-cli-kernel-commands.md`
 
 ---
 
 ## Summary
 
-| Phase | Units | Domain |
-|-------|-------|--------|
-| 0 | 9 | Kernel Core (event bus, registry, tracer, provenance, schema, bootstrap) |
-| 1 | 7 | E2E Bootstrap & Login |
-| 2 | 8 | Single-Turn Conversation |
-| 3 | 6 | Multi-Turn Conversation |
-| 4 | 5 | Three-Provider Demo |
-| 5 | 6 | Frontend Performance |
-| 6 | 6 | Platform Foundation |
-| 7 | 7 | Reliability & Persistence |
-| 8 | 3 | Resource Management |
-| 9 | 5 | Observability |
-| 10 | 3 | Frontend Resilience |
-| 11 | 4 | Stealth Core |
-| 12 | 4 | Fingerprint Spoofing |
-| 13 | 3 | Human Simulation |
-| 14 | 4 | Profile & Trace Stealth |
-| 15 | 4 | Kernel Oracle |
-| 16 | 6 | Kernel Surfaces |
-| **Total** | **90** | |
+| Phase | Units | Done | ~ | Domain |
+|-------|-------|------|---|--------|
+| 0 | 9 | **9** | 0 | Kernel Core (event bus, registry, tracer, provenance, schema, bootstrap) |
+| 1 | 7 | **7** | 0 | E2E Bootstrap & Login |
+| 2 | 8 | 0 | **4** | Single-Turn Conversation |
+| 3 | 6 | 0 | **4** | Multi-Turn Conversation |
+| 4 | 5 | 0 | **1** | Three-Provider Demo |
+| 5 | 6 | 0 | 0 | Frontend Performance |
+| 6 | 6 | 0 | 0 | Platform Foundation |
+| 7 | 7 | 0 | 0 | Reliability & Persistence |
+| 8 | 3 | 0 | 0 | Resource Management |
+| 9 | 5 | **5** | 0 | Observability |
+| 10 | 3 | 0 | 0 | Frontend Resilience |
+| 11 | 4 | **4** | 0 | Stealth Core |
+| 12 | 4 | **4** | 0 | Fingerprint Spoofing |
+| 13 | 3 | **3** | 0 | Human Simulation |
+| 14 | 4 | **4** | 0 | Profile & Trace Stealth |
+| 15 | 4 | **4** | 0 | Kernel Oracle |
+| 16 | 6 | **3** | **2** | Kernel Surfaces |
+| **Total** | **90** | **43** | **11** | |
 
 ## Last Updated
 
-2026-07-12
+2026-07-13

@@ -2,12 +2,14 @@
 // Canonical mock for ConversationStore contract.
 import { mock } from 'bun:test'
 import type {
-  ConversationStore,
-  ConversationRow,
   ConversationMessageRow,
+  ConversationRow,
+  ConversationStore,
 } from '../../../src/storage/contracts/conversation-store.js'
 
-export function createMockConversationStore(overrides: Partial<ConversationStore> = {}): ConversationStore {
+export function createMockConversationStore(
+  overrides: Partial<ConversationStore> = {},
+): ConversationStore {
   const conversations = new Map<string, ConversationRow>()
   const messages = new Map<string, ConversationMessageRow[]>()
 

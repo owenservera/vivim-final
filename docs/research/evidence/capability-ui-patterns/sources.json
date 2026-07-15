@@ -1,0 +1,56 @@
+{
+  "topic": "capability-ui-patterns",
+  "collected": "2026-07-12",
+  "sources": [
+    {
+      "id": "ai-capabilities",
+      "title": "ai-capabilities — Expose application actions to AI agents",
+      "url": "https://github.com/Egorfing/ai-capabilities",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Extract actions from source code to canonical manifest; same defineCapability for UI and agent actions",
+      "usedIn": ["report:capability-ui-patterns", "brief:capability-ui-patterns"]
+    },
+    {
+      "id": "capstan",
+      "title": "Capstan — One framework for humans and AI agents",
+      "url": "https://github.com/barry3406/capstan",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "defineAPI() creates both HTTP endpoint and MCP tool with same auth + policies; no adapter layer",
+      "usedIn": ["report:capability-ui-patterns", "brief:capability-ui-patterns"]
+    },
+    {
+      "id": "agentui",
+      "title": "agentui — AI-native component system for agent-driven UIs",
+      "url": "https://github.com/kibadist/agentui",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Agent emits { name, props } UI events; registry renders whitelisted components dynamically",
+      "usedIn": ["report:capability-ui-patterns", "brief:capability-ui-patterns"]
+    },
+    {
+      "id": "genui-loomagent",
+      "title": "GenUI-LoomAgent — Open-source Generative UI Agent framework",
+      "url": "https://github.com/qingkongzhiqian/GenUI-LoomAgent",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "AG-UI protocol with GenUI components (DataTable, Graph, DataList, TripCard, etc.)",
+      "usedIn": ["report:capability-ui-patterns", "brief:capability-ui-patterns"]
+    },
+    {
+      "id": "hsafa",
+      "title": "Hsafa — runtime for persistent autonomous AI agents",
+      "url": "https://devpost.com/software/hsafa",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Agent-to-user interface via AG-UI protocol; SSE streaming for tool calls and UI components",
+      "usedIn": ["report:capability-ui-patterns", "brief:capability-ui-patterns"]
+    }
+  ]
+}

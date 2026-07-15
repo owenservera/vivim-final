@@ -25,10 +25,10 @@ describe('ObservationTap', () => {
     const events: ObservationEvent[] = []
     tap.onEvent('s1', (e) => events.push(e))
 
-    const handler = (tap as any).listeners.get('s1')![0]
+    const handler = (tap as any).listeners.get('s1')?.[0]
     handler({ type: 'dom_mutation', timestamp: 1000, data: {} })
     expect(events).toHaveLength(1)
-    expect(events[0]!.type).toBe('dom_mutation')
+    expect(events[0]?.type).toBe('dom_mutation')
   })
 
   test('onEvent returns unsubscribe function', async () => {
@@ -37,7 +37,7 @@ describe('ObservationTap', () => {
     const unsub = tap.onEvent('s1', (e) => events.push(e))
 
     const handlers = (tap as any).listeners.get('s1') as Array<(e: ObservationEvent) => void>
-    handlers[0]!({ type: 'console_log', timestamp: 1000, data: {} })
+    handlers[0]?.({ type: 'console_log', timestamp: 1000, data: {} })
     expect(events).toHaveLength(1)
 
     unsub()

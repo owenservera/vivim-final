@@ -2,12 +2,17 @@
 
 *Last updated: 2026-07-12*
 
-| Report | Generated | Last Verified | Status |
-|--------|-----------|---------------|--------|
-| SOTA Deterministic NLU for Agentic Systems | 2026-07-12 | 2026-07-12 | ✅ Fresh |
-| Provider Taxonomy Library | 2026-07-12 | 2026-07-12 | ✅ Fresh |
-| Event Bus SOTA | 2026-07-12 | — | ⚠️ Verify |
-| Tooling Best Practices | 2026-07-12 | — | ⚠️ Verify |
+| Report/Brief | Generated | Last Verified | Status |
+|--------------|-----------|---------------|--------|
+| SOTA Deterministic NLU for Agentic Systems (report) | 2026-07-12 | 2026-07-12 | ✅ Fresh |
+| Provider Taxonomy Library (report) | 2026-07-12 | 2026-07-12 | ✅ Fresh |
+| HTTP QUERY Method (report) | 2026-07-12 | 2026-07-12 | ✅ Fresh |
+| Bun + SQLite WAL Patterns (brief) | 2026-07-12 | 2026-07-12 | ✅ Fresh |
+| Raw CDP Patterns (brief) | 2026-07-12 | 2026-07-12 | ✅ Fresh |
+| Capability-Driven UI Patterns (brief) | 2026-07-12 | 2026-07-12 | ✅ Fresh |
+| Knowledge Graph + ULID Patterns (brief) | 2026-07-12 | 2026-07-12 | ✅ Fresh |
+| Event Bus SOTA (report) | 2026-07-12 | — | ⚠️ Verify |
+| Tooling Best Practices (report) | 2026-07-12 | — | ⚠️ Verify |
 
 ## Rules
 

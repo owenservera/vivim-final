@@ -3,10 +3,10 @@
 // Resolves per-provider launch profiles and builds Chrome args without the
 // bot-signal flags that硬编码 buildChromeArgs used.
 
+import { EngineError } from '../../errors.js'
 import type { StealthProfileStore } from '../../storage/contracts/stealth-store.js'
 import type { LaunchMode } from '../../storage/contracts/stealth-store.js'
 import type { StructuredLogger } from '../logger.js'
-import { EngineError } from '../../errors.js'
 
 export type { LaunchMode } from '../../storage/contracts/stealth-store.js'
 
@@ -43,7 +43,9 @@ export class LaunchProfileEngine {
         this.profiles.set(row.id, this.mapRow(row))
       }
     } catch (err) {
-      this.logger?.error('Failed to load launch profiles', { error: err instanceof Error ? err.message : String(err) })
+      this.logger?.error('Failed to load launch profiles', {
+        error: err instanceof Error ? err.message : String(err),
+      })
     }
   }
 
@@ -56,10 +58,7 @@ export class LaunchProfileEngine {
     return profile
   }
 
-  buildArgs(
-    profile: LaunchProfile,
-    opts: { debugPort: number; profileDir: string },
-  ): string[] {
+  buildArgs(profile: LaunchProfile, opts: { debugPort: number; profileDir: string }): string[] {
     switch (profile.mode) {
       case 'cdp_minimal':
         return this.buildMinimalArgs(opts)

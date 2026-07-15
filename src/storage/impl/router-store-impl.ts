@@ -33,8 +33,8 @@ export class RouterStoreImpl implements RouterStore {
       capability_id: r.capabilityId,
       is_active: r.isActive,
       config_json: r.configJson,
-      created_at: r.createdAt,
-      updated_at: r.updatedAt,
+      created_at: Number(r.createdAt),
+      updated_at: Number(r.updatedAt),
     }))
   }
 
@@ -48,8 +48,8 @@ export class RouterStoreImpl implements RouterStore {
       capability_id: r.capabilityId,
       is_active: r.isActive,
       config_json: r.configJson,
-      created_at: r.createdAt,
-      updated_at: r.updatedAt,
+      created_at: Number(r.createdAt),
+      updated_at: Number(r.updatedAt),
     }
   }
 
@@ -99,7 +99,7 @@ export class RouterStoreImpl implements RouterStore {
       account_id: r.accountId,
       priority: r.priority,
       is_active: r.isActive,
-      created_at: r.createdAt,
+      created_at: Number(r.createdAt),
     }))
   }
 
@@ -183,7 +183,7 @@ export class RouterStoreImpl implements RouterStore {
       conversation_id: r.conversationId,
       status: r.status,
       result_json: r.resultJson,
-      ts: r.ts,
+      ts: Number(r.ts),
     }))
   }
 
@@ -197,7 +197,7 @@ export class RouterStoreImpl implements RouterStore {
       route_request_id: r.routeRequestId,
       event_type: r.eventType,
       event_data_json: r.eventDataJson,
-      ts: r.ts,
+      ts: Number(r.ts),
     }))
   }
 }

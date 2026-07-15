@@ -19,7 +19,12 @@ export { IntentRouter, type CompositeIntent } from './intent-router.js'
 export { getDefaultCommandPatterns, getPatternsByCategory } from './catalog.js'
 
 // ── SOTA NLU pipeline layers ───────────────────────────────────────────────
-export { TextNormalizer, defaultNormalizer, normalizeText, tokenizeText } from './text-normalizer.js'
+export {
+  TextNormalizer,
+  defaultNormalizer,
+  normalizeText,
+  tokenizeText,
+} from './text-normalizer.js'
 export {
   levenshtein,
   levenshteinSimilarity,
@@ -44,6 +49,16 @@ export {
   type LayeredResolverOptions,
   type LayerTelemetry,
 } from './layered-resolver.js'
+
+// ── Phase 25 additions ─────────────────────────────────────────────────────
+export {
+  extractParameters,
+  validateInput,
+  coerceValues,
+  type ExtractResult,
+} from './parameter-extraction.js'
+export { bindContext, resolvePronouns } from './context-binder.js'
+export { LLMSlaveResolver } from './llm-slave-resolver.js'
 
 export {
   FileExecutor,

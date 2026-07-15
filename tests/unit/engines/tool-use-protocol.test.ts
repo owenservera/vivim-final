@@ -29,8 +29,8 @@ describe('ToolUseProtocolImpl', () => {
   test('listTools fetches from client and maps to ToolDefinition', async () => {
     const tools = await protocol.listTools('srv1')
     expect(tools).toHaveLength(1)
-    expect(tools[0]!.name).toBe('echo')
-    expect(tools[0]!.outputSchema).toEqual({})
+    expect(tools[0]?.name).toBe('echo')
+    expect(tools[0]?.outputSchema).toEqual({})
   })
 
   test('executeTool calls client.callTool and returns success', async () => {

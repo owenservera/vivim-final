@@ -22,8 +22,8 @@ describe('CapabilityShapeRegistry', () => {
   test('getShape returns built-in shape', () => {
     const shape = registry.getShape('chat_app')
     expect(shape).not.toBeNull()
-    expect(shape!.name).toBe('Chat Application')
-    expect(shape!.expectedCapabilities.send_message).toBe('required')
+    expect(shape?.name).toBe('Chat Application')
+    expect(shape?.expectedCapabilities.send_message).toBe('required')
   })
 
   test('getShape returns null for unknown', () => {
@@ -57,8 +57,8 @@ describe('CapabilityShapeRegistry', () => {
     ]
     const match = registry.matchShape(indicators)
     expect(match).not.toBeNull()
-    expect(match!.shapeId).toBe('chat_app')
-    expect(match!.confidence).toBeGreaterThan(0.5)
+    expect(match?.shapeId).toBe('chat_app')
+    expect(match?.confidence).toBeGreaterThan(0.5)
   })
 
   test('matchShape returns null for empty indicators', () => {

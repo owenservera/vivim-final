@@ -1,6 +1,6 @@
 # Research Report
 
-**Generated:** 2026-07-12T06:26:03.641Z
+**Generated:** 2026-07-15T14:49:02.391Z
 **Truth Score:** 98%
 
 ---
@@ -8,8 +8,8 @@
 ## Executive Summary
 
 - Total units: 225
-- Done: 220
-- Need port: 1
+- Done: 221
+- Need port: 0
 - Need create: 4
 - Need fix: 0
 
@@ -167,7 +167,7 @@
 
 #### 2.14 — ProviderEndpoint selectorsJson Rename
 
-- **Status:** pending
+- **Status:** in_progress
 - **File:** `prisma/schema.prisma`, `src/storage/impl/provider-store-impl.ts`
 - **Classification:** CREATE
 - **Source:** N/A
@@ -186,9 +186,9 @@
 
 - **Status:** pending
 - **File:** `src/schema/provider-manifest.ts`
-- **Classification:** PORT
+- **Classification:** DONE
 - **Source:** N/A
-- **Effort:** M
+- **Effort:** S
 - **Vivim ref:** `src/schema/provider-manifest.ts`
 
 #### 2.17 — Remove Hardcoded Parsers from StreamParserEngine
@@ -1867,7 +1867,6 @@
 ## Implementation Order
 
 1. **2.14 — ProviderEndpoint selectorsJson Rename** (CREATE, M)
-1. **2.16 — ProviderStreamConfig Delta Path Validation** (PORT, M)
 1. **11.11 — Executor Barrel     → `src/executor/index.ts` (wiring + factory)** (CREATE, M)
 1. **11.13 — MirrorEngine Action Stubs → `src/engines/mirror-engine.ts` (3 stubs → real)** (CREATE, M)
 1. **13.10 — First Feature E2E → proof that sandbox system works end-to-end** (CREATE, M)

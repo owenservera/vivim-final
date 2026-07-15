@@ -184,6 +184,28 @@ export class KnowledgeExtractor {
     return results.filter((r) => r.confidence >= this.config.confidenceThreshold)
   }
 
+  /**
+   * Continuous-mode extraction (Unit 33.2). Operates on a single message/segment
+   * (a "chunk") rather than a whole conversation. It reuses the exact same
+   * extraction logic as batch mode (no prompt divergence) and returns the
+   * relation edges — entities / decisions / facts — extracted from that chunk.
+   */
+  async extractIncremental(chunk: {
+    conversationId: string
+    messageId: string
+    role: string
+    content: string
+    context?: string
+  }): Promise<ExtractionResult[]> {
+    return this.extractFromMessage(
+      chunk.conversationId,
+      chunk.messageId,
+      chunk.role,
+      chunk.content,
+      chunk.context ?? '',
+    )
+  }
+
   async extractFromConversation(
     conversationId: string,
     messages: Array<{ id: string; role: string; content: string }>,

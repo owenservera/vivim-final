@@ -7,14 +7,39 @@
 // Wired into NLCommandParser after regex extraction so every pattern benefits.
 
 const NUMBER_WORDS: Record<string, number> = {
-  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7,
-  eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13,
-  fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
-  nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60,
-  seventy: 70, eighty: 80, ninety: 90, hundred: 100, thousand: 1000,
+  zero: 0,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+  twenty: 20,
+  thirty: 30,
+  forty: 40,
+  fifty: 50,
+  sixty: 60,
+  seventy: 70,
+  eighty: 80,
+  ninety: 90,
+  hundred: 100,
+  thousand: 1000,
 }
 
-const DAY_MS = 86_400_000
+const _DAY_MS = 86_400_000
 
 function addDays(base: Date, days: number): Date {
   const d = new Date(base)
@@ -36,9 +61,19 @@ export function normalizeRelativeDate(text: string, now: Date = new Date()): str
   const inDays = lowered.match(/^in (\d+) days?$/)
   if (inDays?.[1]) return isoDate(addDays(now, Number(inDays[1])))
 
-  const nextWeekday = lowered.match(/^next (monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/)
+  const nextWeekday = lowered.match(
+    /^next (monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/,
+  )
   if (nextWeekday?.[1]) {
-    const target = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(nextWeekday[1]!)
+    const target = [
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+    ].indexOf(nextWeekday[1] ?? '')
     const current = now.getDay()
     let delta = target - current
     if (delta <= 0) delta += 7
@@ -129,4 +164,45 @@ function resolveSingleValue(key: string, value: string, now: Date): string {
     return typeof b === 'boolean' ? String(b) : value
   }
   return value
+}
+
+// ── Unit 1.4 — Intent Registry (programmatic registration) ─────────────────
+
+type IntentEntry = {
+  slug: string
+  patterns: string[]
+  confidence: number
+}
+const intentRegistry = new Map<string, IntentEntry>()
+
+/**
+ * Register a new intent programmatically (no code change required).
+ * The entry is resolved during NL interpretation.
+ */
+export function registerIntent(
+  slug: string,
+  patterns: string[],
+  opts?: { confidence?: number },
+): void {
+  intentRegistry.set(slug, { slug, patterns, confidence: opts?.confidence ?? 1.0 })
+}
+
+/** Get all registered intents. */
+export function listIntents(): IntentEntry[] {
+  return [...intentRegistry.values()]
+}
+
+/** Resolve an intent slug from the registry by matching against patterns. */
+export function resolveIntentFromRegistry(
+  text: string,
+): { slug: string; confidence: number } | null {
+  const lowered = text.toLowerCase()
+  for (const entry of intentRegistry.values()) {
+    for (const pattern of entry.patterns) {
+      if (lowered.includes(pattern.toLowerCase())) {
+        return { slug: entry.slug, confidence: entry.confidence }
+      }
+    }
+  }
+  return null
 }

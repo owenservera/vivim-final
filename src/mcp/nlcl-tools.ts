@@ -6,10 +6,7 @@ import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
 import type { DiscoveryMcpServer } from './server.js'
 
-export function registerNLCLTools(
-  server: DiscoveryMcpServer,
-  engine: NLCLEngine,
-): void {
+export function registerNLCLTools(server: DiscoveryMcpServer, engine: NLCLEngine): void {
   server.tool(
     'nl_command',
     'Execute a natural language command. Type what you want in plain English — the system deterministically parses and executes it. No AI required for 95% of commands.',
@@ -18,7 +15,8 @@ export function registerNLCLTools(
       properties: {
         input: {
           type: 'string',
-          description: 'Natural language command (e.g. "open my resume", "go to cnn and summarize the news")',
+          description:
+            'Natural language command (e.g. "open my resume", "go to cnn and summarize the news")',
         },
         surface: {
           type: 'string',
@@ -61,7 +59,9 @@ export function registerNLCLTools(
         result.error ? `Error: ${result.error}` : '',
         result.followUp ? `Note: ${result.followUp}` : '',
         `Latency: ${result.latencyMs}ms`,
-      ].filter(Boolean).join('\n')
+      ]
+        .filter(Boolean)
+        .join('\n')
 
       return {
         content: [{ type: 'text', text: response }],
@@ -87,15 +87,17 @@ export function registerNLCLTools(
         category: args.category as string | undefined,
       })
 
-      const lines = commands.map((c) =>
-        `- ${c.intent}: ${c.description}\n  Examples: ${c.examples.slice(0, 3).join(' | ')}`,
+      const lines = commands.map(
+        (c) => `- ${c.intent}: ${c.description}\n  Examples: ${c.examples.slice(0, 3).join(' | ')}`,
       )
 
       return {
-        content: [{
-          type: 'text',
-          text: `Available commands (${commands.length}):\n\n${lines.join('\n\n')}`,
-        }],
+        content: [
+          {
+            type: 'text',
+            text: `Available commands (${commands.length}):\n\n${lines.join('\n\n')}`,
+          },
+        ],
       }
     },
   )

@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "tpl_navigate",
+      "pattern": "navigate to (https?:\\/\\/\\S+)",
+      "wildcards": ["url"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "navigate",
+            "inputMapping": { "url": "{url}" },
+            "outputKey": "page",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_navigate_extract",
+      "pattern": "navigate to (https?:\\/\\/\\S+).*?extract",
+      "wildcards": ["url"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "navigate",
+            "inputMapping": { "url": "{url}" },
+            "outputKey": "page",
+            "dependsOn": []
+          },
+          {
+            "id": "n2",
+            "capabilitySlug": "extract",
+            "inputMapping": { "url": "{url}", "target": "title" },
+            "outputKey": "result",
+            "dependsOn": ["n1"]
+          }
+        ],
+        "edges": [{ "from": "n1", "to": "n2" }],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_search",
+      "pattern": "search (?:for )?(.+)",
+      "wildcards": ["query"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "search",
+            "inputMapping": { "query": "{query}" },
+            "outputKey": "results",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_search_extract",
+      "pattern": "search (?:for )?(.+).*?extract",
+      "wildcards": ["query"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "search",
+            "inputMapping": { "query": "{query}" },
+            "outputKey": "results",
+            "dependsOn": []
+          },
+          {
+            "id": "n2",
+            "capabilitySlug": "extract",
+            "inputMapping": { "query": "{query}" },
+            "outputKey": "result",
+            "dependsOn": ["n1"]
+          }
+        ],
+        "edges": [{ "from": "n1", "to": "n2" }],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_extract",
+      "pattern": "extract (.+) from (https?:\\/\\/\\S+)",
+      "wildcards": ["target", "url"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "extract",
+            "inputMapping": { "target": "{target}", "url": "{url}" },
+            "outputKey": "result",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_summarize",
+      "pattern": "summari[sz]e (.+)",
+      "wildcards": ["text"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "summarize",
+            "inputMapping": { "text": "{text}" },
+            "outputKey": "summary",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_summarize_url",
+      "pattern": "summari[sz]e (https?:\\/\\/\\S+)",
+      "wildcards": ["url"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "summarize",
+            "inputMapping": { "url": "{url}" },
+            "outputKey": "summary",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_compare",
+      "pattern": "compare (.+) and (.+)",
+      "wildcards": ["a", "b"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "compare",
+            "inputMapping": { "a": "{a}", "b": "{b}" },
+            "outputKey": "diff",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_translate",
+      "pattern": "translate (.+) (?:to )?(.+)",
+      "wildcards": ["text", "lang"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "translate",
+            "inputMapping": { "text": "{text}", "lang": "{lang}" },
+            "outputKey": "translation",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_click",
+      "pattern": "click (.+)",
+      "wildcards": ["selector"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "click",
+            "inputMapping": { "selector": "{selector}" },
+            "outputKey": "clicked",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_type",
+      "pattern": "type (.+) into (.+)",
+      "wildcards": ["text", "field"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "type",
+            "inputMapping": { "text": "{text}", "field": "{field}" },
+            "outputKey": "typed",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_screenshot",
+      "pattern": "screenshot (https?:\\/\\/\\S+)",
+      "wildcards": ["url"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "screenshot",
+            "inputMapping": { "url": "{url}" },
+            "outputKey": "image",
+            "dependsOn": []
+          }
+        ],
+        "edges": [],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_navigate_screenshot",
+      "pattern": "navigate to (https?:\\/\\/\\S+) and screenshot",
+      "wildcards": ["url"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "navigate",
+            "inputMapping": { "url": "{url}" },
+            "outputKey": "page",
+            "dependsOn": []
+          },
+          {
+            "id": "n2",
+            "capabilitySlug": "screenshot",
+            "inputMapping": { "url": "{url}" },
+            "outputKey": "image",
+            "dependsOn": ["n1"]
+          }
+        ],
+        "edges": [{ "from": "n1", "to": "n2" }],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_search_summarize",
+      "pattern": "search (?:for )?(.+).*?summari[sz]e",
+      "wildcards": ["query"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "search",
+            "inputMapping": { "query": "{query}" },
+            "outputKey": "results",
+            "dependsOn": []
+          },
+          {
+            "id": "n2",
+            "capabilitySlug": "summarize",
+            "inputMapping": { "query": "{query}" },
+            "outputKey": "summary",
+            "dependsOn": ["n1"]
+          }
+        ],
+        "edges": [{ "from": "n1", "to": "n2" }],
+        "strategy": "template"
+      }
+    },
+    {
+      "id": "tpl_extract_summarize",
+      "pattern": "extract (.+) from (https?:\\/\\/\\S+).*?summari[sz]e",
+      "wildcards": ["target", "url"],
+      "dag": {
+        "nodes": [
+          {
+            "id": "n1",
+            "capabilitySlug": "extract",
+            "inputMapping": { "target": "{target}", "url": "{url}" },
+            "outputKey": "result",
+            "dependsOn": []
+          },
+          {
+            "id": "n2",
+            "capabilitySlug": "summarize",
+            "inputMapping": { "url": "{url}" },
+            "outputKey": "summary",
+            "dependsOn": ["n1"]
+          }
+        ],
+        "edges": [{ "from": "n1", "to": "n2" }],
+        "strategy": "template"
+      }
+    }
+  ]
+}

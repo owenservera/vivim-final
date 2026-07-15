@@ -3,7 +3,7 @@
 // other navigator properties to defeat automation fingerprinting.
 
 import { z } from 'zod'
-import type { StealthModule, StealthContext } from './stealth-module.js'
+import type { StealthContext, StealthModule } from './stealth-module.js'
 
 export const navigatorPatchConfig = z.object({
   webdriver: z.boolean().default(false),
@@ -26,7 +26,8 @@ export const navigatorPatchModule: StealthModule = {
     if (typeof config.webdriver === 'boolean') props.webdriver = config.webdriver
     if (typeof config.platform === 'string') props.platform = config.platform
     if (Array.isArray(config.languages)) props.languages = config.languages
-    if (typeof config.hardwareConcurrency === 'number') props.hardwareConcurrency = config.hardwareConcurrency
+    if (typeof config.hardwareConcurrency === 'number')
+      props.hardwareConcurrency = config.hardwareConcurrency
     if (typeof config.maxTouchPoints === 'number') props.maxTouchPoints = config.maxTouchPoints
 
     const propEntries = Object.entries(props)
@@ -41,7 +42,7 @@ export const navigatorPatchModule: StealthModule = {
         get: () => descriptors[key],
         configurable: true,
       });
-    } catch (e) {}
+    } catch (e) { /* best-effort: property may already be defined as non-configurable */ }
   }
   // languages is on Navigator (instance) — patch directly too
   if (descriptors.languages) {
@@ -50,7 +51,7 @@ export const navigatorPatchModule: StealthModule = {
         get: () => descriptors.languages,
         configurable: true,
       });
-    } catch (e) {}
+    } catch (e) { /* best-effort: property may already be defined as non-configurable */ }
   }
 })();`
 

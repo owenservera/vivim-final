@@ -10,7 +10,12 @@ export function createMockGovernorStore(overrides: Partial<GovernorStore> = {}):
     listAccounts: mock(() => [...accounts.values()]),
     getAccount: mock((id: string) => accounts.get(id) ?? null),
     createAccount: mock((input: any) => {
-      const row = { id: crypto.randomUUID(), ...input, createdAt: Date.now(), updatedAt: Date.now() }
+      const row = {
+        id: crypto.randomUUID(),
+        ...input,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
       accounts.set(row.id, row)
       return row
     }),

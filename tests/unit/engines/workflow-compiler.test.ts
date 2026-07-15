@@ -23,9 +23,9 @@ describe('WorkflowCompiler', () => {
     }
     const result = compiler.compile(def)
     expect(result.ok).toBe(true)
-    expect(result.compiled!.dag.nodes).toHaveLength(2)
-    expect(result.compiled!.dag.nodes[0]!.moduleName).toBe('trigger-manual')
-    expect(result.compiled!.dag.nodes[1]!.moduleName).toBe('action-navigate')
+    expect(result.compiled?.dag.nodes).toHaveLength(2)
+    expect(result.compiled?.dag.nodes[0]?.moduleName).toBe('trigger-manual')
+    expect(result.compiled?.dag.nodes[1]?.moduleName).toBe('action-navigate')
   })
 
   test('detects dangling edge references', () => {
@@ -39,7 +39,7 @@ describe('WorkflowCompiler', () => {
     }
     const result = compiler.compile(def)
     expect(result.ok).toBe(false)
-    expect(result.errors[0]!.message).toContain('not found')
+    expect(result.errors[0]?.message).toContain('not found')
   })
 
   test('detects cycles', () => {
@@ -77,8 +77,8 @@ describe('WorkflowCompiler', () => {
     }
     const result = compiler.compile(def)
     expect(result.ok).toBe(true)
-    expect(result.compiled!.dag.nodes[0]!.moduleName).toBe('action-click')
-    expect(result.compiled!.dag.nodes[1]!.moduleName).toBe('action-type')
-    expect(result.compiled!.dag.nodes[2]!.moduleName).toBe('action-screenshot')
+    expect(result.compiled?.dag.nodes[0]?.moduleName).toBe('action-click')
+    expect(result.compiled?.dag.nodes[1]?.moduleName).toBe('action-type')
+    expect(result.compiled?.dag.nodes[2]?.moduleName).toBe('action-screenshot')
   })
 })

@@ -26,4 +26,27 @@ export interface ProviderStore {
   getDefinition(id: string): Promise<ProviderDefinitionRow | null>
   getDefinitionBySlug(slug: string): Promise<ProviderDefinitionRow | null>
   listDefinitions(opts?: { isActive?: boolean }): Promise<ProviderDefinitionRow[]>
+
+  // ── 1.3 Provider Taxonomy Layer ────────────────────────────────────────────
+  registerCapability(input: {
+    providerId: string
+    slug: string
+    title: string
+    description?: string
+    category?: string
+    intent?: string
+    selector?: string
+    version?: string
+  }): Promise<{ id: string }>
+  overrideCapability(input: {
+    providerId: string
+    capabilityId: string
+    overrideType: string
+    overrideJson: string
+  }): Promise<void>
+  listCapabilities(
+    providerId: string,
+  ): Promise<
+    Array<{ id: string; slug: string; title: string; description?: string; version?: string }>
+  >
 }

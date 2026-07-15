@@ -2,9 +2,9 @@
 // CapabilityExecutor — delegates to UnifiedCapabilityRegistry.
 // Bridges NLCL intents to the existing typed capability system.
 
-import type { CommandExecutor, CommandResult, ParsedIntent, NLCContext } from '../types.js'
 import { newId } from '../../../ids.js'
-import type { UnifiedCapabilityRegistry, CapabilityContext } from '../../unified-registry.js'
+import type { CapabilityContext, UnifiedCapabilityRegistry } from '../../unified-registry.js'
+import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 export class CapabilityExecutor implements CommandExecutor {
   readonly id = 'capability' as const
@@ -20,7 +20,7 @@ export class CapabilityExecutor implements CommandExecutor {
     }
 
     try {
-      const capabilityId = (intent.input.capabilityId as string) ?? intent.input.slug as string
+      const capabilityId = (intent.input.capabilityId as string) ?? (intent.input.slug as string)
       if (!capabilityId) {
         return this.fail(intent, traceId, start, 'No capability specified')
       }
@@ -39,8 +39,8 @@ export class CapabilityExecutor implements CommandExecutor {
       }
 
       const input = { ...intent.input }
-      delete input.capabilityId
-      delete input.slug
+      input.capabilityId = undefined
+      input.slug = undefined
 
       const result = await this.registry.execute(cap.id, input, capCtx)
 

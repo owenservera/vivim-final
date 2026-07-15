@@ -16,8 +16,14 @@ pre-commit:
     invariants:
       glob: "src/engines/*.ts"
       run: bun run devops invariants check --category B
+    guard:
+      # Refuse to commit while servers run (orphan risk) or a migration is pending.
+      run: bun run devops runtime-test guard
 
 pre-push:
   commands:
     test:
       run: bun test
+    audit:
+      # Block pushes on P0/P1 source findings.
+      run: bun run devops audit-code standard

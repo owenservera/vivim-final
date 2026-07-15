@@ -1,13 +1,27 @@
 // src/engines/stealth/font-screen-engine.ts
 // Unit 12.4 — FontScreenEngine: font list + screen resolution spoofing.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 const COMMON_FONTS = [
-  'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Comic Sans MS', 'Consolas',
-  'Courier New', 'Georgia', 'Impact', 'Lucida Console', 'Microsoft Sans Serif',
-  'Microsoft YaHei', 'Palatino Linotype', 'Segoe UI', 'Tahoma', 'Times New Roman',
-  'Trebuchet MS', 'Verdana',
+  'Arial',
+  'Arial Black',
+  'Calibri',
+  'Cambria',
+  'Comic Sans MS',
+  'Consolas',
+  'Courier New',
+  'Georgia',
+  'Impact',
+  'Lucida Console',
+  'Microsoft Sans Serif',
+  'Microsoft YaHei',
+  'Palatino Linotype',
+  'Segoe UI',
+  'Tahoma',
+  'Times New Roman',
+  'Trebuchet MS',
+  'Verdana',
 ]
 
 const COMMON_RESOLUTIONS = [
@@ -26,7 +40,9 @@ export class FontScreenModule implements StealthModule {
 
   async apply(config: Record<string, unknown>, ctx: StealthContext): Promise<void> {
     const fonts = (config.fonts as string[]) ?? COMMON_FONTS
-    const screenConfig = config.screen as { width?: number; height?: number; devicePixelRatio?: number } | undefined
+    const screenConfig = config.screen as
+      | { width?: number; height?: number; devicePixelRatio?: number }
+      | undefined
 
     let resolution = COMMON_RESOLUTIONS[Math.floor(Math.random() * COMMON_RESOLUTIONS.length)]!
     if (screenConfig?.width && screenConfig?.height) {

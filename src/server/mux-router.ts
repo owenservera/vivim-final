@@ -1,9 +1,13 @@
 // src/server/mux-router.ts
 // REST API router — provider muxing endpoints (auto-route, mux, cost-report, preferences)
+//
+// PRINCIPLE: FRONTEND = BACKEND
+// Every request is tagged with its source via X-Source header for audit logging.
 
 import type { CostOptimizer } from '../engines/cost-optimizer.js'
 import type { MuxStrategy, ProviderMuxEngine } from '../engines/provider-mux.js'
 import { errorResponse, json } from './response.js'
+import { extractSource } from './source-middleware.js'
 
 export interface MuxRouterContext {
   providerMux?: ProviderMuxEngine
@@ -15,6 +19,7 @@ export function createMuxRouter(ctx: MuxRouterContext) {
     const url = new URL(req.url)
     const { pathname } = url
     const method = req.method
+    const _source = extractSource(req)
 
     try {
       // POST /api/route/auto — auto-route to best provider

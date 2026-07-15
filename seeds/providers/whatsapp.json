@@ -1,0 +1,31 @@
+{
+  "$schema": "https://vivim.app/cap-store/v1/provider-manifest.schema.json",
+  "provider": {
+    "slug": "whatsapp",
+    "display_name": "WhatsApp",
+    "description": "WhatsApp Web messaging channel",
+    "category": "messaging",
+    "provider_type": "messaging",
+    "website_url": "https://web.whatsapp.com",
+    "auth_type": "browser",
+    "has_multi_account": false,
+    "profile_strategy": "single",
+    "fleet_config": {
+      "port_range": [9340, 9360],
+      "extra_args": ["--no-first-run"]
+    },
+    "capabilities": ["channel_add", "channel_connect", "message_send", "message_receive"]
+  },
+  "endpoints": [
+    {
+      "label": "Web",
+      "url": "https://web.whatsapp.com",
+      "endpoint_type": "landing",
+      "is_default": true
+    }
+  ],
+  "parsers": [],
+  "models": [],
+  "capabilities_config": [],
+  "config": [{ "key": "poll_strategy", "value": "cdp-scrape" }]
+}

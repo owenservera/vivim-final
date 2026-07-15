@@ -1,0 +1,46 @@
+{
+  "topic": "knowledge-graph-ulid",
+  "collected": "2026-07-12",
+  "sources": [
+    {
+      "id": "typegraph",
+      "title": "TypeGraph — The Knowledge Graph for TypeScript",
+      "url": "https://github.com/nicia-ai/typegraph",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Zod-defined nodes/edges in SQLite/PostgreSQL; fluent query API; hybrid search with vectors",
+      "usedIn": ["report:knowledge-graph-ulid", "brief:knowledge-graph-ulid"]
+    },
+    {
+      "id": "memoryjs",
+      "title": "MemoryJS — TypeScript knowledge graph library",
+      "url": "https://github.com/danielsimonjr/MemoryJS",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Entities with bitemporal validity, 4-tier memory engine, decay/consolidation schedules",
+      "usedIn": ["report:knowledge-graph-ulid", "brief:knowledge-graph-ulid"]
+    },
+    {
+      "id": "ontograph-core",
+      "title": "ontograph-core — Open-source ontology framework for TypeScript",
+      "url": "https://github.com/openshuyi/ontograph-core",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Entity/Relation/Attribute modeling with Expr AST safe evaluation, OWL/SHACL export",
+      "usedIn": ["report:knowledge-graph-ulid", "brief:knowledge-graph-ulid"]
+    },
+    {
+      "id": "ulid-spec",
+      "title": "ULID JavaScript Specification",
+      "url": "https://github.com/ulid/javascript",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Lexicographically sortable 26-char IDs; 1.21×10^24 IDs per millisecond; monotonically increasing",
+      "usedIn": ["report:knowledge-graph-ulid", "brief:knowledge-graph-ulid"]
+    }
+  ]
+}

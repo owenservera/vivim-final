@@ -133,8 +133,11 @@ function createMockFleetSupervisor() {
           status: 'running' as const,
           pid: null,
           consecutiveFailures: 0,
+          restartAttempts: 0,
           lastHealthCheck: Date.now(),
           createdAt: Date.now(),
+          channel: 'system' as const,
+          mode: 'headless-new' as const,
         }
         instances.set(id, instance)
         return instance
@@ -151,6 +154,12 @@ function createMockFleetSupervisor() {
         if (!inst) throw new Error(`Slave not found: ${instanceId}`)
         if (inst.status !== 'running') inst.status = 'running'
         return inst
+      },
+      async recoverAuth(providerSlug: string, accountId: string) {
+        return this.spawn(providerSlug, accountId)
+      },
+      getSuperState() {
+        return 'active' as const
       },
       getInstance(instanceId: string) {
         return instances.get(instanceId) ?? null
@@ -282,7 +291,7 @@ describe('ChromeGovernor', () => {
     // Directly manipulate the mock instance's status to simulate crash
     const inst = mockFleetSupervisor.instances.get(slave.slaveId)
     expect(inst).toBeDefined()
-    if (inst) inst.status = 'crashed'
+    if (inst) inst.status = 'error'
     const result = await governor.ensureRunning(slave.slaveId)
     expect(result.status).toBe('running')
   })

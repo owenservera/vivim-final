@@ -1,7 +1,7 @@
 // src/engines/stealth/profile-warmup-engine.ts
 // Unit 14.1 — ProfileWarmupEngine: history/cookie/trust building.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 interface HistorySite {
   url: string
@@ -44,14 +44,16 @@ export class ProfileWarmupModule implements StealthModule {
     // Set cookies via CDP
     for (const site of cookieSites) {
       for (const cookie of site.cookies) {
-        await ctx.cdp.send(ctx.slaveId, 'Network.setCookie', {
-          name: cookie.name,
-          value: cookie.value,
-          domain: site.domain,
-          path: cookie.path ?? '/',
-          secure: cookie.secure ?? true,
-          sameSite: cookie.sameSite ?? 'Lax',
-        }).catch(() => {})
+        await ctx.cdp
+          .send(ctx.slaveId, 'Network.setCookie', {
+            name: cookie.name,
+            value: cookie.value,
+            domain: site.domain,
+            path: cookie.path ?? '/',
+            secure: cookie.secure ?? true,
+            sameSite: cookie.sameSite ?? 'Lax',
+          })
+          .catch(() => {})
       }
     }
 

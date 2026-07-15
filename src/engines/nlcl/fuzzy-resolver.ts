@@ -5,11 +5,17 @@
 //
 // Example: "opne my resme" → fuzzy matches alias "open my resume" → file.open.
 
-import type { CommandPattern, IntentResolver, NLCContext, ParsedIntent, NLCLSurface } from './types.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { fuzzySimilarity } from './fuzzy-matcher.js'
-import { normalizeText } from './text-normalizer.js'
 import { buildIntentFromPattern } from './pattern-match.js'
+import { normalizeText } from './text-normalizer.js'
+import type {
+  CommandPattern,
+  IntentResolver,
+  NLCContext,
+  NLCLSurface,
+  ParsedIntent,
+} from './types.js'
 
 export class FuzzyResolver implements IntentResolver {
   readonly name = 'fuzzy'
@@ -42,12 +48,7 @@ export class FuzzyResolver implements IntentResolver {
 
     if (!best || best.score < this.threshold) return null
 
-    return buildIntentFromPattern(
-      best.pattern,
-      rawInput,
-      best.score,
-      `fuzzy:${best.matched}`,
-    )
+    return buildIntentFromPattern(best.pattern, rawInput, best.score, `fuzzy:${best.matched}`)
   }
 }
 

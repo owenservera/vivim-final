@@ -16,10 +16,7 @@ export interface MirrorRegionState {
 
 export interface CanvasMirrorStore {
   upsertRegionState(s: MirrorRegionState): Promise<void>
-  getRegionState(
-    instanceId: string,
-    regionId: string,
-  ): Promise<MirrorRegionState | null>
+  getRegionState(instanceId: string, regionId: string): Promise<MirrorRegionState | null>
   listRegionStates(instanceId: string): Promise<MirrorRegionState[]>
 }
 
@@ -30,6 +27,17 @@ export interface OptimisticUpdate {
   expectedState: unknown
   confirmed: boolean
   createdAt: number
+}
+
+export interface MutationEntry {
+  op: 'set_background' | 'add_layer' | 'remove_layer' | 'set_layout' | 'set_theme' | 'undo'
+  instanceId: string
+  regionId?: string
+  before?: unknown
+  after?: unknown
+  diff: unknown
+  timestamp: number
+  by: 'cli' | 'ui' | 'workflow' | 'api' | 'frontend'
 }
 
 export interface MirrorBudget {
@@ -48,7 +56,37 @@ const LATENCY_BUDGETS: Record<string, number> = {
 }
 
 export class CanvasMirror {
-  constructor(private store: CanvasMirrorStore) {}
+  constructor(
+    private store: CanvasMirrorStore,
+    private history: MutationEntry[] = [],
+  ) {}
+
+  /** Unit 26.5: Push a mutation entry to history log. */
+  pushMutation(entry: MutationEntry): void {
+    this.history.push(entry)
+    if (this.history.length > 100) this.history.shift()
+  }
+
+  /** Unit 26.5: Get mutation history for an instance. */
+  getHistory(instanceId: string, limit = 20): MutationEntry[] {
+    return this.history
+      .filter((e) => e.instanceId === instanceId)
+      .slice(-limit)
+      .reverse()
+  }
+
+  /** Unit 26.5: Undo last N mutations, returns states to restore. */
+  undo(steps = 1): MutationEntry[] {
+    const undone: MutationEntry[] = []
+    for (let i = 0; i < steps && this.history.length > 0; i++) {
+      const entry = this.history.pop()
+      if (entry) {
+        this.pushMutation({ ...entry, op: 'undo' })
+        undone.push(entry)
+      }
+    }
+    return undone
+  }
 
   /**
    * Optimistic push: record the expected state immediately (instant UI), keep
@@ -77,11 +115,7 @@ export class CanvasMirror {
   }
 
   /** Confirm an optimistic update once the backing store/primitive agrees. */
-  async confirm(
-    instanceId: string,
-    regionId: string,
-    actualState: unknown,
-  ): Promise<void> {
+  async confirm(instanceId: string, regionId: string, actualState: unknown): Promise<void> {
     await this.store.upsertRegionState({
       instanceId,
       regionId,
@@ -91,11 +125,7 @@ export class CanvasMirror {
   }
 
   /** Revert: drop the pending optimistic state, restore last confirmed. */
-  async revert(
-    instanceId: string,
-    regionId: string,
-    reason: string,
-  ): Promise<void> {
+  async revert(instanceId: string, regionId: string, reason: string): Promise<void> {
     await this.store.upsertRegionState({
       instanceId,
       regionId,
@@ -104,10 +134,7 @@ export class CanvasMirror {
     })
   }
 
-  getRegionState(
-    instanceId: string,
-    regionId: string,
-  ): Promise<MirrorRegionState | null> {
+  getRegionState(instanceId: string, regionId: string): Promise<MirrorRegionState | null> {
     return this.store.getRegionState(instanceId, regionId)
   }
 
@@ -136,17 +163,17 @@ export class InMemoryCanvasMirrorStore implements CanvasMirrorStore {
     this.states.set(this.key(s.instanceId, s.regionId), s)
   }
 
-  async getRegionState(
-    instanceId: string,
-    regionId: string,
-  ): Promise<MirrorRegionState | null> {
+  async getRegionState(instanceId: string, regionId: string): Promise<MirrorRegionState | null> {
     return this.states.get(this.key(instanceId, regionId)) ?? null
   }
 
   async listRegionStates(instanceId: string): Promise<MirrorRegionState[]> {
-    return Array.from(this.states.values()).filter(
-      (s) => s.instanceId === instanceId,
-    )
+    return Array.from(this.states.values()).filter((s) => s.instanceId === instanceId)
+  }
+
+  // For CanvasMirror constructor with history
+  static create(): InMemoryCanvasMirrorStore {
+    return new InMemoryCanvasMirrorStore()
   }
 }
 

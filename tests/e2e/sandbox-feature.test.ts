@@ -30,8 +30,8 @@ describe('Sandbox System E2E', () => {
     expect(fs.existsSync(bridgePath)).toBe(true)
 
     const content = fs.readFileSync(bridgePath, 'utf8')
-    expect(content).toContain("msg.type === 'agent:command'")
-    expect(content).toContain("msg.type === 'agent:discover'")
+    expect(content).toContain("case 'agent:command'")
+    expect(content).toContain("case 'agent:discover'")
     expect(content).toContain('agent:result')
   })
 

@@ -2,30 +2,32 @@
 // Registers the default capabilities every vivim instance ships with.
 // Called once from createServerWithEngines after the UnifiedCapabilityRegistry is built.
 
+import { buildLocalDiscoveryStack, createPageEvalCapturer } from '../cli/discovery-stack.js'
+import type { ProfileAllocator } from '../executor/profile-allocator.js'
 import type { ConversationStore } from '../storage/contracts/conversation-store.js'
 import type { CapStoreDb } from '../storage/db.js'
 import type { ChromeGovernor } from './chrome-governor.js'
+import { type ComposerType, submitMessage, typeMessage } from './composer-typing.js'
 import type { ConversationManager } from './conversation-manager.js'
 import type { CrossConversationSynthesizer } from './cross-conversation-synthesis.js'
+import { DiscoverySessionRunner } from './discovery-session-runner.js'
 import type { KnowledgeIngestionEngine } from './knowledge-ingestion.js'
 import type { MemoryEngine } from './memory-engine.js'
+import type { NLCLEngine } from './nlcl/nlcl-engine.js'
+import type { NLCContext } from './nlcl/types.js'
 import type { SemanticSearchEngine } from './semantic-search.js'
 import type {
   CapabilitySurface,
   UnifiedCapability,
   UnifiedCapabilityRegistry,
 } from './unified-registry.js'
-import { DiscoverySessionRunner } from './discovery-session-runner.js'
-import { typeMessage, submitMessage, type ComposerType } from './composer-typing.js'
-import { buildLocalDiscoveryStack, createPageEvalCapturer } from '../cli/discovery-stack.js'
-import type { NLCLEngine } from './nlcl/nlcl-engine.js'
-import type { NLCContext } from './nlcl/types.js'
 
 export interface BootstrapServices {
   db: CapStoreDb
   conversationStore: ConversationStore
   governor: ChromeGovernor
   conversationManager: ConversationManager
+  profileAllocator: ProfileAllocator
   memoryEngine?: MemoryEngine
   semanticSearch?: SemanticSearchEngine
   knowledgeIngestion?: KnowledgeIngestionEngine
@@ -34,7 +36,7 @@ export interface BootstrapServices {
 
 const ALL_SURFACES: CapabilitySurface[] = ['cli', 'ui', 'workflow', 'mcp', 'api']
 
-function makeCapability(
+export function makeCapability(
   partial: Omit<
     UnifiedCapability,
     'isAsync' | 'requiresConfirmation' | 'tags' | 'surfaces' | 'handler'
@@ -111,8 +113,9 @@ export function registerDefaultCapabilities(
       },
       async (input) => {
         const conv = await services.conversationStore.createConversation({
+          providerSessionId: String(input.providerId ?? ''),
           providerId: String(input.providerId ?? ''),
-          title: input.title ? String(input.title) : undefined,
+          title: input.title ? String(input.title) : null,
         })
         return { id: conv.id }
       },
@@ -170,7 +173,9 @@ export function registerDefaultCapabilities(
         apiEndpoint: { method: 'DELETE', path: '/api/conversations/{id}' },
       },
       async (input) => {
-        await services.db.prisma.conversation.delete({ where: { id: String(input.conversationId ?? '') } })
+        await services.db.prisma.conversation.delete({
+          where: { id: String(input.conversationId ?? '') },
+        })
         return { ok: true }
       },
     ),
@@ -384,9 +389,19 @@ export function registerDefaultCapabilities(
         const engine = String(input.engine ?? '')
         const patch = (input.patch ?? {}) as Record<string, unknown>
         await services.db.prisma.configEntry.upsert({
-          where: { engineId: engine },
-          create: { engineId: engine, configJson: patch as object },
-          update: { configJson: patch as object },
+          where: {
+            engineId_scopeType_scopeId: { engineId: engine, scopeType: 'engine', scopeId: '' },
+          },
+          create: {
+            id: `cfg:${engine}`,
+            engineId: engine,
+            scopeType: 'engine',
+            scopeId: '',
+            configJson: JSON.stringify(patch),
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          update: { configJson: JSON.stringify(patch) },
         })
         return { ok: true, engine, config: patch }
       },
@@ -441,7 +456,7 @@ export function registerDefaultCapabilities(
       },
       async () => {
         const health = await services.governor.getAllHealth()
-        return Array.from(health.entries()).map(([slaveId, h]) => ({ slaveId, ...h }))
+        return Array.from(health.entries()).map(([slaveId, h]) => ({ ...h, slaveId }))
       },
     ),
 
@@ -453,16 +468,28 @@ export function registerDefaultCapabilities(
         name: 'Config History',
         description: 'Show config change history for an engine.',
         category: 'admin',
-        inputSchema: { type: 'object', properties: { engine: { type: 'string' } }, required: ['engine'] },
+        inputSchema: {
+          type: 'object',
+          properties: { engine: { type: 'string' } },
+          required: ['engine'],
+        },
         outputSchema: { type: 'array' },
-        cliCommand: { name: 'config history', aliases: ['chist'], examples: ['config history governor'] },
+        cliCommand: {
+          name: 'config history',
+          aliases: ['chist'],
+          examples: ['config history governor'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 4 },
         mcpToolName: 'config_history',
         apiEndpoint: { method: 'GET', path: '/api/admin/config/{engine}/history' },
       },
       async (input) => {
         const engine = String(input.engine ?? '')
-        const entry = await services.db.prisma.configEntry.findUnique({ where: { engineId: engine } })
+        const entry = await services.db.prisma.configEntry.findUnique({
+          where: {
+            engineId_scopeType_scopeId: { engineId: engine, scopeType: 'engine', scopeId: '' },
+          },
+        })
         return entry ? [{ engineId: engine, configJson: entry.configJson }] : []
       },
     ),
@@ -475,7 +502,11 @@ export function registerDefaultCapabilities(
         name: 'Audit Provider',
         description: 'Run a drift/audit check against a provider (kernel oracle).',
         category: 'admin',
-        inputSchema: { type: 'object', properties: { providerId: { type: 'string' } }, required: ['providerId'] },
+        inputSchema: {
+          type: 'object',
+          properties: { providerId: { type: 'string' } },
+          required: ['providerId'],
+        },
         outputSchema: { type: 'object' },
         cliCommand: { name: 'admin audit', aliases: ['aaud'], examples: ['admin audit claude'] },
         ui: { component: 'action-button', position: 'admin', order: 5 },
@@ -483,7 +514,10 @@ export function registerDefaultCapabilities(
         apiEndpoint: { method: 'GET', path: '/api/admin/audit/{providerId}' },
       },
       async (input) => {
-        return { providerId: String(input.providerId), note: 'audit requires kernel oracle — run via /api/capabilities/oracle_* once kernel caps are wired' }
+        return {
+          providerId: String(input.providerId),
+          note: 'audit requires kernel oracle — run via /api/capabilities/oracle_* once kernel caps are wired',
+        }
       },
     ),
 
@@ -504,7 +538,10 @@ export function registerDefaultCapabilities(
       },
       async (input) => {
         const providerId = input.providerId ? String(input.providerId) : undefined
-        return { providerId, note: 'drift requires kernel oracle — run via /api/capabilities/oracle_* once kernel caps are wired' }
+        return {
+          providerId,
+          note: 'drift requires kernel oracle — run via /api/capabilities/oracle_* once kernel caps are wired',
+        }
       },
     ),
 
@@ -518,17 +555,30 @@ export function registerDefaultCapabilities(
         category: 'telemetry',
         inputSchema: {
           type: 'object',
-          properties: { providerId: { type: 'string' }, from: { type: 'string' }, to: { type: 'string' } },
+          properties: {
+            providerId: { type: 'string' },
+            from: { type: 'string' },
+            to: { type: 'string' },
+          },
           required: ['providerId', 'from', 'to'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'telemetry summary', aliases: ['tsum'], examples: ['telemetry summary claude --from 2024-01-01 --to 2024-01-31'] },
+        cliCommand: {
+          name: 'telemetry summary',
+          aliases: ['tsum'],
+          examples: ['telemetry summary claude --from 2024-01-01 --to 2024-01-31'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 7 },
         mcpToolName: 'telemetry_summary',
         apiEndpoint: { method: 'GET', path: '/api/telemetry/{providerId}/summary' },
       },
       async (input) => {
-        return { providerId: String(input.providerId), from: String(input.from), to: String(input.to), note: 'telemetry aggregation pending — wire TelemetryEngine store' }
+        return {
+          providerId: String(input.providerId),
+          from: String(input.from),
+          to: String(input.to),
+          note: 'telemetry aggregation pending — wire TelemetryEngine store',
+        }
       },
     ),
     makeCapability(
@@ -544,13 +594,21 @@ export function registerDefaultCapabilities(
           required: ['from', 'to'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'telemetry compare', aliases: ['tcmp'], examples: ['telemetry compare --from 2024-01-01 --to 2024-01-31'] },
+        cliCommand: {
+          name: 'telemetry compare',
+          aliases: ['tcmp'],
+          examples: ['telemetry compare --from 2024-01-01 --to 2024-01-31'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 8 },
         mcpToolName: 'telemetry_compare',
         apiEndpoint: { method: 'GET', path: '/api/telemetry/compare' },
       },
       async (input) => {
-        return { from: String(input.from), to: String(input.to), note: 'telemetry aggregation pending — wire TelemetryEngine store' }
+        return {
+          from: String(input.from),
+          to: String(input.to),
+          note: 'telemetry aggregation pending — wire TelemetryEngine store',
+        }
       },
     ),
   ]
@@ -571,7 +629,8 @@ export function registerNlInterpretCapability(
 ): void {
   const handler: UnifiedCapability['handler'] = async (input, capCtx) => {
     const text = String(input.text ?? '')
-    const extra = input.ctx && typeof input.ctx === 'object' ? (input.ctx as Record<string, unknown>) : {}
+    const extra =
+      input.ctx && typeof input.ctx === 'object' ? (input.ctx as Record<string, unknown>) : {}
     const nlCtx: NLCContext = {
       surface: 'api',
       providerId: (extra.providerId as string | undefined) ?? capCtx.providerId,
@@ -590,7 +649,8 @@ export function registerNlInterpretCapability(
         id: 'cap:nlcl:interpret',
         slug: 'nl_interpret',
         name: 'Interpret Natural Language',
-        description: 'Resolve natural language to a capability chain (self-referential NL parsing).',
+        description:
+          'Resolve natural language to a capability chain (self-referential NL parsing).',
         category: 'nlcl',
         inputSchema: {
           type: 'object',
@@ -640,7 +700,11 @@ export function registerKernelCapabilities(
           },
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'kernel oracle query', aliases: ['koq'], examples: ['kernel oracle query --op health'] },
+        cliCommand: {
+          name: 'kernel oracle query',
+          aliases: ['koq'],
+          examples: ['kernel oracle query --op health'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 9 },
         mcpToolName: 'oracle_query',
         apiEndpoint: { method: 'POST', path: '/api/oracle/query' },
@@ -649,7 +713,7 @@ export function registerKernelCapabilities(
       async (input) => {
         if (!oracle) return { error: 'Oracle not available' }
         return oracle.query.query({
-          type: (String(input.op ?? 'all') as never),
+          type: String(input.op ?? 'all') as never,
           filter: input.filter as Record<string, unknown> | undefined,
           limit: input.limit as number | undefined,
         })
@@ -665,9 +729,17 @@ export function registerKernelCapabilities(
         name: 'Oracle Heal',
         description: 'Trigger oracle self-healing for an issue.',
         category: 'kernel',
-        inputSchema: { type: 'object', properties: { issueId: { type: 'string' } }, required: ['issueId'] },
+        inputSchema: {
+          type: 'object',
+          properties: { issueId: { type: 'string' } },
+          required: ['issueId'],
+        },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'kernel oracle heal', aliases: ['koh'], examples: ['kernel oracle heal --issueId issue:123'] },
+        cliCommand: {
+          name: 'kernel oracle heal',
+          aliases: ['koh'],
+          examples: ['kernel oracle heal --issueId issue:123'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 10 },
         mcpToolName: 'oracle_heal',
         apiEndpoint: { method: 'POST', path: '/api/oracle/heal' },
@@ -690,7 +762,11 @@ export function registerKernelCapabilities(
         category: 'kernel',
         inputSchema: { type: 'object' },
         outputSchema: { type: 'array' },
-        cliCommand: { name: 'kernel oracle scan', aliases: ['kos'], examples: ['kernel oracle scan'] },
+        cliCommand: {
+          name: 'kernel oracle scan',
+          aliases: ['kos'],
+          examples: ['kernel oracle scan'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 11 },
         mcpToolName: 'oracle_scan',
         apiEndpoint: { method: 'POST', path: '/api/oracle/scan' },
@@ -713,7 +789,11 @@ export function registerKernelCapabilities(
         category: 'kernel',
         inputSchema: { type: 'object', properties: { tail: { type: 'number' } } },
         outputSchema: { type: 'array' },
-        cliCommand: { name: 'kernel oracle events', aliases: ['koe'], examples: ['kernel oracle events --tail 10'] },
+        cliCommand: {
+          name: 'kernel oracle events',
+          aliases: ['koe'],
+          examples: ['kernel oracle events --tail 10'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 12 },
         mcpToolName: 'oracle_events',
         apiEndpoint: { method: 'POST', path: '/api/oracle/events' },
@@ -736,7 +816,11 @@ export function registerKernelCapabilities(
         category: 'kernel',
         inputSchema: { type: 'object' },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'kernel oracle visibility', aliases: ['kov'], examples: ['kernel oracle visibility'] },
+        cliCommand: {
+          name: 'kernel oracle visibility',
+          aliases: ['kov'],
+          examples: ['kernel oracle visibility'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 13 },
         mcpToolName: 'oracle_visibility',
         apiEndpoint: { method: 'POST', path: '/api/oracle/visibility' },
@@ -759,7 +843,11 @@ export function registerKernelCapabilities(
         category: 'kernel',
         inputSchema: { type: 'object' },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'kernel oracle manifest', aliases: ['kom'], examples: ['kernel oracle manifest'] },
+        cliCommand: {
+          name: 'kernel oracle manifest',
+          aliases: ['kom'],
+          examples: ['kernel oracle manifest'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 14 },
         mcpToolName: 'oracle_manifest',
         apiEndpoint: { method: 'POST', path: '/api/oracle/manifest' },
@@ -803,7 +891,11 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
           required: ['providerId', 'url'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'discovery run', aliases: ['drun'], examples: ['discovery run claude --url https://claude.ai'] },
+        cliCommand: {
+          name: 'discovery run',
+          aliases: ['drun'],
+          examples: ['discovery run claude --url https://claude.ai'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 15 },
         mcpToolName: 'discovery_run',
         apiEndpoint: { method: 'POST', path: '/api/discovery/run' },
@@ -870,7 +962,11 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
           required: ['providerId'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'discovery interact', aliases: ['dint'], examples: ['discovery interact chatgpt --message "hello"'] },
+        cliCommand: {
+          name: 'discovery interact',
+          aliases: ['dint'],
+          examples: ['discovery interact chatgpt --message "hello"'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 16 },
         mcpToolName: 'discovery_interact',
         apiEndpoint: { method: 'POST', path: '/api/discovery/interact' },
@@ -881,18 +977,31 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
         const message = input.message ? String(input.message) : 'Hello'
         const url = input.url ? String(input.url) : `https://${slug}.ai`
         const stack = await buildLocalDiscoveryStack()
-        const slave = await stack.governor.ensureRunningForAccount(slug, input.accountId ? String(input.accountId) : 'default', {
-          profileDir: input.profileDir ? String(input.profileDir) : undefined,
-        })
+        const slave = await stack.governor.ensureRunningForAccount(
+          slug,
+          input.accountId ? String(input.accountId) : 'default',
+          {
+            profileDir: input.profileDir ? String(input.profileDir) : undefined,
+          },
+        )
         const capturer = createPageEvalCapturer(stack.governor)
         const session = await stack.discovery.createSession(url, { providerNameHint: slug })
         await stack.governor.cdp.send(slave.slaveId, 'Page.navigate', { url })
-        const composer = input.composer ? String(input.composer) : 'textarea, [role="textbox"], [contenteditable]'
+        const composer = input.composer
+          ? String(input.composer)
+          : 'textarea, [role="textbox"], [contenteditable]'
         const timeoutMs = Number(input.timeoutMs ?? 20_000)
         await capturer.arm(slave.slaveId, { urlPattern: new URL(url).hostname, timeoutMs })
         await typeMessage(stack.governor.cdp, slave.slaveId, composer, message, 'textarea')
-        await submitMessage(stack.governor.cdp, slave.slaveId, input.send ? String(input.send) : undefined)
-        const bodies = await capturer.collect(slave.slaveId, { urlPattern: new URL(url).hostname, timeoutMs })
+        await submitMessage(
+          stack.governor.cdp,
+          slave.slaveId,
+          input.send ? String(input.send) : undefined,
+        )
+        const bodies = await capturer.collect(slave.slaveId, {
+          urlPattern: new URL(url).hostname,
+          timeoutMs,
+        })
         return { sessionId: session.id, capturedSamples: bodies.length, raw: bodies }
       },
     ),
@@ -908,11 +1017,20 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
         category: 'discovery',
         inputSchema: {
           type: 'object',
-          properties: { provider: { type: 'string' }, slug: { type: 'string' }, file: { type: 'string' }, format: { type: 'string' } },
+          properties: {
+            provider: { type: 'string' },
+            slug: { type: 'string' },
+            file: { type: 'string' },
+            format: { type: 'string' },
+          },
           required: ['provider', 'file'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'discovery align', aliases: ['dali'], examples: ['discovery align claude --file captured.txt'] },
+        cliCommand: {
+          name: 'discovery align',
+          aliases: ['dali'],
+          examples: ['discovery align claude --file captured.txt'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 17 },
         mcpToolName: 'discovery_align',
         apiEndpoint: { method: 'POST', path: '/api/discovery/align' },
@@ -921,7 +1039,10 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
       async (input) => {
         const slug = String(input.provider ?? input.slug ?? '')
         const text = await Bun.file(String(input.file)).text()
-        const bodies = text.split(/\n\n+/).map((b) => b.trim()).filter(Boolean)
+        const bodies = text
+          .split(/\n\n+/)
+          .map((b) => b.trim())
+          .filter(Boolean)
         const stack = await buildLocalDiscoveryStack()
         const configured = input.format ? (String(input.format) as never) : null
         return stack.align.alignCaptured(bodies, slug, configured)
@@ -948,7 +1069,13 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
       async (input) => {
         const stack = await buildLocalDiscoveryStack()
         const sessions = await stack.discovery.listSessions({ limit: Number(input.limit ?? 50) })
-        return sessions.map((s) => ({ id: s.id, url: s.url, status: s.status, shapeId: s.shapeId, confidence: s.confidence }))
+        return sessions.map((s) => ({
+          id: s.id,
+          url: s.url,
+          status: s.status,
+          shapeId: s.shapeId,
+          confidence: s.confidence,
+        }))
       },
     ),
   )
@@ -961,7 +1088,11 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
         name: 'Discovery Show',
         description: 'Show a discovery session.',
         category: 'discovery',
-        inputSchema: { type: 'object', properties: { sessionId: { type: 'string' } }, required: ['sessionId'] },
+        inputSchema: {
+          type: 'object',
+          properties: { sessionId: { type: 'string' } },
+          required: ['sessionId'],
+        },
         outputSchema: { type: 'object' },
         cliCommand: { name: 'discovery show', aliases: ['dsh'], examples: ['discovery show <id>'] },
         ui: { component: 'action-button', position: 'admin', order: 19 },
@@ -984,9 +1115,17 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
         name: 'Discovery Manifest',
         description: 'Show the manifest draft for a discovery session.',
         category: 'discovery',
-        inputSchema: { type: 'object', properties: { sessionId: { type: 'string' } }, required: ['sessionId'] },
+        inputSchema: {
+          type: 'object',
+          properties: { sessionId: { type: 'string' } },
+          required: ['sessionId'],
+        },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'discovery manifest', aliases: ['dman'], examples: ['discovery manifest <id>'] },
+        cliCommand: {
+          name: 'discovery manifest',
+          aliases: ['dman'],
+          examples: ['discovery manifest <id>'],
+        },
         ui: { component: 'action-button', position: 'admin', order: 20 },
         mcpToolName: 'discovery_manifest',
         apiEndpoint: { method: 'POST', path: '/api/discovery/manifest' },

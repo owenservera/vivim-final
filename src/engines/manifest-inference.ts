@@ -161,7 +161,7 @@ export class ManifestInferenceEngine {
 
   private generateWarnings(
     session: DiscoverySession,
-    fieldConfidence: Record<string, number>,
+    _fieldConfidence: Record<string, number>,
   ): string[] {
     const warnings: string[] = []
     if (session.confidence < 0.5) {
@@ -175,7 +175,7 @@ export class ManifestInferenceEngine {
 
   private draftToManifest(
     draft: ProviderManifestDraft,
-    session: DiscoverySession,
+    _session: DiscoverySession,
   ): ProviderManifest {
     return {
       slug: draft.slug,

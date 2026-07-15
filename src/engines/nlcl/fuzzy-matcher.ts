@@ -25,7 +25,9 @@ export function levenshtein(a: string, b: string): number {
       const sub = prev[j - 1] ?? i + j - 1
       curr[j] = Math.min(del + 1, ins + 1, sub + cost)
     }
-    let tmp = prev; prev = curr; curr = tmp
+    const tmp = prev
+    prev = curr
+    curr = tmp
   }
   return prev[b.length] ?? a.length
 }
@@ -78,8 +80,7 @@ export function jaroWinkler(a: string, b: string, prefixScale = 0.1): number {
     k++
   }
 
-  const jaro =
-    (matches / len1 + matches / len2 + (matches - transpositions / 2) / matches) / 3
+  const jaro = (matches / len1 + matches / len2 + (matches - transpositions / 2) / matches) / 3
 
   let prefix = 0
   const maxPrefix = Math.min(4, Math.min(len1, len2))
@@ -118,8 +119,8 @@ export function diceCoefficient(a: string, b: string): number {
     const other = bg2.get(g)
     if (other) intersection += Math.min(count, other)
   }
-  const total = [...bg1.values()].reduce((a, c) => a + c, 0) +
-    [...bg2.values()].reduce((a, c) => a + c, 0)
+  const total =
+    [...bg1.values()].reduce((a, c) => a + c, 0) + [...bg2.values()].reduce((a, c) => a + c, 0)
   if (total === 0) return 0
   return (2 * intersection) / total
 }

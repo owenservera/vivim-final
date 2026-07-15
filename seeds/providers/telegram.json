@@ -1,0 +1,28 @@
+{
+  "$schema": "https://vivim.app/cap-store/v1/provider-manifest.schema.json",
+  "provider": {
+    "slug": "telegram",
+    "display_name": "Telegram",
+    "description": "Telegram messaging channel",
+    "category": "messaging",
+    "provider_type": "messaging",
+    "website_url": "https://core.telegram.org",
+    "auth_type": "api_key",
+    "has_multi_account": false,
+    "profile_strategy": "single",
+    "fleet_config": { "port_range": [9380, 9400], "extra_args": [] },
+    "capabilities": ["channel_add", "channel_connect", "message_send", "message_receive"]
+  },
+  "endpoints": [
+    {
+      "label": "Bot API",
+      "url": "https://api.telegram.org",
+      "endpoint_type": "landing",
+      "is_default": true
+    }
+  ],
+  "parsers": [],
+  "models": [],
+  "capabilities_config": [],
+  "config": [{ "key": "poll_strategy", "value": "polling" }]
+}

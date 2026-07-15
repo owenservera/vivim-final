@@ -1,7 +1,7 @@
 # vivim-final — Master Workplan
 
 **Generated:** 2026-07-12
-**Tracker:** `docs/atomic-v3-fork-canon/01-tracker.md` (127 units total — 10 done, 117 pending)
+**Tracker:** `docs/atomic-v3-fork-canon/01-tracker.md` (127 units total — 58 done, 48 partial, 21 pending)
 **Scope:** v3-fork-canon (full architecture: v3 108 units + v5 kernel 19 units) + NLCL
 
 > **⛔ DEPRECATED TRACKERS:** `docs/atomic-v3/`, `docs/atomic-v4/`, `docs/atomic-v5/` are superseded.

@@ -6,7 +6,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { parseUnits } from "./tracker.ts";
 import { loadDeps } from "./deps.ts";
-import { selectFrom, TRACKER, ATOMIC_DIR, TOOLING_PHASE_MIN } from "./select.ts";
+import { selectFrom, getTracker, getAtomicDir, TOOLING_PHASE_MIN } from "./select.ts";
 
 export interface ActivePlan {
   file: string;
@@ -102,9 +102,9 @@ async function getSessionObjectives(): Promise<SessionObjectives | undefined> {
 
 async function getCurrentFocus(): Promise<CurrentFocus | undefined> {
   try {
-    const content = await readFile(TRACKER, "utf8");
+    const content = await readFile(getTracker(), "utf8");
     const units = parseUnits(content.split("\n"));
-    const deps = await loadDeps(ATOMIC_DIR);
+    const deps = await loadDeps(getAtomicDir());
     const selection = selectFrom(units, deps);
 
     if (!selection) return undefined;

@@ -1,0 +1,5320 @@
+{
+  "modules": [
+    "alerting/alerter",
+    "automation/scheduler",
+    "canvas/canvas-agent-tools",
+    "canvas/canvas-engine",
+    "canvas/canvas-mirror",
+    "canvas/canvas-registry",
+    "canvas/capability-bridge",
+    "canvas/capability-layer",
+    "canvas/designer",
+    "canvas/in-memory-store",
+    "canvas/index",
+    "canvas/layer-mounter",
+    "canvas/mutation-caps",
+    "canvas/oracle-reader",
+    "canvas/primitives",
+    "canvas/schema",
+    "canvas/types",
+    "cli/command-registry",
+    "cli/commands",
+    "cli/discovery-stack",
+    "cli/index",
+    "cli/json-schema",
+    "cli/output-formatter",
+    "cli/pipeline-engine",
+    "cli/provider-harness",
+    "cli/repl",
+    "config",
+    "engines/adaptive-workspace",
+    "engines/agentic-loop",
+    "engines/airgap",
+    "engines/audit-trail",
+    "engines/autonomous-execution",
+    "engines/autonomous-replay",
+    "engines/backup-scheduler",
+    "engines/capability-bootstrap",
+    "engines/capability-discovery-loop",
+    "engines/capability-event-bus-v2",
+    "engines/capability-event-bus",
+    "engines/capability-macro",
+    "engines/capability-resolution",
+    "engines/capability-shape-registry",
+    "engines/capability",
+    "engines/cdp-capability-registrar",
+    "engines/cdp-discovery",
+    "engines/chrome-governor",
+    "engines/chrome-setup-wizard",
+    "engines/composer-typing",
+    "engines/config-manager",
+    "engines/config-universal-surface",
+    "engines/context-assembly",
+    "engines/conversation-manager",
+    "engines/conversation-organizer",
+    "engines/cost-optimizer",
+    "engines/cross-conversation-synthesis",
+    "engines/db-encryption",
+    "engines/discovery-session-runner",
+    "engines/encryption",
+    "engines/error-tracker",
+    "engines/eviction-manager",
+    "engines/execution-memoizer",
+    "engines/execution-policy",
+    "engines/export",
+    "engines/harness",
+    "engines/harness-checkpoint",
+    "engines/harness-protocol-engine",
+    "engines/harness-runtime",
+    "engines/health-digest",
+    "engines/idempotency-guard",
+    "engines/image-gen-bridge",
+    "engines/kernel",
+    "engines/knowledge-extractor",
+    "engines/knowledge-ingestion",
+    "engines/local-model-adapter",
+    "engines/lock-manager",
+    "engines/logger",
+    "engines/manifest-inference",
+    "engines/mcp-client-adapter",
+    "engines/mcp-server-adapter",
+    "engines/memory-engine",
+    "engines/memory-indexer",
+    "engines/messaging-archetypes",
+    "engines/metrics",
+    "engines/mirror-engine",
+    "engines/nlcl",
+    "engines/observability",
+    "engines/observation-tap",
+    "engines/parser-repair",
+    "engines/parsers",
+    "engines/plugin-hot-reload",
+    "engines/plugin-system",
+    "engines/protocol-loop-parser",
+    "engines/provider-discovery",
+    "engines/provider-health",
+    "engines/provider-mux",
+    "engines/provider-registrar",
+    "engines/provider-selectors",
+    "engines/registration-auditor",
+    "engines/request-queue",
+    "engines/retry-engine",
+    "engines/sandbox-runner",
+    "engines/selector-healer",
+    "engines/semantic-grounding",
+    "engines/semantic-search",
+    "engines/send-capability",
+    "engines/session-caps",
+    "engines/session-checkpoint",
+    "engines/situation-detector",
+    "engines/sla-monitor",
+    "engines/state-transition",
+    "engines/stealth",
+    "engines/stream-align",
+    "engines/stream-block-store",
+    "engines/stream-parser",
+    "engines/streaming-channel-caps",
+    "engines/streaming-protocol",
+    "engines/sync",
+    "engines/telemetry-aggregator",
+    "engines/telemetry-audit",
+    "engines/tool-use-protocol",
+    "engines/transfer-accelerator",
+    "engines/unified-registry",
+    "engines/version-manager",
+    "engines/workflow-compiler",
+    "engines/workflow-engine",
+    "engines/workflow-templates",
+    "errors",
+    "executor/async-mutex",
+    "executor/cdp-transport",
+    "executor/cdp-types",
+    "executor/cdp",
+    "executor/chrome-instance-profile",
+    "executor/circuit-breaker",
+    "executor/content-blocks",
+    "executor/fleet-config",
+    "executor/fleet-supervisor",
+    "executor/ids",
+    "executor/launcher",
+    "executor/port-reaper",
+    "executor/profile-allocator",
+    "executor/slave-read",
+    "executor/slave-states",
+    "executor/slave-write",
+    "ids",
+    "index",
+    "mcp/discovery-tools",
+    "mcp/index",
+    "mcp/nlcl-tools",
+    "mcp/server",
+    "mcp/types",
+    "router/index",
+    "router/router",
+    "schema/automation",
+    "schema/chrome",
+    "schema/config",
+    "schema/core",
+    "schema/harness",
+    "schema/health",
+    "schema/index",
+    "schema/learning",
+    "schema/provider-manifest",
+    "schema/provider",
+    "schema/routing",
+    "schema/session",
+    "schema/streaming",
+    "schema/telemetry",
+    "schema/transfer",
+    "schema/types",
+    "schema/validators",
+    "schema/versioning",
+    "server/auth-gate",
+    "server/autonomous-router",
+    "server/canvas-router",
+    "server/canvas-ws",
+    "server/capability-router",
+    "server/conversation-router",
+    "server/index",
+    "server/interpret-router",
+    "server/kernel-router",
+    "server/knowledge-router",
+    "server/memory-viz-router",
+    "server/mux-router",
+    "server/nlcl-router",
+    "server/response",
+    "server/setup-router",
+    "server/websocket",
+    "storage/contracts",
+    "storage/db",
+    "storage/impl",
+    "storage/prisma",
+    "storage/store-factory"
+  ],
+  "edges": [
+    {
+      "from": "alerting/alerter",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "alerting/alerter",
+      "to": "ids"
+    },
+    {
+      "from": "automation/scheduler",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "automation/scheduler",
+      "to": "ids"
+    },
+    {
+      "from": "canvas/canvas-agent-tools",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "canvas/canvas-agent-tools",
+      "to": "canvas/canvas-mirror"
+    },
+    {
+      "from": "canvas/canvas-agent-tools",
+      "to": "canvas/canvas-registry"
+    },
+    {
+      "from": "canvas/canvas-agent-tools",
+      "to": "canvas/designer"
+    },
+    {
+      "from": "canvas/canvas-agent-tools",
+      "to": "canvas/layer-mounter"
+    },
+    {
+      "from": "canvas/canvas-agent-tools",
+      "to": "canvas/oracle-reader"
+    },
+    {
+      "from": "canvas/canvas-agent-tools",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/canvas-agent-tools"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/canvas-mirror"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/canvas-registry"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/capability-bridge"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/designer"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/layer-mounter"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/mutation-caps"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/oracle-reader"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/primitives"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/schema"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/canvas-engine",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "canvas/canvas-mirror",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/canvas-registry",
+      "to": "errors"
+    },
+    {
+      "from": "canvas/canvas-registry",
+      "to": "ids"
+    },
+    {
+      "from": "canvas/canvas-registry",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "canvas/canvas-registry",
+      "to": "canvas/schema"
+    },
+    {
+      "from": "canvas/canvas-registry",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/capability-bridge",
+      "to": "errors"
+    },
+    {
+      "from": "canvas/capability-bridge",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "canvas/capability-bridge",
+      "to": "canvas/schema"
+    },
+    {
+      "from": "canvas/capability-bridge",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/capability-layer",
+      "to": "canvas/designer"
+    },
+    {
+      "from": "canvas/capability-layer",
+      "to": "canvas/layer-mounter"
+    },
+    {
+      "from": "canvas/capability-layer",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/capability-layer",
+      "to": "canvas/schema"
+    },
+    {
+      "from": "canvas/designer",
+      "to": "canvas/canvas-registry"
+    },
+    {
+      "from": "canvas/designer",
+      "to": "canvas/schema"
+    },
+    {
+      "from": "canvas/designer",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/in-memory-store",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/schema"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/canvas-registry"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/layer-mounter"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/canvas-mirror"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/capability-bridge"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/oracle-reader"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/primitives"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/designer"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/canvas-agent-tools"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/canvas-engine"
+    },
+    {
+      "from": "canvas/index",
+      "to": "canvas/in-memory-store"
+    },
+    {
+      "from": "canvas/index",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "canvas/layer-mounter",
+      "to": "errors"
+    },
+    {
+      "from": "canvas/layer-mounter",
+      "to": "ids"
+    },
+    {
+      "from": "canvas/layer-mounter",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "canvas/layer-mounter",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/mutation-caps",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "canvas/mutation-caps",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "canvas/mutation-caps",
+      "to": "canvas/canvas-mirror"
+    },
+    {
+      "from": "canvas/mutation-caps",
+      "to": "canvas/canvas-registry"
+    },
+    {
+      "from": "canvas/mutation-caps",
+      "to": "canvas/designer"
+    },
+    {
+      "from": "canvas/mutation-caps",
+      "to": "canvas/layer-mounter"
+    },
+    {
+      "from": "canvas/oracle-reader",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/primitives",
+      "to": "canvas/types"
+    },
+    {
+      "from": "canvas/schema",
+      "to": "errors"
+    },
+    {
+      "from": "canvas/schema",
+      "to": "canvas/types"
+    },
+    {
+      "from": "cli/commands",
+      "to": "cli/command-registry"
+    },
+    {
+      "from": "cli/commands",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/capability-shape-registry"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/discovery-session-runner"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/provider-discovery"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/provider-registrar"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/stream-align"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/stream-parser"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "engines/sandbox-runner"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "storage/db"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "storage/impl"
+    },
+    {
+      "from": "cli/discovery-stack",
+      "to": "executor/cdp-transport"
+    },
+    {
+      "from": "cli/index",
+      "to": "cli/command-registry"
+    },
+    {
+      "from": "cli/index",
+      "to": "cli/output-formatter"
+    },
+    {
+      "from": "cli/index",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "cli/index",
+      "to": "cli/commands"
+    },
+    {
+      "from": "cli/index",
+      "to": "server/index"
+    },
+    {
+      "from": "cli/pipeline-engine",
+      "to": "cli/command-registry"
+    },
+    {
+      "from": "cli/pipeline-engine",
+      "to": "cli/output-formatter"
+    },
+    {
+      "from": "cli/provider-harness",
+      "to": "engines/provider-registrar"
+    },
+    {
+      "from": "cli/provider-harness",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "cli/provider-harness",
+      "to": "schema/provider-manifest"
+    },
+    {
+      "from": "engines/adaptive-workspace",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/agentic-loop",
+      "to": "engines/mirror-engine"
+    },
+    {
+      "from": "engines/agentic-loop",
+      "to": "engines/observation-tap"
+    },
+    {
+      "from": "engines/agentic-loop",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/audit-trail",
+      "to": "ids"
+    },
+    {
+      "from": "engines/audit-trail",
+      "to": "engines/logger"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "errors"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "ids"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "engines/autonomous-replay"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "engines/execution-policy"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "engines/selector-healer"
+    },
+    {
+      "from": "engines/autonomous-execution",
+      "to": "engines/semantic-grounding"
+    },
+    {
+      "from": "engines/autonomous-replay",
+      "to": "ids"
+    },
+    {
+      "from": "engines/autonomous-replay",
+      "to": "errors"
+    },
+    {
+      "from": "engines/autonomous-replay",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/autonomous-replay",
+      "to": "engines/autonomous-execution"
+    },
+    {
+      "from": "engines/autonomous-replay",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/backup-scheduler",
+      "to": "errors"
+    },
+    {
+      "from": "engines/backup-scheduler",
+      "to": "ids"
+    },
+    {
+      "from": "engines/backup-scheduler",
+      "to": "engines/db-encryption"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "storage/db"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "executor/profile-allocator"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/conversation-manager"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/cross-conversation-synthesis"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/knowledge-ingestion"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/semantic-search"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/discovery-session-runner"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/composer-typing"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "cli/discovery-stack"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "engines/capability-bootstrap",
+      "to": "engines/kernel"
+    },
+    {
+      "from": "engines/capability-discovery-loop",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/capability-discovery-loop",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/capability-discovery-loop",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/capability-event-bus-v2",
+      "to": "errors"
+    },
+    {
+      "from": "engines/capability-event-bus-v2",
+      "to": "ids"
+    },
+    {
+      "from": "engines/capability-macro",
+      "to": "ids"
+    },
+    {
+      "from": "engines/capability-resolution",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/capability-shape-registry",
+      "to": "errors"
+    },
+    {
+      "from": "engines/capability",
+      "to": "errors"
+    },
+    {
+      "from": "engines/capability",
+      "to": "ids"
+    },
+    {
+      "from": "engines/capability",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/capability",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/capability",
+      "to": "engines/conversation-manager"
+    },
+    {
+      "from": "engines/cdp-capability-registrar",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/cdp-capability-registrar",
+      "to": "engines/cdp-discovery"
+    },
+    {
+      "from": "engines/cdp-capability-registrar",
+      "to": "engines/harness"
+    },
+    {
+      "from": "engines/cdp-capability-registrar",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/cdp-discovery",
+      "to": "errors"
+    },
+    {
+      "from": "engines/chrome-governor",
+      "to": "errors"
+    },
+    {
+      "from": "engines/chrome-governor",
+      "to": "executor/fleet-supervisor"
+    },
+    {
+      "from": "engines/chrome-governor",
+      "to": "executor/slave-states"
+    },
+    {
+      "from": "engines/chrome-governor",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/chrome-governor",
+      "to": "engines/composer-typing"
+    },
+    {
+      "from": "engines/chrome-setup-wizard",
+      "to": "errors"
+    },
+    {
+      "from": "engines/chrome-setup-wizard",
+      "to": "executor/launcher"
+    },
+    {
+      "from": "engines/chrome-setup-wizard",
+      "to": "executor/profile-allocator"
+    },
+    {
+      "from": "engines/chrome-setup-wizard",
+      "to": "storage/db"
+    },
+    {
+      "from": "engines/chrome-setup-wizard",
+      "to": "engines/provider-selectors"
+    },
+    {
+      "from": "engines/composer-typing",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/config-manager",
+      "to": "errors"
+    },
+    {
+      "from": "engines/config-manager",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/config-universal-surface",
+      "to": "errors"
+    },
+    {
+      "from": "engines/config-universal-surface",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/config-universal-surface",
+      "to": "engines/config-manager"
+    },
+    {
+      "from": "engines/config-universal-surface",
+      "to": "engines/kernel"
+    },
+    {
+      "from": "engines/config-universal-surface",
+      "to": "engines/telemetry-aggregator"
+    },
+    {
+      "from": "engines/config-universal-surface",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/config-universal-surface",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/context-assembly",
+      "to": "ids"
+    },
+    {
+      "from": "engines/context-assembly",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/context-assembly",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "engines/context-assembly",
+      "to": "engines/semantic-search"
+    },
+    {
+      "from": "engines/context-assembly",
+      "to": "engines/situation-detector"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "errors"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/capability-resolution"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/context-assembly"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/execution-memoizer"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/provider-selectors"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/stream-block-store"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/streaming-protocol"
+    },
+    {
+      "from": "engines/conversation-manager",
+      "to": "engines/stream-parser"
+    },
+    {
+      "from": "engines/conversation-organizer",
+      "to": "ids"
+    },
+    {
+      "from": "engines/conversation-organizer",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/conversation-organizer",
+      "to": "engines/semantic-search"
+    },
+    {
+      "from": "engines/cost-optimizer",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/cost-optimizer",
+      "to": "ids"
+    },
+    {
+      "from": "engines/cross-conversation-synthesis",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/cross-conversation-synthesis",
+      "to": "engines/semantic-search"
+    },
+    {
+      "from": "engines/db-encryption",
+      "to": "errors"
+    },
+    {
+      "from": "engines/discovery-session-runner",
+      "to": "errors"
+    },
+    {
+      "from": "engines/discovery-session-runner",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/discovery-session-runner",
+      "to": "engines/composer-typing"
+    },
+    {
+      "from": "engines/discovery-session-runner",
+      "to": "engines/provider-discovery"
+    },
+    {
+      "from": "engines/discovery-session-runner",
+      "to": "engines/stream-align"
+    },
+    {
+      "from": "engines/discovery-session-runner",
+      "to": "engines/stream-parser"
+    },
+    {
+      "from": "engines/encryption",
+      "to": "errors"
+    },
+    {
+      "from": "engines/error-tracker",
+      "to": "engines/logger"
+    },
+    {
+      "from": "engines/eviction-manager",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/eviction-manager",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/execution-policy",
+      "to": "errors"
+    },
+    {
+      "from": "engines/execution-policy",
+      "to": "ids"
+    },
+    {
+      "from": "engines/execution-policy",
+      "to": "engines/autonomous-execution"
+    },
+    {
+      "from": "engines/export",
+      "to": "errors"
+    },
+    {
+      "from": "engines/export",
+      "to": "engines/encryption"
+    },
+    {
+      "from": "engines/harness",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/harness",
+      "to": "engines/harness"
+    },
+    {
+      "from": "engines/harness",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/harness",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/harness",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/harness",
+      "to": "ids"
+    },
+    {
+      "from": "engines/harness",
+      "to": "engines/cdp-capability-registrar"
+    },
+    {
+      "from": "engines/harness-checkpoint",
+      "to": "ids"
+    },
+    {
+      "from": "engines/harness-protocol-engine",
+      "to": "schema/harness"
+    },
+    {
+      "from": "engines/harness-protocol-engine",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/harness-runtime",
+      "to": "errors"
+    },
+    {
+      "from": "engines/harness-runtime",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/harness-runtime",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/health-digest",
+      "to": "ids"
+    },
+    {
+      "from": "engines/health-digest",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/idempotency-guard",
+      "to": "engines/conversation-manager"
+    },
+    {
+      "from": "engines/image-gen-bridge",
+      "to": "errors"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "engines/kernel"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "ids"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "storage/db"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "engines/config-manager"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "engines/conversation-manager"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "errors"
+    },
+    {
+      "from": "engines/knowledge-extractor",
+      "to": "ids"
+    },
+    {
+      "from": "engines/knowledge-extractor",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/knowledge-ingestion",
+      "to": "errors"
+    },
+    {
+      "from": "engines/knowledge-ingestion",
+      "to": "ids"
+    },
+    {
+      "from": "engines/knowledge-ingestion",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/knowledge-ingestion",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/knowledge-ingestion",
+      "to": "engines/knowledge-extractor"
+    },
+    {
+      "from": "engines/local-model-adapter",
+      "to": "errors"
+    },
+    {
+      "from": "engines/lock-manager",
+      "to": "errors"
+    },
+    {
+      "from": "engines/manifest-inference",
+      "to": "errors"
+    },
+    {
+      "from": "engines/manifest-inference",
+      "to": "engines/provider-discovery"
+    },
+    {
+      "from": "engines/mcp-client-adapter",
+      "to": "errors"
+    },
+    {
+      "from": "engines/mcp-server-adapter",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/mcp-server-adapter",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/memory-engine",
+      "to": "ids"
+    },
+    {
+      "from": "engines/memory-engine",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/memory-indexer",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/memory-indexer",
+      "to": "engines/semantic-search"
+    },
+    {
+      "from": "engines/memory-indexer",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/metrics",
+      "to": "engines/logger"
+    },
+    {
+      "from": "engines/mirror-engine",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/mirror-engine",
+      "to": "engines/capability-resolution"
+    },
+    {
+      "from": "engines/mirror-engine",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/mirror-engine",
+      "to": "engines/execution-memoizer"
+    },
+    {
+      "from": "engines/mirror-engine",
+      "to": "engines/observation-tap"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "errors"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "ids"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "engines/conversation-manager"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "storage/db"
+    },
+    {
+      "from": "engines/observability",
+      "to": "engines/audit-trail"
+    },
+    {
+      "from": "engines/observability",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/observability",
+      "to": "engines/error-tracker"
+    },
+    {
+      "from": "engines/observability",
+      "to": "engines/logger"
+    },
+    {
+      "from": "engines/observability",
+      "to": "engines/metrics"
+    },
+    {
+      "from": "engines/observability",
+      "to": "engines/sla-monitor"
+    },
+    {
+      "from": "engines/parser-repair",
+      "to": "engines/stream-parser"
+    },
+    {
+      "from": "engines/parser-repair",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/parsers",
+      "to": "engines/parsers"
+    },
+    {
+      "from": "engines/plugin-hot-reload",
+      "to": "errors"
+    },
+    {
+      "from": "engines/plugin-system",
+      "to": "schema/streaming"
+    },
+    {
+      "from": "engines/plugin-system",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/protocol-loop-parser",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/protocol-loop-parser",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/provider-discovery",
+      "to": "errors"
+    },
+    {
+      "from": "engines/provider-discovery",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/provider-discovery",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/provider-discovery",
+      "to": "engines/capability-shape-registry"
+    },
+    {
+      "from": "engines/provider-discovery",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/provider-discovery",
+      "to": "engines/manifest-inference"
+    },
+    {
+      "from": "engines/provider-discovery",
+      "to": "engines/provider-registrar"
+    },
+    {
+      "from": "engines/provider-health",
+      "to": "ids"
+    },
+    {
+      "from": "engines/provider-health",
+      "to": "schema/health"
+    },
+    {
+      "from": "engines/provider-health",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/provider-health",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/provider-health",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/provider-mux",
+      "to": "errors"
+    },
+    {
+      "from": "engines/provider-mux",
+      "to": "ids"
+    },
+    {
+      "from": "engines/provider-mux",
+      "to": "router/router"
+    },
+    {
+      "from": "engines/provider-mux",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/provider-mux",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/provider-mux",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/provider-mux",
+      "to": "engines/messaging-archetypes"
+    },
+    {
+      "from": "engines/provider-registrar",
+      "to": "ids"
+    },
+    {
+      "from": "engines/provider-registrar",
+      "to": "schema/provider-manifest"
+    },
+    {
+      "from": "engines/provider-registrar",
+      "to": "schema/types"
+    },
+    {
+      "from": "engines/provider-registrar",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/provider-registrar",
+      "to": "engines/stream-align"
+    },
+    {
+      "from": "engines/registration-auditor",
+      "to": "schema/provider-manifest"
+    },
+    {
+      "from": "engines/registration-auditor",
+      "to": "schema/types"
+    },
+    {
+      "from": "engines/registration-auditor",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/request-queue",
+      "to": "errors"
+    },
+    {
+      "from": "engines/retry-engine",
+      "to": "errors"
+    },
+    {
+      "from": "engines/sandbox-runner",
+      "to": "ids"
+    },
+    {
+      "from": "engines/sandbox-runner",
+      "to": "errors"
+    },
+    {
+      "from": "engines/sandbox-runner",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/selector-healer",
+      "to": "engines/semantic-grounding"
+    },
+    {
+      "from": "engines/selector-healer",
+      "to": "engines/workflow-engine"
+    },
+    {
+      "from": "engines/semantic-grounding",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/semantic-search",
+      "to": "ids"
+    },
+    {
+      "from": "engines/semantic-search",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/send-capability",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/session-caps",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/session-checkpoint",
+      "to": "ids"
+    },
+    {
+      "from": "engines/session-checkpoint",
+      "to": "schema/types"
+    },
+    {
+      "from": "engines/situation-detector",
+      "to": "ids"
+    },
+    {
+      "from": "engines/situation-detector",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/situation-detector",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "engines/sla-monitor",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/sla-monitor",
+      "to": "engines/logger"
+    },
+    {
+      "from": "engines/sla-monitor",
+      "to": "engines/metrics"
+    },
+    {
+      "from": "engines/state-transition",
+      "to": "ids"
+    },
+    {
+      "from": "engines/stealth",
+      "to": "engines/stealth"
+    },
+    {
+      "from": "engines/stealth",
+      "to": "errors"
+    },
+    {
+      "from": "engines/stealth",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/stealth",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/stealth",
+      "to": "engines/logger"
+    },
+    {
+      "from": "engines/stealth",
+      "to": "storage/db"
+    },
+    {
+      "from": "engines/stream-align",
+      "to": "errors"
+    },
+    {
+      "from": "engines/stream-align",
+      "to": "engines/stream-parser"
+    },
+    {
+      "from": "engines/stream-block-store",
+      "to": "ids"
+    },
+    {
+      "from": "engines/stream-block-store",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/stream-block-store",
+      "to": "storage/db"
+    },
+    {
+      "from": "engines/stream-parser",
+      "to": "errors"
+    },
+    {
+      "from": "engines/stream-parser",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/stream-parser",
+      "to": "engines/sandbox-runner"
+    },
+    {
+      "from": "engines/streaming-channel-caps",
+      "to": "errors"
+    },
+    {
+      "from": "engines/streaming-channel-caps",
+      "to": "ids"
+    },
+    {
+      "from": "engines/streaming-channel-caps",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/streaming-channel-caps",
+      "to": "engines/provider-mux"
+    },
+    {
+      "from": "engines/streaming-channel-caps",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/streaming-protocol",
+      "to": "schema/streaming"
+    },
+    {
+      "from": "engines/streaming-protocol",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/sync",
+      "to": "errors"
+    },
+    {
+      "from": "engines/sync",
+      "to": "engines/encryption"
+    },
+    {
+      "from": "engines/telemetry-aggregator",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/telemetry-aggregator",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/telemetry-aggregator",
+      "to": "engines/config-manager"
+    },
+    {
+      "from": "engines/tool-use-protocol",
+      "to": "engines/mcp-client-adapter"
+    },
+    {
+      "from": "engines/transfer-accelerator",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "engines/unified-registry",
+      "to": "errors"
+    },
+    {
+      "from": "engines/version-manager",
+      "to": "errors"
+    },
+    {
+      "from": "engines/version-manager",
+      "to": "ids"
+    },
+    {
+      "from": "engines/version-manager",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/version-manager",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/version-manager",
+      "to": "engines/config-manager"
+    },
+    {
+      "from": "engines/workflow-compiler",
+      "to": "schema/harness"
+    },
+    {
+      "from": "engines/workflow-compiler",
+      "to": "engines/workflow-engine"
+    },
+    {
+      "from": "engines/workflow-engine",
+      "to": "errors"
+    },
+    {
+      "from": "engines/workflow-engine",
+      "to": "ids"
+    },
+    {
+      "from": "engines/workflow-engine",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/workflow-engine",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/workflow-engine",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/workflow-templates",
+      "to": "ids"
+    },
+    {
+      "from": "engines/workflow-templates",
+      "to": "engines/workflow-engine"
+    },
+    {
+      "from": "executor/cdp-transport",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "executor/cdp-transport",
+      "to": "executor/cdp"
+    },
+    {
+      "from": "executor/cdp",
+      "to": "errors"
+    },
+    {
+      "from": "executor/cdp",
+      "to": "executor/cdp-types"
+    },
+    {
+      "from": "executor/chrome-instance-profile",
+      "to": "errors"
+    },
+    {
+      "from": "executor/fleet-supervisor",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "executor/fleet-supervisor",
+      "to": "executor/cdp"
+    },
+    {
+      "from": "executor/fleet-supervisor",
+      "to": "executor/chrome-instance-profile"
+    },
+    {
+      "from": "executor/fleet-supervisor",
+      "to": "executor/launcher"
+    },
+    {
+      "from": "executor/fleet-supervisor",
+      "to": "executor/port-reaper"
+    },
+    {
+      "from": "executor/fleet-supervisor",
+      "to": "executor/profile-allocator"
+    },
+    {
+      "from": "executor/fleet-supervisor",
+      "to": "executor/slave-states"
+    },
+    {
+      "from": "executor/ids",
+      "to": "ids"
+    },
+    {
+      "from": "executor/launcher",
+      "to": "executor/chrome-instance-profile"
+    },
+    {
+      "from": "executor/slave-read",
+      "to": "executor/cdp"
+    },
+    {
+      "from": "executor/slave-write",
+      "to": "executor/cdp"
+    },
+    {
+      "from": "index",
+      "to": "errors"
+    },
+    {
+      "from": "index",
+      "to": "ids"
+    },
+    {
+      "from": "index",
+      "to": "schema/index"
+    },
+    {
+      "from": "index",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "index",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "index",
+      "to": "engines/conversation-manager"
+    },
+    {
+      "from": "index",
+      "to": "engines/stream-parser"
+    },
+    {
+      "from": "index",
+      "to": "engines/capability"
+    },
+    {
+      "from": "index",
+      "to": "engines/provider-registrar"
+    },
+    {
+      "from": "index",
+      "to": "engines/capability-resolution"
+    },
+    {
+      "from": "index",
+      "to": "engines/provider-health"
+    },
+    {
+      "from": "index",
+      "to": "engines/stream-block-store"
+    },
+    {
+      "from": "index",
+      "to": "engines/registration-auditor"
+    },
+    {
+      "from": "index",
+      "to": "engines/version-manager"
+    },
+    {
+      "from": "index",
+      "to": "engines/telemetry-aggregator"
+    },
+    {
+      "from": "index",
+      "to": "engines/config-manager"
+    },
+    {
+      "from": "index",
+      "to": "engines/execution-memoizer"
+    },
+    {
+      "from": "index",
+      "to": "engines/harness-runtime"
+    },
+    {
+      "from": "index",
+      "to": "engines/harness-checkpoint"
+    },
+    {
+      "from": "index",
+      "to": "engines/capability-macro"
+    },
+    {
+      "from": "index",
+      "to": "engines/session-checkpoint"
+    },
+    {
+      "from": "index",
+      "to": "engines/state-transition"
+    },
+    {
+      "from": "index",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "index",
+      "to": "engines/provider-mux"
+    },
+    {
+      "from": "index",
+      "to": "engines/cost-optimizer"
+    },
+    {
+      "from": "index",
+      "to": "engines/situation-detector"
+    },
+    {
+      "from": "index",
+      "to": "engines/context-assembly"
+    },
+    {
+      "from": "index",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "index",
+      "to": "engines/plugin-hot-reload"
+    },
+    {
+      "from": "index",
+      "to": "engines/adaptive-workspace"
+    },
+    {
+      "from": "index",
+      "to": "engines/conversation-organizer"
+    },
+    {
+      "from": "index",
+      "to": "engines/autonomous-execution"
+    },
+    {
+      "from": "index",
+      "to": "engines/autonomous-replay"
+    },
+    {
+      "from": "index",
+      "to": "engines/health-digest"
+    },
+    {
+      "from": "index",
+      "to": "engines/db-encryption"
+    },
+    {
+      "from": "index",
+      "to": "engines/backup-scheduler"
+    },
+    {
+      "from": "index",
+      "to": "engines/execution-policy"
+    },
+    {
+      "from": "index",
+      "to": "engines/agentic-loop"
+    },
+    {
+      "from": "index",
+      "to": "executor/async-mutex"
+    },
+    {
+      "from": "index",
+      "to": "executor/circuit-breaker"
+    },
+    {
+      "from": "index",
+      "to": "executor/fleet-config"
+    },
+    {
+      "from": "index",
+      "to": "executor/content-blocks"
+    },
+    {
+      "from": "index",
+      "to": "executor/ids"
+    },
+    {
+      "from": "index",
+      "to": "alerting/alerter"
+    },
+    {
+      "from": "index",
+      "to": "automation/scheduler"
+    },
+    {
+      "from": "index",
+      "to": "router/router"
+    },
+    {
+      "from": "index",
+      "to": "engines/encryption"
+    },
+    {
+      "from": "index",
+      "to": "engines/export"
+    },
+    {
+      "from": "index",
+      "to": "engines/airgap"
+    },
+    {
+      "from": "index",
+      "to": "engines/local-model-adapter"
+    },
+    {
+      "from": "index",
+      "to": "engines/sync"
+    },
+    {
+      "from": "index",
+      "to": "engines/telemetry-audit"
+    },
+    {
+      "from": "index",
+      "to": "storage/prisma"
+    },
+    {
+      "from": "index",
+      "to": "storage/impl"
+    },
+    {
+      "from": "index",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "index",
+      "to": "engines/provider-discovery"
+    },
+    {
+      "from": "index",
+      "to": "engines/manifest-inference"
+    },
+    {
+      "from": "index",
+      "to": "engines/capability-shape-registry"
+    },
+    {
+      "from": "index",
+      "to": "mcp/server"
+    },
+    {
+      "from": "index",
+      "to": "mcp/types"
+    },
+    {
+      "from": "index",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "index",
+      "to": "engines/session-caps"
+    },
+    {
+      "from": "index",
+      "to": "engines/workflow-engine"
+    },
+    {
+      "from": "index",
+      "to": "engines/workflow-templates"
+    },
+    {
+      "from": "index",
+      "to": "engines/send-capability"
+    },
+    {
+      "from": "index",
+      "to": "engines/streaming-channel-caps"
+    },
+    {
+      "from": "index",
+      "to": "engines/messaging-archetypes"
+    },
+    {
+      "from": "index",
+      "to": "canvas/mutation-caps"
+    },
+    {
+      "from": "index",
+      "to": "engines/image-gen-bridge"
+    },
+    {
+      "from": "index",
+      "to": "engines/observability"
+    },
+    {
+      "from": "index",
+      "to": "engines/stealth"
+    },
+    {
+      "from": "mcp/discovery-tools",
+      "to": "mcp/server"
+    },
+    {
+      "from": "mcp/discovery-tools",
+      "to": "mcp/types"
+    },
+    {
+      "from": "mcp/index",
+      "to": "mcp/server"
+    },
+    {
+      "from": "mcp/index",
+      "to": "mcp/types"
+    },
+    {
+      "from": "mcp/index",
+      "to": "mcp/discovery-tools"
+    },
+    {
+      "from": "mcp/nlcl-tools",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "mcp/nlcl-tools",
+      "to": "mcp/server"
+    },
+    {
+      "from": "mcp/server",
+      "to": "mcp/discovery-tools"
+    },
+    {
+      "from": "mcp/server",
+      "to": "mcp/types"
+    },
+    {
+      "from": "mcp/types",
+      "to": "engines/provider-discovery"
+    },
+    {
+      "from": "mcp/types",
+      "to": "engines/manifest-inference"
+    },
+    {
+      "from": "mcp/types",
+      "to": "engines/capability-shape-registry"
+    },
+    {
+      "from": "mcp/types",
+      "to": "engines/provider-registrar"
+    },
+    {
+      "from": "router/index",
+      "to": "router/router"
+    },
+    {
+      "from": "router/router",
+      "to": "ids"
+    },
+    {
+      "from": "router/router",
+      "to": "schema/types"
+    },
+    {
+      "from": "router/router",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "schema/chrome",
+      "to": "executor/chrome-instance-profile"
+    },
+    {
+      "from": "schema/chrome",
+      "to": "executor/slave-states"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/automation"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/chrome"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/config"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/core"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/harness"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/health"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/learning"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/provider"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/routing"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/session"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/streaming"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/telemetry"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/transfer"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/types"
+    },
+    {
+      "from": "schema/index",
+      "to": "schema/versioning"
+    },
+    {
+      "from": "schema/provider",
+      "to": "schema/core"
+    },
+    {
+      "from": "server/autonomous-router",
+      "to": "engines/autonomous-execution"
+    },
+    {
+      "from": "server/autonomous-router",
+      "to": "engines/execution-policy"
+    },
+    {
+      "from": "server/canvas-router",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "server/canvas-router",
+      "to": "server/index"
+    },
+    {
+      "from": "server/canvas-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/canvas-ws",
+      "to": "canvas/canvas-engine"
+    },
+    {
+      "from": "server/canvas-ws",
+      "to": "canvas/layer-mounter"
+    },
+    {
+      "from": "server/canvas-ws",
+      "to": "canvas/primitives"
+    },
+    {
+      "from": "server/canvas-ws",
+      "to": "canvas/types"
+    },
+    {
+      "from": "server/canvas-ws",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "server/canvas-ws",
+      "to": "storage/db"
+    },
+    {
+      "from": "server/canvas-ws",
+      "to": "canvas/capability-bridge"
+    },
+    {
+      "from": "server/capability-router",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "server/capability-router",
+      "to": "server/index"
+    },
+    {
+      "from": "server/capability-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/conversation-router",
+      "to": "engines/capability-resolution"
+    },
+    {
+      "from": "server/conversation-router",
+      "to": "server/index"
+    },
+    {
+      "from": "server/conversation-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/conversation-router",
+      "to": "engines/provider-health"
+    },
+    {
+      "from": "server/conversation-router",
+      "to": "engines/mirror-engine"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/capability-bootstrap"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/capability-resolution"
+    },
+    {
+      "from": "server/index",
+      "to": "executor/profile-allocator"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/conversation-manager"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/cost-optimizer"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/cross-conversation-synthesis"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/export"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/idempotency-guard"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/kernel"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/knowledge-ingestion"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/lock-manager"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/provider-health"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/provider-mux"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/retry-engine"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/semantic-search"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "server/index",
+      "to": "storage/db"
+    },
+    {
+      "from": "server/index",
+      "to": "server/auth-gate"
+    },
+    {
+      "from": "server/index",
+      "to": "server/autonomous-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/capability-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/conversation-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/interpret-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/knowledge-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/mux-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/nlcl-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/response"
+    },
+    {
+      "from": "server/index",
+      "to": "server/setup-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/websocket"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/autonomous-execution"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/execution-policy"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/stream-parser"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/stream-block-store"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/execution-memoizer"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "server/index",
+      "to": "storage/impl"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/provider-registrar"
+    },
+    {
+      "from": "server/index",
+      "to": "executor/cdp-transport"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/knowledge-extractor"
+    },
+    {
+      "from": "server/index",
+      "to": "router/router"
+    },
+    {
+      "from": "server/index",
+      "to": "canvas/canvas-engine"
+    },
+    {
+      "from": "server/index",
+      "to": "canvas/in-memory-store"
+    },
+    {
+      "from": "server/index",
+      "to": "server/canvas-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/canvas-ws"
+    },
+    {
+      "from": "server/interpret-router",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "server/interpret-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/kernel-router",
+      "to": "engines/config-universal-surface"
+    },
+    {
+      "from": "server/kernel-router",
+      "to": "server/index"
+    },
+    {
+      "from": "server/knowledge-router",
+      "to": "ids"
+    },
+    {
+      "from": "server/knowledge-router",
+      "to": "server/index"
+    },
+    {
+      "from": "server/knowledge-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/memory-viz-router",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "server/memory-viz-router",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "server/mux-router",
+      "to": "engines/cost-optimizer"
+    },
+    {
+      "from": "server/mux-router",
+      "to": "engines/provider-mux"
+    },
+    {
+      "from": "server/mux-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/nlcl-router",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "server/nlcl-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/setup-router",
+      "to": "executor/cdp"
+    },
+    {
+      "from": "server/setup-router",
+      "to": "executor/launcher"
+    },
+    {
+      "from": "server/setup-router",
+      "to": "executor/profile-allocator"
+    },
+    {
+      "from": "server/setup-router",
+      "to": "server/index"
+    },
+    {
+      "from": "server/setup-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/websocket",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "server/websocket",
+      "to": "engines/unified-registry"
+    },
+    {
+      "from": "storage/contracts",
+      "to": "canvas/types"
+    },
+    {
+      "from": "storage/contracts",
+      "to": "executor/slave-states"
+    },
+    {
+      "from": "storage/contracts",
+      "to": "schema/health"
+    },
+    {
+      "from": "storage/contracts",
+      "to": "schema/types"
+    },
+    {
+      "from": "storage/contracts",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "storage/contracts",
+      "to": "engines/mirror-engine"
+    },
+    {
+      "from": "storage/contracts",
+      "to": "engines/provider-mux"
+    },
+    {
+      "from": "storage/contracts",
+      "to": "engines/sandbox-runner"
+    },
+    {
+      "from": "storage/db",
+      "to": "ids"
+    },
+    {
+      "from": "storage/db",
+      "to": "config"
+    },
+    {
+      "from": "storage/db",
+      "to": "storage/prisma"
+    },
+    {
+      "from": "storage/db",
+      "to": "storage/impl"
+    },
+    {
+      "from": "storage/impl",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "storage/impl",
+      "to": "storage/db"
+    },
+    {
+      "from": "storage/impl",
+      "to": "engines/capability-macro"
+    },
+    {
+      "from": "storage/impl",
+      "to": "storage/impl"
+    },
+    {
+      "from": "storage/impl",
+      "to": "ids"
+    },
+    {
+      "from": "storage/impl",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "storage/impl",
+      "to": "engines/harness-checkpoint"
+    },
+    {
+      "from": "storage/impl",
+      "to": "schema/health"
+    },
+    {
+      "from": "storage/impl",
+      "to": "schema/types"
+    },
+    {
+      "from": "storage/impl",
+      "to": "engines/execution-policy"
+    },
+    {
+      "from": "storage/impl",
+      "to": "engines/harness"
+    },
+    {
+      "from": "storage/impl",
+      "to": "engines/stream-block-store"
+    },
+    {
+      "from": "storage/impl",
+      "to": "engines/sync"
+    },
+    {
+      "from": "storage/impl",
+      "to": "engines/workflow-engine"
+    },
+    {
+      "from": "storage/prisma",
+      "to": "storage/db"
+    },
+    {
+      "from": "storage/store-factory",
+      "to": "storage/db"
+    }
+  ],
+  "layers": [
+    {
+      "module": "alerting/alerter",
+      "layer": 3
+    },
+    {
+      "module": "automation/scheduler",
+      "layer": 3
+    },
+    {
+      "module": "canvas/canvas-agent-tools",
+      "layer": 5
+    },
+    {
+      "module": "canvas/canvas-engine",
+      "layer": 5
+    },
+    {
+      "module": "canvas/canvas-mirror",
+      "layer": 5
+    },
+    {
+      "module": "canvas/canvas-registry",
+      "layer": 5
+    },
+    {
+      "module": "canvas/capability-bridge",
+      "layer": 5
+    },
+    {
+      "module": "canvas/capability-layer",
+      "layer": 5
+    },
+    {
+      "module": "canvas/designer",
+      "layer": 5
+    },
+    {
+      "module": "canvas/in-memory-store",
+      "layer": 5
+    },
+    {
+      "module": "canvas/index",
+      "layer": 5
+    },
+    {
+      "module": "canvas/layer-mounter",
+      "layer": 5
+    },
+    {
+      "module": "canvas/mutation-caps",
+      "layer": 5
+    },
+    {
+      "module": "canvas/oracle-reader",
+      "layer": 5
+    },
+    {
+      "module": "canvas/primitives",
+      "layer": 5
+    },
+    {
+      "module": "canvas/schema",
+      "layer": 5
+    },
+    {
+      "module": "canvas/types",
+      "layer": 5
+    },
+    {
+      "module": "cli/command-registry",
+      "layer": 5
+    },
+    {
+      "module": "cli/commands",
+      "layer": 5
+    },
+    {
+      "module": "cli/discovery-stack",
+      "layer": 5
+    },
+    {
+      "module": "cli/index",
+      "layer": 5
+    },
+    {
+      "module": "cli/json-schema",
+      "layer": 5
+    },
+    {
+      "module": "cli/output-formatter",
+      "layer": 5
+    },
+    {
+      "module": "cli/pipeline-engine",
+      "layer": 5
+    },
+    {
+      "module": "cli/provider-harness",
+      "layer": 5
+    },
+    {
+      "module": "cli/repl",
+      "layer": 5
+    },
+    {
+      "module": "config",
+      "layer": 0
+    },
+    {
+      "module": "engines/adaptive-workspace",
+      "layer": 3
+    },
+    {
+      "module": "engines/agentic-loop",
+      "layer": 4
+    },
+    {
+      "module": "engines/airgap",
+      "layer": 5
+    },
+    {
+      "module": "engines/audit-trail",
+      "layer": 3
+    },
+    {
+      "module": "engines/autonomous-execution",
+      "layer": 3
+    },
+    {
+      "module": "engines/autonomous-replay",
+      "layer": 3
+    },
+    {
+      "module": "engines/backup-scheduler",
+      "layer": 3
+    },
+    {
+      "module": "engines/capability-bootstrap",
+      "layer": 3
+    },
+    {
+      "module": "engines/capability-discovery-loop",
+      "layer": 3
+    },
+    {
+      "module": "engines/capability-event-bus-v2",
+      "layer": 3
+    },
+    {
+      "module": "engines/capability-event-bus",
+      "layer": 2
+    },
+    {
+      "module": "engines/capability-macro",
+      "layer": 2
+    },
+    {
+      "module": "engines/capability-resolution",
+      "layer": 2
+    },
+    {
+      "module": "engines/capability-shape-registry",
+      "layer": 2
+    },
+    {
+      "module": "engines/capability",
+      "layer": 2
+    },
+    {
+      "module": "engines/cdp-capability-registrar",
+      "layer": 3
+    },
+    {
+      "module": "engines/cdp-discovery",
+      "layer": 2
+    },
+    {
+      "module": "engines/chrome-governor",
+      "layer": 1
+    },
+    {
+      "module": "engines/chrome-setup-wizard",
+      "layer": 3
+    },
+    {
+      "module": "engines/composer-typing",
+      "layer": 3
+    },
+    {
+      "module": "engines/config-manager",
+      "layer": 3
+    },
+    {
+      "module": "engines/config-universal-surface",
+      "layer": 3
+    },
+    {
+      "module": "engines/context-assembly",
+      "layer": 3
+    },
+    {
+      "module": "engines/conversation-manager",
+      "layer": 3
+    },
+    {
+      "module": "engines/conversation-organizer",
+      "layer": 3
+    },
+    {
+      "module": "engines/cost-optimizer",
+      "layer": 3
+    },
+    {
+      "module": "engines/cross-conversation-synthesis",
+      "layer": 3
+    },
+    {
+      "module": "engines/db-encryption",
+      "layer": 3
+    },
+    {
+      "module": "engines/discovery-session-runner",
+      "layer": 3
+    },
+    {
+      "module": "engines/encryption",
+      "layer": 3
+    },
+    {
+      "module": "engines/error-tracker",
+      "layer": 3
+    },
+    {
+      "module": "engines/eviction-manager",
+      "layer": 3
+    },
+    {
+      "module": "engines/execution-memoizer",
+      "layer": 3
+    },
+    {
+      "module": "engines/execution-policy",
+      "layer": 3
+    },
+    {
+      "module": "engines/export",
+      "layer": 3
+    },
+    {
+      "module": "engines/harness",
+      "layer": 4
+    },
+    {
+      "module": "engines/harness-checkpoint",
+      "layer": 3
+    },
+    {
+      "module": "engines/harness-protocol-engine",
+      "layer": 3
+    },
+    {
+      "module": "engines/harness-runtime",
+      "layer": 3
+    },
+    {
+      "module": "engines/health-digest",
+      "layer": 3
+    },
+    {
+      "module": "engines/idempotency-guard",
+      "layer": 3
+    },
+    {
+      "module": "engines/image-gen-bridge",
+      "layer": 3
+    },
+    {
+      "module": "engines/kernel",
+      "layer": 1
+    },
+    {
+      "module": "engines/knowledge-extractor",
+      "layer": 3
+    },
+    {
+      "module": "engines/knowledge-ingestion",
+      "layer": 3
+    },
+    {
+      "module": "engines/local-model-adapter",
+      "layer": 3
+    },
+    {
+      "module": "engines/lock-manager",
+      "layer": 3
+    },
+    {
+      "module": "engines/logger",
+      "layer": 3
+    },
+    {
+      "module": "engines/manifest-inference",
+      "layer": 3
+    },
+    {
+      "module": "engines/mcp-client-adapter",
+      "layer": 4
+    },
+    {
+      "module": "engines/mcp-server-adapter",
+      "layer": 4
+    },
+    {
+      "module": "engines/memory-engine",
+      "layer": 3
+    },
+    {
+      "module": "engines/memory-indexer",
+      "layer": 3
+    },
+    {
+      "module": "engines/messaging-archetypes",
+      "layer": 3
+    },
+    {
+      "module": "engines/metrics",
+      "layer": 3
+    },
+    {
+      "module": "engines/mirror-engine",
+      "layer": 3
+    },
+    {
+      "module": "engines/nlcl",
+      "layer": 4
+    },
+    {
+      "module": "engines/observability",
+      "layer": 3
+    },
+    {
+      "module": "engines/observation-tap",
+      "layer": 3
+    },
+    {
+      "module": "engines/parser-repair",
+      "layer": 3
+    },
+    {
+      "module": "engines/parsers",
+      "layer": 3
+    },
+    {
+      "module": "engines/plugin-hot-reload",
+      "layer": 3
+    },
+    {
+      "module": "engines/plugin-system",
+      "layer": 3
+    },
+    {
+      "module": "engines/protocol-loop-parser",
+      "layer": 3
+    },
+    {
+      "module": "engines/provider-discovery",
+      "layer": 1
+    },
+    {
+      "module": "engines/provider-health",
+      "layer": 1
+    },
+    {
+      "module": "engines/provider-mux",
+      "layer": 1
+    },
+    {
+      "module": "engines/provider-registrar",
+      "layer": 1
+    },
+    {
+      "module": "engines/provider-selectors",
+      "layer": 1
+    },
+    {
+      "module": "engines/registration-auditor",
+      "layer": 1
+    },
+    {
+      "module": "engines/request-queue",
+      "layer": 3
+    },
+    {
+      "module": "engines/retry-engine",
+      "layer": 3
+    },
+    {
+      "module": "engines/sandbox-runner",
+      "layer": 3
+    },
+    {
+      "module": "engines/selector-healer",
+      "layer": 3
+    },
+    {
+      "module": "engines/semantic-grounding",
+      "layer": 3
+    },
+    {
+      "module": "engines/semantic-search",
+      "layer": 3
+    },
+    {
+      "module": "engines/send-capability",
+      "layer": 2
+    },
+    {
+      "module": "engines/session-caps",
+      "layer": 3
+    },
+    {
+      "module": "engines/session-checkpoint",
+      "layer": 3
+    },
+    {
+      "module": "engines/situation-detector",
+      "layer": 3
+    },
+    {
+      "module": "engines/sla-monitor",
+      "layer": 3
+    },
+    {
+      "module": "engines/state-transition",
+      "layer": 3
+    },
+    {
+      "module": "engines/stealth",
+      "layer": 3
+    },
+    {
+      "module": "engines/stream-align",
+      "layer": 3
+    },
+    {
+      "module": "engines/stream-block-store",
+      "layer": 3
+    },
+    {
+      "module": "engines/stream-parser",
+      "layer": 3
+    },
+    {
+      "module": "engines/streaming-channel-caps",
+      "layer": 3
+    },
+    {
+      "module": "engines/streaming-protocol",
+      "layer": 3
+    },
+    {
+      "module": "engines/sync",
+      "layer": 3
+    },
+    {
+      "module": "engines/telemetry-aggregator",
+      "layer": 5
+    },
+    {
+      "module": "engines/telemetry-audit",
+      "layer": 5
+    },
+    {
+      "module": "engines/tool-use-protocol",
+      "layer": 4
+    },
+    {
+      "module": "engines/transfer-accelerator",
+      "layer": 3
+    },
+    {
+      "module": "engines/unified-registry",
+      "layer": 3
+    },
+    {
+      "module": "engines/version-manager",
+      "layer": 5
+    },
+    {
+      "module": "engines/workflow-compiler",
+      "layer": 3
+    },
+    {
+      "module": "engines/workflow-engine",
+      "layer": 3
+    },
+    {
+      "module": "engines/workflow-templates",
+      "layer": 3
+    },
+    {
+      "module": "errors",
+      "layer": 0
+    },
+    {
+      "module": "executor/async-mutex",
+      "layer": 1
+    },
+    {
+      "module": "executor/cdp-transport",
+      "layer": 1
+    },
+    {
+      "module": "executor/cdp-types",
+      "layer": 1
+    },
+    {
+      "module": "executor/cdp",
+      "layer": 1
+    },
+    {
+      "module": "executor/chrome-instance-profile",
+      "layer": 1
+    },
+    {
+      "module": "executor/circuit-breaker",
+      "layer": 1
+    },
+    {
+      "module": "executor/content-blocks",
+      "layer": 1
+    },
+    {
+      "module": "executor/fleet-config",
+      "layer": 1
+    },
+    {
+      "module": "executor/fleet-supervisor",
+      "layer": 1
+    },
+    {
+      "module": "executor/ids",
+      "layer": 1
+    },
+    {
+      "module": "executor/launcher",
+      "layer": 1
+    },
+    {
+      "module": "executor/port-reaper",
+      "layer": 1
+    },
+    {
+      "module": "executor/profile-allocator",
+      "layer": 1
+    },
+    {
+      "module": "executor/slave-read",
+      "layer": 1
+    },
+    {
+      "module": "executor/slave-states",
+      "layer": 1
+    },
+    {
+      "module": "executor/slave-write",
+      "layer": 1
+    },
+    {
+      "module": "ids",
+      "layer": 0
+    },
+    {
+      "module": "index",
+      "layer": 5
+    },
+    {
+      "module": "mcp/discovery-tools",
+      "layer": 5
+    },
+    {
+      "module": "mcp/index",
+      "layer": 5
+    },
+    {
+      "module": "mcp/nlcl-tools",
+      "layer": 5
+    },
+    {
+      "module": "mcp/server",
+      "layer": 5
+    },
+    {
+      "module": "mcp/types",
+      "layer": 5
+    },
+    {
+      "module": "router/index",
+      "layer": 5
+    },
+    {
+      "module": "router/router",
+      "layer": 5
+    },
+    {
+      "module": "schema/automation",
+      "layer": 0
+    },
+    {
+      "module": "schema/chrome",
+      "layer": 0
+    },
+    {
+      "module": "schema/config",
+      "layer": 0
+    },
+    {
+      "module": "schema/core",
+      "layer": 0
+    },
+    {
+      "module": "schema/harness",
+      "layer": 0
+    },
+    {
+      "module": "schema/health",
+      "layer": 0
+    },
+    {
+      "module": "schema/index",
+      "layer": 0
+    },
+    {
+      "module": "schema/learning",
+      "layer": 0
+    },
+    {
+      "module": "schema/provider-manifest",
+      "layer": 0
+    },
+    {
+      "module": "schema/provider",
+      "layer": 0
+    },
+    {
+      "module": "schema/routing",
+      "layer": 0
+    },
+    {
+      "module": "schema/session",
+      "layer": 0
+    },
+    {
+      "module": "schema/streaming",
+      "layer": 0
+    },
+    {
+      "module": "schema/telemetry",
+      "layer": 0
+    },
+    {
+      "module": "schema/transfer",
+      "layer": 0
+    },
+    {
+      "module": "schema/types",
+      "layer": 0
+    },
+    {
+      "module": "schema/validators",
+      "layer": 0
+    },
+    {
+      "module": "schema/versioning",
+      "layer": 0
+    },
+    {
+      "module": "server/auth-gate",
+      "layer": 5
+    },
+    {
+      "module": "server/autonomous-router",
+      "layer": 5
+    },
+    {
+      "module": "server/canvas-router",
+      "layer": 5
+    },
+    {
+      "module": "server/canvas-ws",
+      "layer": 5
+    },
+    {
+      "module": "server/capability-router",
+      "layer": 5
+    },
+    {
+      "module": "server/conversation-router",
+      "layer": 5
+    },
+    {
+      "module": "server/index",
+      "layer": 5
+    },
+    {
+      "module": "server/interpret-router",
+      "layer": 5
+    },
+    {
+      "module": "server/kernel-router",
+      "layer": 5
+    },
+    {
+      "module": "server/knowledge-router",
+      "layer": 5
+    },
+    {
+      "module": "server/memory-viz-router",
+      "layer": 5
+    },
+    {
+      "module": "server/mux-router",
+      "layer": 5
+    },
+    {
+      "module": "server/nlcl-router",
+      "layer": 5
+    },
+    {
+      "module": "server/response",
+      "layer": 5
+    },
+    {
+      "module": "server/setup-router",
+      "layer": 5
+    },
+    {
+      "module": "server/websocket",
+      "layer": 5
+    },
+    {
+      "module": "storage/contracts",
+      "layer": 0
+    },
+    {
+      "module": "storage/db",
+      "layer": 0
+    },
+    {
+      "module": "storage/impl",
+      "layer": 3
+    },
+    {
+      "module": "storage/prisma",
+      "layer": 0
+    },
+    {
+      "module": "storage/store-factory",
+      "layer": 0
+    }
+  ],
+  "metrics": [
+    {
+      "module": "alerting/alerter",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "automation/scheduler",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/canvas-agent-tools",
+      "fanIn": 2,
+      "fanOut": 7,
+      "instability": 0.7777777777777778,
+      "selfDeps": 0,
+      "totalDeps": 7,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/canvas-engine",
+      "fanIn": 3,
+      "fanOut": 14,
+      "instability": 0.8235294117647058,
+      "selfDeps": 0,
+      "totalDeps": 14,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/canvas-mirror",
+      "fanIn": 4,
+      "fanOut": 1,
+      "instability": 0.2,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/canvas-registry",
+      "fanIn": 5,
+      "fanOut": 5,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/capability-bridge",
+      "fanIn": 3,
+      "fanOut": 4,
+      "instability": 0.5714285714285714,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/capability-layer",
+      "fanIn": 0,
+      "fanOut": 4,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/designer",
+      "fanIn": 5,
+      "fanOut": 3,
+      "instability": 0.375,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/in-memory-store",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/index",
+      "fanIn": 0,
+      "fanOut": 13,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 13,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/layer-mounter",
+      "fanIn": 6,
+      "fanOut": 4,
+      "instability": 0.4,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/mutation-caps",
+      "fanIn": 2,
+      "fanOut": 6,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 6,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/oracle-reader",
+      "fanIn": 3,
+      "fanOut": 1,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/primitives",
+      "fanIn": 3,
+      "fanOut": 1,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/schema",
+      "fanIn": 6,
+      "fanOut": 2,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "canvas/types",
+      "fanIn": 14,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "cli/command-registry",
+      "fanIn": 3,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "cli/commands",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "cli/discovery-stack",
+      "fanIn": 1,
+      "fanOut": 12,
+      "instability": 0.9230769230769231,
+      "selfDeps": 0,
+      "totalDeps": 12,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "cli/index",
+      "fanIn": 0,
+      "fanOut": 5,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "cli/json-schema",
+      "fanIn": 0,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "cli/output-formatter",
+      "fanIn": 2,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "cli/pipeline-engine",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "cli/provider-harness",
+      "fanIn": 0,
+      "fanOut": 3,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "cli/repl",
+      "fanIn": 0,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "config",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/adaptive-workspace",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/agentic-loop",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/airgap",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/audit-trail",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/autonomous-execution",
+      "fanIn": 5,
+      "fanOut": 11,
+      "instability": 0.6875,
+      "selfDeps": 0,
+      "totalDeps": 11,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/autonomous-replay",
+      "fanIn": 2,
+      "fanOut": 5,
+      "instability": 0.7142857142857143,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/backup-scheduler",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/capability-bootstrap",
+      "fanIn": 1,
+      "fanOut": 15,
+      "instability": 0.9375,
+      "selfDeps": 0,
+      "totalDeps": 15,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/capability-discovery-loop",
+      "fanIn": 0,
+      "fanOut": 3,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/capability-event-bus-v2",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/capability-event-bus",
+      "fanIn": 33,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/capability-macro",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/capability-resolution",
+      "fanIn": 5,
+      "fanOut": 1,
+      "instability": 0.16666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/capability-shape-registry",
+      "fanIn": 4,
+      "fanOut": 1,
+      "instability": 0.2,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/capability",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/cdp-capability-registrar",
+      "fanIn": 1,
+      "fanOut": 4,
+      "instability": 0.8,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/cdp-discovery",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/chrome-governor",
+      "fanIn": 22,
+      "fanOut": 5,
+      "instability": 0.18518518518518517,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/chrome-setup-wizard",
+      "fanIn": 0,
+      "fanOut": 5,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/composer-typing",
+      "fanIn": 3,
+      "fanOut": 1,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/config-manager",
+      "fanIn": 5,
+      "fanOut": 2,
+      "instability": 0.2857142857142857,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/config-universal-surface",
+      "fanIn": 1,
+      "fanOut": 7,
+      "instability": 0.875,
+      "selfDeps": 0,
+      "totalDeps": 7,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/context-assembly",
+      "fanIn": 2,
+      "fanOut": 5,
+      "instability": 0.7142857142857143,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/conversation-manager",
+      "fanIn": 7,
+      "fanOut": 12,
+      "instability": 0.631578947368421,
+      "selfDeps": 0,
+      "totalDeps": 12,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/conversation-organizer",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/cost-optimizer",
+      "fanIn": 3,
+      "fanOut": 2,
+      "instability": 0.4,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/cross-conversation-synthesis",
+      "fanIn": 2,
+      "fanOut": 2,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/db-encryption",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/discovery-session-runner",
+      "fanIn": 2,
+      "fanOut": 6,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 6,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/encryption",
+      "fanIn": 3,
+      "fanOut": 1,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/error-tracker",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/eviction-manager",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/execution-memoizer",
+      "fanIn": 4,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/execution-policy",
+      "fanIn": 5,
+      "fanOut": 3,
+      "instability": 0.375,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/export",
+      "fanIn": 2,
+      "fanOut": 2,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/harness",
+      "fanIn": 3,
+      "fanOut": 7,
+      "instability": 0.7,
+      "selfDeps": 1,
+      "totalDeps": 7,
+      "cohesion": 0.14285714285714285,
+      "files": 17
+    },
+    {
+      "module": "engines/harness-checkpoint",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/harness-protocol-engine",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/harness-runtime",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/health-digest",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/idempotency-guard",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/image-gen-bridge",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/kernel",
+      "fanIn": 4,
+      "fanOut": 11,
+      "instability": 0.7333333333333333,
+      "selfDeps": 1,
+      "totalDeps": 11,
+      "cohesion": 0.09090909090909091,
+      "files": 10
+    },
+    {
+      "module": "engines/knowledge-extractor",
+      "fanIn": 2,
+      "fanOut": 2,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/knowledge-ingestion",
+      "fanIn": 2,
+      "fanOut": 5,
+      "instability": 0.7142857142857143,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/local-model-adapter",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/lock-manager",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/logger",
+      "fanIn": 6,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/manifest-inference",
+      "fanIn": 3,
+      "fanOut": 2,
+      "instability": 0.4,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/mcp-client-adapter",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/mcp-server-adapter",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/memory-engine",
+      "fanIn": 9,
+      "fanOut": 2,
+      "instability": 0.18181818181818182,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/memory-indexer",
+      "fanIn": 0,
+      "fanOut": 3,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/messaging-archetypes",
+      "fanIn": 2,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/metrics",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/mirror-engine",
+      "fanIn": 3,
+      "fanOut": 5,
+      "instability": 0.625,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/nlcl",
+      "fanIn": 9,
+      "fanOut": 8,
+      "instability": 0.47058823529411764,
+      "selfDeps": 1,
+      "totalDeps": 8,
+      "cohesion": 0.125,
+      "files": 30
+    },
+    {
+      "module": "engines/observability",
+      "fanIn": 1,
+      "fanOut": 6,
+      "instability": 0.8571428571428571,
+      "selfDeps": 0,
+      "totalDeps": 6,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/observation-tap",
+      "fanIn": 2,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/parser-repair",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/parsers",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 1,
+      "totalDeps": 1,
+      "cohesion": 1,
+      "files": 3
+    },
+    {
+      "module": "engines/plugin-hot-reload",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/plugin-system",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/protocol-loop-parser",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/provider-discovery",
+      "fanIn": 5,
+      "fanOut": 7,
+      "instability": 0.5833333333333334,
+      "selfDeps": 0,
+      "totalDeps": 7,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/provider-health",
+      "fanIn": 3,
+      "fanOut": 5,
+      "instability": 0.625,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/provider-mux",
+      "fanIn": 5,
+      "fanOut": 7,
+      "instability": 0.5833333333333334,
+      "selfDeps": 0,
+      "totalDeps": 7,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/provider-registrar",
+      "fanIn": 6,
+      "fanOut": 5,
+      "instability": 0.45454545454545453,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/provider-selectors",
+      "fanIn": 2,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/registration-auditor",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/request-queue",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/retry-engine",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/sandbox-runner",
+      "fanIn": 3,
+      "fanOut": 3,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/selector-healer",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/semantic-grounding",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/semantic-search",
+      "fanIn": 6,
+      "fanOut": 2,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/send-capability",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/session-caps",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/session-checkpoint",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/situation-detector",
+      "fanIn": 2,
+      "fanOut": 3,
+      "instability": 0.6,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/sla-monitor",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/state-transition",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/stealth",
+      "fanIn": 2,
+      "fanOut": 6,
+      "instability": 0.75,
+      "selfDeps": 1,
+      "totalDeps": 6,
+      "cohesion": 0.16666666666666666,
+      "files": 19
+    },
+    {
+      "module": "engines/stream-align",
+      "fanIn": 3,
+      "fanOut": 2,
+      "instability": 0.4,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/stream-block-store",
+      "fanIn": 4,
+      "fanOut": 3,
+      "instability": 0.42857142857142855,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/stream-parser",
+      "fanIn": 7,
+      "fanOut": 3,
+      "instability": 0.3,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/streaming-channel-caps",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/streaming-protocol",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/sync",
+      "fanIn": 2,
+      "fanOut": 2,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/telemetry-aggregator",
+      "fanIn": 2,
+      "fanOut": 3,
+      "instability": 0.6,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/telemetry-audit",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/tool-use-protocol",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/transfer-accelerator",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/unified-registry",
+      "fanIn": 26,
+      "fanOut": 1,
+      "instability": 0.037037037037037035,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/version-manager",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/workflow-compiler",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/workflow-engine",
+      "fanIn": 5,
+      "fanOut": 5,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/workflow-templates",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "errors",
+      "fanIn": 47,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/async-mutex",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/cdp-transport",
+      "fanIn": 2,
+      "fanOut": 2,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "executor/cdp-types",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/cdp",
+      "fanIn": 5,
+      "fanOut": 2,
+      "instability": 0.2857142857142857,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "executor/chrome-instance-profile",
+      "fanIn": 3,
+      "fanOut": 1,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "executor/circuit-breaker",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/content-blocks",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/fleet-config",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/fleet-supervisor",
+      "fanIn": 1,
+      "fanOut": 7,
+      "instability": 0.875,
+      "selfDeps": 0,
+      "totalDeps": 7,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "executor/ids",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "executor/launcher",
+      "fanIn": 3,
+      "fanOut": 1,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "executor/port-reaper",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/profile-allocator",
+      "fanIn": 5,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/slave-read",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "executor/slave-states",
+      "fanIn": 4,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "executor/slave-write",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "ids",
+      "fanIn": 42,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "index",
+      "fanIn": 0,
+      "fanOut": 71,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 71,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "mcp/discovery-tools",
+      "fanIn": 2,
+      "fanOut": 2,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "mcp/index",
+      "fanIn": 0,
+      "fanOut": 3,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "mcp/nlcl-tools",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "mcp/server",
+      "fanIn": 4,
+      "fanOut": 2,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "mcp/types",
+      "fanIn": 4,
+      "fanOut": 4,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "router/index",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "router/router",
+      "fanIn": 4,
+      "fanOut": 3,
+      "instability": 0.42857142857142855,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "schema/automation",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/chrome",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "schema/config",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/core",
+      "fanIn": 2,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/harness",
+      "fanIn": 3,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/health",
+      "fanIn": 4,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/index",
+      "fanIn": 1,
+      "fanOut": 15,
+      "instability": 0.9375,
+      "selfDeps": 0,
+      "totalDeps": 15,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "schema/learning",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/provider-manifest",
+      "fanIn": 3,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/provider",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "schema/routing",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/session",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/streaming",
+      "fanIn": 3,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/telemetry",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/transfer",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/types",
+      "fanIn": 7,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/validators",
+      "fanIn": 0,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/versioning",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "server/auth-gate",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "server/autonomous-router",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/canvas-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/canvas-ws",
+      "fanIn": 1,
+      "fanOut": 7,
+      "instability": 0.875,
+      "selfDeps": 0,
+      "totalDeps": 7,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/capability-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/conversation-router",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/index",
+      "fanIn": 7,
+      "fanOut": 46,
+      "instability": 0.8679245283018868,
+      "selfDeps": 0,
+      "totalDeps": 46,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/interpret-router",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/kernel-router",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/knowledge-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/memory-viz-router",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/mux-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/nlcl-router",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/response",
+      "fanIn": 9,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "server/setup-router",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/websocket",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "storage/contracts",
+      "fanIn": 52,
+      "fanOut": 8,
+      "instability": 0.13333333333333333,
+      "selfDeps": 1,
+      "totalDeps": 8,
+      "cohesion": 0.125,
+      "files": 41
+    },
+    {
+      "module": "storage/db",
+      "fanIn": 12,
+      "fanOut": 4,
+      "instability": 0.25,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "storage/impl",
+      "fanIn": 5,
+      "fanOut": 14,
+      "instability": 0.7368421052631579,
+      "selfDeps": 1,
+      "totalDeps": 14,
+      "cohesion": 0.07142857142857142,
+      "files": 44
+    },
+    {
+      "module": "storage/prisma",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "storage/store-factory",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    }
+  ]
+}

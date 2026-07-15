@@ -1,5 +1,6 @@
+import { EngineError } from '../../errors.js'
 import { ulid } from '../../ids.js'
-import type { TraceSpan, KernelStore } from '../../storage/contracts/kernel-store.js'
+import type { KernelStore, TraceSpan } from '../../storage/contracts/kernel-store.js'
 
 export class KernelTracer {
   private ringBuffer: TraceSpan[] = []
@@ -34,7 +35,7 @@ export class KernelTracer {
       await this.end(spanId)
       return result
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err))
+      const error = err instanceof Error ? err : new EngineError(String(err))
       await this.error(spanId, error)
       throw err
     }
@@ -59,7 +60,7 @@ export class KernelTracer {
   }
 
   async end(spanId: string, extra?: Record<string, unknown>): Promise<void> {
-    const span = this.activeSpans.get(spanId) ?? this.ringBuffer.find(s => s.id === spanId)
+    const span = this.activeSpans.get(spanId) ?? this.ringBuffer.find((s) => s.id === spanId)
     if (!span) return
     span.endTime = Date.now()
     span.duration = span.endTime - span.startTime
@@ -68,7 +69,7 @@ export class KernelTracer {
   }
 
   async error(spanId: string, error: Error): Promise<void> {
-    const span = this.activeSpans.get(spanId) ?? this.ringBuffer.find(s => s.id === spanId)
+    const span = this.activeSpans.get(spanId) ?? this.ringBuffer.find((s) => s.id === spanId)
     if (!span) return
     span.endTime = Date.now()
     span.duration = span.endTime - span.startTime
@@ -78,7 +79,7 @@ export class KernelTracer {
   }
 
   getTrace(traceId: string): TraceSpan[] {
-    return this.ringBuffer.filter(s => s.traceId === traceId)
+    return this.ringBuffer.filter((s) => s.traceId === traceId)
   }
 
   getRecentSpans(limit = 20): TraceSpan[] {
@@ -86,7 +87,7 @@ export class KernelTracer {
   }
 
   getSpansByEngine(engineId: string, limit = 20): TraceSpan[] {
-    return this.ringBuffer.filter(s => s.engineId === engineId).slice(-limit)
+    return this.ringBuffer.filter((s) => s.engineId === engineId).slice(-limit)
   }
 
   getActiveSpans(): TraceSpan[] {
@@ -94,25 +95,29 @@ export class KernelTracer {
   }
 
   private getTraceIdFromParent(spanId: string): string {
-    const parent = this.ringBuffer.find(s => s.id === spanId)
+    const parent = this.ringBuffer.find((s) => s.id === spanId)
     return parent?.traceId ?? ulid()
   }
 
   private checkOverflow(): void {
     if (this.ringBuffer.length >= this.persistThreshold && this.store) {
       const batch = this.ringBuffer.splice(0, this.ringBuffer.length - this.ringCapacity)
-      this.store.batchInsertSpans(batch.map(s => ({
-        traceId: s.traceId,
-        parentId: s.parentId,
-        name: s.name,
-        startTime: s.startTime,
-        endTime: s.endTime,
-        duration: s.duration,
-        status: s.status,
-        error: s.error,
-        attrs: s.attrs,
-        engineId: s.engineId,
-      }))).catch(err => console.error('[tracer] persist batch failed', err))
+      this.store
+        .batchInsertSpans(
+          batch.map((s) => ({
+            traceId: s.traceId,
+            parentId: s.parentId,
+            name: s.name,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            duration: s.duration,
+            status: s.status,
+            error: s.error,
+            attrs: s.attrs,
+            engineId: s.engineId,
+          })),
+        )
+        .catch((err) => console.error('[tracer] persist batch failed', err))
     }
   }
 }

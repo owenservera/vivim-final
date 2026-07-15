@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "User Journey Moment",
+  "description": "A key moment in the user journey that can be tracked and verified by the devops system",
+  "type": "object",
+  "required": ["id", "name", "phase", "status", "priority", "description", "entry", "exit"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^M-\\d{3}$",
+      "description": "Moment ID (M-XXX format)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable moment name"
+    },
+    "phase": {
+      "type": "number",
+      "description": "Development phase (100 = user-centric frontend)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["not_started", "in_progress", "implemented", "verified", "broken"],
+      "description": "Current status of the moment"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["P0", "P1", "P2"],
+      "description": "Priority level (P0 = critical path)"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the user sees/does"
+    },
+    "entry": {
+      "type": "string",
+      "description": "What triggers this moment"
+    },
+    "exit": {
+      "type": "string",
+      "description": "What success looks like"
+    },
+    "components": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "React components involved"
+    },
+    "api": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "API endpoints used"
+    },
+    "verification": {
+      "type": "object",
+      "description": "How to verify this moment works",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["http", "composite", "manual"],
+          "description": "Verification method"
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to run verification"
+        },
+        "expected": {
+          "description": "Expected output (string or number)"
+        },
+        "min": {
+          "type": "number",
+          "description": "Minimum expected value"
+        },
+        "steps": {
+          "type": "array",
+          "description": "Multi-step verification",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "command": { "type": "string" },
+              "expectField": { "type": "string" },
+              "expectValue": {},
+              "expectMinLength": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "depends": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^M-\\d{3}$" },
+      "description": "Moment IDs this depends on"
+    },
+    "implementation": {
+      "type": "object",
+      "description": "Files that implement this moment",
+      "properties": {
+        "backend": { "type": "array", "items": { "type": "string" } },
+        "frontend": { "type": "array", "items": { "type": "string" } },
+        "scripts": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "bugs_fixed": {
+      "type": "array",
+      "description": "Bugs found and fixed during implementation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "fix": { "type": "string" },
+          "files": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Source files for this moment"
+    },
+    "completedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When implementation was completed"
+    },
+    "verifiedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When last verified working"
+    }
+  }
+}

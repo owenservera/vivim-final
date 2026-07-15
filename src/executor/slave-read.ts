@@ -37,7 +37,8 @@ export class SlaveRead {
 
   async connect(): Promise<void> {
     await this.cdp.connect()
-    await this.cdp.send('Runtime.enable')
+    // DISC-3: Runtime.enable is owned by ChromeGovernor.enableDomains — never
+    // enable the Runtime domain directly here (would double-enable / race the governor).
     await this.cdp.send('Page.enable').catch(() => {
       // Page domain optional for pure read operations
     })

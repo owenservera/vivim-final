@@ -1,7 +1,7 @@
 // src/engines/stealth/canvas-noise-engine.ts
 // Unit 12.1 — CanvasNoiseEngine: canvas fingerprint perturbation.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 export class CanvasNoiseModule implements StealthModule {
   name = 'canvas_noise'

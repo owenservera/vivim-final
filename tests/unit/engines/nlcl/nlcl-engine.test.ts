@@ -2,11 +2,11 @@
 // Unit tests for the Natural Language Command Layer (NLCL).
 // Verifies the deterministic parser, intent router, and composite commands.
 
-import { describe, test, expect } from 'bun:test'
-import { NLCLEngine } from '../../../../src/engines/nlcl/nlcl-engine.js'
+import { describe, expect, test } from 'bun:test'
+import { getDefaultCommandPatterns } from '../../../../src/engines/nlcl/catalog.js'
 import { CommandPatternRegistry } from '../../../../src/engines/nlcl/command-registry.js'
 import { NLCommandParser } from '../../../../src/engines/nlcl/nl-parser.js'
-import { getDefaultCommandPatterns } from '../../../../src/engines/nlcl/catalog.js'
+import { NLCLEngine } from '../../../../src/engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../../../../src/engines/nlcl/types.js'
 
 const ctx: NLCContext = { surface: 'frontend', metadata: {} }
@@ -19,104 +19,104 @@ describe('NLCommandParser', () => {
   test('parses "open my resume" as file.open', () => {
     const result = parser.parse('open my resume', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('file.open')
-    expect(result!.input.name).toBe('resume')
-    expect(result!.confidence).toBeGreaterThan(0.5)
+    expect(result?.intent).toBe('file.open')
+    expect(result?.input.name).toBe('resume')
+    expect(result?.confidence).toBeGreaterThan(0.5)
   })
 
   test('parses "go to cnn" as browser.navigate', () => {
     const result = parser.parse('go to cnn', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('browser.navigate')
-    expect(result!.input.url).toContain('cnn')
+    expect(result?.intent).toBe('browser.navigate')
+    expect(result?.input.url).toContain('cnn')
   })
 
   test('parses "go to cnn.com" as browser.navigate with URL', () => {
     const result = parser.parse('go to cnn.com', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('browser.navigate')
-    expect(result!.input.url).toBe('cnn.com')
+    expect(result?.intent).toBe('browser.navigate')
+    expect(result?.input.url).toBe('cnn.com')
   })
 
   test('parses "search for best restaurants" as browser.search', () => {
     const result = parser.parse('search for best restaurants', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('browser.search')
-    expect(result!.input.query).toBe('best restaurants')
+    expect(result?.intent).toBe('browser.search')
+    expect(result?.input.query).toBe('best restaurants')
   })
 
   test('parses "ask chatgpt about quantum physics" as llm.ask', () => {
     const result = parser.parse('ask chatgpt about quantum physics', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('llm.ask')
-    expect(result!.input.providerId).toBe('chatgpt')
-    expect(result!.input.prompt).toBe('quantum physics')
+    expect(result?.intent).toBe('llm.ask')
+    expect(result?.input.providerId).toBe('chatgpt')
+    expect(result?.input.prompt).toBe('quantum physics')
   })
 
   test('parses "summarize the news" as llm.summarize', () => {
     const result = parser.parse('summarize the news', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('llm.summarize')
+    expect(result?.intent).toBe('llm.summarize')
   })
 
   test('parses "summarize the news from cnn" as web.summarize', () => {
     const result = parser.parse('summarize the news from cnn', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('web.summarize')
-    expect(result!.input.url).toContain('cnn')
+    expect(result?.intent).toBe('web.summarize')
+    expect(result?.input.url).toContain('cnn')
   })
 
   test('parses "send email to john@example.com about the meeting" as email.send', () => {
     const result = parser.parse('send email to john@example.com about the meeting', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('email.send')
-    expect(result!.input.to).toBe('john@example.com')
-    expect(result!.input.subject).toBe('the meeting')
+    expect(result?.intent).toBe('email.send')
+    expect(result?.input.to).toBe('john@example.com')
+    expect(result?.input.subject).toBe('the meeting')
   })
 
   test('parses "open notepad" as app.launch', () => {
     const result = parser.parse('open notepad', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('app.launch')
-    expect(result!.input.app).toBe('notepad')
+    expect(result?.intent).toBe('app.launch')
+    expect(result?.input.app).toBe('notepad')
   })
 
   test('parses "switch to claude" as conversation.switch', () => {
     const result = parser.parse('switch to claude', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('conversation.switch')
-    expect(result!.input.providerId).toBe('claude')
+    expect(result?.intent).toBe('conversation.switch')
+    expect(result?.input.providerId).toBe('claude')
   })
 
   test('parses "what can you do" as system.help', () => {
     const result = parser.parse('what can you do', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('system.help')
+    expect(result?.intent).toBe('system.help')
   })
 
   test('parses "list my providers" as system.providers', () => {
     const result = parser.parse('list my providers', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('system.providers')
+    expect(result?.intent).toBe('system.providers')
   })
 
   test('normalizes filler words — "please open my resume"', () => {
     const result = parser.parse('please open my resume', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('file.open')
+    expect(result?.intent).toBe('file.open')
   })
 
   test('normalizes filler words — "can you go to youtube"', () => {
     const result = parser.parse('can you go to youtube', ctx)
     expect(result).not.toBeNull()
-    expect(result!.intent).toBe('browser.navigate')
+    expect(result?.intent).toBe('browser.navigate')
   })
 
   test('returns alternatives for ambiguous input', () => {
     const result = parser.parse('open calculator', ctx, { maxAlternatives: 3 })
     expect(result).not.toBeNull()
     // "open calculator" could be app.launch or file.open
-    expect(result!.alternatives.length).toBeGreaterThan(0)
+    expect(result?.alternatives.length).toBeGreaterThan(0)
   })
 })
 
@@ -191,8 +191,8 @@ describe('NLCLEngine', () => {
     await engine.interpret('version', ctx)
     const log = engine.getAuditLog()
     expect(log.length).toBeGreaterThanOrEqual(2)
-    expect(log[0]!.input).toBe('help')
-    expect(log[1]!.input).toBe('version')
+    expect(log[0]?.input).toBe('help')
+    expect(log[1]?.input).toBe('version')
   })
 
   test('engine supports pluggable resolver', async () => {
@@ -238,7 +238,7 @@ describe('CommandPatternRegistry', () => {
     for (const p of getDefaultCommandPatterns()) registry.register(p)
     const exported = registry.exportForSurface('frontend')
     expect(exported.length).toBeGreaterThan(0)
-    expect(exported[0]!.intent).toBeDefined()
-    expect(exported[0]!.examples).toBeDefined()
+    expect(exported[0]?.intent).toBeDefined()
+    expect(exported[0]?.examples).toBeDefined()
   })
 })

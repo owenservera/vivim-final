@@ -35,8 +35,8 @@ export class SyncStoreImpl implements SyncStore {
       recordId: r.recordId,
       operation: r.operation as SyncLogEntry['operation'],
       dataJson: r.dataJson,
-      ts: r.ts,
-      syncedAt: r.syncedAt,
+      ts: Number(r.ts),
+      syncedAt: r.syncedAt == null ? null : Number(r.syncedAt),
     }))
   }
 
@@ -82,9 +82,9 @@ export class SyncStoreImpl implements SyncStore {
       deviceId: r.deviceId,
       name: r.name,
       publicKey: r.publicKey,
-      lastSyncAt: r.lastSyncAt,
+      lastSyncAt: Number(r.lastSyncAt),
       status: r.status as SyncPeer['status'],
-      pairedAt: r.pairedAt ?? undefined,
+      pairedAt: r.pairedAt == null ? undefined : Number(r.pairedAt),
     }))
   }
 
@@ -98,9 +98,9 @@ export class SyncStoreImpl implements SyncStore {
       deviceId: row.deviceId,
       name: row.name,
       publicKey: row.publicKey,
-      lastSyncAt: row.lastSyncAt,
+      lastSyncAt: Number(row.lastSyncAt),
       status: row.status as SyncPeer['status'],
-      pairedAt: row.pairedAt ?? undefined,
+      pairedAt: row.pairedAt == null ? undefined : Number(row.pairedAt),
     }
   }
 }

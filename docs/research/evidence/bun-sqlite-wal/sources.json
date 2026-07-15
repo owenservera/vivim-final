@@ -1,0 +1,56 @@
+{
+  "topic": "bun-sqlite-wal",
+  "collected": "2026-07-12",
+  "sources": [
+    {
+      "id": "bun-sqlite-docs",
+      "title": "SQLite - Bun Documentation",
+      "url": "https://bun.com/docs/runtime/sqlite",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "WAL mode dramatically improves performance for concurrent readers + single writer workloads",
+      "usedIn": ["report:bun-sqlite-wal", "brief:bun-sqlite-wal-patterns"]
+    },
+    {
+      "id": "prisma-bun-sqlite",
+      "title": "prisma-adapter-bun-sqlite",
+      "url": "https://github.com/mmvsk/prisma-adapter-bun-sqlite",
+      "type": "product",
+      "date": "2025",
+      "confidence": "high",
+      "keyClaim": "Production WAL configuration with synchronous=NORMAL provides 2-3x faster operations than FULL",
+      "usedIn": ["report:bun-sqlite-wal", "brief:bun-sqlite-wal-patterns"]
+    },
+    {
+      "id": "llmbest-sqlite",
+      "title": "SQLite Best Practices",
+      "url": "https://llmbestpractices.com/backend/sqlite",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "SQLite 3.53 WAL guidance; foreign_keys=ON must be per-connection; WAL persists across connections",
+      "usedIn": ["report:bun-sqlite-wal", "brief:bun-sqlite-wal-patterns"]
+    },
+    {
+      "id": "oneuptime-sqlite",
+      "title": "How to Use SQLite with Bun",
+      "url": "https://oneuptime.com/blog/post/2026-01-31-bun-sqlite",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Recommended pragmas: cache_size=-64000 (64MB), temp_store=MEMORY for performance",
+      "usedIn": ["report:bun-sqlite-wal", "brief:bun-sqlite-wal-patterns"]
+    },
+    {
+      "id": "bun-issue-25964",
+      "title": "SQLite database file locked on Windows after close() with WAL mode",
+      "url": "https://github.com/oven-sh/bun/issues/25964",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Windows WAL file locking issue: .db file remains locked after close() requiring process exit or 3.5s delay",
+      "usedIn": ["report:bun-sqlite-wal", "brief:bun-sqlite-wal-patterns"]
+    }
+  ]
+}

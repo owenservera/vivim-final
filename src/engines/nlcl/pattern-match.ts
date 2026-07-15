@@ -4,8 +4,8 @@
 // or null if no regex matches. Mirrors NLCommandParser.tryMatch's regex path so
 // fuzzy/semantic resolvers can recover BOTH intent and parameters, not just intent.
 
-import type { CommandPattern, ParsedIntent } from './types.js'
 import { normalizeText } from './text-normalizer.js'
+import type { CommandPattern, ParsedIntent } from './types.js'
 
 /**
  * Attempt to extract validated parameters from rawInput using a pattern's regexes.

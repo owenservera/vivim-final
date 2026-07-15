@@ -4,10 +4,10 @@
 // This is the "send to chatgpt.com and return response" executor.
 // NO local AI — uses the user's already-logged-in provider session.
 
-import type { CommandExecutor, CommandResult, ParsedIntent, NLCContext } from '../types.js'
 import { newId } from '../../../ids.js'
-import type { ConversationManager } from '../../conversation-manager.js'
 import type { ConversationStore } from '../../../storage/contracts/conversation-store.js'
+import type { ConversationManager } from '../../conversation-manager.js'
+import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 export class ProviderLLMExecutor implements CommandExecutor {
   readonly id = 'provider-llm' as const
@@ -38,7 +38,10 @@ export class ProviderLLMExecutor implements CommandExecutor {
 
       let conversationId = ctx.conversationId
       if (!conversationId && this.conversationStore) {
-        const conv = await this.conversationManager.createConversation(providerId, `NLCL: ${prompt.slice(0, 50)}`)
+        const conv = await this.conversationManager.createConversation(
+          providerId,
+          `NLCL: ${prompt.slice(0, 50)}`,
+        )
         conversationId = conv.id
       }
 
@@ -70,14 +73,16 @@ export class ProviderLLMExecutor implements CommandExecutor {
     }
   }
 
-  private buildPrompt(intent: ParsedIntent, ctx: NLCContext): string {
+  private buildPrompt(intent: ParsedIntent, _ctx: NLCContext): string {
     const action = intent.intent
     const input = intent.input
 
     switch (action) {
       case 'provider.query':
       case 'llm.ask': {
-        return (input.prompt as string) ?? (input.query as string) ?? (input.message as string) ?? ''
+        return (
+          (input.prompt as string) ?? (input.query as string) ?? (input.message as string) ?? ''
+        )
       }
 
       case 'llm.summarize': {
@@ -104,9 +109,7 @@ export class ProviderLLMExecutor implements CommandExecutor {
       case 'llm.explain': {
         const topic = input.topic as string
         const content = input.content as string | undefined
-        return content
-          ? `Please explain this:\n\n${content}`
-          : `Please explain ${topic}`
+        return content ? `Please explain this:\n\n${content}` : `Please explain ${topic}`
       }
 
       case 'llm.rewrite': {
@@ -120,9 +123,7 @@ export class ProviderLLMExecutor implements CommandExecutor {
       case 'llm.code': {
         const task = input.task as string
         const language = input.language as string | undefined
-        return language
-          ? `Write ${language} code that: ${task}`
-          : `Write code that: ${task}`
+        return language ? `Write ${language} code that: ${task}` : `Write code that: ${task}`
       }
 
       case 'browser.summarize':
@@ -144,12 +145,7 @@ export class ProviderLLMExecutor implements CommandExecutor {
     }
   }
 
-  private fail(
-    intent: ParsedIntent,
-    traceId: string,
-    start: number,
-    error: string,
-  ): CommandResult {
+  private fail(intent: ParsedIntent, traceId: string, start: number, error: string): CommandResult {
     return {
       ok: false,
       intent: intent.intent,

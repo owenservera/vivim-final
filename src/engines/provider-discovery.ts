@@ -151,7 +151,7 @@ export class ProviderDiscoveryEngine {
 
   // ── Session Management ────────────────────────────────────────────────
 
-  async createSession(url: string, opts?: DiscoveryOptions): Promise<DiscoverySession> {
+  async createSession(url: string, _opts?: DiscoveryOptions): Promise<DiscoverySession> {
     const id = `disc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     const now = Date.now()
     const session: DiscoverySession = {
@@ -243,7 +243,7 @@ export class ProviderDiscoveryEngine {
     return this.getPageState(sessionId)
   }
 
-  async getPageState(sessionId: string): Promise<PageState> {
+  async getPageState(_sessionId: string): Promise<PageState> {
     const slave = await this.governor.ensureRunning('default')
     const cdp = this.governor.cdp
 
@@ -263,7 +263,7 @@ export class ProviderDiscoveryEngine {
 
   // ── DOM Inspection ────────────────────────────────────────────────────
 
-  async getDomSnapshot(sessionId: string): Promise<DomSnapshot> {
+  async getDomSnapshot(_sessionId: string): Promise<DomSnapshot> {
     const slave = await this.governor.ensureRunning('default')
     const cdp = this.governor.cdp
 
@@ -320,7 +320,7 @@ export class ProviderDiscoveryEngine {
     return { role: 'root', name: 'accessibility tree placeholder', children: [] }
   }
 
-  async evaluate(sessionId: string, expression: string): Promise<unknown> {
+  async evaluate(_sessionId: string, expression: string): Promise<unknown> {
     const slave = await this.governor.ensureRunning('default')
     const cdp = this.governor.cdp
     const result = (await cdp.send(slave.slaveId, 'Runtime.evaluate', {
@@ -337,7 +337,7 @@ export class ProviderDiscoveryEngine {
   // ── Interaction ───────────────────────────────────────────────────────
 
   async click(
-    sessionId: string,
+    _sessionId: string,
     selector: string,
     opts?: { waitAfterMs?: number },
   ): Promise<DomMutationResult> {
@@ -357,7 +357,7 @@ export class ProviderDiscoveryEngine {
   }
 
   async type(
-    sessionId: string,
+    _sessionId: string,
     selector: string,
     text: string,
     opts?: { submit?: boolean },
@@ -365,7 +365,7 @@ export class ProviderDiscoveryEngine {
     try {
       const slave = await this.governor.ensureRunning('default')
       const cdp = this.governor.cdp
-      const submitJs = opts?.submit ? `; el.form?.submit()` : ''
+      const submitJs = opts?.submit ? '; el.form?.submit()' : ''
       await cdp.send(slave.slaveId, 'Runtime.evaluate', {
         expression: `(() => { const el = document.querySelector('${selector}'); if(el) { el.focus(); el.value = ${JSON.stringify(text)}; el.dispatchEvent(new Event('input', {bubbles:true}))${submitJs} } })()`,
       })
@@ -376,7 +376,7 @@ export class ProviderDiscoveryEngine {
   }
 
   async scroll(
-    sessionId: string,
+    _sessionId: string,
     direction: 'up' | 'down' | 'left' | 'right',
     amount?: number,
   ): Promise<void> {
@@ -390,7 +390,7 @@ export class ProviderDiscoveryEngine {
     })
   }
 
-  async hover(sessionId: string, selector: string): Promise<void> {
+  async hover(_sessionId: string, selector: string): Promise<void> {
     const slave = await this.governor.ensureRunning('default')
     const cdp = this.governor.cdp
     await cdp.send(slave.slaveId, 'Runtime.evaluate', {
@@ -407,7 +407,7 @@ export class ProviderDiscoveryEngine {
     await cdp.send(slave.slaveId, 'Network.enable', {}).catch(() => {})
   }
 
-  async stopObservation(sessionId: string): Promise<void> {
+  async stopObservation(_sessionId: string): Promise<void> {
     const slave = await this.governor.ensureRunning('default')
     const cdp = this.governor.cdp
     await cdp.send(slave.slaveId, 'Network.disable', {}).catch(() => {})

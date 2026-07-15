@@ -390,7 +390,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
           id: r.id,
           role: r.role,
           content: r.content ?? '',
-          ts: r.createdAt,
+          ts: Number(r.createdAt),
         }))
       },
       async listMemory() {
@@ -528,14 +528,17 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     const { ExecutionPolicyEngine } = await import('../engines/execution-policy.js')
     const { AutonomousStoreImpl } = await import('../storage/impl/autonomous-store-impl.js')
     const { PolicyStoreImpl } = await import('../storage/impl/policy-store-impl.js')
+    const { ProfileAllocator } = await import('../executor/profile-allocator.js')
     const autonomousStore = new AutonomousStoreImpl()
     const pStore = new PolicyStoreImpl()
+    const profileAllocator = new ProfileAllocator()
     registry = new UnifiedCapabilityRegistry()
     registerDefaultCapabilities(registry, {
       db,
       conversationStore: convStore,
       governor,
       conversationManager,
+      profileAllocator,
       memoryEngine,
       semanticSearch,
       knowledgeIngestion,

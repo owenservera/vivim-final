@@ -78,8 +78,8 @@ describe('HpeSessionStoreImpl', () => {
     await store.save(session)
     const result = await store.findById('hs-1')
     expect(result).not.toBeNull()
-    expect(result!.prompt).toBe('hello')
-    expect(result!.status).toBe('pending')
+    expect(result?.prompt).toBe('hello')
+    expect(result?.status).toBe('pending')
   })
 
   test('findByAgent returns sessions for agent', async () => {
@@ -101,7 +101,7 @@ describe('HpeSessionStoreImpl', () => {
     })
     const result = await store.findByAgent('a1')
     expect(result).toHaveLength(1)
-    expect(result[0]!.agentId).toBe('a1')
+    expect(result[0]?.agentId).toBe('a1')
   })
 
   test('updateStatus changes status and sets completedAt', async () => {
@@ -115,7 +115,7 @@ describe('HpeSessionStoreImpl', () => {
     })
     await store.updateStatus('hs-1', 'completed')
     const result = await store.findById('hs-1')
-    expect(result!.status).toBe('completed')
-    expect(result!.completedAt).toBeTruthy()
+    expect(result?.status).toBe('completed')
+    expect(result?.completedAt).toBeTruthy()
   })
 })

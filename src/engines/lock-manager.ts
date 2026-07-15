@@ -1,6 +1,8 @@
 // src/engines/lock-manager.ts
 // Unit 7.3 — Conversation locking: configurable lock policy.
 
+import { EngineError } from '../errors.js'
+
 export interface LockPolicy {
   scope: 'conversation' | 'provider' | 'global'
   strategy: 'mutex' | 'queue' | 'reject'
@@ -30,7 +32,7 @@ export class LockManager {
     if (this.policy.strategy === 'reject') {
       const existing = this.locks.get(key)
       if (existing) {
-        throw new Error(`Lock held by ${existing.owner}`)
+        throw new EngineError(`Lock held by ${existing.owner}`)
       }
     }
 
@@ -84,7 +86,7 @@ export class LockManager {
     // Wait for release
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error(`Lock timeout after ${this.policy.timeoutMs}ms`))
+        reject(new EngineError(`Lock timeout after ${this.policy.timeoutMs}ms`))
       }, this.policy.timeoutMs)
 
       const check = setInterval(() => {
@@ -115,7 +117,7 @@ export class LockManager {
 
     const queue = this.queues.get(key) ?? []
     if (queue.length >= this.policy.queueMaxSize) {
-      throw new Error(`Lock queue full (${this.policy.queueMaxSize})`)
+      throw new EngineError(`Lock queue full (${this.policy.queueMaxSize})`)
     }
 
     return new Promise<void>((resolve, reject) => {

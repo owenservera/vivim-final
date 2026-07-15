@@ -28,7 +28,7 @@ export class CapStoreClient {
     })
     if (!res.ok) {
       const err = (await res.json()) as { error: string; code: string; details?: unknown }
-      throw new CapStoreError(err.error, err.code, res.status, err.details)
+      throw new CapStoreError(err.code, err.error, err.details)
     }
     return res.json() as Promise<T>
   }
@@ -160,6 +160,17 @@ export class CapStoreClient {
   async getHealthTrend(providerId: string, days?: number): Promise<unknown> {
     const qs = days != null ? `?days=${days}` : ''
     return this.request<unknown>('GET', `/api/telemetry/health/${providerId}${qs}`)
+  }
+
+  // ── Universal capabilities (v10 SOA) ────────────────────────────────────
+
+  async capabilities(opts?: { surface?: string }): Promise<unknown[]> {
+    const qs = opts?.surface ? `?surface=${encodeURIComponent(opts.surface)}` : ''
+    return this.request<unknown[]>('GET', `/api/capabilities${qs}`)
+  }
+
+  async interpret(text: string): Promise<unknown> {
+    return this.request<unknown>('POST', '/api/interpret', { text })
   }
 
   // ── WebSocket ──────────────────────────────────────────────────────────
