@@ -5,6 +5,7 @@
 
 import { EngineError } from '../errors.js'
 import type { ParserStore } from '../storage/contracts/parser-store.js'
+import { assertTrustedExpressionSource } from './safe-eval.js'
 import type { SandboxRunner } from './sandbox-runner.js'
 import type { SandboxPermissions } from './sandbox-runner.js'
 
@@ -213,6 +214,7 @@ export class StreamParserEngine {
         // eslint-disable-next-line no-new-func
         // Trusted: inline parser code is admin-defined and DB-backed. The
         // SandboxRunner path above is preferred; this is a legacy host fallback.
+        assertTrustedExpressionSource(code, 'inline parser')
         const factory = new Function('module', 'exports', code)
         factory(mod, mod.exports)
       } catch (error) {
