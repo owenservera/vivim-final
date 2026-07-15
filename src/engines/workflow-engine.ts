@@ -5,6 +5,7 @@ import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
+import { assertTrustedExpressionSource } from './safe-eval.js'
 import type { CapabilityContext, UnifiedCapabilityRegistry } from './unified-registry.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -504,6 +505,7 @@ export class WorkflowEngine {
     try {
       // Trusted: `expr` is an author-defined workflow DSL condition. Evaluated
       // intentionally; sandbox if definitions become externally sourced.
+      assertTrustedExpressionSource(expr, 'workflow expression')
       const fn = new Function(...Object.keys(vars), `return ${expr}`)
       return Boolean(fn(...Object.values(vars)))
     } catch {

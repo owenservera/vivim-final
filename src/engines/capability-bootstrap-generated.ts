@@ -9,6 +9,7 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { CapabilityNotFoundError } from '../errors.js'
 import type { BootstrapServices } from './capability-bootstrap.js'
 import { makeCapability } from './capability-bootstrap.js'
 import type { UnifiedCapability, UnifiedCapabilityRegistry } from './unified-registry.js'
@@ -138,7 +139,7 @@ function createHandlerMap(
 
 function createFallbackHandler(slug: string): UnifiedCapability['handler'] {
   return async () => {
-    throw new Error(`No handler registered for capability: ${slug}`)
+    throw new CapabilityNotFoundError(slug)
   }
 }
 
@@ -200,5 +201,7 @@ export function registerGeneratedCapabilities(
     }
   }
 
-    console.log(`[bootstrap-generated] Registered ${registered} capabilities from taxonomy pool${skipped > 0 ? ` (${skipped} skipped)` : ''}`)
+  console.log(
+    `[bootstrap-generated] Registered ${registered} capabilities from taxonomy pool${skipped > 0 ? ` (${skipped} skipped)` : ''}`,
+  )
 }
