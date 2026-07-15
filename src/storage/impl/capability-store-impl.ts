@@ -167,6 +167,23 @@ export class CapabilityStoreImpl implements CapabilityStore {
     return (rows as PrismaProgram[]).map(toProgramRow)
   }
 
+  async getBestProgramByCapability(
+    capabilitySlug: string,
+    providerId: string,
+  ): Promise<CapabilityProgramRow | null> {
+    // The canonical binding key is (globalId=capabilitySlug, providerId). Resolve
+    // that binding, then return its highest-version program (cap-store bestProgram).
+    const binding = (await this.p.capabilityBinding.findFirst({
+      where: { globalId: capabilitySlug, providerId },
+    })) as PrismaBinding | null
+    if (!binding) return null
+    const r = await this.p.capabilityProgram.findFirst({
+      where: { bindingId: binding.id },
+      orderBy: { version: 'desc' },
+    })
+    return r ? toProgramRow(r as PrismaProgram) : null
+  }
+
   async getSelectors(capabilityId: string, providerId: string): Promise<SelectorStrategyRow[]> {
     const rows = await this.p.selectorStrategy.findMany({
       where: { capabilityId, providerId, isActive: 1 },

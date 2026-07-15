@@ -12,17 +12,12 @@ import type {
   UnifiedCapability,
   UnifiedCapabilityRegistry,
 } from '../engines/unified-registry.js'
-import type { CanvasRegistry } from './canvas-registry.js'
-import type { LayerMounter } from './layer-mounter.js'
 import type { CanvasMirror } from './canvas-mirror.js'
-import type { OracleReader } from './oracle-reader.js'
+import type { CanvasRegistry } from './canvas-registry.js'
 import type { CanvasDesigner } from './designer.js'
-import type {
-  CanvasLayout,
-  LayerBinding,
-  LayerCategory,
-  SandboxPolicy,
-} from './types.js'
+import type { LayerMounter } from './layer-mounter.js'
+import type { OracleReader } from './oracle-reader.js'
+import type { CanvasLayout, LayerBinding, LayerCategory, SandboxPolicy } from './types.js'
 
 // Extended services interface for kernel integration (v9.5)
 export interface CanvasCapabilityServices {
@@ -34,7 +29,11 @@ export interface CanvasCapabilityServices {
   // Extended for kernel capabilities
   kernelOracle?: {
     query: {
-      query: (input: { type: string; filter?: Record<string, unknown>; limit?: number }) => Promise<unknown>
+      query: (input: {
+        type: string
+        filter?: Record<string, unknown>
+        limit?: number
+      }) => Promise<unknown>
     }
     actuator?: {
       heal: (issueId: string) => Promise<unknown>
@@ -61,6 +60,18 @@ function canvasCap(
   return {
     ...partial,
     surfaces: [...ALL_SURFACES],
+    // The UI binding the audit (and runtime) look for is `ui`; `uiAction` is a
+    // canvas-specific alias. Mirror it so the capability is bound on the UI
+    // surface and the command-surface audit stays green.
+    ...(partial.uiAction
+      ? {
+          ui: {
+            component: partial.uiAction.component,
+            position: partial.uiAction.position,
+            order: partial.uiAction.order,
+          },
+        }
+      : {}),
     handler,
     isAsync: true,
     requiresConfirmation: false,
@@ -92,7 +103,11 @@ export function registerCanvasCapabilities(
           required: ['definitionId'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'canvas spawn', aliases: ['cs'], examples: ['canvas spawn --definitionId def:chat'] },
+        cliCommand: {
+          name: 'canvas spawn',
+          aliases: ['cs'],
+          examples: ['canvas spawn --definitionId def:chat'],
+        },
         uiAction: { component: 'canvas-spawn', position: 'toolbar', order: 1 },
         mcpToolName: 'canvas_spawn',
         apiEndpoint: { method: 'POST', path: '/api/canvas/spawn' },
@@ -116,7 +131,11 @@ export function registerCanvasCapabilities(
           required: ['instanceId'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'canvas dismiss', aliases: ['cd'], examples: ['canvas dismiss --instanceId inst:chat:01'] },
+        cliCommand: {
+          name: 'canvas dismiss',
+          aliases: ['cd'],
+          examples: ['canvas dismiss --instanceId inst:chat:01'],
+        },
         uiAction: { component: 'canvas-dismiss', position: 'toolbar', order: 2 },
         mcpToolName: 'canvas_dismiss',
         apiEndpoint: { method: 'DELETE', path: '/api/canvas/instance/{id}' },
@@ -146,17 +165,17 @@ export function registerCanvasCapabilities(
           required: ['instanceId', 'regionId', 'state'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'canvas mutate', aliases: ['cm'], examples: ['canvas mutate --instanceId inst:1 --regionId body'] },
+        cliCommand: {
+          name: 'canvas mutate',
+          aliases: ['cm'],
+          examples: ['canvas mutate --instanceId inst:1 --regionId body'],
+        },
         uiAction: { component: 'canvas-mutate', position: 'toolbar', order: 3 },
         mcpToolName: 'canvas_mutate',
         apiEndpoint: { method: 'POST', path: '/api/canvas/instance/{id}/mutate' },
       },
       async (i) =>
-        svc.mirror.pushOptimistic(
-          String(i.instanceId),
-          String(i.regionId),
-          i.state as unknown,
-        ),
+        svc.mirror.pushOptimistic(String(i.instanceId), String(i.regionId), i.state as unknown),
     ),
   )
 
@@ -175,7 +194,11 @@ export function registerCanvasCapabilities(
           },
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'canvas observe', aliases: ['co'], examples: ['canvas observe --op oracle'] },
+        cliCommand: {
+          name: 'canvas observe',
+          aliases: ['co'],
+          examples: ['canvas observe --op oracle'],
+        },
         uiAction: { component: 'canvas-observe', position: 'toolbar', order: 4 },
         mcpToolName: 'canvas_observe',
         apiEndpoint: { method: 'GET', path: '/api/canvas/observe' },
@@ -210,7 +233,11 @@ export function registerCanvasCapabilities(
           required: ['slug', 'name', 'html', 'bindings', 'layout'],
         },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'canvas define', aliases: ['cdef'], examples: ['canvas define --slug my-layer --name "My Layer"'] },
+        cliCommand: {
+          name: 'canvas define',
+          aliases: ['cdef'],
+          examples: ['canvas define --slug my-layer --name "My Layer"'],
+        },
         uiAction: { component: 'canvas-define', position: 'toolbar', order: 5 },
         mcpToolName: 'canvas_define',
         apiEndpoint: { method: 'POST', path: '/api/canvas/definitions' },
@@ -262,6 +289,7 @@ export function registerCanvasCapabilities(
 
   // cap:kernel:query — query oracle
   if (svc.kernelOracle?.query) {
+    const query = svc.kernelOracle.query
     registry.register(
       canvasCap(
         {
@@ -279,12 +307,17 @@ export function registerCanvasCapabilities(
             },
           },
           outputSchema: { type: 'object' },
-          cliCommand: { name: 'kernel oracle query', aliases: ['koq'], examples: ['kernel oracle query --op health'] },
+          cliCommand: {
+            name: 'kernel query',
+            aliases: ['koq'],
+            examples: ['kernel query --op health'],
+          },
           mcpToolName: 'kernel_query',
           apiEndpoint: { method: 'POST', path: '/api/kernel/oracle/query' },
+          uiAction: { component: 'kernel-query', position: 'toolbar', order: 90 },
         },
         async (i) =>
-          svc.kernelOracle!.query.query({
+          query.query({
             type: (i.op as string) ?? 'all',
             filter: i.filter as Record<string, unknown> | undefined,
             limit: i.limit as number | undefined,
@@ -304,7 +337,12 @@ export function registerCanvasCapabilities(
         category: 'kernel',
         inputSchema: { type: 'object', properties: {} },
         outputSchema: { type: 'object' },
-        cliCommand: { name: 'kernel oracle visibility', aliases: ['kov'], examples: ['kernel oracle visibility'] },
+        cliCommand: {
+          name: 'kernel visibility',
+          aliases: ['kov'],
+          examples: ['kernel visibility'],
+        },
+        uiAction: { component: 'kernel-visibility', position: 'toolbar', order: 100 },
         mcpToolName: 'kernel_visibility',
         apiEndpoint: { method: 'GET', path: '/api/kernel/oracle/visibility' },
       },
@@ -314,6 +352,7 @@ export function registerCanvasCapabilities(
 
   // cap:kernel:heal — trigger healing
   if (svc.kernelOracle?.actuator) {
+    const actuator = svc.kernelOracle.actuator
     registry.register(
       canvasCap(
         {
@@ -328,17 +367,23 @@ export function registerCanvasCapabilities(
             required: ['issueId'],
           },
           outputSchema: { type: 'object' },
-          cliCommand: { name: 'kernel oracle heal', aliases: ['koh'], examples: ['kernel oracle heal --issueId issue:123'] },
+          cliCommand: {
+            name: 'kernel heal',
+            aliases: ['koh'],
+            examples: ['kernel heal --issueId issue:123'],
+          },
           mcpToolName: 'kernel_heal',
           apiEndpoint: { method: 'POST', path: '/api/kernel/oracle/heal' },
+          uiAction: { component: 'kernel-heal', position: 'toolbar', order: 110 },
         },
-        async (i) => svc.kernelOracle!.actuator!.heal(String(i.issueId)),
+        async (i) => actuator.heal(String(i.issueId)),
       ),
     )
   }
 
   // cap:config:list — list config scopes
   if (svc.configSurface) {
+    const configSurface = svc.configSurface
     registry.register(
       canvasCap(
         {
@@ -349,11 +394,16 @@ export function registerCanvasCapabilities(
           category: 'config',
           inputSchema: { type: 'object', properties: {} },
           outputSchema: { type: 'object' },
-          cliCommand: { name: 'kernel config list', aliases: ['kcl'], examples: ['kernel config list'] },
+          cliCommand: {
+            name: 'kernel config list',
+            aliases: ['kcl'],
+            examples: ['kernel config list'],
+          },
           mcpToolName: 'config_list',
           apiEndpoint: { method: 'GET', path: '/api/kernel/config/scopes' },
+          uiAction: { component: 'config-list', position: 'toolbar', order: 120 },
         },
-        async () => ({ scopes: svc.configSurface!.listScopes() }),
+        async () => ({ scopes: configSurface.listScopes() }),
       ),
     )
 
@@ -372,13 +422,18 @@ export function registerCanvasCapabilities(
             required: ['key'],
           },
           outputSchema: { type: 'object' },
-          cliCommand: { name: 'kernel config get', aliases: ['kcg'], examples: ['kernel config get autoheal.stalledEngineRestart.enabled'] },
+          cliCommand: {
+            name: 'kernel config get',
+            aliases: ['kcg'],
+            examples: ['kernel config get autoheal.stalledEngineRestart.enabled'],
+          },
           mcpToolName: 'config_get',
           apiEndpoint: { method: 'GET', path: '/api/kernel/config/{scope}/{key}' },
+          uiAction: { component: 'config-get', position: 'toolbar', order: 121 },
         },
         async (i) => {
           const [scope, key] = ((i.key as string) ?? '').split('.')
-          return { value: svc.configSurface!.get(scope ?? '', key ?? '') }
+          return { value: configSurface.get(scope ?? '', key ?? '') }
         },
       ),
     )
@@ -401,13 +456,18 @@ export function registerCanvasCapabilities(
             required: ['key', 'value'],
           },
           outputSchema: { type: 'object' },
-          cliCommand: { name: 'kernel config set', aliases: ['kcset'], examples: ['kernel config set autoheal.stalledEngineRestart.enabled true'] },
+          cliCommand: {
+            name: 'kernel config set',
+            aliases: ['kcset'],
+            examples: ['kernel config set autoheal.stalledEngineRestart.enabled true'],
+          },
           mcpToolName: 'config_set',
           apiEndpoint: { method: 'PUT', path: '/api/kernel/config/{scope}/{key}' },
+          uiAction: { component: 'config-set', position: 'toolbar', order: 122 },
         },
         async (i) => {
           const [scope, key] = ((i.key as string) ?? '').split('.')
-          return svc.configSurface!.set(scope ?? '', key ?? '', i.value)
+          return configSurface.set(scope ?? '', key ?? '', i.value)
         },
       ),
     )

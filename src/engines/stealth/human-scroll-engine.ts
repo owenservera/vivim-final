@@ -1,7 +1,7 @@
 // src/engines/stealth/human-scroll-engine.ts
 // Unit 13.3 — HumanScrollEngine: natural scroll velocity curves.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 export class HumanScrollModule implements StealthModule {
   name = 'human_scroll'

@@ -55,6 +55,7 @@ export { ConversationOrganizer } from './engines/conversation-organizer.js'
 
 // Phase 19: Autonomous Execution
 export { AutonomousExecutionEngine } from './engines/autonomous-execution.js'
+export { ReplayController } from './engines/autonomous-replay.js'
 export type {
   AutonomousGoal,
   AutonomousTask,
@@ -64,6 +65,30 @@ export type {
   StepStatus,
   ActionClassification,
 } from './engines/autonomous-execution.js'
+export type {
+  ReplayBranchOptions,
+  ReplayResult,
+  ReplayStepDiff,
+  ReplayStepExecutor,
+} from './engines/autonomous-replay.js'
+export { HealthDigestEngine, renderDigest } from './engines/health-digest.js'
+export type {
+  HealthDigestMetrics,
+  HealthDigestMetricsProvider,
+  HealthDigestRow,
+  HealthDigestStore,
+  HealthDigestOptions,
+} from './engines/health-digest.js'
+export { DbEncryptionEngine } from './engines/db-encryption.js'
+export type { EncryptedDbBlob } from './engines/db-encryption.js'
+export { BackupScheduler } from './engines/backup-scheduler.js'
+export type {
+  BackupCadence,
+  BackupScheduleConfig,
+  BackupEntry,
+} from './engines/backup-scheduler.js'
+export { resolvePlanner } from './engines/autonomous-execution.js'
+export type { PlannerResolution } from './engines/autonomous-execution.js'
 export { ExecutionPolicyEngine } from './engines/execution-policy.js'
 export type { PolicyRule, PolicyDecision } from './engines/execution-policy.js'
 export { AgenticLoopEngine } from './engines/agentic-loop.js'
@@ -183,6 +208,15 @@ export type {
 } from './engines/nlcl/intent-resolver.js'
 export { IntentRouter } from './engines/nlcl/intent-router.js'
 export { getDefaultCommandPatterns } from './engines/nlcl/catalog.js'
+// Phase 25 additions
+export {
+  extractParameters,
+  validateInput,
+  coerceValues,
+  LLMSlaveResolver,
+  bindContext,
+  resolvePronouns,
+} from './engines/nlcl/index.js'
 export {
   FileExecutor,
   BrowserExecutor,
@@ -206,6 +240,34 @@ export type {
   NLPattern,
 } from './engines/nlcl/types.js'
 export { DEFAULT_NLCL_CONFIG } from './engines/nlcl/types.js'
+
+// Phase 29: Interactive Sessions
+export { registerSessionCaps } from './engines/session-caps.js'
+export type { SessionDeps } from './engines/session-caps.js'
+
+// Phase 28: Workflow Automation
+export { WorkflowEngine } from './engines/workflow-engine.js'
+export type {
+  WorkflowDefinition,
+  WorkflowNode,
+  WorkflowEdge,
+  WorkflowExecution,
+} from './engines/workflow-engine.js'
+export { buildNewsletterWorkflow } from './engines/workflow-templates/newsletter.js'
+export type { NewsletterOpts } from './engines/workflow-templates/newsletter.js'
+export { registerSendCaps } from './engines/send-capability.js'
+
+// Phase 27: Streaming Channels
+export { registerStreamingChannelCaps } from './engines/streaming-channel-caps.js'
+export { InMemoryChannelStore } from './storage/impl/channel-store-impl.js'
+export type { Channel, ChannelStore } from './storage/contracts/channel-store.js'
+export { MESSAGING_ARCHETYPES } from './engines/messaging-archetypes.js'
+export type { MessagingArchetype, NormalizedMessage } from './engines/messaging-archetypes.js'
+
+// Phase 26: Canvas NL Mutation
+export { registerCanvasMutationCaps } from './canvas/mutation-caps.js'
+export type { MutationServices, UndoInput, HistoryInput } from './canvas/mutation-caps.js'
+export { ImageGenBridge, generateImage } from './engines/image-gen-bridge.js'
 
 // Phase 9: Observability
 export * from './engines/observability/index.js'

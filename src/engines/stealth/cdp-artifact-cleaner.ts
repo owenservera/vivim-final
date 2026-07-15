@@ -1,11 +1,12 @@
 // src/engines/stealth/cdp-artifact-cleaner.ts
 // Unit 14.2 — CDPArtifactCleaner: remove CDP traces from page.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 export class CdpArtifactCleanerModule implements StealthModule {
   name = 'cdp_artifact_cleaner'
-  detectionVector = 'CDP/WebDriver artifacts in page context (cdc_*, stack traces, performance entries)'
+  detectionVector =
+    'CDP/WebDriver artifacts in page context (cdc_*, stack traces, performance entries)'
   description = 'Removes CDP-injected variables, cleans error stacks, filters performance entries'
   priority = 1
 
@@ -16,7 +17,9 @@ export class CdpArtifactCleanerModule implements StealthModule {
 
     const script = `
       (function() {
-        ${removeCdcVars ? `
+        ${
+          removeCdcVars
+            ? `
           // Remove CDP-injected variables
           var keys = Object.keys(window).filter(function(k) {
             return k.startsWith('cdc_') || k.startsWith('$cdc_') || k.startsWith('$wdc_') ||
@@ -24,7 +27,7 @@ export class CdpArtifactCleanerModule implements StealthModule {
                    k === '__selenium_evaluate' || k === '__fxdriver_evaluate';
           });
           keys.forEach(function(k) {
-            try { delete window[k]; } catch(e) {}
+            try { delete window[k]; } catch(e) { /* best-effort: var may be non-configurable */ }
           });
 
           // Remove from document
@@ -32,11 +35,15 @@ export class CdpArtifactCleanerModule implements StealthModule {
             return k.startsWith('$cdc_') || k.startsWith('$wdc_');
           });
           docKeys.forEach(function(k) {
-            try { delete document[k]; } catch(e) {}
+            try { delete document[k]; } catch(e) { /* best-effort: var may be non-configurable */ }
           });
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${patchErrorStack ? `
+        ${
+          patchErrorStack
+            ? `
           // Patch Error.prototype.stack to remove CDP frames
           var origStack = Object.getOwnPropertyDescriptor(Error.prototype, 'stack');
           if (origStack && origStack.get) {
@@ -54,9 +61,13 @@ export class CdpArtifactCleanerModule implements StealthModule {
               configurable: true,
             });
           }
-        ` : ''}
+        `
+            : ''
+        }
 
-        ${filterPerfEntries ? `
+        ${
+          filterPerfEntries
+            ? `
           // Filter performance entries to remove CDP-related timing
           if (typeof PerformanceObserver !== 'undefined') {
             var origGetEntries = Performance.prototype.getEntries;
@@ -67,7 +78,9 @@ export class CdpArtifactCleanerModule implements StealthModule {
               });
             };
           }
-        ` : ''}
+        `
+            : ''
+        }
       })();
     `
 

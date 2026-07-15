@@ -65,8 +65,8 @@ describe('AlertStoreImpl', () => {
     await store.save(alert)
     const result = await store.findById('alert-1')
     expect(result).not.toBeNull()
-    expect(result!.id).toBe('alert-1')
-    expect(result!.acknowledged).toBe(false)
+    expect(result?.id).toBe('alert-1')
+    expect(result?.acknowledged).toBe(false)
   })
 
   test('findUnacknowledged returns only unacknowledged', async () => {
@@ -90,7 +90,7 @@ describe('AlertStoreImpl', () => {
     })
     const result = await store.findUnacknowledged()
     expect(result).toHaveLength(1)
-    expect(result[0]!.id).toBe('a1')
+    expect(result[0]?.id).toBe('a1')
   })
 
   test('acknowledge marks alert as acknowledged', async () => {
@@ -105,7 +105,7 @@ describe('AlertStoreImpl', () => {
     })
     await store.acknowledge('a1')
     const result = await store.findById('a1')
-    expect(result!.acknowledged).toBe(true)
+    expect(result?.acknowledged).toBe(true)
   })
 
   test('delete removes alert', async () => {

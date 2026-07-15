@@ -5,19 +5,12 @@
 // row can ship a UI: the user, an agent, or the system. No build step
 // sits between imagining a layer and running it.
 
-import { newId } from '../ids.js'
-import type { CanvasDefinition, CanvasDefinitionInput } from './types.js'
-import type { CanvasStore } from '../storage/contracts/canvas-store.js'
-import {
-  defaultSandbox,
-  finalizeDefinition,
-  validateDefinition,
-} from './schema.js'
-import {
-  definitionToRow,
-  rowToDefinition,
-} from '../storage/contracts/canvas-store.js'
 import { EngineError } from '../errors.js'
+import { newId } from '../ids.js'
+import type { CanvasStore } from '../storage/contracts/canvas-store.js'
+import { definitionToRow, rowToDefinition } from '../storage/contracts/canvas-store.js'
+import { defaultSandbox, finalizeDefinition, validateDefinition } from './schema.js'
+import type { CanvasDefinition, CanvasDefinitionInput } from './types.js'
 
 export interface RegistryListOpts {
   category?: string

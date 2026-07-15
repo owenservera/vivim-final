@@ -1,69 +1,39 @@
 // tests/unit/executor/launcher.test.ts
-// Unit tests for Chrome launcher utilities.
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { clearSingletonLock } from '../../../src/executor/launcher.js'
 
-import { describe, expect, it } from 'bun:test'
-import { buildChromeArgs, getDefaultChromePaths } from '../../../src/executor/launcher.js'
+let tmp: string
 
-describe('Chrome Launcher', () => {
-  describe('getDefaultChromePaths', () => {
-    it('returns an array of paths for the current platform', () => {
-      const paths = getDefaultChromePaths()
-      expect(Array.isArray(paths)).toBe(true)
-      expect(paths.length).toBeGreaterThan(0)
-    })
+beforeEach(() => {
+  tmp = join(tmpdir(), `vivim-lock-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+  mkdirSync(tmp, { recursive: true })
+})
+
+afterEach(() => {
+  rmSync(tmp, { recursive: true, force: true })
+})
+
+describe('clearSingletonLock (FR-11)', () => {
+  it('removes SingletonLock / SingletonCookie / SingletonSocket', () => {
+    for (const name of ['SingletonLock', 'SingletonCookie', 'SingletonSocket']) {
+      writeFileSync(join(tmp, name), 'locked')
+      expect(existsSync(join(tmp, name))).toBe(true)
+    }
+    clearSingletonLock(tmp)
+    expect(existsSync(join(tmp, 'SingletonLock'))).toBe(false)
+    expect(existsSync(join(tmp, 'SingletonCookie'))).toBe(false)
+    expect(existsSync(join(tmp, 'SingletonSocket'))).toBe(false)
   })
 
-  describe('buildChromeArgs', () => {
-    it('includes --headless=new by default', () => {
-      const args = buildChromeArgs({})
-      expect(args).toContain('--headless=new')
-    })
+  it('is a no-op for an empty dir / missing locks', () => {
+    expect(() => clearSingletonLock(tmp)).not.toThrow()
+    expect(existsSync(tmp)).toBe(true)
+  })
 
-    it('does not include --headless when visible is true', () => {
-      const args = buildChromeArgs({ visible: true })
-      expect(args).not.toContain('--headless=new')
-    })
-
-    it('includes remote debugging port when specified', () => {
-      const args = buildChromeArgs({ debugPort: 9222 })
-      expect(args).toContain('--remote-debugging-port=9222')
-    })
-
-    it('includes user-data-dir when profileDir is set', () => {
-      const args = buildChromeArgs({ profileDir: '/tmp/my-profile' })
-      expect(args).toContain('--user-data-dir=/tmp/my-profile')
-    })
-
-    it('includes --disable-gpu when disableGpu is true', () => {
-      const args = buildChromeArgs({ disableGpu: true })
-      expect(args).toContain('--disable-gpu')
-    })
-
-    it('includes window-size when windowSize is provided', () => {
-      const args = buildChromeArgs({ windowSize: { width: 1280, height: 720 } })
-      expect(args).toContain('--window-size=1280,720')
-    })
-
-    it('includes extraArgs when provided', () => {
-      const args = buildChromeArgs({ extraArgs: ['--custom-flag=value'] })
-      expect(args).toContain('--custom-flag=value')
-    })
-
-    it('always includes --no-first-run and --disable-extensions', () => {
-      const args = buildChromeArgs({})
-      expect(args).toContain('--no-first-run')
-      expect(args).toContain('--disable-extensions')
-    })
-
-    it('positions window off-screen on Windows when hidden', () => {
-      const originalPlatform = process.platform
-      // We can't easily mock process.platform, so just test the logic
-      // by checking the args include the flag when visible is false
-      const args = buildChromeArgs({ visible: false })
-      // On non-Windows, this flag is NOT added
-      if (originalPlatform !== 'win32') {
-        expect(args).not.toContain('--window-position=-32000,-32000')
-      }
-    })
+  it('tolerates missing profile dir', () => {
+    expect(() => clearSingletonLock('')).not.toThrow()
   })
 })

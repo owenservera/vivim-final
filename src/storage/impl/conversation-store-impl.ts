@@ -212,4 +212,92 @@ export class ConversationStoreImpl implements ConversationStore {
     const account = (session as unknown as { account?: PrismaAccount } | null)?.account
     return account ? toAccountRow(account) : null
   }
+
+  async updateMessage(
+    id: string,
+    patch: Partial<Pick<ConversationMessageRow, 'content' | 'blocksJson' | 'metadataJson'>>,
+  ): Promise<void> {
+    const data: Record<string, unknown> = {}
+    if (patch.content !== undefined) data.content = patch.content
+    if (patch.blocksJson !== undefined) data.blocksJson = patch.blocksJson
+    if (patch.metadataJson !== undefined) data.metadataJson = patch.metadataJson
+    await this.db.prisma.conversationMessage.update({ where: { id }, data })
+  }
+
+  async createAttachment(input: {
+    messageId: string
+    filename: string
+    mimeType: string
+    sizeBytes: number
+    storagePath: string
+    thumbnailPath?: string
+    metadataJson?: string
+  }): Promise<import('../contracts/conversation-store.js').MessageAttachmentRow> {
+    const row = await this.db.prisma.messageAttachment.create({
+      data: {
+        id: newId(),
+        messageId: input.messageId,
+        filename: input.filename,
+        mimeType: input.mimeType,
+        sizeBytes: input.sizeBytes,
+        storagePath: input.storagePath,
+        thumbnailPath: input.thumbnailPath ?? null,
+        metadataJson: input.metadataJson ?? '{}',
+        createdAt: Date.now(),
+      },
+    })
+    return {
+      id: row.id,
+      messageId: row.messageId,
+      filename: row.filename,
+      mimeType: row.mimeType,
+      sizeBytes: row.sizeBytes,
+      storagePath: row.storagePath,
+      thumbnailPath: row.thumbnailPath,
+      metadataJson: row.metadataJson,
+      createdAt: Number(row.createdAt),
+    }
+  }
+
+  async getAttachments(
+    messageId: string,
+  ): Promise<import('../contracts/conversation-store.js').MessageAttachmentRow[]> {
+    const rows = await this.db.prisma.messageAttachment.findMany({
+      where: { messageId },
+      orderBy: { createdAt: 'asc' },
+    })
+    return rows.map((r) => ({
+      id: r.id,
+      messageId: r.messageId,
+      filename: r.filename,
+      mimeType: r.mimeType,
+      sizeBytes: r.sizeBytes,
+      storagePath: r.storagePath,
+      thumbnailPath: r.thumbnailPath,
+      metadataJson: r.metadataJson,
+      createdAt: Number(r.createdAt),
+    }))
+  }
+
+  async getAttachment(
+    id: string,
+  ): Promise<import('../contracts/conversation-store.js').MessageAttachmentRow | null> {
+    const row = await this.db.prisma.messageAttachment.findUnique({ where: { id } })
+    if (!row) return null
+    return {
+      id: row.id,
+      messageId: row.messageId,
+      filename: row.filename,
+      mimeType: row.mimeType,
+      sizeBytes: row.sizeBytes,
+      storagePath: row.storagePath,
+      thumbnailPath: row.thumbnailPath,
+      metadataJson: row.metadataJson,
+      createdAt: Number(row.createdAt),
+    }
+  }
+
+  async deleteAttachment(id: string): Promise<void> {
+    await this.db.prisma.messageAttachment.delete({ where: { id } })
+  }
 }

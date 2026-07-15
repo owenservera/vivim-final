@@ -86,4 +86,9 @@ export interface CapabilityStore {
   createOutcome(outcome: OutcomeInput): Promise<OutcomeRow>
   updateBindingHealth(bindingId: string, patch: Partial<CapabilityBindingRow>): Promise<void>
   updateSelectorHealth(selectorId: string, hit: boolean): Promise<void>
+  /** Resolve the best seeded program for a (capabilitySlug, provider). v14 harness. */
+  getBestProgramByCapability(
+    capabilitySlug: string,
+    providerId: string,
+  ): Promise<CapabilityProgramRow | null>
 }

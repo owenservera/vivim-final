@@ -53,7 +53,7 @@ export class AlertStoreImpl implements AlertStore {
   private toAlert(row: {
     id: string
     conditionId: string
-    firedAt: number
+    firedAt: bigint
     acknowledged: number
   }): Alert {
     return {
@@ -63,7 +63,7 @@ export class AlertStoreImpl implements AlertStore {
       source: row.conditionId,
       message: `Alert event ${row.id}`,
       acknowledged: row.acknowledged === 1,
-      createdAt: row.firedAt,
+      createdAt: Number(row.firedAt),
     }
   }
 }

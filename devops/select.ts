@@ -22,8 +22,16 @@ import { join } from "node:path";
 import { parseUnits, type Unit } from "./tracker.ts";
 import { loadDeps } from "./deps.ts";
 
-export const TRACKER = join(process.cwd(), "docs/atomic-v3-fork-canon/01-tracker.md");
-export const ATOMIC_DIR = join(process.cwd(), "docs/atomic-v3-fork-canon");
+// Tracker path is overridable so satellite trackers (e.g. docs/atomic-runtime)
+// are selectable: `bun run devops select --tracker <path>`.
+// Resolved lazily (not at module load) so `--tracker` / DEVOPS_TRACKER set in
+// index.ts main() (after ESM imports hoist) takes effect.
+export function getTracker(): string {
+  return process.env.DEVOPS_TRACKER ?? join(process.cwd(), "docs/atomic-v3-fork-canon/01-tracker.md");
+}
+export function getAtomicDir(): string {
+  return process.env.DEVOPS_ATOMIC_DIR ?? join(process.cwd(), "docs/atomic-v3-fork-canon");
+}
 
 // Phases at or above this number are cross-cutting tooling tracks, exempt
 // from the sequential product-phase gate.
@@ -99,8 +107,8 @@ export async function selectNext(): Promise<Selection | null> {
     );
     return null;
   }
-  const content = await readFile(TRACKER, "utf8");
+  const content = await readFile(getTracker(), "utf8");
   const units = parseUnits(content.split("\n"));
-  const deps = await loadDeps(ATOMIC_DIR);
+  const deps = await loadDeps(getAtomicDir());
   return selectFrom(units, deps);
 }

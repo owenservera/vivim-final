@@ -31,6 +31,7 @@ export const PARSER_TYPES = ['sse', 'ndjson', 'batchexecute', 'frame', 'html-dif
 export const SELECTOR_TYPES = ['css', 'xpath', 'text', 'aria', 'data', 'regex', 'composite'] as const
 export const SEND_METHODS = ['enter_key', 'button_click', 'both', 'none'] as const
 export const CAPABILITY_KINDS = ['action', 'query', 'state', 'config', 'navigation'] as const
+export const CAPABILITY_SURFACES = ['cli', 'ui', 'workflow', 'mcp', 'api'] as const
 
 export type Protocol = (typeof PROTOCOLS)[number]
 export type TechStackFamily = (typeof TECH_STACK_FAMILIES)[number]
@@ -38,6 +39,7 @@ export type ParserType = (typeof PARSER_TYPES)[number]
 export type SelectorType = (typeof SELECTOR_TYPES)[number]
 export type SendMethod = (typeof SEND_METHODS)[number]
 export type CapabilityKind = (typeof CAPABILITY_KINDS)[number]
+export type CapabilitySurface = (typeof CAPABILITY_SURFACES)[number]
 
 // ── Node kinds ──────────────────────────────────────────────────────────────
 export const NODE_KINDS = [
@@ -82,6 +84,56 @@ export const CapabilityNodeSchema = BaseNodeSchema.extend({
   kind: z.literal('capability'),
   shared: z.literal(true),
   capabilityKind: z.enum(CAPABILITY_KINDS).default('action'),
+  // ── UI slot mapping (Round 3) ──
+  ui_component: z.string().nullable().default(null),
+  ui_label: z.string().nullable().default(null),
+  ui_icon: z.string().nullable().default(null),
+  ui_position: z.string().nullable().default(null),
+  ui_order: z.number().int().nullable().default(null),
+  ui_group: z.string().nullable().default(null),
+  ui_layer_depth: z.number().int().default(0),
+  ui_priority: z.string().default('normal'),
+  interaction_mode: z.string().default('button'),
+  ui_states_json: z.string().default('{}'),
+  ui_visibility_rule: z.string().nullable().default(null),
+  ui_input_schema: z.string().default('{}'),
+  result_component: z.string().default('text'),
+  result_layout: z.string().default('single'),
+  // ── Cross-surface binding (Round 4) ──
+  capId: z.string().nullable().default(null), // "cap:category:action" format
+  surfaces: z.array(z.enum(CAPABILITY_SURFACES)).default(['cli', 'ui', 'api']),
+  cliCommand: z.object({
+    name: z.string(),
+    aliases: z.array(z.string()).default([]),
+    examples: z.array(z.string()).default([]),
+  }).nullable().default(null),
+  apiEndpoint: z.object({
+    method: z.string(),
+    path: z.string(),
+  }).nullable().default(null),
+  mcpToolName: z.string().nullable().default(null),
+  uiAction: z.object({
+    component: z.string(),
+    position: z.string(),
+    order: z.number().int(),
+  }).nullable().default(null),
+  workflowNodeType: z.string().nullable().default(null),
+  isAsync: z.boolean().default(true),
+  requiresConfirmation: z.boolean().default(false),
+  // ── Backend metadata ──
+  inputSchema: z.record(z.unknown()).nullable().default(null),
+  outputSchema: z.record(z.unknown()).nullable().default(null),
+  // ── Platform bindings (from Round 2 method nodes) ──
+  platformBindings: z.array(z.object({
+    platformSlug: z.string(),
+    selectorType: z.string().default('css'),
+    selectorValue: z.string().default(''),
+    sendMethod: z.string().default('both'),
+    protocolSlug: z.string(),
+    parserSlug: z.string().nullable().default(null),
+    techStackSlug: z.string().nullable().default(null),
+    authScope: z.string().nullable().default(null),
+  })).default([]),
 })
 export type CapabilityNode = z.infer<typeof CapabilityNodeSchema>
 

@@ -8,8 +8,8 @@ export function createMockConfigStore(overrides: Partial<ConfigStore> = {}): Con
   const audits: any[] = []
 
   return {
-    getConfigEntry: mock((engineId: string, key: string) =>
-      entries.get(`${engineId}:${key}`) ?? null,
+    getConfigEntry: mock(
+      (engineId: string, key: string) => entries.get(`${engineId}:${key}`) ?? null,
     ),
     upsertConfigEntry: mock((input: any) => {
       const row = { id: crypto.randomUUID(), ...input }

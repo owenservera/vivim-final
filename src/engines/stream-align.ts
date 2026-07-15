@@ -93,8 +93,12 @@ export class StreamAlignmentEngine {
         textBlocks: 0,
         detectedDeltaPath: null,
         streamFieldCandidates: [],
-        mismatches: ['No stream body was captured — interaction may not have triggered a response.'],
-        suggestions: ['Verify the composer selector and send action; increase the capture timeout.'],
+        mismatches: [
+          'No stream body was captured — interaction may not have triggered a response.',
+        ],
+        suggestions: [
+          'Verify the composer selector and send action; increase the capture timeout.',
+        ],
         ok: false,
       }
     }
@@ -114,11 +118,10 @@ export class StreamAlignmentEngine {
       }
     }
 
-    const inferredFormat = this.inferFormat(samples[0])
-    const jsonSample = this.extractJsonSample(samples[0])
-    const { path: detectedDeltaPath, candidates: streamFieldCandidates } = this.detectDeltaPath(
-      jsonSample,
-    )
+    const inferredFormat = samples[0] ? this.inferFormat(samples[0]) : 'custom'
+    const jsonSample = samples[0] ? this.extractJsonSample(samples[0]) : null
+    const { path: detectedDeltaPath, candidates: streamFieldCandidates } =
+      this.detectDeltaPath(jsonSample)
 
     const mismatches: string[] = []
     const suggestions: string[] = []
@@ -143,7 +146,9 @@ export class StreamAlignmentEngine {
 
     if (inferredFormat !== 'html' && !detectedDeltaPath) {
       mismatches.push('Could not locate a response delta path in the captured JSON.')
-      suggestions.push('Inspect the captured body and set an explicit deltaPath in ProviderStreamConfig.')
+      suggestions.push(
+        'Inspect the captured body and set an explicit deltaPath in ProviderStreamConfig.',
+      )
     }
 
     return {
@@ -221,10 +226,18 @@ export class StreamAlignmentEngine {
     }
     const value = getAtPath(root, deltaPath)
     if (value === undefined) {
-      return { valid: false, resolvedValue: undefined, error: `Path '${deltaPath}' did not resolve.` }
+      return {
+        valid: false,
+        resolvedValue: undefined,
+        error: `Path '${deltaPath}' did not resolve.`,
+      }
     }
     if (typeof value === 'string' && value.length === 0) {
-      return { valid: false, resolvedValue: value, error: `Path '${deltaPath}' resolved to an empty string.` }
+      return {
+        valid: false,
+        resolvedValue: value,
+        error: `Path '${deltaPath}' resolved to an empty string.`,
+      }
     }
     return { valid: true, resolvedValue: value }
   }
@@ -239,6 +252,12 @@ export class StreamAlignmentEngine {
     return createHash('sha256').update(source).digest('hex')
   }
 
+  // ── Standalone helper (for import by registrar) ────────────────────────
+  static computeParserHash(source: string): string {
+    if (!source) throw new EngineError('computeParserHash: source must be non-empty')
+    return createHash('sha256').update(source).digest('hex')
+  }
+
   // ── private ─────────────────────────────────────────────────────────────
 
   private extractJsonSample(body: string): string | null {
@@ -248,8 +267,7 @@ export class StreamAlignmentEngine {
       // Grab the first `data:` line that is valid JSON (skip [DONE]).
       for (const line of body.split('\n')) {
         const m = line.match(/^data:\s*(.*)$/)
-        if (!m) continue
-        const payload = m[1].trim()
+        const payload = m?.[1]?.trim()
         if (!payload || payload === '[DONE]') continue
         try {
           JSON.parse(payload)

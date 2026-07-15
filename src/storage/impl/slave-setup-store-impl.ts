@@ -93,8 +93,8 @@ export class SlaveSetupStoreImpl implements SlaveSetupStore {
       loginState: row.loginState ?? 'unknown',
       profileDir: row.profileDir,
       debugPort: row.debugPort,
-      created_at: row.createdAt,
-      updated_at: row.updatedAt,
+      created_at: Number(row.createdAt),
+      updated_at: Number(row.updatedAt),
     }
   }
 
@@ -109,8 +109,8 @@ export class SlaveSetupStoreImpl implements SlaveSetupStore {
       loginState: r.loginState ?? 'unknown',
       profileDir: r.profileDir,
       debugPort: r.debugPort,
-      created_at: r.createdAt ?? Date.now(),
-      updated_at: r.updatedAt ?? Date.now(),
+      created_at: Number(r.createdAt ?? Date.now()),
+      updated_at: Number(r.updatedAt ?? Date.now()),
     }))
   }
 }

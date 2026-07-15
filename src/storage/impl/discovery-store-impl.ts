@@ -110,7 +110,7 @@ export class DiscoveryStoreImpl implements DiscoveryStore {
         responseHeadersJson: (data.responseHeadersJson as string) ?? '{}',
         responseBodyPreview: (data.responseBodyPreview as string) ?? null,
         durationMs: (data.durationMs as number) ?? null,
-        createdAt: r.createdAt,
+        createdAt: Number(r.createdAt),
       }
     })
   }
@@ -132,8 +132,8 @@ export class DiscoveryStoreImpl implements DiscoveryStore {
     parserFormat: string | null
     manifestDraftJson: string | null
     error: string | null
-    createdAt: number
-    updatedAt: number
+    createdAt: bigint
+    updatedAt: bigint
   }): DiscoverySessionRow {
     return {
       id: row.id,
@@ -147,8 +147,8 @@ export class DiscoveryStoreImpl implements DiscoveryStore {
       manifestDraftJson: row.manifestDraftJson,
       error: row.error,
       agentId: null,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      createdAt: Number(row.createdAt),
+      updatedAt: Number(row.updatedAt),
     }
   }
 }

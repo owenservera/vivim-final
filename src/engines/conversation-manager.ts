@@ -21,10 +21,9 @@ import type { ExecutionMemoizer } from './execution-memoizer.js'
 import type { AgentMemoryContext, MemoryEngine } from './memory-engine.js'
 import {
   COMPOSER_SELECTORS,
-  findComposerHeuristic,
-  findWorkingSelector,
   PROVIDER_URLS,
   PROVIDER_URL_PATTERNS,
+  findWorkingSelector,
 } from './provider-selectors.js'
 import type { StreamBlockStore } from './stream-block-store.js'
 import type { StreamingProtocol } from './streaming-protocol.js'
@@ -108,12 +107,10 @@ export interface SendResult {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function deriveSlaveId(providerId: string, accountId: string): string {
-  return `slave_${providerId}_${accountId}`
-}
-
 /** Best-effort composer type per provider when the endpoint manifest omits it. */
-function composerTypeForProvider(providerId: string): 'textarea' | 'contenteditable' | 'quill' | 'codemirror' {
+function composerTypeForProvider(
+  providerId: string,
+): 'textarea' | 'contenteditable' | 'quill' | 'codemirror' {
   switch (providerId) {
     case 'claude':
     case 'gemini':
@@ -325,7 +322,11 @@ export class ConversationManager {
       const selector = (await findWorkingSelector(cdpSend, selectorCandidates)) ?? 'textarea'
       const sendSelector = composerCap?.sendSelector
       const composerType = (composerCap?.composerType ??
-        composerTypeForProvider(conv.providerId)) as 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
+        composerTypeForProvider(conv.providerId)) as
+        | 'textarea'
+        | 'contenteditable'
+        | 'quill'
+        | 'codemirror'
 
       const dag: HarnessDAG = {
         nodes: [
@@ -550,8 +551,11 @@ export class ConversationManager {
     ]
     const selector = (await findWorkingSelector(cdpSend, selectorCandidates)) ?? 'textarea'
     const sendSelector = composerCap?.sendSelector
-    const composerType = (composerCap?.composerType ??
-      composerTypeForProvider(conv.providerId)) as 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
+    const composerType = (composerCap?.composerType ?? composerTypeForProvider(conv.providerId)) as
+      | 'textarea'
+      | 'contenteditable'
+      | 'quill'
+      | 'codemirror'
 
     // [5.5] PRE-CAPTURE
     const capturePattern = CAPTURE_PATTERNS[conv.providerId] ?? /\/api\/conversation\//
@@ -609,14 +613,14 @@ export class ConversationManager {
           const event = params as { requestId?: string }
           if (event.requestId && matchingRequests.has(event.requestId)) {
             try {
-              const result = await this.governor.cdp.send(slaveId, 'Network.getResponseBody', {
+              const result = (await this.governor.cdp.send(slaveId, 'Network.getResponseBody', {
                 requestId: event.requestId,
-              }) as { body?: string }
+              })) as { body?: string }
               const body = result?.body ?? ''
               if (body.length > lastBody.length) {
                 const newChunk = body.slice(lastBody.length)
                 lastBody = body
-                await this.streamingProtocol!.captureChunk(conversationId, messageId, newChunk)
+                await this.streamingProtocol?.captureChunk(conversationId, messageId, newChunk)
               }
             } catch {
               // body not ready
@@ -641,7 +645,7 @@ export class ConversationManager {
             const result = await this.governor.cdp.capture(slaveId, capturePattern, 60_000)
             const body = (result as { body?: string }).body ?? ''
             if (body !== lastBody) {
-              await this.streamingProtocol!.captureChunk(
+              await this.streamingProtocol?.captureChunk(
                 conversationId,
                 messageId,
                 body.slice(lastBody.length),

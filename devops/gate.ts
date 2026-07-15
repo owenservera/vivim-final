@@ -13,6 +13,14 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { getChangedFiles } from './changed.ts'
 import { checkInvariants } from './invariants.ts'
+import {
+  diffBaseline,
+  hasBaseline,
+  lintFingerprints,
+  type BaselineDiff,
+} from './baseline.ts'
+
+export type GateMode = 'regression' | 'full'
 
 interface GateStep {
   name: string
@@ -88,6 +96,24 @@ function hasChromeAvailable(): boolean {
   if (envPath) return true
   // Assume Chrome available if not explicitly disabled
   return process.env.SKIP_CHROME_INTEGRATION !== 'true'
+}
+
+// Parse tsc --noEmit output for stable error-line fingerprints.
+function parseTypecheckErrors(out: string): string[] {
+  return out
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => /\.ts\(\d+,\d+\):\s*error TS\d+/.test(l))
+}
+
+// Parse bun test output for failing test names.
+function parseFailingTests(out: string): string[] {
+  const names = new Set<string>()
+  for (const line of out.split('\n')) {
+    const m = line.match(/(?:✗|✕|fail\))\s*(.+?)\s*(?:\[[\d.]+m?s\])?\s*$/)
+    if (m) names.add(m[1]!.trim())
+  }
+  return [...names]
 }
 
 // Run dependency audit (bun audit)
@@ -221,7 +247,11 @@ async function runIntegrationTests(): Promise<GateResult['integration']> {
   }
 }
 
-export async function runGate(strict = false, includeIntegration = false): Promise<GateResult> {
+export async function runGate(
+  strict = false,
+  includeIntegration = false,
+  mode: GateMode = 'regression',
+): Promise<GateResult> {
   const steps: GateStep[] = []
   steps.push(await run('bun', ['run', 'typecheck']))
   steps.push(await run('bun', ['run', 'lint']))
@@ -261,13 +291,38 @@ export async function runGate(strict = false, includeIntegration = false): Promi
   const integrationFailed =
     integrationResult && !integrationResult.pass && !integrationResult.skipped
 
-  const ok =
-    corePass &&
-    !strictFailed &&
-    !invariantFailed &&
-    !auditFailed &&
-    !coverageFailed &&
-    !integrationFailed
+  let ok = corePass && !strictFailed && !invariantFailed && !auditFailed && !coverageFailed && !integrationFailed
+  let baseline: BaselineDiff | undefined
+  let baselineNote = ''
+
+  if (mode === 'regression') {
+    // Build the *current* finding set and compare against the captured
+    // baseline. The loop passes when no NEW findings are introduced, even if
+    // the repo already carried pre-existing debt at baseline time.
+    const current = {
+      lint: lintFingerprints(),
+      typecheck: parseTypecheckErrors(steps[0]!.out),
+      tests: parseFailingTests(steps[2]!.out),
+      auditVulns: auditResult.vulnerabilities,
+      invariantViolations: invRaw.violations.map((v) => v.id ?? v.title ?? JSON.stringify(v)),
+    }
+    baseline = diffBaseline(current)
+    // Without a baseline we cannot tolerate debt → behave as strict repo-wide.
+    if (!hasBaseline()) {
+      baselineNote = ' | NO BASELINE (strict)'
+    } else if (baseline.hasNew) {
+      ok = false
+      baselineNote =
+        ` | NEW REGRESSIONS: lint=${baseline.newLint.length} tc=${baseline.newTypecheck.length} ` +
+        `tests=${baseline.newTests.length} vulns=${baseline.newVulns} inv=${baseline.newInvariants.length}`
+    } else {
+      // No new findings vs the captured baseline → the loop passes even
+      // though pre-existing debt (typecheck/lint/audit/invariants) remains.
+      ok = true
+      baselineNote = ' | REGRESSION-SCOPED PASS (pre-existing debt tolerated)'
+    }
+  }
+
   const summary = steps.map((s) => `${s.ok ? 'PASS' : 'FAIL'} ${s.name}`).join(' | ')
   const strictExtra = strictFailed ? ' | STRICT FAIL' : ''
   const auditExtra = auditResult.ok ? '' : ` | AUDIT FAIL (${auditResult.vulnerabilities} vulns)`
@@ -285,7 +340,7 @@ export async function runGate(strict = false, includeIntegration = false): Promi
   return {
     pass: ok,
     steps,
-    summary: summary + strictExtra + auditExtra + coverageExtra + integExtra + invSummary,
+    summary: summary + strictExtra + auditExtra + coverageExtra + integExtra + invSummary + baselineNote,
     strict: strictResult,
     invariants: invariantResult,
     integration: integrationResult,

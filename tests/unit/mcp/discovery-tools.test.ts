@@ -69,7 +69,7 @@ describe('Discovery MCP Server', () => {
   test('discover_start creates session', async () => {
     const result = await server.callTool('discover_start', { url: 'https://example.com' })
     expect(result.isError).toBeFalsy()
-    const session = JSON.parse(result.content[0]!.text)
+    const session = JSON.parse(result.content[0]?.text ?? '')
     expect(session.id).toBeTruthy()
     expect(session.status).toBe('started')
   })
@@ -81,7 +81,7 @@ describe('Discovery MCP Server', () => {
 
   test('discover_approve registers provider', async () => {
     const created = await server.callTool('discover_start', { url: 'https://chat.example.com' })
-    const session = JSON.parse(created.content[0]!.text)
+    const session = JSON.parse(created.content[0]?.text ?? '')
 
     await server.callTool('discover_navigate', {
       sessionId: session.id,
@@ -90,7 +90,7 @@ describe('Discovery MCP Server', () => {
 
     const result = await server.callTool('discover_approve', { sessionId: session.id })
     expect(result.isError).toBeFalsy()
-    const data = JSON.parse(result.content[0]!.text)
+    const data = JSON.parse(result.content[0]?.text ?? '')
     expect(data.providerId).toBeTruthy()
   })
 
@@ -98,7 +98,7 @@ describe('Discovery MCP Server', () => {
     await server.callTool('discover_start', { url: 'https://a.com' })
     await server.callTool('discover_start', { url: 'https://b.com' })
     const result = await server.callTool('discover_list_sessions', {})
-    const sessions = JSON.parse(result.content[0]!.text)
+    const sessions = JSON.parse(result.content[0]?.text ?? '')
     expect(Array.isArray(sessions)).toBe(true)
     expect(sessions.length).toBeGreaterThanOrEqual(2)
   })

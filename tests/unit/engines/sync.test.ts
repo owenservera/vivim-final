@@ -71,9 +71,9 @@ describe('SyncEngine', () => {
     const { pairingCode } = await engine.pair('device-remote', 'Laptop')
     expect(pairingCode).toMatch(/^\d{6}$/)
     expect(store.peers).toHaveLength(1)
-    expect(store.peers[0]!.status).toBe('pending')
-    expect(store.peers[0]!.deviceId).toBe('device-remote')
-    expect(store.peers[0]!.name).toBe('Laptop')
+    expect(store.peers[0]?.status).toBe('pending')
+    expect(store.peers[0]?.deviceId).toBe('device-remote')
+    expect(store.peers[0]?.name).toBe('Laptop')
   })
 
   test('confirmPair activates peer when code matches', async () => {
@@ -106,7 +106,7 @@ describe('SyncEngine', () => {
     const engine = new SyncEngine(store, makeConfig(), encryption)
     await engine.pair('device-remote', 'Laptop')
     await engine.revokePeer('device-remote')
-    expect(store.peers[0]!.status).toBe('revoked')
+    expect(store.peers[0]?.status).toBe('revoked')
   })
 
   test('getPendingSync returns 0 with no paired peers', async () => {

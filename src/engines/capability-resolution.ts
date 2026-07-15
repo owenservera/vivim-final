@@ -62,6 +62,9 @@ export interface ResolvedCapability {
   maxResultSize: number
   resultComponent: string
   resultLayout: string
+  // Hot-swap slot overrides (per-slot component key + sandbox whitelist),
+  // sourced from provider_capability.ui_component_override (FRONTEND=BACKEND, H6).
+  uiSlots: Record<string, { component?: string; sandbox?: string[] }>
   searchHints: string[]
   aliases: string[]
   availability: AvailabilityGating
@@ -114,6 +117,31 @@ function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
 
 function toOverrideSource(v: string | null | undefined): OverrideSource {
   return v === 'provider' || v === 'tier' ? v : 'global'
+}
+
+/**
+ * Parse provider_capability.ui_component_override into a per-slot override map.
+ * The stored JSON has the shape: { "<slotId>": { "component"?: string, "sandbox"?: string[] } }.
+ * A legacy plain-string value is ignored (treated as no overrides).
+ */
+function parseUiSlots(
+  raw: string | null | undefined,
+): Record<string, { component?: string; sandbox?: string[] }> {
+  if (!raw || raw === '') return {}
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const out: Record<string, { component?: string; sandbox?: string[] }> = {}
+      for (const [slot, val] of Object.entries(parsed)) {
+        if (val && typeof val === 'object')
+          out[slot] = val as { component?: string; sandbox?: string[] }
+      }
+      return out
+    }
+  } catch {
+    return {}
+  }
+  return {}
 }
 
 const UI_POSITIONS = ['composer', 'header', 'message', 'sidebar', 'inline'] as const
@@ -239,6 +267,7 @@ export class CapabilityResolutionEngine {
       maxResultSize: row.max_result_size,
       resultComponent: row.result_component,
       resultLayout: row.result_layout,
+      uiSlots: parseUiSlots(row.ui_component_override),
       searchHints: safeJsonParse<string[]>(row.search_hints_json, []),
       aliases: safeJsonParse<string[]>(row.aliases_json, []),
       availability: safeJsonParse<AvailabilityGating>(row.availability_json, {}),

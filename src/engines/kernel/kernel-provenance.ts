@@ -3,10 +3,7 @@
 // Tracks what caused what: selector → parser → result → action → error.
 
 import { newId } from '../../ids.js'
-import type {
-  CausalNode,
-  KernelStore,
-} from '../../storage/contracts/kernel-store.js'
+import type { CausalNode, KernelStore } from '../../storage/contracts/kernel-store.js'
 
 export interface ProvenanceChain {
   traceId: string
@@ -73,15 +70,11 @@ export class KernelProvenance {
   }
 
   getByEngine(engineId: string, limit = 50): CausalNode[] {
-    return this.buffer
-      .filter((n) => n.engineId === engineId)
-      .slice(-limit)
+    return this.buffer.filter((n) => n.engineId === engineId).slice(-limit)
   }
 
   getByKind(kind: CausalNode['kind'], limit = 50): CausalNode[] {
-    return this.buffer
-      .filter((n) => n.kind === kind)
-      .slice(-limit)
+    return this.buffer.filter((n) => n.kind === kind).slice(-limit)
   }
 
   getRecent(limit = 100): CausalNode[] {

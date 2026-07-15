@@ -1,12 +1,13 @@
 // src/engines/stealth/human-mouse-engine.ts
 // Unit 13.1 — HumanMouseEngine: bezier-curve mouse movement.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 export class HumanMouseModule implements StealthModule {
   name = 'human_mouse'
   detectionVector = 'Mouse movement biometrics (acceleration curves, click distribution)'
-  description = 'Moves mouse along bezier curves with human-like acceleration and Gaussian click offset'
+  description =
+    'Moves mouse along bezier curves with human-like acceleration and Gaussian click offset'
   priority = 20
 
   async apply(config: Record<string, unknown>, ctx: StealthContext): Promise<void> {

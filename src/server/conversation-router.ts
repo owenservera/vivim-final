@@ -233,7 +233,7 @@ export function createConversationRouter(ctx: ServerContext) {
 
       // GET /api/config/governor — governor config
       if (pathname === '/api/config/governor' && method === 'GET') {
-        const govConfig = (ctx.governor as { config?: Record<string, unknown> })?.config ?? {}
+        const govConfig = (ctx.governor as unknown as { config?: Record<string, unknown> })?.config ?? {}
         return json({
           fleetConfig: {
             portRange: govConfig.portRange ?? [9300, 9400],

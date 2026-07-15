@@ -2,15 +2,15 @@
 // OracleQueryEngine — the oracle's "brain". Structured queries about system state.
 // Takes a question about the system and returns an answer with confidence + suggestions.
 
-import type { KernelRegistry } from './kernel-registry.js'
-import type { KernelTracer } from './kernel-tracer.js'
-import type { KernelProvenance, ProvenanceChain } from './kernel-provenance.js'
-import type { ConfigManager } from '../config-manager.js'
 import type {
+  CapabilityDescriptor,
   EngineDescriptor,
   HealthState,
-  CapabilityDescriptor,
 } from '../../storage/contracts/kernel-store.js'
+import type { ConfigManager } from '../config-manager.js'
+import type { KernelProvenance, ProvenanceChain } from './kernel-provenance.js'
+import type { KernelRegistry } from './kernel-registry.js'
+import type { KernelTracer } from './kernel-tracer.js'
 import type { DiagnosticIssue } from './oracle-diagnostic.js'
 
 export type SystemQueryType =
@@ -238,7 +238,7 @@ export class OracleQueryEngine {
         id: cap.id,
         layer: cap.layer,
         status: cap.status,
-        surfaces: (cap.metadata?.surfaces as string[] | undefined),
+        surfaces: cap.metadata?.surfaces as string[] | undefined,
       })
     }
     return { total: capabilities.length, byLayer, capabilities: list }
@@ -278,6 +278,15 @@ export class OracleQueryEngine {
 }
 
 function layerStatus(current: string, engineStatus: EngineDescriptor['status']): string {
-  const rank: Record<string, number> = { error: 4, stopped: 3, registered: 2, wired: 1, running: 0, none: 0 }
-  return rank[engineStatus] > (rank[current] ?? 0) ? engineStatus : current
+  const rank: Record<string, number> = {
+    error: 4,
+    stopped: 3,
+    registered: 2,
+    wired: 1,
+    running: 0,
+    none: 0,
+  }
+  const currRank = rank[current] ?? 0
+  const engRank = engineStatus ? (rank[engineStatus] ?? 0) : 0
+  return engRank > currRank ? engineStatus : current
 }

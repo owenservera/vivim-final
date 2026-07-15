@@ -24,7 +24,7 @@ describe('TelemetryAudit', () => {
     })
     const calls = audit.getCalls()
     expect(calls).toHaveLength(1)
-    expect(calls[0]!.isToAiProvider).toBe(true)
+    expect(calls[0]?.isToAiProvider).toBe(true)
   })
 
   test('generateReport returns clean verdict with zero non-provider calls', () => {
@@ -60,7 +60,7 @@ describe('TelemetryAudit', () => {
     expect(report.verdict).toBe('suspicious')
     expect(report.callsToOther).toBe(1)
     expect(report.nonProviderCalls).toHaveLength(1)
-    expect(report.nonProviderCalls[0]!.url).toContain('analytics.example.com')
+    expect(report.nonProviderCalls[0]?.url).toContain('analytics.example.com')
   })
 
   test('generateReport returns violating with >10 non-provider calls', () => {
@@ -93,7 +93,7 @@ describe('TelemetryAudit', () => {
       isToAiProvider: false,
     })
     const report = audit.generateReport(now - 1000, now + 1000)
-    expect(report.nonProviderCalls[0]!.url).toBe('https://cdn.example.com')
+    expect(report.nonProviderCalls[0]?.url).toBe('https://cdn.example.com')
   })
 
   test('time range filtering works correctly', () => {
@@ -118,7 +118,7 @@ describe('TelemetryAudit', () => {
     })
     const report = audit.generateReport(now - 1000, now + 1000)
     expect(report.totalOutboundCalls).toBe(1)
-    expect(report.nonProviderCalls[0]!.url).toContain('new.example.com')
+    expect(report.nonProviderCalls[0]?.url).toContain('new.example.com')
   })
 
   test('empty period returns clean report with zero counts', () => {
@@ -156,6 +156,6 @@ describe('TelemetryAudit', () => {
       isToAiProvider: false,
     })
     const calls = audit.getCalls()
-    expect(calls[0]!.isToAiProvider).toBe(true)
+    expect(calls[0]?.isToAiProvider).toBe(true)
   })
 })

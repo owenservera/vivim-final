@@ -4,10 +4,10 @@
 // ZERO AI dependency. Handles 95%+ of consumer command volume.
 // The remaining ~5% falls through to the pluggable IntentResolver (local LLM / provider LLM).
 
-import type { CommandPattern, NLCContext, ParsedIntent } from './types.js'
 import type { CommandPatternRegistry } from './command-registry.js'
-import { normalizeText } from './text-normalizer.js'
 import { resolveEntityValues } from './entity-resolution.js'
+import { normalizeText } from './text-normalizer.js'
+import type { CommandPattern, NLCContext, ParsedIntent } from './types.js'
 
 export interface ParseOptions {
   maxAlternatives?: number
@@ -24,7 +24,7 @@ const DEFAULT_PARSE_OPTIONS: Required<ParseOptions> = {
 export class NLCommandParser {
   constructor(private registry: CommandPatternRegistry) {}
 
-  parse(rawInput: string, ctx: NLCContext, opts?: ParseOptions): ParsedIntent | null {
+  parse(rawInput: string, _ctx: NLCContext, opts?: ParseOptions): ParsedIntent | null {
     const options = { ...DEFAULT_PARSE_OPTIONS, ...opts }
     const input = rawInput.trim()
     if (!input) return null
@@ -58,9 +58,7 @@ export class NLCommandParser {
 
     if (best.intent.confidence < options.minConfidence) return null
 
-    const alternatives = matches
-      .slice(1, options.maxAlternatives + 1)
-      .map((m) => m.intent)
+    const alternatives = matches.slice(1, options.maxAlternatives + 1).map((m) => m.intent)
 
     return {
       ...best.intent,
@@ -91,6 +89,7 @@ export class NLCommandParser {
             matchedPattern: nlPattern.regex.source,
             alternatives: [],
             resolvedAt: Date.now(),
+            capabilityId: pattern.capabilityId,
           }
         }
       }
@@ -107,6 +106,7 @@ export class NLCommandParser {
           matchedPattern: `alias:${alias}`,
           alternatives: [],
           resolvedAt: Date.now(),
+          capabilityId: pattern.capabilityId,
         }
       }
     }
@@ -124,6 +124,7 @@ export class NLCommandParser {
           matchedPattern: 'keyword-fallback',
           alternatives: [],
           resolvedAt: Date.now(),
+          capabilityId: pattern.capabilityId,
         }
       }
     }
@@ -133,7 +134,7 @@ export class NLCommandParser {
 
   private scoreMatch(
     match: RegExpMatchArray,
-    pattern: { regex: RegExp; keywords?: string[] },
+    _pattern: { regex: RegExp; keywords?: string[] },
     input: string,
   ): number {
     const captureGroups = match.length - 1

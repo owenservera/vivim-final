@@ -39,7 +39,7 @@ describe('UnifiedCapabilityRegistry', () => {
     registry.register(makeCapability())
     const list = registry.list()
     expect(list.length).toBe(1)
-    expect(list[0]!.id).toBe('test-cap')
+    expect(list[0]?.id).toBe('test-cap')
   })
 
   it('execute with valid input -> handler called', async () => {
@@ -69,8 +69,8 @@ describe('UnifiedCapabilityRegistry', () => {
     registry.register(makeCapability())
     const cli = registry.exportForCli()
     expect(cli.length).toBe(1)
-    expect(cli[0]!.name).toBe('test')
-    expect(cli[0]!.description).toBe('A test capability')
+    expect(cli[0]?.name).toBe('test')
+    expect(cli[0]?.description).toBe('A test capability')
   })
 
   it('export for MCP produces correct format', () => {
@@ -82,8 +82,8 @@ describe('UnifiedCapabilityRegistry', () => {
     )
     const mcp = registry.exportForMcp()
     expect(mcp.length).toBe(1)
-    expect(mcp[0]!.name).toBe('mcp_test')
-    expect(mcp[0]!.inputSchema).toBeDefined()
+    expect(mcp[0]?.name).toBe('mcp_test')
+    expect(mcp[0]?.inputSchema).toBeDefined()
   })
 
   it('get by id returns capability', () => {

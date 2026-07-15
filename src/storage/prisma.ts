@@ -11,23 +11,22 @@ let walApplied = false
 
 /**
  * Apply SQLite WAL-mode pragmas once at startup.
- * Non-fatal: if raw pragmas fail (e.g. non-SQLite driver), they are silently skipped.
+ * DISC-2: this is no longer a pragma authority — it delegates to `configurePrisma`
+ * (the single source of truth in db.ts) so there is exactly one code path that
+ * touches SQLite pragmas. Kept as the lazy/fire-and-forget entry used by getPrisma().
  */
 export async function initPrismaWal(prisma?: PrismaClient): Promise<void> {
   if (walApplied) return
+  walApplied = true
   const p = prisma ?? getPrisma()
   try {
-    // WAL mode for concurrent reads during writes (offline-first critical)
-    await p.$executeRawUnsafe('PRAGMA journal_mode = WAL')
-    // 5s busy timeout so concurrent transactions wait rather than fail immediately
-    await p.$executeRawUnsafe('PRAGMA busy_timeout = 5000')
-    // 64MB cache for fast in-memory lookups
-    await p.$executeRawUnsafe('PRAGMA cache_size = -65536')
-    // Enforce foreign key constraints
-    await p.$executeRawUnsafe('PRAGMA foreign_keys = ON')
-    walApplied = true
-  } catch {
-    // Non-fatal: if raw pragmas fail, continue
+    // Lazy import avoids a static cycle (db.ts imports getPrisma/closePrisma from here).
+    const { configurePrisma } = await import('./db.js')
+    // configurePrisma only reads `db.prisma`; a shim is sufficient.
+    await configurePrisma({ prisma: p } as unknown as import('./db.js').CapStoreDb)
+  } catch (err) {
+    // Non-fatal: the explicit configurePrisma() call during server bootstrap still applies pragmas.
+    console.warn('[db] initPrismaWal delegation skipped:', err)
   }
 }
 

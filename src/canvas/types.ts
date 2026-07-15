@@ -117,7 +117,10 @@ export interface CanvasDefinition {
 }
 
 // Input type for the API boundary (domain types, not JSON strings)
-export type CanvasDefinitionInput = Omit<CanvasDefinition, 'id' | 'version' | 'createdAt' | 'updatedAt'> & {
+export type CanvasDefinitionInput = Omit<
+  CanvasDefinition,
+  'id' | 'version' | 'createdAt' | 'updatedAt'
+> & {
   id?: string
 }
 
@@ -233,10 +236,7 @@ export interface CapabilityExecutor {
 
 // ── Primitive read contract (P6) ───────────────────────────────────────────
 export interface PrimitiveReader {
-  read(
-    kind: PrimitiveKind,
-    query: Record<string, unknown>,
-  ): Promise<unknown>
+  read(kind: PrimitiveKind, query: Record<string, unknown>): Promise<unknown>
 }
 
 // ── Oracle read provider (P4) ─────────────────────────────────────────────

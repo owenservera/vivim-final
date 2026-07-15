@@ -1,7 +1,7 @@
 // src/engines/stealth/network-fingerprint-engine.ts
 // Unit 14.3 — NetworkFingerprintEngine: TLS + HTTP header preservation.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 export class NetworkFingerprintModule implements StealthModule {
   name = 'network_fingerprint'
@@ -9,7 +9,7 @@ export class NetworkFingerprintModule implements StealthModule {
   description = 'Verifies TLS fingerprint matches stock Chrome; monitors for network anomalies'
   priority = 2
 
-  async apply(config: Record<string, unknown>, ctx: StealthContext): Promise<void> {
+  async apply(_config: Record<string, unknown>, ctx: StealthContext): Promise<void> {
     // This module doesn't modify the network stack (that would require kernel-level interception).
     // Instead it monitors and verifies that the TLS fingerprint matches stock Chrome.
     // The actual defense is in LaunchProfileEngine (11.1) which removes bot-signal args

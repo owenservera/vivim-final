@@ -5,18 +5,15 @@
 // Binding to capabilities is performed by the SandboxBridge; this engine owns
 // the lifecycle and releases DOM + bindings on dismiss.
 
-import { newId } from '../ids.js'
-import type { CanvasDefinition, LayerInstance, LayerAuthor } from './types.js'
-import type { CanvasStore } from '../storage/contracts/canvas-store.js'
 import { CanvasSpawnError } from '../errors.js'
+import { newId } from '../ids.js'
+import type { CanvasStore } from '../storage/contracts/canvas-store.js'
+import type { CanvasDefinition, LayerAuthor, LayerInstance } from './types.js'
 
 /** The dumb shell surface the canvas mounts layers into (P2). */
 export interface LayerHost {
   /** Mount a layer definition into the infinite plane. Returns a host node id. */
-  mount(
-    instanceId: string,
-    def: CanvasDefinition,
-  ): Promise<{ hostNodeId: string }>
+  mount(instanceId: string, def: CanvasDefinition): Promise<{ hostNodeId: string }>
   /** Unmount + release DOM for a dismissed instance. */
   unmount(instanceId: string): Promise<void>
   /** True if the host currently holds the instance in the DOM. */

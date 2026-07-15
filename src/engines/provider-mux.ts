@@ -4,7 +4,10 @@
 import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import type { Router } from '../router/router.js'
+import type { ChannelStore } from '../storage/contracts/channel-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
+import type { ChromeGovernor } from './chrome-governor.js'
+import type { NormalizedMessage } from './messaging-archetypes.js'
 
 // ── Store contract ─────────────────────────────────────────────────────────
 
@@ -120,7 +123,43 @@ export class ProviderMuxEngine {
     private dispatcher: MuxDispatcher,
     private router: Router,
     private eventBus: CapabilityEventBus,
+    private channelStore?: ChannelStore,
+    private governor?: ChromeGovernor,
   ) {}
+
+  // Phase 27.6: Subscribe a channel to route messages to a conversation
+  async subscribeChannel(channelId: string, targetConversationId: string): Promise<void> {
+    // Channel subscriptions would be tracked in the MuxStore or a dedicated table
+    this.eventBus.emit({
+      type: 'channel:subscription',
+      channelId,
+      conversationId: targetConversationId,
+      active: true,
+    } as unknown as never)
+  }
+
+  // Phase 27.6: Unsubscribe a channel
+  async unsubscribeChannel(channelId: string): Promise<void> {
+    this.eventBus.emit({
+      type: 'channel:subscription',
+      channelId,
+      active: false,
+    } as unknown as never)
+  }
+
+  // Phase 27.6: Process inbound channel message
+  async processChannelMessage(
+    channelId: string,
+    message: NormalizedMessage,
+    targetConversationId: string,
+  ): Promise<void> {
+    this.eventBus.emit({
+      type: 'channel:message',
+      channelId,
+      conversationId: targetConversationId,
+      message,
+    } as unknown as never)
+  }
 
   async mux(request: MuxRequest): Promise<MuxResponse> {
     const providerIds = request.targetProviderIds ?? (await this.resolveProviderIds(request))
@@ -237,6 +276,16 @@ export class ProviderMuxEngine {
     const prefs = await this.store.getRoutingPreferences(capabilityId)
     const match = prefs.find((p) => p.providerId === providerId)
     return match?.score ?? 0.5
+  }
+
+  // Unit 34.5: ordered fallback providers for mid-task failover. Returns all
+  // known providers except the failed one, sorted by routing score (best first).
+  async fallbacksFor(providerId: string): Promise<string[]> {
+    const prefs = await this.store.getRoutingPreferences()
+    return prefs
+      .filter((p) => p.providerId !== providerId)
+      .sort((a, b) => b.score - a.score)
+      .map((p) => p.providerId)
   }
 
   // ── Private ────────────────────────────────────────────────────────────

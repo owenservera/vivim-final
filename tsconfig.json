@@ -23,9 +23,10 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "shared/*": ["./shared/*"]
     }
   },
-  "include": ["src/**/*", "tests/**/*", "seeds/**/*"],
+  "include": ["src/**/*", "tests/**/*", "seeds/**/*", "shared/**/*"],
   "exclude": ["dist", "node_modules"]
 }

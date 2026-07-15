@@ -1,12 +1,11 @@
-import { ulid } from '../../ids.js'
 import { EngineError } from '../../errors.js'
 import type {
-  EngineDescriptor,
-  StoreDescriptor,
   CapabilityDescriptor,
-  RouteDescriptor,
-  SystemTopology,
+  EngineDescriptor,
   HealthState,
+  RouteDescriptor,
+  StoreDescriptor,
+  SystemTopology,
 } from '../../storage/contracts/kernel-store.js'
 
 type RegisterCallback = (desc: EngineDescriptor) => void
@@ -30,7 +29,9 @@ export class KernelRegistry {
     }
     this.engines.set(desc.id, entry)
     for (const cb of this.registerCallbacks) {
-      try { cb(entry) } catch {}
+      try {
+        cb(entry)
+      } catch {}
     }
   }
 
@@ -64,9 +65,9 @@ export class KernelRegistry {
 
   listEngines(filter?: { layer?: string; kind?: string; status?: string }): EngineDescriptor[] {
     let result = [...this.engines.values()]
-    if (filter?.layer) result = result.filter(e => e.layer === filter.layer)
-    if (filter?.kind) result = result.filter(e => e.kind === filter.kind)
-    if (filter?.status) result = result.filter(e => e.status === filter.status)
+    if (filter?.layer) result = result.filter((e) => e.layer === filter.layer)
+    if (filter?.kind) result = result.filter((e) => e.kind === filter.kind)
+    if (filter?.status) result = result.filter((e) => e.status === filter.status)
     return result
   }
 
@@ -103,7 +104,7 @@ export class KernelRegistry {
   updateHealth(id: string, health: HealthState): void {
     const desc = this.engines.get(id)
     if (!desc) throw new EngineError(`Engine ${id} not found in registry`)
-    const from = desc.status
+    const _from = desc.status
     desc.health = health
     desc.updatedAt = Date.now()
     if (health.status === 'healthy') {
@@ -133,12 +134,16 @@ export class KernelRegistry {
 
   onRegister(callback: (desc: EngineDescriptor) => void): () => void {
     this.registerCallbacks.add(callback)
-    return () => { this.registerCallbacks.delete(callback) }
+    return () => {
+      this.registerCallbacks.delete(callback)
+    }
   }
 
   onStatusChange(callback: (id: string, from: string, to: string) => void): () => void {
     this.statusChangeCallbacks.add(callback)
-    return () => { this.statusChangeCallbacks.delete(callback) }
+    return () => {
+      this.statusChangeCallbacks.delete(callback)
+    }
   }
 
   private updateStatus(id: string, to: string): void {
@@ -148,7 +153,9 @@ export class KernelRegistry {
     desc.status = to as EngineDescriptor['status']
     desc.updatedAt = Date.now()
     for (const cb of this.statusChangeCallbacks) {
-      try { cb(id, from, to) } catch {}
+      try {
+        cb(id, from, to)
+      } catch {}
     }
   }
 }

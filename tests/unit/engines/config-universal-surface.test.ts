@@ -1,9 +1,9 @@
 // tests/unit/engines/config-universal-surface.test.ts
 // Unit tests for ConfigUniversalSurface (v9.1)
 
-import { describe, expect, test, beforeEach } from 'bun:test'
-import { ConfigUniversalSurface } from '../../../src/engines/config-universal-surface.js'
+import { beforeEach, describe, expect, test } from 'bun:test'
 import type { CapabilityEventBus, EngineEvent } from '../../../src/engines/capability-event-bus.js'
+import { ConfigUniversalSurface } from '../../../src/engines/config-universal-surface.js'
 
 // Mock event bus
 const events: Array<{ type: string; data: unknown }> = []
@@ -11,7 +11,9 @@ const mockEventBus: CapabilityEventBus = {
   emit(event: EngineEvent) {
     events.push({ type: event.type, data: event })
   },
-  on() { return () => {} },
+  on() {
+    return () => {}
+  },
   off() {},
   subscribe() {},
   unsubscribe() {},
@@ -24,7 +26,12 @@ describe('ConfigUniversalSurface', () => {
     events.length = 0
     surface = new ConfigUniversalSurface({
       registry: {} as any,
-      configManager: { registerSchema() {}, getConfig() { return {} } } as any,
+      configManager: {
+        registerSchema() {},
+        getConfig() {
+          return {}
+        },
+      } as any,
       eventBus: mockEventBus as any,
     })
   })
@@ -32,7 +39,7 @@ describe('ConfigUniversalSurface', () => {
   test('listScopes returns all 12 scopes', () => {
     const scopes = surface.listScopes()
     expect(scopes.length).toBe(12)
-    const scopeIds = scopes.map(s => s.id)
+    const scopeIds = scopes.map((s) => s.id)
     expect(scopeIds).toContain('engine')
     expect(scopeIds).toContain('capability')
     expect(scopeIds).toContain('store')
@@ -60,7 +67,12 @@ describe('ConfigUniversalSurface', () => {
   test('set emits config:changed on eventBus', () => {
     surface.set('autoheal', 'setting', {
       stalledEngineRestart: { enabled: true, maxAgeMinutes: 5, backoffMs: 1000 },
-      healthDecayRestart: { enabled: false, decayThreshold: 10, minHealth: 0.5, cooldownMinutes: 1 },
+      healthDecayRestart: {
+        enabled: false,
+        decayThreshold: 10,
+        minHealth: 0.5,
+        cooldownMinutes: 1,
+      },
     })
     expect(events.length).toBe(1)
     expect((events[0]?.data as { engineId?: string }).engineId).toBe('autoheal')
@@ -82,13 +94,20 @@ describe('ConfigUniversalSurface', () => {
     expect(() => surface.set('autoheal', 'policy', { invalid: 'value' } as unknown)).toThrow()
     surface.set('autoheal', 'policy', {
       stalledEngineRestart: { enabled: true, maxAgeMinutes: 5, backoffMs: 1000 },
-      healthDecayRestart: { enabled: false, decayThreshold: 10, minHealth: 0.5, cooldownMinutes: 1 },
+      healthDecayRestart: {
+        enabled: false,
+        decayThreshold: 10,
+        minHealth: 0.5,
+        cooldownMinutes: 1,
+      },
     })
     const fetched = surface.get('autoheal', 'policy')
     expect(fetched?.value).toBeDefined()
   })
 
   test('rollback throws for unknown snapshot id', () => {
-    expect(() => surface.rollback('snap:nonexistent')).toThrow('Snapshot snap:nonexistent not found')
+    expect(() => surface.rollback('snap:nonexistent')).toThrow(
+      'Snapshot snap:nonexistent not found',
+    )
   })
 })

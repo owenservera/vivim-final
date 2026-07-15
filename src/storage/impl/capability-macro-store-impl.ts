@@ -22,8 +22,8 @@ export class CapabilityMacroStoreImpl implements CapabilityMacroStore {
       providerId: r.providerId ?? null,
       dagJson: r.dagJson,
       isActive: r.isActive === 1,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }))
   }
 
@@ -37,8 +37,8 @@ export class CapabilityMacroStoreImpl implements CapabilityMacroStore {
       providerId: row.providerId ?? null,
       dagJson: row.dagJson,
       isActive: row.isActive === 1,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      createdAt: Number(row.createdAt),
+      updatedAt: Number(row.updatedAt),
     }
   }
 

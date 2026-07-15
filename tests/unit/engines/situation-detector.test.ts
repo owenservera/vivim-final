@@ -120,7 +120,7 @@ describe('SituationDetector', () => {
     await det.detect({ message: 'Fix the bug', conversationId: 'conv-1' })
     expect(store.createLog).toHaveBeenCalledTimes(1)
     const callArgs = (store.createLog as ReturnType<typeof mock>).mock.calls[0]
-    const logArg = callArgs![0]!
+    const logArg = callArgs?.[0]!
     expect(logArg.detectedType).toBe('debugging')
     expect(logArg.conversationId).toBe('conv-1')
     expect(logArg.confidence).toBeGreaterThan(0)
@@ -131,7 +131,7 @@ describe('SituationDetector', () => {
     await det.learnFromCorrection('conv-1', 'writing', 'coding')
     expect(store.createUserPreference).toHaveBeenCalledTimes(1)
     const callArgs = (store.createUserPreference as ReturnType<typeof mock>).mock.calls[0]
-    const prefArg = callArgs![0]!
+    const prefArg = callArgs?.[0]!
     expect(prefArg.key).toBe('correction:writing')
     expect(prefArg.value).toBe('coding')
   })

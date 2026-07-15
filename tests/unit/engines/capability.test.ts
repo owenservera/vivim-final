@@ -65,6 +65,7 @@ function mockStore(overrides?: Partial<CapabilityStore>): CapabilityStore {
     getBinding: mock(async () => makeBinding()),
     getProgram: mock(async () => null),
     getPrograms: mock(async () => []),
+    getBestProgramByCapability: mock(async () => null),
     getSelectors: mock(async () => [makeSelector()]),
     createOutcome: mock(
       async (o) =>

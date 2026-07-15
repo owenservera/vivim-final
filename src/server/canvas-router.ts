@@ -2,10 +2,14 @@
 // vivim-canvas HTTP router (v7.12). Maps /api/canvas/* to the canvas
 // capability plane (v7.9). Every route is just `registry.execute` of a
 // `cap:canvas:*` capability — the same surface a CLI/MCP/agent uses.
+//
+// PRINCIPLE: FRONTEND = BACKEND
+// Every request is tagged with its source via X-Source header for audit logging.
 
-import type { ServerContext } from './index.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
+import { extractSource } from './source-middleware.js'
 
 export interface CanvasRouterDeps {
   registry: UnifiedCapabilityRegistry
@@ -24,6 +28,7 @@ export function createCanvasRouter(ctx: ServerContext) {
   }
 
   return async (req: Request, url: URL): Promise<Response> => {
+    const source = extractSource(req)
     const cap = (id: string, input: Record<string, unknown>) =>
       registry.execute(id, input, ctxFrom(req)) as Promise<unknown>
 
@@ -70,7 +75,10 @@ export function createCanvasRouter(ctx: ServerContext) {
     const dismissMatch = url.pathname.match(/^\/api\/canvas\/instance\/([^/]+)$/)
     if (dismissMatch && req.method === 'DELETE') {
       try {
-        return json({ ok: true, result: await cap('cap:canvas:dismiss', { instanceId: dismissMatch[1] }) })
+        return json({
+          ok: true,
+          result: await cap('cap:canvas:dismiss', { instanceId: dismissMatch[1] }),
+        })
       } catch (e) {
         return errorResponse((e as Error).message, 'CanvasDismissFailed', 500)
       }

@@ -243,7 +243,7 @@ describe('AutonomousExecutionEngine', () => {
     const task = await engine.execute(goal)
     const status = await engine.getStatus(task.id)
     expect(status).not.toBeNull()
-    expect(status!.id).toBe(task.id)
+    expect(status?.id).toBe(task.id)
   })
 
   it('getStatus returns null for unknown task', async () => {

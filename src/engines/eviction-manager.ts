@@ -43,9 +43,12 @@ export class EvictionManager {
     private governor: ChromeGovernor,
     private eventBus: CapabilityEventBus,
   ) {
-    this.eventBus.on('capability:executed' as any, ((e: any) => {
-      if (e.slaveId) this.recordAccess(e.slaveId)
-    }) as any)
+    this.eventBus.on(
+      'capability:executed' as any,
+      ((e: any) => {
+        if (e.slaveId) this.recordAccess(e.slaveId)
+      }) as any,
+    )
   }
 
   start(): void {
@@ -107,11 +110,12 @@ export class EvictionManager {
     const scored = slaves.map((s) => {
       const record = this.accessLog.get(s.slaveId)
       const idleTime = record ? now - record.lastAccess : 0
-      const score = this.policy.evictionStrategy === 'lfu'
-        ? -(record?.accessCount ?? 0)
-        : this.policy.evictionStrategy === 'fifo'
-          ? 0
-          : idleTime
+      const score =
+        this.policy.evictionStrategy === 'lfu'
+          ? -(record?.accessCount ?? 0)
+          : this.policy.evictionStrategy === 'fifo'
+            ? 0
+            : idleTime
       return { id: s.slaveId, score }
     })
     scored.sort((a, b) => a.score - b.score)

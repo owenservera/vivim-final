@@ -1,0 +1,21 @@
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@keyframes vivim-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}

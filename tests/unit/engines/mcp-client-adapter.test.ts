@@ -27,7 +27,7 @@ describe('McpClientAdapter', () => {
 
     const tools = await adapter.listTools('srv1')
     expect(tools).toHaveLength(1)
-    expect(tools[0]!.name).toBe('t1')
+    expect(tools[0]?.name).toBe('t1')
   })
 
   test('connect sets error status on fetch failure', async () => {
@@ -37,7 +37,7 @@ describe('McpClientAdapter', () => {
     expect(adapter.isConnected('srv1')).toBe(false)
 
     const conns = adapter.getConnections()
-    expect(conns[0]!.status).toBe('error')
+    expect(conns[0]?.status).toBe('error')
   })
 
   test('callTool sends POST to remote server', async () => {

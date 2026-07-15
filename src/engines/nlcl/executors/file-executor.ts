@@ -2,13 +2,13 @@
 // FileExecutor — file system operations (open, list, search, create).
 
 import { existsSync } from 'node:fs'
-import { open, readdir, readFile, stat, writeFile, mkdir } from 'node:fs/promises'
-import { join, basename, extname, dirname } from 'node:path'
+import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { platform } from 'node:os'
-import type { CommandExecutor, CommandResult, ParsedIntent, NLCContext } from '../types.js'
+import { basename, extname, join } from 'node:path'
 import { newId } from '../../../ids.js'
+import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
-const isWindows = platform() === 'win32'
+const _isWindows = platform() === 'win32'
 
 const FILE_OPEN_COMMANDS: Record<string, string> = {
   win32: 'explorer',
@@ -16,12 +16,36 @@ const FILE_OPEN_COMMANDS: Record<string, string> = {
   linux: 'xdg-open',
 }
 
-const APP_EXTENSIONS = new Set([
-  '.txt', '.md', '.pdf', '.doc', '.docx', '.xls', '.xlsx',
-  '.ppt', '.pptx', '.csv', '.json', '.html', '.htm',
-  '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg',
-  '.mp4', '.mp3', '.wav', '.avi', '.mov',
-  '.zip', '.rar', '.7z', '.tar', '.gz',
+const _APP_EXTENSIONS = new Set([
+  '.txt',
+  '.md',
+  '.pdf',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.ppt',
+  '.pptx',
+  '.csv',
+  '.json',
+  '.html',
+  '.htm',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.bmp',
+  '.svg',
+  '.mp4',
+  '.mp3',
+  '.wav',
+  '.avi',
+  '.mov',
+  '.zip',
+  '.rar',
+  '.7z',
+  '.tar',
+  '.gz',
 ])
 
 const SEARCH_LOCATIONS: Record<string, string[]> = {
@@ -105,7 +129,7 @@ export class FileExecutor implements CommandExecutor {
 
   private async listFiles(
     intent: ParsedIntent,
-    ctx: NLCContext,
+    _ctx: NLCContext,
     traceId: string,
     start: number,
   ): Promise<CommandResult> {
@@ -143,7 +167,7 @@ export class FileExecutor implements CommandExecutor {
 
   private async searchFiles(
     intent: ParsedIntent,
-    ctx: NLCContext,
+    _ctx: NLCContext,
     traceId: string,
     start: number,
   ): Promise<CommandResult> {
@@ -165,20 +189,27 @@ export class FileExecutor implements CommandExecutor {
           if (entry.name.toLowerCase().includes(query.toLowerCase())) {
             const fullPath = join(dirPath, entry.name)
             let size: number | undefined
-            try { size = (await stat(fullPath)).size } catch { /* ignore */ }
+            try {
+              size = (await stat(fullPath)).size
+            } catch {
+              /* ignore */
+            }
             results.push({ path: fullPath, name: entry.name, size })
           }
         }
-      } catch { /* skip inaccessible dirs */ }
+      } catch {
+        /* skip inaccessible dirs */
+      }
     }
 
     return {
       ok: true,
       intent: intent.intent,
       output: { query, results: results.slice(0, 20), totalFound: results.length },
-      text: results.length > 0
-        ? `Found ${results.length} file(s) matching "${query}"`
-        : `No files found matching "${query}"`,
+      text:
+        results.length > 0
+          ? `Found ${results.length} file(s) matching "${query}"`
+          : `No files found matching "${query}"`,
       latencyMs: Date.now() - start,
       traceId,
       classification: 'read',
@@ -187,7 +218,7 @@ export class FileExecutor implements CommandExecutor {
 
   private async createFile(
     intent: ParsedIntent,
-    ctx: NLCContext,
+    _ctx: NLCContext,
     traceId: string,
     start: number,
   ): Promise<CommandResult> {
@@ -294,13 +325,15 @@ export class FileExecutor implements CommandExecutor {
             return join(dirPath, entry.name)
           }
         }
-      } catch { /* skip inaccessible */ }
+      } catch {
+        /* skip inaccessible */
+      }
     }
     return null
   }
 
   private async launchFile(filePath: string): Promise<void> {
-    const ext = extname(filePath).toLowerCase()
+    const _ext = extname(filePath).toLowerCase()
     const cmd = FILE_OPEN_COMMANDS[platform()] ?? 'xdg-open'
     const { exec } = await import('node:child_process')
     exec(`${cmd} "${filePath}"`, (err) => {
@@ -308,12 +341,7 @@ export class FileExecutor implements CommandExecutor {
     })
   }
 
-  private fail(
-    intent: ParsedIntent,
-    traceId: string,
-    start: number,
-    error: string,
-  ): CommandResult {
+  private fail(intent: ParsedIntent, traceId: string, start: number, error: string): CommandResult {
     return {
       ok: false,
       intent: intent.intent,

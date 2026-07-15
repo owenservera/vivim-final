@@ -1,21 +1,30 @@
 // src/engines/autonomous-execution.ts
 // AutonomousExecutionEngine — multi-step autonomous task executor with HITL gates
 
-import { EngineError } from '../errors.js'
+import { ConsentViolationError, EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
+import { ReplayController } from './autonomous-replay.js'
+import type { ReplayResult } from './autonomous-replay.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { ExecutionPolicyEngine, PolicyDecision } from './execution-policy.js'
+import type { IntentResolver, NLCContext, ParsedIntent } from './nlcl/types.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
+
+// Unit 34.5: provider failover. Implemented by ProviderMuxEngine.fallbacksFor.
+export interface FailoverRouter {
+  fallbacksFor(providerId: string): Promise<string[]>
+}
 
 export type TaskStatus =
   | 'pending'
   | 'planning'
   | 'executing'
   | 'waiting_approval'
+  | 'paused'
   | 'complete'
   | 'failed'
   | 'cancelled'
@@ -27,8 +36,16 @@ export type ActionClassification =
   | 'destructive'
   | 'financial'
   | 'communication'
-export type GateType = 'approval' | 'confirmation' | 'selection' | 'input'
-export type GateStatus = 'pending' | 'approved' | 'denied' | 'skipped' | 'expired'
+export type GateType =
+  | 'approval'
+  | 'confirmation'
+  | 'selection'
+  | 'input'
+  | 'question'
+  | 'option'
+  | 'file'
+  | 'url'
+export type GateStatus = 'pending' | 'approved' | 'denied' | 'skipped' | 'resolved' | 'expired'
 
 export interface AutonomousGoal {
   description: string
@@ -37,6 +54,10 @@ export interface AutonomousGoal {
   requireApprovalAbove: ActionClassification
   allowBrowser: boolean
   costBudgetCents: number
+  // Unit 36.2: explicit LLM provider for planning. 'local' (or unset) →
+  // LocalModelAdapter (offline). Any other value is an outbound/cloud model
+  // and is only honored when the user has consented (see resolvePlanner).
+  llmProvider?: string
 }
 
 export interface AutonomousStep {
@@ -100,6 +121,12 @@ function classificationAtLeast(
   return (CLASSIFICATION_PRIORITY[classification] ?? 0) >= (CLASSIFICATION_PRIORITY[threshold] ?? 0)
 }
 
+// The nlcl resolver uses a superset classification ('system' extra); map it
+// onto the autonomous engine's classification space.
+function toAutonomousClassification(c: string): ActionClassification {
+  return c === 'system' ? 'read' : (c as ActionClassification)
+}
+
 // ── Engine ──────────────────────────────────────────────────────────────
 
 export class AutonomousExecutionEngine {
@@ -115,6 +142,12 @@ export class AutonomousExecutionEngine {
     private readonly policyEngine: ExecutionPolicyEngine,
     private readonly governor: ChromeGovernor,
     private readonly eventBus: CapabilityEventBus,
+    private readonly resolver?: IntentResolver,
+    private readonly failoverRouter?: FailoverRouter,
+    // Unit 36.2: offline-first defaults. airgap=true → planner uses local model
+    // unless an explicit, consented cloud provider override is given.
+    private readonly airgap: boolean = true,
+    private readonly consentCheck: () => boolean | Promise<boolean> = () => false,
   ) {}
 
   async execute(goal: AutonomousGoal): Promise<AutonomousTask> {
@@ -162,16 +195,40 @@ export class AutonomousExecutionEngine {
         })
       }
 
+      return this.runTask(task)
+    } catch (err) {
+      task.status = 'failed'
+      task.error = err instanceof Error ? err.message : String(err)
+      task.completedAt = Date.now()
+      await this.store.updateTask(taskId, {
+        status: 'failed',
+        error: task.error,
+        completedAt: task.completedAt,
+      })
+    }
+
+    return task
+  }
+
+  // ── Pause / Resume (HITL v2) ──────────────────────────────────────────
+
+  private async runTask(task: AutonomousTask): Promise<AutonomousTask> {
+    const taskId = task.id
+    if ((task.status as string) !== 'executing') {
       task.status = 'executing'
       await this.store.updateTask(taskId, { status: 'executing' })
+    }
 
+    try {
       for (const step of task.steps) {
         if ((task.status as string) === 'cancelled') break
+        if ((task.status as string) === 'paused') break
+        if (step.status === 'complete' || step.status === 'skipped') continue
 
         const decision = await this.policyEngine.evaluate(step.action, step.actionInput)
         step.requiresHumanApproval =
           decision.requiresApproval ||
-          classificationAtLeast(step.classification, goal.requireApprovalAbove)
+          classificationAtLeast(step.classification, task.goal.requireApprovalAbove)
 
         if (step.requiresHumanApproval) {
           const gate = await this.createGate(taskId, step, decision)
@@ -213,7 +270,7 @@ export class AutonomousExecutionEngine {
         await this.store.updateStep(step.id, { status: 'running', startedAt: step.startedAt })
 
         try {
-          const result = await this.executeStepWithHealing(step, task)
+          const result = await this.executeStepWithFailover(step, task)
           step.result = result
           step.status = 'complete'
           step.completedAt = Date.now()
@@ -254,7 +311,11 @@ export class AutonomousExecutionEngine {
         }
       }
 
-      if ((task.status as string) !== 'failed' && (task.status as string) !== 'cancelled') {
+      if (
+        (task.status as string) !== 'failed' &&
+        (task.status as string) !== 'cancelled' &&
+        (task.status as string) !== 'paused'
+      ) {
         task.status = 'complete'
         task.result = task.steps.map((s) => ({ step: s.description, result: s.result }))
       }
@@ -267,13 +328,15 @@ export class AutonomousExecutionEngine {
         completedAt: task.completedAt,
       })
 
-      this.eventBus.emit({
-        type: 'autonomous:complete',
-        taskId,
-        status: task.status,
-        stepsCompleted: task.steps.filter((s) => s.status === 'complete').length,
-        stepsTotal: task.steps.length,
-      })
+      if ((task.status as string) === 'complete') {
+        this.eventBus.emit({
+          type: 'autonomous:complete',
+          taskId,
+          status: task.status,
+          stepsCompleted: task.steps.filter((s) => s.status === 'complete').length,
+          stepsTotal: task.steps.length,
+        })
+      }
     } catch (err) {
       task.status = 'failed'
       task.error = err instanceof Error ? err.message : String(err)
@@ -288,6 +351,22 @@ export class AutonomousExecutionEngine {
     }
 
     return task
+  }
+
+  async pause(taskId: string): Promise<void> {
+    const task = this.activeTasks.get(taskId) ?? (await this.getStatus(taskId))
+    if (!task) return
+    task.status = 'paused'
+    await this.store.updateTask(taskId, { status: 'paused' })
+    this.eventBus.emit({ type: 'autonomous:paused', taskId })
+  }
+
+  async resume(taskId: string): Promise<AutonomousTask | null> {
+    const task = this.activeTasks.get(taskId) ?? (await this.getStatus(taskId))
+    if (!task) return null
+    if ((task.status as string) !== 'paused') return task
+    this.activeTasks.set(taskId, task)
+    return this.runTask(task)
   }
 
   async cancel(taskId: string): Promise<void> {
@@ -371,8 +450,12 @@ export class AutonomousExecutionEngine {
     if (!gateRow) throw new EngineError(`Gate not found: ${gateId}`)
     if (gateRow.status !== 'pending') throw new EngineError(`Gate already resolved: ${gateId}`)
 
-    const validResponses = ['approve', 'deny', 'skip']
-    if (!validResponses.includes(response)) {
+    const gateType = gateRow.gateType as GateType
+
+    // Approval gates accept approve/deny/skip; clarification gates (question,
+    // option, file, url) accept the human's free-form answer.
+    const approvalResponses = ['approve', 'deny', 'skip']
+    if (gateType === 'approval' && !approvalResponses.includes(response)) {
       throw new EngineError(`Invalid gate response: ${response}`)
     }
 
@@ -381,7 +464,8 @@ export class AutonomousExecutionEngine {
       deny: 'denied',
       skip: 'skipped',
     }
-    const gateStatus = statusMap[response] ?? 'denied'
+    const gateStatus: GateStatus =
+      gateType === 'approval' ? (statusMap[response] ?? 'denied') : 'resolved'
 
     await this.store.updateHitlGate(gateId, {
       status: gateStatus,
@@ -441,6 +525,60 @@ export class AutonomousExecutionEngine {
     }))
   }
 
+  // ── Proactive clarification (HITL v2) ──────────────────────────────────
+  // Opens a mid-task clarification gate (open question / option select /
+  // file picker / URL input) and resolves with the human response.
+
+  async clarify(
+    step: AutonomousStep,
+    prompt: string,
+    kind: GateType,
+    opts?: { options?: string[]; defaultValue?: string; timeoutMs?: number },
+  ): Promise<string | null> {
+    const timeoutMs = opts?.timeoutMs ?? 300_000
+    const gate: HitlGate = {
+      id: newId(),
+      taskId: step.taskId,
+      stepId: step.id,
+      gateType: kind,
+      prompt,
+      options: opts?.options ?? [],
+      defaultValue: opts?.defaultValue ?? null,
+      status: 'pending',
+      resolvedBy: null,
+      resolvedAt: null,
+      response: null,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + timeoutMs,
+    }
+
+    await this.store.createHitlGate({
+      id: gate.id,
+      taskId: gate.taskId,
+      stepId: gate.stepId,
+      gateType: gate.gateType,
+      prompt: gate.prompt,
+      optionsJson: JSON.stringify(gate.options),
+      defaultValue: gate.defaultValue,
+      status: 'pending',
+      createdAt: gate.createdAt,
+      expiresAt: gate.expiresAt,
+    })
+
+    this.eventBus.emit({
+      type: 'agent:clarify',
+      gateId: gate.id,
+      taskId: gate.taskId,
+      stepId: gate.stepId,
+      gateType: kind,
+      prompt,
+      options: gate.options,
+    })
+
+    const resolved = await this.waitForGateResolution(gate.id, timeoutMs)
+    return resolved?.response ?? null
+  }
+
   async replay(taskId: string, fromStep?: string): Promise<AutonomousTask> {
     const prev = await this.getStatus(taskId)
     if (!prev) throw new EngineError(`Task not found: ${taskId}`)
@@ -468,86 +606,52 @@ export class AutonomousExecutionEngine {
     return newTask
   }
 
-  // ── Private: Planning ────────────────────────────────────────────────
-
-  private async planGoal(goal: AutonomousGoal): Promise<AutonomousStep[]> {
-    const steps: AutonomousStep[] = []
-    const lower = goal.description.toLowerCase()
-
-    const navMatch = lower.match(/(?:go to|navigate to|open)\s+(.+)/)
-    if (navMatch) {
-      steps.push(
-        this.makeStep(steps.length, goal, `Navigate to ${navMatch[1]}`, 'navigate', {
-          url: navMatch[1],
-        }),
-      )
-    }
-
-    const searchMatch = lower.match(/(?:search|find|look for)\s+(.+)/)
-    if (searchMatch) {
-      steps.push(
-        this.makeStep(steps.length, goal, `Search for ${searchMatch[1]}`, 'search', {
-          query: searchMatch[1],
-        }),
-      )
-    }
-
-    if (lower.includes('fill') || lower.includes('form')) {
-      steps.push(this.makeStep(steps.length, goal, 'Fill form fields', 'fill_form', {}))
-    }
-
-    const clickMatch = lower.match(/click\s+(?:on\s+)?(?:the\s+)?(.+)/)
-    if (clickMatch) {
-      steps.push(
-        this.makeStep(steps.length, goal, `Click ${clickMatch[1]}`, 'click', {
-          target: clickMatch[1],
-        }),
-      )
-    }
-
-    if (lower.includes('screenshot') || lower.includes('capture')) {
-      steps.push(this.makeStep(steps.length, goal, 'Take screenshot', 'screenshot', {}))
-    }
-
-    if (steps.length === 0) {
-      steps.push(
-        this.makeStep(0, goal, `Execute goal: ${goal.description}`, 'llm_plan', {
-          goal: goal.description,
-        }),
-      )
-    }
-
-    // Enforce maxSteps limit
-    if (steps.length > goal.maxSteps) {
-      return steps.slice(0, goal.maxSteps)
-    }
-
-    return steps
+  // Replay a finished task with branching (Unit 34.4). Delegates to
+  // ReplayController; the branch re-executes capability steps via the
+  // capability registry, leaving the original timeline untouched.
+  async replayBranch(
+    taskId: string,
+    opts?: {
+      fromStep?: string
+      overrideInput?: Record<string, unknown>
+      overrideProvider?: string
+    },
+  ): Promise<ReplayResult> {
+    const controller = new ReplayController(
+      this.store,
+      async (step, branchId) => {
+        if (!this.registry) throw new EngineError('No registry bound for replay branch')
+        return this.registry.execute(
+          (step.actionInput.capabilitySlug as string) ?? step.action,
+          (step.actionInput.input as Record<string, unknown>) ?? {},
+          { metadata: { taskId: branchId, branch: true } },
+        )
+      },
+      this.eventBus,
+    )
+    return controller.branch(taskId, opts)
   }
 
-  private makeStep(
-    index: number,
-    goal: AutonomousGoal,
-    description: string,
-    action: string,
-    input: Record<string, unknown>,
-  ): AutonomousStep {
-    const classification = (input.classification as ActionClassification) ?? 'read'
-    return {
-      id: newId(),
-      taskId: '',
-      stepIndex: index,
-      description,
-      action,
-      actionInput: input,
-      classification,
-      status: 'pending',
-      result: null,
-      error: null,
-      startedAt: null,
-      completedAt: null,
-      requiresHumanApproval: classificationAtLeast(classification, goal.requireApprovalAbove),
+  // ── Private: Planning ────────────────────────────────────────────────
+  // planGoal delegates to the IntentDecomposer (nlcl resolver): each resolved
+  // CapabilityNode becomes an AutonomousStep whose `action` is the capability
+  // slug, carrying its inputMapping + classification. No regex action parsing.
+
+  private async planGoal(goal: AutonomousGoal): Promise<AutonomousStep[]> {
+    // Unit 36.2: enforce offline-first planning consent before any work begins.
+    // resolvePlanner throws ConsentViolationError for a cloud llmProvider when
+    // the user has not consented; airgap/local goals are always allowed.
+    const consented = await this.consentCheck()
+    resolvePlanner(goal, { airgap: this.airgap, consented })
+    // LLM-backed planning when a resolver is injected (Unit 34.1).
+    if (this.resolver) {
+      const ctx: NLCContext = { surface: 'cli', metadata: {} }
+      const intent = await this.resolver.resolve(goal.description, ctx)
+      return planStepsFromIntent(goal, intent)
     }
+    // Offline built-in planner: always `local` (no outbound model). Used when no
+    // resolver is wired (e.g. unit tests, airgap-default instances).
+    return planStepsLocally(goal)
   }
 
   // ── Private: Execution ───────────────────────────────────────────────
@@ -568,6 +672,48 @@ export class AutonomousExecutionEngine {
       }
       throw err
     }
+  }
+
+  // Unit 34.5: provider failover. Attempts the step (with selector healing);
+  // on failure, consults the failover router for fallback providers, opens an
+  // `option` clarification gate, and on approval re-executes against the chosen
+  // fallback with adapted input. With no fallback, the original error propagates.
+  private async executeStepWithFailover(
+    step: AutonomousStep,
+    task: AutonomousTask,
+  ): Promise<unknown> {
+    const attempted = (step.actionInput.provider as string) ?? 'default'
+    try {
+      return await this.executeStepWithHealing(step, task)
+    } catch (err) {
+      const fallbacks = this.failoverRouter ? await this.failoverRouter.fallbacksFor(attempted) : []
+      if (fallbacks.length === 0) throw err
+
+      const choice = await this.clarify(
+        step,
+        `Provider "${attempted}" failed mid-task. Choose a fallback provider to continue.`,
+        'option',
+        { options: fallbacks },
+      )
+      if (!choice || !fallbacks.includes(choice)) throw err
+
+      step.actionInput = this.adaptInputForProvider(step.actionInput, choice)
+      this.eventBus.emit({
+        type: 'autonomous:failover',
+        taskId: task.id,
+        fromProvider: attempted,
+        toProvider: choice,
+        stepId: step.id,
+      })
+      return await this.executeStepWithHealing(step, task)
+    }
+  }
+
+  private adaptInputForProvider(
+    input: Record<string, unknown>,
+    provider: string,
+  ): Record<string, unknown> {
+    return { ...input, provider }
   }
 
   private async executeStep(step: AutonomousStep, task: AutonomousTask): Promise<unknown> {
@@ -743,4 +889,109 @@ export class AutonomousExecutionEngine {
       })
     })
   }
+}
+
+// ── Pure planner helpers (exported for unit tests) ───────────────────────
+
+// Build an AutonomousStep from a resolved intent node.
+function assembleStep(
+  index: number,
+  goal: AutonomousGoal,
+  description: string,
+  action: string,
+  input: Record<string, unknown>,
+): AutonomousStep {
+  const classification = toAutonomousClassification((input.classification as string) ?? 'read')
+  return {
+    id: newId(),
+    taskId: '',
+    stepIndex: index,
+    description,
+    action,
+    actionInput: input,
+    classification,
+    status: 'pending',
+    result: null,
+    error: null,
+    startedAt: null,
+    completedAt: null,
+    requiresHumanApproval: classificationAtLeast(classification, goal.requireApprovalAbove),
+  }
+}
+
+// Unit 36.2: resolves which LLM provider the planner should use for a goal.
+// - no override (or 'local') → LocalModelAdapter (offline, always allowed)
+// - any other provider is an outbound/cloud model and is only honored when the
+//   user has consented; otherwise a ConsentViolationError is raised.
+export interface PlannerResolution {
+  provider: string
+  local: boolean
+}
+
+export function resolvePlanner(
+  goal: AutonomousGoal,
+  opts: { airgap: boolean; consented: boolean },
+): PlannerResolution {
+  const override = goal.llmProvider
+  if (!override || override === 'local') {
+    return { provider: 'local', local: true }
+  }
+  if (!opts.consented) {
+    throw new ConsentViolationError(override)
+  }
+  return { provider: override, local: false }
+}
+
+// Maps a resolved intent (CapabilityDAG root + alternatives) into
+// AutonomousSteps. Empty/null intent → 0 steps.
+export function planStepsFromIntent(
+  goal: AutonomousGoal,
+  intent: ParsedIntent | null,
+): AutonomousStep[] {
+  if (!intent || !intent.capabilityId) return []
+  const nodes: ParsedIntent[] = [intent, ...(intent.alternatives ?? [])]
+  const steps: AutonomousStep[] = []
+  for (const node of nodes) {
+    if (!node.capabilityId) continue
+    const classification = toAutonomousClassification(node.classification ?? 'read')
+    steps.push(
+      assembleStep(steps.length, goal, node.intent || goal.description, node.capabilityId, {
+        ...node.input,
+        inputMapping: node.input,
+        classification,
+      }),
+    )
+  }
+  if (steps.length > goal.maxSteps) return steps.slice(0, goal.maxSteps)
+  return steps
+}
+
+// Built-in offline planner used when no LLM resolver is injected. Always runs
+// locally (no outbound model): it parses the goal description for browser /
+// destructive / read keywords into concrete AutonomousSteps the engine can
+// execute directly via the governor or capability registry.
+export function planStepsLocally(goal: AutonomousGoal): AutonomousStep[] {
+  const text = goal.description.toLowerCase()
+  const steps: AutonomousStep[] = []
+  const add = (
+    action: string,
+    classification: ActionClassification,
+    extra: Record<string, unknown> = {},
+  ) => {
+    if (steps.length >= goal.maxSteps) return
+    steps.push(
+      assembleStep(steps.length, goal, goal.description, action, { ...extra, classification }),
+    )
+  }
+
+  const urlMatch = goal.description.match(/https?:\/\/[^\s]+|(?:\b[a-z0-9-]+\.)+[a-z]{2,}\b/i)
+  const url = urlMatch ? (urlMatch[0] as string) : undefined
+  if (url) add('navigate', 'navigate', { url })
+  if (/\bscreenshot\b/.test(text)) add('screenshot', 'read')
+  if (/\b(delete|remove|permanent|drop|truncate|wipe)\b/.test(text))
+    add('destructive', 'destructive')
+  if (/\b(summar|summarize)\b/.test(text)) add('summarize', 'read')
+  if (/\b(search|find)\b/.test(text) && !url) add('search', 'read', { query: goal.description })
+  if (steps.length === 0) add('task', 'read')
+  return steps
 }

@@ -79,7 +79,7 @@ function toRow(raw: {
   blockKind: string
   blockData: string
   blockMeta: string
-  createdAt: number
+  createdAt: bigint
 }): StreamBlockRow {
   return {
     id: raw.id,
@@ -89,6 +89,6 @@ function toRow(raw: {
     blockKind: raw.blockKind,
     blockData: raw.blockData,
     blockMeta: raw.blockMeta,
-    createdAt: raw.createdAt,
+    createdAt: Number(raw.createdAt),
   }
 }

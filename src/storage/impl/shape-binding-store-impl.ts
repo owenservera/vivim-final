@@ -69,7 +69,7 @@ export class ShapeBindingStoreImpl implements ShapeBindingStore {
     shapeId: string
     configJson: string | null
     isActive: number
-    createdAt: number
+    createdAt: bigint
   }): ShapeBindingRow {
     return {
       id: row.id,
@@ -78,7 +78,7 @@ export class ShapeBindingStoreImpl implements ShapeBindingStore {
       shapeId: row.shapeId,
       configJson: row.configJson,
       isActive: row.isActive,
-      createdAt: row.createdAt,
+      createdAt: Number(row.createdAt),
     }
   }
 }

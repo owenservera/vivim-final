@@ -4,7 +4,7 @@
 // Patterns auto-derive from UnifiedCapabilityRegistry + explicit consumer catalog.
 
 import { EngineError } from '../../errors.js'
-import type { CommandPattern, NLCContext, NLCLSurface, ParsedIntent } from './types.js'
+import type { CommandPattern, NLCLSurface } from './types.js'
 
 type RegisterCallback = (pattern: CommandPattern) => void
 
@@ -20,7 +20,9 @@ export class CommandPatternRegistry {
       throw new EngineError(`CommandPattern ${pattern.id} already registered`)
     }
     if (this.intentIndex.has(pattern.intent)) {
-      throw new EngineError(`Intent ${pattern.intent} already registered by ${this.intentIndex.get(pattern.intent)?.id}`)
+      throw new EngineError(
+        `Intent ${pattern.intent} already registered by ${this.intentIndex.get(pattern.intent)?.id}`,
+      )
     }
     this.patterns.set(pattern.id, pattern)
     this.intentIndex.set(pattern.intent, pattern)
@@ -36,7 +38,11 @@ export class CommandPatternRegistry {
     }
 
     for (const cb of this.registerCallbacks) {
-      try { cb(pattern) } catch { /* callback errors are non-fatal */ }
+      try {
+        cb(pattern)
+      } catch {
+        /* callback errors are non-fatal */
+      }
     }
   }
 
@@ -46,10 +52,16 @@ export class CommandPatternRegistry {
     this.patterns.delete(id)
     this.intentIndex.delete(pattern.intent)
     const catSet = this.categoryIndex.get(pattern.category)
-    if (catSet) { catSet.delete(id); if (catSet.size === 0) this.categoryIndex.delete(pattern.category) }
+    if (catSet) {
+      catSet.delete(id)
+      if (catSet.size === 0) this.categoryIndex.delete(pattern.category)
+    }
     for (const surface of pattern.surfaces) {
       const surfSet = this.surfaceIndex.get(surface)
-      if (surfSet) { surfSet.delete(id); if (surfSet.size === 0) this.surfaceIndex.delete(surface) }
+      if (surfSet) {
+        surfSet.delete(id)
+        if (surfSet.size === 0) this.surfaceIndex.delete(surface)
+      }
     }
   }
 
@@ -59,6 +71,11 @@ export class CommandPatternRegistry {
 
   getByIntent(intent: string): CommandPattern | undefined {
     return this.intentIndex.get(intent)
+  }
+
+  /** Get pattern by id (alias for get for semantic clarity). */
+  getPattern(id: string): CommandPattern | undefined {
+    return this.patterns.get(id)
   }
 
   list(filter?: {
@@ -119,7 +136,9 @@ export class CommandPatternRegistry {
 
   onRegister(callback: RegisterCallback): () => void {
     this.registerCallbacks.add(callback)
-    return () => { this.registerCallbacks.delete(callback) }
+    return () => {
+      this.registerCallbacks.delete(callback)
+    }
   }
 
   size(): number {

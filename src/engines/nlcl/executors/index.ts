@@ -9,5 +9,6 @@ export { ConversationExecutor } from './conversation-executor.js'
 export { CapabilityExecutor } from './capability-executor.js'
 export { EmailExecutor, type MailAdapter } from './email-executor.js'
 export { AppExecutor } from './app-executor.js'
+export { WorkflowExecutor } from './workflow-executor.js'
 
 export type { CommandExecutor } from '../types.js'

@@ -11,12 +11,7 @@ export const COMPOSER_SELECTORS: Record<string, string[]> = {
     'textarea',
     '[contenteditable][role="textbox"]',
   ],
-  claude: [
-    'div[contenteditable="true"]',
-    '[role="textbox"]',
-    'fieldset textarea',
-    'textarea',
-  ],
+  claude: ['div[contenteditable="true"]', '[role="textbox"]', 'fieldset textarea', 'textarea'],
   gemini: [
     'div.ql-editor[contenteditable="true"]',
     '.ql-editor',
@@ -38,11 +33,7 @@ export const SEND_BUTTON_SELECTORS: Record<string, string[]> = {
     'button[aria-label="Send"]',
     'button:has(svg[aria-hidden="true"])',
   ],
-  gemini: [
-    "button[aria-label='Send message']",
-    'button.send-button',
-    'button[aria-label="Send"]',
-  ],
+  gemini: ["button[aria-label='Send message']", 'button.send-button', 'button[aria-label="Send"]'],
 }
 
 // ── Provider URL Patterns ─────────────────────────────────────────────────
@@ -55,8 +46,8 @@ export const PROVIDER_URLS: Record<string, string> = {
 
 export const PROVIDER_URL_PATTERNS: Record<string, RegExp> = {
   chatgpt: /^https:\/\/chatgpt\.com\/(c\/.*)?$/,
-  claude: /^https:\/\/claude\.ai\/(chat\/.*)?$/,
-  gemini: /^https:\/\/gemini\.google\.com\/(app\/.*)?$/,
+  claude: /^https:\/\/claude\.ai\/(chat(\/.*)?)?$/,
+  gemini: /^https:\/\/gemini\.google\.com\/(app(\/.*)?)?$/,
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────

@@ -7,7 +7,9 @@ export function createMockParserStore(overrides: Partial<ParserStore> = {}): Par
   const parsers: any[] = []
 
   return {
-    getParser: mock((providerId: string) => parsers.find((p) => p.providerId === providerId) ?? null),
+    getParser: mock(
+      (providerId: string) => parsers.find((p) => p.providerId === providerId) ?? null,
+    ),
     getActiveParser: mock(
       (providerId: string) =>
         parsers.find((p) => p.providerId === providerId && p.isActive) ?? null,
@@ -17,9 +19,7 @@ export function createMockParserStore(overrides: Partial<ParserStore> = {}): Par
       if (idx >= 0) parsers[idx] = parser
       else parsers.push(parser)
     }),
-    listParsers: mock((providerId: string) =>
-      parsers.filter((p) => p.providerId === providerId),
-    ),
+    listParsers: mock((providerId: string) => parsers.filter((p) => p.providerId === providerId)),
     getParserByFile: mock(() => null),
     getParserByHash: mock(() => null),
     getGenericParser: mock(() => null),

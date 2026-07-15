@@ -1,8 +1,8 @@
 // src/engines/audit-trail.ts
 // Unit 9.4 — Audit trail for all user + system actions.
 
-import type { StructuredLogger } from './logger.js'
 import { newId } from '../ids.js'
+import type { StructuredLogger } from './logger.js'
 
 export interface AuditSink {
   name: string
@@ -42,7 +42,10 @@ export class AuditTrail {
   private sinks: AuditSink[] = []
   private policy: AuditPolicy = DEFAULT_POLICY
 
-  constructor(policy?: Partial<AuditPolicy>, private logger?: StructuredLogger) {
+  constructor(
+    policy?: Partial<AuditPolicy>,
+    private logger?: StructuredLogger,
+  ) {
     if (policy) this.policy = { ...DEFAULT_POLICY, ...policy }
   }
 
@@ -57,7 +60,7 @@ export class AuditTrail {
     if (!this.policy.actions.includes('*') && !this.policy.actions.includes(entry.action)) return
 
     // Redact fields
-    let details = { ...entry.details }
+    const details = { ...entry.details }
     for (const field of this.policy.redactFields) {
       if (field in details) {
         details[field] = '[REDACTED]'

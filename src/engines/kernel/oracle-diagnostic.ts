@@ -4,9 +4,8 @@
 // mismatches, missing config. Generates actionable diagnostic reports.
 
 import { ulid } from '../../ids.js'
-import type { KernelRegistry } from './kernel-registry.js'
 import type { KernelStore } from '../../storage/contracts/kernel-store.js'
-import type { EngineDescriptor } from '../../storage/contracts/kernel-store.js'
+import type { KernelRegistry } from './kernel-registry.js'
 
 export type DiagnosticSeverity = 'critical' | 'warning' | 'info'
 export type DiagnosticCategory =
@@ -32,11 +31,7 @@ export interface DiagnosticIssue {
 
 // Known stub method markers. Engines may also self-report stubs via
 // descriptor.metadata.stubMethods (string[]).
-const KNOWN_STUB_MARKERS = [
-  'executeHarnessPlan',
-  'not implemented',
-  'not yet implemented',
-]
+const KNOWN_STUB_MARKERS = ['executeHarnessPlan', 'not implemented', 'not yet implemented']
 
 export class OracleDiagnosticEngine {
   private knownStubs = new Map<string, string[]>()
@@ -130,7 +125,10 @@ export class OracleDiagnosticEngine {
             category: 'broken-wire',
             engineId: engine.id,
             description: `Engine ${engine.id} depends on errored engine ${dep}`,
-            evidence: [`${dep} status = error`, `error: ${String(depEngine.metadata?.error ?? 'unknown')}`],
+            evidence: [
+              `${dep} status = error`,
+              `error: ${String(depEngine.metadata?.error ?? 'unknown')}`,
+            ],
             suggestedFix: `Heal engine ${dep} (restart or reconnect)`,
             autoFixable: false,
             detectedAt: Date.now(),
@@ -178,7 +176,7 @@ export class OracleDiagnosticEngine {
     const issues: DiagnosticIssue[] = []
     if (!this.store) {
       issues.push({
-        id: `schema:nostore`,
+        id: 'schema:nostore',
         severity: 'info',
         category: 'schema-mismatch',
         engineId: 'kernel',
@@ -199,7 +197,7 @@ export class OracleDiagnosticEngine {
       await this.store.queryRecentSpans(1)
     } catch (err) {
       issues.push({
-        id: `schema:spans`,
+        id: 'schema:spans',
         severity: 'critical',
         category: 'schema-mismatch',
         engineId: 'kernel',

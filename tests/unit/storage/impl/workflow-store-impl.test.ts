@@ -108,8 +108,8 @@ describe('WorkflowStoreImpl', () => {
     await store.saveWorkflow(def)
     const result = await store.getWorkflow('wf-1')
     expect(result).not.toBeNull()
-    expect(result!.name).toBe('Test Workflow')
-    expect(result!.nodes).toHaveLength(1)
+    expect(result?.name).toBe('Test Workflow')
+    expect(result?.nodes).toHaveLength(1)
   })
 
   test('getWorkflow returns null for unknown id', async () => {
@@ -143,8 +143,8 @@ describe('WorkflowStoreImpl', () => {
     await store.saveExecution(exec)
     const result = await store.getExecution('exec-1')
     expect(result).not.toBeNull()
-    expect(result!.status).toBe('running')
-    expect(result!.input).toEqual({ key: 'val' })
+    expect(result?.status).toBe('running')
+    expect(result?.input).toEqual({ key: 'val' })
   })
 
   test('getExecution returns null for unknown id', async () => {

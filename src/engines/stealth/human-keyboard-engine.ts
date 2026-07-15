@@ -1,12 +1,13 @@
 // src/engines/stealth/human-keyboard-engine.ts
 // Unit 13.2 — HumanKeyboardEngine: variable rhythm typing.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 export class HumanKeyboardModule implements StealthModule {
   name = 'human_keyboard'
   detectionVector = 'Typing rhythm analysis (keystroke timing, burst patterns)'
-  description = 'Types text character-by-character with log-normal delay distribution and occasional bursts'
+  description =
+    'Types text character-by-character with log-normal delay distribution and occasional bursts'
   priority = 21
 
   private config = {
@@ -18,7 +19,7 @@ export class HumanKeyboardModule implements StealthModule {
     typoProbability: 0.005,
   }
 
-  async apply(config: Record<string, unknown>, ctx: StealthContext): Promise<void> {
+  async apply(config: Record<string, unknown>, _ctx: StealthContext): Promise<void> {
     this.config = {
       minDelayMs: (config.minDelayMs as number) ?? 50,
       maxDelayMs: (config.maxDelayMs as number) ?? 180,
@@ -41,28 +42,38 @@ export class HumanKeyboardModule implements StealthModule {
 
       // Occasional typo + correction
       if (Math.random() < cfg.typoProbability) {
-        const wrongChar = String.fromCharCode(char.charCodeAt(0) + Math.floor(Math.random() * 3) - 1)
+        const wrongChar = String.fromCharCode(
+          char.charCodeAt(0) + Math.floor(Math.random() * 3) - 1,
+        )
         await ctx.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', {
-          type: 'keyDown', text: wrongChar,
+          type: 'keyDown',
+          text: wrongChar,
         })
         await ctx.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', {
-          type: 'keyUp', text: wrongChar,
+          type: 'keyUp',
+          text: wrongChar,
         })
         await this.sleep(cfg.minDelayMs + Math.random() * cfg.maxDelayMs)
         await ctx.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', {
-          type: 'keyDown', key: 'Backspace', code: 'Backspace',
+          type: 'keyDown',
+          key: 'Backspace',
+          code: 'Backspace',
         })
         await ctx.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', {
-          type: 'keyUp', key: 'Backspace', code: 'Backspace',
+          type: 'keyUp',
+          key: 'Backspace',
+          code: 'Backspace',
         })
         await this.sleep(cfg.minDelayMs + Math.random() * cfg.maxDelayMs)
       }
 
       await ctx.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', {
-        type: 'keyDown', text: char,
+        type: 'keyDown',
+        text: char,
       })
       await ctx.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', {
-        type: 'keyUp', text: char,
+        type: 'keyUp',
+        text: char,
       })
 
       // Variable delay

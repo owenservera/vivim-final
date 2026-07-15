@@ -1,11 +1,11 @@
 // src/engines/nlcl/executors/system-executor.ts
 // SystemExecutor — system-level commands (health, status, config, providers, fleet).
 
-import type { CommandExecutor, CommandResult, ParsedIntent, NLCContext } from '../types.js'
 import { newId } from '../../../ids.js'
+import type { CapStoreDb } from '../../../storage/db.js'
 import type { ChromeGovernor } from '../../chrome-governor.js'
 import type { UnifiedCapabilityRegistry } from '../../unified-registry.js'
-import type { CapStoreDb } from '../../../storage/db.js'
+import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 export class SystemExecutor implements CommandExecutor {
   readonly id = 'system' as const
@@ -58,7 +58,11 @@ export class SystemExecutor implements CommandExecutor {
     }
   }
 
-  private async health(intent: ParsedIntent, traceId: string, start: number): Promise<CommandResult> {
+  private async health(
+    intent: ParsedIntent,
+    traceId: string,
+    start: number,
+  ): Promise<CommandResult> {
     const memUsage = process.memoryUsage()
     return {
       ok: true,
@@ -79,7 +83,11 @@ export class SystemExecutor implements CommandExecutor {
     }
   }
 
-  private async listProviders(intent: ParsedIntent, traceId: string, start: number): Promise<CommandResult> {
+  private async listProviders(
+    intent: ParsedIntent,
+    traceId: string,
+    start: number,
+  ): Promise<CommandResult> {
     if (!this.db) {
       return this.fail(intent, traceId, start, 'Database not available')
     }
@@ -91,16 +99,19 @@ export class SystemExecutor implements CommandExecutor {
       ok: true,
       intent: intent.intent,
       output: { providers, count: providers.length },
-      text: providers.length > 0
-        ? `Available providers: ${providerList}`
-        : 'No providers registered',
+      text:
+        providers.length > 0 ? `Available providers: ${providerList}` : 'No providers registered',
       latencyMs: Date.now() - start,
       traceId,
       classification: 'system',
     }
   }
 
-  private async fleetStatus(intent: ParsedIntent, traceId: string, start: number): Promise<CommandResult> {
+  private async fleetStatus(
+    intent: ParsedIntent,
+    traceId: string,
+    start: number,
+  ): Promise<CommandResult> {
     if (!this.governor) {
       return this.fail(intent, traceId, start, 'Governor not available')
     }
@@ -109,16 +120,19 @@ export class SystemExecutor implements CommandExecutor {
       ok: true,
       intent: intent.intent,
       output: { slaves, count: slaves.length },
-      text: slaves.length > 0
-        ? `${slaves.length} Chrome slave(s) running`
-        : 'No Chrome slaves running',
+      text:
+        slaves.length > 0 ? `${slaves.length} Chrome slave(s) running` : 'No Chrome slaves running',
       latencyMs: Date.now() - start,
       traceId,
       classification: 'system',
     }
   }
 
-  private async listCapabilities(intent: ParsedIntent, traceId: string, start: number): Promise<CommandResult> {
+  private async listCapabilities(
+    intent: ParsedIntent,
+    traceId: string,
+    start: number,
+  ): Promise<CommandResult> {
     if (!this.registry) {
       return this.fail(intent, traceId, start, 'Registry not available')
     }
@@ -126,7 +140,10 @@ export class SystemExecutor implements CommandExecutor {
     return {
       ok: true,
       intent: intent.intent,
-      output: { capabilities: caps.map((c) => ({ slug: c.slug, name: c.name, category: c.category })), count: caps.length },
+      output: {
+        capabilities: caps.map((c) => ({ slug: c.slug, name: c.name, category: c.category })),
+        count: caps.length,
+      },
       text: `${caps.length} capabilities registered`,
       latencyMs: Date.now() - start,
       traceId,

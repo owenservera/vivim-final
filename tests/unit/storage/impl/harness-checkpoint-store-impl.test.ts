@@ -62,8 +62,8 @@ describe('HarnessCheckpointStoreImpl', () => {
     await store.create(row)
     const result = await store.getLatestBySlave('slave-1')
     expect(result).not.toBeNull()
-    expect(result!.id).toBe('cp-1')
-    expect(result!.slaveId).toBe('slave-1')
+    expect(result?.id).toBe('cp-1')
+    expect(result?.slaveId).toBe('slave-1')
   })
 
   test('getLatestByConversation returns latest checkpoint', async () => {
@@ -92,8 +92,8 @@ describe('HarnessCheckpointStoreImpl', () => {
       createdAt: 200,
     })
     const result = await store.getLatestByConversation('conv-1')
-    expect(result!.id).toBe('cp-2')
-    expect(result!.dagPosition).toBe(5)
+    expect(result?.id).toBe('cp-2')
+    expect(result?.dagPosition).toBe(5)
   })
 
   test('deleteBySlave removes checkpoints', async () => {

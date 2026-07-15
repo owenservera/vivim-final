@@ -60,7 +60,7 @@ export class HarnessCheckpointStoreImpl implements HarnessCheckpointStore {
     pageUrl: string | null
     pageTitle: string | null
     authState: string | null
-    createdAt: number
+    createdAt: bigint
   }): HarnessCheckpointRow {
     return {
       id: r.id,
@@ -72,7 +72,7 @@ export class HarnessCheckpointStoreImpl implements HarnessCheckpointStore {
       pageUrl: r.pageUrl,
       pageTitle: r.pageTitle,
       authState: r.authState,
-      createdAt: r.createdAt,
+      createdAt: Number(r.createdAt),
     }
   }
 }

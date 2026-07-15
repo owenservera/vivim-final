@@ -21,8 +21,8 @@ export class WorkflowStoreImpl implements WorkflowStore {
       nodes: JSON.parse(row.nodesJson),
       edges: JSON.parse(row.edgesJson),
       variables: row.variablesJson ? JSON.parse(row.variablesJson) : undefined,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
+      createdAt: Number(row.createdAt),
+      updatedAt: Number(row.updatedAt),
     }
   }
 
@@ -85,8 +85,8 @@ export class WorkflowStoreImpl implements WorkflowStore {
       input: row.inputJson ? JSON.parse(row.inputJson) : undefined,
       output: row.outputJson ? JSON.parse(row.outputJson) : undefined,
       nodeExecutions: [],
-      startedAt: row.startedAt,
-      completedAt: row.completedAt ?? undefined,
+      startedAt: Number(row.startedAt),
+      completedAt: row.completedAt == null ? undefined : Number(row.completedAt),
     }
   }
 }

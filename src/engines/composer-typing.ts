@@ -28,7 +28,7 @@ export async function typeMessage(
     case 'textarea':
       expression = `(() => {
         const el = document.querySelector(${safeSelector});
-        if (!el) throw new Error('Composer not found: ' + ${safeSelector});
+        if (!el) throw new EngineError('Composer not found: ' + ${safeSelector});
         el.focus();
         const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
         setter?.call(el, ${safeText});
@@ -40,7 +40,7 @@ export async function typeMessage(
     case 'contenteditable':
       expression = `(() => {
         const el = document.querySelector(${safeSelector});
-        if (!el) throw new Error('Composer not found: ' + ${safeSelector});
+        if (!el) throw new EngineError('Composer not found: ' + ${safeSelector});
         el.focus();
         el.textContent = '';
         document.execCommand('insertText', false, ${safeText});
@@ -50,7 +50,7 @@ export async function typeMessage(
     case 'quill':
       expression = `(() => {
         const el = document.querySelector(${safeSelector});
-        if (!el) throw new Error('Composer not found: ' + ${safeSelector});
+        if (!el) throw new EngineError('Composer not found: ' + ${safeSelector});
         const quill = el.__quill || el.closest('.ql-container')?.__quill;
         if (quill) {
           quill.setContents([]);
@@ -66,7 +66,7 @@ export async function typeMessage(
     case 'codemirror':
       expression = `(() => {
         const el = document.querySelector(${safeSelector});
-        if (!el) throw new Error('Composer not found: ' + ${safeSelector});
+        if (!el) throw new EngineError('Composer not found: ' + ${safeSelector});
         const cm = el.closest('.CodeMirror')?.CodeMirror;
         if (cm) {
           cm.setValue(${safeText});
@@ -82,7 +82,7 @@ export async function typeMessage(
     default:
       expression = `(() => {
         const el = document.querySelector(${safeSelector});
-        if (!el) throw new Error('Composer not found: ' + ${safeSelector});
+        if (!el) throw new EngineError('Composer not found: ' + ${safeSelector});
         el.focus();
         el.value = ${safeText};
         el.dispatchEvent(new Event('input', { bubbles: true }));

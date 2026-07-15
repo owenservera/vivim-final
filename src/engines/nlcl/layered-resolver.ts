@@ -12,15 +12,11 @@
 // First layer to clear its gate wins; lower-confidence matches are attached as
 // alternatives. Tracks which layer resolved (telemetry for Kernel Oracle).
 
-import type {
-  IntentResolver,
-  NLCContext,
-  ParsedIntent,
-} from './types.js'
 import type { CommandPatternRegistry } from './command-registry.js'
-import { DeterministicResolver } from './intent-resolver.js'
 import { FuzzyResolver } from './fuzzy-resolver.js'
+import { DeterministicResolver } from './intent-resolver.js'
 import { SemanticResolver } from './semantic-resolver.js'
+import type { IntentResolver, NLCContext, ParsedIntent } from './types.js'
 
 export type ResolutionLayer = 'deterministic' | 'fuzzy' | 'semantic' | 'llm' | 'none'
 

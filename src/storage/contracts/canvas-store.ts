@@ -8,7 +8,7 @@
 // The store contract uses JSON string fields for storage efficiency.
 // CanvasRegistry (the API layer) accepts domain types and converts via definitionToRow.
 
-import type { CanvasDefinition, LayerInstance } from '../../canvas/types.js'
+import type { CanvasDefinition } from '../../canvas/types.js'
 
 // Row format for persistence (JSON strings embedded)
 export interface CanvasDefinitionRow {

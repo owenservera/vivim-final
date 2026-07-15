@@ -5,7 +5,7 @@ function makeMuxDispatcher(
   conversationManager: { send: ReturnType<typeof mock> },
   costOptimizer?: { recordCost: ReturnType<typeof mock>; estimateCost: ReturnType<typeof mock> },
 ) {
-  const start = Date.now()
+  const _start = Date.now()
   return {
     async dispatchToProvider(
       providerId: string,
@@ -63,7 +63,9 @@ function makeMuxDispatcher(
 describe('muxDispatcher real dispatch', () => {
   it('dispatches to a provider and returns real response', async () => {
     const convStore = { createConversation: mock(() => Promise.resolve({ id: 'conv-1' })) }
-    const conversationManager = { send: mock(() => Promise.resolve({ ok: true, text: 'Hello back' })) }
+    const conversationManager = {
+      send: mock(() => Promise.resolve({ ok: true, text: 'Hello back' })),
+    }
     const costOptimizer = {
       recordCost: mock(() => Promise.resolve()),
       estimateCost: mock(() => Promise.resolve(5)),
@@ -81,7 +83,9 @@ describe('muxDispatcher real dispatch', () => {
 
   it('creates transient conversation when conversationId is undefined', async () => {
     const convStore = { createConversation: mock(() => Promise.resolve({ id: 'conv-new' })) }
-    const conversationManager = { send: mock(() => Promise.resolve({ ok: true, text: 'Response' })) }
+    const conversationManager = {
+      send: mock(() => Promise.resolve({ ok: true, text: 'Response' })),
+    }
     const costOptimizer = {
       recordCost: mock(() => Promise.resolve()),
       estimateCost: mock(() => Promise.resolve(3)),
@@ -100,7 +104,9 @@ describe('muxDispatcher real dispatch', () => {
 
   it('uses existing conversationId when provided', async () => {
     const convStore = { createConversation: mock(() => Promise.resolve({ id: 'conv-ignored' })) }
-    const conversationManager = { send: mock(() => Promise.resolve({ ok: true, text: 'Response' })) }
+    const conversationManager = {
+      send: mock(() => Promise.resolve({ ok: true, text: 'Response' })),
+    }
     const costOptimizer = {
       recordCost: mock(() => Promise.resolve()),
       estimateCost: mock(() => Promise.resolve(1)),

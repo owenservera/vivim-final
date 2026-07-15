@@ -6,7 +6,6 @@ import { readFile, readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { newId } from '../ids.js'
 import { type ProviderManifest, ProviderManifestSchema } from '../schema/provider-manifest.js'
-import { computeParserHash } from './stream-align.js'
 import type {
   ProviderCapabilityRow,
   ProviderConfigRow,
@@ -16,6 +15,7 @@ import type {
   ProviderParserRow,
 } from '../schema/types.js'
 import type { ProviderStore } from '../storage/contracts/provider-store.js'
+import { StreamAlignmentEngine } from './stream-align.js'
 
 // ── Lightweight event bus interface (avoids circular dep on CapabilityEventBus) ──
 
@@ -80,7 +80,10 @@ export class ProviderRegistrar {
     // Determine if provider exists
     const existing = await this.store.getDefinitionBySlug(manifest.provider.slug)
     const status = existing ? 'updated' : 'created'
-    const providerId = existing?.id ?? newId()
+    // Use the slug as the stable provider id so the entire API surface (which addresses
+    // providers by slug, e.g. /api/providers/claude/*) aligns with the DB primary key.
+    // This removes the slug<->ULID mismatch that broke account/conversation creation.
+    const providerId = manifest.provider.slug
 
     // [1] Upsert provider_definition
     const defRow: ProviderDefinitionRow = {
@@ -141,7 +144,7 @@ export class ProviderRegistrar {
         parser_file_path: parser.file ?? null,
         parser_logic_code: parser.logic_code ?? null,
         // Unit 2.15 — autocompute a stable hash so the parser cache stays in sync.
-        parser_hash: computeParserHash(
+        parser_hash: StreamAlignmentEngine.computeParserHash(
           parser.logic_code ?? parser.file ?? `${parser.name}:${parser.version}`,
         ),
         is_active: parser.is_active ? 1 : 0,
@@ -366,5 +369,37 @@ export class ProviderRegistrar {
 
   async reloadFromSeeds(): Promise<SeedAllResult> {
     return this.seedAll()
+  }
+
+  // ── 1.3 Provider Taxonomy Layer ────────────────────────────────────────────
+
+  async registerCapability(input: {
+    providerId: string
+    slug: string
+    title: string
+    description?: string
+    category?: string
+    intent?: string
+    selector?: string
+    version?: string
+  }): Promise<{ id: string }> {
+    return this.store.registerCapability(input)
+  }
+
+  async overrideCapability(input: {
+    providerId: string
+    capabilityId: string
+    overrideType: string
+    overrideJson: string
+  }): Promise<void> {
+    return this.store.overrideCapability(input)
+  }
+
+  async listCapabilities(
+    providerId: string,
+  ): Promise<
+    Array<{ id: string; slug: string; title: string; description?: string; version?: string }>
+  > {
+    return this.store.listCapabilities(providerId)
   }
 }

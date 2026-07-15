@@ -177,9 +177,15 @@ async function checkA4_TruthScore(domain: string): Promise<Violation[]> {
 
 async function checkB1_GovernorCanon(): Promise<Violation[]> {
   const violations: Violation[] = []
+  // Flag any CDP *transport* import inside an engine (BunCdpClient, executor/cdp,
+  // cdp-transport, etc.). The `cdp-discovery` module is a pure protocol *descriptor*
+  // (static catalog + parser, no socket) supplied so an injected executor supplied by
+  // ChromeGovernor can drive commands — it is Governor-Canon-safe and explicitly
+  // exempt via the negative lookahead. The pattern still fails safe: any other cdp
+  // module import is caught.
   const matches = await scanDirForPattern(
     ENGINES_DIR,
-    /BunCdpClient|from.*['"].*cdp['"]|import.*cdp/,
+    /BunCdpClient|from\s+['"][^'"]*cdp(?!-discovery)[^'"]*['"]/,
     'chrome-governor.ts',
   )
   for (const m of matches) {

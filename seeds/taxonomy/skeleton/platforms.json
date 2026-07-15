@@ -1,5 +1,3 @@
 {
-  "platforms": [
-    { "slug": "z-ai", "category": "ai_chat", "sourceConfidence": "high" }
-  ]
+  "platforms": [{ "slug": "z-ai", "category": "ai_chat", "sourceConfidence": "high" }]
 }

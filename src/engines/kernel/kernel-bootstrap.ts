@@ -4,23 +4,28 @@
 // registers the NLCL (Natural Language Command Layer) as a first-class kernel citizen.
 
 import { ulid } from '../../ids.js'
-import { KernelRegistry } from './kernel-registry.js'
-import { KernelTracer } from './kernel-tracer.js'
-import { KernelProvenance } from './kernel-provenance.js'
-import { createKernel, type Kernel, type KernelContext, ConsoleKernelLogger } from './kernel-context.js'
-import { OracleQueryEngine } from './oracle-query.js'
-import { OracleDiagnosticEngine } from './oracle-diagnostic.js'
-import { OracleActuator } from './oracle-actuator.js'
-import { OracleEventStream } from './oracle-event-stream.js'
-import { CapabilityEventBus } from '../capability-event-bus.js'
-import { ConfigManager } from '../config-manager.js'
 import type { ConfigStore } from '../../storage/contracts/config-store.js'
 import type { KernelStore } from '../../storage/contracts/kernel-store.js'
-import type { NLCLEngine } from '../nlcl/nlcl-engine.js'
-import type { ChromeGovernor } from '../chrome-governor.js'
-import type { ConversationManager } from '../conversation-manager.js'
-import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
 import type { CapStoreDb } from '../../storage/db.js'
+import type { CapabilityEventBus } from '../capability-event-bus.js'
+import type { ChromeGovernor } from '../chrome-governor.js'
+import { ConfigManager } from '../config-manager.js'
+import type { ConversationManager } from '../conversation-manager.js'
+import type { NLCLEngine } from '../nlcl/nlcl-engine.js'
+import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
+import {
+  ConsoleKernelLogger,
+  type Kernel,
+  type KernelContext,
+  createKernel,
+} from './kernel-context.js'
+import { KernelProvenance } from './kernel-provenance.js'
+import { KernelRegistry } from './kernel-registry.js'
+import { KernelTracer } from './kernel-tracer.js'
+import { OracleActuator } from './oracle-actuator.js'
+import { OracleDiagnosticEngine } from './oracle-diagnostic.js'
+import { OracleEventStream } from './oracle-event-stream.js'
+import { OracleQueryEngine } from './oracle-query.js'
 
 export interface KernelBootstrapDeps {
   eventBus: CapabilityEventBus
@@ -86,10 +91,7 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
   const registry = new KernelRegistry()
   const tracer = new KernelTracer({ store: deps.store })
   const provenance = new KernelProvenance({ store: deps.store })
-  const config = new ConfigManager(
-    createInMemoryConfigStore(),
-    { emit: () => {} },
-  )
+  const config = new ConfigManager(createInMemoryConfigStore(), { emit: () => {} })
   const logger = new ConsoleKernelLogger()
 
   const kernel = createKernel({
@@ -261,4 +263,4 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
   return kernel
 }
 
-export { Kernel, KernelContext }
+export type { Kernel, KernelContext }

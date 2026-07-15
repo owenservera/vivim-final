@@ -63,8 +63,8 @@ export class KnowledgeIngestionStoreImpl implements KnowledgeIngestionStore {
       status: r.status,
       configJson: r.configJson,
       resultJson: r.resultJson,
-      startedAt: r.startedAt,
-      completedAt: r.completedAt,
+      startedAt: Number(r.startedAt),
+      completedAt: r.completedAt == null ? null : Number(r.completedAt),
     }
   }
 
@@ -85,8 +85,8 @@ export class KnowledgeIngestionStoreImpl implements KnowledgeIngestionStore {
       id: r.id,
       source: r.source,
       status: r.status,
-      startedAt: r.startedAt,
-      completedAt: r.completedAt,
+      startedAt: Number(r.startedAt),
+      completedAt: r.completedAt == null ? null : Number(r.completedAt),
     }))
   }
 

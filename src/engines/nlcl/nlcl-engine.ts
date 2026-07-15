@@ -5,37 +5,43 @@
 // Pluggable IntentResolver: deterministic by default, local LLM swappable.
 
 import { newId } from '../../ids.js'
-import type {
-  CommandPattern,
-  CommandResult,
-  NLCContext,
-  NLCLEngineConfig,
-  ParsedIntent,
-  IntentResolver,
-  ExecutorId,
-  CommandExecutor,
-} from './types.js'
-import { DEFAULT_NLCL_CONFIG } from './types.js'
-import { CommandPatternRegistry } from './command-registry.js'
-import { NLCommandParser } from './nl-parser.js'
-import { createResolver, unresolvedIntent, type LocalLLMAdapter, type ProviderLLMAdapter } from './intent-resolver.js'
-import { IntentRouter, type CompositeIntent } from './intent-router.js'
-import { getDefaultCommandPatterns } from './catalog.js'
-import {
-  FileExecutor,
-  BrowserExecutor,
-  ProviderLLMExecutor,
-  SystemExecutor,
-  ConversationExecutor,
-  CapabilityExecutor,
-  EmailExecutor,
-  AppExecutor,
-} from './executors/index.js'
+import type { ConversationStore } from '../../storage/contracts/conversation-store.js'
+import type { CapStoreDb } from '../../storage/db.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { ConversationManager } from '../conversation-manager.js'
 import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
-import type { CapStoreDb } from '../../storage/db.js'
-import type { ConversationStore } from '../../storage/contracts/conversation-store.js'
+import { getDefaultCommandPatterns } from './catalog.js'
+import { CommandPatternRegistry } from './command-registry.js'
+import {
+  AppExecutor,
+  BrowserExecutor,
+  CapabilityExecutor,
+  ConversationExecutor,
+  EmailExecutor,
+  FileExecutor,
+  ProviderLLMExecutor,
+  SystemExecutor,
+  WorkflowExecutor,
+} from './executors/index.js'
+import {
+  type LocalLLMAdapter,
+  type ProviderLLMAdapter,
+  createResolver,
+  unresolvedIntent,
+} from './intent-resolver.js'
+import { type CompositeIntent, IntentRouter } from './intent-router.js'
+import { NLCommandParser } from './nl-parser.js'
+import { extractParameters, validateInput } from './parameter-extraction.js'
+import type {
+  CommandExecutor,
+  CommandPattern,
+  CommandResult,
+  IntentResolver,
+  NLCContext,
+  NLCLEngineConfig,
+  ParsedIntent,
+} from './types.js'
+import { DEFAULT_NLCL_CONFIG, classificationAtLeast } from './types.js'
 
 export interface NLCLEngineDeps {
   governor?: ChromeGovernor
@@ -62,20 +68,25 @@ export class NLCLEngine {
   private parser: NLCommandParser
   private config: NLCLEngineConfig
   private deps: NLCLEngineDeps
-  private auditLog: Array<{ ts: number; input: string; intent: string; ok: boolean; latencyMs: number }> = []
+  private auditLog: Array<{
+    ts: number
+    input: string
+    intent: string
+    ok: boolean
+    latencyMs: number
+  }> = []
 
   constructor(deps: NLCLEngineDeps = {}) {
     this.deps = deps
     this.config = { ...DEFAULT_NLCL_CONFIG, ...deps.config }
     this.registry = new CommandPatternRegistry()
-    this.router = new IntentRouter()
+    this.router = new IntentRouter(deps.registry)
     this.parser = new NLCommandParser(this.registry)
 
-    this.resolver = createResolver(
-      this.config.resolver,
-      this.registry,
-      { localLLM: deps.localLLM, providerLLM: deps.providerLLM },
-    )
+    this.resolver = createResolver(this.config.resolver, this.registry, {
+      localLLM: deps.localLLM,
+      providerLLM: deps.providerLLM,
+    })
 
     this.registerDefaultPatterns()
     this.registerExecutors()
@@ -110,7 +121,7 @@ export class NLCLEngine {
       if (this.config.enableAIFallback) {
         const aiIntent = await this.tryAIFallback(rawInput, ctx)
         if (aiIntent) {
-          const result = await this.router.route(aiIntent, ctx)
+          const result = await this.routeWithConfirmation(aiIntent, ctx, start)
           this.audit(rawInput, aiIntent.intent, result.ok, Date.now() - start)
           return result
         }
@@ -122,9 +133,82 @@ export class NLCLEngine {
       return result
     }
 
-    const result = await this.router.route(intent, ctx)
+    const result = await this.routeWithConfirmation(intent, ctx, start)
     this.audit(rawInput, intent.intent, result.ok, Date.now() - start)
     return result
+  }
+
+  /**
+   * Routes intent with parameter extraction and confirmation flow.
+   */
+  private async routeWithConfirmation(
+    intent: ParsedIntent,
+    ctx: NLCContext,
+    _start: number,
+  ): Promise<CommandResult> {
+    // Get the pattern to check capabilityId and schema
+    const pattern = this.registry.getPattern(intent.patternId)
+    if (pattern?.capabilityId) {
+      // Extract and validate parameters against schema
+      const extraction = extractParameters(intent.rawInput, pattern.inputSchema, ctx)
+      if (extraction.missing.length > 0) {
+        return {
+          ok: false,
+          intent: intent.intent,
+          error: `Missing parameters: ${extraction.missing.join(', ')}`,
+          text: `What ${extraction.missing.join(', ')}?`,
+          latencyMs: 0,
+          traceId: newId(),
+          classification: pattern.classification,
+          clarification: {
+            prompt: `Missing: ${extraction.missing.join(', ')}`,
+            missing: extraction.missing,
+          },
+          capabilityId: pattern.capabilityId,
+        }
+      }
+
+      // Validate extracted input
+      const validation = validateInput(extraction.input, pattern.inputSchema)
+      if (!validation.ok) {
+        return {
+          ok: false,
+          intent: intent.intent,
+          error: validation.errors.join('; '),
+          latencyMs: 0,
+          traceId: newId(),
+          classification: pattern.classification,
+          clarification: {
+            prompt: `Invalid parameters: ${validation.errors.join('; ')}`,
+          },
+          capabilityId: pattern.capabilityId,
+        }
+      }
+    }
+
+    // Check for confirmation requirement (25.6)
+    if (pattern && (pattern.requiresConfirmation || this.isDestructive(pattern.classification))) {
+      const token = newId()
+      return {
+        ok: true,
+        intent: intent.intent,
+        latencyMs: 0,
+        traceId: newId(),
+        classification: pattern.classification,
+        requiresConfirmation: true,
+        confirmation: {
+          token,
+          prompt: `Confirm: ${pattern.description}`,
+        },
+        capabilityId: pattern.capabilityId,
+      }
+    }
+
+    return this.router.route(intent, ctx)
+  }
+
+  private isDestructive(classification: string): boolean {
+    return classificationAtLeast(classification as any, 'destructive')
   }
 
   // ── Introspection ───────────────────────────────────────────────────────
@@ -154,7 +238,9 @@ export class NLCLEngine {
     return { categories, totalCommands: this.registry.size() }
   }
 
-  getAuditLog(limit = 50): Array<{ ts: number; input: string; intent: string; ok: boolean; latencyMs: number }> {
+  getAuditLog(
+    limit = 50,
+  ): Array<{ ts: number; input: string; intent: string; ok: boolean; latencyMs: number }> {
     return this.auditLog.slice(-limit)
   }
 
@@ -194,8 +280,19 @@ export class NLCLEngine {
     const capExec = new CapabilityExecutor(registry)
     const emailExec = new EmailExecutor()
     const appExec = new AppExecutor()
+    const workflowExec = new WorkflowExecutor(registry)
 
-    const executors: CommandExecutor[] = [fileExec, browserExec, llmExec, systemExec, convExec, capExec, emailExec, appExec]
+    const executors: CommandExecutor[] = [
+      fileExec,
+      browserExec,
+      llmExec,
+      systemExec,
+      convExec,
+      capExec,
+      emailExec,
+      appExec,
+      workflowExec,
+    ]
     for (const exec of executors) {
       this.router.registerExecutor(exec)
     }
@@ -209,7 +306,9 @@ export class NLCLEngine {
         for (const part of parts) {
           const trimmed = part.trim()
           if (!trimmed) continue
-          const intent = this.parser.parse(trimmed, { surface: 'frontend' } as NLCContext, { surface: 'frontend' })
+          const intent = this.parser.parse(trimmed, { surface: 'frontend' } as NLCContext, {
+            surface: 'frontend',
+          })
           if (intent) {
             steps.push(intent)
           } else {
@@ -226,13 +325,20 @@ export class NLCLEngine {
   }
 
   private inferJoinStrategy(steps: ParsedIntent[]): 'sequential' | 'pipeline' | 'parallel' {
-    const hasSummarize = steps.some((s) => s.intent.includes('summarize') || s.intent.includes('extract'))
-    const hasNavigate = steps.some((s) => s.intent.includes('navigate') || s.intent.includes('browser'))
+    const hasSummarize = steps.some(
+      (s) => s.intent.includes('summarize') || s.intent.includes('extract'),
+    )
+    const hasNavigate = steps.some(
+      (s) => s.intent.includes('navigate') || s.intent.includes('browser'),
+    )
     if (hasNavigate && hasSummarize) return 'pipeline'
     return 'sequential'
   }
 
-  private async executeComposite(composite: CompositeIntent, ctx: NLCContext): Promise<CommandResult> {
+  private async executeComposite(
+    composite: CompositeIntent,
+    ctx: NLCContext,
+  ): Promise<CommandResult> {
     if (composite.joinStrategy === 'pipeline') {
       return this.executePipeline(composite.steps, ctx)
     }
@@ -250,9 +356,10 @@ export class NLCLEngine {
       const stepCtx = { ...ctx }
 
       if (pipelineData && i > 0) {
-        const content = typeof pipelineData === 'string'
-          ? pipelineData
-          : (pipelineData as { text?: string })?.text ?? JSON.stringify(pipelineData)
+        const content =
+          typeof pipelineData === 'string'
+            ? pipelineData
+            : ((pipelineData as { text?: string })?.text ?? JSON.stringify(pipelineData))
         step.input = { ...step.input, content }
       }
 

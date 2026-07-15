@@ -96,6 +96,30 @@ export function registerConversationForwarder(eventBus: CapabilityEventBus): voi
   eventBus.on('conversation:error', forward)
 }
 
+/**
+ * Forward `canvas:mutated` events to WebSocket frontends.
+ * Frontends subscribe with `subscribe` + `topic: canvas` or a specific instance.
+ */
+export function registerCanvasMutationForwarder(eventBus: CapabilityEventBus): void {
+  const forward = (event: EngineEvent) => {
+    const e = event as { instanceId?: string; regionId?: string; state?: unknown }
+    if (!e?.instanceId) return
+    for (const session of wsSessions.values()) {
+      if (
+        session.subscriptions.has('canvas') ||
+        session.subscriptions.has(`canvas:${e.instanceId}`)
+      ) {
+        try {
+          session.ws.send(JSON.stringify(event))
+        } catch {
+          // Drop if a socket is mid-close
+        }
+      }
+    }
+  }
+  eventBus.on('canvas:mutated', forward)
+}
+
 export const handleWebSocket = {
   open(ws: WsLike) {
     // Register session placeholder - session id set on hello
@@ -107,7 +131,7 @@ export const handleWebSocket = {
     ws: WsLike,
     raw: string | Buffer,
     eventBus: CapabilityEventBus,
-    registry?: UnifiedCapabilityRegistry,
+    _registry?: UnifiedCapabilityRegistry,
   ) {
     try {
       const msg = JSON.parse(typeof raw === 'string' ? raw : raw.toString())
@@ -202,7 +226,11 @@ export const handleWebSocket = {
       // Canvas frames (canvas:* and bridge:*) are owned by the CanvasEngine's
       // sandbox bridge. Hand off before the generic subscribe/unsubscribe path.
       const msgType = msg.type as string | undefined
-      if (canvasWsHandler && msgType && (msgType.startsWith('canvas:') || msgType.startsWith('bridge:'))) {
+      if (
+        canvasWsHandler &&
+        msgType &&
+        (msgType.startsWith('canvas:') || msgType.startsWith('bridge:'))
+      ) {
         const rawStr = typeof raw === 'string' ? raw : raw.toString()
         canvasWsHandler(ws, rawStr)
         return

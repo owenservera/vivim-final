@@ -1,9 +1,9 @@
-import type { KernelContext } from '../../src/engines/kernel/kernel-context.js'
-import { KernelRegistry } from '../../src/engines/kernel/kernel-registry.js'
-import { KernelTracer } from '../../src/engines/kernel/kernel-tracer.js'
-import { KernelProvenance } from '../../src/engines/kernel/kernel-provenance.js'
 import { CapabilityEventBus } from '../../src/engines/capability-event-bus.js'
 import { ConfigManager } from '../../src/engines/config-manager.js'
+import type { KernelContext } from '../../src/engines/kernel/kernel-context.js'
+import { KernelProvenance } from '../../src/engines/kernel/kernel-provenance.js'
+import { KernelRegistry } from '../../src/engines/kernel/kernel-registry.js'
+import { KernelTracer } from '../../src/engines/kernel/kernel-tracer.js'
 import { createMockKernelStore } from './mock-store-contracts.js'
 
 export function createMockKernelContext(): KernelContext {

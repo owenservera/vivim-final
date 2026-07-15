@@ -5,10 +5,16 @@
 //
 // Example: "display the log output" → TF-IDF cosine matches "show me the logs" → system.logs.
 
-import type { CommandPattern, IntentResolver, NLCContext, ParsedIntent, NLCLSurface } from './types.js'
 import type { CommandPatternRegistry } from './command-registry.js'
-import { Tfidf, cosineSimilarity, type SparseVector } from './tfidf.js'
 import { buildIntentFromPattern } from './pattern-match.js'
+import { type SparseVector, Tfidf, cosineSimilarity } from './tfidf.js'
+import type {
+  CommandPattern,
+  IntentResolver,
+  NLCContext,
+  NLCLSurface,
+  ParsedIntent,
+} from './types.js'
 
 interface IndexedPattern {
   pattern: CommandPattern
@@ -48,12 +54,7 @@ export class SemanticResolver implements IntentResolver {
 
     if (!best || best.score < this.threshold) return null
 
-    return buildIntentFromPattern(
-      best.pattern,
-      rawInput,
-      best.score,
-      'semantic:tfidf-cosine',
-    )
+    return buildIntentFromPattern(best.pattern, rawInput, best.score, 'semantic:tfidf-cosine')
   }
 
   /** Rebuild the TF-IDF index if the registry has changed since last build. */

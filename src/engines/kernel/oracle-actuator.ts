@@ -2,10 +2,10 @@
 // OracleActuator — the oracle's "hands". Translates diagnostic issues into
 // corrective (self-healing) actions. Auto-heal respects AutoHealPolicy.
 
-import type { KernelRegistry } from './kernel-registry.js'
-import type { OracleDiagnosticEngine, DiagnosticIssue } from './oracle-diagnostic.js'
-import type { KernelStore } from '../../storage/contracts/kernel-store.js'
 import { NotFoundError } from '../../errors.js'
+import type { KernelStore } from '../../storage/contracts/kernel-store.js'
+import type { KernelRegistry } from './kernel-registry.js'
+import type { DiagnosticIssue, OracleDiagnosticEngine } from './oracle-diagnostic.js'
 
 export type HealKind =
   | 'restart-engine'
@@ -34,7 +34,10 @@ export interface AutoHealPolicy {
   notify: { enabled: boolean; channels: string[] }
 }
 
-const CATEGORY_TO_ACTION: Record<DiagnosticIssue['category'], { kind: HealKind; autoFixable: boolean }> = {
+const CATEGORY_TO_ACTION: Record<
+  DiagnosticIssue['category'],
+  { kind: HealKind; autoFixable: boolean }
+> = {
   stalled: { kind: 'restart-engine', autoFixable: true },
   'broken-wire': { kind: 'reconnect', autoFixable: false },
   'missing-dep': { kind: 'notify', autoFixable: false },
@@ -64,7 +67,9 @@ export class OracleActuator {
 
   onHeal(callback: (action: HealAction) => void): () => void {
     this.healCallbacks.add(callback)
-    return () => { this.healCallbacks.delete(callback) }
+    return () => {
+      this.healCallbacks.delete(callback)
+    }
   }
 
   async heal(issueId: string): Promise<HealAction> {
@@ -218,7 +223,11 @@ export class OracleActuator {
 
   private emitHeal(action: HealAction): void {
     for (const cb of this.healCallbacks) {
-      try { cb(action) } catch { /* ignore subscriber errors */ }
+      try {
+        cb(action)
+      } catch {
+        /* ignore subscriber errors */
+      }
     }
   }
 }

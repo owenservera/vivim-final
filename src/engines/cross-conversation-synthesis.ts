@@ -103,4 +103,55 @@ export class CrossConversationSynthesizer {
       synthesisStyle: 'summary',
     })
   }
+
+  // Phase 28.4: Distill knowledge over a time window
+  async distill(window: string): Promise<{
+    summary: string
+    sources: string[]
+    topics: string[]
+  }> {
+    const ms = parseWindow(window)
+    const now = Date.now()
+    const since = now - ms
+
+    // Synthesize a summary of recent conversations
+    const result = await this.synthesize({
+      question: 'Summarize the work and insights from this period',
+      scope: { dateFrom: since, dateTo: now },
+      maxSources: 10,
+      synthesisStyle: 'summary',
+    })
+
+    const sources = result.sources.map((s) => s.conversationId).filter(Boolean)
+    const topics = result.sources
+      .map((s) => s.snippet.split(' ').slice(0, 5).join(' '))
+      .filter(Boolean)
+
+    return {
+      summary: result.answer,
+      sources,
+      topics,
+    }
+  }
+}
+
+function parseWindow(window: string): number {
+  const match = window.match(/^(\d+)([dhms]?)$/)
+  if (!match) return 7 * 24 * 60 * 60 * 1000 // default 7 days
+
+  const value = Number(match[1])
+  const unit = match[2] ?? 'd'
+
+  switch (unit) {
+    case 'd':
+      return value * 24 * 60 * 60 * 1000
+    case 'h':
+      return value * 60 * 60 * 1000
+    case 'm':
+      return value * 60 * 1000
+    case 's':
+      return value * 1000
+    default:
+      return value * 24 * 60 * 60 * 1000
+  }
 }

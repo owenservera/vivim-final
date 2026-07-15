@@ -240,19 +240,12 @@ function stripAlias(col: string): string {
 function percentileExpr(field: string, pct: number, table: string, groupRawCols: string[]): string {
   const partCols = groupRawCols.length ? groupRawCols.map((c) => `${table}.${c}`).join(', ') : ''
   const selCols = groupRawCols.length
-    ? groupRawCols.map((c) => `${table}.${c}`).join(', ') + ', '
+    ? `${groupRawCols.map((c) => `${table}.${c}`).join(', ')}, `
     : ''
   const corr = groupRawCols.length
     ? groupRawCols.map((c) => `w.${c} = src.${c}`).join(' AND ')
     : '1=1'
-  return (
-    `(SELECT AVG(dm) FROM (` +
-    `SELECT ${selCols}${table}.${field} AS dm, ` +
-    `ROW_NUMBER() OVER (${groupRawCols.length ? `PARTITION BY ${partCols} ` : ''}ORDER BY ${table}.${field}) AS rn, ` +
-    `COUNT(*) OVER (${groupRawCols.length ? `PARTITION BY ${partCols}` : ''}) AS tot ` +
-    `FROM ${table}` +
-    `) w WHERE ${corr} AND w.rn BETWEEN w.tot * ${pct} / 100 AND w.tot * ${pct} / 100 + 1)`
-  )
+  return `(SELECT AVG(dm) FROM (SELECT ${selCols}${table}.${field} AS dm, ROW_NUMBER() OVER (${groupRawCols.length ? `PARTITION BY ${partCols} ` : ''}ORDER BY ${table}.${field}) AS rn, COUNT(*) OVER (${groupRawCols.length ? `PARTITION BY ${partCols}` : ''}) AS tot FROM ${table}) w WHERE ${corr} AND w.rn BETWEEN w.tot * ${pct} / 100 AND w.tot * ${pct} / 100 + 1)`
 }
 
 function metricToSql(m: AggregationMetric, table: string, groupRawCols: string[]): string {

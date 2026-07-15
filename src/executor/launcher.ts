@@ -1,15 +1,27 @@
 // src/executor/launcher.ts
-// Cross-platform Chrome/Chromium binary discovery and process spawning.
+// Chrome/Edge launcher with profile isolation, channel selection, and
+// SingletonLock cleanup. Config-driven via ChromeInstanceProfile.
+// Matches the proven pattern from vivim-app-og cap-store.
 
-import { ChromeNotFoundError } from '@/errors.ts'
+import { rmSync } from 'node:fs'
+import {
+  type ChromeChannel,
+  type ChromeInstanceProfile,
+  type ChromeMode,
+  buildChromeArgs,
+  makeProfile,
+  resolveChromeBinary,
+} from './chrome-instance-profile.js'
 
 export interface LaunchResult {
   process: ReturnType<typeof Bun.spawn>
+  binary: string
   debugPort: number
   pid: number
   profileDir: string
 }
 
+/** Legacy options shape — retained for callers that don't use a profile yet. */
 export interface ChromeLaunchOptions {
   visible?: boolean
   profileDir?: string
@@ -18,198 +30,173 @@ export interface ChromeLaunchOptions {
   userDataDir?: string
   disableGpu?: boolean
   windowSize?: { width: number; height: number }
+  url?: string
 }
 
-const PLATFORM_PATHS = {
-  darwin: [
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/Applications/Chromium.app/Contents/MacOS/Chromium',
-    '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
-  ],
-  win32: [
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
-  ],
-  linux: ['google-chrome', 'google-chrome-stable', 'chromium-browser', 'chromium'],
-} as const
+const IS_WIN = process.platform === 'win32'
 
-export function getDefaultChromePaths(): readonly string[] {
-  const platform = process.platform as keyof typeof PLATFORM_PATHS
-  return PLATFORM_PATHS[platform] ?? PLATFORM_PATHS.linux
-}
-
-export async function findChromeBinary(): Promise<string> {
-  const envPath = process.env.CHROME_PATH
-  if (envPath) {
-    const file = Bun.file(envPath)
-    if (await file.exists()) return envPath
-  }
-
-  const paths = getDefaultChromePaths()
-  for (const p of paths) {
-    const file = Bun.file(p)
-    if (await file.exists()) return p
-  }
-
-  // Try which/where as last resort
-  try {
-    const result = Bun.spawnSync(
-      process.platform === 'win32' ? ['where', 'chrome'] : ['which', 'google-chrome'],
-      { stdout: 'pipe', stderr: 'pipe' },
-    )
-    if (result.exitCode === 0 && result.stdout.toString().trim()) {
-      const first = result.stdout.toString().trim().split('\n')[0]
-      if (first) return first
+/**
+ * Remove stale Chrome singleton locks so a previously-crashed slave does not
+ * fail to launch with "profile already in use" (FR-11). Best-effort: a locked
+ * profile that is genuinely in use by a live process is not our concern here
+ * because the fleet frees the port/process before re-launching.
+ */
+export function clearSingletonLock(userDataDir: string): void {
+  if (!userDataDir) return
+  for (const name of ['SingletonLock', 'SingletonCookie', 'SingletonSocket']) {
+    try {
+      rmSync(`${userDataDir}/${name}`, { force: true })
+    } catch {
+      /* best-effort */
     }
-  } catch {
-    // ignore
   }
-
-  throw new ChromeNotFoundError()
-}
-
-export function buildChromeArgs(opts: ChromeLaunchOptions): string[] {
-  const args: string[] = []
-
-  if (opts.visible === false || opts.visible === undefined) {
-    args.push('--headless=new')
-  }
-
-  if (opts.debugPort) {
-    args.push(`--remote-debugging-port=${opts.debugPort}`)
-  }
-
-  if (opts.userDataDir || opts.profileDir) {
-    args.push(`--user-data-dir=${opts.userDataDir ?? opts.profileDir}`)
-  }
-
-  args.push('--no-first-run')
-  args.push('--disable-extensions')
-  args.push('--disable-background-networking')
-  args.push('--disable-sync')
-  args.push('--disable-translate')
-  args.push('--metrics-recording-only')
-
-  if (opts.disableGpu) {
-    args.push('--disable-gpu')
-  }
-
-  // Visible mode: position window on-screen and focused
-  if (opts.visible === true) {
-    args.push('--window-position=100,100')
-  }
-
-  // Hidden mode on Windows (off-screen positioning)
-  if (opts.visible === false && process.platform === 'win32') {
-    args.push('--window-position=-32000,-32000')
-  }
-
-  if (opts.windowSize) {
-    args.push(`--window-size=${opts.windowSize.width},${opts.windowSize.height}`)
-  }
-
-  if (opts.extraArgs) {
-    args.push(...opts.extraArgs)
-  }
-
-  return args
 }
 
 async function isPortInUse(port: number): Promise<boolean> {
   try {
-    const resp = await fetch(`http://127.0.0.1:${port}/json/version`, { signal: AbortSignal.timeout(1000) })
+    const resp = await fetch(`http://127.0.0.1:${port}/json/version`, {
+      signal: AbortSignal.timeout(1000),
+    })
     return resp.ok
   } catch {
     return false
   }
 }
 
-export async function launchChrome(opts?: ChromeLaunchOptions): Promise<LaunchResult> {
-  const binary = await findChromeBinary()
-  let debugPort = opts?.debugPort ?? 0
-  // Use opts.profileDir or fall back to platform-appropriate temp location
-  const profileDir =
-    opts?.profileDir ??
-    (process.platform === 'win32'
-      ? `${process.env.LOCALAPPDATA}\\Temp\\chrome-profile-${Date.now()}`
-      : `/tmp/chrome-profile-${Date.now()}`)
+async function freePort(start: number, span = 100): Promise<number> {
+  for (let p = start; p < start + span; p++) {
+    if (!(await isPortInUse(p))) return p
+  }
+  return start
+}
 
-  // Port conflict detection: if requested port is in use, find an alternative
-  if (debugPort !== 0 && await isPortInUse(debugPort)) {
-    // Try next ports in range
-    for (let tryPort = debugPort + 1; tryPort < debugPort + 100; tryPort++) {
-      if (!(await isPortInUse(tryPort))) {
-        debugPort = tryPort
-        break
-      }
-    }
+/**
+ * Launch Chrome from a config-driven profile. Resolves the binary for the
+ * requested channel, clears any stale SingletonLock, then waits (bounded by
+ * `launchTimeoutMs`) for the debug port to respond (FR-14/NFR-3).
+ */
+export async function launchProfile(profile: ChromeInstanceProfile): Promise<LaunchResult> {
+  const binary = await resolveChromeBinary(profile.channel)
+
+  let debugPort = profile.debugPort ?? 9222
+  if (await isPortInUse(debugPort)) {
+    debugPort = await freePort(debugPort + 1)
   }
 
-  const args = buildChromeArgs({ ...opts, debugPort, profileDir })
+  // FR-11 — clear stale singleton lock before spawning
+  clearSingletonLock(profile.userDataDir)
+
+  const args = buildChromeArgs({ ...profile, debugPort })
+
+    console.log(`[launcher] Spawning (${profile.channel}/${profile.mode}): ${binary} ${args.join(' ')}`)
 
   const proc = Bun.spawn([binary, ...args], {
     stdout: 'ignore',
     stderr: 'ignore',
     env: { ...process.env },
+    detached: profile.mode === 'headed',
   })
 
   const pid = proc.pid
-
-  // Wait for Chrome to start and open the debug port
-  const startTime = Date.now()
-  const timeout = 15_000
-  let actualPort = debugPort
-
-  if (debugPort === 0) {
-    // Parse port from stderr output or wait for it
-    // For headless mode, Chrome prints the port to stderr
-    await Bun.sleep(500)
-    // Fallback: try default port 9222
-    actualPort = 9222
-  }
-
-  while (Date.now() - startTime < timeout) {
+  const ready = await waitForPort(debugPort, profile.launchTimeoutMs)
+  if (!ready) {
     try {
-      const resp = await fetch(`http://127.0.0.1:${actualPort}/json/version`)
-      if (resp.ok) break
+      proc.kill('SIGKILL')
     } catch {
-      // Chrome not ready yet
+      /* ignore */
     }
-    await Bun.sleep(100)
+    throw new ChromeLaunchTimeoutError(debugPort, profile.launchTimeoutMs, binary)
   }
 
-  return { process: proc, debugPort: actualPort, pid, profileDir }
+  return { process: proc, binary, debugPort, pid, profileDir: profile.userDataDir }
+}
+
+/** Legacy entry point — wraps options into a profile and delegates. */
+export async function launchChrome(opts?: ChromeLaunchOptions): Promise<LaunchResult> {
+  const profile = makeProfile({
+    userDataDir:
+      opts?.userDataDir ??
+      opts?.profileDir ??
+      (IS_WIN
+        ? `${process.env.LOCALAPPDATA}\\Temp\\chrome-profile-${Date.now()}`
+        : `/tmp/chrome-profile-${Date.now()}`),
+    channel: 'system',
+    mode: opts?.visible ? 'headed' : 'headless-new',
+    debugPort: opts?.debugPort,
+    windowSize: opts?.windowSize,
+    disableGpu: opts?.disableGpu,
+    extraArgs: opts?.extraArgs ?? [],
+    launchTimeoutMs: 15_000,
+  })
+  return launchProfile(profile)
+}
+
+async function waitForPort(port: number, timeoutMs: number): Promise<boolean> {
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    if (await isPortInUse(port)) return true
+    await Bun.sleep(200)
+  }
+  return false
+}
+
+/** Detailed launch failure carrying the port + binary for diagnostics. */
+export class ChromeLaunchTimeoutError extends Error {
+  constructor(
+    public readonly port: number,
+    public readonly timeoutMs: number,
+    public readonly binary: string,
+  ) {
+    super(`Chrome did not open debug port ${port} within ${timeoutMs}ms (${binary})`)
+    this.name = 'ChromeLaunchTimeoutError'
+  }
 }
 
 export async function killChrome(pid: number): Promise<void> {
+  if (!pid) return
+  if (IS_WIN) {
+    Bun.spawn({
+      cmd: ['taskkill', '/PID', String(pid), '/F', '/T'],
+      stdout: 'ignore',
+      stderr: 'ignore',
+    })
+    return
+  }
   try {
     process.kill(pid, 'SIGTERM')
   } catch {
-    // process may already be dead
     return
   }
-
-  // Wait up to 5s for graceful shutdown
   const start = Date.now()
-  while (Date.now() - start < 5000) {
+  while (Date.now() - start < 5_000) {
     if (!(await isChromeRunning(pid))) return
     await Bun.sleep(100)
   }
-
-  // Force kill
   try {
     process.kill(pid, 'SIGKILL')
   } catch {
-    // already dead
+    /* already dead */
   }
 }
 
 export async function isChromeRunning(pid: number): Promise<boolean> {
+  if (!pid) return false
   try {
+    if (IS_WIN) {
+      const proc = Bun.spawn({
+        cmd: ['tasklist', '/FI', `PID eq ${pid}`, '/NH'],
+        stdout: 'pipe',
+        stderr: 'ignore',
+      })
+      const text = await new Response(proc.stdout).text()
+      return !text.includes('INFO: No tasks') && text.includes(String(pid))
+    }
     process.kill(pid, 0)
     return true
   } catch {
     return false
   }
 }
+
+export { resolveChromeBinary, buildChromeArgs, makeProfile }
+export type { ChromeInstanceProfile, ChromeChannel, ChromeMode }

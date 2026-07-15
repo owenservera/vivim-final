@@ -1,66 +1,170 @@
 // src/cli/commands/registry-bridge.ts
-// Bridge between UnifiedCapabilityRegistry and existing CommandRegistry.
-// All capabilities registered in UnifiedCapabilityRegistry automatically become CLI commands.
+// Unit 24.8 — bridges the UnifiedCapabilityRegistry to the CLI CommandRegistry
+// (in-process) and provides the introspection/dispatch helpers for the
+// thin-shell CLI that talks to a running server over the universal route.
 
 import { z } from 'zod'
-import type { UnifiedCapabilityRegistry } from '../../engines/unified-registry.js'
-import type { CommandRegistry } from '../command-registry.js'
+import type {
+  UnifiedCapability,
+  UnifiedCapabilityRegistry,
+} from '../../engines/unified-registry.js'
+import type { CliCommand, CommandRegistry } from '../command-registry.js'
 
+export interface CliCapability {
+  id: string
+  slug: string
+  name: string
+  description: string
+  inputSchema: {
+    type: 'object'
+    properties?: Record<string, { type: string; description?: string }>
+    required?: string[]
+  }
+  cliCommand?: { name: string; aliases?: string[]; examples?: string[] }
+}
+
+/** Build a loose Zod schema from a JSON inputSchema (satisfies CliCommand.schema). */
+export function jsonSchemaToZod(schema: CliCapability['inputSchema']): z.ZodTypeAny {
+  const shape: Record<string, z.ZodTypeAny> = {}
+  const props = schema?.properties ?? {}
+  const required = new Set(schema?.required ?? [])
+  for (const [key, def] of Object.entries(props)) {
+    let zod: z.ZodTypeAny = z.string()
+    switch (def.type) {
+      case 'number':
+      case 'integer':
+        zod = z.number()
+        break
+      case 'boolean':
+        zod = z.boolean()
+        break
+      case 'array':
+        zod = z.array(z.any())
+        break
+      case 'object':
+        zod = z.record(z.any())
+        break
+      default:
+        zod = z.string()
+    }
+    shape[key] = required.has(key) ? zod : zod.optional()
+  }
+  return z.object(shape)
+}
+
+/**
+ * In-process bridge: register every cli-surface capability as a CLI command
+ * whose handler executes the capability directly through the registry.
+ * Used when the CLI runs inside the server (after connectCapabilityRegistry).
+ */
 export function syncCliFromUnified(
-  registry: UnifiedCapabilityRegistry,
-  cliRegistry: CommandRegistry,
+  reg: UnifiedCapabilityRegistry,
+  registry: CommandRegistry,
 ): void {
-  const capabilities = registry.exportForCli()
-  for (const cap of capabilities) {
-    // Build a Zod schema from the JSON Schema inputSchema
-    const schema = jsonSchemaToZod(cap.schema)
-    // Find the original capability to get its id
-    const original = registry
-      .list({ surface: 'cli' })
-      .find((c) => (c.cliCommand?.name ?? c.slug) === cap.name)
-    const capId = original?.id ?? cap.name
-    cliRegistry.register({
-      name: cap.name,
-      description: cap.description,
-      subsystem: 'backend',
-      schema,
-      handler: async (args) => ({
-        data: await registry.execute(capId, args as Record<string, unknown>, { metadata: {} }),
-      }),
-      examples: [],
-    })
+  const caps = reg.list({ surface: 'cli' }) as UnifiedCapability[]
+  for (const cap of caps) {
+    const cli = cap.cliCommand
+    if (!cli) continue
+    const names = [cli.name, ...(cli.aliases ?? [])]
+    for (const name of names) {
+      const cmd: CliCommand = {
+        name,
+        description: cap.description,
+        subsystem: 'cap-store',
+        schema: jsonSchemaToZod(cap.inputSchema as CliCapability['inputSchema']),
+        examples: cli.examples ?? [],
+        handler: async (args: unknown) => {
+          const a = (args ?? {}) as { args?: string[]; flags?: Record<string, string> }
+          const input = argvToInput(
+            a.args ?? [],
+            stripMeta(a.flags ?? {}),
+            cap.inputSchema as CliCapability['inputSchema'],
+          )
+          const output = await reg.execute(cap.id, input, { metadata: {} })
+          return { data: output }
+        },
+      }
+      registry.register(cmd)
+    }
   }
 }
 
-/** Convert a simple JSON Schema to a Zod schema (best-effort, handles common cases). */
-function jsonSchemaToZod(jsonSchema: Record<string, unknown>): z.ZodSchema {
-  const properties = (jsonSchema.properties as Record<string, Record<string, unknown>>) ?? {}
-  const required = (jsonSchema.required as string[]) ?? []
+/** Fetch cli-surface capabilities from a running server (thin-shell introspection). */
+export async function fetchCliCapabilities(remote: string): Promise<CliCapability[]> {
+  const res = await fetch(`${remote}/api/capabilities?surface=cli`)
+  if (!res.ok) throw new Error(`failed to fetch capabilities: ${res.status}`)
+  return (await res.json()) as CliCapability[]
+}
 
-  const shape: Record<string, z.ZodSchema> = {}
-  for (const [key, prop] of Object.entries(properties)) {
-    const isRequired = required.includes(key)
-    let field: z.ZodSchema
+/** Match a command token list to a capability by cliCommand.name or alias. */
+export function matchCapability(
+  caps: CliCapability[],
+  tokens: string[],
+): { cap: CliCapability; rest: string[] } | undefined {
+  for (let i = Math.min(tokens.length, 4); i >= 1; i--) {
+    const joined = tokens.slice(0, i).join(' ')
+    const cap = caps.find(
+      (c) => c.cliCommand?.name === joined || c.cliCommand?.aliases?.includes(joined),
+    )
+    if (cap) return { cap, rest: tokens.slice(i) }
+  }
+  const head = tokens[0]
+  if (!head) return undefined
+  const cap = caps.find((c) => c.cliCommand?.aliases?.includes(head))
+  if (cap) return { cap, rest: tokens.slice(1) }
+  return undefined
+}
 
-    switch (prop.type) {
-      case 'string':
-        field = z.string()
-        break
-      case 'number':
-        field = z.number()
-        break
-      case 'boolean':
-        field = z.boolean()
-        break
-      case 'array':
-        field = z.array(z.unknown())
-        break
-      default:
-        field = z.unknown()
-    }
+/**
+ * Map positional args + --flag values onto an inputSchema.
+ * Flags match property names; positional args fill required props (then the
+ * remaining props) in declared order.
+ */
+export function argvToInput(
+  args: string[],
+  flags: Record<string, string>,
+  schema: CliCapability['inputSchema'],
+): Record<string, unknown> {
+  const props = schema?.properties ?? {}
+  const required = schema?.required ?? []
+  const input: Record<string, unknown> = {}
 
-    shape[key] = isRequired ? field : field.optional()
+  for (const [key, val] of Object.entries(flags)) {
+    const def = props[key]
+    if (!def) continue
+    if (key in props) input[key] = coerce(def.type, val)
   }
 
-  return z.object(shape)
+  const positionalTargets: string[] = []
+  for (const key of required) if (!(key in input)) positionalTargets.push(key)
+  for (const key of Object.keys(props)) if (!(key in input)) positionalTargets.push(key)
+
+  let ai = 0
+  for (const key of positionalTargets) {
+    if (ai >= args.length) break
+    const def = props[key]
+    if (!def) continue
+    input[key] = coerce(def.type, args[ai] ?? '')
+    ai++
+  }
+  return input
+}
+
+/** Strip CLI meta-flags so they are not mistaken for capability inputs. */
+export function stripMeta(flags: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const [k, v] of Object.entries(flags)) {
+    if (k === 'json' || k === 'remote' || k === 'auth') continue
+    out[k] = v
+  }
+  return out
+}
+
+function coerce(type: string | undefined, val: string): unknown {
+  if (type === 'number' || type === 'integer') {
+    const n = Number(val)
+    return Number.isNaN(n) ? val : n
+  }
+  if (type === 'boolean') return val === 'true' || val === '1' || val === ''
+  return val
 }

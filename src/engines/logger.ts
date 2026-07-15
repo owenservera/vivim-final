@@ -41,7 +41,12 @@ export const DEFAULT_LOGGING_POLICY: LoggingPolicy = {
 }
 
 const LEVEL_RANK: Record<string, number> = {
-  trace: 0, debug: 1, info: 2, warn: 3, error: 4, fatal: 5,
+  trace: 0,
+  debug: 1,
+  info: 2,
+  warn: 3,
+  error: 4,
+  fatal: 5,
 }
 
 export class StructuredLogger {
@@ -64,15 +69,33 @@ export class StructuredLogger {
     this.transports.push(transport)
   }
 
-  trace(msg: string, data?: Record<string, unknown>): void { this.write('trace', msg, data) }
-  debug(msg: string, data?: Record<string, unknown>): void { this.write('debug', msg, data) }
-  info(msg: string, data?: Record<string, unknown>): void { this.write('info', msg, data) }
-  warn(msg: string, data?: Record<string, unknown>): void { this.write('warn', msg, data) }
-  error(msg: string, data?: Record<string, unknown>): void { this.write('error', msg, data) }
-  fatal(msg: string, data?: Record<string, unknown>): void { this.write('fatal', msg, data) }
+  trace(msg: string, data?: Record<string, unknown>): void {
+    this.write('trace', msg, data)
+  }
+  debug(msg: string, data?: Record<string, unknown>): void {
+    this.write('debug', msg, data)
+  }
+  info(msg: string, data?: Record<string, unknown>): void {
+    this.write('info', msg, data)
+  }
+  warn(msg: string, data?: Record<string, unknown>): void {
+    this.write('warn', msg, data)
+  }
+  error(msg: string, data?: Record<string, unknown>): void {
+    this.write('error', msg, data)
+  }
+  fatal(msg: string, data?: Record<string, unknown>): void {
+    this.write('fatal', msg, data)
+  }
 
-  child(bindings: Partial<Pick<StructuredLog, 'engine' | 'conversationId' | 'slaveId' | 'providerId'>>): StructuredLogger {
-    const child = new StructuredLogger({ minLevel: 'trace' as any, transports: [], redactPaths: [] })
+  child(
+    bindings: Partial<Pick<StructuredLog, 'engine' | 'conversationId' | 'slaveId' | 'providerId'>>,
+  ): StructuredLogger {
+    const child = new StructuredLogger({
+      minLevel: 'trace' as any,
+      transports: [],
+      redactPaths: [],
+    })
     child.transports = this.transports
     child.minRank = this.minRank
     child.redactPaths = this.redactPaths
@@ -80,7 +103,9 @@ export class StructuredLogger {
     return child
   }
 
-  private bindings?: Partial<Pick<StructuredLog, 'engine' | 'conversationId' | 'slaveId' | 'providerId'>>
+  private bindings?: Partial<
+    Pick<StructuredLog, 'engine' | 'conversationId' | 'slaveId' | 'providerId'>
+  >
 
   private write(level: string, msg: string, data?: Record<string, unknown>): void {
     if ((LEVEL_RANK[level] ?? 0) < this.minRank) return
@@ -129,9 +154,14 @@ class ConsoleTransport implements LogTransport {
     const prefix = `[${entry.level.toUpperCase()}]${entry.engine ? ` [${entry.engine}]` : ''}`
     const msg = `${prefix} ${entry.msg}`
     switch (entry.level) {
-      case 'error': case 'fatal': console.error(msg, entry.data ?? ''); break
-      case 'warn': console.warn(msg, entry.data ?? ''); break
-      default: console.log(msg, entry.data ?? '')
+      case 'error':
+      case 'fatal':
+        console.error(msg, entry.data ?? '')
+        break
+      case 'warn':
+        console.warn(msg, entry.data ?? '')
+        break
+      default:
     }
   }
 }

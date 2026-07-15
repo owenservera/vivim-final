@@ -7,19 +7,12 @@
 // primitive read flows through the PrimitiveReader. This is how untrusted
 // (agent-authored) layers stay safe.
 
-import type {
-  BridgeMessage,
-  CapabilityExecutor,
-  PrimitiveReader,
-} from './types.js'
-import { canUseCapability } from './schema.js'
-import type { CanvasDefinition } from './types.js'
-import {
-  SandboxPermissionError,
-  SandboxTimeoutError,
-} from '../errors.js'
+import { SandboxPermissionError, SandboxTimeoutError } from '../errors.js'
 import type { CanvasStore } from '../storage/contracts/canvas-store.js'
 import { rowToDefinition } from '../storage/contracts/canvas-store.js'
+import { canUseCapability } from './schema.js'
+import type { BridgeMessage, CapabilityExecutor, PrimitiveReader } from './types.js'
+import type { CanvasDefinition } from './types.js'
 
 /** A sandboxed iframe's messaging port (window or MessageChannel port). */
 export interface SandboxPort {
@@ -75,10 +68,7 @@ export class SandboxBridge {
     return def
   }
 
-  private async dispatch(
-    instanceId: string,
-    msg: BridgeMessage,
-  ): Promise<void> {
+  private async dispatch(instanceId: string, msg: BridgeMessage): Promise<void> {
     const port = this.ports.get(instanceId)
     if (!port) return
 

@@ -60,8 +60,8 @@ export class HpeSessionStoreImpl implements HpeSessionStoreContract {
     response: string | null
     actions: string
     status: string
-    startedAt: number
-    completedAt: number | null
+    startedAt: bigint
+    completedAt: bigint | null
   }): HpeSession {
     return {
       id: row.id,
@@ -70,8 +70,8 @@ export class HpeSessionStoreImpl implements HpeSessionStoreContract {
       response: row.response ?? undefined,
       actions: row.actions,
       status: row.status as HpeSession['status'],
-      startedAt: row.startedAt,
-      completedAt: row.completedAt ?? undefined,
+      startedAt: Number(row.startedAt),
+      completedAt: row.completedAt == null ? undefined : Number(row.completedAt),
     }
   }
 }

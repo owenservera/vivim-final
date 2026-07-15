@@ -37,15 +37,16 @@ devops/  (Bun + TypeScript, stdlib + Bun only)
    ├─ report   (progress summary)
    ├─ audit    (append PROGRESS.md line w/ real sha)
    ├─ fmt / gc / truth / roadmap / invariants / decision / goals
-  tracker.ts ── parse/serialize 01-tracker.md (authoritative)
-  select.ts  ── phase+dependency gating, tooling-phase exemption
-  mark.ts    ── write state back to tracker
-  gate.ts    ── quality gate (strict/integration modes)
-  invariants.ts ── A/B/C/D/E boundary enforcement
-  deps.ts    ── extract **Depends:** from unit files (ranges supported)
-  report.ts / audit.ts
-  roadmap/   ── research engine (research/discover/interview/merge-gate/report)
-  truth/     ── truth grounding (scanner/comparators/gap-generator)
+   tracker.ts ── parse/serialize 01-tracker.md (authoritative)
+   select.ts  ── phase+dependency gating, tooling-phase exemption
+   mark.ts    ── write state back to tracker
+   gate.ts    ── quality gate (strict/integration modes)
+   invariants.ts ── A/B/C/D/E boundary enforcement
+   deps.ts    ── extract **Depends:** from unit files (ranges supported)
+   report.ts / audit.ts
+   audit-code/ ── source-code audit (priority P0-P3 × 4 tiers; reuses invariants/truth)
+   roadmap/   ── research engine (research/discover/interview/merge-gate/report)
+   truth/     ── truth grounding (scanner/comparators/gap-generator)
   decision.ts / decision-review.ts ── ADR workflow
   goals.ts / goals-progress.ts / goals-align.ts ── OKR tracking
             │ reads/writes
@@ -153,6 +154,7 @@ Single `switch (cmd)` dispatcher. Commands:
 | `gate [--strict] [--include-integration\|--full]` | Quality gate → JSON, exit non-zero on fail |
 | `fmt` | Format (`biome check --write`) |
 | `audit <id> "<summary>"` | Append audit line w/ real commit sha |
+| `audit-code [scope] [flags]` | Source-code audit (surface\|standard\|deep\|full) + fix/to-units |
 | `gc [--force]` | Garbage-collect stale state |
 | `report` | Progress summary |
 | `truth <scan\|compare\|interfaces\|full\|report>` | Truth grounding system |
@@ -475,6 +477,10 @@ Current status (from `GOALS.md`): **G-001 Core Platform DONE 100%**, **G-002 SOT
 | `docs/roadmap/DOMAIN-HEALTH.md` | Truth scores per domain. | `roadmap` |
 | `docs/decisions/ADR-NNN-*.md` | Architecture decisions. | `decision` |
 | `docs/goals/GOALS.md` | OKR tree. | `goals` |
+| `docs/audits/CODE-AUDIT-<scope>-<date>.md` | Source-code audit report (priority + fix instructions). | `audit-code` |
+| `docs/audits/findings.json` | Machine-readable findings (consumed by `audit-code fix`). | `audit-code` |
+| `docs/audits/baseline-<date>.json` | Trend baseline for `--compare`. | `audit-code --baseline` |
+| `docs/audits/AUDIT-UNITS-<date>.md` | P0/P1 findings promoted to unit candidates. | `audit-code --to-units` |
 
 **Wiring into OpenCode CLI:** the agent loads `.opencode/skill/devops/SKILL.md` and
 `.opencode/skill/devops-roadmap/SKILL.md` as operating instructions; it then drives the deterministic
@@ -483,6 +489,44 @@ cross-check. Hooks (Lefthook) + `/check` (quality gate) run the same `gate` logi
 The baseline MCP surface (playwright/observer, web-reader, web-search-prime, zai, codex-status)
 supports tests, research, and truth scanning but is **not** part of the deterministic `devops/`
 core (Bun + stdlib only, per constraint).
+
+## 11. Source-Code Audit Subsystem (`audit-code`)
+
+Run via `bun run devops audit-code <scope> [flags]` → `devops/audit-code/index.ts`.
+A full source-code audit that scans the working tree through a **P0–P3 priority
+scheme** and **4 cumulative depth tiers**, reusing existing mechanics instead of
+duplicating them.
+
+**Priority scheme**
+
+| Priority | Meaning |
+|---|---|
+| P0 | Critical — fix before release (secret leakage, `eval()`, real shell exec, B1/B2 violations, crash/data-loss) |
+| P1 | High — correctness/architecture (swallowed errors, raw `Error` in engine B7, missing engine test D1, dead code) |
+| P2 | Medium — quality/perf (engine `any` D2, N+1 loops, unused export/dependency, drift, barrel gap D4) |
+| P3 | Low — hygiene (leftover `console.*`, TODO/stub debt, naming) |
+
+**Depth tiers** (cumulative): `surface` (security+quality+correctness regex) →
+`standard` (+ architecture B invariants, testing D1, performance, dependencies)
+→ `deep` (+ drift: truth-scanner STUB/MIXED + barrel D4) → `full` (+ baseline
+trend comparison). Default: `standard`.
+
+**Reuse (no duplication):**
+- `invariants.ts::checkInvariants(undefined,'B')` → architecture findings (B1→P0, B2→P0, rest→P1).
+- `truth/scanner.ts::scanRoot` → incomplete-implementation (STUB/MIXED) drift findings.
+- `scan.ts` (local) → shared cached file walk + pattern scanner used by every check.
+- `tracker.ts` patterns → state discipline; audit never mutates the tracker on its own.
+
+**Output design:**
+- `docs/audits/CODE-AUDIT-<scope>-<date>.md` — report: exec summary (risk H/M/L + P0–P3), grouped findings with **Fix Instructions** (steps, effort, `autoFixable` flag, optional patch suggestion), and a Fix Backlog table.
+- `docs/audits/findings.json` — always written; schema `{ run, summary, findings[] }`; consumed by `audit-code fix`.
+- `audit-code fix <id>` prints the fix block; `audit-code fix <id> --apply` rewrites the file **only if** `autoFixable` (safe mechanical edits: delete a debug log line, add a barrel export). Manual fixes are never auto-applied.
+- `audit-code --to-units` promotes P0/P1 findings into `docs/audits/AUDIT-UNITS-<date>.md` as *candidate* units; they enter the tracker only through the roadmap interview + merge-gate (user wins conflicts).
+- `audit-code full --baseline` then `full --compare` shows new/resolved findings vs the last baseline.
+
+**Skill:** `.opencode/skill/source-audit/SKILL.md` (creative orchestration). The
+audit is local + deterministic (no web search) and focuses on the semantic layer
+the quality gate does not cover.
 
 **End of reference.**
 ```

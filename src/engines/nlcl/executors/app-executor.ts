@@ -1,9 +1,9 @@
 // src/engines/nlcl/executors/app-executor.ts
 // AppExecutor — launch native applications (notepad, calculator, terminal, etc.)
 
-import type { CommandExecutor, CommandResult, ParsedIntent, NLCContext } from '../types.js'
-import { newId } from '../../../ids.js'
 import { platform } from 'node:os'
+import { newId } from '../../../ids.js'
+import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 const APP_MAP: Record<string, Record<string, string[]>> = {
   win32: {
@@ -57,12 +57,14 @@ const APP_MAP: Record<string, Record<string, string[]>> = {
 export class AppExecutor implements CommandExecutor {
   readonly id = 'app' as const
 
-  async execute(intent: ParsedIntent, ctx: NLCContext): Promise<CommandResult> {
+  async execute(intent: ParsedIntent, _ctx: NLCContext): Promise<CommandResult> {
     const start = Date.now()
     const traceId = newId()
 
     try {
-      const appName = (intent.input.app as string ?? intent.input.name as string ?? '').toLowerCase().trim()
+      const appName = ((intent.input.app as string) ?? (intent.input.name as string) ?? '')
+        .toLowerCase()
+        .trim()
       if (!appName) {
         return this.fail(intent, traceId, start, 'No application specified')
       }
@@ -76,7 +78,12 @@ export class AppExecutor implements CommandExecutor {
 
       if (!cmdParts) {
         const available = Object.keys(appMap).join(', ')
-        return this.fail(intent, traceId, start, `Unknown app "${appName}". Available: ${available}`)
+        return this.fail(
+          intent,
+          traceId,
+          start,
+          `Unknown app "${appName}". Available: ${available}`,
+        )
       }
 
       const { exec } = await import('node:child_process')

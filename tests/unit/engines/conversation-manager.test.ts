@@ -115,7 +115,24 @@ function mockStore(overrides?: Partial<ConversationStore>): ConversationStore {
     getMessage: mock(() => Promise.resolve(makeMsg())),
     getMessages: mock(() => Promise.resolve([])),
     getLastMessage: mock(() => Promise.resolve(null)),
+    updateMessage: mock(() => Promise.resolve()),
     getAccount: mock(() => Promise.resolve(makeAccount())),
+    createAttachment: mock(() =>
+      Promise.resolve({
+        id: 'att',
+        messageId: 'msg',
+        filename: 'f',
+        mimeType: 'x',
+        sizeBytes: 0,
+        storagePath: 'p',
+        thumbnailPath: null,
+        metadataJson: '{}',
+        createdAt: 0,
+      }),
+    ),
+    getAttachments: mock(() => Promise.resolve([])),
+    getAttachment: mock(() => Promise.resolve(null)),
+    deleteAttachment: mock(() => Promise.resolve()),
     ...overrides,
   }
 }
@@ -193,6 +210,19 @@ function mockGovernor(): ChromeGovernor {
       circuitState: 'closed',
       lastHealthCheck: Date.now(),
     })),
+    ensureRunningForAccount: mock(async (_providerId: string, _accountId: string) => ({
+      slaveId: 'session_1',
+      providerId: 'claude',
+      accountId: 'acct_1',
+      debugPort: 9222,
+      profileDir: '/tmp/test',
+      status: 'running',
+      superState: 'idle',
+      pid: 123,
+      consecutiveFailures: 0,
+      circuitState: 'closed',
+      lastHealthCheck: Date.now(),
+    })),
     cdp: {
       executeHarnessPlan: mock(async () => ({ success: true, stepsCompleted: 2 })),
       capture: mock(async () => ({
@@ -201,12 +231,14 @@ function mockGovernor(): ChromeGovernor {
         headers: {},
         status: 200,
       })),
-      send: mock(async () => ({})),
+      send: mock(async () => ({ result: { value: true } })),
       getPageState: mock(async () => ({
-        url: 'https://test.com',
+        url: 'https://claude.ai/',
         title: 'Test',
         readyState: 'complete',
       })),
+      enable: mock(async () => ({})),
+      disable: mock(async () => ({})),
       captureScreenshot: mock(async () => 'base64'),
     },
   } as unknown as ChromeGovernor

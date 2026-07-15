@@ -93,6 +93,9 @@ function nodeCategory(type: string): string {
 
 function compileExpression(expr: string): ExpressionFn {
   try {
+    // Trusted: `expr` is an author-defined workflow DSL condition, not free-form
+    // user input. Evaluation is intentional; route through SandboxRunner if
+    // workflow definitions ever become externally sourced.
     const fn = new Function('vars', `with(vars) { return (${expr}) }`) as ExpressionFn
     return fn
   } catch {

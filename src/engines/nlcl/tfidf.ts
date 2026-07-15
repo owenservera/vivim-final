@@ -71,9 +71,7 @@ export class Tfidf {
   }
 
   private tokenize(text: string): string[] {
-    return defaultNormalizer
-      .tokenize(text)
-      .filter((t) => t.length >= this.minTokenLength)
+    return defaultNormalizer.tokenize(text).filter((t) => t.length >= this.minTokenLength)
   }
 }
 

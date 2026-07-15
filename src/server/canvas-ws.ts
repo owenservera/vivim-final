@@ -7,14 +7,14 @@
 // through the v7.9 capability plane. The browser shell owns the real DOM; the
 // server side records mounts and bridges sandboxed frames to the engine.
 
-import type { LayerHost } from '../canvas/layer-mounter.js'
-import type { LayerInstance, CanvasDefinition, OracleReadProvider } from '../canvas/types.js'
-import type { PrimitiveProvider, PrimitiveKind } from '../canvas/primitives.js'
-import type { CapabilityExecutor } from '../canvas/types.js'
-import { fnPrimitive } from '../canvas/primitives.js'
 import type { CanvasEngine } from '../canvas/canvas-engine.js'
-import type { CapStoreDb } from '../storage/db.js'
+import type { LayerHost } from '../canvas/layer-mounter.js'
+import type { PrimitiveKind, PrimitiveProvider } from '../canvas/primitives.js'
+import { fnPrimitive } from '../canvas/primitives.js'
+import type { CanvasDefinition, LayerInstance, OracleReadProvider } from '../canvas/types.js'
+import type { CapabilityExecutor } from '../canvas/types.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import type { CapStoreDb } from '../storage/db.js'
 
 export interface WsLike {
   send(data: string): void
@@ -181,15 +181,16 @@ export function attachCanvasWs(engine: CanvasEngine): (ws: WsLike, raw: string) 
       const port = new CanvasWsPort(ws, msg.instanceId)
       ports.set(msg.instanceId, port)
       instanceWs.set(msg.instanceId, ws)
-      engine.bridge.attach(msg.instanceId, port as unknown as import('../canvas/capability-bridge.js').SandboxPort)
+      engine.bridge.attach(
+        msg.instanceId,
+        port as unknown as import('../canvas/capability-bridge.js').SandboxPort,
+      )
       return
     }
 
     // Browser pushed local region state → optimistic mirror (P2).
     if (msg.type === 'canvas:state' && typeof msg.instanceId === 'string') {
-      engine.mirror
-        .pushOptimistic(msg.instanceId, String(msg.regionId), msg.state)
-        .catch(() => {})
+      engine.mirror.pushOptimistic(msg.instanceId, String(msg.regionId), msg.state).catch(() => {})
       return
     }
 
@@ -203,9 +204,16 @@ export function attachCanvasWs(engine: CanvasEngine): (ws: WsLike, raw: string) 
     if (msg.type === 'canvas:spawn' && typeof msg.definitionId === 'string') {
       engine.mounter
         .spawn(msg.definitionId)
-        .then((inst: LayerInstance) => ws.send(JSON.stringify({ type: 'canvas:spawned', instance: inst })))
+        .then((inst: LayerInstance) =>
+          ws.send(JSON.stringify({ type: 'canvas:spawned', instance: inst })),
+        )
         .catch((e: unknown) =>
-          ws.send(JSON.stringify({ type: 'canvas:error', error: e instanceof Error ? e.message : String(e) })),
+          ws.send(
+            JSON.stringify({
+              type: 'canvas:error',
+              error: e instanceof Error ? e.message : String(e),
+            }),
+          ),
         )
       return
     }
@@ -213,9 +221,16 @@ export function attachCanvasWs(engine: CanvasEngine): (ws: WsLike, raw: string) 
     if (msg.type === 'canvas:dismiss' && typeof msg.instanceId === 'string') {
       engine.mounter
         .dismiss(msg.instanceId)
-        .then(() => ws.send(JSON.stringify({ type: 'canvas:dismissed', instanceId: msg.instanceId })))
+        .then(() =>
+          ws.send(JSON.stringify({ type: 'canvas:dismissed', instanceId: msg.instanceId })),
+        )
         .catch((e: unknown) =>
-          ws.send(JSON.stringify({ type: 'canvas:error', error: e instanceof Error ? e.message : String(e) })),
+          ws.send(
+            JSON.stringify({
+              type: 'canvas:error',
+              error: e instanceof Error ? e.message : String(e),
+            }),
+          ),
         )
       return
     }

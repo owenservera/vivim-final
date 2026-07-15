@@ -69,9 +69,9 @@ export class AutomationStoreImpl implements AutomationStore {
     scheduleValue: string
     actionConfigJson: string
     isActive: number
-    lastRunAt: number | null
-    nextRunAt: number | null
-    createdAt: number
+    lastRunAt: bigint | null
+    nextRunAt: bigint | null
+    createdAt: bigint
   }): Automation {
     return {
       id: row.id,
@@ -80,9 +80,9 @@ export class AutomationStoreImpl implements AutomationStore {
       schedule: row.scheduleValue || undefined,
       enabled: row.isActive === 1,
       config: JSON.parse(row.actionConfigJson),
-      lastRunAt: row.lastRunAt ?? undefined,
-      nextRunAt: row.nextRunAt ?? undefined,
-      createdAt: row.createdAt,
+      lastRunAt: row.lastRunAt == null ? undefined : Number(row.lastRunAt),
+      nextRunAt: row.nextRunAt == null ? undefined : Number(row.nextRunAt),
+      createdAt: Number(row.createdAt),
     }
   }
 }

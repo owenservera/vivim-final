@@ -66,13 +66,13 @@ describe('ResponseExtractor', () => {
   test('extract returns content blocks with plain text', async () => {
     const result = await extractor.extract('Hello world', DEFAULT_CONFIG)
     expect(result.contentBlocks).toHaveLength(1)
-    expect(result.contentBlocks[0]!.content).toBe('Hello world')
+    expect(result.contentBlocks[0]?.content).toBe('Hello world')
   })
 
   test('extract handles empty string', async () => {
     const result = await extractor.extract('', DEFAULT_CONFIG)
     expect(result.contentBlocks).toHaveLength(1)
-    expect(result.contentBlocks[0]!.content).toBe('')
+    expect(result.contentBlocks[0]?.content).toBe('')
   })
 })
 
@@ -87,7 +87,7 @@ describe('ActionRouter', () => {
     }
     const target = router.route(action, DEFAULT_CONFIG)
     expect(target).not.toBeNull()
-    expect(target!.type).toBe('observation')
+    expect(target?.type).toBe('observation')
   })
 
   test('route passes through capability_action with autoApproveWriteOps', () => {
@@ -100,7 +100,7 @@ describe('ActionRouter', () => {
     }
     const target = router.route(action, { ...DEFAULT_CONFIG, autoApproveWriteOps: true })
     expect(target).not.toBeNull()
-    expect(target!.type).toBe('capability')
+    expect(target?.type).toBe('capability')
   })
 
   test('route denies write capability when autoApproveWriteOps is false', () => {

@@ -1,9 +1,15 @@
 // src/schema/chrome.ts
-// Chrome browser slave types — used by ChromeGovernor and LifecycleManager.
+// Chrome browser slave domain types — used by ChromeGovernor and LifecycleManager.
+// Canonical lifecycle/super-state now lives in executor/slave-states (atomic-v13 / FR-3).
 
-export type SlaveStatus = 'launching' | 'ready' | 'busy' | 'stale' | 'dead'
+import type { ChromeChannel, ChromeMode } from '../executor/chrome-instance-profile.js'
+import type { FleetSuperState, SlaveLifecycle } from '../executor/slave-states.js'
 
-export type SuperState = 'active' | 'sleep' | 'error' | 'recovering'
+export type SlaveStatus = SlaveLifecycle
+export type SuperState = FleetSuperState
+
+export type { ChromeChannel, ChromeMode }
+export type { FleetSuperState, SlaveLifecycle }
 
 export interface LaunchOptions {
   headless: boolean
@@ -11,6 +17,8 @@ export interface LaunchOptions {
   args: string[]
   timeoutMs: number
   debugPort: number
+  channel?: ChromeChannel
+  mode?: ChromeMode
 }
 
 export interface ChromeSlave {
@@ -18,6 +26,7 @@ export interface ChromeSlave {
   providerId: string
   accountId: string
   status: SlaveStatus
+  superState: SuperState
   port: number
   profileDir: string
   pid: number | null

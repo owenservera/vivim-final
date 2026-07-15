@@ -7,16 +7,18 @@
 import { CapabilityEventBus } from '../engines/capability-event-bus.js'
 import { CapabilityShapeRegistry } from '../engines/capability-shape-registry.js'
 import { ChromeGovernor } from '../engines/chrome-governor.js'
+import type { CaptureOptions, StreamCapturer } from '../engines/discovery-session-runner.js'
+import { ProviderDiscoveryEngine } from '../engines/provider-discovery.js'
+import { ProviderRegistrar } from '../engines/provider-registrar.js'
+import { SandboxRunner } from '../engines/sandbox-runner.js'
+import { StreamAlignmentEngine } from '../engines/stream-align.js'
+import { StreamParserEngine } from '../engines/stream-parser.js'
+import { type CapStoreDb, getDb } from '../storage/db.js'
 import { DiscoveryStoreImpl } from '../storage/impl/discovery-store-impl.js'
 import { GovernorStoreImpl } from '../storage/impl/governor-store-impl.js'
 import { ParserStoreImpl } from '../storage/impl/parser-store-impl.js'
-import { ProviderRegistrar } from '../engines/provider-registrar.js'
 import { ProviderStoreImpl } from '../storage/impl/provider-store-impl.js'
-import { ProviderDiscoveryEngine } from '../engines/provider-discovery.js'
-import { StreamAlignmentEngine } from '../engines/stream-align.js'
-import { StreamParserEngine } from '../engines/stream-parser.js'
-import type { StreamCapturer, CaptureOptions } from '../engines/discovery-session-runner.js'
-import { getDb, type CapStoreDb } from '../storage/db.js'
+import { SandboxAuditStoreImpl } from '../storage/impl/sandbox-audit-store-impl.js'
 
 export interface DiscoveryStack {
   governor: ChromeGovernor
@@ -32,7 +34,9 @@ export interface DiscoveryStackOptions {
   portRange?: [number, number]
 }
 
-export async function buildLocalDiscoveryStack(opts?: DiscoveryStackOptions): Promise<DiscoveryStack> {
+export async function buildLocalDiscoveryStack(
+  opts?: DiscoveryStackOptions,
+): Promise<DiscoveryStack> {
   const db = getDb()
   const eventBus = CapabilityEventBus.getInstance()
 
@@ -65,7 +69,8 @@ export async function buildLocalDiscoveryStack(opts?: DiscoveryStackOptions): Pr
   )
 
   const parserStore = new ParserStoreImpl(db)
-  const streamParser = new StreamParserEngine(parserStore)
+  const sandboxRunner = new SandboxRunner(new SandboxAuditStoreImpl(db))
+  const streamParser = new StreamParserEngine(parserStore, undefined, sandboxRunner)
   const align = new StreamAlignmentEngine(streamParser)
 
   return {
@@ -96,7 +101,7 @@ export function createPageEvalCapturer(governor: ChromeGovernor): StreamCapturer
             const resp = await orig(...args);
             const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
             if (url.indexOf(${pattern}) !== -1) {
-              try { window.__vivimStream.chunks.push(await resp.clone().text()); } catch (e) {}
+              try { window.__vivimStream.chunks.push(await resp.clone().text()); } catch (e) { /* best-effort: clone()/text() may fail on a consumed response */ }
             }
             return resp;
           };

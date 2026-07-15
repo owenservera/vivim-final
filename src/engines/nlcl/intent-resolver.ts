@@ -1,13 +1,8 @@
-// src/engines/nlcl/intent-resolver.ts
-// IntentResolver — pluggable NL→Intent resolution.
-// Default: DeterministicResolver (regex/keyword, zero AI).
-// Pluggable: LocalLLMResolver (Ollama/llama.cpp), ProviderLLMResolver (via harness), HybridResolver.
-
-import { newId } from '../../ids.js'
-import type { NLCContext, ParsedIntent, IntentResolver, ResolverConfig } from './types.js'
-import { NLCommandParser } from './nl-parser.js'
+import { EngineError } from '../../errors.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { LayeredResolver } from './layered-resolver.js'
+import { NLCommandParser } from './nl-parser.js'
+import type { IntentResolver, NLCContext, ParsedIntent, ResolverConfig } from './types.js'
 
 // ── Deterministic (default, zero AI) ──────────────────────────────────────
 
@@ -58,7 +53,10 @@ export class LocalLLMResolver implements IntentResolver {
     }
   }
 
-  private buildPrompt(rawInput: string, catalog: Array<{ intent: string; description: string; examples: string[] }>): string {
+  private buildPrompt(
+    rawInput: string,
+    catalog: Array<{ intent: string; description: string; examples: string[] }>,
+  ): string {
     const catalogStr = catalog
       .map((c) => `- ${c.intent}: ${c.description} (e.g. ${c.examples.slice(0, 2).join(', ')})`)
       .join('\n')
@@ -129,7 +127,7 @@ export class ProviderLLMResolver implements IntentResolver {
     try {
       const response = await this.adapter.query(prompt)
       const localParser = new LocalLLMResolver(
-        { complete: async (p: string) => p === prompt ? response : '' },
+        { complete: async (p: string) => (p === prompt ? response : '') },
         this.registry,
       )
       return localParser.resolve(rawInput, ctx)
@@ -138,7 +136,10 @@ export class ProviderLLMResolver implements IntentResolver {
     }
   }
 
-  private buildPrompt(rawInput: string, catalog: Array<{ intent: string; description: string; examples: string[] }>): string {
+  private buildPrompt(
+    rawInput: string,
+    catalog: Array<{ intent: string; description: string; examples: string[] }>,
+  ): string {
     const catalogStr = catalog
       .map((c) => `- ${c.intent}: ${c.description} (e.g. ${c.examples.slice(0, 2).join(', ')})`)
       .join('\n')
@@ -161,11 +162,7 @@ export class HybridResolver implements IntentResolver {
   private llmFallback: IntentResolver | null
   private minConfidence: number
 
-  constructor(
-    registry: CommandPatternRegistry,
-    llmFallback?: IntentResolver,
-    minConfidence = 0.5,
-  ) {
+  constructor(registry: CommandPatternRegistry, llmFallback?: IntentResolver, minConfidence = 0.5) {
     this.deterministic = new DeterministicResolver(registry)
     this.llmFallback = llmFallback ?? null
     this.minConfidence = minConfidence
@@ -208,7 +205,7 @@ export function createResolver(
     case 'local-llm': {
       if (!adapters?.localLLM) {
         if (config.fallbackToDeterministic) return new DeterministicResolver(registry)
-        throw new Error('Local LLM adapter not provided and fallback disabled')
+        throw new EngineError('Local LLM adapter not provided and fallback disabled')
       }
       const llm = new LocalLLMResolver(adapters.localLLM, registry, config.minConfidence)
       if (config.fallbackToDeterministic) {
@@ -220,7 +217,7 @@ export function createResolver(
     case 'provider-llm': {
       if (!adapters?.providerLLM) {
         if (config.fallbackToDeterministic) return new DeterministicResolver(registry)
-        throw new Error('Provider LLM adapter not provided and fallback disabled')
+        throw new EngineError('Provider LLM adapter not provided and fallback disabled')
       }
       const llm = new ProviderLLMResolver(adapters.providerLLM, registry)
       if (config.fallbackToDeterministic) {
@@ -245,7 +242,13 @@ export function createResolver(
       // Full SOTA 5-layer pipeline: Deterministic → Fuzzy → Semantic → LLM.
       const llms: IntentResolver[] = []
       if (adapters?.localLLM) {
-        llms.push(new LocalLLMResolver(adapters.localLLM, registry, config.llmThreshold ?? config.minConfidence))
+        llms.push(
+          new LocalLLMResolver(
+            adapters.localLLM,
+            registry,
+            config.llmThreshold ?? config.minConfidence,
+          ),
+        )
       }
       if (adapters?.providerLLM) {
         llms.push(new ProviderLLMResolver(adapters.providerLLM, registry))

@@ -3,7 +3,7 @@
 
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 
 export const DEFAULT_PROFILE_BASE = 'chrome-profiles'
 
@@ -21,8 +21,16 @@ export class ProfileAllocator {
     this.baseDir = baseDir ?? DEFAULT_PROFILE_BASE
   }
 
+  /**
+   * Sanitize a directory name component (e.g. email) for filesystem use.
+   * Replaces @ with -at- to avoid Chrome --user-data-dir issues.
+   */
+  static sanitizeDirName(name: string): string {
+    return name.replace(/@/g, '-at-')
+  }
+
   getPath(providerSlug: string, accountId: string): string {
-    return join(this.baseDir, providerSlug, accountId)
+    return resolve(join(this.baseDir, providerSlug, ProfileAllocator.sanitizeDirName(accountId)))
   }
 
   async allocate(providerSlug: string, accountId: string): Promise<string> {
@@ -120,5 +128,33 @@ export class ProfileAllocator {
     }
 
     return removed
+  }
+
+  /**
+   * True when the profile directory holds a persisted authenticated session.
+   * Chrome stores session cookies in `Cookies` / `Cookies-journal`; their
+   * presence (non-empty) is the source of truth for "is this provider
+   * authenticated" (FR-7/FR-8/FR-23). We never copy sessions from an external
+   * profile — this only reads the owning profile dir.
+   */
+  async isAuthenticated(profileDir: string): Promise<boolean> {
+    if (!existsSync(profileDir)) return false
+    for (const cookieFile of ['Cookies', 'Cookies-journal', 'Network/Cookies']) {
+      try {
+        const full = join(profileDir, cookieFile)
+        if (existsSync(full)) {
+          const stat = await import('node:fs/promises').then((m) => m.stat(full))
+          if (stat.size > 0) return true
+        }
+      } catch {
+        // keep checking other candidates
+      }
+    }
+    return false
+  }
+
+  /** True when the provider has no persisted authenticated session (FR-7). */
+  async requiresFirstRun(profileDir: string): Promise<boolean> {
+    return !(await this.isAuthenticated(profileDir))
   }
 }

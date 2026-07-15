@@ -3,6 +3,7 @@
 // Fixes: error isolation, event envelopes, wildcards, ring buffer, DLQ, publishAndWait.
 // Parallel implementation; v1 remains for backward compatibility.
 
+import { EngineError } from '../errors.js'
 import { ulid } from '../ids.js'
 
 // ── Event Envelope ──────────────────────────────────────────────────────────
@@ -51,10 +52,15 @@ export class CapabilityEventBusV2 {
 
   // ── Publish (fire-and-forget) ──────────────────────────────────────────
 
-  publish<T>(source: string, kind: string, event: T, opts?: {
-    correlationId?: string
-    causationId?: string
-  }): string {
+  publish<T>(
+    source: string,
+    kind: string,
+    event: T,
+    opts?: {
+      correlationId?: string
+      causationId?: string
+    },
+  ): string {
     const eventId = ulid()
     const envelope: EventEnvelope<T> = {
       event,
@@ -74,10 +80,15 @@ export class CapabilityEventBusV2 {
 
   // ── Publish and Wait (awaitable) ───────────────────────────────────────
 
-  async publishAndWait<T>(source: string, kind: string, event: T, opts?: {
-    correlationId?: string
-    causationId?: string
-  }): Promise<{ eventId: string; failures: Array<{ handlerId: string; error: Error }> }> {
+  async publishAndWait<T>(
+    source: string,
+    kind: string,
+    event: T,
+    opts?: {
+      correlationId?: string
+      causationId?: string
+    },
+  ): Promise<{ eventId: string; failures: Array<{ handlerId: string; error: Error }> }> {
     const eventId = ulid()
     const envelope: EventEnvelope<T> = {
       event,
@@ -107,7 +118,7 @@ export class CapabilityEventBusV2 {
     if (kind === '*') {
       this.wildcardHandlers.push(entry)
       return () => {
-        this.wildcardHandlers = this.wildcardHandlers.filter(e => e.id !== entry.id)
+        this.wildcardHandlers = this.wildcardHandlers.filter((e) => e.id !== entry.id)
       }
     }
 
@@ -121,7 +132,7 @@ export class CapabilityEventBusV2 {
     return () => {
       const list = this.handlers.get(kind)
       if (list) {
-        const idx = list.findIndex(e => e.id === entry.id)
+        const idx = list.findIndex((e) => e.id === entry.id)
         if (idx >= 0) list.splice(idx, 1)
       }
     }
@@ -146,7 +157,7 @@ export class CapabilityEventBusV2 {
     return () => {
       const list = this.handlers.get(kind)
       if (list) {
-        const idx = list.findIndex(e => e.id !== entry.id)
+        const idx = list.findIndex((e) => e.id !== entry.id)
         if (idx >= 0) list.splice(idx, 1)
       }
     }
@@ -163,8 +174,8 @@ export class CapabilityEventBusV2 {
   private dispatch(kind: string, envelope: EventEnvelope): void {
     const exactHandlers = [...(this.handlers.get(kind) ?? [])]
     const wildcardSnap = [...this.wildcardHandlers]
-    const onceHandlers = exactHandlers.filter(h => h.once)
-    const remaining = exactHandlers.filter(h => !h.once)
+    const _onceHandlers = exactHandlers.filter((h) => h.once)
+    const remaining = exactHandlers.filter((h) => !h.once)
     this.handlers.set(kind, remaining)
 
     for (const entry of [...exactHandlers, ...wildcardSnap]) {
@@ -172,7 +183,7 @@ export class CapabilityEventBusV2 {
         .then(() => entry.handler(envelope))
         .catch((err) => {
           console.error(`[bus] ${kind} handler ${entry.id} failed`, err)
-          this.addToDLQ(envelope, err instanceof Error ? err : new Error(String(err)))
+          this.addToDLQ(envelope, err instanceof Error ? err : new EngineError(String(err)))
         })
     }
   }
@@ -185,22 +196,22 @@ export class CapabilityEventBusV2 {
     const wildcardSnap = [...this.wildcardHandlers]
     const all = [...exactHandlers, ...wildcardSnap]
 
-    const onceHandlers = exactHandlers.filter(h => h.once)
-    const remaining = exactHandlers.filter(h => !h.once)
+    const _onceHandlers = exactHandlers.filter((h) => h.once)
+    const remaining = exactHandlers.filter((h) => !h.once)
     this.handlers.set(kind, remaining)
 
     const failures: Array<{ handlerId: string; error: Error }> = []
 
     await Promise.allSettled(
-      all.map(entry =>
+      all.map((entry) =>
         Promise.resolve()
           .then(() => entry.handler(envelope))
           .catch((err) => {
-            const error = err instanceof Error ? err : new Error(String(err))
+            const error = err instanceof Error ? err : new EngineError(String(err))
             failures.push({ handlerId: entry.id, error })
             this.addToDLQ(envelope, error)
-          })
-      )
+          }),
+      ),
     )
 
     return failures

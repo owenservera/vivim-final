@@ -7,9 +7,13 @@ import { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry
 
 const stubServices = {
   db: {} as any,
-  conversationStore: {} as any,
+  conversationStore: {
+    listConversations: async () => [],
+    getMessages: async () => [],
+  } as any,
   governor: {} as any,
   conversationManager: {} as any,
+  profileAllocator: {} as any,
 } as any
 
 describe('Unit 1.3 — registerDefaultCapabilities', () => {
@@ -50,7 +54,7 @@ describe('Unit 1.3 — registerDefaultCapabilities', () => {
     registerDefaultCapabilities(registry, stubServices)
     const cap = registry.getBySlug('conversation_send')
     expect(cap).not.toBeNull()
-    expect(cap!.id).toBe('cap:conversation:send')
+    expect(cap?.id).toBe('cap:conversation:send')
   })
 
   it('conversation_list handler returns an array', async () => {

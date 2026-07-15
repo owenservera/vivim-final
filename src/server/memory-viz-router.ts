@@ -1,11 +1,16 @@
 // src/server/memory-viz-router.ts
 // Memory Visualization API — REST routes for memory graph, timeline, stats.
+//
+// PRINCIPLE: FRONTEND = BACKEND
+// Every request is tagged with its source via X-Source header for audit logging.
 
 import type { MemoryEngine } from '../engines/memory-engine.js'
+import type { MemoryCuratedStore } from '../storage/contracts/memory-curated-store.js'
 
 interface MemoryVizRequest {
   url: string
   method: string
+  body?: unknown
 }
 
 interface MemoryVizResponse {
@@ -13,7 +18,7 @@ interface MemoryVizResponse {
   body: unknown
 }
 
-export function createMemoryVizRouter(memory: MemoryEngine) {
+export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: MemoryCuratedStore) {
   return async (req: MemoryVizRequest): Promise<MemoryVizResponse> => {
     const url = new URL(req.url, 'http://localhost')
     const path = url.pathname
@@ -88,6 +93,45 @@ export function createMemoryVizRouter(memory: MemoryEngine) {
           })),
         },
       }
+    }
+
+    // POST /api/memory/curate  { id, memoryType, memoryId, action }
+    if (path === '/api/memory/curate' && req.method === 'POST') {
+      if (!curatedStore) {
+        return { status: 501, body: { error: 'curation store not configured' } }
+      }
+      let body: { id?: string; memoryType?: string; memoryId?: string; action?: string }
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+      } catch {
+        return { status: 400, body: { error: 'invalid json body' } }
+      }
+      const memoryType = body.memoryType ?? 'fact'
+      const memoryId = body.memoryId ?? body.id
+      if (!memoryId) {
+        return { status: 400, body: { error: 'memoryId required' } }
+      }
+      switch (body.action) {
+        case 'pin':
+          await curatedStore.setPinned(memoryType, memoryId, true)
+          break
+        case 'hide':
+          await curatedStore.setVerified(memoryType, memoryId, false)
+          break
+        case 'merge':
+          await curatedStore.upsert({
+            id: `${memoryType}:${memoryId}`,
+            memoryType,
+            memoryId,
+            isPinned: false,
+            isVerified: true,
+            note: 'merged',
+          })
+          break
+        default:
+          return { status: 400, body: { error: 'unknown action' } }
+      }
+      return { status: 200, body: { ok: true, action: body.action, memoryId } }
     }
 
     return { status: 404, body: { error: 'Not found' } }

@@ -69,6 +69,7 @@ function makeRow(overrides: Partial<RawResolutionRow> = {}): RawResolutionRow {
     tier_max_file_size: null,
     tier_config_json: null,
     tier_max_options: null,
+    ui_component_override: null,
     ...overrides,
   }
 }
@@ -226,5 +227,29 @@ describe('CapabilityResolutionEngine', () => {
     expect(cap?.aliases).toEqual(['send'])
     expect(cap?.tierOverrides.maxModels).toBe(3)
     expect(cap?.tierOverrides.customConfig).toEqual({ beta: true })
+  })
+
+  it('parses provider_capability.ui_component_override into per-slot uiSlots (H6)', async () => {
+    const rows = [
+      makeRow({
+        ui_component_override: JSON.stringify({
+          'chat.bubble': { component: 'claude-bubble', sandbox: ['claude.send_message'] },
+          'chat.composer': { component: 'claude-composer' },
+        }),
+      }),
+    ]
+    const engine = new CapabilityResolutionEngine(mockStore(rows))
+    const cap = (await engine.resolve('claude', 'free')).composer[0]
+    expect(cap?.uiSlots).toEqual({
+      'chat.bubble': { component: 'claude-bubble', sandbox: ['claude.send_message'] },
+      'chat.composer': { component: 'claude-composer' },
+    })
+  })
+
+  it('treats a legacy/plain-string ui_component_override as no slots', async () => {
+    const rows = [makeRow({ ui_component_override: 'legacy_button' })]
+    const engine = new CapabilityResolutionEngine(mockStore(rows))
+    const cap = (await engine.resolve('claude', 'free')).composer[0]
+    expect(cap?.uiSlots).toEqual({})
   })
 })

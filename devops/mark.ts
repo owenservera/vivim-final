@@ -4,13 +4,14 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { computeStats, parseUnits, updateHeader, updateState, type UnitState } from "./tracker.ts";
-import { TRACKER } from "./select.ts";
+import { getTracker } from "./select.ts";
 
 export async function markUnit(id: string, state: UnitState): Promise<void> {
-  const raw = await readFile(TRACKER, "utf8");
+  const trackerPath = getTracker();
+  const raw = await readFile(trackerPath, "utf8");
   const lines = raw.split("\n");
   const next = updateState(lines, id, state);
   const stats = computeStats(parseUnits(next));
   const final = updateHeader(next, stats);
-  await writeFile(TRACKER, final.join("\n"), "utf8");
+  await writeFile(trackerPath, final.join("\n"), "utf8");
 }

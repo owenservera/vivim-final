@@ -1,23 +1,23 @@
 // web/sandbox/src/features/generic-capability-renderer.tsx
-// 90.9: generic renderer — can render ANY capability from its 21-field
-// resolved contract. Used when no bespoke renderer is promoted in the
-// CapabilityRegistry ledger.
+// 90.9: generic renderer — can render ANY capability from its contract. Used
+// when no bespoke renderer is promoted in the CapabilityRegistry ledger for
+// the capability's `ui_component` slug (FRONTEND = BACKEND fallback).
 
 import { ActionRegistry } from '@ui'
-import { CapabilityRegistry, type CapabilityRenderProps } from '@ui/registry/index.js'
+import { type CapabilityRenderProps } from '@ui/registry/index.js'
 import { z } from 'zod'
 
 const GENERIC_EXECUTE = z.object({ slug: z.string() })
 
 export function GenericCapabilityRenderer({ slug, contract, onAction }: CapabilityRenderProps) {
-  const bespoke = CapabilityRegistry.get(slug)
   const name = (contract.name as string) ?? slug
   const description = (contract.description as string) ?? ''
-  const uiPosition = (contract.uiPosition as string) ?? '—'
-  const uiGroup = (contract.uiGroup as string) ?? '—'
-  const uiOrder = (contract.uiOrder as number) ?? 0
-  const planTier = (contract.minPlanTier as string) ?? (contract.plan_tier as string) ?? 'free'
-  const dependencies = (contract.dependsOn as string[]) ?? (contract.dependencies as string[]) ?? []
+  const uiComponent = (contract.ui_component as string) ?? slug
+  const uiPosition = (contract.ui_position as string) ?? '—'
+  const uiGroup = (contract.ui_group as string) ?? '—'
+  const uiOrder = (contract.ui_order as number) ?? 0
+  const planTier = (contract.plan_tier as string) ?? 'free'
+  const dependencies = (contract.dependencies as string[]) ?? []
 
   const handleExecute = () => {
     const params = { slug }
@@ -30,15 +30,10 @@ export function GenericCapabilityRenderer({ slug, contract, onAction }: Capabili
       <h2 className="text-xl font-semibold text-gray-900">{name}</h2>
       <p className="text-gray-600 mt-1">{description}</p>
 
-      {bespoke?.bestPracticeNote && (
-        <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
-          <strong>Best practice:</strong> {bespoke.bestPracticeNote}
-        </div>
-      )}
-
       <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-white">
         <h3 className="text-sm font-medium text-gray-700 mb-2">UI Contract (generic)</h3>
         <dl className="text-xs space-y-1">
+          <div><dt className="font-medium inline">Component:</dt> <dd className="inline">{uiComponent}</dd></div>
           <div><dt className="font-medium inline">Position:</dt> <dd className="inline">{uiPosition}</dd></div>
           <div><dt className="font-medium inline">Group:</dt> <dd className="inline">{uiGroup}</dd></div>
           <div><dt className="font-medium inline">Order:</dt> <dd className="inline">{String(uiOrder)}</dd></div>

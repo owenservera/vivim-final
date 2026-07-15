@@ -1,14 +1,29 @@
 // src/engines/stealth/webgl-spoof-engine.ts
 // Unit 12.2 — WebGlSpoofEngine: GPU renderer + vendor spoofing.
 
-import type { StealthModule, StealthContext } from './stealth-module-engine.js'
+import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 const REALISTIC_GPUS = [
-  { vendor: 'Google Inc. (NVIDIA)', renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 Direct3D11 vs_5_0 ps_5_0)' },
-  { vendor: 'Google Inc. (NVIDIA)', renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0)' },
-  { vendor: 'Google Inc. (Intel)', renderer: 'ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)' },
-  { vendor: 'Google Inc. (AMD)', renderer: 'ANGLE (AMD, AMD Radeon RX 6700 XT Direct3D11 vs_5_0 ps_5_0)' },
-  { vendor: 'Google Inc. (Intel)', renderer: 'ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0)' },
+  {
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 Direct3D11 vs_5_0 ps_5_0)',
+  },
+  {
+    vendor: 'Google Inc. (NVIDIA)',
+    renderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0)',
+  },
+  {
+    vendor: 'Google Inc. (Intel)',
+    renderer: 'ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11 vs_5_0 ps_5_0)',
+  },
+  {
+    vendor: 'Google Inc. (AMD)',
+    renderer: 'ANGLE (AMD, AMD Radeon RX 6700 XT Direct3D11 vs_5_0 ps_5_0)',
+  },
+  {
+    vendor: 'Google Inc. (Intel)',
+    renderer: 'ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0)',
+  },
 ]
 
 export class WebGlSpoofModule implements StealthModule {
@@ -18,13 +33,16 @@ export class WebGlSpoofModule implements StealthModule {
   priority = 11
 
   async apply(config: Record<string, unknown>, ctx: StealthContext): Promise<void> {
-    const renderer = config.renderer as string ?? 'auto'
-    const vendor = config.vendor as string ?? 'auto'
+    const renderer = (config.renderer as string) ?? 'auto'
+    const vendor = (config.vendor as string) ?? 'auto'
     const seed = config.seed as number | undefined
 
     let gpu = REALISTIC_GPUS[0]!
     if (renderer === 'auto') {
-      const idx = seed !== undefined ? seed % REALISTIC_GPUS.length : Math.floor(Math.random() * REALISTIC_GPUS.length)
+      const idx =
+        seed !== undefined
+          ? seed % REALISTIC_GPUS.length
+          : Math.floor(Math.random() * REALISTIC_GPUS.length)
       gpu = REALISTIC_GPUS[idx]!
     } else {
       gpu = { vendor: vendor !== 'auto' ? vendor : 'Google Inc. (NVIDIA)', renderer }

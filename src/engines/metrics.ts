@@ -54,7 +54,10 @@ export class MetricsRegistry {
   private policy: MetricsPolicy = DEFAULT_POLICY
   private timer: ReturnType<typeof setInterval> | null = null
 
-  constructor(policy?: Partial<MetricsPolicy>, private logger?: StructuredLogger) {
+  constructor(
+    policy?: Partial<MetricsPolicy>,
+    private logger?: StructuredLogger,
+  ) {
     if (policy) this.policy = { ...DEFAULT_POLICY, ...policy }
   }
 
@@ -167,7 +170,10 @@ export class MetricsRegistry {
 
   private key(name: string, labels?: Record<string, string>): string {
     if (!labels) return name
-    const sorted = Object.entries(labels).sort().map(([k, v]) => `${k}=${v}`).join(',')
+    const sorted = Object.entries(labels)
+      .sort()
+      .map(([k, v]) => `${k}=${v}`)
+      .join(',')
     return `${name}{${sorted}}`
   }
 }

@@ -6,8 +6,8 @@
 // was not granted. Definitions are rejected closed at publish time.
 
 import { z } from 'zod'
-import type { CanvasDefinition, CanvasLayout, LayerBinding, LayerCategory, LayerAuthor, SandboxPolicy, LayerStatus, CanvasDefinitionInput } from './types.js'
-import { CanvasSpawnError, CanvasMutationError, SandboxPermissionError } from '../errors.js'
+import { CanvasMutationError, CanvasSpawnError, SandboxPermissionError } from '../errors.js'
+import type { CanvasDefinition, CanvasDefinitionInput, SandboxPolicy } from './types.js'
 
 export const primitiveKindSchema = z.enum([
   'workspace',
@@ -66,10 +66,9 @@ export const layerBindingSchema = z
   .strict()
   // A binding may reference a primitive, a capability, or neither (a
   // passive region the oracle fills). It must NOT reference both.
-  .refine(
-    (b) => !(b.primitive && b.capabilitySlug),
-    { message: 'binding must not reference both a primitive and a capability' },
-  )
+  .refine((b) => !(b.primitive && b.capabilitySlug), {
+    message: 'binding must not reference both a primitive and a capability',
+  })
 
 export const canvasDefinitionSchema = z
   .object({
@@ -143,7 +142,7 @@ export function assertNoInlineScript(def: {
   if (INLINE_SCRIPT.test(def.css)) {
     throw new SandboxPermissionError('definition', 'inline <script> in css')
   }
-  if (def.scriptUrl && def.scriptUrl.startsWith('javascript:')) {
+  if (def.scriptUrl?.startsWith('javascript:')) {
     throw new SandboxPermissionError('definition', 'disallowed javascript: script url')
   }
 }
@@ -152,9 +151,7 @@ export function assertNoInlineScript(def: {
  * Validate a candidate definition structurally. Throws typed CapStoreError
  * subclasses (never `new Error()`), so callers get classified failures.
  */
-export function validateDefinition(
-  input: unknown,
-): CanvasDefinitionInput {
+export function validateDefinition(input: unknown): CanvasDefinitionInput {
   const parsed = canvasDefinitionFullSchema.parse(input)
   assertNoInlineScript(parsed)
   return parsed as CanvasDefinitionInput
@@ -169,7 +166,7 @@ export function canUseCapability(
   capabilitySlug: string,
 ): boolean {
   const allowed = Array.isArray(def)
-    ? (def as unknown as SandboxPolicy[])[0]?.allowCapabilities ?? []
+    ? ((def as unknown as SandboxPolicy[])[0]?.allowCapabilities ?? [])
     : (def as Pick<CanvasDefinition, 'sandbox'>).sandbox.allowCapabilities
   return allowed.includes(capabilitySlug)
 }
@@ -204,8 +201,4 @@ export function finalizeDefinition(
   }
 }
 
-export {
-  CanvasSpawnError,
-  CanvasMutationError,
-  SandboxPermissionError,
-}
+export { CanvasSpawnError, CanvasMutationError, SandboxPermissionError }

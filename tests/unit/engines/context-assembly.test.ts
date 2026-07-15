@@ -205,7 +205,7 @@ describe('ContextAssemblyEngine', () => {
     const result = await engine.assemble('conv-1', 'What is TypeScript?')
     const topicLayer = result.layers.find((l) => l.name === 'topic')
     expect(topicLayer).toBeDefined()
-    expect(topicLayer!.content).toContain('TypeScript')
+    expect(topicLayer?.content).toContain('TypeScript')
   })
 
   it('includes recent episodes layer when memory has episodes', async () => {
@@ -227,7 +227,7 @@ describe('ContextAssemblyEngine', () => {
     const result = await engine.assemble('conv-1', 'Continue with React')
     const epLayer = result.layers.find((l) => l.name === 'recent_episodes')
     expect(epLayer).toBeDefined()
-    expect(epLayer!.content).toContain('React hooks')
+    expect(epLayer?.content).toContain('React hooks')
   })
 
   it('includes identity layer when user facts exist', async () => {
@@ -247,7 +247,7 @@ describe('ContextAssemblyEngine', () => {
     const result = await engine.assemble('conv-1', 'What do you know about me?')
     const idLayer = result.layers.find((l) => l.name === 'identity')
     expect(idLayer).toBeDefined()
-    expect(idLayer!.content).toContain('Alice')
+    expect(idLayer?.content).toContain('Alice')
   })
 
   it('handles search engine failure gracefully', async () => {

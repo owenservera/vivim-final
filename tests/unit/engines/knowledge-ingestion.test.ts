@@ -71,7 +71,22 @@ function mockConversationStore(): ConversationStore {
     getMessage: async () => null,
     getMessages: async () => [],
     getLastMessage: async () => null,
+    updateMessage: async () => {},
     getAccount: async () => null,
+    createAttachment: async () => ({
+      id: 'att',
+      messageId: 'msg',
+      filename: 'f',
+      mimeType: 'x',
+      sizeBytes: 0,
+      storagePath: 'p',
+      thumbnailPath: null,
+      metadataJson: '{}',
+      createdAt: 0,
+    }),
+    getAttachments: async () => [],
+    getAttachment: async () => null,
+    deleteAttachment: async () => {},
   }
 }
 

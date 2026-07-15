@@ -2,8 +2,8 @@
 // Unit 11.2 — StealthModuleEngine: registry + CDP injection pipeline.
 
 import type { StructuredLogger } from '../logger.js'
-import type { StealthProfileStore } from './stealth-profile-store.js'
 import type { StealthCdpProxy } from './stealth-module.js'
+import type { StealthProfileStore } from './stealth-profile-store.js'
 
 export interface StealthModule {
   name: string

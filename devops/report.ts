@@ -2,11 +2,11 @@
 // Summarize tracker progress: totals, per-phase counts, blocked list.
 
 import { readFile } from 'node:fs/promises'
-import { PLAN_PAUSED, TRACKER } from './select.ts'
+import { PLAN_PAUSED, getTracker } from './select.ts'
 import { computeStats, parseUnits } from './tracker.ts'
 
 export async function report(): Promise<string> {
-  const content = await readFile(TRACKER, 'utf8')
+  const content = await readFile(getTracker(), 'utf8')
   const units = parseUnits(content.split('\n'))
   const stats = computeStats(units)
 

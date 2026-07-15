@@ -56,18 +56,30 @@ interface StealthPrismaClient {
   stealthLaunchProfile: {
     findMany(): Promise<unknown[]>
     findUnique(args: { where: { id: string } }): Promise<unknown | null>
-    upsert(args: { where: { id: string }; create: Record<string, unknown>; update: Record<string, unknown> }): Promise<unknown>
+    upsert(args: {
+      where: { id: string }
+      create: Record<string, unknown>
+      update: Record<string, unknown>
+    }): Promise<unknown>
     delete(args: { where: { id: string } }): Promise<unknown>
   }
   stealthModuleProfile: {
     findMany(): Promise<unknown[]>
     findUnique(args: { where: { id: string } }): Promise<unknown | null>
-    upsert(args: { where: { id: string }; create: Record<string, unknown>; update: Record<string, unknown> }): Promise<unknown>
+    upsert(args: {
+      where: { id: string }
+      create: Record<string, unknown>
+      update: Record<string, unknown>
+    }): Promise<unknown>
     delete(args: { where: { id: string } }): Promise<unknown>
   }
   stealthPolicy: {
     findUnique(args: { where: { id: string } }): Promise<unknown | null>
-    upsert(args: { where: { id: string }; create: Record<string, unknown>; update: Record<string, unknown> }): Promise<unknown>
+    upsert(args: {
+      where: { id: string }
+      create: Record<string, unknown>
+      update: Record<string, unknown>
+    }): Promise<unknown>
   }
 }
 
@@ -75,13 +87,16 @@ export class PrismaStealthStore implements StealthProfileStore {
   constructor(private readonly prisma: StealthPrismaClient) {}
 
   async getAllLaunchProfiles(): Promise<LaunchProfileRow[]> {
-    const rows = (await this.prisma.stealthLaunchProfile.findMany()) as Array<Record<string, unknown>>
+    const rows = (await this.prisma.stealthLaunchProfile.findMany()) as Array<
+      Record<string, unknown>
+    >
     return rows.map(mapLaunchRow)
   }
   async getLaunchProfile(id: string): Promise<LaunchProfileRow | null> {
-    const row = (await this.prisma.stealthLaunchProfile.findUnique({ where: { id } })) as
-      | Record<string, unknown>
-      | null
+    const row = (await this.prisma.stealthLaunchProfile.findUnique({ where: { id } })) as Record<
+      string,
+      unknown
+    > | null
     return row ? mapLaunchRow(row) : null
   }
   async upsertLaunchProfile(profile: LaunchProfileRow): Promise<void> {
@@ -97,14 +112,23 @@ export class PrismaStealthStore implements StealthProfileStore {
   }
 
   async getAllModuleProfiles(): Promise<ModuleProfileRow[]> {
-    const rows = (await this.prisma.stealthModuleProfile.findMany()) as Array<Record<string, unknown>>
-    return rows.map((r) => ({ id: String(r.id), name: String(r.name), modulesJson: String(r.modulesJson) }))
+    const rows = (await this.prisma.stealthModuleProfile.findMany()) as Array<
+      Record<string, unknown>
+    >
+    return rows.map((r) => ({
+      id: String(r.id),
+      name: String(r.name),
+      modulesJson: String(r.modulesJson),
+    }))
   }
   async getModuleProfile(id: string): Promise<ModuleProfileRow | null> {
-    const row = (await this.prisma.stealthModuleProfile.findUnique({ where: { id } })) as
-      | Record<string, unknown>
-      | null
-    return row ? { id: String(row.id), name: String(row.name), modulesJson: String(row.modulesJson) } : null
+    const row = (await this.prisma.stealthModuleProfile.findUnique({ where: { id } })) as Record<
+      string,
+      unknown
+    > | null
+    return row
+      ? { id: String(row.id), name: String(row.name), modulesJson: String(row.modulesJson) }
+      : null
   }
   async upsertModuleProfile(profile: ModuleProfileRow): Promise<void> {
     const now = Date.now()
@@ -119,9 +143,9 @@ export class PrismaStealthStore implements StealthProfileStore {
   }
 
   async getPolicy(): Promise<StealthPolicy | null> {
-    const row = (await this.prisma.stealthPolicy.findUnique({ where: { id: 'default' } })) as
-      | Record<string, unknown>
-      | null
+    const row = (await this.prisma.stealthPolicy.findUnique({
+      where: { id: 'default' },
+    })) as Record<string, unknown> | null
     if (!row) return null
     return {
       defaultProfileId: (row.defaultLaunchProfileId as string | null) ?? null,

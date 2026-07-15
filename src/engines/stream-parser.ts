@@ -5,6 +5,8 @@
 
 import { EngineError } from '../errors.js'
 import type { ParserStore } from '../storage/contracts/parser-store.js'
+import type { SandboxRunner } from './sandbox-runner.js'
+import type { SandboxPermissions } from './sandbox-runner.js'
 
 export type ContentBlock =
   | { kind: 'text'; content: string; index: number }
@@ -49,9 +51,20 @@ export class StreamParserEngine {
   private parserCache = new Map<string, { module: ParserModule; hash: string }>()
   private inlineCache = new Map<string, ParserModule>()
 
+  // Hardened execution environment for inline parser code (Unit 31.1). When
+  // present, inline parser logic is compiled inside a frozen vm context with a
+  // CPU/memory budget and an audit row — replacing the raw `new Function` path.
+  private static readonly SANDBOX_PERMISSIONS: SandboxPermissions = {
+    canFetch: [],
+    canReadFile: [],
+    canWriteFile: [],
+    canUseClipboard: false,
+  }
+
   constructor(
     private store: ParserStore,
     private config?: ParserConfig,
+    private sandbox?: SandboxRunner,
   ) {}
 
   async parse(rawBody: string, providerId: string): Promise<ParseResult> {
@@ -191,22 +204,40 @@ export class StreamParserEngine {
     const cached = this.inlineCache.get(hash)
     if (cached) return cached
 
-    try {
-      const factory = new Function('module', 'exports', code)
-      const mod = { exports: {} as Record<string, unknown> }
-      factory(mod, mod.exports)
+    const mod = { exports: {} as Record<string, unknown> }
 
-      const candidate = (mod.exports.default ?? mod.exports) as Partial<ParserModule>
-      if (typeof candidate.parse !== 'function') {
-        throw new EngineError('Inline parser has no parse() method')
+    if (!this.sandbox) {
+      // Legacy fallback: raw host evaluation. Inline parser code is admin-defined
+      // (DB-backed); prefer the SandboxRunner path above whenever available.
+      try {
+        // eslint-disable-next-line no-new-func
+        // Trusted: inline parser code is admin-defined and DB-backed. The
+        // SandboxRunner path above is preferred; this is a legacy host fallback.
+        const factory = new Function('module', 'exports', code)
+        factory(mod, mod.exports)
+      } catch (error) {
+        throw new EngineError(`Failed to compile inline parser: ${error}`)
       }
-
-      const module = candidate as ParserModule
-      this.inlineCache.set(hash, module)
-      return module
-    } catch (error) {
-      throw new EngineError(`Failed to compile inline parser: ${error}`)
+    } else {
+      const res = await this.sandbox.run(code, {}, StreamParserEngine.SANDBOX_PERMISSIONS, {
+        handlerSlug: `parser:${hash}`,
+        globals: { module: mod, exports: mod.exports },
+      })
+      if (!res.ok) {
+        throw new EngineError(
+          `Failed to compile inline parser: ${res.error ?? 'unknown sandbox error'}`,
+        )
+      }
     }
+
+    const candidate = (mod.exports.default ?? mod.exports) as Partial<ParserModule>
+    if (typeof candidate.parse !== 'function') {
+      throw new EngineError('Inline parser has no parse() method')
+    }
+
+    const module = candidate as ParserModule
+    this.inlineCache.set(hash, module)
+    return module
   }
 
   private async loadFileParser(filePath: string): Promise<ParserModule> {

@@ -197,6 +197,68 @@ export class WorkflowEngine {
     })
   }
 
+  // Phase 28.1: Register workflow as a capability
+  async registerAsCapability(
+    workflow: WorkflowDefinition,
+    registry: UnifiedCapabilityRegistry,
+  ): Promise<void> {
+    // Derive inputSchema from workflow variables
+    const inputSchema: {
+      type: string
+      properties: Record<string, { type: string }>
+      required?: string[]
+    } = {
+      type: 'object',
+      properties: {},
+    }
+    const required: string[] = []
+
+    if (workflow.variables) {
+      for (const [key, value] of Object.entries(workflow.variables)) {
+        inputSchema.properties[key] = { type: typeof value }
+        if (value === undefined) required.push(key)
+      }
+    }
+
+    if (required.length > 0) {
+      inputSchema.required = required
+    }
+
+    const cap = {
+      id: `cap:workflow:${workflow.id}`,
+      slug: `wf_${workflow.name.replace(/\s+/g, '_').toLowerCase()}`,
+      name: workflow.name,
+      description: workflow.description ?? `Execute workflow: ${workflow.name}`,
+      category: 'workflow',
+      surfaces: ['cli', 'ui', 'api', 'mcp', 'workflow'] as (
+        | 'cli'
+        | 'ui'
+        | 'workflow'
+        | 'mcp'
+        | 'api'
+      )[],
+      inputSchema,
+      outputSchema: { type: 'object' },
+      handler: async (input: Record<string, unknown>, _ctx: CapabilityContext) => {
+        return this.execute(workflow.id, input)
+      },
+      isAsync: true,
+      requiresConfirmation: false,
+      tags: ['workflow'],
+      workflowNodeType: 'workflow-root' as const,
+    }
+
+    registry.register(cap)
+  }
+
+  // Phase 28.1: Unregister workflow capability
+  async unregisterCapability(
+    workflowId: string,
+    registry: UnifiedCapabilityRegistry,
+  ): Promise<void> {
+    registry.unregister?.(`cap:workflow:${workflowId}`)
+  }
+
   private async executeNodes(
     workflow: WorkflowDefinition,
     execution: WorkflowExecution,
@@ -440,6 +502,8 @@ export class WorkflowEngine {
 
   private evaluateExpression(expr: string, vars: Record<string, unknown>): boolean {
     try {
+      // Trusted: `expr` is an author-defined workflow DSL condition. Evaluated
+      // intentionally; sandbox if definitions become externally sourced.
       const fn = new Function(...Object.keys(vars), `return ${expr}`)
       return Boolean(fn(...Object.values(vars)))
     } catch {
