@@ -78,6 +78,26 @@ export interface TraceEntryInput {
   error?: string | null
 }
 
+// ── Harness Command Registry (017-harness-command-registry) ──
+export interface HarnessCommandRow {
+  id: string
+  commandId: string
+  version: string
+  kind: string
+  paramsSchemaJson: string
+  adaptorRef: string
+  description: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface ProviderFleetConfig {
+  channel?: string
+  mode?: string
+  extraArgs?: string[]
+  portRange?: [number, number]
+}
+
 // ── Contract ───────────────────────────────────────────────────────────────
 
 export interface GovernorStore {
@@ -92,4 +112,8 @@ export interface GovernorStore {
   createHealthTick(tick: Omit<HealthTickRow, 'id'>): Promise<HealthTickRow>
   createTraceEntry(entry: TraceEntryInput): Promise<TraceEntryRow>
   getTrace(slaveId: string, limit?: number): Promise<TraceEntryRow[]>
+  getProviderFleetConfig(providerSlug: string): Promise<ProviderFleetConfig | null>
+  getHarnessCommand(commandId: string, version: string): Promise<HarnessCommandRow | null>
+  listHarnessCommands(commandId: string): Promise<HarnessCommandRow[]>
+  upsertHarnessCommand(cmd: HarnessCommandRow): Promise<void>
 }

@@ -166,6 +166,15 @@ export class CapabilityEventBus {
     // Deliver to WebSocket subscribers
     for (const [ws, entityMap] of this.wsSubscriptions) {
       for (const [entityType, entityIds] of entityMap) {
+        // Dev firehose: a single `*` wildcard entity id forwards EVERY event.
+        if (entityIds.has('*')) {
+          try {
+            ws.send(JSON.stringify(event))
+          } catch {
+            // WebSocket may be closed — ignore
+          }
+          continue
+        }
         // Check if event has a matching entity field
         const eventAny = event as Record<string, unknown>
         const idFields: Record<string, string> = {

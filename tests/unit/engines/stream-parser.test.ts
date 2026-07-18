@@ -45,7 +45,7 @@ describe('StreamParserEngine', () => {
     const store = mockStore({ getActiveParser: async () => row({}) })
     const engine = new StreamParserEngine(store)
     const result = await engine.parse('hello', 'claude')
-    expect(result.blocks).toEqual([{ kind: 'text', content: 'claude:hello', index: 0 }])
+    expect(result.blocks).toEqual([{ type: 'text', text: 'claude:hello' }])
     expect(result.parserName).toBe('claude-ok')
     expect(result.confidence).toBeGreaterThan(0)
   })
@@ -64,7 +64,7 @@ describe('StreamParserEngine', () => {
     const engine = new StreamParserEngine(store)
     const result = await engine.parse('frame', 'claude')
     expect(result.blocks.length).toBeGreaterThan(0)
-    expect(result.blocks[0]?.kind).toBe('text')
+    expect(result.blocks[0]?.type).toBe('text')
   })
 
   it('parse() falls back to system parser from DB when generic fails', async () => {
@@ -95,7 +95,7 @@ describe('StreamParserEngine', () => {
     const engine = new StreamParserEngine(store)
     const result = await engine.parse('x', 'claude')
     expect(result.blocks).toHaveLength(1)
-    expect(result.blocks[0]?.kind).toBe('error')
+    expect(result.blocks[0]?.type).toBe('error')
   })
 
   it('parse() uses inline code when logicType=inline', async () => {
@@ -103,7 +103,7 @@ describe('StreamParserEngine', () => {
       name: 'test-parser',
       version: 1,
       providerId: 'test',
-      parse(rawBody) { return [{ kind: 'text', content: 'inline:' + rawBody, index: 0 }]; },
+      parse(rawBody) { return [{ type: 'text', text: 'inline:' + rawBody }]; },
       detectCompletion() { return true; },
       getConfidence() { return 0.8; }
     };`
@@ -112,7 +112,7 @@ describe('StreamParserEngine', () => {
     })
     const engine = new StreamParserEngine(store)
     const result = await engine.parse('hello', 'test')
-    expect(result.blocks).toEqual([{ kind: 'text', content: 'inline:hello', index: 0 }])
+    expect(result.blocks).toEqual([{ type: 'text', text: 'inline:hello' }])
   })
 
   it('detectCompletion() returns true for a complete response', async () => {

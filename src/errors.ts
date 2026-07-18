@@ -173,3 +173,48 @@ export class BudgetExceededError extends CapStoreError {
     super('BudgetExceededError', `${budget} ${used} > ${limit}`)
   }
 }
+
+// ── Harness Command Registry / Repair Engine (017-harness-command-registry) ──
+export class HarnessRepairError extends CapStoreError {
+  constructor(message: string, details?: unknown) {
+    super('HarnessRepairError', message, details)
+  }
+}
+
+export class HarnessCommandNotFoundError extends CapStoreError {
+  constructor(commandId: string, version?: string) {
+    const v = version ? ` v${version}` : ''
+    super('HarnessCommandNotFoundError', `Harness command not found: ${commandId}${v}`)
+  }
+}
+
+export class HarnessRetryExhaustedError extends CapStoreError {
+  public readonly attempts: number
+  public readonly lastError?: string
+
+  constructor(attempts: number, lastError?: string) {
+    super('HarnessRetryExhaustedError', `Retry exhausted after ${attempts} attempt(s)`, {
+      attempts,
+      lastError,
+    })
+    this.attempts = attempts
+    this.lastError = lastError
+  }
+}
+
+// ── SendResilience ────────────────────────────────────────────────
+
+export type RecoveryKind = 'chrome_crash' | 'cdp_down' | 'session_expired' | 'circuit_open' | 'unknown' | 'relogin'
+
+export class SendResilienceError extends CapStoreError {
+  public readonly recoveryKind: RecoveryKind
+  public readonly retryAfterMs?: number
+  public readonly autoReconnectAttempted: boolean
+
+  constructor(message: string, meta: { recoveryKind: RecoveryKind; providerId: string; slaveId: string; retryAfterMs?: number; autoReconnectAttempted: boolean; defaultMessage: string }) {
+    super('SendResilienceError', message, meta)
+    this.recoveryKind = meta.recoveryKind
+    this.retryAfterMs = meta.retryAfterMs
+    this.autoReconnectAttempted = meta.autoReconnectAttempted
+  }
+}

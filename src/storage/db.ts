@@ -445,14 +445,17 @@ const DEFAULT_PRAGMAS: DbPragmaPolicy = {
 export async function configurePrisma(db: CapStoreDb, policy?: Partial<DbPragmaPolicy>): Promise<void> {
   const pragmas = { ...DEFAULT_PRAGMAS, ...policy }
 
-  await db.prisma.$executeRawUnsafe(`PRAGMA journal_mode = ${pragmas.journalMode}`)
-  await db.prisma.$executeRawUnsafe(`PRAGMA synchronous = ${pragmas.synchronous}`)
-  await db.prisma.$executeRawUnsafe(`PRAGMA cache_size = ${pragmas.cacheSize}`)
-  await db.prisma.$executeRawUnsafe(`PRAGMA temp_store = ${pragmas.tempStore}`)
-  await db.prisma.$executeRawUnsafe(`PRAGMA mmap_size = ${pragmas.mmapSize}`)
-  await db.prisma.$executeRawUnsafe(`PRAGMA busy_timeout = ${pragmas.busyTimeoutMs}`)
-  await db.prisma.$executeRawUnsafe(`PRAGMA wal_autocheckpoint = ${pragmas.walAutocheckpoint}`)
-  await db.prisma.$executeRawUnsafe(`PRAGMA foreign_keys = ${pragmas.foreignKeys ? 'ON' : 'OFF'}`)
+  // All pragmas may return a row (e.g. journal_mode echoes the new mode,
+  // mmap_size/busy_timeout echo the value). $executeRawUnsafe rejects returned
+  // rows on SQLite (P2010), so every pragma write goes through $queryRawUnsafe.
+  await db.prisma.$queryRawUnsafe(`PRAGMA journal_mode = ${pragmas.journalMode}`)
+  await db.prisma.$queryRawUnsafe(`PRAGMA synchronous = ${pragmas.synchronous}`)
+  await db.prisma.$queryRawUnsafe(`PRAGMA cache_size = ${pragmas.cacheSize}`)
+  await db.prisma.$queryRawUnsafe(`PRAGMA temp_store = ${pragmas.tempStore}`)
+  await db.prisma.$queryRawUnsafe(`PRAGMA mmap_size = ${pragmas.mmapSize}`)
+  await db.prisma.$queryRawUnsafe(`PRAGMA busy_timeout = ${pragmas.busyTimeoutMs}`)
+  await db.prisma.$queryRawUnsafe(`PRAGMA wal_autocheckpoint = ${pragmas.walAutocheckpoint}`)
+  await db.prisma.$queryRawUnsafe(`PRAGMA foreign_keys = ${pragmas.foreignKeys ? 'ON' : 'OFF'}`)
 
   const journalMode = await db.prisma.$queryRawUnsafe<{ journal_mode: string }[]>(
     'PRAGMA journal_mode',

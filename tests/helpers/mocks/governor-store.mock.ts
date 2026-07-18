@@ -9,6 +9,7 @@ export function createMockGovernorStore(overrides: Partial<GovernorStore> = {}):
   return {
     listAccounts: mock(() => [...accounts.values()]),
     getAccount: mock((id: string) => accounts.get(id) ?? null),
+    getAccountsByProvider: mock(() => []),
     createAccount: mock((input: any) => {
       const row = {
         id: crypto.randomUUID(),
@@ -19,8 +20,21 @@ export function createMockGovernorStore(overrides: Partial<GovernorStore> = {}):
       accounts.set(row.id, row)
       return row
     }),
+    upsertAccount: mock(() => {}),
+    deleteAccount: mock(() => {}),
     updateAccount: mock(() => {}),
     recordHealthCheck: mock(() => {}),
+    createFleetEvent: mock(() => ({})),
+    getFleetEvents: mock(() => []),
+    getCircuitState: mock(() => null),
+    upsertCircuitState: mock(() => {}),
+    createHealthTick: mock(() => ({})),
+    createTraceEntry: mock(() => ({})),
+    getTrace: mock(() => []),
+    getProviderFleetConfig: mock(() => null),
+    getHarnessCommand: mock(() => null),
+    listHarnessCommands: mock(() => []),
+    upsertHarnessCommand: mock(() => {}),
     ...overrides,
-  } as GovernorStore
+  } as unknown as GovernorStore
 }

@@ -174,6 +174,9 @@ export class CDPProxy {
     private mutexes: Map<string, AsyncMutex>,
     private transport?: CDPTransport,
     private eventBus?: GovernorEventBus,
+    private browserHarness?: import(
+      './browser-automation/harness-actions.js',
+    ).BrowserHarnessActions,
   ) {}
 
   async send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown> {
@@ -291,6 +294,77 @@ export class CDPProxy {
               expression,
               returnByValue: true,
             })
+            stepsCompleted++
+            break
+          }
+          // ── Extended browser-automation vocabulary (recipe-compiler) ──
+          case 'scroll': {
+            const x = typeof params.x === 'number' ? params.x : 0
+            const y = typeof params.y === 'number' ? params.y : 0
+            const expr =
+              typeof params.selector === 'string'
+                ? `document.querySelector(${JSON.stringify(params.selector)})?.scrollIntoView()`
+                : `window.scrollBy(${x},${y})`
+            await this.transport?.send(slaveId, 'Runtime.evaluate', {
+              expression: expr,
+              returnByValue: true,
+            })
+            stepsCompleted++
+            break
+          }
+          case 'hover':
+          case 'select':
+          case 'press':
+          case 'upload':
+          case 'wait_selector':
+          case 'wait_text':
+          case 'screenshot':
+          case 'assert':
+          case 'mock_request':
+          case 'cookie_set':
+          case 'observe': {
+            // Delegate to the browser-automation harness action handler so all
+            // CDP stays Governor-Canon-safe and the logic isn't duplicated here.
+            if (this.browserHarness) {
+              await this.browserHarness.runAction(slaveId, action, params)
+            }
+            stepsCompleted++
+            break
+          }
+          case 'tab_open': {
+            await this.transport?.send(slaveId, 'Target.createTarget', {
+              url: (params.url as string) ?? 'about:blank',
+            })
+            stepsCompleted++
+            break
+          }
+          case 'tab_close': {
+            if (params.targetId)
+              await this.transport?.send(slaveId, 'Target.closeTarget', {
+                targetId: params.targetId,
+              })
+            else await this.transport?.send(slaveId, 'Page.close', {})
+            stepsCompleted++
+            break
+          }
+          case 'tab_switch': {
+            await this.transport
+              ?.send(slaveId, 'Target.activateTarget', { targetId: params.targetId })
+              .catch(() => {})
+            stepsCompleted++
+            break
+          }
+          case 'extract_markdown': {
+            await this.transport?.send(slaveId, 'Runtime.evaluate', {
+              expression: `document.body.innerText.replace(/\\n{3,}/g,'\\n\\n').trim()`,
+              returnByValue: true,
+            })
+            stepsCompleted++
+            break
+          }
+          case 'human_gate': {
+            // In headless automation, human gates are logged and pass through.
+            this.eventBus?.emit('harness:human_gate', { slaveId, prompt: params.prompt })
             stepsCompleted++
             break
           }
@@ -639,6 +713,10 @@ export class ChromeGovernor {
   private traceLog: TraceLog | null = null
   private healthMonitor: HealthMonitor | null = null
   private circuitBreakers = new Map<string, CircuitBreaker>()
+  /** Memoized provider-free generic browser slave (automation backbone). */
+  private _genericSlaveId: string | null = null
+  /** Extended browser-automation recipe actions (set by bootstrap). */
+  browserHarness?: import('./browser-automation/harness-actions.js').BrowserHarnessActions
 
   constructor(
     private store: GovernorStore,
@@ -650,8 +728,7 @@ export class ChromeGovernor {
     this.cdpTransport = transport ?? null
 
     // Use injected fleetSupervisor or create real one
-    this.fleetSupervisor =
-      (fleetSupervisor ??
+    this.fleetSupervisor = (fleetSupervisor ??
       new FleetSupervisor(store, {
         portRange: this.config.portRange,
         healthProbeIntervalMs: this.config.healthProbeIntervalMs ?? 30_000,
@@ -700,6 +777,7 @@ export class ChromeGovernor {
 
   async killAll(): Promise<void> {
     await this.fleetSupervisor.killAll()
+    this._genericSlaveId = null
   }
 
   async ensureRunning(slaveId: string): Promise<ChromeSlave> {
@@ -843,7 +921,13 @@ export class ChromeGovernor {
     // freeze a stale snapshot and a freshly-spawned slave (e.g. a chatgpt send)
     // would 404 as "Slave not found". Mutexes + transport are shared by
     // reference, so rebuilding the thin proxy wrapper is cheap and safe.
-    this._cdpProxy = new CDPProxy(this.slaves, this.mutexes, this.cdpTransport, this.eventBus)
+    this._cdpProxy = new CDPProxy(
+      this.slaves,
+      this.mutexes,
+      this.cdpTransport,
+      this.eventBus,
+      this.browserHarness,
+    )
     return this._cdpProxy
   }
 
@@ -860,7 +944,7 @@ export class ChromeGovernor {
    */
   async enableDomains(
     slaveId: string,
-    domains: Array<'Runtime' | 'DOM' | 'Page' | 'Network' | 'Log'>,
+    domains: Array<'Runtime' | 'DOM' | 'Page' | 'Network' | 'Log' | 'Accessibility' | 'Input'>,
   ): Promise<void> {
     for (const domain of domains) {
       await this.cdp.send(slaveId, `${domain}.enable`).catch(() => {
@@ -888,6 +972,183 @@ export class ChromeGovernor {
       throw new EngineError(`Runtime.evaluate threw: ${JSON.stringify(result.exceptionDetails)}`)
     }
     return result?.result?.value
+  }
+
+  // ── Capability execution (Stage 3: Slave executes) ───────────────────────
+  //
+  // Resolves a registered `cap:cdp:*` capability to a live slave and fires the
+  // real CDP command through the mediated transport (Governor Canon intact).
+  // Drives the full chain: conversation/provider → slave → CDP send → trace.
+
+  /**
+   * Resolve the target slave for a capability execution.
+   * Accepts either a conversationId (resolved via the conversation's provider to
+   * a running slave) or a direct providerId. Falls back to the provider-free
+   * generic browser when no provider-bound slave exists.
+   */
+  private async resolveSlaveForExecution(
+    ref: string,
+    resolver: { getConversationProviderId?: (id: string) => Promise<string | null> },
+  ): Promise<ChromeSlave> {
+    let providerId: string | null = null
+
+    // Cheap check: is `ref` a known provider with a running slave?
+    const providerSlaves = this.getAllSlaves({ providerId: ref })
+    if (providerSlaves.length > 0) {
+      providerId = ref
+    } else if (resolver.getConversationProviderId) {
+      providerId = await resolver.getConversationProviderId(ref)
+    }
+
+    if (providerId) {
+      const slaves = this.getAllSlaves({ providerId })
+      if (slaves.length > 0) return slaves[0] as ChromeSlave
+      // Provider known but no slave up — spawn one so execution still proceeds.
+      return this.spawn(providerId, 'default')
+    }
+
+    // No provider context: use the shared generic browser (automation backbone).
+    return this.ensureGenericBrowser()
+  }
+
+  /**
+   * Core CDP send used by capability execution. Resolves the slave from a
+   * conversationId/providerId reference, fires the real CDP command, and records
+   * a trace entry. `params` are forwarded verbatim as the CDP command parameters.
+   */
+  async executeCdpMethod(
+    ref: string,
+    cdpMethod: string,
+    params: Record<string, unknown>,
+    resolver?: { getConversationProviderId?: (id: string) => Promise<string | null> },
+  ): Promise<unknown> {
+    if (!this.cdpTransport) {
+      throw new EngineError('CDP transport not configured. Call setCdpTransport() first.')
+    }
+
+    const slave = await this.resolveSlaveForExecution(ref, resolver ?? {})
+    const start = Date.now()
+    try {
+      const result = await this.cdp.send(slave.slaveId, cdpMethod, params)
+      await this.recordTrace({
+        method: 'executeCapability',
+        conversationId: ref,
+        slaveId: slave.slaveId,
+        paramsJson: JSON.stringify({ cdpMethod, params }),
+        resultJson: JSON.stringify(result),
+        durationMs: Date.now() - start,
+        error: null,
+      }).catch(() => {})
+      return result
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'execution failed'
+      await this.recordTrace({
+        method: 'executeCapability',
+        conversationId: ref,
+        slaveId: slave.slaveId,
+        paramsJson: JSON.stringify({ cdpMethod, params }),
+        resultJson: null,
+        durationMs: Date.now() - start,
+        error: message,
+      }).catch(() => {})
+      throw err
+    }
+  }
+
+  /**
+   * Execute a registered capability by slug against a live slave (Stage 3).
+   * `ref` is a conversationId or providerId. The capability must be a `cap:cdp:*`
+   * (discovered) capability — its CDP method is read from the capability id
+   * (`cap:cdp:Runtime.evaluate`) and its input schema parameters are forwarded as
+   * the CDP command parameters.
+   */
+  async executeCapability(
+    ref: string,
+    slug: string,
+    opts?: {
+      resolver?: { getConversationProviderId?: (id: string) => Promise<string | null> }
+      capabilityLookup?: (
+        slug: string,
+      ) => { id: string; inputSchema?: { properties?: Record<string, unknown> } } | null
+      params?: Record<string, unknown>
+    },
+  ): Promise<unknown> {
+    const cap = opts?.capabilityLookup?.(slug)
+    if (!cap) {
+      throw new EngineError(`Capability not found for slug: ${slug}`)
+    }
+    if (!cap.id.startsWith('cap:cdp:')) {
+      throw new EngineError(`Not a CDP capability: ${cap.id}`)
+    }
+    const cdpMethod = cap.id.slice('cap:cdp:'.length)
+    return this.executeCdpMethod(ref, cdpMethod, opts?.params ?? {}, opts?.resolver)
+  }
+
+  // ── Provider-free generic browser (automation backbone) ───────────────────
+  //
+  // A neutral Chrome slave not bound to any chat provider. The system can drive
+  // the open web through it for any automation task (research, monitoring,
+  // scraping, testing). Governor Canon: all CDP still funnels through `this.cdp`.
+
+  /**
+   * Find-or-spawn the shared generic browser slave. Memoized per governor
+   * lifetime; `killAll()` clears it so the next call relaunches.
+   */
+  async ensureGenericBrowser(opts?: LaunchOptions): Promise<ChromeSlave> {
+    if (this._genericSlaveId) {
+      const existing = this.getSlave(this._genericSlaveId)
+      if (existing) return existing
+    }
+    const slave = await this.spawn('generic', 'default', {
+      ...opts,
+      extraArgs: [...(opts?.extraArgs ?? []), '--no-first-run', '--disable-default-args'],
+    })
+    this._genericSlaveId = slave.slaveId
+    return slave
+  }
+
+  /** Reset the memoized generic slave (e.g. after killAll). */
+  clearGenericBrowser(): void {
+    this._genericSlaveId = null
+  }
+
+  /** Wire the extended browser-automation harness actions (called at boot). */
+  setBrowserHarness(
+    harness: import('./browser-automation/harness-actions.js').BrowserHarnessActions,
+  ): void {
+    this.browserHarness = harness
+  }
+
+  /**
+   * Capture a screenshot of a slave (base64 PNG) through the governor transport.
+   * Convenience used by capability handlers + observe tap.
+   */
+  async captureScreenshot(
+    slaveId: string,
+    region?: { x: number; y: number; w: number; h: number },
+  ): Promise<string> {
+    const params: Record<string, unknown> = { format: 'png' }
+    if (region) {
+      params.captureBeyondViewport = true
+      params.clip = { x: region.x, y: region.y, width: region.w, height: region.h, scale: 1 }
+    }
+    const res = (await this.cdp.send(slaveId, 'Page.captureScreenshot', params)) as {
+      data?: string
+    }
+    if (!res?.data) throw new EngineError('ChromeGovernor: screenshot failed')
+    return res.data
+  }
+
+  /** Get the full accessibility tree for a slave (role/name). */
+  async getAccessibilityTree(
+    slaveId: string,
+  ): Promise<{ role: string; name?: string; children?: unknown[] }> {
+    await this.enableDomains(slaveId, ['Accessibility', 'Runtime'])
+    const res = (await this.cdp.send(slaveId, 'Accessibility.getFullAXTree', {})) as {
+      nodes?: Record<string, unknown>
+    }
+    if (!res?.nodes) throw new EngineError('ChromeGovernor: empty AX tree')
+    return { role: 'root', children: Object.values(res.nodes) }
   }
 
   // ── Trace (3.4 TraceLog) ────────────────────────────────────────────────

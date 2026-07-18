@@ -123,7 +123,7 @@ describe('parser-repair', () => {
 
     // The repaired parser actually splits NDJSON into classified blocks.
     const result = await engine.parse(RAW, 'p')
-    const toolUse = result.blocks.find((b) => b.kind === 'tool_use')
+    const toolUse = result.blocks.find((b) => b.type === 'tool-call')
     expect(toolUse).toBeDefined()
     expect((toolUse as { toolName: string }).toolName).toBe('x')
   })

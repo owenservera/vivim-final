@@ -114,7 +114,7 @@ export class StreamAlignmentEngine {
       totalConfidence += result.confidence
       blockCount += result.blocks.length
       for (const b of result.blocks) {
-        if (b.kind === 'text' || b.kind === 'code' || b.kind === 'thinking') textBlocks++
+        if (b.type === 'text' || b.type === 'code' || b.type === 'reasoning') textBlocks++
       }
     }
 

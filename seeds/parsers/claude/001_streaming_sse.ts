@@ -10,7 +10,6 @@ export default {
 
   parse(rawBody: string): ContentBlock[] {
     const blocks: ContentBlock[] = []
-    let index = 0
     for (const line of rawBody.split('\n')) {
       const trimmed = line.trim()
       if (!trimmed.startsWith('data:')) continue
@@ -21,36 +20,42 @@ export default {
         if (json.type === 'content_block_start' && json.content_block) {
           const cb = json.content_block
           if (cb.type === 'thinking') {
-            blocks.push({ kind: 'thinking', content: '', index: index++ })
+            blocks.push({ type: 'reasoning', text: '' })
           } else if (cb.type === 'tool_use') {
             blocks.push({
-              kind: 'tool_use',
+              type: 'tool-call',
+              toolCallId: `tc_${blocks.length}`,
               toolName: cb.name,
               input: cb.input ?? {},
-              index: index++,
             })
           } else if (cb.type === 'image') {
-            blocks.push({ kind: 'image', url: cb.url, alt: cb.alt, index: index++ })
+            blocks.push({
+              type: 'file',
+              mediaType: 'image/png',
+              url: cb.url,
+              filename: cb.alt,
+            })
           }
         }
         if (json.type === 'content_block_delta' && json.delta?.text) {
           const lastBlock = blocks[blocks.length - 1]
-          if (lastBlock && lastBlock.kind === 'text') {
-            lastBlock.content += json.delta.text
-          } else if (json.delta?.thinking) {
-            const lastBlock = blocks[blocks.length - 1]
-            if (lastBlock && lastBlock.kind === 'thinking') {
-              lastBlock.content += json.delta.thinking
-            }
+          if (lastBlock && lastBlock.type === 'text' && typeof lastBlock.text === 'string') {
+            lastBlock.text += json.delta.text
+          }
+        }
+        if (json.delta?.thinking) {
+          const lastBlock = blocks[blocks.length - 1]
+          if (lastBlock && lastBlock.type === 'reasoning' && typeof lastBlock.text === 'string') {
+            lastBlock.text += json.delta.thinking
           }
         }
         if (json.type === 'message_start') {
-          blocks.push({ kind: 'meta', key: 'message_id', value: json.message?.id, index: index++ })
+          blocks.push({ type: 'meta', key: 'message_id', value: json.message?.id })
         }
         if (json.type === 'message_stop' || json.type === 'error') {
           const last = blocks[blocks.length - 1]
-          if (last && last.kind !== 'meta') {
-            blocks.push({ kind: 'meta', key: 'stopped', value: json.type, index: index++ })
+          if (last && last.type !== 'meta') {
+            blocks.push({ type: 'meta', key: 'stopped', value: json.type })
           }
         }
       } catch {
@@ -58,7 +63,7 @@ export default {
       }
     }
     if (blocks.length === 0 && rawBody.length > 0) {
-      blocks.push({ kind: 'text', content: rawBody, index: 0 })
+      blocks.push({ type: 'text', text: rawBody })
     }
     return blocks
   },

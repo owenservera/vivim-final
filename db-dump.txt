@@ -1,0 +1,6569 @@
+
+===== TABLE provider_definition (63 rows) =====
+
+#0
+  id: chatgpt
+  slug: chatgpt
+  display_name: ChatGPT
+  description: OpenAI's ChatGPT assistant
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: https://chatgpt.com
+  documentation_url: https://platform.openai.com/docs
+  auth_type: browser
+  has_multi_account: 1
+  profile_strategy: per_account
+  fleet_config_json: {"port_range":[9252,9280],"extra_args":["--no-first-run"]}
+  capabilities_json: ["select_model","send_message","edit_message","regenerate_response","upload_file","create_new_chat","navigate_chat","delete_chat","rename_chat","browse_with_bing"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280215675
+  updated_at: 1784281212985
+  provider_type_id: 01KXQP6XM35BFWGX7CTCC06GGH
+
+#1
+  id: claude
+  slug: claude
+  display_name: Claude
+  description: Anthropic's Claude AI assistant
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: https://claude.ai
+  documentation_url: https://docs.anthropic.com
+  auth_type: browser
+  has_multi_account: 1
+  profile_strategy: per_account
+  fleet_config_json: {"port_range":[9222,9250],"extra_args":["--disable-features=Translate","--no-first-run"]}
+  capabilities_json: ["select_model","send_message","edit_message","regenerate_response","toggle_extended_thinking","upload_file","create_new_chat","navigate_chat","delete_chat","rename_chat","deep_research"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280215832
+  updated_at: 1784281213413
+  provider_type_id: 01KXQP6XM35BFWGX7CTCC06GGH
+
+#2
+  id: deepseek
+  slug: deepseek
+  display_name: DeepSeek
+  description: DeepSeek AI assistant with strong coding and reasoning capabilities
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: https://chat.deepseek.com
+  documentation_url: https://platform.deepseek.com/api-docs
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {"port_range":[9312,9340]}
+  capabilities_json: ["send_message","edit_message","regenerate_response","create_new_chat","navigate_chat","delete_chat","rename_chat"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280216038
+  updated_at: 1784281213645
+  provider_type_id: 01KXQP6XM35BFWGX7CTCC06GGH
+
+#3
+  id: facebook
+  slug: facebook
+  display_name: Facebook Messenger
+  description: Facebook Messenger channel
+  category: messaging
+  provider_type: messaging
+  is_active: 1
+  website_url: https://www.facebook.com/messages
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: single
+  fleet_config_json: {"port_range":[9360,9380],"extra_args":["--no-first-run"]}
+  capabilities_json: ["channel_add","channel_connect","message_send","message_receive"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280216168
+  updated_at: 1784281213852
+  provider_type_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+
+#4
+  id: gemini
+  slug: gemini
+  display_name: Gemini
+  description: Google's Gemini AI assistant
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: https://gemini.google.com
+  documentation_url: https://ai.google.dev/docs
+  auth_type: browser
+  has_multi_account: 1
+  profile_strategy: per_account
+  fleet_config_json: {"port_range":[9282,9310],"extra_args":["--no-first-run"]}
+  capabilities_json: ["select_model","send_message","edit_message","regenerate_response","upload_file","create_new_chat","navigate_chat","delete_chat","rename_chat"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280216217
+  updated_at: 1784281213945
+  provider_type_id: 01KXQP6XM35BFWGX7CTCC06GGH
+
+#5
+  id: qwen
+  slug: qwen
+  display_name: Qwen
+  description: Alibaba's Qwen AI assistant
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: https://tongyi.aliyun.com
+  documentation_url: https://help.aliyun.com/zh/model-studio/
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {"port_range":[9372,9400]}
+  capabilities_json: ["send_message","select_model","create_new_chat","navigate_chat"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280216334
+  updated_at: 1784281214111
+  provider_type_id: 01KXQP6XM35BFWGX7CTCC06GGH
+
+#6
+  id: slack
+  slug: slack
+  display_name: Slack
+  description: Slack messaging channel
+  category: messaging
+  provider_type: messaging
+  is_active: 1
+  website_url: https://api.slack.com
+  documentation_url: null
+  auth_type: oauth
+  has_multi_account: 0
+  profile_strategy: single
+  fleet_config_json: {"port_range":[9400,9420],"extra_args":[]}
+  capabilities_json: ["channel_add","channel_connect","message_send","message_receive"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280216562
+  updated_at: 1784281214434
+  provider_type_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+
+#7
+  id: studio-ai
+  slug: studio-ai
+  display_name: Studio AI
+  description: Google AI Studio — Gemini API playground and prototyping environment
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: https://aistudio.google.com
+  documentation_url: https://ai.google.dev/docs
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {"port_range":[9342,9370]}
+  capabilities_json: ["send_message","select_model","create_new_chat","navigate_chat"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280216674
+  updated_at: 1784281214533
+  provider_type_id: 01KXQP6XM35BFWGX7CTCC06GGH
+
+#8
+  id: system
+  slug: system
+  display_name: System
+  description: System-level fallback parsers — universal fallback chain
+  category: system
+  provider_type: system
+  is_active: 1
+  website_url: https://vivim.app
+  documentation_url: null
+  auth_type: none
+  has_multi_account: 0
+  profile_strategy: shared
+  fleet_config_json: {}
+  capabilities_json: []
+  models_json: []
+  plugin_id: null
+  created_at: 1784280216844
+  updated_at: 1784281214756
+  provider_type_id: null
+
+#9
+  id: telegram
+  slug: telegram
+  display_name: Telegram
+  description: Telegram messaging channel
+  category: messaging
+  provider_type: messaging
+  is_active: 1
+  website_url: https://core.telegram.org
+  documentation_url: null
+  auth_type: api_key
+  has_multi_account: 0
+  profile_strategy: single
+  fleet_config_json: {"port_range":[9380,9400],"extra_args":[]}
+  capabilities_json: ["channel_add","channel_connect","message_send","message_receive"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280216942
+  updated_at: 1784281214810
+  provider_type_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+
+#10
+  id: whatsapp
+  slug: whatsapp
+  display_name: WhatsApp
+  description: WhatsApp Web messaging channel
+  category: messaging
+  provider_type: messaging
+  is_active: 1
+  website_url: https://web.whatsapp.com
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: single
+  fleet_config_json: {"port_range":[9340,9360],"extra_args":["--no-first-run"]}
+  capabilities_json: ["channel_add","channel_connect","message_send","message_receive"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280217033
+  updated_at: 1784281214916
+  provider_type_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+
+#11
+  id: z-ai
+  slug: z-ai
+  display_name: Z AI
+  description: Z.AI — Z.ai's multimodal AI assistant
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: https://z.ai
+  documentation_url: null
+  auth_type: api
+  has_multi_account: 0
+  profile_strategy: shared
+  fleet_config_json: {}
+  capabilities_json: ["send_message","select_model"]
+  models_json: []
+  plugin_id: null
+  created_at: 1784280217093
+  updated_at: 1784281214975
+  provider_type_id: 01KXQP6XM35BFWGX7CTCC06GGH
+
+#12
+  id: prov_01KXQPAX613K96QA37XG5T0YEX
+  slug: prov-slug-prov_01KXQPAX613K96QA37XG5T0YEX
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784280348052
+  updated_at: 1784280348053
+  provider_type_id: null
+
+#13
+  id: prov_01KXQPAX62DE1HBHA2VYE1CQKS
+  slug: prov-slug-prov_01KXQPAX62DE1HBHA2VYE1CQKS
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784280348146
+  updated_at: 1784280348146
+  provider_type_id: null
+
+#14
+  id: prov_01KXQPAX623DQ25PN2QJ3E3CXR
+  slug: prov-slug-prov_01KXQPAX623DQ25PN2QJ3E3CXR
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784280348174
+  updated_at: 1784280348174
+  provider_type_id: null
+
+#15
+  id: prov_01KXR603K9209VDKB24WD05EF7
+  slug: prov-slug-prov_01KXR603K9209VDKB24WD05EF7
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784296771357
+  updated_at: 1784296771357
+  provider_type_id: null
+
+#16
+  id: prov_01KXR603KA559K3KGTZV2CBFEQ
+  slug: prov-slug-prov_01KXR603KA559K3KGTZV2CBFEQ
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784296771456
+  updated_at: 1784296771456
+  provider_type_id: null
+
+#17
+  id: prov_01KXR603KAMKMX0RKWM477NST3
+  slug: prov-slug-prov_01KXR603KAMKMX0RKWM477NST3
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784296771537
+  updated_at: 1784296771537
+  provider_type_id: null
+
+#18
+  id: prov_01KXR679JE10543V18965YPMFE
+  slug: prov-slug-prov_01KXR679JE10543V18965YPMFE
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784297006863
+  updated_at: 1784297006872
+  provider_type_id: null
+
+#19
+  id: prov_01KXR679JFAYDJM9Y15MA698XX
+  slug: prov-slug-prov_01KXR679JFAYDJM9Y15MA698XX
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784297007276
+  updated_at: 1784297007276
+  provider_type_id: null
+
+#20
+  id: prov_01KXR679JFPVAKCHDNBY54RX7W
+  slug: prov-slug-prov_01KXR679JFPVAKCHDNBY54RX7W
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784297007489
+  updated_at: 1784297007489
+  provider_type_id: null
+
+#21
+  id: prov_01KXR6ARJMJWHCE7DSME4T621P
+  slug: prov-slug-prov_01KXR6ARJMJWHCE7DSME4T621P
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784297122865
+  updated_at: 1784297122872
+  provider_type_id: null
+
+#22
+  id: prov_01KXR6ARJZPCAARY9R2MPV62SA
+  slug: prov-slug-prov_01KXR6ARJZPCAARY9R2MPV62SA
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784297123975
+  updated_at: 1784297123975
+  provider_type_id: null
+
+#23
+  id: prov_01KXR6ARK4QJHSZVJJDR2W402E
+  slug: prov-slug-prov_01KXR6ARK4QJHSZVJJDR2W402E
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784297124856
+  updated_at: 1784297124856
+  provider_type_id: null
+
+#24
+  id: prov_01KXR7E54405APQPZX1Q2VKCK8
+  slug: prov-slug-prov_01KXR7E54405APQPZX1Q2VKCK8
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784298280942
+  updated_at: 1784298280942
+  provider_type_id: null
+
+#25
+  id: prov_01KXR7E545A551TNY6W0VT1P67
+  slug: prov-slug-prov_01KXR7E545A551TNY6W0VT1P67
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784298281219
+  updated_at: 1784298281219
+  provider_type_id: null
+
+#26
+  id: prov_01KXR7E545CJB1WSJS7R2VZZ7G
+  slug: prov-slug-prov_01KXR7E545CJB1WSJS7R2VZZ7G
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784298281458
+  updated_at: 1784298281458
+  provider_type_id: null
+
+#27
+  id: prov_01KXR82T64VQV15YEPFB7RD64P
+  slug: prov-slug-prov_01KXR82T64VQV15YEPFB7RD64P
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784298957806
+  updated_at: 1784298957806
+  provider_type_id: null
+
+#28
+  id: prov_01KXR82T66WZ9D8VPEYQP2BKB0
+  slug: prov-slug-prov_01KXR82T66WZ9D8VPEYQP2BKB0
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784298958272
+  updated_at: 1784298958272
+  provider_type_id: null
+
+#29
+  id: prov_01KXR82T667XKB7MJGMAPAYSKY
+  slug: prov-slug-prov_01KXR82T667XKB7MJGMAPAYSKY
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784298958645
+  updated_at: 1784298958645
+  provider_type_id: null
+
+#30
+  id: prov_01KXR8GE098CWRTAVB3SQ6KE6H
+  slug: prov-slug-prov_01KXR8GE098CWRTAVB3SQ6KE6H
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784299404877
+  updated_at: 1784299404877
+  provider_type_id: null
+
+#31
+  id: prov_01KXR8GE096FX6J8KY6ZMM7XC6
+  slug: prov-slug-prov_01KXR8GE096FX6J8KY6ZMM7XC6
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784299405682
+  updated_at: 1784299405682
+  provider_type_id: null
+
+#32
+  id: prov_01KXR8GE0AMK38VYRYF5DWQXSS
+  slug: prov-slug-prov_01KXR8GE0AMK38VYRYF5DWQXSS
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784299406632
+  updated_at: 1784299406632
+  provider_type_id: null
+
+#33
+  id: prov_01KXRA51DVWKBRFH37KFB5PHNA
+  slug: prov-slug-prov_01KXRA51DVWKBRFH37KFB5PHNA
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784301127202
+  updated_at: 1784301127202
+  provider_type_id: null
+
+#34
+  id: prov_01KXRA51DV0HJ9G0J35R5XVB2N
+  slug: prov-slug-prov_01KXRA51DV0HJ9G0J35R5XVB2N
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784301127253
+  updated_at: 1784301127253
+  provider_type_id: null
+
+#35
+  id: prov_01KXRA51DW9Q52YBJ12RN2QXCE
+  slug: prov-slug-prov_01KXRA51DW9Q52YBJ12RN2QXCE
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784301127306
+  updated_at: 1784301127306
+  provider_type_id: null
+
+#36
+  id: prov_01KXRAKRNYSB3FKJJQ9YC6BXS9
+  slug: prov-slug-prov_01KXRAKRNYSB3FKJJQ9YC6BXS9
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784301609839
+  updated_at: 1784301609840
+  provider_type_id: null
+
+#37
+  id: prov_01KXRAKRNZJ294N99ZM5W448D1
+  slug: prov-slug-prov_01KXRAKRNZJ294N99ZM5W448D1
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784301609968
+  updated_at: 1784301609968
+  provider_type_id: null
+
+#38
+  id: prov_01KXRAKRNZF6Z9BXMDS89A9TBT
+  slug: prov-slug-prov_01KXRAKRNZF6Z9BXMDS89A9TBT
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784301610030
+  updated_at: 1784301610030
+  provider_type_id: null
+
+#39
+  id: prov_01KXRB0EVS4J16ZREJ30DDVK96
+  slug: prov-slug-prov_01KXRB0EVS4J16ZREJ30DDVK96
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302027536
+  updated_at: 1784302027536
+  provider_type_id: null
+
+#40
+  id: prov_01KXRB0EVTF1WPNYVJH30B9XE7
+  slug: prov-slug-prov_01KXRB0EVTF1WPNYVJH30B9XE7
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302028756
+  updated_at: 1784302028756
+  provider_type_id: null
+
+#41
+  id: prov_01KXRB0EVT9MFD3YC3DQPFG5EJ
+  slug: prov-slug-prov_01KXRB0EVT9MFD3YC3DQPFG5EJ
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302030001
+  updated_at: 1784302030001
+  provider_type_id: null
+
+#42
+  id: prov_01KXRB9V8TKQ5EXEY5Z0NWDSY2
+  slug: prov-slug-prov_01KXRB9V8TKQ5EXEY5Z0NWDSY2
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302334223
+  updated_at: 1784302334225
+  provider_type_id: null
+
+#43
+  id: prov_01KXRB9V8T37D2RRM33YZE83VP
+  slug: prov-slug-prov_01KXRB9V8T37D2RRM33YZE83VP
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302335035
+  updated_at: 1784302335035
+  provider_type_id: null
+
+#44
+  id: prov_01KXRB9V8VT1NJ75BJMH3CEG70
+  slug: prov-slug-prov_01KXRB9V8VT1NJ75BJMH3CEG70
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302335664
+  updated_at: 1784302335664
+  provider_type_id: null
+
+#45
+  id: prov_01KXRBGWEVGXGQ3MG3ZFZJ3SMJ
+  slug: prov-slug-prov_01KXRBGWEVGXGQ3MG3ZFZJ3SMJ
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302564003
+  updated_at: 1784302564003
+  provider_type_id: null
+
+#46
+  id: prov_01KXRBGWEWPJJ8ZBVAFB2HMVC3
+  slug: prov-slug-prov_01KXRBGWEWPJJ8ZBVAFB2HMVC3
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302564134
+  updated_at: 1784302564134
+  provider_type_id: null
+
+#47
+  id: prov_01KXRBGWEX0XF0ZG9XJ24FT309
+  slug: prov-slug-prov_01KXRBGWEX0XF0ZG9XJ24FT309
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302564233
+  updated_at: 1784302564233
+  provider_type_id: null
+
+#48
+  id: prov_01KXRBQW6VDQKYQA1HXFMTVRED
+  slug: prov-slug-prov_01KXRBQW6VDQKYQA1HXFMTVRED
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302793489
+  updated_at: 1784302793489
+  provider_type_id: null
+
+#49
+  id: prov_01KXRBQW6WVBJQPN18TSYRXJJZ
+  slug: prov-slug-prov_01KXRBQW6WVBJQPN18TSYRXJJZ
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302793636
+  updated_at: 1784302793636
+  provider_type_id: null
+
+#50
+  id: prov_01KXRBQW6W7C2PV6A492BJ4YXV
+  slug: prov-slug-prov_01KXRBQW6W7C2PV6A492BJ4YXV
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784302793729
+  updated_at: 1784302793729
+  provider_type_id: null
+
+#51
+  id: prov_01KXRCDYSYCFXW8ZK8V1P3VT05
+  slug: prov-slug-prov_01KXRCDYSYCFXW8ZK8V1P3VT05
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784303516956
+  updated_at: 1784303516957
+  provider_type_id: null
+
+#52
+  id: prov_01KXRCDYSZ4AVA3Y8GCDNF3TKW
+  slug: prov-slug-prov_01KXRCDYSZ4AVA3Y8GCDNF3TKW
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784303517079
+  updated_at: 1784303517079
+  provider_type_id: null
+
+#53
+  id: prov_01KXRCDYSZKB5741DZRSY26CQN
+  slug: prov-slug-prov_01KXRCDYSZKB5741DZRSY26CQN
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784303517222
+  updated_at: 1784303517222
+  provider_type_id: null
+
+#54
+  id: prov_01KXRCWSFP104VQ24AYRQ9KJK2
+  slug: prov-slug-prov_01KXRCWSFP104VQ24AYRQ9KJK2
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784304003449
+  updated_at: 1784304003450
+  provider_type_id: null
+
+#55
+  id: prov_01KXRCWSFQWCZTYMAAM2HKQVXR
+  slug: prov-slug-prov_01KXRCWSFQWCZTYMAAM2HKQVXR
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784304003835
+  updated_at: 1784304003835
+  provider_type_id: null
+
+#56
+  id: prov_01KXRCWSFQ3AZ0HK6YWBM725T3
+  slug: prov-slug-prov_01KXRCWSFQ3AZ0HK6YWBM725T3
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784304004070
+  updated_at: 1784304004070
+  provider_type_id: null
+
+#57
+  id: prov_01KXRD0ZKP0FE7GKJ4YDCNPKNT
+  slug: prov-slug-prov_01KXRD0ZKP0FE7GKJ4YDCNPKNT
+  display_name: FTS Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784304140452
+  updated_at: 1784304140453
+  provider_type_id: null
+
+#58
+  id: prov_01KXRD0ZKQ2BKE7ETVSSXTNNAZ
+  slug: prov-slug-prov_01KXRD0ZKQ2BKE7ETVSSXTNNAZ
+  display_name: Delete Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784304140736
+  updated_at: 1784304140736
+  provider_type_id: null
+
+#59
+  id: prov_01KXRD0ZKR42PP1BTP58BVQ6Q2
+  slug: prov-slug-prov_01KXRD0ZKR42PP1BTP58BVQ6Q2
+  display_name: Blocks Test Provider
+  description: null
+  category: ai
+  provider_type: llm
+  is_active: 1
+  website_url: null
+  documentation_url: null
+  auth_type: browser
+  has_multi_account: 0
+  profile_strategy: per_account
+  fleet_config_json: {}
+  capabilities_json: {}
+  models_json: []
+  plugin_id: null
+  created_at: 1784304140956
+  updated_at: 1784304140956
+  provider_type_id: null
+… +3 more
+
+===== TABLE provider_type (4 rows) =====
+
+#0
+  id: 01KXQP6XM35BFWGX7CTCC06GGH
+  slug: ai-chat
+  display_name: AI Chat Webapp
+  description: Composer + transcript thread + bubbles
+  slot_catalog_json: ["prompt-box","response-bubble","user-bubble","model-switcher","new-chat","chat-history-sidebar","streaming-indicator","regenerate","copy-message","branch"]
+  region_layout_json: {}
+  interaction_grammar_json: {"basePrimitive":"conversations","sendGesture":"enter"}
+  base_primitive: conversations
+  version: 1
+  created_at: 1784280217234
+  updated_at: 1784280217234
+
+#1
+  id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  slug: email
+  display_name: Email
+  description: Folder list + message list + reader + compose
+  slot_catalog_json: ["folder-list","message-list","message-reader","compose-window","to-cc-bcc","send","archive","label","signature","draft-autosave"]
+  region_layout_json: {}
+  interaction_grammar_json: {"basePrimitive":"mailbox","sendGesture":"enter"}
+  base_primitive: mailbox
+  version: 1
+  created_at: 1784280217312
+  updated_at: 1784280217312
+
+#2
+  id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  slug: messenger
+  display_name: Messengers
+  description: Conversation list + chat + bubbles
+  slot_catalog_json: ["conversation-list","chat-header","message-bubble","typing-indicator","emoji-picker","voice-note","read-receipt","status-presence"]
+  region_layout_json: {}
+  interaction_grammar_json: {"basePrimitive":"conversations","sendGesture":"enter"}
+  base_primitive: conversations
+  version: 1
+  created_at: 1784280217321
+  updated_at: 1784280217321
+
+#3
+  id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  slug: social
+  display_name: Social
+  description: Feed + post cards + composer + reactions
+  slot_catalog_json: ["feed","post-card","composer","like-react","comment","share","follow-button","stories-tray","profile-header"]
+  region_layout_json: {}
+  interaction_grammar_json: {"basePrimitive":"feed","sendGesture":"enter"}
+  base_primitive: feed
+  version: 1
+  created_at: 1784280217324
+  updated_at: 1784280217324
+
+===== TABLE primitive (53 rows) =====
+
+#0
+  id: prim:cross:message-bubble
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Message Bubble
+  description: One message card from one sender. Shared across chat/messenger/social.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217328
+  updated_at: 1784280217328
+
+#1
+  id: prim:cross:attach-doc
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Attach Doc
+  description: Attach file/image/doc before sending.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217362
+  updated_at: 1784280217362
+
+#2
+  id: prim:cross:composer
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Composer
+  description: Text-entry surface that produces a message/post.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217371
+  updated_at: 1784280217371
+
+#3
+  id: prim:cross:send-action
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Send Action
+  description: Commit composed content.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217375
+  updated_at: 1784280217375
+
+#4
+  id: prim:cross:thread
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Thread / Conversation List
+  description: Scroll region of past messages.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217378
+  updated_at: 1784280217378
+
+#5
+  id: prim:cross:sender-identity
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Sender Identity
+  description: Who is "me" (account switcher / avatar).
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217391
+  updated_at: 1784280217391
+
+#6
+  id: prim:cross:search
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Search
+  description: Find within the surface.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217418
+  updated_at: 1784280217418
+
+#7
+  id: prim:cross:notification
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Notification
+  description: Toast / badge surface.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217427
+  updated_at: 1784280217427
+
+#8
+  id: prim:cross:settings
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Settings
+  description: Gear / preferences entry.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217434
+  updated_at: 1784280217434
+
+#9
+  id: prim:cross:error-surface
+  scope: cross-type
+  family_id: null
+  provider_id: null
+  label: Error Surface
+  description: Error / empty / blocked state.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217442
+  updated_at: 1784280217442
+
+#10
+  id: prim:ai-chat:prompt-box
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: Prompt Box
+  description: Composer variant for AI chat.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217511
+  updated_at: 1784280217511
+
+#11
+  id: prim:ai-chat:response-bubble
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: Response Bubble
+  description: Assistant message bubble.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217551
+  updated_at: 1784280217551
+
+#12
+  id: prim:ai-chat:user-bubble
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: User Bubble
+  description: User message bubble.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217554
+  updated_at: 1784280217554
+
+#13
+  id: prim:ai-chat:model-switcher
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: Model Switcher
+  description: Pick the underlying model.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217558
+  updated_at: 1784280217558
+
+#14
+  id: prim:ai-chat:new-chat
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: New Chat
+  description: Start a fresh conversation.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217561
+  updated_at: 1784280217561
+
+#15
+  id: prim:ai-chat:chat-history-sidebar
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: Chat History Sidebar
+  description: List of past conversations.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217568
+  updated_at: 1784280217568
+
+#16
+  id: prim:ai-chat:streaming-indicator
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: Streaming Indicator
+  description: Token streaming progress.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217590
+  updated_at: 1784280217590
+
+#17
+  id: prim:ai-chat:regenerate
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: Regenerate
+  description: Re-run the last assistant turn.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217626
+  updated_at: 1784280217626
+
+#18
+  id: prim:ai-chat:copy-message
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: Copy Message
+  description: Copy a message to clipboard.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217633
+  updated_at: 1784280217633
+
+#19
+  id: prim:ai-chat:branch
+  scope: family
+  family_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  provider_id: null
+  label: Branch
+  description: Fork a conversation branch.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217637
+  updated_at: 1784280217637
+
+#20
+  id: prim:email:folder-list
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Folder List
+  description: Inbox/sent/drafts.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217640
+  updated_at: 1784280217640
+
+#21
+  id: prim:email:message-list
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Message List
+  description: List of messages in a folder.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217647
+  updated_at: 1784280217647
+
+#22
+  id: prim:email:message-reader
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Message Reader
+  description: Read a single message.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217651
+  updated_at: 1784280217651
+
+#23
+  id: prim:email:compose-window
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Compose Window
+  description: Rich compose surface.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217690
+  updated_at: 1784280217690
+
+#24
+  id: prim:email:to-cc-bcc
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: To / Cc / Bcc
+  description: Recipient fields.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217693
+  updated_at: 1784280217693
+
+#25
+  id: prim:email:send
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Send
+  description: Send email.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217698
+  updated_at: 1784280217698
+
+#26
+  id: prim:email:archive
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Archive
+  description: Archive a message.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217706
+  updated_at: 1784280217706
+
+#27
+  id: prim:email:label
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Label
+  description: Tag a message.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217709
+  updated_at: 1784280217709
+
+#28
+  id: prim:email:signature
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Signature
+  description: Auto signature.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217713
+  updated_at: 1784280217713
+
+#29
+  id: prim:email:draft-autosave
+  scope: family
+  family_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  provider_id: null
+  label: Draft Autosave
+  description: Persist drafts.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217717
+  updated_at: 1784280217717
+
+#30
+  id: prim:messenger:conversation-list
+  scope: family
+  family_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  provider_id: null
+  label: Conversation List
+  description: List of chats.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217758
+  updated_at: 1784280217758
+
+#31
+  id: prim:messenger:chat-header
+  scope: family
+  family_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  provider_id: null
+  label: Chat Header
+  description: Contact name/status.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217851
+  updated_at: 1784280217851
+
+#32
+  id: prim:messenger:message-bubble
+  scope: family
+  family_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  provider_id: null
+  label: Message Bubble
+  description: One message bubble.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217878
+  updated_at: 1784280217878
+
+#33
+  id: prim:messenger:typing-indicator
+  scope: family
+  family_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  provider_id: null
+  label: Typing Indicator
+  description: Peer is typing.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217942
+  updated_at: 1784280217942
+
+#34
+  id: prim:messenger:emoji-picker
+  scope: family
+  family_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  provider_id: null
+  label: Emoji Picker
+  description: Insert emoji.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217970
+  updated_at: 1784280217970
+
+#35
+  id: prim:messenger:voice-note
+  scope: family
+  family_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  provider_id: null
+  label: Voice Note
+  description: Send audio.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217973
+  updated_at: 1784280217973
+
+#36
+  id: prim:messenger:read-receipt
+  scope: family
+  family_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  provider_id: null
+  label: Read Receipt
+  description: Seen state.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217977
+  updated_at: 1784280217977
+
+#37
+  id: prim:messenger:status-presence
+  scope: family
+  family_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  provider_id: null
+  label: Status / Presence
+  description: Online/last-seen.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217986
+  updated_at: 1784280217986
+
+#38
+  id: prim:social:feed
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Feed
+  description: Infinite scroll of posts.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280217989
+  updated_at: 1784280217989
+
+#39
+  id: prim:social:post-card
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Post Card
+  description: One post in the feed.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218037
+  updated_at: 1784280218037
+
+#40
+  id: prim:social:composer
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Composer
+  description: Top-of-feed or modal composer.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218098
+  updated_at: 1784280218098
+
+#41
+  id: prim:social:like-react
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Like / React
+  description: Reaction control.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218149
+  updated_at: 1784280218149
+
+#42
+  id: prim:social:comment
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Comment
+  description: Comment on a post.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218251
+  updated_at: 1784280218251
+
+#43
+  id: prim:social:share
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Share
+  description: Share a post.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218379
+  updated_at: 1784280218379
+
+#44
+  id: prim:social:follow-button
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Follow Button
+  description: Follow/unfollow.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218434
+  updated_at: 1784280218434
+
+#45
+  id: prim:social:stories-tray
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Stories Tray
+  description: Stories rail.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218498
+  updated_at: 1784280218498
+
+#46
+  id: prim:social:profile-header
+  scope: family
+  family_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  provider_id: null
+  label: Profile Header
+  description: User profile header.
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218520
+  updated_at: 1784280218520
+
+#47
+  id: prim:provider:chatgpt:canvas-viewer
+  scope: provider
+  family_id: null
+  provider_id: chatgpt
+  label: Canvas Viewer
+  description: ChatGPT canvas code viewer
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218542
+  updated_at: 1784280218542
+
+#48
+  id: prim:provider:claude:artifacts-viewer
+  scope: provider
+  family_id: null
+  provider_id: claude
+  label: Artifacts Viewer
+  description: Claude artifacts viewer
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218546
+  updated_at: 1784280218546
+
+#49
+  id: prim:provider:gemini:inline-images
+  scope: provider
+  family_id: null
+  provider_id: gemini
+  label: Inline Images
+  description: Gemini inline image display
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218549
+  updated_at: 1784280218549
+
+#50
+  id: prim:provider:chatgpt:model-picker
+  scope: provider
+  family_id: null
+  provider_id: chatgpt
+  label: Model Picker
+  description: Provider-specific model picker
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218587
+  updated_at: 1784280218587
+
+#51
+  id: prim:provider:claude:code-block-viewer
+  scope: provider
+  family_id: null
+  provider_id: claude
+  label: Code Block Viewer
+  description: Code block with syntax highlighting
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218590
+  updated_at: 1784280218590
+
+#52
+  id: prim:provider:gemini:image-generator
+  scope: provider
+  family_id: null
+  provider_id: gemini
+  label: Image Generator
+  description: Gemini image generation surface
+  default_region_json: {"x":0,"y":0,"w":320,"h":200}
+  version: 1
+  created_at: 1784280218593
+  updated_at: 1784280218593
+
+===== TABLE ui_component (22 rows) =====
+
+#0
+  id: uc:cross-type:global:prim:cross:message-bubble
+  primitive_id: prim:cross:message-bubble
+  scope: cross-type
+  owner_id: global
+  variant: null
+  component_key: message-bubble.base
+  display_name: Base Message Bubble
+  html: <div class="bubble">{{content}}</div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218598
+  updated_at: 1784280218598
+
+#1
+  id: uc:cross-type:global:prim:cross:composer
+  primitive_id: prim:cross:composer
+  scope: cross-type
+  owner_id: global
+  variant: null
+  component_key: composer.base
+  display_name: Base Composer
+  html: <textarea class="composer"></textarea>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218607
+  updated_at: 1784280218607
+
+#2
+  id: uc:family:01KXQP6XM35BFWGX7CTCC06GGH:prim:cross:composer
+  primitive_id: prim:cross:composer
+  scope: family
+  owner_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  variant: null
+  component_key: composer.ai-chat
+  display_name: AI-Chat Composer
+  html: <textarea class="composer ai-chat" placeholder="Send a message…"></textarea>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218611
+  updated_at: 1784280218611
+
+#3
+  id: uc:family:01KXQP6XM35BFWGX7CTCC06GGH:prim:cross:composer:gemini
+  primitive_id: prim:cross:composer
+  scope: family
+  owner_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  variant: gemini
+  component_key: composer.ai-chat.gemini
+  display_name: Gemini Composer (contenteditable)
+  html: <div class="composer gemini" contenteditable="true"></div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218678
+  updated_at: 1784280218678
+
+#4
+  id: uc:family:01KXQP6XM35BFWGX7CTCC06GGH:prim:ai-chat:prompt-box
+  primitive_id: prim:ai-chat:prompt-box
+  scope: family
+  owner_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  variant: null
+  component_key: prompt-box.ai-chat
+  display_name: AI-Chat Prompt Box
+  html: <div class="prompt-box" contenteditable="true"></div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218687
+  updated_at: 1784280218687
+
+#5
+  id: uc:family:01KXQP6XM35BFWGX7CTCC06GGH:prim:ai-chat:response-bubble
+  primitive_id: prim:ai-chat:response-bubble
+  scope: family
+  owner_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  variant: null
+  component_key: response-bubble.ai-chat
+  display_name: AI Response Bubble
+  html: <div class="bubble assistant">{{content}}</div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218691
+  updated_at: 1784280218691
+
+#6
+  id: uc:family:01KXQP6XM35BFWGX7CTCC06GGH:prim:ai-chat:chat-history-sidebar
+  primitive_id: prim:ai-chat:chat-history-sidebar
+  scope: family
+  owner_id: 01KXQP6XM35BFWGX7CTCC06GGH
+  variant: null
+  component_key: chat-history-sidebar.ai-chat
+  display_name: AI-Chat History Sidebar
+  html: <div class="sidebar history">{{conversations}}</div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218754
+  updated_at: 1784280218754
+
+#7
+  id: uc:family:01KXQP6XQ0P7Y9TDBM8AHWRS81:prim:cross:composer
+  primitive_id: prim:cross:composer
+  scope: family
+  owner_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  variant: null
+  component_key: composer.email
+  display_name: Email Compose
+  html: <div class="email-compose"><input class="to" placeholder="To" /><textarea class="body"></textarea></div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218764
+  updated_at: 1784280218764
+
+#8
+  id: uc:family:01KXQP6XQ0P7Y9TDBM8AHWRS81:prim:email:message-reader
+  primitive_id: prim:email:message-reader
+  scope: family
+  owner_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  variant: null
+  component_key: message-reader.email
+  display_name: Email Message Reader
+  html: <div class="email-reader">{{body}}</div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218768
+  updated_at: 1784280218768
+
+#9
+  id: uc:family:01KXQP6XQ0P7Y9TDBM8AHWRS81:prim:email:message-list
+  primitive_id: prim:email:message-list
+  scope: family
+  owner_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  variant: null
+  component_key: message-list.email
+  display_name: Email Message List
+  html: <ul class="email-list">{{messages}}</ul>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218810
+  updated_at: 1784280218810
+
+#10
+  id: uc:family:01KXQP6XQ0P7Y9TDBM8AHWRS81:prim:email:folder-list
+  primitive_id: prim:email:folder-list
+  scope: family
+  owner_id: 01KXQP6XQ0P7Y9TDBM8AHWRS81
+  variant: null
+  component_key: folder-list.email
+  display_name: Email Folder List
+  html: <nav class="email-folders">{{folders}}</nav>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218819
+  updated_at: 1784280218819
+
+#11
+  id: uc:family:01KXQP6XQ95XKDRJXXSB9AEE36:prim:cross:composer
+  primitive_id: prim:cross:composer
+  scope: family
+  owner_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  variant: null
+  component_key: composer.messenger
+  display_name: Messenger Composer
+  html: <textarea class="messenger-composer" placeholder="Message…"></textarea>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218826
+  updated_at: 1784280218826
+
+#12
+  id: uc:family:01KXQP6XQ95XKDRJXXSB9AEE36:prim:messenger:conversation-list
+  primitive_id: prim:messenger:conversation-list
+  scope: family
+  owner_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  variant: null
+  component_key: conversation-list.messenger
+  display_name: Messenger Conversation List
+  html: <ul class="conversation-list">{{chats}}</ul>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218834
+  updated_at: 1784280218834
+
+#13
+  id: uc:family:01KXQP6XQ95XKDRJXXSB9AEE36:prim:messenger:message-bubble
+  primitive_id: prim:messenger:message-bubble
+  scope: family
+  owner_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  variant: null
+  component_key: message-bubble.messenger
+  display_name: Messenger Message Bubble
+  html: <div class="messenger-bubble">{{content}}</div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218876
+  updated_at: 1784280218876
+
+#14
+  id: uc:family:01KXQP6XQ95XKDRJXXSB9AEE36:prim:messenger:typing-indicator
+  primitive_id: prim:messenger:typing-indicator
+  scope: family
+  owner_id: 01KXQP6XQ95XKDRJXXSB9AEE36
+  variant: null
+  component_key: typing-indicator.messenger
+  display_name: Messenger Typing Indicator
+  html: <div class="typing-indicator"><span></span><span></span><span></span></div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218885
+  updated_at: 1784280218885
+
+#15
+  id: uc:family:01KXQP6XQC1CXMWSYZGVF8T7R8:prim:social:composer
+  primitive_id: prim:social:composer
+  scope: family
+  owner_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  variant: null
+  component_key: composer.social
+  display_name: Social Composer
+  html: <div class="social-composer" contenteditable="true" placeholder="What’s happening?"></div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218889
+  updated_at: 1784280218889
+
+#16
+  id: uc:family:01KXQP6XQC1CXMWSYZGVF8T7R8:prim:social:feed
+  primitive_id: prim:social:feed
+  scope: family
+  owner_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  variant: null
+  component_key: feed.social
+  display_name: Social Feed
+  html: <div class="social-feed">{{posts}}</div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218893
+  updated_at: 1784280218893
+
+#17
+  id: uc:family:01KXQP6XQC1CXMWSYZGVF8T7R8:prim:social:post-card
+  primitive_id: prim:social:post-card
+  scope: family
+  owner_id: 01KXQP6XQC1CXMWSYZGVF8T7R8
+  variant: null
+  component_key: post-card.social
+  display_name: Social Post Card
+  html: <article class="post-card">{{content}}</article>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218920
+  updated_at: 1784280218920
+
+#18
+  id: uc:provider:chatgpt:prim:ai-chat:response-bubble:chatgpt
+  primitive_id: prim:ai-chat:response-bubble
+  scope: provider
+  owner_id: chatgpt
+  variant: chatgpt
+  component_key: canvas-viewer.chatgpt
+  display_name: ChatGPT Canvas Viewer
+  html: <div class="chatgpt-canvas"><iframe class="canvas-frame"></iframe></div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218937
+  updated_at: 1784280218937
+
+#19
+  id: uc:provider:chatgpt:prim:ai-chat:model-switcher:chatgpt
+  primitive_id: prim:ai-chat:model-switcher
+  scope: provider
+  owner_id: chatgpt
+  variant: chatgpt
+  component_key: model-picker.chatgpt
+  display_name: ChatGPT Model Picker
+  html: <select class="model-picker chatgpt">{{models}}</select>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218941
+  updated_at: 1784280218941
+
+#20
+  id: uc:provider:claude:prim:ai-chat:response-bubble:claude
+  primitive_id: prim:ai-chat:response-bubble
+  scope: provider
+  owner_id: claude
+  variant: claude
+  component_key: artifacts-viewer.claude
+  display_name: Claude Artifacts Viewer
+  html: <div class="claude-artifacts"><pre><code>{{content}}</code></pre></div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218945
+  updated_at: 1784280218945
+
+#21
+  id: uc:provider:gemini:prim:ai-chat:response-bubble:gemini
+  primitive_id: prim:ai-chat:response-bubble
+  scope: provider
+  owner_id: gemini
+  variant: gemini
+  component_key: inline-images.gemini
+  display_name: Gemini Inline Images
+  html: <div class="gemini-inline-images"><img src="{{url}}" alt="{{alt}}" /></div>
+  css: 
+  script_url: null
+  sandbox_json: {}
+  constraints_json: {}
+  contract_json: {}
+  archetype: null
+  version: 1
+  status: published
+  author: system
+  tags_json: []
+  default_region_json: 
+  created_at: 1784280218955
+  updated_at: 1784280218955
+
+===== TABLE provider_endpoint (21 rows) =====
+
+#0
+  id: 01KXQQ5A24Y4VP7RRRH28MCJHC
+  provider_id: chatgpt
+  url: https://chatgpt.com
+  label: Landing
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281212959
+  updated_at: 1784281213003
+
+#1
+  id: 01KXQQ5A2HYDY796THEDFSV3Y2
+  provider_id: chatgpt
+  url: https://chatgpt.com
+  label: Chat
+  endpoint_type: chat
+  is_default: 0
+  selectors_json: {"composer":"#prompt-textarea","send_button":"[data-testid='send-button']"}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281212959
+  updated_at: 1784281213009
+
+#2
+  id: 01KXQQ5A3YSE5A6DXE5M6QP2PE
+  provider_id: chatgpt
+  url: https://chatgpt.com/auth/login
+  label: Login
+  endpoint_type: login
+  is_default: 0
+  selectors_json: {"email_input":"input[name='email']","continue_button":"button[type='submit']"}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281212959
+  updated_at: 1784281213055
+
+#3
+  id: 01KXQQ5AFF1337G809ETTQESYH
+  provider_id: claude
+  url: https://claude.ai
+  label: Landing
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281213403
+  updated_at: 1784281213445
+
+#4
+  id: 01KXQQ5AGYGS701Y0YERQ97B2A
+  provider_id: claude
+  url: https://claude.ai/new
+  label: Chat
+  endpoint_type: chat
+  is_default: 0
+  selectors_json: {"composer":"[data-testid=\"chat-input\"]","composer_fallback":"div.ProseMirror[contenteditable]","fetch_patterns":["*claude.ai/api/*"],"dom_selectors":["div.font-claude-response","[data-message-author-role=\"assistant\"]"]}
+  composer_type: prosemirror
+  send_method: enter_key
+  content_editable: 1
+  created_at: 1784281213403
+  updated_at: 1784281213470
+
+#5
+  id: 01KXQQ5AH3CJDKKPE2VN5F7GZ4
+  provider_id: claude
+  url: https://claude.ai/login
+  label: Login
+  endpoint_type: login
+  is_default: 0
+  selectors_json: {"email_input":"input[type='email']","continue_button":"button[type='submit']"}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281213403
+  updated_at: 1784281213475
+
+#6
+  id: 01KXQQ5APQGFHQBCDNGX2GC38Q
+  provider_id: deepseek
+  url: https://chat.deepseek.com
+  label: Landing
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281213602
+  updated_at: 1784281213655
+
+#7
+  id: 01KXQQ5AQEMQMV45J6Y62HT5TY
+  provider_id: deepseek
+  url: https://chat.deepseek.com
+  label: Chat
+  endpoint_type: chat
+  is_default: 0
+  selectors_json: {"composer":"textarea","send_button":"button[aria-label='Send']"}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281213602
+  updated_at: 1784281213678
+
+#8
+  id: 01KXQQ5AQKNWSF1QJE7WRNMSGB
+  provider_id: deepseek
+  url: https://chat.deepseek.com/sign_in
+  label: Login
+  endpoint_type: login
+  is_default: 0
+  selectors_json: {"email_input":"input[type='email']","continue_button":"button[type='submit']"}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281213602
+  updated_at: 1784281213683
+
+#9
+  id: 01KXQQ5AXBJSZ47Q9ATVHXFAA5
+  provider_id: facebook
+  url: https://www.facebook.com/messages
+  label: Web
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281213846
+  updated_at: 1784281213867
+
+#10
+  id: 01KXQQ5B0X3NEPW908NSBRVFEK
+  provider_id: gemini
+  url: https://gemini.google.com
+  label: Landing
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281213941
+  updated_at: 1784281213986
+
+#11
+  id: 01KXQQ5B1DSTZH8THXXBYDNJDR
+  provider_id: gemini
+  url: https://gemini.google.com/app
+  label: Chat
+  endpoint_type: chat
+  is_default: 0
+  selectors_json: {"composer":".ql-editor","send_button":"button[aria-label='Send message']"}
+  composer_type: quill
+  send_method: both
+  content_editable: 1
+  created_at: 1784281213941
+  updated_at: 1784281213997
+
+#12
+  id: 01KXQQ5B244ARF7PMT2NENV4V3
+  provider_id: gemini
+  url: https://accounts.google.com
+  label: Login
+  endpoint_type: login
+  is_default: 0
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281213941
+  updated_at: 1784281214020
+
+#13
+  id: 01KXQQ5B6C4YTGFYKJ0GBVB1X8
+  provider_id: qwen
+  url: https://tongyi.aliyun.com
+  label: Landing
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281214107
+  updated_at: 1784281214164
+
+#14
+  id: 01KXQQ5B70846CVN6PG3C4S096
+  provider_id: qwen
+  url: https://tongyi.aliyun.com/qianwen
+  label: Chat
+  endpoint_type: chat
+  is_default: 0
+  selectors_json: {"composer":"textarea","send_button":"button[aria-label='Send']"}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281214107
+  updated_at: 1784281214176
+
+#15
+  id: 01KXQQ5BFNEMXW06HCW771B8C2
+  provider_id: slack
+  url: https://slack.com/api
+  label: API
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281214393
+  updated_at: 1784281214453
+
+#16
+  id: 01KXQQ5BJQZZJQR6T268VZN1BW
+  provider_id: studio-ai
+  url: https://aistudio.google.com
+  label: Landing
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281214528
+  updated_at: 1784281214551
+
+#17
+  id: 01KXQQ5BJVA8N9VKD9JEC9GMA4
+  provider_id: studio-ai
+  url: https://aistudio.google.com/prompts/new_chat
+  label: Chat
+  endpoint_type: chat
+  is_default: 0
+  selectors_json: {"composer":"rich-textarea","send_button":"button[aria-label='Send message']"}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281214528
+  updated_at: 1784281214555
+
+#18
+  id: 01KXQQ5BWQVXNQD1YMR1VZ69PK
+  provider_id: telegram
+  url: https://api.telegram.org
+  label: Bot API
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281214802
+  updated_at: 1784281214878
+
+#19
+  id: 01KXQQ5BYH76S6499CVQAP0TNJ
+  provider_id: whatsapp
+  url: https://web.whatsapp.com
+  label: Web
+  endpoint_type: landing
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281214912
+  updated_at: 1784281214929
+
+#20
+  id: 01KXQQ5C0NFQRZH8ZJ8A2ESN03
+  provider_id: z-ai
+  url: https://api.z.ai/v1
+  label: API
+  endpoint_type: api
+  is_default: 1
+  selectors_json: {}
+  composer_type: textarea
+  send_method: both
+  content_editable: 0
+  created_at: 1784281214970
+  updated_at: 1784281214998
+
+===== TABLE provider_capability (14 rows) =====
+
+#0
+  id: 01KXQQ5A6TSADN15Q1EZF1K4BC
+  provider_id: chatgpt
+  global_capability_id: send_message
+  recovery_strategies_json: [{"type":"retry_selector"},{"type":"navigate_home"}]
+  ui_component_override: text_input
+  ui_label_override: Send to ChatGPT
+  ui_icon_override: arrow-up-circle
+  ui_position_override: composer
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281212959
+  updated_at: 1784281213147
+
+#1
+  id: 01KXQQ5A87FEFDPMMNX1K13XQX
+  provider_id: chatgpt
+  global_capability_id: select_model
+  recovery_strategies_json: []
+  ui_component_override: dropdown_selector
+  ui_label_override: Select GPT Model
+  ui_icon_override: cpu
+  ui_position_override: header
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281212959
+  updated_at: 1784281213192
+
+#2
+  id: 01KXQQ5AJEFW4WBEGXP3R6JJVV
+  provider_id: claude
+  global_capability_id: send_message
+  recovery_strategies_json: [{"type":"retry_selector"},{"type":"retry_with_fallback","config":{"fallback_selector":"textarea"}},{"type":"navigate_home"}]
+  ui_component_override: text_input
+  ui_label_override: Send to Claude
+  ui_icon_override: arrow-up-circle
+  ui_position_override: composer
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281213403
+  updated_at: 1784281213518
+
+#3
+  id: 01KXQQ5AJM6TWCTM7XDTSMHTJF
+  provider_id: claude
+  global_capability_id: select_model
+  recovery_strategies_json: []
+  ui_component_override: dropdown_selector
+  ui_label_override: Select Claude Model
+  ui_icon_override: cpu
+  ui_position_override: header
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281213403
+  updated_at: 1784281213524
+
+#4
+  id: 01KXQQ5AJZDHVG4F3P1QPWQMTM
+  provider_id: claude
+  global_capability_id: toggle_extended_thinking
+  recovery_strategies_json: []
+  ui_component_override: toggle_switch
+  ui_label_override: Extended Thinking
+  ui_icon_override: null
+  ui_position_override: header
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: secondary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: message_has_thinking_block
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281213403
+  updated_at: 1784281213535
+
+#5
+  id: 01KXQQ5AKN7M9QGXCDQNGTEJWZ
+  provider_id: claude
+  global_capability_id: deep_research
+  recovery_strategies_json: []
+  ui_component_override: action_button
+  ui_label_override: Deep Research
+  ui_icon_override: flask
+  ui_position_override: composer
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: secondary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: pro
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281213403
+  updated_at: 1784281213557
+
+#6
+  id: 01KXQQ5AS8H0RW8VSDJ603TCHK
+  provider_id: deepseek
+  global_capability_id: send_message
+  recovery_strategies_json: [{"type":"retry_selector"},{"type":"navigate_home"}]
+  ui_component_override: text_input
+  ui_label_override: Send to DeepSeek
+  ui_icon_override: arrow-up-circle
+  ui_position_override: composer
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281213602
+  updated_at: 1784281213736
+
+#7
+  id: 01KXQQ5B2NWXJQV71Y8Z3JFTR1
+  provider_id: gemini
+  global_capability_id: send_message
+  recovery_strategies_json: [{"type":"retry_selector"},{"type":"navigate_home"}]
+  ui_component_override: text_input
+  ui_label_override: Send to Gemini
+  ui_icon_override: arrow-up-circle
+  ui_position_override: composer
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281213941
+  updated_at: 1784281214038
+
+#8
+  id: 01KXQQ5B2VW2G4W06WEHZVKXR1
+  provider_id: gemini
+  global_capability_id: select_model
+  recovery_strategies_json: []
+  ui_component_override: dropdown_selector
+  ui_label_override: Select Gemini Model
+  ui_icon_override: cpu
+  ui_position_override: header
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281213941
+  updated_at: 1784281214043
+
+#9
+  id: 01KXQQ5B8S1S962AJVYW8XP6N8
+  provider_id: qwen
+  global_capability_id: send_message
+  recovery_strategies_json: [{"type":"retry_selector"},{"type":"navigate_home"}]
+  ui_component_override: text_input
+  ui_label_override: Send to Qwen
+  ui_icon_override: arrow-up-circle
+  ui_position_override: composer
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281214107
+  updated_at: 1784281214234
+
+#10
+  id: 01KXQQ5BA3KPX9CTD607JRP0PK
+  provider_id: qwen
+  global_capability_id: select_model
+  recovery_strategies_json: []
+  ui_component_override: dropdown_selector
+  ui_label_override: Select Qwen Model
+  ui_icon_override: cpu
+  ui_position_override: header
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281214107
+  updated_at: 1784281214275
+
+#11
+  id: 01KXQQ5BNMBW04PZKSQ478C93Y
+  provider_id: studio-ai
+  global_capability_id: send_message
+  recovery_strategies_json: [{"type":"retry_selector"},{"type":"navigate_home"}]
+  ui_component_override: text_input
+  ui_label_override: Send to Studio AI
+  ui_icon_override: arrow-up-circle
+  ui_position_override: composer
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281214528
+  updated_at: 1784281214644
+
+#12
+  id: 01KXQQ5BPKKY0F7E8XPKCJHKG4
+  provider_id: studio-ai
+  global_capability_id: select_model
+  recovery_strategies_json: []
+  ui_component_override: dropdown_selector
+  ui_label_override: Select Model
+  ui_icon_override: cpu
+  ui_position_override: header
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281214528
+  updated_at: 1784281214676
+
+#13
+  id: 01KXQQ5C21EZBVQJ3CF75NHZJK
+  provider_id: z-ai
+  global_capability_id: send_message
+  recovery_strategies_json: [{"type":"retry_selector"}]
+  ui_component_override: text_input
+  ui_label_override: Send to Z AI
+  ui_icon_override: arrow-up-circle
+  ui_position_override: composer
+  ui_order_override: null
+  ui_group_override: null
+  ui_priority_override: primary
+  interaction_mode_override: null
+  ui_states_override_json: null
+  ui_visibility_rule_override: null
+  existential_rule_override: null
+  ui_input_schema_override: null
+  mutation_effects_override_json: null
+  recovery_behavior_override: null
+  state_persistence_override: null
+  data_flow_override: null
+  min_plan_tier_override: null
+  depends_on_override_json: null
+  confidence: 1
+  success_count: 0
+  fail_count: 0
+  consecutive_failures: 0
+  avg_latency_ms: 0
+  p95_latency_ms: 0
+  last_used_at: null
+  selector_hit_count: 0
+  selector_miss_count: 0
+  selector_last_miss_at: null
+  selector_last_error: null
+  created_at: 1784281214970
+  updated_at: 1784281215041
+
+===== TABLE provider_model (18 rows) =====
+
+#0
+  id: 01KXQQ5ABZYYJFXDZ8XNEQWSFF
+  provider_id: chatgpt
+  model_slug: gpt-4o
+  display_name: GPT-4o
+  is_active: 1
+  is_default: 1
+  capabilities_json: []
+  context_window: 128000
+  max_output_tokens: 16384
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 0
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281212959
+  updated_at: 1784281213331
+
+#1
+  id: 01KXQQ5ADDV82XBJ30SGNRMPN5
+  provider_id: chatgpt
+  model_slug: gpt-4o-mini
+  display_name: GPT-4o Mini
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 128000
+  max_output_tokens: 16384
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 0
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281212959
+  updated_at: 1784281213357
+
+#2
+  id: 01KXQQ5ADRZFCYBAQDV0GXHQGP
+  provider_id: chatgpt
+  model_slug: o3
+  display_name: o3
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 200000
+  max_output_tokens: 100000
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 1
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281212959
+  updated_at: 1784281213369
+
+#3
+  id: 01KXQQ5ADZCA5NVDJB0N55MKTK
+  provider_id: chatgpt
+  model_slug: o4-mini
+  display_name: o4-mini
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 200000
+  max_output_tokens: 100000
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 1
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281212959
+  updated_at: 1784281213375
+
+#4
+  id: 01KXQQ5AMBWDZVQEV68E10KAK7
+  provider_id: claude
+  model_slug: claude-sonnet-4-20250514
+  display_name: Sonnet 4
+  is_active: 1
+  is_default: 1
+  capabilities_json: []
+  context_window: 200000
+  max_output_tokens: 64000
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 1
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281213403
+  updated_at: 1784281213580
+
+#5
+  id: 01KXQQ5AMNVSY9A2R8PWGWPM7S
+  provider_id: claude
+  model_slug: claude-opus-4-20250514
+  display_name: Opus 4
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 200000
+  max_output_tokens: 64000
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 1
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281213403
+  updated_at: 1784281213589
+
+#6
+  id: 01KXQQ5AMT2B03V0WCRA9TXRHY
+  provider_id: claude
+  model_slug: claude-haiku-4-20250514
+  display_name: Haiku 4
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 200000
+  max_output_tokens: 64000
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 0
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281213403
+  updated_at: 1784281213594
+
+#7
+  id: 01KXQQ5AVR2F2SM10D6RQ0ENM1
+  provider_id: deepseek
+  model_slug: deepseek-chat
+  display_name: DeepSeek Chat (V3)
+  is_active: 1
+  is_default: 1
+  capabilities_json: []
+  context_window: 65536
+  max_output_tokens: 8192
+  supports_streaming: 1
+  supports_vision: 0
+  supports_thinking: 0
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281213602
+  updated_at: 1784281213816
+
+#8
+  id: 01KXQQ5AWCM1F8Q3736HEK358T
+  provider_id: deepseek
+  model_slug: deepseek-reasoner
+  display_name: DeepSeek Reasoner (R1)
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 65536
+  max_output_tokens: 8192
+  supports_streaming: 1
+  supports_vision: 0
+  supports_thinking: 1
+  supports_tools: 0
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281213602
+  updated_at: 1784281213836
+
+#9
+  id: 01KXQQ5B3WK5GAWGVXDH1RJDRH
+  provider_id: gemini
+  model_slug: gemini-2.5-pro
+  display_name: Gemini 2.5 Pro
+  is_active: 1
+  is_default: 1
+  capabilities_json: []
+  context_window: 1048576
+  max_output_tokens: 65536
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 1
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281213941
+  updated_at: 1784281214081
+
+#10
+  id: 01KXQQ5B4965GZV1YZVVYY6RHT
+  provider_id: gemini
+  model_slug: gemini-2.5-flash
+  display_name: Gemini 2.5 Flash
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 1048576
+  max_output_tokens: 65536
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 1
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281213941
+  updated_at: 1784281214089
+
+#11
+  id: 01KXQQ5B4F8TNM255NHZ96EGN4
+  provider_id: gemini
+  model_slug: gemini-2.0-flash
+  display_name: Gemini 2.0 Flash
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 1048576
+  max_output_tokens: 8192
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 0
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281213941
+  updated_at: 1784281214095
+
+#12
+  id: 01KXQQ5BCXG9CE565XXYFQSH6C
+  provider_id: qwen
+  model_slug: qwen-max
+  display_name: Qwen Max
+  is_active: 1
+  is_default: 1
+  capabilities_json: []
+  context_window: 32768
+  max_output_tokens: 8192
+  supports_streaming: 1
+  supports_vision: 0
+  supports_thinking: 0
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281214107
+  updated_at: 1784281214365
+
+#13
+  id: 01KXQQ5BD84N79XWN0070Y1888
+  provider_id: qwen
+  model_slug: qwen-plus
+  display_name: Qwen Plus
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 131072
+  max_output_tokens: 8192
+  supports_streaming: 1
+  supports_vision: 0
+  supports_thinking: 0
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281214107
+  updated_at: 1784281214376
+
+#14
+  id: 01KXQQ5BDKFGA0REJ01521RXKK
+  provider_id: qwen
+  model_slug: qwen-turbo
+  display_name: Qwen Turbo
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 131072
+  max_output_tokens: 8192
+  supports_streaming: 1
+  supports_vision: 0
+  supports_thinking: 0
+  supports_tools: 0
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281214107
+  updated_at: 1784281214387
+
+#15
+  id: 01KXQQ5BQTKACYMPB16FVXY3CK
+  provider_id: studio-ai
+  model_slug: gemini-2.5-pro-preview
+  display_name: Gemini 2.5 Pro Preview
+  is_active: 1
+  is_default: 1
+  capabilities_json: []
+  context_window: 1048576
+  max_output_tokens: 65536
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 1
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281214528
+  updated_at: 1784281214715
+
+#16
+  id: 01KXQQ5BR0ZNNCKGEF67XCAVQP
+  provider_id: studio-ai
+  model_slug: gemini-2.5-flash-preview
+  display_name: Gemini 2.5 Flash Preview
+  is_active: 1
+  is_default: 0
+  capabilities_json: []
+  context_window: 1048576
+  max_output_tokens: 65536
+  supports_streaming: 1
+  supports_vision: 1
+  supports_thinking: 0
+  supports_tools: 1
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281214528
+  updated_at: 1784281214720
+
+#17
+  id: 01KXQQ5C349MV9T3638D4Y0EG7
+  provider_id: z-ai
+  model_slug: z-ai-default
+  display_name: Z AI Default
+  is_active: 1
+  is_default: 1
+  capabilities_json: []
+  context_window: 128000
+  max_output_tokens: 4096
+  supports_streaming: 1
+  supports_vision: 0
+  supports_thinking: 0
+  supports_tools: 0
+  pricing_input_per_1m: null
+  pricing_output_per_1m: null
+  created_at: 1784281214970
+  updated_at: 1784281215081
+
+===== TABLE provider_account (54 rows) =====
+
+#0
+  id: acct_01KXR603K92C7FT38YYGSJ1JBK
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR603K9209VDKB24WD05EF7
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784296771357
+  updated_at: 1784296771402
+  is_deleted: 0
+  deleted_at: null
+
+#1
+  id: acct_01KXR603KA3HW70P7N32JM1YWH
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR603KA559K3KGTZV2CBFEQ
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784296771456
+  updated_at: 1784296771459
+  is_deleted: 0
+  deleted_at: null
+
+#2
+  id: acct_01KXR603KAK7TCMEP4SD9G70WR
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR603KAMKMX0RKWM477NST3
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784296771537
+  updated_at: 1784296771542
+  is_deleted: 0
+  deleted_at: null
+
+#3
+  id: acct_01KXR679JEH1A4RK8YASZY2H89
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR679JE10543V18965YPMFE
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784297006863
+  updated_at: 1784297007018
+  is_deleted: 0
+  deleted_at: null
+
+#4
+  id: acct_01KXR679JFVY6A4Q37DF28MWPE
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR679JFAYDJM9Y15MA698XX
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784297007276
+  updated_at: 1784297007281
+  is_deleted: 0
+  deleted_at: null
+
+#5
+  id: acct_01KXR679JF1GTG56N5Q5DT7RVP
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR679JFPVAKCHDNBY54RX7W
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784297007489
+  updated_at: 1784297007496
+  is_deleted: 0
+  deleted_at: null
+
+#6
+  id: acct_01KXR6ARJMHPFQND5ZXEQTN481
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR6ARJMJWHCE7DSME4T621P
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784297122865
+  updated_at: 1784297123067
+  is_deleted: 0
+  deleted_at: null
+
+#7
+  id: acct_01KXR6ARJZT4HQR7YASPF37SG0
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR6ARJZPCAARY9R2MPV62SA
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784297123975
+  updated_at: 1784297124092
+  is_deleted: 0
+  deleted_at: null
+
+#8
+  id: acct_01KXR6ARK4TNDYHDMJFBGGWBSE
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR6ARK4QJHSZVJJDR2W402E
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784297124856
+  updated_at: 1784297125027
+  is_deleted: 0
+  deleted_at: null
+
+#9
+  id: acct_01KXR7E544V8S755K1NGX7GQM2
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR7E54405APQPZX1Q2VKCK8
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784298280942
+  updated_at: 1784298280982
+  is_deleted: 0
+  deleted_at: null
+
+#10
+  id: acct_01KXR7E54538P3BNZA765JK9JG
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR7E545A551TNY6W0VT1P67
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784298281219
+  updated_at: 1784298281223
+  is_deleted: 0
+  deleted_at: null
+
+#11
+  id: acct_01KXR7E545YV5DGXRQ5Y2AME0X
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR7E545CJB1WSJS7R2VZZ7G
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784298281458
+  updated_at: 1784298281539
+  is_deleted: 0
+  deleted_at: null
+
+#12
+  id: acct_01KXR82T65RPATAM96Q5M79PVH
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR82T64VQV15YEPFB7RD64P
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784298957806
+  updated_at: 1784298957973
+  is_deleted: 0
+  deleted_at: null
+
+#13
+  id: acct_01KXR82T66DJFP4Y77AH682VMW
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR82T66WZ9D8VPEYQP2BKB0
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784298958272
+  updated_at: 1784298958310
+  is_deleted: 0
+  deleted_at: null
+
+#14
+  id: acct_01KXR82T66EQYS4RKZK3N8HQ02
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR82T667XKB7MJGMAPAYSKY
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784298958645
+  updated_at: 1784298958650
+  is_deleted: 0
+  deleted_at: null
+
+#15
+  id: acct_01KXR8GE09JJBBQ4807NMJ1TJ8
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR8GE098CWRTAVB3SQ6KE6H
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784299404877
+  updated_at: 1784299405082
+  is_deleted: 0
+  deleted_at: null
+
+#16
+  id: acct_01KXR8GE094TGKY78WEAA9G3Z8
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR8GE096FX6J8KY6ZMM7XC6
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784299405682
+  updated_at: 1784299405815
+  is_deleted: 0
+  deleted_at: null
+
+#17
+  id: acct_01KXR8GE0A82FM3NSFKVVSPVAM
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXR8GE0AMK38VYRYF5DWQXSS
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784299406632
+  updated_at: 1784299406805
+  is_deleted: 0
+  deleted_at: null
+
+#18
+  id: acct_01KXRA51DVWAZVZQJKN8N4WBD4
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRA51DVWKBRFH37KFB5PHNA
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784301127202
+  updated_at: 1784301127223
+  is_deleted: 0
+  deleted_at: null
+
+#19
+  id: acct_01KXRA51DVTNC5CGC0C6MKJQB1
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRA51DV0HJ9G0J35R5XVB2N
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784301127253
+  updated_at: 1784301127256
+  is_deleted: 0
+  deleted_at: null
+
+#20
+  id: acct_01KXRA51DWCYCNSXC9RE6345WB
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRA51DW9Q52YBJ12RN2QXCE
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784301127306
+  updated_at: 1784301127316
+  is_deleted: 0
+  deleted_at: null
+
+#21
+  id: acct_01KXRAKRNY1EJ63NSJAQ9PRRT3
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRAKRNYSB3FKJJQ9YC6BXS9
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784301609839
+  updated_at: 1784301609871
+  is_deleted: 0
+  deleted_at: null
+
+#22
+  id: acct_01KXRAKRNZK5WDBX8N5AFD8S94
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRAKRNZJ294N99ZM5W448D1
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784301609968
+  updated_at: 1784301609973
+  is_deleted: 0
+  deleted_at: null
+
+#23
+  id: acct_01KXRAKRNZ5WJN02STVT8DXY1P
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRAKRNZF6Z9BXMDS89A9TBT
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784301610030
+  updated_at: 1784301610054
+  is_deleted: 0
+  deleted_at: null
+
+#24
+  id: acct_01KXRB0EVS3HZ36VBHVH9FG115
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRB0EVS4J16ZREJ30DDVK96
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302027536
+  updated_at: 1784302027785
+  is_deleted: 0
+  deleted_at: null
+
+#25
+  id: acct_01KXRB0EVTFZPY7QK5FVSZ20BE
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRB0EVTF1WPNYVJH30B9XE7
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302028756
+  updated_at: 1784302028950
+  is_deleted: 0
+  deleted_at: null
+
+#26
+  id: acct_01KXRB0EVTWEEKNWQAVG6ZAX9A
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRB0EVT9MFD3YC3DQPFG5EJ
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302030001
+  updated_at: 1784302030099
+  is_deleted: 0
+  deleted_at: null
+
+#27
+  id: acct_01KXRB9V8T07TD9WDK718RJCQM
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRB9V8TKQ5EXEY5Z0NWDSY2
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302334223
+  updated_at: 1784302334660
+  is_deleted: 0
+  deleted_at: null
+
+#28
+  id: acct_01KXRB9V8TBKE2B1BZJD0FY5BR
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRB9V8T37D2RRM33YZE83VP
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302335035
+  updated_at: 1784302335054
+  is_deleted: 0
+  deleted_at: null
+
+#29
+  id: acct_01KXRB9V8V6DW6Z0YH8CVSVXMQ
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRB9V8VT1NJ75BJMH3CEG70
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302335664
+  updated_at: 1784302335696
+  is_deleted: 0
+  deleted_at: null
+
+#30
+  id: acct_01KXRBGWEVF6RF7WPDTJ33BBMX
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRBGWEVGXGQ3MG3ZFZJ3SMJ
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302564003
+  updated_at: 1784302564033
+  is_deleted: 0
+  deleted_at: null
+
+#31
+  id: acct_01KXRBGWEWVY1EETFR4BQAABKY
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRBGWEWPJJ8ZBVAFB2HMVC3
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302564134
+  updated_at: 1784302564143
+  is_deleted: 0
+  deleted_at: null
+
+#32
+  id: acct_01KXRBGWEXE09FMGJQ6S1PA8QZ
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRBGWEX0XF0ZG9XJ24FT309
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302564233
+  updated_at: 1784302564243
+  is_deleted: 0
+  deleted_at: null
+
+#33
+  id: acct_01KXRBQW6VVX9QSRWN1X13RZ9H
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRBQW6VDQKYQA1HXFMTVRED
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302793489
+  updated_at: 1784302793541
+  is_deleted: 0
+  deleted_at: null
+
+#34
+  id: acct_01KXRBQW6W8B0GMDKMFAHP5Y1T
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRBQW6WVBJQPN18TSYRXJJZ
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302793636
+  updated_at: 1784302793648
+  is_deleted: 0
+  deleted_at: null
+
+#35
+  id: acct_01KXRBQW6W04T7DM1RSY6TBF3R
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRBQW6W7C2PV6A492BJ4YXV
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784302793729
+  updated_at: 1784302793739
+  is_deleted: 0
+  deleted_at: null
+
+#36
+  id: acct_01KXRCDYSYCMDR20RW434K40SZ
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRCDYSYCFXW8ZK8V1P3VT05
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784303516956
+  updated_at: 1784303517013
+  is_deleted: 0
+  deleted_at: null
+
+#37
+  id: acct_01KXRCDYSZ8EP37HJF7AXSYSFX
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRCDYSZ4AVA3Y8GCDNF3TKW
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784303517079
+  updated_at: 1784303517101
+  is_deleted: 0
+  deleted_at: null
+
+#38
+  id: acct_01KXRCDYSZAA75EGG7SKAKSSGA
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRCDYSZKB5741DZRSY26CQN
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784303517222
+  updated_at: 1784303517244
+  is_deleted: 0
+  deleted_at: null
+
+#39
+  id: acct_01KXRCWSFPARKKQCCJMBH6KKBR
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRCWSFP104VQ24AYRQ9KJK2
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304003449
+  updated_at: 1784304003525
+  is_deleted: 0
+  deleted_at: null
+
+#40
+  id: acct_01KXRCWSFQ7408S17MZ0FQQE5E
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRCWSFQWCZTYMAAM2HKQVXR
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304003835
+  updated_at: 1784304003889
+  is_deleted: 0
+  deleted_at: null
+
+#41
+  id: acct_01KXRCWSFQB16WEFWAEJP81PGJ
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRCWSFQ3AZ0HK6YWBM725T3
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304004070
+  updated_at: 1784304004129
+  is_deleted: 0
+  deleted_at: null
+
+#42
+  id: acct_01KXRD0ZKP4XD72ZVT07JFEG66
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRD0ZKP0FE7GKJ4YDCNPKNT
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304140452
+  updated_at: 1784304140490
+  is_deleted: 0
+  deleted_at: null
+
+#43
+  id: acct_01KXRD0ZKQKP3XVF5VXNHP58FB
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRD0ZKQ2BKE7ETVSSXTNNAZ
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304140736
+  updated_at: 1784304140753
+  is_deleted: 0
+  deleted_at: null
+
+#44
+  id: acct_01KXRD0ZKR9XG174NRGFN0VFPG
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRD0ZKR42PP1BTP58BVQ6Q2
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304140956
+  updated_at: 1784304140995
+  is_deleted: 0
+  deleted_at: null
+
+#45
+  id: acct_01KXRD6SPYGHEHKFHZRG0DH6BV
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRD6SPXEH1PXQNB74NTYYKR
+  email: fts-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304332797
+  updated_at: 1784304332893
+  is_deleted: 0
+  deleted_at: null
+
+#46
+  id: acct_01KXRD6SPZDZ57JEN8YMTSDPBA
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRD6SPZZA6PSREDYZD95X9M
+  email: delete-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304333410
+  updated_at: 1784304333534
+  is_deleted: 0
+  deleted_at: null
+
+#47
+  id: acct_01KXRD6SQ00NW2D79SJ4ATG3DA
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: prov_01KXRD6SQ0DRW58XTNW2NWMWMX
+  email: blocks-test@example.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: unknown
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: null
+  chrome_slave_id: null
+  created_at: 1784304335101
+  updated_at: 1784304335233
+  is_deleted: 0
+  deleted_at: null
+
+#48
+  id: chatgpt_chatgpt_owservera
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: chatgpt
+  email: chatgpt_owservera
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: authenticated
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: C:\0-BlackBoxProject-0\vivim-final\chatgpt\chatgpt_owservera
+  chrome_slave_id: null
+  created_at: 1784313709106
+  updated_at: 1784313709106
+  is_deleted: 0
+  deleted_at: null
+
+#49
+  id: chatgpt_chatgpt_user-at-gmail.com
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: chatgpt
+  email: chatgpt_user-at-gmail.com
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: authenticated
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: C:\0-BlackBoxProject-0\vivim-final\chatgpt\chatgpt_user-at-gmail.com
+  chrome_slave_id: null
+  created_at: 1784313709131
+  updated_at: 1784313709131
+  is_deleted: 0
+  deleted_at: null
+
+#50
+  id: chatgpt_owservera
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: chatgpt
+  email: owservera
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: authenticated
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: C:\0-BlackBoxProject-0\vivim-final\chatgpt\owservera
+  chrome_slave_id: null
+  created_at: 1784313709172
+  updated_at: 1784313709172
+  is_deleted: 0
+  deleted_at: null
+
+#51
+  id: claude_claude_owservera
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: claude
+  email: claude_owservera
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: authenticated
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: C:\0-BlackBoxProject-0\vivim-final\claude\claude_owservera
+  chrome_slave_id: null
+  created_at: 1784313709265
+  updated_at: 1784313709265
+  is_deleted: 0
+  deleted_at: null
+
+#52
+  id: claude_owservera
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: claude
+  email: owservera
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: authenticated
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: null
+  profile_dir: C:\0-BlackBoxProject-0\vivim-final\claude\owservera
+  chrome_slave_id: null
+  created_at: 1784313709290
+  updated_at: 1784313709290
+  is_deleted: 0
+  deleted_at: null
+
+#53
+  id: gemini_owservera
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_id: gemini
+  email: owservera
+  plan_tier: free
+  is_default: 0
+  is_kind: 0
+  login_state: authenticated
+  login_attempts: 0
+  last_login_at: null
+  provider_state_json: {}
+  debug_port: 9282
+  profile_dir: C:\0-BlackBoxProject-0\vivim-final\gemini\owservera
+  chrome_slave_id: null
+  created_at: 1784313709306
+  updated_at: 1784313766762
+  is_deleted: 0
+  deleted_at: null
+
+===== TABLE provider_session (48 rows) =====
+
+#0
+  id: ses_01KXR603K9K119DCW54BTTV7E6
+  vivim_session_id: vs_01KXR603K9N1SGD0EAE7BRP5T8
+  provider_id: prov_01KXR603K9209VDKB24WD05EF7
+  account_id: acct_01KXR603K92C7FT38YYGSJ1JBK
+  state: idle
+  context_json: {}
+  created_at: 1784296771357
+  updated_at: 1784296771357
+
+#1
+  id: ses_01KXR603KA2TVR8XFA8497NGK3
+  vivim_session_id: vs_01KXR603KAV9GTH1KNCC53ZAG5
+  provider_id: prov_01KXR603KA559K3KGTZV2CBFEQ
+  account_id: acct_01KXR603KA3HW70P7N32JM1YWH
+  state: idle
+  context_json: {}
+  created_at: 1784296771456
+  updated_at: 1784296771456
+
+#2
+  id: ses_01KXR603KAMD0KXTS5BPN0M3HG
+  vivim_session_id: vs_01KXR603KA5EWXFA1DDKF5AWTV
+  provider_id: prov_01KXR603KAMKMX0RKWM477NST3
+  account_id: acct_01KXR603KAK7TCMEP4SD9G70WR
+  state: idle
+  context_json: {}
+  created_at: 1784296771537
+  updated_at: 1784296771537
+
+#3
+  id: ses_01KXR679JEPP3AJRADBQGFE66E
+  vivim_session_id: vs_01KXR679JEZ4R9R1644ENZF0B2
+  provider_id: prov_01KXR679JE10543V18965YPMFE
+  account_id: acct_01KXR679JEH1A4RK8YASZY2H89
+  state: idle
+  context_json: {}
+  created_at: 1784297006863
+  updated_at: 1784297006863
+
+#4
+  id: ses_01KXR679JFS38XW2N9N4G4BPRT
+  vivim_session_id: vs_01KXR679JFKMWKDQZAVSH55KGY
+  provider_id: prov_01KXR679JFAYDJM9Y15MA698XX
+  account_id: acct_01KXR679JFVY6A4Q37DF28MWPE
+  state: idle
+  context_json: {}
+  created_at: 1784297007276
+  updated_at: 1784297007276
+
+#5
+  id: ses_01KXR679JFGW11YQFGYF4MR1Q0
+  vivim_session_id: vs_01KXR679JFS4XKVHE5B8JHHQ7R
+  provider_id: prov_01KXR679JFPVAKCHDNBY54RX7W
+  account_id: acct_01KXR679JF1GTG56N5Q5DT7RVP
+  state: idle
+  context_json: {}
+  created_at: 1784297007489
+  updated_at: 1784297007489
+
+#6
+  id: ses_01KXR6ARJMW9SGY07AZ4F1ZZFR
+  vivim_session_id: vs_01KXR6ARJM76V7K1ZSK45F91YY
+  provider_id: prov_01KXR6ARJMJWHCE7DSME4T621P
+  account_id: acct_01KXR6ARJMHPFQND5ZXEQTN481
+  state: idle
+  context_json: {}
+  created_at: 1784297122865
+  updated_at: 1784297122865
+
+#7
+  id: ses_01KXR6ARJZ0QBA5Y29YGMGB3R1
+  vivim_session_id: vs_01KXR6ARK4707VRWZMXZZHJ3H6
+  provider_id: prov_01KXR6ARJZPCAARY9R2MPV62SA
+  account_id: acct_01KXR6ARJZT4HQR7YASPF37SG0
+  state: idle
+  context_json: {}
+  created_at: 1784297123975
+  updated_at: 1784297123975
+
+#8
+  id: ses_01KXR6ARK4XRYKW1121VXHWXC6
+  vivim_session_id: vs_01KXR6ARK5XVCBRFZBWCNSQ02G
+  provider_id: prov_01KXR6ARK4QJHSZVJJDR2W402E
+  account_id: acct_01KXR6ARK4TNDYHDMJFBGGWBSE
+  state: idle
+  context_json: {}
+  created_at: 1784297124856
+  updated_at: 1784297124856
+
+#9
+  id: ses_01KXR7E544KRSSQ760R78D24YM
+  vivim_session_id: vs_01KXR7E544VGHT1V086APJYHW3
+  provider_id: prov_01KXR7E54405APQPZX1Q2VKCK8
+  account_id: acct_01KXR7E544V8S755K1NGX7GQM2
+  state: idle
+  context_json: {}
+  created_at: 1784298280942
+  updated_at: 1784298280942
+
+#10
+  id: ses_01KXR7E5455VNXK9JRMT3H1H6H
+  vivim_session_id: vs_01KXR7E545QGG0N6D0R6FKX02A
+  provider_id: prov_01KXR7E545A551TNY6W0VT1P67
+  account_id: acct_01KXR7E54538P3BNZA765JK9JG
+  state: idle
+  context_json: {}
+  created_at: 1784298281219
+  updated_at: 1784298281219
+
+#11
+  id: ses_01KXR7E5457PKXAY4NYE4BHGDF
+  vivim_session_id: vs_01KXR7E5459NHDHNKPCMGSK6QZ
+  provider_id: prov_01KXR7E545CJB1WSJS7R2VZZ7G
+  account_id: acct_01KXR7E545YV5DGXRQ5Y2AME0X
+  state: idle
+  context_json: {}
+  created_at: 1784298281458
+  updated_at: 1784298281458
+
+#12
+  id: ses_01KXR82T6547YX5YJ97QCGZM2T
+  vivim_session_id: vs_01KXR82T652YJ2W0ZFQ5PW0YVD
+  provider_id: prov_01KXR82T64VQV15YEPFB7RD64P
+  account_id: acct_01KXR82T65RPATAM96Q5M79PVH
+  state: idle
+  context_json: {}
+  created_at: 1784298957806
+  updated_at: 1784298957806
+
+#13
+  id: ses_01KXR82T66XCZSGVR7DGZBCVA8
+  vivim_session_id: vs_01KXR82T66RXHRQ4K7X8GPARYK
+  provider_id: prov_01KXR82T66WZ9D8VPEYQP2BKB0
+  account_id: acct_01KXR82T66DJFP4Y77AH682VMW
+  state: idle
+  context_json: {}
+  created_at: 1784298958272
+  updated_at: 1784298958272
+
+#14
+  id: ses_01KXR82T662XHR7GY0WGFSQMXS
+  vivim_session_id: vs_01KXR82T66JCMB4HNHN788SM1Q
+  provider_id: prov_01KXR82T667XKB7MJGMAPAYSKY
+  account_id: acct_01KXR82T66EQYS4RKZK3N8HQ02
+  state: idle
+  context_json: {}
+  created_at: 1784298958645
+  updated_at: 1784298958645
+
+#15
+  id: ses_01KXR8GE09PPZWZPHPH3GTSPS0
+  vivim_session_id: vs_01KXR8GE0910VZYGT1329W3KVZ
+  provider_id: prov_01KXR8GE098CWRTAVB3SQ6KE6H
+  account_id: acct_01KXR8GE09JJBBQ4807NMJ1TJ8
+  state: idle
+  context_json: {}
+  created_at: 1784299404877
+  updated_at: 1784299404877
+
+#16
+  id: ses_01KXR8GE0ATERRAAA41F1X3C6X
+  vivim_session_id: vs_01KXR8GE0AHPE7JGEZW7ZTA48R
+  provider_id: prov_01KXR8GE096FX6J8KY6ZMM7XC6
+  account_id: acct_01KXR8GE094TGKY78WEAA9G3Z8
+  state: idle
+  context_json: {}
+  created_at: 1784299405682
+  updated_at: 1784299405682
+
+#17
+  id: ses_01KXR8GE0ASYRQDP9Q6FVPEWW5
+  vivim_session_id: vs_01KXR8GE0BAAAET0G00K9STWVF
+  provider_id: prov_01KXR8GE0AMK38VYRYF5DWQXSS
+  account_id: acct_01KXR8GE0A82FM3NSFKVVSPVAM
+  state: idle
+  context_json: {}
+  created_at: 1784299406632
+  updated_at: 1784299406632
+
+#18
+  id: ses_01KXRA51DV4VJVBS031268CBM1
+  vivim_session_id: vs_01KXRA51DVQ1X40JGBJKHYTSG9
+  provider_id: prov_01KXRA51DVWKBRFH37KFB5PHNA
+  account_id: acct_01KXRA51DVWAZVZQJKN8N4WBD4
+  state: idle
+  context_json: {}
+  created_at: 1784301127202
+  updated_at: 1784301127202
+
+#19
+  id: ses_01KXRA51DVCWQYA9VZS7XZY3WF
+  vivim_session_id: vs_01KXRA51DV9RPZR9M1AJ58194E
+  provider_id: prov_01KXRA51DV0HJ9G0J35R5XVB2N
+  account_id: acct_01KXRA51DVTNC5CGC0C6MKJQB1
+  state: idle
+  context_json: {}
+  created_at: 1784301127253
+  updated_at: 1784301127253
+
+#20
+  id: ses_01KXRA51DWPEVYN19XTRCVW2ZX
+  vivim_session_id: vs_01KXRA51DWYEW59MA0RE16YV8K
+  provider_id: prov_01KXRA51DW9Q52YBJ12RN2QXCE
+  account_id: acct_01KXRA51DWCYCNSXC9RE6345WB
+  state: idle
+  context_json: {}
+  created_at: 1784301127306
+  updated_at: 1784301127306
+
+#21
+  id: ses_01KXRAKRNYQEW369XWZJ27GEYQ
+  vivim_session_id: vs_01KXRAKRNYAHACKCQZYTEXZSTX
+  provider_id: prov_01KXRAKRNYSB3FKJJQ9YC6BXS9
+  account_id: acct_01KXRAKRNY1EJ63NSJAQ9PRRT3
+  state: idle
+  context_json: {}
+  created_at: 1784301609839
+  updated_at: 1784301609839
+
+#22
+  id: ses_01KXRAKRNZY6DH9S4S1ZHC5EPE
+  vivim_session_id: vs_01KXRAKRNZYC6Y0Q36HTK0J9QC
+  provider_id: prov_01KXRAKRNZJ294N99ZM5W448D1
+  account_id: acct_01KXRAKRNZK5WDBX8N5AFD8S94
+  state: idle
+  context_json: {}
+  created_at: 1784301609968
+  updated_at: 1784301609968
+
+#23
+  id: ses_01KXRAKRNZTA0MJ576T01YTG5F
+  vivim_session_id: vs_01KXRAKRNZSRV9XNX9KWZX4T08
+  provider_id: prov_01KXRAKRNZF6Z9BXMDS89A9TBT
+  account_id: acct_01KXRAKRNZ5WJN02STVT8DXY1P
+  state: idle
+  context_json: {}
+  created_at: 1784301610030
+  updated_at: 1784301610030
+
+#24
+  id: ses_01KXRB0EVSVTFNBKMGDHMQR445
+  vivim_session_id: vs_01KXRB0EVS1KE9KTA55MBECDAE
+  provider_id: prov_01KXRB0EVS4J16ZREJ30DDVK96
+  account_id: acct_01KXRB0EVS3HZ36VBHVH9FG115
+  state: idle
+  context_json: {}
+  created_at: 1784302027536
+  updated_at: 1784302027536
+
+#25
+  id: ses_01KXRB0EVT5CRKTH480F361FJN
+  vivim_session_id: vs_01KXRB0EVT01NY70RJRJFAD1PX
+  provider_id: prov_01KXRB0EVTF1WPNYVJH30B9XE7
+  account_id: acct_01KXRB0EVTFZPY7QK5FVSZ20BE
+  state: idle
+  context_json: {}
+  created_at: 1784302028756
+  updated_at: 1784302028756
+
+#26
+  id: ses_01KXRB0EVTQMJQHVEAPS1TVTVN
+  vivim_session_id: vs_01KXRB0EVT2M4AKCQPZPHW264H
+  provider_id: prov_01KXRB0EVT9MFD3YC3DQPFG5EJ
+  account_id: acct_01KXRB0EVTWEEKNWQAVG6ZAX9A
+  state: idle
+  context_json: {}
+  created_at: 1784302030001
+  updated_at: 1784302030001
+
+#27
+  id: ses_01KXRB9V8T3PCP5Q3W5AGXVWEH
+  vivim_session_id: vs_01KXRB9V8TMV5SCCPAR75NDJR2
+  provider_id: prov_01KXRB9V8TKQ5EXEY5Z0NWDSY2
+  account_id: acct_01KXRB9V8T07TD9WDK718RJCQM
+  state: idle
+  context_json: {}
+  created_at: 1784302334223
+  updated_at: 1784302334223
+
+#28
+  id: ses_01KXRB9V8T9BDSDW9PM9SDCMMM
+  vivim_session_id: vs_01KXRB9V8VEF38YV1BC41FJMV2
+  provider_id: prov_01KXRB9V8T37D2RRM33YZE83VP
+  account_id: acct_01KXRB9V8TBKE2B1BZJD0FY5BR
+  state: idle
+  context_json: {}
+  created_at: 1784302335035
+  updated_at: 1784302335035
+
+#29
+  id: ses_01KXRB9V8V8CKQFFAWDQFHXYTH
+  vivim_session_id: vs_01KXRB9V8V7YZ5AYY0HZMWWK30
+  provider_id: prov_01KXRB9V8VT1NJ75BJMH3CEG70
+  account_id: acct_01KXRB9V8V6DW6Z0YH8CVSVXMQ
+  state: idle
+  context_json: {}
+  created_at: 1784302335664
+  updated_at: 1784302335664
+
+#30
+  id: ses_01KXRBGWEVHPGF7GPZ0RE16PKA
+  vivim_session_id: vs_01KXRBGWEV2XX8NZ2F02NEHMSA
+  provider_id: prov_01KXRBGWEVGXGQ3MG3ZFZJ3SMJ
+  account_id: acct_01KXRBGWEVF6RF7WPDTJ33BBMX
+  state: idle
+  context_json: {}
+  created_at: 1784302564003
+  updated_at: 1784302564003
+
+#31
+  id: ses_01KXRBGWEW8CRVP60WDND36RJK
+  vivim_session_id: vs_01KXRBGWEWRGQM1HWCTGWVQV17
+  provider_id: prov_01KXRBGWEWPJJ8ZBVAFB2HMVC3
+  account_id: acct_01KXRBGWEWVY1EETFR4BQAABKY
+  state: idle
+  context_json: {}
+  created_at: 1784302564134
+  updated_at: 1784302564134
+
+#32
+  id: ses_01KXRBGWEXJZ2QEQHQQ3X73THX
+  vivim_session_id: vs_01KXRBGWEXBM3Z0MZ5V55CHN2J
+  provider_id: prov_01KXRBGWEX0XF0ZG9XJ24FT309
+  account_id: acct_01KXRBGWEXE09FMGJQ6S1PA8QZ
+  state: idle
+  context_json: {}
+  created_at: 1784302564233
+  updated_at: 1784302564233
+
+#33
+  id: ses_01KXRBQW6VYKJESMW1Q9QK3EXT
+  vivim_session_id: vs_01KXRBQW6VNVB2GR9CGNCS3Q63
+  provider_id: prov_01KXRBQW6VDQKYQA1HXFMTVRED
+  account_id: acct_01KXRBQW6VVX9QSRWN1X13RZ9H
+  state: idle
+  context_json: {}
+  created_at: 1784302793489
+  updated_at: 1784302793489
+
+#34
+  id: ses_01KXRBQW6WGEZ533RZX6JC0KGJ
+  vivim_session_id: vs_01KXRBQW6WV52H6C3MYE2K7Z38
+  provider_id: prov_01KXRBQW6WVBJQPN18TSYRXJJZ
+  account_id: acct_01KXRBQW6W8B0GMDKMFAHP5Y1T
+  state: idle
+  context_json: {}
+  created_at: 1784302793636
+  updated_at: 1784302793636
+
+#35
+  id: ses_01KXRBQW6WYGPPSQ8P1JPFR08Y
+  vivim_session_id: vs_01KXRBQW6WFF3TEMVZ6KMBDAFY
+  provider_id: prov_01KXRBQW6W7C2PV6A492BJ4YXV
+  account_id: acct_01KXRBQW6W04T7DM1RSY6TBF3R
+  state: idle
+  context_json: {}
+  created_at: 1784302793729
+  updated_at: 1784302793729
+
+#36
+  id: ses_01KXRCDYSYECB3XCJNTW2S6KQ9
+  vivim_session_id: vs_01KXRCDYSYNZ52DATGNP9HGJFG
+  provider_id: prov_01KXRCDYSYCFXW8ZK8V1P3VT05
+  account_id: acct_01KXRCDYSYCMDR20RW434K40SZ
+  state: idle
+  context_json: {}
+  created_at: 1784303516956
+  updated_at: 1784303516956
+
+#37
+  id: ses_01KXRCDYSZZ8F2BQFHQYH22CWC
+  vivim_session_id: vs_01KXRCDYSZZZS8V2Y6PWFY2VAJ
+  provider_id: prov_01KXRCDYSZ4AVA3Y8GCDNF3TKW
+  account_id: acct_01KXRCDYSZ8EP37HJF7AXSYSFX
+  state: idle
+  context_json: {}
+  created_at: 1784303517079
+  updated_at: 1784303517079
+
+#38
+  id: ses_01KXRCDYSZRYH0Y3PHDJ1F6YAN
+  vivim_session_id: vs_01KXRCDYT07HVTSS4FG5T0TRVM
+  provider_id: prov_01KXRCDYSZKB5741DZRSY26CQN
+  account_id: acct_01KXRCDYSZAA75EGG7SKAKSSGA
+  state: idle
+  context_json: {}
+  created_at: 1784303517222
+  updated_at: 1784303517222
+
+#39
+  id: ses_01KXRCWSFP7H964D373QV5B4BJ
+  vivim_session_id: vs_01KXRCWSFPJ0FGPR9A0AK5RAHE
+  provider_id: prov_01KXRCWSFP104VQ24AYRQ9KJK2
+  account_id: acct_01KXRCWSFPARKKQCCJMBH6KKBR
+  state: idle
+  context_json: {}
+  created_at: 1784304003449
+  updated_at: 1784304003449
+
+#40
+  id: ses_01KXRCWSFQ3H4WAA6KNF8CH7AW
+  vivim_session_id: vs_01KXRCWSFQPFX26RTBH6S1J5KA
+  provider_id: prov_01KXRCWSFQWCZTYMAAM2HKQVXR
+  account_id: acct_01KXRCWSFQ7408S17MZ0FQQE5E
+  state: idle
+  context_json: {}
+  created_at: 1784304003835
+  updated_at: 1784304003835
+
+#41
+  id: ses_01KXRCWSFQ1JJG7SV266MMYF16
+  vivim_session_id: vs_01KXRCWSFQ6AREF4EDH07VGM97
+  provider_id: prov_01KXRCWSFQ3AZ0HK6YWBM725T3
+  account_id: acct_01KXRCWSFQB16WEFWAEJP81PGJ
+  state: idle
+  context_json: {}
+  created_at: 1784304004070
+  updated_at: 1784304004070
+
+#42
+  id: ses_01KXRD0ZKPQBZCVDJQH83XQ5AR
+  vivim_session_id: vs_01KXRD0ZKPM1H5QGMEQJV08RRM
+  provider_id: prov_01KXRD0ZKP0FE7GKJ4YDCNPKNT
+  account_id: acct_01KXRD0ZKP4XD72ZVT07JFEG66
+  state: idle
+  context_json: {}
+  created_at: 1784304140452
+  updated_at: 1784304140452
+
+#43
+  id: ses_01KXRD0ZKQG5218VFN0STTHDNF
+  vivim_session_id: vs_01KXRD0ZKQGBZBMCM45J36QGJZ
+  provider_id: prov_01KXRD0ZKQ2BKE7ETVSSXTNNAZ
+  account_id: acct_01KXRD0ZKQKP3XVF5VXNHP58FB
+  state: idle
+  context_json: {}
+  created_at: 1784304140736
+  updated_at: 1784304140736
+
+#44
+  id: ses_01KXRD0ZKR3ZFCC1ME7XEP59V7
+  vivim_session_id: vs_01KXRD0ZKRHZHP3NET480TY68Y
+  provider_id: prov_01KXRD0ZKR42PP1BTP58BVQ6Q2
+  account_id: acct_01KXRD0ZKR9XG174NRGFN0VFPG
+  state: idle
+  context_json: {}
+  created_at: 1784304140956
+  updated_at: 1784304140956
+
+#45
+  id: ses_01KXRD6SPYRXJB22NM1GBA7J8T
+  vivim_session_id: vs_01KXRD6SPYN093MWRAC7T328JM
+  provider_id: prov_01KXRD6SPXEH1PXQNB74NTYYKR
+  account_id: acct_01KXRD6SPYGHEHKFHZRG0DH6BV
+  state: idle
+  context_json: {}
+  created_at: 1784304332797
+  updated_at: 1784304332797
+
+#46
+  id: ses_01KXRD6SPZD1VGBYW4R61SSN6N
+  vivim_session_id: vs_01KXRD6SPZ6AYXWHKSQ60DV8YF
+  provider_id: prov_01KXRD6SPZZA6PSREDYZD95X9M
+  account_id: acct_01KXRD6SPZDZ57JEN8YMTSDPBA
+  state: idle
+  context_json: {}
+  created_at: 1784304333410
+  updated_at: 1784304333410
+
+#47
+  id: ses_01KXRD6SQ0R3WEDPC8H5D4NWRA
+  vivim_session_id: vs_01KXRD6SQ0TCE65589HRRCDR2X
+  provider_id: prov_01KXRD6SQ0DRW58XTNW2NWMWMX
+  account_id: acct_01KXRD6SQ00NW2D79SJ4ATG3DA
+  state: idle
+  context_json: {}
+  created_at: 1784304335101
+  updated_at: 1784304335101
+
+===== TABLE conversation (48 rows) =====
+
+#0
+  id: 01KXR603K9N1SGD0EAE7BRP5T8
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR603K9K119DCW54BTTV7E6
+  provider_id: prov_01KXR603K9209VDKB24WD05EF7
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784296771357
+  updated_at: 1784296771357
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#1
+  id: 01KXR603KAV9GTH1KNCC53ZAG5
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR603KA2TVR8XFA8497NGK3
+  provider_id: prov_01KXR603KA559K3KGTZV2CBFEQ
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784296771456
+  updated_at: 1784296771512
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#2
+  id: 01KXR603KA5EWXFA1DDKF5AWTV
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR603KAMD0KXTS5BPN0M3HG
+  provider_id: prov_01KXR603KAMKMX0RKWM477NST3
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784296771537
+  updated_at: 1784296771537
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#3
+  id: 01KXR679JEZ4R9R1644ENZF0B2
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR679JEPP3AJRADBQGFE66E
+  provider_id: prov_01KXR679JE10543V18965YPMFE
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784297006863
+  updated_at: 1784297006863
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#4
+  id: 01KXR679JFKMWKDQZAVSH55KGY
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR679JFS38XW2N9N4G4BPRT
+  provider_id: prov_01KXR679JFAYDJM9Y15MA698XX
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784297007276
+  updated_at: 1784297007475
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#5
+  id: 01KXR679JFS4XKVHE5B8JHHQ7R
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR679JFGW11YQFGYF4MR1Q0
+  provider_id: prov_01KXR679JFPVAKCHDNBY54RX7W
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784297007489
+  updated_at: 1784297007489
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#6
+  id: 01KXR6ARJM76V7K1ZSK45F91YY
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR6ARJMW9SGY07AZ4F1ZZFR
+  provider_id: prov_01KXR6ARJMJWHCE7DSME4T621P
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784297122865
+  updated_at: 1784297122865
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#7
+  id: 01KXR6ARK4707VRWZMXZZHJ3H6
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR6ARJZ0QBA5Y29YGMGB3R1
+  provider_id: prov_01KXR6ARJZPCAARY9R2MPV62SA
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784297123975
+  updated_at: 1784297124745
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#8
+  id: 01KXR6ARK5XVCBRFZBWCNSQ02G
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR6ARK4XRYKW1121VXHWXC6
+  provider_id: prov_01KXR6ARK4QJHSZVJJDR2W402E
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784297124856
+  updated_at: 1784297124856
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#9
+  id: 01KXR7E544VGHT1V086APJYHW3
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR7E544KRSSQ760R78D24YM
+  provider_id: prov_01KXR7E54405APQPZX1Q2VKCK8
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784298280942
+  updated_at: 1784298280942
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#10
+  id: 01KXR7E545QGG0N6D0R6FKX02A
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR7E5455VNXK9JRMT3H1H6H
+  provider_id: prov_01KXR7E545A551TNY6W0VT1P67
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784298281219
+  updated_at: 1784298281452
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#11
+  id: 01KXR7E5459NHDHNKPCMGSK6QZ
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR7E5457PKXAY4NYE4BHGDF
+  provider_id: prov_01KXR7E545CJB1WSJS7R2VZZ7G
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784298281458
+  updated_at: 1784298281458
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#12
+  id: 01KXR82T652YJ2W0ZFQ5PW0YVD
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR82T6547YX5YJ97QCGZM2T
+  provider_id: prov_01KXR82T64VQV15YEPFB7RD64P
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784298957806
+  updated_at: 1784298957806
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#13
+  id: 01KXR82T66RXHRQ4K7X8GPARYK
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR82T66XCZSGVR7DGZBCVA8
+  provider_id: prov_01KXR82T66WZ9D8VPEYQP2BKB0
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784298958272
+  updated_at: 1784298958522
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#14
+  id: 01KXR82T66JCMB4HNHN788SM1Q
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR82T662XHR7GY0WGFSQMXS
+  provider_id: prov_01KXR82T667XKB7MJGMAPAYSKY
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784298958645
+  updated_at: 1784298958645
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#15
+  id: 01KXR8GE0910VZYGT1329W3KVZ
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR8GE09PPZWZPHPH3GTSPS0
+  provider_id: prov_01KXR8GE098CWRTAVB3SQ6KE6H
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784299404877
+  updated_at: 1784299404877
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#16
+  id: 01KXR8GE0AHPE7JGEZW7ZTA48R
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR8GE0ATERRAAA41F1X3C6X
+  provider_id: prov_01KXR8GE096FX6J8KY6ZMM7XC6
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784299405682
+  updated_at: 1784299406481
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#17
+  id: 01KXR8GE0BAAAET0G00K9STWVF
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXR8GE0ASYRQDP9Q6FVPEWW5
+  provider_id: prov_01KXR8GE0AMK38VYRYF5DWQXSS
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784299406632
+  updated_at: 1784299406632
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#18
+  id: 01KXRA51DVQ1X40JGBJKHYTSG9
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRA51DV4VJVBS031268CBM1
+  provider_id: prov_01KXRA51DVWKBRFH37KFB5PHNA
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784301127202
+  updated_at: 1784301127202
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#19
+  id: 01KXRA51DV9RPZR9M1AJ58194E
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRA51DVCWQYA9VZS7XZY3WF
+  provider_id: prov_01KXRA51DV0HJ9G0J35R5XVB2N
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784301127253
+  updated_at: 1784301127301
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#20
+  id: 01KXRA51DWYEW59MA0RE16YV8K
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRA51DWPEVYN19XTRCVW2ZX
+  provider_id: prov_01KXRA51DW9Q52YBJ12RN2QXCE
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784301127306
+  updated_at: 1784301127306
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#21
+  id: 01KXRAKRNYAHACKCQZYTEXZSTX
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRAKRNYQEW369XWZJ27GEYQ
+  provider_id: prov_01KXRAKRNYSB3FKJJQ9YC6BXS9
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784301609839
+  updated_at: 1784301609839
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#22
+  id: 01KXRAKRNZYC6Y0Q36HTK0J9QC
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRAKRNZY6DH9S4S1ZHC5EPE
+  provider_id: prov_01KXRAKRNZJ294N99ZM5W448D1
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784301609968
+  updated_at: 1784301610024
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#23
+  id: 01KXRAKRNZSRV9XNX9KWZX4T08
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRAKRNZTA0MJ576T01YTG5F
+  provider_id: prov_01KXRAKRNZF6Z9BXMDS89A9TBT
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784301610030
+  updated_at: 1784301610030
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#24
+  id: 01KXRB0EVS1KE9KTA55MBECDAE
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRB0EVSVTFNBKMGDHMQR445
+  provider_id: prov_01KXRB0EVS4J16ZREJ30DDVK96
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302027536
+  updated_at: 1784302027536
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#25
+  id: 01KXRB0EVT01NY70RJRJFAD1PX
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRB0EVT5CRKTH480F361FJN
+  provider_id: prov_01KXRB0EVTF1WPNYVJH30B9XE7
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302028756
+  updated_at: 1784302029836
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#26
+  id: 01KXRB0EVT2M4AKCQPZPHW264H
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRB0EVTQMJQHVEAPS1TVTVN
+  provider_id: prov_01KXRB0EVT9MFD3YC3DQPFG5EJ
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302030001
+  updated_at: 1784302030001
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#27
+  id: 01KXRB9V8TMV5SCCPAR75NDJR2
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRB9V8T3PCP5Q3W5AGXVWEH
+  provider_id: prov_01KXRB9V8TKQ5EXEY5Z0NWDSY2
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302334223
+  updated_at: 1784302334223
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#28
+  id: 01KXRB9V8VEF38YV1BC41FJMV2
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRB9V8T9BDSDW9PM9SDCMMM
+  provider_id: prov_01KXRB9V8T37D2RRM33YZE83VP
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302335035
+  updated_at: 1784302335589
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#29
+  id: 01KXRB9V8V7YZ5AYY0HZMWWK30
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRB9V8V8CKQFFAWDQFHXYTH
+  provider_id: prov_01KXRB9V8VT1NJ75BJMH3CEG70
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302335664
+  updated_at: 1784302335664
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#30
+  id: 01KXRBGWEV2XX8NZ2F02NEHMSA
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRBGWEVHPGF7GPZ0RE16PKA
+  provider_id: prov_01KXRBGWEVGXGQ3MG3ZFZJ3SMJ
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302564003
+  updated_at: 1784302564003
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#31
+  id: 01KXRBGWEWRGQM1HWCTGWVQV17
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRBGWEW8CRVP60WDND36RJK
+  provider_id: prov_01KXRBGWEWPJJ8ZBVAFB2HMVC3
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302564134
+  updated_at: 1784302564207
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#32
+  id: 01KXRBGWEXBM3Z0MZ5V55CHN2J
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRBGWEXJZ2QEQHQQ3X73THX
+  provider_id: prov_01KXRBGWEX0XF0ZG9XJ24FT309
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302564233
+  updated_at: 1784302564233
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#33
+  id: 01KXRBQW6VNVB2GR9CGNCS3Q63
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRBQW6VYKJESMW1Q9QK3EXT
+  provider_id: prov_01KXRBQW6VDQKYQA1HXFMTVRED
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302793489
+  updated_at: 1784302793489
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#34
+  id: 01KXRBQW6WV52H6C3MYE2K7Z38
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRBQW6WGEZ533RZX6JC0KGJ
+  provider_id: prov_01KXRBQW6WVBJQPN18TSYRXJJZ
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302793636
+  updated_at: 1784302793723
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#35
+  id: 01KXRBQW6WFF3TEMVZ6KMBDAFY
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRBQW6WYGPPSQ8P1JPFR08Y
+  provider_id: prov_01KXRBQW6W7C2PV6A492BJ4YXV
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784302793729
+  updated_at: 1784302793729
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#36
+  id: 01KXRCDYSYNZ52DATGNP9HGJFG
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRCDYSYECB3XCJNTW2S6KQ9
+  provider_id: prov_01KXRCDYSYCFXW8ZK8V1P3VT05
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784303516956
+  updated_at: 1784303516956
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#37
+  id: 01KXRCDYSZZZS8V2Y6PWFY2VAJ
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRCDYSZZ8F2BQFHQYH22CWC
+  provider_id: prov_01KXRCDYSZ4AVA3Y8GCDNF3TKW
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784303517079
+  updated_at: 1784303517216
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#38
+  id: 01KXRCDYT07HVTSS4FG5T0TRVM
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRCDYSZRYH0Y3PHDJ1F6YAN
+  provider_id: prov_01KXRCDYSZKB5741DZRSY26CQN
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784303517222
+  updated_at: 1784303517222
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#39
+  id: 01KXRCWSFPJ0FGPR9A0AK5RAHE
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRCWSFP7H964D373QV5B4BJ
+  provider_id: prov_01KXRCWSFP104VQ24AYRQ9KJK2
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304003449
+  updated_at: 1784304003449
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#40
+  id: 01KXRCWSFQPFX26RTBH6S1J5KA
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRCWSFQ3H4WAA6KNF8CH7AW
+  provider_id: prov_01KXRCWSFQWCZTYMAAM2HKQVXR
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304003835
+  updated_at: 1784304004037
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#41
+  id: 01KXRCWSFQ6AREF4EDH07VGM97
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRCWSFQ1JJG7SV266MMYF16
+  provider_id: prov_01KXRCWSFQ3AZ0HK6YWBM725T3
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304004070
+  updated_at: 1784304004070
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#42
+  id: 01KXRD0ZKPM1H5QGMEQJV08RRM
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRD0ZKPQBZCVDJQH83XQ5AR
+  provider_id: prov_01KXRD0ZKP0FE7GKJ4YDCNPKNT
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304140452
+  updated_at: 1784304140452
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#43
+  id: 01KXRD0ZKQGBZBMCM45J36QGJZ
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRD0ZKQG5218VFN0STTHDNF
+  provider_id: prov_01KXRD0ZKQ2BKE7ETVSSXTNNAZ
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304140736
+  updated_at: 1784304140920
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#44
+  id: 01KXRD0ZKRHZHP3NET480TY68Y
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRD0ZKR3ZFCC1ME7XEP59V7
+  provider_id: prov_01KXRD0ZKR42PP1BTP58BVQ6Q2
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304140956
+  updated_at: 1784304140956
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#45
+  id: 01KXRD6SPYN093MWRAC7T328JM
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRD6SPYRXJB22NM1GBA7J8T
+  provider_id: prov_01KXRD6SPXEH1PXQNB74NTYYKR
+  title: FTS Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304332797
+  updated_at: 1784304332797
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#46
+  id: 01KXRD6SPZ6AYXWHKSQ60DV8YF
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRD6SPZD1VGBYW4R61SSN6N
+  provider_id: prov_01KXRD6SPZZA6PSREDYZD95X9M
+  title: Delete Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304333410
+  updated_at: 1784304334807
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+#47
+  id: 01KXRD6SQ0TCE65589HRRCDR2X
+  user_id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  provider_session_id: ses_01KXRD6SQ0R3WEDPC8H5D4NWRA
+  provider_id: prov_01KXRD6SQ0DRW58XTNW2NWMWMX
+  title: Blocks Test
+  state: active
+  message_count: 0
+  last_message_at: null
+  context_json: {}
+  created_at: 1784304335101
+  updated_at: 1784304335101
+  project_id: null
+  topic_id: null
+  source: live
+  external_id: null
+  provider_conversation_url: null
+  import_job_id: null
+  deleted_at: null
+
+===== TABLE provider_parser (9 rows) =====
+
+#0
+  id: 01KXQQ5A5MABMT4DC2KNWA7XPG
+  provider_id: chatgpt
+  parser_name: chatgpt/001_openai_sse
+  parser_version: 1
+  parser_logic_type: inline
+  parser_file_path: null
+  parser_logic_code: var parse = function(rawBody) { var blocks = []; var index = 0; var lines = rawBody.split('\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (!trimmed.startsWith('data:')) continue; var payload = trimmed.slice(5).trim(); if (payload === '[DONE]') break; try { var json = JSON.parse(payload); var delta = json.choices && json.choices[0] && json.choices[0].delta; if (delta && delta.content) { var lastBlock = blocks[blocks.length - 1]; if (lastBlock && lastBlock.kind === 'text') { lastBlock.content += delta.content; } else { blocks.push({ kind: 'text', content: delta.content, index: index++ }); } } if (delta && delta.tool_calls) { for (var j = 0; j < delta.tool_calls.length; j++) { var tc = delta.tool_calls[j]; blocks.push({ kind: 'tool_use', toolName: (tc.function && tc.function.name) || 'unknown', input: (tc.function && tc.function.arguments) || {}, index: index++ }); } } } catch (e) { void e; } } if (blocks.length === 0 && rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } return blocks; }; var detectCompletion = function(rawBody) { return rawBody.indexOf('[DONE]') !== -1 || /"finish_reason"\s*:\s*"stop"/.test(rawBody); }; var getConfidence = function(rawBody) { var hasDone = rawBody.indexOf('[DONE]') !== -1; var hasDelta = rawBody.indexOf('choices') !== -1 && rawBody.indexOf('delta') !== -1; if (hasDone) return 1; if (hasDelta) return 0.7; return 0; }; exports.default = { name: 'chatgpt/001_openai_sse', version: 1, providerId: 'chatgpt', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+  parser_hash: 4c11ed3e5e8214517f439392370d5e530c277f58774bdc0300ae164d64fde936
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281212959
+  updated_at: 1784281213109
+
+#1
+  id: 01KXQQ5AHD1B5Q95B64W8W71HJ
+  provider_id: claude
+  parser_name: claude/001_streaming_sse
+  parser_version: 1
+  parser_logic_type: file
+  parser_file_path: seeds/parsers/claude-streaming-sse.ts
+  parser_logic_code: null
+  parser_hash: 61e88549802b9afd371feb3fdc535631c565a44b39fba2f2cb65b6824308ce16
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281213403
+  updated_at: 1784281213485
+
+#2
+  id: 01KXQQ5AQVGFSX4TRQA6SG64TZ
+  provider_id: deepseek
+  parser_name: deepseek/001_sse_frames
+  parser_version: 1
+  parser_logic_type: inline
+  parser_file_path: null
+  parser_logic_code: var parse = function(rawBody) { var blocks = []; var index = 0; var frames = rawBody.split('\n\n'); for (var f = 0; f < frames.length; f++) { var dataLines = []; var lines = frames[f].split('\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (trimmed.startsWith('data:')) { dataLines.push(trimmed.slice(5).trim()); } } if (dataLines.length === 0) continue; var joinedData = dataLines.join('\n'); try { var json = JSON.parse(joinedData); if (typeof json === 'string') { blocks.push({ kind: 'text', content: json, index: index++ }); } else if (typeof json === 'object' && json !== null) { blocks.push({ kind: 'text', content: JSON.stringify(json), index: index++ }); } } catch (e) { blocks.push({ kind: 'text', content: joinedData, index: index++ }); } } if (blocks.length === 0 && rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } return blocks; }; var detectCompletion = function(rawBody) { return rawBody.length > 0; }; var getConfidence = function(rawBody) { var hasData = rawBody.indexOf('data:') !== -1; return hasData ? 0.6 : 0.3; }; exports.default = { name: 'deepseek/001_sse_frames', version: 1, providerId: 'deepseek', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+  parser_hash: c08e4f2d083460eec628065291cc89b6dfc6891acb986f7d782e3c45c44e0af0
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281213602
+  updated_at: 1784281213691
+
+#3
+  id: 01KXQQ5B2BPM089B4TTQXM7GKC
+  provider_id: gemini
+  parser_name: gemini/001_batchexecute
+  parser_version: 1
+  parser_logic_type: inline
+  parser_file_path: null
+  parser_logic_code: var parse = function(rawBody) { var blocks = []; var index = 0; try { var parsed = JSON.parse(rawBody); if (!Array.isArray(parsed)) { return [{ kind: 'text', content: rawBody, index: 0 }]; } var innerArrays = parsed.flat(2); for (var i = 0; i < innerArrays.length; i++) { var item = innerArrays[i]; if (typeof item === 'string') { blocks.push({ kind: 'text', content: item, index: index++ }); } } } catch (e) { if (rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } } return blocks; }; var detectCompletion = function() { return true; }; var getConfidence = function() { return 0.8; }; exports.default = { name: 'gemini/001_batchexecute', version: 1, providerId: 'gemini', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+  parser_hash: 1b1f1dd8375681fd3fa9803b4986c5688e60d68d48d8bf3e16a5e028f7d506d3
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281213941
+  updated_at: 1784281214027
+
+#4
+  id: 01KXQQ5B7FMTACPKYSVQPAMZGP
+  provider_id: qwen
+  parser_name: qwen/001_sse_frames
+  parser_version: 1
+  parser_logic_type: inline
+  parser_file_path: null
+  parser_logic_code: var parse = function(rawBody) { var blocks = []; var index = 0; var frames = rawBody.split('\n\n'); for (var f = 0; f < frames.length; f++) { var dataLines = []; var lines = frames[f].split('\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (trimmed.startsWith('data:')) { dataLines.push(trimmed.slice(5).trim()); } } if (dataLines.length === 0) continue; var joinedData = dataLines.join('\n'); try { var json = JSON.parse(joinedData); if (typeof json === 'string') { blocks.push({ kind: 'text', content: json, index: index++ }); } else if (typeof json === 'object' && json !== null) { blocks.push({ kind: 'text', content: JSON.stringify(json), index: index++ }); } } catch (e) { blocks.push({ kind: 'text', content: joinedData, index: index++ }); } } if (blocks.length === 0 && rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } return blocks; }; var detectCompletion = function(rawBody) { return rawBody.length > 0; }; var getConfidence = function(rawBody) { var hasData = rawBody.indexOf('data:') !== -1; return hasData ? 0.6 : 0.3; }; exports.default = { name: 'qwen/001_sse_frames', version: 1, providerId: 'qwen', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+  parser_hash: 5501fd80c44755cc73bd85e00660152010aaa2483578223450c13d7757fc7e99
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281214107
+  updated_at: 1784281214191
+
+#5
+  id: 01KXQQ5BMN6RKE2MDRC8AP7P5D
+  provider_id: studio-ai
+  parser_name: studio-ai/001_batchexecute
+  parser_version: 1
+  parser_logic_type: inline
+  parser_file_path: null
+  parser_logic_code: var parse = function(rawBody) { var blocks = []; var index = 0; try { var parsed = JSON.parse(rawBody); if (!Array.isArray(parsed)) { return [{ kind: 'text', content: rawBody, index: 0 }]; } var innerArrays = parsed.flat(2); for (var i = 0; i < innerArrays.length; i++) { var item = innerArrays[i]; if (typeof item === 'string') { blocks.push({ kind: 'text', content: item, index: index++ }); } } } catch (e) { if (rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } } return blocks; }; var detectCompletion = function() { return true; }; var getConfidence = function() { return 0.8; }; exports.default = { name: 'studio-ai/001_batchexecute', version: 1, providerId: 'studio-ai', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+  parser_hash: 3ec6b3abf88af9a17372c81f4d1da5d917f261228186e9c49d0119549266a27f
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281214528
+  updated_at: 1784281214613
+
+#6
+  id: 01KXQQ5BSKXG4867YS2VGSZ3NW
+  provider_id: system
+  parser_name: system/001_fallback
+  parser_version: 1
+  parser_logic_type: inline
+  parser_file_path: null
+  parser_logic_code: var parse = function(rawBody) { if (rawBody.length === 0) { return [{ kind: 'text', content: '', index: 0 }]; } return [{ kind: 'text', content: rawBody, index: 0 }]; }; var detectCompletion = function() { return true; }; var getConfidence = function(rawBody) { return rawBody.length > 0 ? 0.1 : 0; }; exports.default = { name: 'system/001_fallback', version: 1, providerId: 'system', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+  parser_hash: a5eb234caf2863f4ae4b6f6e221aa4fa2a535240ef77020fa7439462c6941ea8
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281214751
+  updated_at: 1784281214771
+
+#7
+  id: 01KXQQ5BT983ZKNV0WC0MYRHZX
+  provider_id: system
+  parser_name: generic/001_sse_frames
+  parser_version: 1
+  parser_logic_type: inline
+  parser_file_path: null
+  parser_logic_code: var parse = function(rawBody) { var blocks = []; var index = 0; var frames = rawBody.split('\n\n'); for (var f = 0; f < frames.length; f++) { var dataLines = []; var lines = frames[f].split('\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (trimmed.startsWith('data:')) { dataLines.push(trimmed.slice(5).trim()); } } if (dataLines.length === 0) continue; var joinedData = dataLines.join('\n'); try { var json = JSON.parse(joinedData); if (typeof json === 'string') { blocks.push({ kind: 'text', content: json, index: index++ }); } else if (typeof json === 'object' && json !== null) { blocks.push({ kind: 'text', content: JSON.stringify(json), index: index++ }); } } catch (e) { blocks.push({ kind: 'text', content: joinedData, index: index++ }); } } if (blocks.length === 0 && rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } return blocks; }; var detectCompletion = function(rawBody) { return rawBody.length > 0; }; var getConfidence = function(rawBody) { var hasData = rawBody.indexOf('data:') !== -1; return hasData ? 0.6 : 0.3; }; exports.default = { name: 'generic/001_sse_frames', version: 1, providerId: 'generic', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+  parser_hash: cf7cab71416dbf983bf6fd3cec9436590363fc27a766dbfd356f597c20b57d5b
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281214751
+  updated_at: 1784281214794
+
+#8
+  id: 01KXQQ5C1KAPXD2TX5D9QD4MKC
+  provider_id: z-ai
+  parser_name: z-ai/001_openai_delta
+  parser_version: 1
+  parser_logic_type: inline
+  parser_file_path: null
+  parser_logic_code: var parse = function(rawBody) { var blocks = []; var index = 0; var lines = rawBody.split('\n'); for (var i = 0; i < lines.length; i++) { var trimmed = lines[i].trim(); if (!trimmed.startsWith('data:')) continue; var payload = trimmed.slice(5).trim(); if (payload === '[DONE]') break; try { var json = JSON.parse(payload); var delta = json.choices && json.choices[0] && json.choices[0].delta; if (delta && delta.role) { blocks.push({ kind: 'meta', key: 'role', value: delta.role, index: index++ }); } if (delta && delta.content) { var lastBlock = blocks[blocks.length - 1]; if (lastBlock && lastBlock.kind === 'text') { lastBlock.content += delta.content; } else { blocks.push({ kind: 'text', content: delta.content, index: index++ }); } } if (delta && delta.function_call) { blocks.push({ kind: 'tool_use', toolName: (delta.function_call && delta.function_call.name) || 'unknown', input: delta.function_call.arguments ? JSON.parse(delta.function_call.arguments) : {}, index: index++ }); } if (delta && delta.tool_calls) { for (var j = 0; j < delta.tool_calls.length; j++) { var tc = delta.tool_calls[j]; blocks.push({ kind: 'tool_use', toolName: (tc.function && tc.function.name) || 'unknown', input: (tc.function && tc.function.arguments) || {}, index: index++ }); } } } catch (e) { void e; } } if (blocks.length === 0 && rawBody.trim().length > 0) { blocks.push({ kind: 'text', content: rawBody, index: 0 }); } return blocks; }; var detectCompletion = function(rawBody) { return rawBody.indexOf('[DONE]') !== -1 || /"finish_reason"\s*:\s*"stop"/.test(rawBody); }; var getConfidence = function() { return 0.7; }; exports.default = { name: 'z-ai/001_openai_delta', version: 1, providerId: 'z-ai', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+  parser_hash: fdb7e88342d9d94459765b967d02c21d63af182e30cb056c9ef845e9a37f9277
+  is_active: 1
+  fallback_parser_id: null
+  created_at: 1784281214970
+  updated_at: 1784281215028
+
+===== TABLE stream_block (16 rows) =====
+
+#0
+  id: 01KXR603ZN58P2Y6WMSSBT30QV
+  conversation_id: 01KXR603KA5EWXFA1DDKF5AWTV
+  message_id: 01KXR603KA84RC9291688HB826
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784296771537
+
+#1
+  id: 01KXR67AGG1NVQME3KV8XMQQHF
+  conversation_id: 01KXR679JFS4XKVHE5B8JHHQ7R
+  message_id: 01KXR679JFGNVHZJ8CK7QYM57G
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784297007489
+
+#2
+  id: 01KXR6AXCZ8T51EWRRVC2634FN
+  conversation_id: 01KXR6ARK5XVCBRFZBWCNSQ02G
+  message_id: 01KXR6ARK8RQ56D1KA51CDC6X3
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784297124856
+
+#3
+  id: 01KXR7E6K2J6EYQTWX2EB0V7AX
+  conversation_id: 01KXR7E5459NHDHNKPCMGSK6QZ
+  message_id: 01KXR7E545PJ1TY1DFYSVN7FZ8
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784298281458
+
+#4
+  id: 01KXR82W2YMK1BGXVSYK0F1E92
+  conversation_id: 01KXR82T66JCMB4HNHN788SM1Q
+  message_id: 01KXR82T669P5X81T9PHY7845J
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784298958645
+
+#5
+  id: 01KXR8GHK6G6EPW8PHG4GQFCY8
+  conversation_id: 01KXR8GE0BAAAET0G00K9STWVF
+  message_id: 01KXR8GE0BKED8WRQQS3JH29P8
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784299406632
+
+#6
+  id: 01KXRA51N4HTAGQQJ54HS4FGFP
+  conversation_id: 01KXRA51DWYEW59MA0RE16YV8K
+  message_id: 01KXRA51DWNFKGT00045CGVZQ3
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784301127306
+
+#7
+  id: 01KXRAKS4JRC3A8JRKA20BBENC
+  conversation_id: 01KXRAKRNZSRV9XNX9KWZX4T08
+  message_id: 01KXRAKRNZJ832GTSPCH0E5FWR
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784301610030
+
+#8
+  id: 01KXRB0KG2EEM21JNWY0DPC04T
+  conversation_id: 01KXRB0EVT2M4AKCQPZPHW264H
+  message_id: 01KXRB0EVTT8J9FF9N398FJFSR
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784302030001
+
+#9
+  id: 01KXRB9XWTHMQBBN6SVM61GG8M
+  conversation_id: 01KXRB9V8V7YZ5AYY0HZMWWK30
+  message_id: 01KXRB9V8VA64WR5B96CSH0GX7
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784302335664
+
+#10
+  id: 01KXRBGWX9YBG08XFHQC7XGVDK
+  conversation_id: 01KXRBGWEXBM3Z0MZ5V55CHN2J
+  message_id: 01KXRBGWEX7Y69HH4S3QFQJZFZ
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784302564233
+
+#11
+  id: 01KXRBQX287W6M8SSS43YYA0NR
+  conversation_id: 01KXRBQW6WFF3TEMVZ6KMBDAFY
+  message_id: 01KXRBQW6WYCK12K1T25R3VG3H
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784302793729
+
+#12
+  id: 01KXRCDZJ7CCRPJYGZ8Y2G843W
+  conversation_id: 01KXRCDYT07HVTSS4FG5T0TRVM
+  message_id: 01KXRCDYT0HEHMVP4J2SGZZ54Z
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784303517222
+
+#13
+  id: 01KXRCWV2F6B8YGR6NRPS4HAKF
+  conversation_id: 01KXRCWSFQ6AREF4EDH07VGM97
+  message_id: 01KXRCWSFQW2AYP371GJB6K4JQ
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784304004070
+
+#14
+  id: 01KXRD10SA9MJARSMNFAWA4FFQ
+  conversation_id: 01KXRD0ZKRHZHP3NET480TY68Y
+  message_id: 01KXRD0ZKRRHPFRPZT2CK5WKP6
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784304140956
+
+#15
+  id: 01KXRD6YZ3FBW58JE257FQ3E7A
+  conversation_id: 01KXRD6SQ0TCE65589HRRCDR2X
+  message_id: 01KXRD6SQ0DD0DTP6MFJ8PSNJ3
+  block_index: 0
+  block_kind: text
+  block_data: Hello world
+  block_meta: {}
+  created_at: 1784304335101
+
+===== TABLE user (2 rows) =====
+
+#0
+  id: 01KXQP6ZBYYDWMEK9S696XXYSJ
+  display_name: Default User
+  role: developer
+  avatar_color: #6C5CE7
+  avatar_url: null
+  status: active
+  is_default: 1
+  created_at: 1784280219006
+  updated_at: 1784280219006
+  last_active_at: null
+  last_session_id: null
+
+#1
+  id: 01KXQP7YANFQ20GHXWTG49PX54
+  display_name: Alice
+  role: member
+  avatar_color: #6C5CE7
+  avatar_url: null
+  status: active
+  is_default: 0
+  created_at: 1784280250708
+  updated_at: 1784280250750
+  last_active_at: 1784280250750
+  last_session_id: null
+
+===== TABLE config_entry (1 rows) =====
+
+#0
+  id: cfg_test_engine_1784280348245
+  engine_id: test_engine
+  scope_type: global
+  scope_id: global
+  config_json: {"key":"value"}
+  schema_version: 1
+  created_at: 1784280348244
+  updated_at: 1784280348244
+
+===== TABLE policy_rule (8 rows) =====
+
+#0
+  id: 01KXQP6ZQXR62HYT77S305GBQB
+  name: read_only_safe
+  condition: action matches ^(get|list|read|query|fetch|search)$
+  classification: read
+  requires_approval: 0
+  cooldown_ms: 0
+  max_occurrences: 1000000
+  window_ms: 60000
+  is_active: 1
+
+#1
+  id: 01KXQP6ZST8S2SJJX7MWD3VDF6
+  name: navigate_safe
+  condition: action matches ^(navigate|goto|open|visit)$
+  classification: navigate
+  requires_approval: 0
+  cooldown_ms: 0
+  max_occurrences: 1000000
+  window_ms: 60000
+  is_active: 1
+
+#2
+  id: 01KXQP6ZSXG45GB5ZPCK44RT37
+  name: send_allowed
+  condition: action matches ^(send)$
+  classification: communication
+  requires_approval: 0
+  cooldown_ms: 0
+  max_occurrences: 100
+  window_ms: 3600000
+  is_active: 1
+
+#3
+  id: 01KXQP6ZT1QT2H6AXKE8C5PKVG
+  name: write_needs_approval
+  condition: action matches ^(create|update|delete|submit|save|write|patch)$
+  classification: write
+  requires_approval: 1
+  cooldown_ms: 0
+  max_occurrences: 10
+  window_ms: 60000
+  is_active: 1
+
+#4
+  id: 01KXQP6ZT5CNQXV5P99WX0626G
+  name: destructive_always
+  condition: action matches ^(delete_permanent|format|reset|drop|purge|destroy)$
+  classification: destructive
+  requires_approval: 1
+  cooldown_ms: 5000
+  max_occurrences: 3
+  window_ms: 300000
+  is_active: 1
+
+#5
+  id: 01KXQP6ZTQHREVTQ1FFVS3XDN7
+  name: delete_requires_approval
+  condition: action matches ^(destroy|wipe|truncate)$
+  classification: destructive
+  requires_approval: 1
+  cooldown_ms: 10000
+  max_occurrences: 1
+  window_ms: 600000
+  is_active: 1
+
+#6
+  id: 01KXQP6ZXEAF4FQS3ZE0YVD2C1
+  name: financial_always
+  condition: action matches ^(purchase|pay|transfer|checkout|buy|subscribe)$
+  classification: financial
+  requires_approval: 1
+  cooldown_ms: 10000
+  max_occurrences: 5
+  window_ms: 600000
+  is_active: 1
+
+#7
+  id: 01KXQP6ZXSJQ6J2VANKMY6DM9Z
+  name: communication_always
+  condition: action matches ^(send_email|send_message|post_comment|reply)$
+  classification: communication
+  requires_approval: 1
+  cooldown_ms: 0
+  max_occurrences: 20
+  window_ms: 60000
+  is_active: 1

@@ -8,13 +8,16 @@
 // (the SLOT_IDS set in web/ui/src/ui/slots.ts).
 //
 // Run:
-//   bun run scripts/verify-cross-surface.ts            (offline, static)
-//   bun run scripts/verify-cross-surface.ts --live     (requires running server)
+//   bun run scripts/verify-cross-surface.ts                        (offline, static)
+//   bun run scripts/verify-cross-surface.ts --live                 (+ server API reachability)
+//   bun run scripts/verify-cross-surface.ts --runtime              (+ actual CLI dispatch)
+//   bun run scripts/verify-cross-surface.ts --live --runtime       (all checks)
 //
 // Exit code is non-zero if any capability fails verification, so it can block
 // PR merge in the devops gate.
 
-import { readFileSync, existsSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CapabilityNodeSchema, type TaxonomyNode } from './taxonomy-gen/lib/taxonomy-model.ts'
 
@@ -35,16 +38,31 @@ interface Finding {
   checks: SurfaceCheck
 }
 
+interface RuntimeCliCheck {
+  slug: string
+  cliName: string
+  ok: boolean
+  exitCode: number
+  stderr: string
+}
+
+interface AliasCollision {
+  alias: string
+  slugs: string[]
+}
+
 interface Report {
   verifier: 'cross-surface'
   generatedAt: string
-  mode: 'offline' | 'live'
+  mode: 'offline' | 'live' | 'runtime' | 'live+runtime'
   total: number
   passed: number
   failed: number
   bySurface: Record<string, { required: number; ok: number }>
   findings: Finding[]
   liveApi: { ok: boolean; baseUrl: string; checked: number; failures: string[] }
+  runtimeCli: { checked: number; passed: number; failures: RuntimeCliCheck[] }
+  aliasCollisions: AliasCollision[]
 }
 
 // The set of legal UI slot ids (mirrors web/ui/src/ui/slots.ts).
@@ -213,7 +231,82 @@ async function verifyLive(baseUrl: string, findings: Finding[]): Promise<Report[
   return { ok: failures.length === 0, baseUrl, checked, failures }
 }
 
-function buildReport(nodes: TaxonomyNode[], mode: 'offline' | 'live', liveApi?: Report['liveApi']): Report {
+/**
+ * Runtime CLI check: dispatch every cli-surface capability through
+ * `bun run src/cli/index.ts <name> --json` and assert exit 0 + valid JSON.
+ * Requires a running server on the configured CAP_STORE_PORT (default 9420).
+ *
+ * Optimized: runs with bounded concurrency (CONCURRENCY) instead of one
+ * sequential spawn per command, cutting wall-clock from ~O(N*2s) to ~O(N/8*2s).
+ */
+async function verifyRuntimeCli(nodes: TaxonomyNode[]): Promise<RuntimeCliCheck[]> {
+  const cliScript = join(process.cwd(), 'src', 'cli', 'index.ts')
+  const basePort = process.env.CAP_STORE_PORT ?? process.env.PORT ?? '9420'
+
+  const targets = nodes
+    .filter((n) => n.surfaces?.includes('cli') && n.cliCommand?.name)
+    .map((n) => ({ slug: n.slug, cliName: n.cliCommand!.name }))
+
+  const CONCURRENCY = 8
+  const results: RuntimeCliCheck[] = []
+
+  async function runOne(t: { slug: string; cliName: string }): Promise<RuntimeCliCheck> {
+    const args = ['run', cliScript, ...t.cliName.split(/\s+/), '--json']
+    const proc = spawnSync(process.execPath ?? 'bun', args, {
+      env: { ...process.env, CAP_STORE_PORT: basePort },
+      timeout: 10_000,
+      encoding: 'utf-8',
+      windowsHide: true,
+    })
+    return {
+      slug: t.slug,
+      cliName: t.cliName,
+      ok: proc.status === 0,
+      exitCode: proc.status ?? -1,
+      stderr: (proc.stderr ?? '').slice(0, 200).trim(),
+    }
+  }
+
+  for (let i = 0; i < targets.length; i += CONCURRENCY) {
+    const batch = targets.slice(i, i + CONCURRENCY)
+    const settled = await Promise.all(batch.map((t) => runOne(t)))
+    results.push(...settled)
+  }
+
+  return results
+}
+
+/**
+ * Static alias-collision check: collect every cli alias across all nodes
+ * and flag aliases that map to 2+ distinct slugs.
+ */
+function checkAliasCollisions(nodes: TaxonomyNode[]): AliasCollision[] {
+  const aliasMap = new Map<string, string[]>()
+  for (const node of nodes) {
+    if (!node.surfaces?.includes('cli')) continue
+    const aliases = node.cliCommand?.aliases
+    if (!aliases) continue
+    for (const alias of aliases) {
+      if (!alias) continue
+      const existing = aliasMap.get(alias) ?? []
+      if (!existing.includes(node.slug)) existing.push(node.slug)
+      aliasMap.set(alias, existing)
+    }
+  }
+  const collisions: AliasCollision[] = []
+  for (const [alias, slugs] of aliasMap) {
+    if (slugs.length > 1) collisions.push({ alias, slugs })
+  }
+  return collisions.sort((a, b) => b.slugs.length - a.slugs.length)
+}
+
+function buildReport(
+  nodes: TaxonomyNode[],
+  mode: 'offline' | 'live',
+  liveApi?: Report['liveApi'],
+  runtimeCli?: RuntimeCliCheck[],
+  aliasCollisions?: AliasCollision[],
+): Report {
   const findings = nodes.map(verifyCapability)
 
   const bySurface: Record<string, { required: number; ok: number }> = {
@@ -241,6 +334,16 @@ function buildReport(nodes: TaxonomyNode[], mode: 'offline' | 'live', liveApi?: 
     }
   }
 
+  const runtimeResult = runtimeCli
+    ? {
+        checked: runtimeCli.length,
+        passed: runtimeCli.filter((r) => r.ok).length,
+        failures: runtimeCli.filter((r) => !r.ok),
+      }
+    : { checked: 0, passed: 0, failures: [] }
+
+  const aliasResult = aliasCollisions ?? []
+
   return {
     verifier: 'cross-surface',
     generatedAt: new Date().toISOString(),
@@ -251,6 +354,8 @@ function buildReport(nodes: TaxonomyNode[], mode: 'offline' | 'live', liveApi?: 
     bySurface,
     findings,
     liveApi: liveApi ?? { ok: true, baseUrl: '', checked: 0, failures: [] },
+    runtimeCli: runtimeResult,
+    aliasCollisions: aliasResult,
   }
 }
 
@@ -266,14 +371,33 @@ function render(report: Report): void {
     const icon = ok === required ? '✓' : '✗'
     console.log(`  ${icon} ${surface.padEnd(4)}: ${ok}/${required} resolved`)
   }
-  if (report.mode === 'live') {
+  if (report.mode.includes('live')) {
     console.log('')
-    console.log(`Live API check: ${report.liveApi.ok ? '✓' : '✗'} (${report.liveApi.checked} endpoints)`)
+    console.log(
+      `Live API check: ${report.liveApi.ok ? '✓' : '✗'} (${report.liveApi.checked} endpoints)`,
+    )
     for (const f of report.liveApi.failures) console.log(`  ✗ ${f}`)
+  }
+  if (report.runtimeCli.checked > 0) {
+    console.log('')
+    console.log(
+      `Runtime CLI dispatch: ${report.runtimeCli.passed}/${report.runtimeCli.checked} passed`,
+    )
+    for (const f of report.runtimeCli.failures) {
+      console.log(`  ✗ ${f.slug} (${f.cliName}) exit=${f.exitCode}`)
+      if (f.stderr) console.log(`      stderr: ${f.stderr}`)
+    }
+  }
+  if (report.aliasCollisions.length > 0) {
+    console.log('')
+    console.log(`Alias collisions: ${report.aliasCollisions.length}`)
+    for (const c of report.aliasCollisions) {
+      console.log(`  ⚠ "${c.alias}" → ${c.slugs.join(', ')}`)
+    }
   }
   if (report.failed > 0) {
     console.log('')
-    console.log('Failures:')
+    console.log('Surface spec failures:')
     for (const f of report.findings) {
       const failedSurfaces = (Object.keys(f.checks) as (keyof SurfaceCheck)[]).filter(
         (k) => f.surfaces.includes(k) && !f.checks[k],
@@ -281,7 +405,8 @@ function render(report: Report): void {
       if (f.issues.length === 0 && failedSurfaces.length === 0) continue
       console.log(`  ✗ ${f.slug} (${f.capId ?? 'no-capId'})`)
       for (const issue of f.issues) console.log(`      - ${issue}`)
-      if (failedSurfaces.length > 0) console.log(`      - surface checks failed: ${failedSurfaces.join(', ')}`)
+      if (failedSurfaces.length > 0)
+        console.log(`      - surface checks failed: ${failedSurfaces.join(', ')}`)
     }
   }
   console.log('═══════════════════════════════════════════════════════════════')
@@ -289,8 +414,10 @@ function render(report: Report): void {
 
 async function main() {
   const live = process.argv.includes('--live')
+  const runtime = process.argv.includes('--runtime')
   const baseUrl =
-    process.argv.find((a) => a.startsWith('--base='))?.slice('--base='.length) ?? 'http://localhost:5173'
+    process.argv.find((a) => a.startsWith('--base='))?.slice('--base='.length) ??
+    'http://localhost:5173'
 
   const nodes = loadNodes()
   if (nodes.length === 0) {
@@ -298,17 +425,32 @@ async function main() {
     process.exit(2)
   }
 
+  let mode: Report['mode'] = 'offline'
   let liveApi: Report['liveApi'] | undefined
+
   if (live) {
     const findings = nodes.map(verifyCapability)
     liveApi = await verifyLive(baseUrl, findings)
+    mode = runtime ? 'live+runtime' : 'live'
+  }
+  if (runtime && !live) mode = 'runtime'
+
+  let runtimeResults: RuntimeCliCheck[] | undefined
+  if (runtime) {
+    console.log('[runtime] Dispatching CLI commands (concurrency 8)...')
+    runtimeResults = await verifyRuntimeCli(nodes)
   }
 
-  const report = buildReport(nodes, live ? 'live' : 'offline', liveApi)
+  const collisions = checkAliasCollisions(nodes)
+
+  const report = buildReport(nodes, mode, liveApi, runtimeResults, collisions)
   render(report)
 
-  const clean = report.failed === 0 && (report.mode !== 'live' || report.liveApi.ok)
-  process.exit(clean ? 0 : 1)
+  const anyFailure =
+    report.failed > 0 ||
+    (report.mode.includes('live') && !report.liveApi.ok) ||
+    report.runtimeCli.failures.length > 0
+  process.exit(anyFailure ? 1 : 0)
 }
 
 main().catch((e) => {

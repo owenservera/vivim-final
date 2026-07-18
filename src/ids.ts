@@ -28,3 +28,24 @@ export function deriveProgramId(bindingId: string, version: number): string {
 export function deriveSelectorId(capabilityId: string, providerId: string, name: string): string {
   return `sel:${capabilityId}:${providerId}:${name}`
 }
+
+// ── Content hashing (integrity + dedup) ───────────────────────────────────
+// Stable SHA-256 of canonicalized content. Mirrors OG AtomicChatUnit.contentHash.
+// Used by the universal Node layer for dedup and tamper-evidence.
+
+export function hashContent(content: string): string {
+  // Lazy import to avoid a hard node:crypto dep in edge/browser contexts;
+  // Bun and Node both provide it. Fallback to a lightweight hash if unavailable.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const crypto = require('node:crypto')
+    return crypto.createHash('sha256').update(content, 'utf8').digest('hex')
+  } catch {
+    let h = 0x811c9dc5
+    for (let i = 0; i < content.length; i++) {
+      h ^= content.charCodeAt(i)
+      h = Math.imul(h, 0x01000193)
+    }
+    return `fnv1a:${(h >>> 0).toString(16)}`
+  }
+}

@@ -37,6 +37,10 @@
   "dependencies": {
     "@prisma/client": "^6.5.0",
     "alasql": "^4.17.3",
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-gfm": "^3.1.0",
+    "micromark": "^4.0.2",
+    "micromark-extension-gfm": "^3.0.0",
     "ulid": "^2.3.0",
     "zod": "^3.24.2"
   },

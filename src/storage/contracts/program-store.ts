@@ -25,6 +25,27 @@ export type RecipeStep =
   | { kind: 'navigate'; url: string; outputKey?: string }
   | { kind: 'capture'; pattern?: string; timeoutMs?: number; outputKey?: string }
   | { kind: 'evaluate'; expression: string; outputKey?: string }
+  // ── Extended browser-automation vocabulary (100+ capability backbone) ──
+  | { kind: 'scroll'; x?: number; y?: number; selector?: string; outputKey?: string }
+  | { kind: 'hover'; selector: string; outputKey?: string }
+  | { kind: 'select'; selector: string; value?: string; label?: string; outputKey?: string }
+  | { kind: 'press'; key: string; outputKey?: string }
+  | { kind: 'tab_open'; url?: string; outputKey?: string }
+  | { kind: 'tab_close'; targetId?: string; outputKey?: string }
+  | { kind: 'tab_switch'; targetId: string; outputKey?: string }
+  | { kind: 'observe'; what: 'dom' | 'a11y' | 'network' | 'console' | 'screenshot'; outputKey?: string }
+  | { kind: 'upload'; selector: string; files: string[]; outputKey?: string }
+  | { kind: 'extract_markdown'; outputKey?: string }
+  | { kind: 'wait_selector'; selector: string; timeoutMs?: number; outputKey?: string }
+  | { kind: 'wait_text'; text: string; timeoutMs?: number; outputKey?: string }
+  | { kind: 'screenshot'; region?: { x: number; y: number; w: number; h: number }; outputKey?: string }
+  | { kind: 'assert'; condition: string; outputKey?: string }
+  | { kind: 'branch_if'; condition: string; then: RecipeStep[]; outputKey?: string }
+  | { kind: 'loop_while'; condition: string; body: RecipeStep[]; max?: number; outputKey?: string }
+  | { kind: 'parallel'; branches: RecipeStep[][]; outputKey?: string }
+  | { kind: 'human_gate'; prompt?: string; outputKey?: string }
+  | { kind: 'mock_request'; urlPattern: string; body: string; status?: number; outputKey?: string }
+  | { kind: 'cookie_set'; name: string; value: string; path?: string; outputKey?: string }
 
 export interface RecipeBranch {
   when: { outputKey: string; equals?: string; truthy?: boolean }

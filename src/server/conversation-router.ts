@@ -100,13 +100,35 @@ export function createConversationRouter(ctx: ServerContext) {
         // delegate through the engine that owns the capability and surface a
         // `dispatched` result so progress can still stream over WS.
         const governor = ctx.governor as
-          | { executeCapability?: (cid: string, s: string) => Promise<unknown> }
+          | {
+              executeCapability?: (
+                ref: string,
+                slug: string,
+                opts?: {
+                  resolver?: { getConversationProviderId?: (id: string) => Promise<string | null> }
+                  capabilityLookup?: (
+                    slug: string,
+                  ) => { id: string; inputSchema?: { properties?: Record<string, unknown> } } | null
+                  params?: Record<string, unknown>
+                },
+              ) => Promise<unknown>
+            }
           | undefined
         let executed: unknown
         let ok = true
         if (governor?.executeCapability) {
           try {
-            executed = await governor.executeCapability(conversationId, slug)
+            const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
+            executed = await governor.executeCapability(conversationId, slug, {
+              resolver: {
+                getConversationProviderId: async (id) => {
+                  const conv = await ctx.db.getConversation(id)
+                  return conv ? (conv as { providerId: string }).providerId : null
+                },
+              },
+              capabilityLookup: (s) => ctx.registry?.getBySlug(s) ?? null,
+              params: body ?? {},
+            })
           } catch (err) {
             ok = false
             executed = { error: err instanceof Error ? err.message : 'execution failed' }
@@ -199,7 +221,9 @@ export function createConversationRouter(ctx: ServerContext) {
 
       // Health providers endpoint (4.5)
       if (pathname === '/api/health/providers' && method === 'GET') {
-        const healthKernel = (ctx as { healthKernel?: import('../engines/provider-health.js').ProviderHealthKernel }).healthKernel
+        const healthKernel = (
+          ctx as { healthKernel?: import('../engines/provider-health.js').ProviderHealthKernel }
+        ).healthKernel
         if (!healthKernel) {
           return json({})
         }
@@ -216,7 +240,8 @@ export function createConversationRouter(ctx: ServerContext) {
       if (mirrorMatch && method === 'GET') {
         const convId = mirrorMatch[1]
         if (!convId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
-        const mirror = (ctx as { mirror?: import('../engines/mirror-engine.js').MirrorEngine }).mirror
+        const mirror = (ctx as { mirror?: import('../engines/mirror-engine.js').MirrorEngine })
+          .mirror
         if (!mirror) return json({ chrome: {}, ui: {}, lastSyncAt: 0, pendingUpdates: 0 })
         const state = await mirror.projectState(convId)
         return json(state)
@@ -233,7 +258,8 @@ export function createConversationRouter(ctx: ServerContext) {
 
       // GET /api/config/governor — governor config
       if (pathname === '/api/config/governor' && method === 'GET') {
-        const govConfig = (ctx.governor as unknown as { config?: Record<string, unknown> })?.config ?? {}
+        const govConfig =
+          (ctx.governor as unknown as { config?: Record<string, unknown> })?.config ?? {}
         return json({
           fleetConfig: {
             portRange: govConfig.portRange ?? [9300, 9400],

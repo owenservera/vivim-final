@@ -95,7 +95,7 @@ function makeResolved(): ResolvedCapabilities {
 
 function makeParseResult(blocks?: ContentBlock[]): ParseResult {
   return {
-    blocks: blocks ?? [{ kind: 'text', content: 'Hi there', index: 0 }],
+    blocks: blocks ?? [{ type: 'text', text: 'Hi there' }],
     confidence: 0.95,
     parserName: 'test',
     parserVersion: 1,

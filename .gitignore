@@ -63,3 +63,20 @@ docs/audits/AUDIT-UNITS-*.md
 # Local quality-gate baseline for regression-scoped `devops gate` / `devops run`
 # Auto-captured on first run; per-machine so it tolerates pre-existing debt.
 devops/.gate-baseline.json
+tests/fixtures/node-store-test.db
+
+# Local browser-export / cache dumps (never commit)
+chatgpt/
+claude/
+gemini/
+uploads/
+.playwright-mcp/
+.archive/
+.runtime/
+C0-BlackBoxProject-0/
+nil/
+shared/
+agent-brief/
+.opencode/.claude/
+--url/
+

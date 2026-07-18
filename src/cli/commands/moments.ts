@@ -104,8 +104,7 @@ const SUBCOMMANDS = {
   },
 }
 
-async function main() {
-  const args = process.argv.slice(2)
+export async function runMoments(args: string[]): Promise<void> {
   const sub = args[0] ?? 'list'
 
   try {
@@ -168,4 +167,9 @@ The X-Source header tracks which surface initiated each request.
   }
 }
 
-main()
+if (import.meta.main) {
+  runMoments(process.argv.slice(2)).catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

@@ -5,15 +5,19 @@
 // and WebSocket bridge. Engine wiring is deferred to the full bootstrap
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
+import { connectCapabilityRegistry } from '../cli/index.js'
+import { registerGeneratedCapabilities } from '../engines/capability-bootstrap-generated.js'
 import { registerDefaultCapabilities } from '../engines/capability-bootstrap.js'
-import {
-  registerDiscoveryCapabilities,
-  registerKernelCapabilities,
-  registerNlInterpretCapability,
-} from '../engines/capability-bootstrap.js'
+import { registerNlInterpretCapability } from '../engines/capability-bootstrap.js'
 import { CapabilityEventBus } from '../engines/capability-event-bus.js'
 import type { CapabilityResolutionEngine } from '../engines/capability-resolution.js'
+import {
+  type CdpBindingStore,
+  registerDiscoveredCdpMethods,
+} from '../engines/cdp-capability-registrar.js'
+import { CDP_PROTOCOL_CATALOG } from '../engines/cdp-discovery.js'
 import type { ChromeGovernor } from '../engines/chrome-governor.js'
+import type { ConceptualModelService } from '../engines/conceptual-model-service.js'
 import type { ConversationManager } from '../engines/conversation-manager.js'
 import type { CostOptimizer } from '../engines/cost-optimizer.js'
 import type { CrossConversationSynthesizer } from '../engines/cross-conversation-synthesis.js'
@@ -23,12 +27,13 @@ import { bootstrapKernel } from '../engines/kernel/kernel-bootstrap.js'
 import type { Kernel } from '../engines/kernel/kernel-context.js'
 import type { KnowledgeIngestionEngine } from '../engines/knowledge-ingestion.js'
 import type { LockManager } from '../engines/lock-manager.js'
-import type { ProviderHealthKernel } from '../engines/provider-health.js'
 import { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
+import type { ProviderHealthKernel } from '../engines/provider-health.js'
 import type { ProviderMuxEngine } from '../engines/provider-mux.js'
 import type { RetryEngine } from '../engines/retry-engine.js'
 import type { SemanticSearchEngine } from '../engines/semantic-search.js'
 import { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import type { UserIdentityEngine } from '../engines/user-identity.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { createAuthMiddleware } from './auth-gate.js'
 import { createAutonomousRouter } from './autonomous-router.js'
@@ -63,6 +68,8 @@ export interface ServerContext {
   lockManager?: LockManager
   idempotencyGuard?: IdempotencyGuard
   retryEngine?: RetryEngine
+  conceptualModel?: ConceptualModelService
+  userIdentity?: UserIdentityEngine
 }
 
 /** Shutdown hooks registered during server lifetime */
@@ -201,6 +208,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const { ChromeGovernor } = await import('../engines/chrome-governor.js')
   const { StreamParserEngine } = await import('../engines/stream-parser.js')
   const { StreamBlockStore } = await import('../engines/stream-block-store.js')
+  const { NodeStoreImpl } = await import('../storage/impl/node-store-impl.js')
   const { ExecutionMemoizer } = await import('../engines/execution-memoizer.js')
   const { MemoryEngine } = await import('../engines/memory-engine.js')
   const { ConversationStoreImpl } = await import('../storage/impl/conversation-store-impl.js')
@@ -274,6 +282,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     eventBus,
     memoizer,
     memoryEngine,
+    undefined,
+    undefined,
+    new NodeStoreImpl(db.prisma as never),
   )
 
   // Wire CDP transport, trace log, and health monitor into governor
@@ -544,6 +555,91 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       knowledgeIngestion,
       synthesizer,
     })
+
+    // Register generated capabilities from the taxonomy pool (196 caps)
+    registerGeneratedCapabilities(registry, {
+      db,
+      conversationStore: convStore,
+      governor,
+      conversationManager,
+      profileAllocator,
+      memoryEngine,
+      semanticSearch,
+      knowledgeIngestion,
+      synthesizer,
+    })
+
+    // ── G1/G2: Register discovered CDP methods as live capabilities ──────────
+    // Every CDP command becomes a `cap:cdp:*` capability backed by the governor's
+    // mediated transport. At boot we register the full offline protocol catalog
+    // (96+ commands) and persist a CapabilityBinding row per command against the
+    // `generic` provider (the automation backbone) with status `prospect` (D2
+    // light gate — not yet live-verified). When a real provider slave attaches,
+    // executeCdp re-registers with that providerId + `active` status.
+    const cdpBindingStore: CdpBindingStore = {
+      async ensureCdpBinding(args) {
+        const now = Date.now()
+        // Relaxed persistence: ensure the canonical taxonomy row exists, then upsert the binding.
+        await db.prisma.capabilityTaxonomy
+          .upsert({
+            where: { id: args.capabilityId },
+            create: {
+              id: args.capabilityId,
+              slug: args.capabilityId.replace(/:/g, '-'),
+              name: args.capabilityId,
+              category: 'cdp',
+              description: `Discovered CDP capability ${args.capabilityId}`,
+              createdAt: now,
+              updatedAt: now,
+            },
+            update: { updatedAt: now },
+          })
+          .catch(() => {})
+        await db.prisma.capabilityBinding
+          .upsert({
+            where: {
+              globalId_providerId: { globalId: args.capabilityId, providerId: args.providerId },
+            },
+            create: {
+              id: `bind:${args.providerId}:${args.capabilityId}`,
+              globalId: args.capabilityId,
+              providerId: args.providerId,
+              status: args.status,
+              confidence: args.confidence,
+              promotionHistoryJson: JSON.stringify([
+                { ts: now, from: 'none', to: args.status, reason: args.reason ?? 'boot' },
+              ]),
+              createdAt: now,
+              updatedAt: now,
+            },
+            update: {
+              status: args.status,
+              confidence: args.confidence,
+              promotionHistoryJson: JSON.stringify([
+                { ts: now, from: 'prospect', to: args.status, reason: args.reason ?? 'boot' },
+              ]),
+              updatedAt: now,
+            },
+          })
+          .catch(() => {})
+      },
+    }
+
+    const cdpResult = registerDiscoveredCdpMethods(registry, CDP_PROTOCOL_CATALOG, {
+      executeCdp: (method, params, ctx) => {
+        const ref = ctx?.conversationId ?? ctx?.providerId ?? 'generic'
+        return governor.executeCdpMethod(ref, method, params)
+      },
+      providerId: 'generic',
+      bindingStore: cdpBindingStore,
+      // Boot registration is unverified → prospect (D2 light gate pending).
+    })
+    console.log(
+      `[boot] CDP capabilities: registered=${cdpResult.registered.length} bound=${cdpResult.bound.length} skipped=${cdpResult.skipped.length}`,
+    )
+
+    // Bridge: sync all cli-surface capabilities to the CLI CommandRegistry
+    connectCapabilityRegistry(registry)
     policyEngine = new ExecutionPolicyEngine(pStore)
     await policyEngine.initialize()
     autonomousEngine = new AutonomousExecutionEngine(
@@ -567,7 +663,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     registry,
     db,
   })
-  console.log(`[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`)
+  console.log(
+    `[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`,
+  )
 
   // 24.7 — register NLCL itself as a capability on the unified registry
   if (registry) {
@@ -577,9 +675,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   // ── vivim-canvas (v7) — native composable layer system ────────────────
   // Attaches to the existing server host; every canvas op is a capability
   // (P5). Local-first store by default; primitives + oracle read from db.
-  let canvasRouter:
-    | ((req: Request, url: URL) => Promise<Response>)
-    | null = null
+  let canvasRouter: ((req: Request, url: URL) => Promise<Response>) | null = null
   try {
     const { CanvasEngine } = await import('../canvas/canvas-engine.js')
     const { InMemoryCanvasStore } = await import('../canvas/in-memory-store.js')
@@ -652,7 +748,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     intervalMs: 30_000,
   })
   healthKernel.start()
-  onShutdown(async () => { healthKernel.stop() })
+  onShutdown(async () => {
+    healthKernel.stop()
+  })
 
   // ── Phase 7: Reliability engines ──────────────────────────────────────
   const { LockManager } = await import('../engines/lock-manager.js')
@@ -765,7 +863,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       }
 
       // 24.1/24.2 — universal capability transport (execute + introspection)
-      if (url.pathname.startsWith('/api/capabilities/') && capabilityRouter) {
+      if (url.pathname.startsWith('/api/capabilities') && capabilityRouter) {
         return capabilityRouter(req, url)
       }
 

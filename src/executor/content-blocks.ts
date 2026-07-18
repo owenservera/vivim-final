@@ -1,19 +1,4 @@
 // src/executor/content-blocks.ts
-// Content block types for stream parsing.
+// Re-export from the canonical schema — this file exists only for import compat.
 
-export type ContentBlockKind =
-  | 'text'
-  | 'thinking'
-  | 'code'
-  | 'artifact'
-  | 'image'
-  | 'citation'
-  | 'tool_use'
-  | 'error'
-  | 'meta'
-
-export interface ContentBlock {
-  kind: ContentBlockKind
-  content: string
-  metadata?: Record<string, unknown>
-}
+export type { ContentBlock } from '../schema/streaming.js'

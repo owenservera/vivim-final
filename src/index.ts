@@ -103,7 +103,8 @@ export type {
 export { AsyncMutex } from './executor/async-mutex.js'
 export { CircuitBreaker } from './executor/circuit-breaker.js'
 export type { FleetConfig } from './executor/fleet-config.js'
-export type { ContentBlock } from './executor/content-blocks.js'
+// ContentBlock re-exported from schema canon (executor/content-blocks is a compat shim)
+export type { ContentBlock, ContentPart } from './schema/streaming.js'
 export { deriveId, deriveSlaveId } from './executor/ids.js'
 
 // Alerting
@@ -274,3 +275,29 @@ export * from './engines/observability/index.js'
 
 // Phase 11: Stealth Core
 export * from './engines/stealth/index.js'
+
+// 017: Harness Command Registry
+export { HarnessCommandRegistry } from './engines/harness-command-registry.js'
+export type { ResolvedCommand } from './engines/harness-command-registry.js'
+export { HarnessRepairEngine } from './engines/harness-repair-engine.js'
+export type { RepairResult, RepairInput } from './engines/harness-repair-engine.js'
+export { HarnessFeedbackCoordinator } from './engines/harness-feedback-coordinator.js'
+export type {
+  FeedbackOutcome,
+  FeedbackTurn,
+  FeedbackStrategy,
+} from './engines/harness-feedback-coordinator.js'
+export {
+  registerRepair,
+  getRepairMetadata,
+  repairString,
+  repairNumber,
+  repairBoolean,
+} from './schema/repair-metadata.js'
+export type { RepairMetadata } from './schema/repair-metadata.js'
+export { HarnessRepairStoreImpl } from './storage/impl/harness-repair-store-impl.js'
+export type {
+  HarnessRepairStore,
+  RepairSessionRow,
+} from './storage/contracts/harness-repair-store.js'
+export { seedHarnessCommands } from '../seeds/harness/commands.seed.js'
