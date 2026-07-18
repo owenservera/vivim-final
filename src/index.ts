@@ -301,3 +301,4 @@ export type {
   RepairSessionRow,
 } from './storage/contracts/harness-repair-store.js'
 export { seedHarnessCommands } from '../seeds/harness/commands.seed.js'
+export { seedAutomation } from '../seeds/automation/automation.seed.js'

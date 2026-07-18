@@ -12,6 +12,7 @@ import type {
   TraceEntryInput,
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
+import type { BrowserHarnessActions } from './browser-automation/harness-actions.js'
 import { submitMessage, typeMessage } from './composer-typing.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -174,9 +175,7 @@ export class CDPProxy {
     private mutexes: Map<string, AsyncMutex>,
     private transport?: CDPTransport,
     private eventBus?: GovernorEventBus,
-    private browserHarness?: import(
-      './browser-automation/harness-actions.js',
-    ).BrowserHarnessActions,
+    private browserHarness?: BrowserHarnessActions,
   ) {}
 
   async send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown> {

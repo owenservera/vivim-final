@@ -151,3 +151,101 @@ export function createTestProvider(overrides?: Partial<ProviderDefinition>) {
   }
 }
 ```
+
+## Node-Store Testing Pattern (Real DB)
+
+NodeStoreImpl tests use a **pre-built fixture DB** (`tests/fixtures/node-store-test.db`) that is kept in sync with `prisma/schema.prisma` via `bunx prisma db push`. Each test run copies the fixture to a temp directory, runs tests against the copy, and cleans up.
+
+**Setup:**
+```bash
+# (one-time) Build fixture DB when schema changes:
+DATABASE_URL="file:./tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
+```
+
+**Test pattern:**
+```typescript
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { mkdtempSync, rmSync, copyFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { PrismaClient } from '@prisma/client'
+import { NodeStoreImpl } from '../../../../src/storage/impl/node-store-impl.js'
+
+const FIXTURE = join(import.meta.dir, 'relative-path-to', 'tests', 'fixtures', 'node-store-test.db')
+
+let prisma: PrismaClient
+let store: NodeStoreImpl
+
+beforeAll(() => {
+  const dir = mkdtempSync(join(tmpdir(), 'node-store-test-'))
+  const dbPath = join(dir, 'test.db')
+  copyFileSync(FIXTURE, dbPath)
+  prisma = new PrismaClient({ datasources: { db: { url: `file:${dbPath}` } } })
+  store = new NodeStoreImpl(prisma as never)
+})
+
+afterAll(async () => {
+  await prisma.$disconnect()
+  rmSync(dir, { recursive: true, force: true })
+})
+```
+
+### Testing Version Chain
+```typescript
+it('writes a version-1 entry on putNode', async () => {
+  await store.putNode(mkNode({ id: 'n1', type: 'cap-store.message' }))
+  const history = await store.getNodeHistory('n1')
+  expect(history).toHaveLength(1)
+  expect(history[0]?.version).toBe(1)
+  expect(history[0]?.op).toBe('create')
+})
+
+it('updateNode bumps version and appends history', async () => {
+  await store.putNode(mkNode({ id: 'n2', type: 'cap-store.message' }))
+  await store.updateNode('n2', { dataJson: JSON.stringify({ text: 'edited' }) })
+  const history = await store.getNodeHistory('n2')
+  expect(history).toHaveLength(2)
+  expect(history[1]?.version).toBe(2)
+  expect(history[1]?.op).toBe('update')
+  expect(history[1]?.parentVersion).toBe(1)
+})
+```
+
+### Testing Alias Resolution
+```typescript
+it('registers and resolves alias -> canonical', async () => {
+  await store.registerAlias('alias_a', 'canon_x', 'merge', 0.9)
+  expect(await store.resolveAlias('alias_a')).toBe('canon_x')
+  expect(await store.resolveAlias('nope')).toBeNull()
+})
+```
+
+### Testing Rebuildable Graph
+```typescript
+it('materializes edges from node edgesJson', async () => {
+  await store.putNode(mkNode({
+    id: 'src', type: 'cap-store.message',
+    edges: [{ type: 'responds_to', targetId: 'tgt', properties: {} }],
+  }))
+  await store.putNode(mkNode({ id: 'tgt', type: 'cap-store.message' }))
+  const count = await store.rebuildGraphFromNodes()
+  expect(count).toBeGreaterThanOrEqual(1)
+  const out = await store.getOutgoingEdges('src')
+  expect(out.some(e => e.targetId === 'tgt')).toBe(true)
+})
+```
+
+### mkNode Helper
+```typescript
+function mkNode(over: Partial<NodeBase> & Pick<NodeBase, 'id' | 'type'>): NodeBase {
+  const now = Date.now()
+  return {
+    id: over.id, type: over.type,
+    schemaVersion: 1, version: 1, state: 'active',
+    data: over.data ?? { text: 'hello' },
+    edges: over.edges ?? [],
+    meta: over.meta ?? {},
+    createdAt: now, updatedAt: now,
+  }
+}
+```

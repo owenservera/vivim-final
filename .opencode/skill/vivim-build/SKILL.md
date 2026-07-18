@@ -143,3 +143,39 @@ describe('MyEngine', () => {
 4. Emit events via CapabilityEventBus for cross-engine communication
 5. Never import PrismaClient directly in engine — use Store Contract
 6. Write tests alongside implementation
+
+## Node-Layer v2 (Universal Node DB)
+
+Every engine that persists data should **capture as a Node** via `NodeStoreContract` (not directly to Prisma). Documentation: `docs/node-layer-v2/`.
+
+### ACU-Proven Fields (always populate)
+When creating a `NodeBase`, populate:
+- `version: 1` — starts at 1, bumped by `updateNode`
+- `state: 'active'` — lifecycle: active | archived | deleted | superseded
+- `authorDid` — provenance: `'user'` | `'assistant'` | DID string
+- `contentType` — fine-grained classification: `'message'` | `'memory'` | `'document'` etc.
+- `acl` — access control: `{ canView: true, canRemix: false, canReshare: false }`
+- `securityLevel` — 0=public ... 5=top secret
+- `contentHash` — auto-computed by `toRow()`; can also set explicitly
+
+### Version Chain
+- `putNode` auto-writes version-1 `NodeVersion` entry (op: `create`)
+- `updateNode(id, patch)` bumps version, writes `NodeVersion` (op: `update`), sets `parentVersion`
+- `getNodeAtVersion(id, version)` — point-in-time read
+- `getNodeHistory(id)` — full version history
+
+### Fork Linkage
+When a response/follow-up is captured, link it to its parent via an edge:
+```typescript
+edges: [{ type: 'responds_to', targetId: parentNodeId, properties: { role } }]
+```
+
+### Graph Rebuild
+`rebuildGraphFromNodes()` re-materializes all edges from `edgesJson` — call after bulk imports or when graph corruption is suspected.
+
+### Registering New Node Types
+1. Define Zod schema in `src/schema/*.ts`
+2. Create `NodeSchema` object with `type`, `version`, `schema`, `indexContent`, `embeddingText`
+3. Register in `src/schema/schemas.ts` → `registerAllSchemas()`
+4. Optionally add to `NodeType` union in `src/schema/node.ts`
+5. Wire capture via `nodeStore.putNode(...)`

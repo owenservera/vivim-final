@@ -42,6 +42,7 @@ import { createConversationRouter } from './conversation-router.js'
 import { createKnowledgeRouter } from './knowledge-router.js'
 import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
+import { createAutomationRouter } from './automation-router.js'
 import { errorResponse, json } from './response.js'
 import { createSetupRouter } from './setup-router.js'
 import { handleWebSocket, registerConversationForwarder, setCanvasWsHandler } from './websocket.js'
@@ -63,6 +64,7 @@ export interface ServerContext {
   registry?: UnifiedCapabilityRegistry
   costOptimizer?: CostOptimizer
   nlclEngine?: NLCLEngine
+  automationOrchestrator?: import('../engines/automation/orchestrator.js').AutomationOrchestrator
   kernel?: Kernel
   healthKernel?: ProviderHealthKernel
   lockManager?: LockManager
@@ -656,8 +658,10 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   // NLCL — Natural Language Command Layer (the "comms system")
   // Deterministic parser by default; pluggable local LLM / provider LLM for fallback.
   // Available on all surfaces: REST API, CLI, MCP, frontend.
+  const automationOrchestrator = new (await import('../engines/automation/orchestrator.js')).AutomationOrchestrator(governor)
   const nlclEngine = new NLCLEngine({
     governor,
+    automationOrchestrator,
     conversationManager,
     conversationStore: convStore,
     registry,
@@ -782,6 +786,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     policyEngine,
     registry,
     nlclEngine,
+    automationOrchestrator,
     kernel,
     healthKernel,
     lockManager,
@@ -800,6 +805,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       : null
   const nlclRouter = createNLCLRouter(nlclEngine)
   const capabilityRouter = ctx.registry ? createCapabilityRouter(ctx) : null
+  const automationRouter = createAutomationRouter({ orchestrator: automationOrchestrator })
 
   // Unit 2.7 — forward conversation events to subscribed WebSocket frontends
   registerConversationForwarder(eventBus)
@@ -851,6 +857,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       // NLCL — Natural Language Command Layer routes
       if (url.pathname.startsWith('/api/nlcl/')) {
         return nlclRouter(req)
+      }
+
+      // Automation — governor-mediated browser automation (B9 / L7)
+      if (url.pathname.startsWith('/api/automate/')) {
+        return automationRouter(req, url).then((r) => r ?? conversationRouter(req))
       }
 
       if (url.pathname.startsWith('/api/knowledge/')) {
