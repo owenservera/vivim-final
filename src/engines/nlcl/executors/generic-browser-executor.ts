@@ -45,7 +45,7 @@ export class GenericBrowserExecutor implements CommandExecutor {
         text: `Ran ${role} via ${result.recipeId} (${result.steps} steps)`,
         latencyMs: Date.now() - start,
         traceId,
-        classification: intent.classification,
+        classification: intent.classification ?? 'read',
       }
     } catch (err) {
       return this.fail(intent, traceId, start, err instanceof Error ? err.message : String(err))
@@ -69,7 +69,7 @@ export class GenericBrowserExecutor implements CommandExecutor {
       error,
       latencyMs: Date.now() - start,
       traceId,
-      classification: intent.classification,
+      classification: intent.classification ?? 'read',
     }
   }
 }

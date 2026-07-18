@@ -56,6 +56,21 @@ LOOP:
                 goto LOOP
 ```
 
+## Node-Layer v2 (separate from the 127-unit canon)
+
+The Universal Node layer (`docs/node-layer-v2/`) is an **additive foundation** built on top of
+the existing 127-unit atomic plan. It is not part of the 127 units but is a prerequisite
+for many of them. See `docs/node-layer-v2/README.md` for full documentation.
+
+**After any schema change that touches Node/NodeEdge/NodeVersion/NodeAlias**, rebuild
+the test fixture DB:
+```bash
+DATABASE_URL="file:./tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
+```
+
+**Key contract:** Engines depend on `NodeStoreContract` (never `NodeStoreImpl` directly) —
+follows the Store Contracts invariant.
+
 ## Selection rules (enforced by `devops/select.ts`)
 
 1. Selectable only if state is `pending` or `in_progress` (resume first).

@@ -103,5 +103,16 @@
       }
     }
   },
+  "lsp": {
+    "typescript": {
+      "disabled": false,
+      "command": ["bun", "run", "--bun", "typescript-language-server", "--stdio"],
+      "initialization": {
+        "preferences": {
+          "importModuleSpecifierPreference": "relative"
+        }
+      }
+    }
+  },
   "permission": "allow"
 }

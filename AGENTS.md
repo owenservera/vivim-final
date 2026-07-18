@@ -288,3 +288,30 @@ bun run devops runtime-test test --nl "list conversations"
 
 **Skill source:** `.kilo/skills/vivim-runtime/SKILL.md` (devops dir, source of truth)
 **Harness copy:** `.opencode/skill/vivim-runtime/SKILL.md` (generated from source)
+
+## Node-Layer v2 (Universal Node DB — completed)
+
+Full documentation: `docs/node-layer-v2/`.
+
+### What was built
+- **ACU-proven fields** on `Node` model (`contentHash`, `version`, `state`, `securityLevel`, `contentType`, `authorDid`, `signature`, `acl`, `quality`, `validFrom`/`validUntil`, `parentVersion`)
+- **NodeVersion** — time-travel version chain (every mutation recorded, `getNodeAtVersion`/`getNodeHistory`)
+- **NodeAlias** — entity alias→canonical resolution (`registerAlias`/`resolveAlias`)
+- **NodeEdge.weight** — edge weight/confidence
+- **Typed data shapes** for 8 additional types: Memory (+FSRS-6), Acu, Notebook, Note, Bookmark, Artifact, Document, Email — registered as `cap-store.*` schemas
+- **`captureAsNode()`** in ConversationManager — auto-captures every message as a Node with fork-linking (assistant→user via `responds_to` edge)
+- **`recordMemory()`** in MemoryEngine — emits `cap-store.memory` Nodes with FSRS-6 initial state
+- **`rebuildGraphFromNodes()`** — re-materializes edges from source (ADR-001)
+
+### Key contract
+Engines depend on `NodeStoreContract` (never `NodeStoreImpl` directly). Located at `src/storage/contracts/node-store.ts` — implements Store Contracts invariant.
+
+### Fixture DB
+After any Prisma schema change, rebuild test fixture:
+```bash
+DATABASE_URL="file:./tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
+```
+
+### Migration history
+- `20260718022736_universal_node_layer` — base Node + NodeEdge
+- `20260718041000_node_layer_v2` — ACU fields + NodeVersion + NodeAlias + NodeEdge.weight
