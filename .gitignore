@@ -79,4 +79,5 @@ shared/
 agent-brief/
 .opencode/.claude/
 --url/
+dev-poc/
 
