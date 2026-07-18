@@ -1,0 +1,861 @@
+{
+  "run": {
+    "scope": "surface",
+    "commit": "47342ab",
+    "date": "2026-07-17",
+    "filesScanned": 397,
+    "root": "C:\\0-BlackBoxProject-0\\vivim-final\\devops\\audit-arch"
+  },
+  "summary": {
+    "P0": 0,
+    "P1": 38,
+    "P2": 0,
+    "P3": 0,
+    "risk": "M",
+    "total": 38
+  },
+  "findings": [
+    {
+      "id": "AR-0001",
+      "priority": "P1",
+      "dimension": "cycles",
+      "title": "Cyclic module dependency (9 modules)",
+      "description": "Modules form a compile/load-time cycle: src/engines/sandbox-runner -> src/router/router -> src/engines/provider-mux -> src/engines/composer-typing -> src/executor/fleet-supervisor -> src/engines/chrome-governor -> src/engines/capability-resolution -> src/engines/mirror-engine -> src/storage/contracts.",
+      "file": "src/engines/sandbox-runner",
+      "line": 0,
+      "evidence": "cycle: engines/sandbox-runner -> router/router -> engines/provider-mux -> engines/composer-typing -> executor/fleet-supervisor -> engines/chrome-governor -> engines/capability-resolution -> engines/mirror-engine -> storage/contracts -> engines/sandbox-runner",
+      "impact": "Cycles complicate reasoning, break lazy init, and make refactoring risky.",
+      "fix": {
+        "summary": "Introduce an interface/contract module that the cycle participants depend on, or invert one of the dependency directions.",
+        "steps": [
+          "Pick the edge whose direction is most easily inverted.",
+          "Extract the shared abstraction into a new foundation module.",
+          "Depend on the abstraction instead of the concrete module.",
+          "Re-run `audit-arch` to confirm the cycle is gone."
+        ],
+        "effort": "L",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0002",
+      "priority": "P1",
+      "dimension": "cycles",
+      "title": "Cyclic module dependency (2 modules)",
+      "description": "Modules form a compile/load-time cycle: src/engines/manifest-inference -> src/engines/provider-discovery.",
+      "file": "src/engines/manifest-inference",
+      "line": 0,
+      "evidence": "cycle: engines/manifest-inference -> engines/provider-discovery -> engines/manifest-inference",
+      "impact": "Cycles complicate reasoning, break lazy init, and make refactoring risky.",
+      "fix": {
+        "summary": "Introduce an interface/contract module that the cycle participants depend on, or invert one of the dependency directions.",
+        "steps": [
+          "Pick the edge whose direction is most easily inverted.",
+          "Extract the shared abstraction into a new foundation module.",
+          "Depend on the abstraction instead of the concrete module.",
+          "Re-run `audit-arch` to confirm the cycle is gone."
+        ],
+        "effort": "L",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0003",
+      "priority": "P1",
+      "dimension": "cycles",
+      "title": "Cyclic module dependency (2 modules)",
+      "description": "Modules form a compile/load-time cycle: src/engines/cdp-capability-registrar -> src/engines/harness.",
+      "file": "src/engines/cdp-capability-registrar",
+      "line": 0,
+      "evidence": "cycle: engines/cdp-capability-registrar -> engines/harness -> engines/cdp-capability-registrar",
+      "impact": "Cycles complicate reasoning, break lazy init, and make refactoring risky.",
+      "fix": {
+        "summary": "Introduce an interface/contract module that the cycle participants depend on, or invert one of the dependency directions.",
+        "steps": [
+          "Pick the edge whose direction is most easily inverted.",
+          "Extract the shared abstraction into a new foundation module.",
+          "Depend on the abstraction instead of the concrete module.",
+          "Re-run `audit-arch` to confirm the cycle is gone."
+        ],
+        "effort": "L",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0004",
+      "priority": "P1",
+      "dimension": "cycles",
+      "title": "Cyclic module dependency (9 modules)",
+      "description": "Modules form a compile/load-time cycle: src/engines/stream-block-store -> src/engines/conversation-manager -> src/engines/nlcl -> src/engines/autonomous-replay -> src/engines/autonomous-execution -> src/engines/execution-policy -> src/storage/impl -> src/storage/prisma -> src/storage/db.",
+      "file": "src/engines/stream-block-store",
+      "line": 0,
+      "evidence": "cycle: engines/stream-block-store -> engines/conversation-manager -> engines/nlcl -> engines/autonomous-replay -> engines/autonomous-execution -> engines/execution-policy -> storage/impl -> storage/prisma -> storage/db -> engines/stream-block-store",
+      "impact": "Cycles complicate reasoning, break lazy init, and make refactoring risky.",
+      "fix": {
+        "summary": "Introduce an interface/contract module that the cycle participants depend on, or invert one of the dependency directions.",
+        "steps": [
+          "Pick the edge whose direction is most easily inverted.",
+          "Extract the shared abstraction into a new foundation module.",
+          "Depend on the abstraction instead of the concrete module.",
+          "Re-run `audit-arch` to confirm the cycle is gone."
+        ],
+        "effort": "L",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0005",
+      "priority": "P1",
+      "dimension": "cycles",
+      "title": "Cyclic module dependency (7 modules)",
+      "description": "Modules form a compile/load-time cycle: src/server/canvas-router -> src/server/setup-router -> src/server/knowledge-router -> src/server/conversation-router -> src/server/capability-router -> src/server/index -> src/cli/index.",
+      "file": "src/server/canvas-router",
+      "line": 0,
+      "evidence": "cycle: server/canvas-router -> server/setup-router -> server/knowledge-router -> server/conversation-router -> server/capability-router -> server/index -> cli/index -> server/canvas-router",
+      "impact": "Cycles complicate reasoning, break lazy init, and make refactoring risky.",
+      "fix": {
+        "summary": "Introduce an interface/contract module that the cycle participants depend on, or invert one of the dependency directions.",
+        "steps": [
+          "Pick the edge whose direction is most easily inverted.",
+          "Extract the shared abstraction into a new foundation module.",
+          "Depend on the abstraction instead of the concrete module.",
+          "Re-run `audit-arch` to confirm the cycle is gone."
+        ],
+        "effort": "L",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0006",
+      "priority": "P1",
+      "dimension": "cycles",
+      "title": "Cyclic module dependency (2 modules)",
+      "description": "Modules form a compile/load-time cycle: src/mcp/discovery-tools -> src/mcp/server.",
+      "file": "src/mcp/discovery-tools",
+      "line": 0,
+      "evidence": "cycle: mcp/discovery-tools -> mcp/server -> mcp/discovery-tools",
+      "impact": "Cycles complicate reasoning, break lazy init, and make refactoring risky.",
+      "fix": {
+        "summary": "Introduce an interface/contract module that the cycle participants depend on, or invert one of the dependency directions.",
+        "steps": [
+          "Pick the edge whose direction is most easily inverted.",
+          "Extract the shared abstraction into a new foundation module.",
+          "Depend on the abstraction instead of the concrete module.",
+          "Re-run `audit-arch` to confirm the cycle is gone."
+        ],
+        "effort": "L",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0007",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: automation/automation-router -> server/response",
+      "description": "Layer 3 module `automation/automation-router` imports layer 5 module `server/response`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/automation/automation-router",
+      "line": 0,
+      "evidence": "edge automation/automation-router -> server/response (layers 3 -> 5)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `server/response` rather than `server/response` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0008",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/autonomous-execution -> engines/nlcl",
+      "description": "Layer 3 module `engines/autonomous-execution` imports layer 4 module `engines/nlcl`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/autonomous-execution",
+      "line": 0,
+      "evidence": "edge engines/autonomous-execution -> engines/nlcl (layers 3 -> 4)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/nlcl` rather than `engines/nlcl` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0009",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/capability-bootstrap -> cli/discovery-stack",
+      "description": "Layer 3 module `engines/capability-bootstrap` imports layer 5 module `cli/discovery-stack`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/capability-bootstrap",
+      "line": 0,
+      "evidence": "edge engines/capability-bootstrap -> cli/discovery-stack (layers 3 -> 5)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `cli/discovery-stack` rather than `cli/discovery-stack` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0010",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/capability-bootstrap -> engines/nlcl",
+      "description": "Layer 3 module `engines/capability-bootstrap` imports layer 4 module `engines/nlcl`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/capability-bootstrap",
+      "line": 0,
+      "evidence": "edge engines/capability-bootstrap -> engines/nlcl (layers 3 -> 4)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/nlcl` rather than `engines/nlcl` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0011",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/capability -> engines/conversation-manager",
+      "description": "Layer 2 module `engines/capability` imports layer 3 module `engines/conversation-manager`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/capability",
+      "line": 0,
+      "evidence": "edge engines/capability -> engines/conversation-manager (layers 2 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/conversation-manager` rather than `engines/conversation-manager` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0012",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/cdp-capability-registrar -> engines/harness",
+      "description": "Layer 3 module `engines/cdp-capability-registrar` imports layer 4 module `engines/harness`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/cdp-capability-registrar",
+      "line": 0,
+      "evidence": "edge engines/cdp-capability-registrar -> engines/harness (layers 3 -> 4)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/harness` rather than `engines/harness` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0013",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/chrome-governor -> engines/composer-typing",
+      "description": "Layer 1 module `engines/chrome-governor` imports layer 3 module `engines/composer-typing`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/chrome-governor",
+      "line": 0,
+      "evidence": "edge engines/chrome-governor -> engines/composer-typing (layers 1 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/composer-typing` rather than `engines/composer-typing` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0014",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/config-universal-surface -> engines/telemetry-aggregator",
+      "description": "Layer 3 module `engines/config-universal-surface` imports layer 5 module `engines/telemetry-aggregator`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/config-universal-surface",
+      "line": 0,
+      "evidence": "edge engines/config-universal-surface -> engines/telemetry-aggregator (layers 3 -> 5)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/telemetry-aggregator` rather than `engines/telemetry-aggregator` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0015",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/kernel -> engines/capability-event-bus",
+      "description": "Layer 1 module `engines/kernel` imports layer 2 module `engines/capability-event-bus`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/kernel",
+      "line": 0,
+      "evidence": "edge engines/kernel -> engines/capability-event-bus (layers 1 -> 2)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/capability-event-bus` rather than `engines/capability-event-bus` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0016",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/kernel -> engines/config-manager",
+      "description": "Layer 1 module `engines/kernel` imports layer 3 module `engines/config-manager`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/kernel",
+      "line": 0,
+      "evidence": "edge engines/kernel -> engines/config-manager (layers 1 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/config-manager` rather than `engines/config-manager` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0017",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/kernel -> engines/conversation-manager",
+      "description": "Layer 1 module `engines/kernel` imports layer 3 module `engines/conversation-manager`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/kernel",
+      "line": 0,
+      "evidence": "edge engines/kernel -> engines/conversation-manager (layers 1 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/conversation-manager` rather than `engines/conversation-manager` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0018",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/kernel -> engines/nlcl",
+      "description": "Layer 1 module `engines/kernel` imports layer 4 module `engines/nlcl`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/kernel",
+      "line": 0,
+      "evidence": "edge engines/kernel -> engines/nlcl (layers 1 -> 4)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/nlcl` rather than `engines/nlcl` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0019",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/kernel -> engines/unified-registry",
+      "description": "Layer 1 module `engines/kernel` imports layer 3 module `engines/unified-registry`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/kernel",
+      "line": 0,
+      "evidence": "edge engines/kernel -> engines/unified-registry (layers 1 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/unified-registry` rather than `engines/unified-registry` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0020",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/provider-discovery -> engines/capability-event-bus",
+      "description": "Layer 1 module `engines/provider-discovery` imports layer 2 module `engines/capability-event-bus`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/provider-discovery",
+      "line": 0,
+      "evidence": "edge engines/provider-discovery -> engines/capability-event-bus (layers 1 -> 2)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/capability-event-bus` rather than `engines/capability-event-bus` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0021",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/provider-discovery -> engines/capability-shape-registry",
+      "description": "Layer 1 module `engines/provider-discovery` imports layer 2 module `engines/capability-shape-registry`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/provider-discovery",
+      "line": 0,
+      "evidence": "edge engines/provider-discovery -> engines/capability-shape-registry (layers 1 -> 2)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/capability-shape-registry` rather than `engines/capability-shape-registry` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0022",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/provider-discovery -> engines/manifest-inference",
+      "description": "Layer 1 module `engines/provider-discovery` imports layer 3 module `engines/manifest-inference`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/provider-discovery",
+      "line": 0,
+      "evidence": "edge engines/provider-discovery -> engines/manifest-inference (layers 1 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/manifest-inference` rather than `engines/manifest-inference` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0023",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/provider-health -> engines/capability-event-bus",
+      "description": "Layer 1 module `engines/provider-health` imports layer 2 module `engines/capability-event-bus`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/provider-health",
+      "line": 0,
+      "evidence": "edge engines/provider-health -> engines/capability-event-bus (layers 1 -> 2)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/capability-event-bus` rather than `engines/capability-event-bus` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0024",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/provider-mux -> router/router",
+      "description": "Layer 1 module `engines/provider-mux` imports layer 5 module `router/router`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/provider-mux",
+      "line": 0,
+      "evidence": "edge engines/provider-mux -> router/router (layers 1 -> 5)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `router/router` rather than `router/router` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0025",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/provider-mux -> engines/capability-event-bus",
+      "description": "Layer 1 module `engines/provider-mux` imports layer 2 module `engines/capability-event-bus`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/provider-mux",
+      "line": 0,
+      "evidence": "edge engines/provider-mux -> engines/capability-event-bus (layers 1 -> 2)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/capability-event-bus` rather than `engines/capability-event-bus` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0026",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/provider-mux -> engines/messaging-archetypes",
+      "description": "Layer 1 module `engines/provider-mux` imports layer 3 module `engines/messaging-archetypes`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/provider-mux",
+      "line": 0,
+      "evidence": "edge engines/provider-mux -> engines/messaging-archetypes (layers 1 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/messaging-archetypes` rather than `engines/messaging-archetypes` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0027",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/provider-registrar -> engines/stream-align",
+      "description": "Layer 1 module `engines/provider-registrar` imports layer 3 module `engines/stream-align`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/provider-registrar",
+      "line": 0,
+      "evidence": "edge engines/provider-registrar -> engines/stream-align (layers 1 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/stream-align` rather than `engines/stream-align` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0028",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/send-capability -> engines/unified-registry",
+      "description": "Layer 2 module `engines/send-capability` imports layer 3 module `engines/unified-registry`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/send-capability",
+      "line": 0,
+      "evidence": "edge engines/send-capability -> engines/unified-registry (layers 2 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/unified-registry` rather than `engines/unified-registry` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0029",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: schema/chrome -> executor/chrome-instance-profile",
+      "description": "Layer 0 module `schema/chrome` imports layer 1 module `executor/chrome-instance-profile`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/schema/chrome",
+      "line": 0,
+      "evidence": "edge schema/chrome -> executor/chrome-instance-profile (layers 0 -> 1)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `executor/chrome-instance-profile` rather than `executor/chrome-instance-profile` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0030",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: schema/chrome -> executor/slave-states",
+      "description": "Layer 0 module `schema/chrome` imports layer 1 module `executor/slave-states`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/schema/chrome",
+      "line": 0,
+      "evidence": "edge schema/chrome -> executor/slave-states (layers 0 -> 1)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `executor/slave-states` rather than `executor/slave-states` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0031",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: storage/contracts -> canvas/types",
+      "description": "Layer 0 module `storage/contracts` imports layer 5 module `canvas/types`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/storage/contracts",
+      "line": 0,
+      "evidence": "edge storage/contracts -> canvas/types (layers 0 -> 5)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `canvas/types` rather than `canvas/types` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0032",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: storage/contracts -> executor/slave-states",
+      "description": "Layer 0 module `storage/contracts` imports layer 1 module `executor/slave-states`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/storage/contracts",
+      "line": 0,
+      "evidence": "edge storage/contracts -> executor/slave-states (layers 0 -> 1)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `executor/slave-states` rather than `executor/slave-states` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0033",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: storage/contracts -> engines/intent-decomposer",
+      "description": "Layer 0 module `storage/contracts` imports layer 3 module `engines/intent-decomposer`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/storage/contracts",
+      "line": 0,
+      "evidence": "edge storage/contracts -> engines/intent-decomposer (layers 0 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/intent-decomposer` rather than `engines/intent-decomposer` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0034",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: storage/contracts -> engines/mirror-engine",
+      "description": "Layer 0 module `storage/contracts` imports layer 3 module `engines/mirror-engine`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/storage/contracts",
+      "line": 0,
+      "evidence": "edge storage/contracts -> engines/mirror-engine (layers 0 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/mirror-engine` rather than `engines/mirror-engine` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0035",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: storage/contracts -> engines/provider-mux",
+      "description": "Layer 0 module `storage/contracts` imports layer 1 module `engines/provider-mux`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/storage/contracts",
+      "line": 0,
+      "evidence": "edge storage/contracts -> engines/provider-mux (layers 0 -> 1)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/provider-mux` rather than `engines/provider-mux` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0036",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: storage/contracts -> engines/sandbox-runner",
+      "description": "Layer 0 module `storage/contracts` imports layer 3 module `engines/sandbox-runner`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/storage/contracts",
+      "line": 0,
+      "evidence": "edge storage/contracts -> engines/sandbox-runner (layers 0 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/sandbox-runner` rather than `engines/sandbox-runner` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0037",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: storage/db -> storage/impl",
+      "description": "Layer 0 module `storage/db` imports layer 3 module `storage/impl`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/storage/db",
+      "line": 0,
+      "evidence": "edge storage/db -> storage/impl (layers 0 -> 3)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `storage/impl` rather than `storage/impl` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0038",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: storage/impl -> engines/harness",
+      "description": "Layer 3 module `storage/impl` imports layer 4 module `engines/harness`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/storage/impl",
+      "line": 0,
+      "evidence": "edge storage/impl -> engines/harness (layers 3 -> 4)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/harness` rather than `engines/harness` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    }
+  ]
+}

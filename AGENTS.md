@@ -98,6 +98,32 @@ Non-negotiable constraints enforced by `bun run devops invariants check`.
 3. **Research-First:** No implementation without research report classification.
 4. **Phase Gates:** Phase N requires phase N-1 complete.
 
+### Harness Command Registry (Completed — spec 017)
+
+Browser-free schema repair pipeline with declarative harness commands.
+
+**Engines:**
+- `src/engines/harness-command-registry.ts` — semver version resolution, required-field validation
+- `src/engines/harness-repair-engine.ts` — Zod schema repair with alias remapping, code-fence strip, trailing-comma fix, apostrophe-safe quote balancing
+- `src/engines/harness-feedback-coordinator.ts` — escalating retry prompts with exponential backoff + diff (never repeats same prompt)
+
+**Prisma models:**
+- `HarnessCommand` — versioned command definitions with JSON schema (seeded from `seeds/harness/commands.json`)
+- `RepairSession` — audit trail for LLM payload repairs
+
+**Storage contracts:**
+- `GovernorStore` — `getHarnessCommand`, `listHarnessCommands`, `upsertHarnessCommand`, `getProviderFleetConfig`
+- `HarnessRepairStore` — `createRepairSession`, `findRepairSessionsByConversation`
+
+**Repair metadata side-table:** `src/schema/repair-metadata.ts` — `registerRepair`/`getRepairMetadata` with `repairString`/`repairNumber`/`repairBoolean` helpers. Never monkey-patches Zod prototypes.
+
+**Seeding:** `seeds/harness/commands.seed.ts` → `seedHarnessCommands()` called in `src/engines/capability-bootstrap.ts` at boot.
+
+**Key rules:**
+- String schemas passthrough (never rewrite interior apostrophes)
+- Zod 3.23+ `_def.shape()` is a function — call it
+- Field-level `repairString({aliases})` for alias remapping (not top-level `registerRepair`)
+
 ### One Entry Point (v10 Invariant)
 
 Every operation is a `UnifiedCapability`. CLI and frontend are thin NL shells that
@@ -115,6 +141,25 @@ Use Unit 24.1 (registry contract), Unit 24.3 (CLI generation), and Unit 25.1 (ca
 2. Register it with `surfaces: ['cli', 'ui', 'api']` to enable all transports
 3. Add NL patterns to `src/engines/nlcl/catalog.ts` linking to your capabilityId
 4. Add `cliCommand`, `ui`, and `mcpToolName` for cross-surface parity
+
+#### CLI Dispatch (how the thin-client actually routes)
+
+`src/cli/index.ts` is **not** a second transport — it is a thin client to a running
+server (default `CAP_STORE_PORT=9420`; this env runs on `9421`). Two layers feed the
+in-process `CommandRegistry`:
+
+1. **Bridged capabilities** — `syncCliFromUnified()` copies every `cli`-surface
+   capability from the `UnifiedCapabilityRegistry` into `CommandRegistry` (alias-
+   collision guard: warns + skips duplicates instead of silent overwrite).
+2. **Builtin commands** — `registerBuiltinCommands()` registers `automate` and
+   `moments`, which bypass the capability registry and talk to the API directly
+   (legacy extension pattern). They are still first-class members of the command
+   tree and appear in `help`.
+
+Multi-word commands (`admin db status`) resolve via `CommandRegistry.resolve()`
+(longest-prefix match), not single-token `find()`. New builtins go in
+`src/cli/commands/builtins.ts` — do NOT hand-write standalone `commands/*.ts`
+scripts that bypass the registry.
 
 ### Taxonomy Chain Gotchas (CRITICAL)
 
@@ -214,8 +259,9 @@ Get-ChildItem -Path src -Recurse -Filter *.ts | Select-String -Pattern "TODO"
 - **devops-roadmap** — Research-first roadmap with truth scanning and gap discovery
 - **devops-generators** — Taxonomy generation (PlatformCatalog + ProviderCapabilityTaxonomy) with 4-round pipeline (skeleton → drill-down → UI slot mapping → cross-surface binding)
 - **source-audit** — P0-P3 source-code audit with 4 depth tiers
+- **arch-audit** — Module-level architecture audit (cycles, layering, coupling, cohesion, boundaries)
 - **prisma-workflow** — Prisma patterns and workflows for schema/migrations
-- **vivim-build** — DEPRECATED: Use `devops` skill instead
+- **vivim-build** — Engine implementation workflow (13-engine architecture)
 - **vivim-testing** — Testing patterns and test infrastructure
 - **vivim-runtime** — DEPRECATED: Use `devops` skill instead
 

@@ -59,6 +59,46 @@ function stepToNode(step: RecipeStep, index: number): HarnessNode {
         outputKey: step.outputKey ?? `s${index}`,
         params: { expression: step.expression },
       }
+    case 'scroll':
+      return { type: 'action', action: 'scroll', outputKey: step.outputKey ?? `s${index}`, params: { x: step.x, y: step.y, selector: step.selector } }
+    case 'hover':
+      return { type: 'action', action: 'hover', outputKey: step.outputKey ?? `s${index}`, selector: step.selector }
+    case 'select':
+      return { type: 'action', action: 'select', outputKey: step.outputKey ?? `s${index}`, selector: step.selector, params: { value: step.value, label: step.label } }
+    case 'press':
+      return { type: 'action', action: 'press', outputKey: step.outputKey ?? `s${index}`, params: { key: step.key } }
+    case 'tab_open':
+      return { type: 'action', action: 'tab_open', outputKey: step.outputKey ?? `s${index}`, params: { url: step.url } }
+    case 'tab_close':
+      return { type: 'action', action: 'tab_close', outputKey: step.outputKey ?? `s${index}`, params: { targetId: step.targetId } }
+    case 'tab_switch':
+      return { type: 'action', action: 'tab_switch', outputKey: step.outputKey ?? `s${index}`, params: { targetId: step.targetId } }
+    case 'observe':
+      return { type: 'action', action: 'observe', outputKey: step.outputKey ?? `s${index}`, params: { what: step.what } }
+    case 'upload':
+      return { type: 'action', action: 'upload', outputKey: step.outputKey ?? `s${index}`, selector: step.selector, params: { files: step.files } }
+    case 'extract_markdown':
+      return { type: 'action', action: 'extract_markdown', outputKey: step.outputKey ?? `s${index}` }
+    case 'wait_selector':
+      return { type: 'action', action: 'wait_selector', outputKey: step.outputKey ?? `s${index}`, selector: step.selector, params: { timeoutMs: step.timeoutMs } }
+    case 'wait_text':
+      return { type: 'action', action: 'wait_text', outputKey: step.outputKey ?? `s${index}`, params: { text: step.text, timeoutMs: step.timeoutMs } }
+    case 'screenshot':
+      return { type: 'action', action: 'screenshot', outputKey: step.outputKey ?? `s${index}`, params: { region: step.region } }
+    case 'assert':
+      return { type: 'action', action: 'assert', outputKey: step.outputKey ?? `s${index}`, params: { condition: step.condition } }
+    case 'mock_request':
+      return { type: 'action', action: 'mock_request', outputKey: step.outputKey ?? `s${index}`, params: { urlPattern: step.urlPattern, body: step.body, status: step.status } }
+    case 'cookie_set':
+      return { type: 'action', action: 'cookie_set', outputKey: step.outputKey ?? `s${index}`, params: { name: step.name, value: step.value, path: step.path } }
+    case 'branch_if':
+      return { type: 'branch', action: 'branch_if', outputKey: step.outputKey ?? `s${index}`, condition: { outputKey: step.condition, truthy: true }, params: { steps: step.then } }
+    case 'loop_while':
+      return { type: 'action', action: 'loop_while', outputKey: step.outputKey ?? `s${index}`, condition: { outputKey: step.condition, truthy: true }, params: { steps: step.body, max: step.max } }
+    case 'parallel':
+      return { type: 'parallel', action: 'parallel', outputKey: step.outputKey ?? `s${index}`, params: { branches: step.branches } }
+    case 'human_gate':
+      return { type: 'action', action: 'human_gate', outputKey: step.outputKey ?? `s${index}`, params: { prompt: step.prompt } }
   }
 }
 

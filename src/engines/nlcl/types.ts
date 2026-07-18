@@ -34,6 +34,7 @@ export type ExecutorId =
   | 'memory'
   | 'llm'
   | 'web'
+  | 'generic-browser'
 
 export interface NLCContext {
   workspacePath?: string

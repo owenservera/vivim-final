@@ -2,23 +2,22 @@
 // StreamParserEngine — parse raw provider responses into typed ContentBlock[] (04-merged-engines.md §3).
 // All parser logic loaded from DB — engine is a loader/executor, not a parser repository.
 // Fallback chain: provider → generic → system → error (all from DB).
+//
+// ContentBlock is the canonical ContentPart from schema/streaming.
+// Legacy {kind,content,index} blocks from seed parsers are auto-migrated at the boundary.
 
 import { EngineError } from '../errors.js'
 import type { ParserStore } from '../storage/contracts/parser-store.js'
 import { assertTrustedExpressionSource } from './safe-eval.js'
 import type { SandboxRunner } from './sandbox-runner.js'
 import type { SandboxPermissions } from './sandbox-runner.js'
+import {
+  isLegacyBlock,
+  migrateLegacyParts,
+} from '../schema/streaming.js'
+import type { ContentPart } from '../schema/streaming.js'
 
-export type ContentBlock =
-  | { kind: 'text'; content: string; index: number }
-  | { kind: 'thinking'; content: string; index: number }
-  | { kind: 'code'; content: string; language?: string; index: number }
-  | { kind: 'artifact'; content: string; artifactType?: string; index: number }
-  | { kind: 'image'; url: string; alt?: string; index: number }
-  | { kind: 'citation'; content: string; source?: string; index: number }
-  | { kind: 'tool_use'; toolName: string; input: Record<string, unknown>; index: number }
-  | { kind: 'error'; message: string; code?: string; index: number }
-  | { kind: 'meta'; key: string; value: unknown; index: number }
+export type ContentBlock = ContentPart
 
 export interface ParserModule {
   name: string
@@ -45,7 +44,19 @@ export interface ParserConfig {
 }
 
 function errorBlock(_providerId: string, message: string): ContentBlock[] {
-  return [{ kind: 'error', message, code: 'PARSE_FAILED', index: 0 }]
+  return [{ type: 'error', message, code: 'PARSE_FAILED' }]
+}
+
+// ── Legacy migration helper ───────────────────────────────────────────────
+// Detects old {kind,content,index} blocks from seed parsers and converts them
+// to canonical {type,text,...} ContentPart. Runs as a pass over parser output.
+
+function normalizeBlocks(blocks: ContentBlock[]): ContentBlock[] {
+  if (blocks.length === 0) return blocks
+  if (isLegacyBlock(blocks[0])) {
+    return migrateLegacyParts(blocks as unknown as Parameters<typeof migrateLegacyParts>[0])
+  }
+  return blocks
 }
 
 export class StreamParserEngine {
@@ -75,15 +86,15 @@ export class StreamParserEngine {
 
     try {
       module = await this.loadProviderParser(providerId)
-      blocks = module.parse(rawBody)
+      blocks = normalizeBlocks(module.parse(rawBody))
     } catch {
       try {
         module = await this.loadGenericParser()
-        blocks = module.parse(rawBody)
+        blocks = normalizeBlocks(module.parse(rawBody))
       } catch {
         try {
           module = await this.loadSystemFallbackParser()
-          blocks = module.parse(rawBody)
+          blocks = normalizeBlocks(module.parse(rawBody))
         } catch {
           blocks = errorBlock(providerId, 'all parsers failed — check provider_parser table')
           module = {

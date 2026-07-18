@@ -1,0 +1,2 @@
+name: vivim-testing
+description: Testing patterns and workflows for vivim-final. Use when writing tests, analyzing coverage, fixing flaky tests, or setting up test infrastructure.

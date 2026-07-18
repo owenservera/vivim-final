@@ -5,7 +5,7 @@ const mod: ParserModule = {
   name: 'claude-ok',
   version: 1,
   providerId: 'claude',
-  parse: (raw) => [{ kind: 'text', content: `claude:${raw}`, index: 0 }],
+  parse: (raw) => [{ type: 'text', text: `claude:${raw}` }],
   detectCompletion: () => true,
   getConfidence: () => 0.99,
 }

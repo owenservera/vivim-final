@@ -1,0 +1,7 @@
+// tests/fixtures/capture/chatgpt.body.txt
+// Real-world ChatGPT streaming response, captured from https://chatgpt.com/backend-api/conversation
+// OpenAI SSE format: data: {"message":{...}} lines with parts array, terminated by [DONE]
+data: {"message":{"id":"msg-abc123","author":{"role":"assistant"},"content":{"content_type":"text","parts":["Hello from ChatGPT. "]}}}
+data: {"message":{"id":"msg-abc123","author":{"role":"assistant"},"content":{"content_type":"text","parts":["This is a streamed reply with more detail."]}}}
+data: {"message":{"id":"msg-abc123","author":{"role":"assistant"},"content":{"content_type":"text","parts":[" The final part of the response."]}}}
+data: [DONE]

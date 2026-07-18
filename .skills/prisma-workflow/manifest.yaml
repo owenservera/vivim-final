@@ -1,0 +1,2 @@
+name: prisma-workflow
+description: Prisma ORM patterns and workflows for vivim-final. Use when creating migrations, writing seed files, optimizing queries, or debugging Prisma issues.

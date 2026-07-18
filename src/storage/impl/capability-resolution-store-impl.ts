@@ -26,11 +26,11 @@ export class CapabilityResolutionStoreImpl implements CapabilityResolutionStore 
         pt.max_models AS tier_max_models,
         pt.max_file_size AS tier_max_file_size,
         pt.max_options AS tier_max_options,
-        pt.config_json AS tier_config_json
+        pt.custom_config_json AS tier_config_json
       FROM capability_taxonomy ct
       LEFT JOIN capability_binding cb ON cb.global_id = ct.id AND cb.provider_id = $1
       LEFT JOIN provider_capability pc ON pc.provider_id = $1 AND pc.global_capability_id = ct.id
-      LEFT JOIN provider_tier pt ON pt.tier = $2
+      LEFT JOIN capability_tier pt ON pt.capability_id = ct.id AND pt.plan_tier = $2
       WHERE cb.status = 'active' OR cb.id IS NULL
       ORDER BY ct.ui_position, ct.ui_order
     `
@@ -61,11 +61,11 @@ export class CapabilityResolutionStoreImpl implements CapabilityResolutionStore 
         pt.max_models AS tier_max_models,
         pt.max_file_size AS tier_max_file_size,
         pt.max_options AS tier_max_options,
-        pt.config_json AS tier_config_json
+        pt.custom_config_json AS tier_config_json
       FROM capability_taxonomy ct
       LEFT JOIN capability_binding cb ON cb.global_id = ct.id AND cb.provider_id = $1
       LEFT JOIN provider_capability pc ON pc.provider_id = $1 AND pc.global_capability_id = ct.id
-      LEFT JOIN provider_tier pt ON pt.tier = $2
+      LEFT JOIN capability_tier pt ON pt.capability_id = ct.id AND pt.plan_tier = $2
       WHERE (ct.name ILIKE $3 OR ct.slug ILIKE $3 OR ct.search_hints_json ILIKE $3)
         AND (cb.status = 'active' OR cb.id IS NULL)
       ORDER BY ct.ui_position, ct.ui_order

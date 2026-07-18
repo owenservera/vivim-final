@@ -8,6 +8,7 @@ import { HealthDashboard } from '../features/health-dashboard.js'
 import { ProviderManager } from '../features/provider-manager.js'
 import { WorkspaceSettings } from '../features/workspace-settings.js'
 import { DebugPanel } from '../features/debug-panel.js'
+import { DevConsole } from '../features/dev-console.js'
 import { ProviderSetupWizard } from '@ui/features/provider-setup-wizard.js'
 
 export function SandboxApp() {
@@ -17,6 +18,18 @@ export function SandboxApp() {
   const [showWorkspaceSettings, setShowWorkspaceSettings] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [view, setView] = useState<'capabilities' | 'chat' | 'health'>('capabilities')
+  const [devConsole, setDevConsole] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === '`') {
+        e.preventDefault()
+        setDevConsole((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     loadCapabilities()
@@ -109,6 +122,13 @@ export function SandboxApp() {
           >
             Settings
           </button>
+          <button
+            onClick={() => setDevConsole((v) => !v)}
+            className={`text-sm px-2 py-1 rounded ${devConsole ? 'bg-sky-100 text-sky-700' : 'text-gray-600 hover:bg-gray-100'}`}
+            title="Dev Console (Ctrl+`)"
+          >
+            Dev ⌃`
+          </button>
         </div>
       </header>
 
@@ -134,6 +154,8 @@ export function SandboxApp() {
           <HealthDashboard />
         )}
       </main>
+
+      <DevConsole open={devConsole} onClose={() => setDevConsole(false)} />
     </div>
   )
 }

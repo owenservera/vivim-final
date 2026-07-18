@@ -513,3 +513,48 @@ export class WorkflowEngine {
     }
   }
 }
+
+// ── Storage contracts (implemented in src/storage/impl) ───────────────────
+
+export interface HitlGateStore {
+  createGate(gate: Record<string, unknown>): Promise<void>
+  getGate(id: string): Promise<Record<string, unknown> | null>
+  resolveGate(id: string, resolution: unknown): Promise<void>
+  listPending(): Promise<Array<Record<string, unknown>>>
+}
+
+export interface WorkflowRetryQueueStore {
+  enqueue(record: {
+    id: string
+    nodeExecutionId: string
+    attempt: number
+    nextRetryAt: number
+    maxAttempts: number
+    backoffMs: number
+    status: string
+  }): Promise<void>
+  getPending(now: number): Promise<
+    Array<{
+      id: string
+      nodeExecutionId: string
+      attempt: number
+      nextRetryAt: number
+      maxAttempts: number
+      backoffMs: number
+      status: string
+    }>
+  >
+  markComplete(id: string): Promise<void>
+  markDead(id: string): Promise<void>
+}
+
+export interface WorkflowVersionStore {
+  createVersion(record: {
+    id: string
+    workflowId: string
+    version: number
+    definitionJson: string
+    createdAt: number
+  }): Promise<void>
+  getLatestVersion(workflowId: string): Promise<number>
+}

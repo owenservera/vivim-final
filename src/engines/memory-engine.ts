@@ -2,7 +2,9 @@
 // MemoryEngine — episodic, semantic, and procedural memory with learning
 
 import { newId } from '../ids.js'
+import { hashContent } from '../ids.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
+import type { NodeStoreContract } from '../storage/contracts/node-store.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -156,6 +158,87 @@ export class MemoryEngine {
     }
     await this.semantic.save(fact)
     this.eventBus.emit({ type: 'memory:fact_asserted', data: { id: fact.id } })
+  }
+
+  // ── Node-layer v2: emit a durable `cap-store.memory` Node (OG Memory +
+  // FSRS-6). Each memory lands as a universally-stored Node with spaced-
+  // repetition fields so the second brain can schedule reviews.
+  async recordMemory(input: {
+    content: string
+    memoryType: string
+    category: string
+    subcategory?: string
+    tags?: string[]
+    importance?: number
+    relevance?: number
+    sourceConversationIds?: string[]
+    sourceMessageIds?: string[]
+    occurredAt?: number
+    validFrom?: number
+    validUntil?: number
+    isPinned?: boolean
+    isArchived?: boolean
+    nodeStore?: NodeStoreContract
+    conversationId?: string
+    messageId?: string
+  }): Promise<string> {
+    const now = Date.now()
+    const id = newId()
+    const memoryData = {
+      content: input.content,
+      memoryType: input.memoryType,
+      category: input.category,
+      subcategory: input.subcategory ?? null,
+      tags: input.tags ?? [],
+      importance: input.importance ?? 0.5,
+      relevance: input.relevance ?? 0.5,
+      sourceConversationIds: input.sourceConversationIds ?? [],
+      sourceMessageIds: input.sourceMessageIds ?? [],
+      occurredAt: input.occurredAt ?? now,
+      validFrom: input.validFrom ?? now,
+      validUntil: input.validUntil ?? null,
+      isPinned: input.isPinned ?? false,
+      isArchived: input.isArchived ?? false,
+      consolidationStatus: 'unconsolidated',
+      accessCount: 0,
+      // FSRS-6 initial state (New card).
+      stability: 1.0,
+      difficulty: 0.3,
+      dueDate: now,
+      lastReview: null,
+      reviewCount: 0,
+      fsrsState: 'New' as const,
+    }
+    const nodeStore = input.nodeStore
+    if (nodeStore) {
+      await nodeStore
+        .putNode({
+          id,
+          type: 'cap-store.memory',
+          schemaVersion: 1,
+          version: 1,
+          state: 'active',
+          source: input.content,
+          data: memoryData as unknown as Record<string, unknown>,
+          edges: [],
+          meta: {
+            conversationId: input.conversationId,
+            messageId: input.messageId,
+            sourceParser: 'memory-engine',
+          },
+          acl: { canView: true, canRemix: false, canReshare: false },
+          authorDid: 'assistant',
+          contentType: 'memory',
+          securityLevel: 0,
+          validFrom: memoryData.validFrom,
+          validUntil: memoryData.validUntil ?? undefined,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .catch(() => {})
+    }
+    this.eventBus.emit({ type: 'memory:recorded', data: { id, category: input.category } })
+    return id
   }
 
   async createRule(input: ProceduralRuleInput): Promise<void> {

@@ -10,7 +10,6 @@ export default {
 
   parse(rawBody: string): ContentBlock[] {
     const blocks: ContentBlock[] = []
-    let index = 0
     for (const frame of rawBody.split('\n\n')) {
       const dataLines: string[] = []
       for (const line of frame.split('\n')) {
@@ -24,16 +23,16 @@ export default {
       try {
         const json = JSON.parse(joinedData)
         if (typeof json === 'string') {
-          blocks.push({ kind: 'text', content: json, index: index++ })
+          blocks.push({ type: 'text', text: json })
         } else if (typeof json === 'object' && json !== null) {
-          blocks.push({ kind: 'text', content: JSON.stringify(json), index: index++ })
+          blocks.push({ type: 'text', text: JSON.stringify(json) })
         }
       } catch {
-        blocks.push({ kind: 'text', content: joinedData, index: index++ })
+        blocks.push({ type: 'text', text: joinedData })
       }
     }
     if (blocks.length === 0 && rawBody.trim().length > 0) {
-      blocks.push({ kind: 'text', content: rawBody, index: 0 })
+      blocks.push({ type: 'text', text: rawBody })
     }
     return blocks
   },

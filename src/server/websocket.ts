@@ -222,6 +222,18 @@ export const handleWebSocket = {
         eventBus.unsubscribe(ws as unknown as WebSocket, msg.entityType, msg.entityId)
       }
 
+      // Dev firehose: subscribe to EVERY emitted event (SOTA live dev console).
+      // Backend acks so the console knows the pipe is open.
+      if (msg.type === 'dev:subscribe') {
+        eventBus.subscribe(ws as unknown as WebSocket, 'dev', '*')
+        ws.send(JSON.stringify({ type: 'dev:subscribed', ok: true, at: Date.now() }))
+        return
+      }
+      if (msg.type === 'dev:unsubscribe') {
+        eventBus.unsubscribe(ws as unknown as WebSocket, 'dev', '*')
+        return
+      }
+
       // ── vivim-canvas protocol (v7.12) ─────────────────────────────
       // Canvas frames (canvas:* and bridge:*) are owned by the CanvasEngine's
       // sandbox bridge. Hand off before the generic subscribe/unsubscribe path.

@@ -28,8 +28,8 @@ describe('StreamBlockStoreImpl', () => {
 
   it('storeBlocks + getBlocksByMessage persists and retrieves blocks', async () => {
     const blocks: ContentBlock[] = [
-      { kind: 'text', content: 'a', index: 0 },
-      { kind: 'code', content: 'b', language: 'ts', index: 1 },
+      { type: 'text', text: 'a' },
+      { type: 'code', text: 'b', language: 'ts' },
     ]
     await store.storeBlocks('conv_1', 'msg_1', blocks)
     const rows = await store.getBlocksByMessage('msg_1')

@@ -1,0 +1,2 @@
+name: vivim-runtime
+description: Agent becomes the runtime of its own dev loop (launch→engage→discover→test→debug→build→repeat). Fully-autonomous runtime-OS skill.

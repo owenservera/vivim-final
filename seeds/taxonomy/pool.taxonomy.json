@@ -9,7 +9,10 @@
       "label": "Send Message",
       "description": "Compose and dispatch a message in the composer",
       "sourceConfidence": "high",
-      "tags": ["compose", "chat"],
+      "tags": [
+        "compose",
+        "chat"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -27,11 +30,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:send:message",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "send message",
-        "aliases": ["sm"],
-        "examples": ["sm <args>"]
+        "aliases": [
+          "sm"
+        ],
+        "examples": [
+          "sm <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -57,7 +70,10 @@
       "label": "Read Response",
       "description": "Observe the assistant response stream render",
       "sourceConfidence": "high",
-      "tags": ["observe", "chat"],
+      "tags": [
+        "observe",
+        "chat"
+      ],
       "shared": true,
       "capabilityKind": "state",
       "ui_component": "status-indicator",
@@ -75,11 +91,20 @@
       "result_component": "indicator",
       "result_layout": "inline",
       "capId": "cap:read:response",
-      "surfaces": ["cli", "ui", "api", "mcp"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp"
+      ],
       "cliCommand": {
         "name": "read response",
-        "aliases": ["rr"],
-        "examples": ["rr <args>"]
+        "aliases": [
+          "rr"
+        ],
+        "examples": [
+          "rr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -101,7 +126,9 @@
       "label": "New Chat",
       "description": "Start a new conversation",
       "sourceConfidence": "high",
-      "tags": ["session"],
+      "tags": [
+        "session"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -119,11 +146,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:new:chat",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "new chat",
-        "aliases": ["nc"],
-        "examples": ["nc <args>"]
+        "aliases": [
+          "nc"
+        ],
+        "examples": [
+          "nc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -149,7 +186,10 @@
       "label": "Switch Provider",
       "description": "Switch between AI providers (ChatGPT, Claude, Gemini)",
       "sourceConfidence": "high",
-      "tags": ["navigation", "provider"],
+      "tags": [
+        "navigation",
+        "provider"
+      ],
       "shared": true,
       "capabilityKind": "navigation",
       "ui_component": "nav-item",
@@ -167,11 +207,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:switch:provider",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "switch provider",
-        "aliases": ["sp"],
-        "examples": ["sp <args>"]
+        "aliases": [
+          "sp"
+        ],
+        "examples": [
+          "sp <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -193,7 +243,10 @@
       "label": "List Conversations",
       "description": "Browse conversation history",
       "sourceConfidence": "high",
-      "tags": ["navigation", "sidebar"],
+      "tags": [
+        "navigation",
+        "sidebar"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -211,11 +264,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:list:conversations",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "list conversations",
-        "aliases": ["lc"],
-        "examples": ["lc <args>"]
+        "aliases": [
+          "lc"
+        ],
+        "examples": [
+          "lc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -237,7 +300,10 @@
       "label": "Search Messages",
       "description": "Search across conversation messages",
       "sourceConfidence": "high",
-      "tags": ["search", "query"],
+      "tags": [
+        "search",
+        "query"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -255,11 +321,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:search:messages",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "search messages",
-        "aliases": ["sm"],
-        "examples": ["sm <args>"]
+        "aliases": [
+          "sem"
+        ],
+        "examples": [
+          "sem <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -281,7 +357,10 @@
       "label": "Attach File",
       "description": "Attach a file to the message",
       "sourceConfidence": "high",
-      "tags": ["compose", "file"],
+      "tags": [
+        "compose",
+        "file"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -299,11 +378,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:attach:file",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "attach file",
-        "aliases": ["af"],
-        "examples": ["af <args>"]
+        "aliases": [
+          "af"
+        ],
+        "examples": [
+          "af <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -329,7 +418,10 @@
       "label": "Edit Message",
       "description": "Edit a previously sent message",
       "sourceConfidence": "high",
-      "tags": ["compose", "edit"],
+      "tags": [
+        "compose",
+        "edit"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -347,11 +439,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:edit:message",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "edit message",
-        "aliases": ["em"],
-        "examples": ["em <args>"]
+        "aliases": [
+          "em"
+        ],
+        "examples": [
+          "em <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -377,7 +479,9 @@
       "label": "Delete Message",
       "description": "Delete a message from the conversation",
       "sourceConfidence": "high",
-      "tags": ["destructive"],
+      "tags": [
+        "destructive"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -395,11 +499,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:delete:message",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "delete message",
-        "aliases": ["dm"],
-        "examples": ["dm <args>"]
+        "aliases": [
+          "dm"
+        ],
+        "examples": [
+          "dm <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -425,7 +539,9 @@
       "label": "Copy Message",
       "description": "Copy message content to clipboard",
       "sourceConfidence": "high",
-      "tags": ["utility"],
+      "tags": [
+        "utility"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -443,11 +559,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:copy:message",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "copy message",
-        "aliases": ["cm"],
-        "examples": ["cm <args>"]
+        "aliases": [
+          "cm"
+        ],
+        "examples": [
+          "cm <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -473,7 +599,10 @@
       "label": "Regenerate Response",
       "description": "Regenerate the last assistant response",
       "sourceConfidence": "high",
-      "tags": ["chat", "retry"],
+      "tags": [
+        "chat",
+        "retry"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -491,11 +620,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:regenerate:response",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "regenerate response",
-        "aliases": ["rr"],
-        "examples": ["rr <args>"]
+        "aliases": [
+          "rer"
+        ],
+        "examples": [
+          "rer <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -521,7 +660,10 @@
       "label": "Stop Generation",
       "description": "Stop an in-progress response generation",
       "sourceConfidence": "high",
-      "tags": ["chat", "control"],
+      "tags": [
+        "chat",
+        "control"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -539,11 +681,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:stop:generation",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "stop generation",
-        "aliases": ["sg"],
-        "examples": ["sg <args>"]
+        "aliases": [
+          "sg"
+        ],
+        "examples": [
+          "sg <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -569,7 +721,10 @@
       "label": "Toggle Sidebar",
       "description": "Show/hide the conversation sidebar",
       "sourceConfidence": "high",
-      "tags": ["navigation", "layout"],
+      "tags": [
+        "navigation",
+        "layout"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -587,11 +742,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:toggle:sidebar",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "toggle sidebar",
-        "aliases": ["ts"],
-        "examples": ["ts <args>"]
+        "aliases": [
+          "ts"
+        ],
+        "examples": [
+          "ts <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -617,7 +782,10 @@
       "label": "Clear Conversation",
       "description": "Clear all messages in current conversation",
       "sourceConfidence": "high",
-      "tags": ["destructive", "session"],
+      "tags": [
+        "destructive",
+        "session"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -635,11 +803,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:clear:conversation",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "clear conversation",
-        "aliases": ["cc"],
-        "examples": ["cc <args>"]
+        "aliases": [
+          "cc"
+        ],
+        "examples": [
+          "cc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -665,7 +843,10 @@
       "label": "Export Conversation",
       "description": "Export conversation as markdown/JSON",
       "sourceConfidence": "high",
-      "tags": ["utility", "export"],
+      "tags": [
+        "utility",
+        "export"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -683,11 +864,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:export:conversation",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "export conversation",
-        "aliases": ["ec"],
-        "examples": ["ec <args>"]
+        "aliases": [
+          "ec"
+        ],
+        "examples": [
+          "ec <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -713,7 +904,10 @@
       "label": "Rename Conversation",
       "description": "Rename the current conversation",
       "sourceConfidence": "high",
-      "tags": ["session", "edit"],
+      "tags": [
+        "session",
+        "edit"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -731,11 +925,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:rename:conversation",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "rename conversation",
-        "aliases": ["rc"],
-        "examples": ["rc <args>"]
+        "aliases": [
+          "rc"
+        ],
+        "examples": [
+          "rc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -761,7 +965,10 @@
       "label": "Archive Conversation",
       "description": "Archive a conversation to hide from list",
       "sourceConfidence": "high",
-      "tags": ["session", "organize"],
+      "tags": [
+        "session",
+        "organize"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -779,11 +986,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:archive:conversation",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "archive conversation",
-        "aliases": ["ac"],
-        "examples": ["ac <args>"]
+        "aliases": [
+          "ac"
+        ],
+        "examples": [
+          "ac <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -809,7 +1026,10 @@
       "label": "Pin Conversation",
       "description": "Pin a conversation to top of list",
       "sourceConfidence": "high",
-      "tags": ["session", "organize"],
+      "tags": [
+        "session",
+        "organize"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -827,11 +1047,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:pin:conversation",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "pin conversation",
-        "aliases": ["pc"],
-        "examples": ["pc <args>"]
+        "aliases": [
+          "pc"
+        ],
+        "examples": [
+          "pc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -857,7 +1087,10 @@
       "label": "Voice Input",
       "description": "Record voice input for message",
       "sourceConfidence": "medium",
-      "tags": ["compose", "voice"],
+      "tags": [
+        "compose",
+        "voice"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -875,11 +1108,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:voice:input",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "voice input",
-        "aliases": ["vi"],
-        "examples": ["vi <args>"]
+        "aliases": [
+          "vi"
+        ],
+        "examples": [
+          "vi <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -905,7 +1148,10 @@
       "label": "Image Generate",
       "description": "Generate an image from text prompt",
       "sourceConfidence": "medium",
-      "tags": ["ai", "image"],
+      "tags": [
+        "ai",
+        "image"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -923,11 +1169,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:image:generate",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "image generate",
-        "aliases": ["ig"],
-        "examples": ["ig <args>"]
+        "aliases": [
+          "ig"
+        ],
+        "examples": [
+          "ig <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -953,7 +1209,10 @@
       "label": "Code Execute",
       "description": "Execute code in a sandboxed environment",
       "sourceConfidence": "medium",
-      "tags": ["ai", "code"],
+      "tags": [
+        "ai",
+        "code"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -971,11 +1230,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:code:execute",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "code execute",
-        "aliases": ["ce"],
-        "examples": ["ce <args>"]
+        "aliases": [
+          "ce"
+        ],
+        "examples": [
+          "ce <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1001,7 +1270,10 @@
       "label": "Web Search",
       "description": "Search the web for information",
       "sourceConfidence": "high",
-      "tags": ["ai", "search"],
+      "tags": [
+        "ai",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1019,11 +1291,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:web:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "web search",
-        "aliases": ["ws"],
-        "examples": ["ws <args>"]
+        "aliases": [
+          "ws"
+        ],
+        "examples": [
+          "ws <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1049,7 +1331,10 @@
       "label": "Canvas Set Background",
       "description": "Change canvas background image",
       "sourceConfidence": "high",
-      "tags": ["canvas", "customization"],
+      "tags": [
+        "canvas",
+        "customization"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1067,11 +1352,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:canvas:set_background",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "canvas set background",
-        "aliases": ["csb"],
-        "examples": ["csb <args>"]
+        "aliases": [
+          "csb"
+        ],
+        "examples": [
+          "csb <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1097,7 +1392,10 @@
       "label": "Canvas Add Layer",
       "description": "Add a layer to the canvas",
       "sourceConfidence": "high",
-      "tags": ["canvas", "layout"],
+      "tags": [
+        "canvas",
+        "layout"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1115,11 +1413,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:canvas:add_layer",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "canvas add layer",
-        "aliases": ["cal"],
-        "examples": ["cal <args>"]
+        "aliases": [
+          "cal"
+        ],
+        "examples": [
+          "cal <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1145,7 +1453,10 @@
       "label": "Canvas Remove Layer",
       "description": "Remove a layer from the canvas",
       "sourceConfidence": "high",
-      "tags": ["canvas", "destructive"],
+      "tags": [
+        "canvas",
+        "destructive"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1163,11 +1474,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:canvas:remove_layer",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "canvas remove layer",
-        "aliases": ["crl"],
-        "examples": ["crl <args>"]
+        "aliases": [
+          "crl"
+        ],
+        "examples": [
+          "crl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1193,7 +1514,10 @@
       "label": "Canvas Set Layout",
       "description": "Set canvas layout mode (grid/list/freeform)",
       "sourceConfidence": "high",
-      "tags": ["canvas", "layout"],
+      "tags": [
+        "canvas",
+        "layout"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -1211,11 +1535,21 @@
       "result_component": "form",
       "result_layout": "single",
       "capId": "cap:canvas:set_layout",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "canvas set layout",
-        "aliases": ["csl"],
-        "examples": ["csl <args>"]
+        "aliases": [
+          "csl"
+        ],
+        "examples": [
+          "csl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -1237,7 +1571,10 @@
       "label": "Canvas Set Theme",
       "description": "Set canvas theme (light/dark/auto)",
       "sourceConfidence": "high",
-      "tags": ["canvas", "theme"],
+      "tags": [
+        "canvas",
+        "theme"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -1255,11 +1592,21 @@
       "result_component": "form",
       "result_layout": "single",
       "capId": "cap:canvas:set_theme",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "canvas set theme",
-        "aliases": ["cst"],
-        "examples": ["cst <args>"]
+        "aliases": [
+          "cst"
+        ],
+        "examples": [
+          "cst <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -1281,7 +1628,10 @@
       "label": "Channel Add",
       "description": "Add a streaming channel (WhatsApp, Telegram, etc.)",
       "sourceConfidence": "high",
-      "tags": ["channel", "integration"],
+      "tags": [
+        "channel",
+        "integration"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1299,11 +1649,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:channel:add",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "channel add",
-        "aliases": ["ca"],
-        "examples": ["ca <args>"]
+        "aliases": [
+          "ca"
+        ],
+        "examples": [
+          "ca <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1329,7 +1689,10 @@
       "label": "Channel Connect",
       "description": "Connect to a streaming channel",
       "sourceConfidence": "high",
-      "tags": ["channel", "connection"],
+      "tags": [
+        "channel",
+        "connection"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1347,11 +1710,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:channel:connect",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "channel connect",
-        "aliases": ["cc"],
-        "examples": ["cc <args>"]
+        "aliases": [
+          "chc"
+        ],
+        "examples": [
+          "chc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1377,7 +1750,10 @@
       "label": "Channel List",
       "description": "List all streaming channels",
       "sourceConfidence": "high",
-      "tags": ["channel", "query"],
+      "tags": [
+        "channel",
+        "query"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1395,11 +1771,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:channel:list",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "channel list",
-        "aliases": ["cl"],
-        "examples": ["cl <args>"]
+        "aliases": [
+          "cl"
+        ],
+        "examples": [
+          "cl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1421,7 +1807,10 @@
       "label": "Channel Remove",
       "description": "Remove a streaming channel",
       "sourceConfidence": "high",
-      "tags": ["channel", "destructive"],
+      "tags": [
+        "channel",
+        "destructive"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1439,11 +1828,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:channel:remove",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "channel remove",
-        "aliases": ["cr"],
-        "examples": ["cr <args>"]
+        "aliases": [
+          "cr"
+        ],
+        "examples": [
+          "cr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1469,7 +1868,10 @@
       "label": "Session Load",
       "description": "Load an interactive session with a provider",
       "sourceConfidence": "high",
-      "tags": ["session", "provider"],
+      "tags": [
+        "session",
+        "provider"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1487,11 +1889,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:session:load",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "session load",
-        "aliases": ["sl"],
-        "examples": ["sl <args>"]
+        "aliases": [
+          "sl"
+        ],
+        "examples": [
+          "sl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1517,7 +1929,9 @@
       "label": "Session Start",
       "description": "Start a new session",
       "sourceConfidence": "high",
-      "tags": ["session"],
+      "tags": [
+        "session"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1535,11 +1949,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:session:start",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "session start",
-        "aliases": ["ss"],
-        "examples": ["ss <args>"]
+        "aliases": [
+          "ss"
+        ],
+        "examples": [
+          "ss <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1565,7 +1989,10 @@
       "label": "Session List",
       "description": "List active sessions",
       "sourceConfidence": "high",
-      "tags": ["session", "query"],
+      "tags": [
+        "session",
+        "query"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1583,11 +2010,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:session:list",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "session list",
-        "aliases": ["sl"],
-        "examples": ["sl <args>"]
+        "aliases": [
+          "sel"
+        ],
+        "examples": [
+          "sel <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1609,7 +2046,10 @@
       "label": "Memory Recall",
       "description": "Recall stored knowledge",
       "sourceConfidence": "high",
-      "tags": ["memory", "query"],
+      "tags": [
+        "memory",
+        "query"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1627,11 +2067,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:memory:recall",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "memory recall",
-        "aliases": ["mr"],
-        "examples": ["mr <args>"]
+        "aliases": [
+          "mr"
+        ],
+        "examples": [
+          "mr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1653,7 +2103,10 @@
       "label": "Memory Store",
       "description": "Store knowledge for later recall",
       "sourceConfidence": "high",
-      "tags": ["memory", "write"],
+      "tags": [
+        "memory",
+        "write"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -1671,11 +2124,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:memory:store",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "memory store",
-        "aliases": ["ms"],
-        "examples": ["ms <args>"]
+        "aliases": [
+          "ms"
+        ],
+        "examples": [
+          "ms <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -1701,7 +2164,10 @@
       "label": "System Health",
       "description": "Check system health status",
       "sourceConfidence": "high",
-      "tags": ["system", "diagnostic"],
+      "tags": [
+        "system",
+        "diagnostic"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1719,11 +2185,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:system:health",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "system health",
-        "aliases": ["sh"],
-        "examples": ["sh <args>"]
+        "aliases": [
+          "sh"
+        ],
+        "examples": [
+          "sh <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1745,7 +2221,10 @@
       "label": "System Providers",
       "description": "List available AI providers",
       "sourceConfidence": "high",
-      "tags": ["system", "provider"],
+      "tags": [
+        "system",
+        "provider"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1763,11 +2242,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:system:providers",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "system providers",
-        "aliases": ["sp"],
-        "examples": ["sp <args>"]
+        "aliases": [
+          "syp"
+        ],
+        "examples": [
+          "syp <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1789,7 +2278,10 @@
       "label": "System Fleet",
       "description": "Show Chrome fleet status",
       "sourceConfidence": "high",
-      "tags": ["system", "chrome"],
+      "tags": [
+        "system",
+        "chrome"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1807,11 +2299,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:system:fleet",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "system fleet",
-        "aliases": ["sf"],
-        "examples": ["sf <args>"]
+        "aliases": [
+          "sf"
+        ],
+        "examples": [
+          "sf <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1833,7 +2335,10 @@
       "label": "System Capabilities",
       "description": "List all available capabilities",
       "sourceConfidence": "high",
-      "tags": ["system", "meta"],
+      "tags": [
+        "system",
+        "meta"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1851,11 +2356,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:system:capabilities",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "system capabilities",
-        "aliases": ["sc"],
-        "examples": ["sc <args>"]
+        "aliases": [
+          "sc"
+        ],
+        "examples": [
+          "sc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1877,7 +2392,10 @@
       "label": "System Version",
       "description": "Show system version",
       "sourceConfidence": "high",
-      "tags": ["system", "meta"],
+      "tags": [
+        "system",
+        "meta"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1895,11 +2413,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:system:version",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "system version",
-        "aliases": ["sv"],
-        "examples": ["sv <args>"]
+        "aliases": [
+          "sv"
+        ],
+        "examples": [
+          "sv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1921,7 +2449,10 @@
       "label": "System Workspace",
       "description": "Show current workspace",
       "sourceConfidence": "high",
-      "tags": ["system", "meta"],
+      "tags": [
+        "system",
+        "meta"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1939,11 +2470,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:system:workspace",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "system workspace",
-        "aliases": ["sw"],
-        "examples": ["sw <args>"]
+        "aliases": [
+          "sw"
+        ],
+        "examples": [
+          "sw <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -1965,7 +2506,10 @@
       "label": "Help",
       "description": "Show help and available commands",
       "sourceConfidence": "high",
-      "tags": ["system", "meta"],
+      "tags": [
+        "system",
+        "meta"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -1983,11 +2527,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:help:help",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "help",
-        "aliases": ["h"],
-        "examples": ["h <args>"]
+        "aliases": [
+          "hel"
+        ],
+        "examples": [
+          "hel <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2009,7 +2563,10 @@
       "label": "Workflow Newsletter",
       "description": "Create a newsletter workflow",
       "sourceConfidence": "medium",
-      "tags": ["workflow", "automation"],
+      "tags": [
+        "workflow",
+        "automation"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2027,11 +2584,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:workflow:newsletter",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "workflow newsletter",
-        "aliases": ["wn"],
-        "examples": ["wn <args>"]
+        "aliases": [
+          "wn"
+        ],
+        "examples": [
+          "wn <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2057,7 +2624,10 @@
       "label": "Schedule Register",
       "description": "Register a scheduled task",
       "sourceConfidence": "medium",
-      "tags": ["schedule", "automation"],
+      "tags": [
+        "schedule",
+        "automation"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2075,11 +2645,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:schedule:register",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "schedule register",
-        "aliases": ["sr"],
-        "examples": ["sr <args>"]
+        "aliases": [
+          "sr"
+        ],
+        "examples": [
+          "sr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2105,7 +2685,10 @@
       "label": "Browser Navigate",
       "description": "Navigate to a URL in the browser",
       "sourceConfidence": "high",
-      "tags": ["browser", "navigation"],
+      "tags": [
+        "browser",
+        "navigation"
+      ],
       "shared": true,
       "capabilityKind": "navigation",
       "ui_component": "nav-item",
@@ -2123,11 +2706,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:browser:navigate",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "browser navigate",
-        "aliases": ["bn"],
-        "examples": ["bn <args>"]
+        "aliases": [
+          "bn"
+        ],
+        "examples": [
+          "bn <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2149,7 +2742,10 @@
       "label": "Browser Search",
       "description": "Search the web via browser",
       "sourceConfidence": "high",
-      "tags": ["browser", "search"],
+      "tags": [
+        "browser",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2167,11 +2763,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:browser:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "browser search",
-        "aliases": ["bs"],
-        "examples": ["bs <args>"]
+        "aliases": [
+          "bs"
+        ],
+        "examples": [
+          "bs <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2197,7 +2803,10 @@
       "label": "Browser Screenshot",
       "description": "Take a screenshot of current page",
       "sourceConfidence": "high",
-      "tags": ["browser", "capture"],
+      "tags": [
+        "browser",
+        "capture"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2215,11 +2824,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:browser:screenshot",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "browser screenshot",
-        "aliases": ["bs"],
-        "examples": ["bs <args>"]
+        "aliases": [
+          "brs"
+        ],
+        "examples": [
+          "brs <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2245,7 +2864,10 @@
       "label": "Browser Extract",
       "description": "Extract text content from current page",
       "sourceConfidence": "high",
-      "tags": ["browser", "extract"],
+      "tags": [
+        "browser",
+        "extract"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -2263,11 +2885,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:browser:extract",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "browser extract",
-        "aliases": ["be"],
-        "examples": ["be <args>"]
+        "aliases": [
+          "be"
+        ],
+        "examples": [
+          "be <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2289,7 +2921,10 @@
       "label": "File Open",
       "description": "Open a file by name or path",
       "sourceConfidence": "high",
-      "tags": ["file", "navigation"],
+      "tags": [
+        "file",
+        "navigation"
+      ],
       "shared": true,
       "capabilityKind": "navigation",
       "ui_component": "nav-item",
@@ -2307,11 +2942,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:file:open",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "file open",
-        "aliases": ["fo"],
-        "examples": ["fo <args>"]
+        "aliases": [
+          "fo"
+        ],
+        "examples": [
+          "fo <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2333,7 +2978,10 @@
       "label": "File List",
       "description": "List files in a folder",
       "sourceConfidence": "high",
-      "tags": ["file", "query"],
+      "tags": [
+        "file",
+        "query"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -2351,11 +2999,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:file:list",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "file list",
-        "aliases": ["fl"],
-        "examples": ["fl <args>"]
+        "aliases": [
+          "fl"
+        ],
+        "examples": [
+          "fl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2377,7 +3035,10 @@
       "label": "File Search",
       "description": "Search for files by name",
       "sourceConfidence": "high",
-      "tags": ["file", "search"],
+      "tags": [
+        "file",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -2395,11 +3056,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:file:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "file search",
-        "aliases": ["fs"],
-        "examples": ["fs <args>"]
+        "aliases": [
+          "fs"
+        ],
+        "examples": [
+          "fs <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2421,7 +3092,10 @@
       "label": "File Create",
       "description": "Create a new file",
       "sourceConfidence": "high",
-      "tags": ["file", "write"],
+      "tags": [
+        "file",
+        "write"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2439,11 +3113,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:file:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "file create",
-        "aliases": ["fc"],
-        "examples": ["fc <args>"]
+        "aliases": [
+          "fc"
+        ],
+        "examples": [
+          "fc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2469,7 +3153,10 @@
       "label": "File Read",
       "description": "Read file contents",
       "sourceConfidence": "high",
-      "tags": ["file", "read"],
+      "tags": [
+        "file",
+        "read"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -2487,11 +3174,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:file:read",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "file read",
-        "aliases": ["fr"],
-        "examples": ["fr <args>"]
+        "aliases": [
+          "fr"
+        ],
+        "examples": [
+          "fr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2513,7 +3210,10 @@
       "label": "Email Send",
       "description": "Send an email",
       "sourceConfidence": "high",
-      "tags": ["email", "communication"],
+      "tags": [
+        "email",
+        "communication"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2531,11 +3231,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:email:send",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "email send",
-        "aliases": ["es"],
-        "examples": ["es <args>"]
+        "aliases": [
+          "es"
+        ],
+        "examples": [
+          "es <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2561,7 +3271,10 @@
       "label": "LLM Ask",
       "description": "Ask a provider LLM a question",
       "sourceConfidence": "high",
-      "tags": ["llm", "chat"],
+      "tags": [
+        "llm",
+        "chat"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2579,11 +3292,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:llm:ask",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "llm ask",
-        "aliases": ["la"],
-        "examples": ["la <args>"]
+        "aliases": [
+          "la"
+        ],
+        "examples": [
+          "la <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2609,7 +3332,10 @@
       "label": "LLM Summarize",
       "description": "Summarize content using provider LLM",
       "sourceConfidence": "high",
-      "tags": ["llm", "summarize"],
+      "tags": [
+        "llm",
+        "summarize"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2627,11 +3353,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:llm:summarize",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "llm summarize",
-        "aliases": ["ls"],
-        "examples": ["ls <args>"]
+        "aliases": [
+          "ls"
+        ],
+        "examples": [
+          "ls <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2657,7 +3393,10 @@
       "label": "LLM Translate",
       "description": "Translate text using provider LLM",
       "sourceConfidence": "high",
-      "tags": ["llm", "translate"],
+      "tags": [
+        "llm",
+        "translate"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2675,11 +3414,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:llm:translate",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "llm translate",
-        "aliases": ["lt"],
-        "examples": ["lt <args>"]
+        "aliases": [
+          "lt"
+        ],
+        "examples": [
+          "lt <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2705,7 +3454,10 @@
       "label": "LLM Explain",
       "description": "Explain something using provider LLM",
       "sourceConfidence": "high",
-      "tags": ["llm", "explain"],
+      "tags": [
+        "llm",
+        "explain"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2723,11 +3475,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:llm:explain",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "llm explain",
-        "aliases": ["le"],
-        "examples": ["le <args>"]
+        "aliases": [
+          "le"
+        ],
+        "examples": [
+          "le <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2753,7 +3515,10 @@
       "label": "LLM Rewrite",
       "description": "Rewrite text using provider LLM",
       "sourceConfidence": "high",
-      "tags": ["llm", "rewrite"],
+      "tags": [
+        "llm",
+        "rewrite"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2771,11 +3536,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:llm:rewrite",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "llm rewrite",
-        "aliases": ["lr"],
-        "examples": ["lr <args>"]
+        "aliases": [
+          "lr"
+        ],
+        "examples": [
+          "lr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2801,7 +3576,10 @@
       "label": "LLM Code",
       "description": "Generate code using provider LLM",
       "sourceConfidence": "high",
-      "tags": ["llm", "code"],
+      "tags": [
+        "llm",
+        "code"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2819,11 +3597,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:llm:code",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "llm code",
-        "aliases": ["lc"],
-        "examples": ["lc <args>"]
+        "aliases": [
+          "llc"
+        ],
+        "examples": [
+          "llc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2849,7 +3637,10 @@
       "label": "App Launch",
       "description": "Launch a native application",
       "sourceConfidence": "high",
-      "tags": ["app", "system"],
+      "tags": [
+        "app",
+        "system"
+      ],
       "shared": true,
       "capabilityKind": "navigation",
       "ui_component": "nav-item",
@@ -2867,11 +3658,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:app:launch",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "app launch",
-        "aliases": ["al"],
-        "examples": ["al <args>"]
+        "aliases": [
+          "al"
+        ],
+        "examples": [
+          "al <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2893,7 +3694,10 @@
       "label": "Web Query",
       "description": "Query an HTTP endpoint with body",
       "sourceConfidence": "high",
-      "tags": ["web", "http"],
+      "tags": [
+        "web",
+        "http"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -2911,11 +3715,21 @@
       "result_component": "card",
       "result_layout": "grid",
       "capId": "cap:web:query",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "web query",
-        "aliases": ["wq"],
-        "examples": ["wq <args>"]
+        "aliases": [
+          "wq"
+        ],
+        "examples": [
+          "wq <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -2937,7 +3751,10 @@
       "label": "Web Summarize",
       "description": "Navigate to URL and summarize content",
       "sourceConfidence": "high",
-      "tags": ["web", "summarize"],
+      "tags": [
+        "web",
+        "summarize"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -2955,11 +3772,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:web:summarize",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "web summarize",
-        "aliases": ["ws"],
-        "examples": ["ws <args>"]
+        "aliases": [
+          "wes"
+        ],
+        "examples": [
+          "wes <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -2985,7 +3812,10 @@
       "label": "Chrome DevTools Protocol",
       "description": "Browser automation via CDP",
       "sourceConfidence": "high",
-      "tags": ["browser", "automation"],
+      "tags": [
+        "browser",
+        "automation"
+      ],
       "shared": true,
       "transport": "cdp"
     },
@@ -2996,7 +3826,10 @@
       "label": "DOM Manipulation",
       "description": "Direct DOM interaction via selectors",
       "sourceConfidence": "high",
-      "tags": ["browser", "dom"],
+      "tags": [
+        "browser",
+        "dom"
+      ],
       "shared": true,
       "transport": "dom"
     },
@@ -3007,7 +3840,10 @@
       "label": "REST API",
       "description": "HTTP REST API communication",
       "sourceConfidence": "high",
-      "tags": ["api", "http"],
+      "tags": [
+        "api",
+        "http"
+      ],
       "shared": true,
       "transport": "rest"
     },
@@ -3018,7 +3854,10 @@
       "label": "WebSocket",
       "description": "WebSocket real-time communication",
       "sourceConfidence": "high",
-      "tags": ["realtime", "ws"],
+      "tags": [
+        "realtime",
+        "ws"
+      ],
       "shared": true,
       "transport": "ws"
     },
@@ -3029,7 +3868,10 @@
       "label": "Server-Sent Events",
       "description": "HTTP streaming via SSE",
       "sourceConfidence": "high",
-      "tags": ["streaming", "sse"],
+      "tags": [
+        "streaming",
+        "sse"
+      ],
       "shared": true,
       "transport": "sse"
     },
@@ -3040,7 +3882,10 @@
       "label": "GraphQL",
       "description": "GraphQL query language",
       "sourceConfidence": "medium",
-      "tags": ["api", "graphql"],
+      "tags": [
+        "api",
+        "graphql"
+      ],
       "shared": true,
       "transport": "graphql"
     },
@@ -3051,7 +3896,10 @@
       "label": "Screen Mirroring",
       "description": "Screen mirroring / remote desktop",
       "sourceConfidence": "medium",
-      "tags": ["desktop", "mirroring"],
+      "tags": [
+        "desktop",
+        "mirroring"
+      ],
       "shared": true,
       "transport": "mirroring"
     },
@@ -3062,7 +3910,10 @@
       "label": "ProseMirror",
       "description": "Rich-text editor used by ChatGPT/Claude web UIs",
       "sourceConfidence": "high",
-      "tags": ["editor", "rich-text"],
+      "tags": [
+        "editor",
+        "rich-text"
+      ],
       "shared": true,
       "family": "editor",
       "composerHint": ".ProseMirror[contenteditable='true']",
@@ -3075,7 +3926,10 @@
       "label": "CodeMirror",
       "description": "Code editor used by coding-focused AI UIs",
       "sourceConfidence": "high",
-      "tags": ["editor", "code"],
+      "tags": [
+        "editor",
+        "code"
+      ],
       "shared": true,
       "family": "editor",
       "composerHint": ".cm-editor .cm-content",
@@ -3088,7 +3942,10 @@
       "label": "Plain Textarea",
       "description": "Simple textarea input",
       "sourceConfidence": "high",
-      "tags": ["editor", "plain"],
+      "tags": [
+        "editor",
+        "plain"
+      ],
       "shared": true,
       "family": "dom",
       "composerHint": "textarea",
@@ -3101,7 +3958,10 @@
       "label": "ContentEditable",
       "description": "ContentEditable div-based editor",
       "sourceConfidence": "high",
-      "tags": ["editor", "div"],
+      "tags": [
+        "editor",
+        "div"
+      ],
       "shared": true,
       "family": "dom",
       "composerHint": "[contenteditable='true']",
@@ -3114,7 +3974,10 @@
       "label": "React",
       "description": "React-based single page application",
       "sourceConfidence": "high",
-      "tags": ["framework", "spa"],
+      "tags": [
+        "framework",
+        "spa"
+      ],
       "shared": true,
       "family": "framework",
       "composerHint": "",
@@ -3127,7 +3990,10 @@
       "label": "Vue.js",
       "description": "Vue.js-based application",
       "sourceConfidence": "medium",
-      "tags": ["framework", "spa"],
+      "tags": [
+        "framework",
+        "spa"
+      ],
       "shared": true,
       "family": "framework",
       "composerHint": "",
@@ -3140,7 +4006,10 @@
       "label": "Angular",
       "description": "Angular-based application",
       "sourceConfidence": "medium",
-      "tags": ["framework", "spa"],
+      "tags": [
+        "framework",
+        "spa"
+      ],
       "shared": true,
       "family": "framework",
       "composerHint": "",
@@ -3153,7 +4022,10 @@
       "label": "Next.js",
       "description": "Next.js React framework",
       "sourceConfidence": "medium",
-      "tags": ["framework", "ssr"],
+      "tags": [
+        "framework",
+        "ssr"
+      ],
       "shared": true,
       "family": "framework",
       "composerHint": "",
@@ -3166,7 +4038,10 @@
       "label": "Svelte",
       "description": "Svelte-based application",
       "sourceConfidence": "medium",
-      "tags": ["framework", "spa"],
+      "tags": [
+        "framework",
+        "spa"
+      ],
       "shared": true,
       "family": "framework",
       "composerHint": "",
@@ -3179,7 +4054,10 @@
       "label": "Tailwind CSS",
       "description": "Tailwind CSS utility-first framework",
       "sourceConfidence": "high",
-      "tags": ["css", "utility"],
+      "tags": [
+        "css",
+        "utility"
+      ],
       "shared": true,
       "family": "dom",
       "composerHint": "",
@@ -3192,7 +4070,10 @@
       "label": "Material UI",
       "description": "Material Design component library",
       "sourceConfidence": "medium",
-      "tags": ["ui", "material"],
+      "tags": [
+        "ui",
+        "material"
+      ],
       "shared": true,
       "family": "framework",
       "composerHint": "",
@@ -3205,7 +4086,10 @@
       "label": "shadcn/ui",
       "description": "shadcn/ui component library",
       "sourceConfidence": "medium",
-      "tags": ["ui", "shadcn"],
+      "tags": [
+        "ui",
+        "shadcn"
+      ],
       "shared": true,
       "family": "framework",
       "composerHint": "",
@@ -3218,7 +4102,10 @@
       "label": "Generic SSE",
       "description": "Generic SSE delta stream parser",
       "sourceConfidence": "high",
-      "tags": ["sse", "generic"],
+      "tags": [
+        "sse",
+        "generic"
+      ],
       "shared": true,
       "parserType": "sse",
       "fallbackSlug": null
@@ -3230,7 +4117,10 @@
       "label": "OpenAI SSE",
       "description": "OpenAI/ChatGPT SSE stream parser",
       "sourceConfidence": "high",
-      "tags": ["sse", "openai"],
+      "tags": [
+        "sse",
+        "openai"
+      ],
       "shared": true,
       "parserType": "sse",
       "fallbackSlug": "parser-001"
@@ -3242,7 +4132,10 @@
       "label": "Anthropic SSE",
       "description": "Anthropic/Claude SSE stream parser",
       "sourceConfidence": "high",
-      "tags": ["sse", "anthropic"],
+      "tags": [
+        "sse",
+        "anthropic"
+      ],
       "shared": true,
       "parserType": "sse",
       "fallbackSlug": "parser-001"
@@ -3254,7 +4147,10 @@
       "label": "Google SSE",
       "description": "Google/Gemini SSE stream parser",
       "sourceConfidence": "high",
-      "tags": ["sse", "google"],
+      "tags": [
+        "sse",
+        "google"
+      ],
       "shared": true,
       "parserType": "sse",
       "fallbackSlug": "parser-001"
@@ -3266,7 +4162,10 @@
       "label": "NDJSON",
       "description": "Newline-delimited JSON parser",
       "sourceConfidence": "high",
-      "tags": ["json", "streaming"],
+      "tags": [
+        "json",
+        "streaming"
+      ],
       "shared": true,
       "parserType": "ndjson",
       "fallbackSlug": null
@@ -3278,7 +4177,10 @@
       "label": "Batch Execute",
       "description": "Google BatchExecute RPC parser",
       "sourceConfidence": "high",
-      "tags": ["google", "rpc"],
+      "tags": [
+        "google",
+        "rpc"
+      ],
       "shared": true,
       "parserType": "batchexecute",
       "fallbackSlug": null
@@ -3290,7 +4192,10 @@
       "label": "Frame Parser",
       "description": "iframe-based content parser",
       "sourceConfidence": "medium",
-      "tags": ["iframe", "frame"],
+      "tags": [
+        "iframe",
+        "frame"
+      ],
       "shared": true,
       "parserType": "frame",
       "fallbackSlug": null
@@ -3302,7 +4207,10 @@
       "label": "HTML Diff",
       "description": "HTML diff-based change detector",
       "sourceConfidence": "medium",
-      "tags": ["dom", "diff"],
+      "tags": [
+        "dom",
+        "diff"
+      ],
       "shared": true,
       "parserType": "html-diff",
       "fallbackSlug": null
@@ -3314,7 +4222,10 @@
       "label": "JSON-RPC",
       "description": "JSON-RPC 2.0 protocol parser",
       "sourceConfidence": "high",
-      "tags": ["json", "rpc"],
+      "tags": [
+        "json",
+        "rpc"
+      ],
       "shared": true,
       "parserType": "json",
       "fallbackSlug": null
@@ -3326,7 +4237,10 @@
       "label": "XML Parser",
       "description": "XML/RSS feed parser",
       "sourceConfidence": "medium",
-      "tags": ["xml", "rss"],
+      "tags": [
+        "xml",
+        "rss"
+      ],
       "shared": true,
       "parserType": "xml",
       "fallbackSlug": null
@@ -3338,7 +4252,10 @@
       "label": "Plain Text",
       "description": "Plain text response parser",
       "sourceConfidence": "high",
-      "tags": ["text", "plain"],
+      "tags": [
+        "text",
+        "plain"
+      ],
       "shared": true,
       "parserType": "text",
       "fallbackSlug": null
@@ -3350,7 +4267,10 @@
       "label": "Product Search",
       "description": "Search for products across platforms",
       "sourceConfidence": "medium",
-      "tags": ["product", "search"],
+      "tags": [
+        "product",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -3368,11 +4288,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:product:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "product search",
-        "aliases": ["ps"],
-        "examples": ["ps <args>"]
+        "aliases": [
+          "ps"
+        ],
+        "examples": [
+          "ps <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -3394,7 +4324,10 @@
       "label": "Product Detail",
       "description": "Get detailed product information",
       "sourceConfidence": "medium",
-      "tags": ["product", "detail"],
+      "tags": [
+        "product",
+        "detail"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -3412,11 +4345,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:product:detail",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "product detail",
-        "aliases": ["pd"],
-        "examples": ["pd <args>"]
+        "aliases": [
+          "pd"
+        ],
+        "examples": [
+          "pd <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -3438,7 +4381,10 @@
       "label": "Cart Add",
       "description": "Add item to shopping cart",
       "sourceConfidence": "medium",
-      "tags": ["cart", "add"],
+      "tags": [
+        "cart",
+        "add"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -3456,11 +4402,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:cart:add",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "cart add",
-        "aliases": ["ca"],
-        "examples": ["ca <args>"]
+        "aliases": [
+          "caa"
+        ],
+        "examples": [
+          "caa <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -3486,7 +4442,10 @@
       "label": "Cart Remove",
       "description": "Remove item from cart",
       "sourceConfidence": "medium",
-      "tags": ["cart", "remove"],
+      "tags": [
+        "cart",
+        "remove"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -3504,11 +4463,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:cart:remove",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "cart remove",
-        "aliases": ["cr"],
-        "examples": ["cr <args>"]
+        "aliases": [
+          "car"
+        ],
+        "examples": [
+          "car <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -3534,7 +4503,10 @@
       "label": "Cart View",
       "description": "View shopping cart contents",
       "sourceConfidence": "medium",
-      "tags": ["cart", "view"],
+      "tags": [
+        "cart",
+        "view"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -3552,11 +4524,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:cart:view",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "cart view",
-        "aliases": ["cv"],
-        "examples": ["cv <args>"]
+        "aliases": [
+          "cv"
+        ],
+        "examples": [
+          "cv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -3578,7 +4560,10 @@
       "label": "Order Place",
       "description": "Place an order",
       "sourceConfidence": "medium",
-      "tags": ["order", "place"],
+      "tags": [
+        "order",
+        "place"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -3596,11 +4581,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:order:place",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "order place",
-        "aliases": ["op"],
-        "examples": ["op <args>"]
+        "aliases": [
+          "op"
+        ],
+        "examples": [
+          "op <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -3626,7 +4621,10 @@
       "label": "Order Track",
       "description": "Track order status",
       "sourceConfidence": "medium",
-      "tags": ["order", "track"],
+      "tags": [
+        "order",
+        "track"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -3644,11 +4642,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:order:track",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "order track",
-        "aliases": ["ot"],
-        "examples": ["ot <args>"]
+        "aliases": [
+          "ot"
+        ],
+        "examples": [
+          "ot <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -3670,7 +4678,10 @@
       "label": "Review Submit",
       "description": "Submit a product review",
       "sourceConfidence": "medium",
-      "tags": ["review", "submit"],
+      "tags": [
+        "review",
+        "submit"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -3688,11 +4699,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:review:submit",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "review submit",
-        "aliases": ["rs"],
-        "examples": ["rs <args>"]
+        "aliases": [
+          "rs"
+        ],
+        "examples": [
+          "rs <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -3718,7 +4739,10 @@
       "label": "Price Compare",
       "description": "Compare prices across sellers",
       "sourceConfidence": "medium",
-      "tags": ["price", "compare"],
+      "tags": [
+        "price",
+        "compare"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -3736,11 +4760,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:price:compare",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "price compare",
-        "aliases": ["pc"],
-        "examples": ["pc <args>"]
+        "aliases": [
+          "prc"
+        ],
+        "examples": [
+          "prc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -3762,7 +4796,10 @@
       "label": "Wishlist Add",
       "description": "Add item to wishlist",
       "sourceConfidence": "medium",
-      "tags": ["wishlist", "add"],
+      "tags": [
+        "wishlist",
+        "add"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -3780,11 +4817,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:wishlist:add",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "wishlist add",
-        "aliases": ["wa"],
-        "examples": ["wa <args>"]
+        "aliases": [
+          "wa"
+        ],
+        "examples": [
+          "wa <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -3810,7 +4857,10 @@
       "label": "Portfolio View",
       "description": "View investment portfolio",
       "sourceConfidence": "medium",
-      "tags": ["portfolio", "view"],
+      "tags": [
+        "portfolio",
+        "view"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -3828,11 +4878,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:portfolio:view",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "portfolio view",
-        "aliases": ["pv"],
-        "examples": ["pv <args>"]
+        "aliases": [
+          "pv"
+        ],
+        "examples": [
+          "pv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -3854,7 +4914,10 @@
       "label": "Trade Execute",
       "description": "Execute a trade",
       "sourceConfidence": "medium",
-      "tags": ["trade", "execute"],
+      "tags": [
+        "trade",
+        "execute"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -3872,11 +4935,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:trade:execute",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "trade execute",
-        "aliases": ["te"],
-        "examples": ["te <args>"]
+        "aliases": [
+          "te"
+        ],
+        "examples": [
+          "te <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -3902,7 +4975,10 @@
       "label": "Balance Check",
       "description": "Check account balance",
       "sourceConfidence": "medium",
-      "tags": ["balance", "check"],
+      "tags": [
+        "balance",
+        "check"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -3920,11 +4996,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:balance:check",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "balance check",
-        "aliases": ["bc"],
-        "examples": ["bc <args>"]
+        "aliases": [
+          "bc"
+        ],
+        "examples": [
+          "bc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -3946,7 +5032,10 @@
       "label": "Transaction List",
       "description": "List recent transactions",
       "sourceConfidence": "medium",
-      "tags": ["transaction", "list"],
+      "tags": [
+        "transaction",
+        "list"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -3964,11 +5053,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:transaction:list",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "transaction list",
-        "aliases": ["tl"],
-        "examples": ["tl <args>"]
+        "aliases": [
+          "tl"
+        ],
+        "examples": [
+          "tl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -3990,7 +5089,10 @@
       "label": "Transfer Funds",
       "description": "Transfer funds between accounts",
       "sourceConfidence": "medium",
-      "tags": ["transfer", "funds"],
+      "tags": [
+        "transfer",
+        "funds"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4008,11 +5110,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:transfer:funds",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "transfer funds",
-        "aliases": ["tf"],
-        "examples": ["tf <args>"]
+        "aliases": [
+          "tf"
+        ],
+        "examples": [
+          "tf <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4038,7 +5150,10 @@
       "label": "Invoice Create",
       "description": "Create an invoice",
       "sourceConfidence": "medium",
-      "tags": ["invoice", "create"],
+      "tags": [
+        "invoice",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4056,11 +5171,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:invoice:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "invoice create",
-        "aliases": ["ic"],
-        "examples": ["ic <args>"]
+        "aliases": [
+          "ic"
+        ],
+        "examples": [
+          "ic <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4086,7 +5211,10 @@
       "label": "Expense Track",
       "description": "Track expenses",
       "sourceConfidence": "medium",
-      "tags": ["expense", "track"],
+      "tags": [
+        "expense",
+        "track"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4104,11 +5232,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:expense:track",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "expense track",
-        "aliases": ["et"],
-        "examples": ["et <args>"]
+        "aliases": [
+          "et"
+        ],
+        "examples": [
+          "et <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4134,7 +5272,10 @@
       "label": "Budget Set",
       "description": "Set a budget",
       "sourceConfidence": "medium",
-      "tags": ["budget", "set"],
+      "tags": [
+        "budget",
+        "set"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4152,11 +5293,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:budget:set",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "budget set",
-        "aliases": ["bs"],
-        "examples": ["bs <args>"]
+        "aliases": [
+          "bus"
+        ],
+        "examples": [
+          "bus <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4182,7 +5333,10 @@
       "label": "Course Enroll",
       "description": "Enroll in a course",
       "sourceConfidence": "medium",
-      "tags": ["course", "enroll"],
+      "tags": [
+        "course",
+        "enroll"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4200,11 +5354,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:course:enroll",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "course enroll",
-        "aliases": ["ce"],
-        "examples": ["ce <args>"]
+        "aliases": [
+          "coe"
+        ],
+        "examples": [
+          "coe <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4230,7 +5394,10 @@
       "label": "Lesson Complete",
       "description": "Mark lesson as complete",
       "sourceConfidence": "medium",
-      "tags": ["lesson", "complete"],
+      "tags": [
+        "lesson",
+        "complete"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4248,11 +5415,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:lesson:complete",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "lesson complete",
-        "aliases": ["lc"],
-        "examples": ["lc <args>"]
+        "aliases": [
+          "lec"
+        ],
+        "examples": [
+          "lec <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4278,7 +5455,10 @@
       "label": "Quiz Take",
       "description": "Take a quiz",
       "sourceConfidence": "medium",
-      "tags": ["quiz", "take"],
+      "tags": [
+        "quiz",
+        "take"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4296,11 +5476,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:quiz:take",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "quiz take",
-        "aliases": ["qt"],
-        "examples": ["qt <args>"]
+        "aliases": [
+          "qt"
+        ],
+        "examples": [
+          "qt <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4326,7 +5516,10 @@
       "label": "Flashcard Review",
       "description": "Review flashcards",
       "sourceConfidence": "medium",
-      "tags": ["flashcard", "review"],
+      "tags": [
+        "flashcard",
+        "review"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4344,11 +5537,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:flashcard:review",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "flashcard review",
-        "aliases": ["fr"],
-        "examples": ["fr <args>"]
+        "aliases": [
+          "flr"
+        ],
+        "examples": [
+          "flr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4374,7 +5577,10 @@
       "label": "Progress Track",
       "description": "Track learning progress",
       "sourceConfidence": "medium",
-      "tags": ["progress", "track"],
+      "tags": [
+        "progress",
+        "track"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -4392,11 +5598,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:progress:track",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "progress track",
-        "aliases": ["pt"],
-        "examples": ["pt <args>"]
+        "aliases": [
+          "pt"
+        ],
+        "examples": [
+          "pt <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -4418,7 +5634,10 @@
       "label": "Certificate Earn",
       "description": "Earn a course certificate",
       "sourceConfidence": "medium",
-      "tags": ["certificate", "earn"],
+      "tags": [
+        "certificate",
+        "earn"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4436,11 +5655,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:certificate:earn",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "certificate earn",
-        "aliases": ["ce"],
-        "examples": ["ce <args>"]
+        "aliases": [
+          "cee"
+        ],
+        "examples": [
+          "cee <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4466,7 +5695,10 @@
       "label": "Note Create",
       "description": "Create study notes",
       "sourceConfidence": "medium",
-      "tags": ["note", "create"],
+      "tags": [
+        "note",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4484,11 +5716,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:note:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "note create",
-        "aliases": ["nc"],
-        "examples": ["nc <args>"]
+        "aliases": [
+          "noc"
+        ],
+        "examples": [
+          "noc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4514,7 +5756,10 @@
       "label": "Schedule Class",
       "description": "Schedule a class session",
       "sourceConfidence": "medium",
-      "tags": ["schedule", "class"],
+      "tags": [
+        "schedule",
+        "class"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4532,11 +5777,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:schedule:class",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "schedule class",
-        "aliases": ["sc"],
-        "examples": ["sc <args>"]
+        "aliases": [
+          "scc"
+        ],
+        "examples": [
+          "scc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4562,7 +5817,10 @@
       "label": "Appointment Book",
       "description": "Book a medical appointment",
       "sourceConfidence": "medium",
-      "tags": ["appointment", "book"],
+      "tags": [
+        "appointment",
+        "book"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4580,11 +5838,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:appointment:book",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "appointment book",
-        "aliases": ["ab"],
-        "examples": ["ab <args>"]
+        "aliases": [
+          "ab"
+        ],
+        "examples": [
+          "ab <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4610,7 +5878,10 @@
       "label": "Appointment Cancel",
       "description": "Cancel a medical appointment",
       "sourceConfidence": "medium",
-      "tags": ["appointment", "cancel"],
+      "tags": [
+        "appointment",
+        "cancel"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4628,11 +5899,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:appointment:cancel",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "appointment cancel",
-        "aliases": ["ac"],
-        "examples": ["ac <args>"]
+        "aliases": [
+          "apc"
+        ],
+        "examples": [
+          "apc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4658,7 +5939,10 @@
       "label": "Prescription Refill",
       "description": "Refill a prescription",
       "sourceConfidence": "medium",
-      "tags": ["prescription", "refill"],
+      "tags": [
+        "prescription",
+        "refill"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4676,11 +5960,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:prescription:refill",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "prescription refill",
-        "aliases": ["pr"],
-        "examples": ["pr <args>"]
+        "aliases": [
+          "pr"
+        ],
+        "examples": [
+          "pr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4706,7 +6000,10 @@
       "label": "Symptom Check",
       "description": "Check symptoms",
       "sourceConfidence": "medium",
-      "tags": ["symptom", "check"],
+      "tags": [
+        "symptom",
+        "check"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -4724,11 +6021,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:symptom:check",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "symptom check",
-        "aliases": ["sc"],
-        "examples": ["sc <args>"]
+        "aliases": [
+          "syc"
+        ],
+        "examples": [
+          "syc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -4750,7 +6057,10 @@
       "label": "Health Metric Log",
       "description": "Log health metrics",
       "sourceConfidence": "medium",
-      "tags": ["health", "metric"],
+      "tags": [
+        "health",
+        "metric"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4768,11 +6078,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:health:metric_log",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "health metric log",
-        "aliases": ["hml"],
-        "examples": ["hml <args>"]
+        "aliases": [
+          "hml"
+        ],
+        "examples": [
+          "hml <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4798,7 +6118,10 @@
       "label": "Doctor Message",
       "description": "Message a doctor",
       "sourceConfidence": "medium",
-      "tags": ["doctor", "message"],
+      "tags": [
+        "doctor",
+        "message"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4816,11 +6139,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:doctor:message",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "doctor message",
-        "aliases": ["dm"],
-        "examples": ["dm <args>"]
+        "aliases": [
+          "dom"
+        ],
+        "examples": [
+          "dom <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4846,7 +6179,10 @@
       "label": "Record View",
       "description": "View medical records",
       "sourceConfidence": "medium",
-      "tags": ["record", "view"],
+      "tags": [
+        "record",
+        "view"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -4864,11 +6200,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:record:view",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "record view",
-        "aliases": ["rv"],
-        "examples": ["rv <args>"]
+        "aliases": [
+          "rv"
+        ],
+        "examples": [
+          "rv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -4890,7 +6236,10 @@
       "label": "Game Launch",
       "description": "Launch a game",
       "sourceConfidence": "medium",
-      "tags": ["game", "launch"],
+      "tags": [
+        "game",
+        "launch"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4908,11 +6257,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:game:launch",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "game launch",
-        "aliases": ["gl"],
-        "examples": ["gl <args>"]
+        "aliases": [
+          "gl"
+        ],
+        "examples": [
+          "gl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4938,7 +6297,10 @@
       "label": "Game Purchase",
       "description": "Purchase a game",
       "sourceConfidence": "medium",
-      "tags": ["game", "purchase"],
+      "tags": [
+        "game",
+        "purchase"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -4956,11 +6318,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:game:purchase",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "game purchase",
-        "aliases": ["gp"],
-        "examples": ["gp <args>"]
+        "aliases": [
+          "gp"
+        ],
+        "examples": [
+          "gp <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -4986,7 +6358,10 @@
       "label": "Game Invite",
       "description": "Invite friend to game",
       "sourceConfidence": "medium",
-      "tags": ["game", "invite"],
+      "tags": [
+        "game",
+        "invite"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5004,11 +6379,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:game:invite",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "game invite",
-        "aliases": ["gi"],
-        "examples": ["gi <args>"]
+        "aliases": [
+          "gi"
+        ],
+        "examples": [
+          "gi <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5034,7 +6419,10 @@
       "label": "Game Chat",
       "description": "Chat during gameplay",
       "sourceConfidence": "medium",
-      "tags": ["game", "chat"],
+      "tags": [
+        "game",
+        "chat"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5052,11 +6440,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:game:chat",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "game chat",
-        "aliases": ["gc"],
-        "examples": ["gc <args>"]
+        "aliases": [
+          "gc"
+        ],
+        "examples": [
+          "gc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5082,7 +6480,10 @@
       "label": "Game Clip",
       "description": "Record game clip",
       "sourceConfidence": "medium",
-      "tags": ["game", "clip"],
+      "tags": [
+        "game",
+        "clip"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5100,11 +6501,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:game:clip",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "game clip",
-        "aliases": ["gc"],
-        "examples": ["gc <args>"]
+        "aliases": [
+          "gac"
+        ],
+        "examples": [
+          "gac <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5130,7 +6541,10 @@
       "label": "Stream Watch",
       "description": "Watch a game stream",
       "sourceConfidence": "medium",
-      "tags": ["stream", "watch"],
+      "tags": [
+        "stream",
+        "watch"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5148,11 +6562,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:stream:watch",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "stream watch",
-        "aliases": ["sw"],
-        "examples": ["sw <args>"]
+        "aliases": [
+          "stw"
+        ],
+        "examples": [
+          "stw <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5178,7 +6602,10 @@
       "label": "Media Play",
       "description": "Play media content",
       "sourceConfidence": "medium",
-      "tags": ["media", "play"],
+      "tags": [
+        "media",
+        "play"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5196,11 +6623,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:media:play",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "media play",
-        "aliases": ["mp"],
-        "examples": ["mp <args>"]
+        "aliases": [
+          "mp"
+        ],
+        "examples": [
+          "mp <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5226,7 +6663,10 @@
       "label": "Media Pause",
       "description": "Pause media playback",
       "sourceConfidence": "medium",
-      "tags": ["media", "pause"],
+      "tags": [
+        "media",
+        "pause"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5244,11 +6684,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:media:pause",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "media pause",
-        "aliases": ["mp"],
-        "examples": ["mp <args>"]
+        "aliases": [
+          "mep"
+        ],
+        "examples": [
+          "mep <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5274,7 +6724,10 @@
       "label": "Media Skip",
       "description": "Skip to next track",
       "sourceConfidence": "medium",
-      "tags": ["media", "skip"],
+      "tags": [
+        "media",
+        "skip"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5292,11 +6745,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:media:skip",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "media skip",
-        "aliases": ["ms"],
-        "examples": ["ms <args>"]
+        "aliases": [
+          "mes"
+        ],
+        "examples": [
+          "mes <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5322,7 +6785,10 @@
       "label": "Playlist Create",
       "description": "Create a new playlist",
       "sourceConfidence": "medium",
-      "tags": ["playlist", "create"],
+      "tags": [
+        "playlist",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5340,11 +6806,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:playlist:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "playlist create",
-        "aliases": ["pc"],
-        "examples": ["pc <args>"]
+        "aliases": [
+          "plc"
+        ],
+        "examples": [
+          "plc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5370,7 +6846,10 @@
       "label": "Playlist Add",
       "description": "Add to playlist",
       "sourceConfidence": "medium",
-      "tags": ["playlist", "add"],
+      "tags": [
+        "playlist",
+        "add"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5388,11 +6867,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:playlist:add",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "playlist add",
-        "aliases": ["pa"],
-        "examples": ["pa <args>"]
+        "aliases": [
+          "pa"
+        ],
+        "examples": [
+          "pa <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5418,7 +6907,10 @@
       "label": "Media Download",
       "description": "Download media for offline",
       "sourceConfidence": "medium",
-      "tags": ["media", "download"],
+      "tags": [
+        "media",
+        "download"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5436,11 +6928,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:media:download",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "media download",
-        "aliases": ["md"],
-        "examples": ["md <args>"]
+        "aliases": [
+          "md"
+        ],
+        "examples": [
+          "md <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5466,7 +6968,10 @@
       "label": "Media Share",
       "description": "Share media content",
       "sourceConfidence": "medium",
-      "tags": ["media", "share"],
+      "tags": [
+        "media",
+        "share"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5484,11 +6989,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:media:share",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "media share",
-        "aliases": ["ms"],
-        "examples": ["ms <args>"]
+        "aliases": [
+          "ms2"
+        ],
+        "examples": [
+          "ms2 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5514,7 +7029,10 @@
       "label": "Subscribe Channel",
       "description": "Subscribe to a channel",
       "sourceConfidence": "medium",
-      "tags": ["subscribe", "channel"],
+      "tags": [
+        "subscribe",
+        "channel"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5532,11 +7050,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:subscribe:channel",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "subscribe channel",
-        "aliases": ["sc"],
-        "examples": ["sc <args>"]
+        "aliases": [
+          "suc"
+        ],
+        "examples": [
+          "suc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5562,7 +7090,10 @@
       "label": "Flight Search",
       "description": "Search for flights",
       "sourceConfidence": "medium",
-      "tags": ["flight", "search"],
+      "tags": [
+        "flight",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -5580,11 +7111,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:flight:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "flight search",
-        "aliases": ["fs"],
-        "examples": ["fs <args>"]
+        "aliases": [
+          "fls"
+        ],
+        "examples": [
+          "fls <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -5606,7 +7147,10 @@
       "label": "Hotel Search",
       "description": "Search for hotels",
       "sourceConfidence": "medium",
-      "tags": ["hotel", "search"],
+      "tags": [
+        "hotel",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -5624,11 +7168,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:hotel:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "hotel search",
-        "aliases": ["hs"],
-        "examples": ["hs <args>"]
+        "aliases": [
+          "hs"
+        ],
+        "examples": [
+          "hs <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -5650,7 +7204,10 @@
       "label": "Booking Reserve",
       "description": "Reserve a booking",
       "sourceConfidence": "medium",
-      "tags": ["booking", "reserve"],
+      "tags": [
+        "booking",
+        "reserve"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5668,11 +7225,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:booking:reserve",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "booking reserve",
-        "aliases": ["br"],
-        "examples": ["br <args>"]
+        "aliases": [
+          "br"
+        ],
+        "examples": [
+          "br <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5698,7 +7265,10 @@
       "label": "Booking Cancel",
       "description": "Cancel a booking",
       "sourceConfidence": "medium",
-      "tags": ["booking", "cancel"],
+      "tags": [
+        "booking",
+        "cancel"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5716,11 +7286,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:booking:cancel",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "booking cancel",
-        "aliases": ["bc"],
-        "examples": ["bc <args>"]
+        "aliases": [
+          "boc"
+        ],
+        "examples": [
+          "boc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5746,7 +7326,10 @@
       "label": "Review Write",
       "description": "Write a travel review",
       "sourceConfidence": "medium",
-      "tags": ["review", "write"],
+      "tags": [
+        "review",
+        "write"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5764,11 +7347,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:review:write",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "review write",
-        "aliases": ["rw"],
-        "examples": ["rw <args>"]
+        "aliases": [
+          "rw"
+        ],
+        "examples": [
+          "rw <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5794,7 +7387,10 @@
       "label": "Itinerary Plan",
       "description": "Plan a travel itinerary",
       "sourceConfidence": "medium",
-      "tags": ["itinerary", "plan"],
+      "tags": [
+        "itinerary",
+        "plan"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5812,11 +7408,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:itinerary:plan",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "itinerary plan",
-        "aliases": ["ip"],
-        "examples": ["ip <args>"]
+        "aliases": [
+          "ip"
+        ],
+        "examples": [
+          "ip <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5842,7 +7448,10 @@
       "label": "Repo Clone",
       "description": "Clone a repository",
       "sourceConfidence": "medium",
-      "tags": ["repo", "clone"],
+      "tags": [
+        "repo",
+        "clone"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5860,11 +7469,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:repo:clone",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "repo clone",
-        "aliases": ["rc"],
-        "examples": ["rc <args>"]
+        "aliases": [
+          "rec"
+        ],
+        "examples": [
+          "rec <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5890,7 +7509,10 @@
       "label": "PR Create",
       "description": "Create a pull request",
       "sourceConfidence": "medium",
-      "tags": ["pr", "create"],
+      "tags": [
+        "pr",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5908,11 +7530,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:pr:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "pr create",
-        "aliases": ["pc"],
-        "examples": ["pc <args>"]
+        "aliases": [
+          "pc2"
+        ],
+        "examples": [
+          "pc2 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5938,7 +7570,10 @@
       "label": "PR Merge",
       "description": "Merge a pull request",
       "sourceConfidence": "medium",
-      "tags": ["pr", "merge"],
+      "tags": [
+        "pr",
+        "merge"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -5956,11 +7591,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:pr:merge",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "pr merge",
-        "aliases": ["pm"],
-        "examples": ["pm <args>"]
+        "aliases": [
+          "pm"
+        ],
+        "examples": [
+          "pm <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -5986,7 +7631,10 @@
       "label": "CI Status",
       "description": "Check CI/CD status",
       "sourceConfidence": "medium",
-      "tags": ["ci", "status"],
+      "tags": [
+        "ci",
+        "status"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -6004,11 +7652,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:ci:status",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "ci status",
-        "aliases": ["cs"],
-        "examples": ["cs <args>"]
+        "aliases": [
+          "cs"
+        ],
+        "examples": [
+          "cs <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -6030,7 +7688,10 @@
       "label": "Deploy Trigger",
       "description": "Trigger a deployment",
       "sourceConfidence": "medium",
-      "tags": ["deploy", "trigger"],
+      "tags": [
+        "deploy",
+        "trigger"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6048,11 +7709,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:deploy:trigger",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "deploy trigger",
-        "aliases": ["dt"],
-        "examples": ["dt <args>"]
+        "aliases": [
+          "dt"
+        ],
+        "examples": [
+          "dt <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6078,7 +7749,10 @@
       "label": "Deploy Rollback",
       "description": "Rollback a deployment",
       "sourceConfidence": "medium",
-      "tags": ["deploy", "rollback"],
+      "tags": [
+        "deploy",
+        "rollback"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6096,11 +7770,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:deploy:rollback",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "deploy rollback",
-        "aliases": ["dr"],
-        "examples": ["dr <args>"]
+        "aliases": [
+          "dr"
+        ],
+        "examples": [
+          "dr <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6126,7 +7810,10 @@
       "label": "Log View",
       "description": "View deployment logs",
       "sourceConfidence": "medium",
-      "tags": ["log", "view"],
+      "tags": [
+        "log",
+        "view"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -6144,11 +7831,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:log:view",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "log view",
-        "aliases": ["lv"],
-        "examples": ["lv <args>"]
+        "aliases": [
+          "lv"
+        ],
+        "examples": [
+          "lv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -6170,7 +7867,10 @@
       "label": "Env Var Set",
       "description": "Set environment variable",
       "sourceConfidence": "medium",
-      "tags": ["env", "set"],
+      "tags": [
+        "env",
+        "set"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6188,11 +7888,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:env:var_set",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "env var set",
-        "aliases": ["evs"],
-        "examples": ["evs <args>"]
+        "aliases": [
+          "evs"
+        ],
+        "examples": [
+          "evs <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6218,7 +7928,10 @@
       "label": "Container Start",
       "description": "Start a container",
       "sourceConfidence": "medium",
-      "tags": ["container", "start"],
+      "tags": [
+        "container",
+        "start"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6236,11 +7949,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:container:start",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "container start",
-        "aliases": ["cs"],
-        "examples": ["cs <args>"]
+        "aliases": [
+          "cos"
+        ],
+        "examples": [
+          "cos <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6266,7 +7989,10 @@
       "label": "Container Stop",
       "description": "Stop a container",
       "sourceConfidence": "medium",
-      "tags": ["container", "stop"],
+      "tags": [
+        "container",
+        "stop"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6284,11 +8010,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:container:stop",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "container stop",
-        "aliases": ["cs"],
-        "examples": ["cs <args>"]
+        "aliases": [
+          "cs2"
+        ],
+        "examples": [
+          "cs2 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6314,7 +8050,10 @@
       "label": "Design Create",
       "description": "Create a new design file",
       "sourceConfidence": "medium",
-      "tags": ["design", "create"],
+      "tags": [
+        "design",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6332,11 +8071,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:design:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "design create",
-        "aliases": ["dc"],
-        "examples": ["dc <args>"]
+        "aliases": [
+          "dc"
+        ],
+        "examples": [
+          "dc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6362,7 +8111,10 @@
       "label": "Design Export",
       "description": "Export design to file",
       "sourceConfidence": "medium",
-      "tags": ["design", "export"],
+      "tags": [
+        "design",
+        "export"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6380,11 +8132,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:design:export",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "design export",
-        "aliases": ["de"],
-        "examples": ["de <args>"]
+        "aliases": [
+          "de"
+        ],
+        "examples": [
+          "de <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6410,7 +8172,10 @@
       "label": "Design Share",
       "description": "Share design for collaboration",
       "sourceConfidence": "medium",
-      "tags": ["design", "share"],
+      "tags": [
+        "design",
+        "share"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6428,11 +8193,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:design:share",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "design share",
-        "aliases": ["ds"],
-        "examples": ["ds <args>"]
+        "aliases": [
+          "ds"
+        ],
+        "examples": [
+          "ds <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6458,7 +8233,10 @@
       "label": "Design Comment",
       "description": "Comment on a design",
       "sourceConfidence": "medium",
-      "tags": ["design", "comment"],
+      "tags": [
+        "design",
+        "comment"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6476,11 +8254,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:design:comment",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "design comment",
-        "aliases": ["dc"],
-        "examples": ["dc <args>"]
+        "aliases": [
+          "dec"
+        ],
+        "examples": [
+          "dec <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6506,7 +8294,10 @@
       "label": "Prototype Create",
       "description": "Create an interactive prototype",
       "sourceConfidence": "medium",
-      "tags": ["prototype", "create"],
+      "tags": [
+        "prototype",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6524,11 +8315,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:prototype:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "prototype create",
-        "aliases": ["pc"],
-        "examples": ["pc <args>"]
+        "aliases": [
+          "pc3"
+        ],
+        "examples": [
+          "pc3 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6554,7 +8355,10 @@
       "label": "Component Library",
       "description": "Access design component library",
       "sourceConfidence": "medium",
-      "tags": ["component", "library"],
+      "tags": [
+        "component",
+        "library"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -6572,11 +8376,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:component:library",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "component library",
-        "aliases": ["cl"],
-        "examples": ["cl <args>"]
+        "aliases": [
+          "col"
+        ],
+        "examples": [
+          "col <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -6598,7 +8412,10 @@
       "label": "Lead Create",
       "description": "Create a new lead",
       "sourceConfidence": "medium",
-      "tags": ["lead", "create"],
+      "tags": [
+        "lead",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6616,11 +8433,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:lead:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "lead create",
-        "aliases": ["lc"],
-        "examples": ["lc <args>"]
+        "aliases": [
+          "lc2"
+        ],
+        "examples": [
+          "lc2 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6646,7 +8473,10 @@
       "label": "Lead Update",
       "description": "Update lead information",
       "sourceConfidence": "medium",
-      "tags": ["lead", "update"],
+      "tags": [
+        "lead",
+        "update"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6664,11 +8494,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:lead:update",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "lead update",
-        "aliases": ["lu"],
-        "examples": ["lu <args>"]
+        "aliases": [
+          "lu"
+        ],
+        "examples": [
+          "lu <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6694,7 +8534,10 @@
       "label": "Deal Create",
       "description": "Create a new deal",
       "sourceConfidence": "medium",
-      "tags": ["deal", "create"],
+      "tags": [
+        "deal",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6712,11 +8555,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:deal:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "deal create",
-        "aliases": ["dc"],
-        "examples": ["dc <args>"]
+        "aliases": [
+          "dc2"
+        ],
+        "examples": [
+          "dc2 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6742,7 +8595,10 @@
       "label": "Deal Stage Move",
       "description": "Move deal to next stage",
       "sourceConfidence": "medium",
-      "tags": ["deal", "stage"],
+      "tags": [
+        "deal",
+        "stage"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6760,11 +8616,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:deal:stage_move",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "deal stage move",
-        "aliases": ["dsm"],
-        "examples": ["dsm <args>"]
+        "aliases": [
+          "dsm"
+        ],
+        "examples": [
+          "dsm <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6790,7 +8656,10 @@
       "label": "Contact Import",
       "description": "Import contacts from CSV",
       "sourceConfidence": "medium",
-      "tags": ["contact", "import"],
+      "tags": [
+        "contact",
+        "import"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6808,11 +8677,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:contact:import",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "contact import",
-        "aliases": ["ci"],
-        "examples": ["ci <args>"]
+        "aliases": [
+          "ci"
+        ],
+        "examples": [
+          "ci <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6838,7 +8717,10 @@
       "label": "Report Generate",
       "description": "Generate a CRM report",
       "sourceConfidence": "medium",
-      "tags": ["report", "generate"],
+      "tags": [
+        "report",
+        "generate"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -6856,11 +8738,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:report:generate",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "report generate",
-        "aliases": ["rg"],
-        "examples": ["rg <args>"]
+        "aliases": [
+          "rg"
+        ],
+        "examples": [
+          "rg <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -6886,7 +8778,10 @@
       "label": "Pipeline View",
       "description": "View sales pipeline",
       "sourceConfidence": "medium",
-      "tags": ["pipeline", "view"],
+      "tags": [
+        "pipeline",
+        "view"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -6904,11 +8799,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:pipeline:view",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "pipeline view",
-        "aliases": ["pv"],
-        "examples": ["pv <args>"]
+        "aliases": [
+          "piv"
+        ],
+        "examples": [
+          "piv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -6930,7 +8835,10 @@
       "label": "Activity Log",
       "description": "View activity log",
       "sourceConfidence": "medium",
-      "tags": ["activity", "log"],
+      "tags": [
+        "activity",
+        "log"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -6948,11 +8856,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:activity:log",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "activity log",
-        "aliases": ["al"],
-        "examples": ["al <args>"]
+        "aliases": [
+          "acl"
+        ],
+        "examples": [
+          "acl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -6974,7 +8892,10 @@
       "label": "Dashboard View",
       "description": "View analytics dashboard",
       "sourceConfidence": "medium",
-      "tags": ["dashboard", "view"],
+      "tags": [
+        "dashboard",
+        "view"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -6992,11 +8913,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:dashboard:view",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "dashboard view",
-        "aliases": ["dv"],
-        "examples": ["dv <args>"]
+        "aliases": [
+          "dv"
+        ],
+        "examples": [
+          "dv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -7018,7 +8949,10 @@
       "label": "Report Create",
       "description": "Create an analytics report",
       "sourceConfidence": "medium",
-      "tags": ["report", "create"],
+      "tags": [
+        "report",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7036,11 +8970,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:report:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "report create",
-        "aliases": ["rc"],
-        "examples": ["rc <args>"]
+        "aliases": [
+          "rc2"
+        ],
+        "examples": [
+          "rc2 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7066,7 +9010,10 @@
       "label": "Metric Track",
       "description": "Track custom metrics",
       "sourceConfidence": "medium",
-      "tags": ["metric", "track"],
+      "tags": [
+        "metric",
+        "track"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7084,11 +9031,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:metric:track",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "metric track",
-        "aliases": ["mt"],
-        "examples": ["mt <args>"]
+        "aliases": [
+          "mt"
+        ],
+        "examples": [
+          "mt <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7114,7 +9071,10 @@
       "label": "Funnel Analyze",
       "description": "Analyze conversion funnel",
       "sourceConfidence": "medium",
-      "tags": ["funnel", "analyze"],
+      "tags": [
+        "funnel",
+        "analyze"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -7132,11 +9092,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:funnel:analyze",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "funnel analyze",
-        "aliases": ["fa"],
-        "examples": ["fa <args>"]
+        "aliases": [
+          "fa"
+        ],
+        "examples": [
+          "fa <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -7158,7 +9128,10 @@
       "label": "Event Track",
       "description": "Track user events",
       "sourceConfidence": "medium",
-      "tags": ["event", "track"],
+      "tags": [
+        "event",
+        "track"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7176,11 +9149,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:event:track",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "event track",
-        "aliases": ["et"],
-        "examples": ["et <args>"]
+        "aliases": [
+          "evt"
+        ],
+        "examples": [
+          "evt <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7206,7 +9189,10 @@
       "label": "AB Test",
       "description": "Run A/B test",
       "sourceConfidence": "medium",
-      "tags": ["ab", "test"],
+      "tags": [
+        "ab",
+        "test"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7224,11 +9210,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:ab:test",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "ab test",
-        "aliases": ["at"],
-        "examples": ["at <args>"]
+        "aliases": [
+          "at"
+        ],
+        "examples": [
+          "at <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7254,7 +9250,10 @@
       "label": "Doc Create",
       "description": "Create a new document",
       "sourceConfidence": "medium",
-      "tags": ["doc", "create"],
+      "tags": [
+        "doc",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7272,11 +9271,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:doc:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "doc create",
-        "aliases": ["dc"],
-        "examples": ["dc <args>"]
+        "aliases": [
+          "doc"
+        ],
+        "examples": [
+          "doc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7302,7 +9311,10 @@
       "label": "Doc Edit",
       "description": "Edit a document",
       "sourceConfidence": "medium",
-      "tags": ["doc", "edit"],
+      "tags": [
+        "doc",
+        "edit"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7320,11 +9332,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:doc:edit",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "doc edit",
-        "aliases": ["de"],
-        "examples": ["de <args>"]
+        "aliases": [
+          "doe"
+        ],
+        "examples": [
+          "doe <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7350,7 +9372,10 @@
       "label": "Doc Comment",
       "description": "Comment on a document",
       "sourceConfidence": "medium",
-      "tags": ["doc", "comment"],
+      "tags": [
+        "doc",
+        "comment"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7368,11 +9393,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:doc:comment",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "doc comment",
-        "aliases": ["dc"],
-        "examples": ["dc <args>"]
+        "aliases": [
+          "dc3"
+        ],
+        "examples": [
+          "dc3 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7398,7 +9433,10 @@
       "label": "Doc Publish",
       "description": "Publish a document",
       "sourceConfidence": "medium",
-      "tags": ["doc", "publish"],
+      "tags": [
+        "doc",
+        "publish"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7416,11 +9454,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:doc:publish",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "doc publish",
-        "aliases": ["dp"],
-        "examples": ["dp <args>"]
+        "aliases": [
+          "dp"
+        ],
+        "examples": [
+          "dp <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7446,7 +9494,10 @@
       "label": "Wiki Search",
       "description": "Search the wiki",
       "sourceConfidence": "medium",
-      "tags": ["wiki", "search"],
+      "tags": [
+        "wiki",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -7464,11 +9515,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:wiki:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "wiki search",
-        "aliases": ["ws"],
-        "examples": ["ws <args>"]
+        "aliases": [
+          "wis"
+        ],
+        "examples": [
+          "wis <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -7490,7 +9551,10 @@
       "label": "Template Use",
       "description": "Use a document template",
       "sourceConfidence": "medium",
-      "tags": ["template", "use"],
+      "tags": [
+        "template",
+        "use"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7508,11 +9572,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:template:use",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "template use",
-        "aliases": ["tu"],
-        "examples": ["tu <args>"]
+        "aliases": [
+          "tu"
+        ],
+        "examples": [
+          "tu <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7538,7 +9612,10 @@
       "label": "Email Compose",
       "description": "Compose a new email",
       "sourceConfidence": "medium",
-      "tags": ["email", "compose"],
+      "tags": [
+        "email",
+        "compose"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7556,11 +9633,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:email:compose",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "email compose",
-        "aliases": ["ec"],
-        "examples": ["ec <args>"]
+        "aliases": [
+          "emc"
+        ],
+        "examples": [
+          "emc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7586,7 +9673,10 @@
       "label": "Email Reply",
       "description": "Reply to an email",
       "sourceConfidence": "medium",
-      "tags": ["email", "reply"],
+      "tags": [
+        "email",
+        "reply"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7604,11 +9694,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:email:reply",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "email reply",
-        "aliases": ["er"],
-        "examples": ["er <args>"]
+        "aliases": [
+          "er"
+        ],
+        "examples": [
+          "er <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7634,7 +9734,10 @@
       "label": "Email Forward",
       "description": "Forward an email",
       "sourceConfidence": "medium",
-      "tags": ["email", "forward"],
+      "tags": [
+        "email",
+        "forward"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7652,11 +9755,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:email:forward",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "email forward",
-        "aliases": ["ef"],
-        "examples": ["ef <args>"]
+        "aliases": [
+          "ef"
+        ],
+        "examples": [
+          "ef <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7682,7 +9795,10 @@
       "label": "Email Archive",
       "description": "Archive an email",
       "sourceConfidence": "medium",
-      "tags": ["email", "archive"],
+      "tags": [
+        "email",
+        "archive"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7700,11 +9816,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:email:archive",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "email archive",
-        "aliases": ["ea"],
-        "examples": ["ea <args>"]
+        "aliases": [
+          "ea"
+        ],
+        "examples": [
+          "ea <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7730,7 +9856,10 @@
       "label": "Email Label",
       "description": "Label/categorize an email",
       "sourceConfidence": "medium",
-      "tags": ["email", "label"],
+      "tags": [
+        "email",
+        "label"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7748,11 +9877,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:email:label",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "email label",
-        "aliases": ["el"],
-        "examples": ["el <args>"]
+        "aliases": [
+          "el"
+        ],
+        "examples": [
+          "el <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7778,7 +9917,10 @@
       "label": "Email Search",
       "description": "Search emails",
       "sourceConfidence": "medium",
-      "tags": ["email", "search"],
+      "tags": [
+        "email",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -7796,11 +9938,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:email:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "email search",
-        "aliases": ["es"],
-        "examples": ["es <args>"]
+        "aliases": [
+          "ems"
+        ],
+        "examples": [
+          "ems <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -7822,7 +9974,10 @@
       "label": "Event Create",
       "description": "Create a calendar event",
       "sourceConfidence": "medium",
-      "tags": ["event", "create"],
+      "tags": [
+        "event",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7840,11 +9995,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:event:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "event create",
-        "aliases": ["ec"],
-        "examples": ["ec <args>"]
+        "aliases": [
+          "evc"
+        ],
+        "examples": [
+          "evc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7870,7 +10035,10 @@
       "label": "Event Update",
       "description": "Update a calendar event",
       "sourceConfidence": "medium",
-      "tags": ["event", "update"],
+      "tags": [
+        "event",
+        "update"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7888,11 +10056,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:event:update",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "event update",
-        "aliases": ["eu"],
-        "examples": ["eu <args>"]
+        "aliases": [
+          "eu"
+        ],
+        "examples": [
+          "eu <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7918,7 +10096,10 @@
       "label": "Event Delete",
       "description": "Delete a calendar event",
       "sourceConfidence": "medium",
-      "tags": ["event", "delete"],
+      "tags": [
+        "event",
+        "delete"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -7936,11 +10117,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:event:delete",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "event delete",
-        "aliases": ["ed"],
-        "examples": ["ed <args>"]
+        "aliases": [
+          "ed"
+        ],
+        "examples": [
+          "ed <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -7966,7 +10157,10 @@
       "label": "Availability Check",
       "description": "Check availability",
       "sourceConfidence": "medium",
-      "tags": ["availability", "check"],
+      "tags": [
+        "availability",
+        "check"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -7984,11 +10178,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:availability:check",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "availability check",
-        "aliases": ["ac"],
-        "examples": ["ac <args>"]
+        "aliases": [
+          "avc"
+        ],
+        "examples": [
+          "avc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -8010,7 +10214,10 @@
       "label": "Meeting Schedule",
       "description": "Schedule a meeting",
       "sourceConfidence": "medium",
-      "tags": ["meeting", "schedule"],
+      "tags": [
+        "meeting",
+        "schedule"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8028,11 +10235,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:meeting:schedule",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "meeting schedule",
-        "aliases": ["ms"],
-        "examples": ["ms <args>"]
+        "aliases": [
+          "ms3"
+        ],
+        "examples": [
+          "ms3 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8058,7 +10275,10 @@
       "label": "Reminder Set",
       "description": "Set a reminder",
       "sourceConfidence": "medium",
-      "tags": ["reminder", "set"],
+      "tags": [
+        "reminder",
+        "set"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8076,11 +10296,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:reminder:set",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "reminder set",
-        "aliases": ["rs"],
-        "examples": ["rs <args>"]
+        "aliases": [
+          "res"
+        ],
+        "examples": [
+          "res <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8106,7 +10336,10 @@
       "label": "Post Create",
       "description": "Create a social post",
       "sourceConfidence": "medium",
-      "tags": ["post", "create"],
+      "tags": [
+        "post",
+        "create"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8124,11 +10357,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:post:create",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "post create",
-        "aliases": ["pc"],
-        "examples": ["pc <args>"]
+        "aliases": [
+          "poc"
+        ],
+        "examples": [
+          "poc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8154,7 +10397,10 @@
       "label": "Post Like",
       "description": "Like a social post",
       "sourceConfidence": "medium",
-      "tags": ["post", "like"],
+      "tags": [
+        "post",
+        "like"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8172,11 +10418,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:post:like",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "post like",
-        "aliases": ["pl"],
-        "examples": ["pl <args>"]
+        "aliases": [
+          "pl"
+        ],
+        "examples": [
+          "pl <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8202,7 +10458,10 @@
       "label": "Post Comment",
       "description": "Comment on a social post",
       "sourceConfidence": "medium",
-      "tags": ["post", "comment"],
+      "tags": [
+        "post",
+        "comment"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8220,11 +10479,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:post:comment",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "post comment",
-        "aliases": ["pc"],
-        "examples": ["pc <args>"]
+        "aliases": [
+          "pc4"
+        ],
+        "examples": [
+          "pc4 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8250,7 +10519,10 @@
       "label": "Post Share",
       "description": "Share a social post",
       "sourceConfidence": "medium",
-      "tags": ["post", "share"],
+      "tags": [
+        "post",
+        "share"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8268,11 +10540,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:post:share",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "post share",
-        "aliases": ["ps"],
-        "examples": ["ps <args>"]
+        "aliases": [
+          "pos"
+        ],
+        "examples": [
+          "pos <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8298,7 +10580,10 @@
       "label": "Post Bookmark",
       "description": "Bookmark a social post",
       "sourceConfidence": "medium",
-      "tags": ["post", "bookmark"],
+      "tags": [
+        "post",
+        "bookmark"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8316,11 +10601,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:post:bookmark",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "post bookmark",
-        "aliases": ["pb"],
-        "examples": ["pb <args>"]
+        "aliases": [
+          "pb"
+        ],
+        "examples": [
+          "pb <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8346,7 +10641,10 @@
       "label": "Feed Scroll",
       "description": "Scroll through the feed",
       "sourceConfidence": "medium",
-      "tags": ["feed", "scroll"],
+      "tags": [
+        "feed",
+        "scroll"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8364,11 +10662,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:feed:scroll",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "feed scroll",
-        "aliases": ["fs"],
-        "examples": ["fs <args>"]
+        "aliases": [
+          "fes"
+        ],
+        "examples": [
+          "fes <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8394,7 +10702,10 @@
       "label": "Profile Update",
       "description": "Update user profile",
       "sourceConfidence": "medium",
-      "tags": ["profile", "update"],
+      "tags": [
+        "profile",
+        "update"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8412,11 +10723,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:profile:update",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "profile update",
-        "aliases": ["pu"],
-        "examples": ["pu <args>"]
+        "aliases": [
+          "pu"
+        ],
+        "examples": [
+          "pu <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8442,7 +10763,10 @@
       "label": "Follower Follow",
       "description": "Follow a user",
       "sourceConfidence": "medium",
-      "tags": ["follower", "follow"],
+      "tags": [
+        "follower",
+        "follow"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8460,11 +10784,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:follower:follow",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "follower follow",
-        "aliases": ["ff"],
-        "examples": ["ff <args>"]
+        "aliases": [
+          "ff"
+        ],
+        "examples": [
+          "ff <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8490,7 +10824,10 @@
       "label": "Follower Unfollow",
       "description": "Unfollow a user",
       "sourceConfidence": "medium",
-      "tags": ["follower", "unfollow"],
+      "tags": [
+        "follower",
+        "unfollow"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8508,11 +10845,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:follower:unfollow",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "follower unfollow",
-        "aliases": ["fu"],
-        "examples": ["fu <args>"]
+        "aliases": [
+          "fu"
+        ],
+        "examples": [
+          "fu <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8538,7 +10885,10 @@
       "label": "Notification Manage",
       "description": "Manage notification settings",
       "sourceConfidence": "medium",
-      "tags": ["notification", "manage"],
+      "tags": [
+        "notification",
+        "manage"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -8556,11 +10906,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:notification:manage",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "notification manage",
-        "aliases": ["nm"],
-        "examples": ["nm <args>"]
+        "aliases": [
+          "nm"
+        ],
+        "examples": [
+          "nm <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -8582,7 +10942,10 @@
       "label": "Settings Update",
       "description": "Update application settings",
       "sourceConfidence": "medium",
-      "tags": ["settings", "update"],
+      "tags": [
+        "settings",
+        "update"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -8600,11 +10963,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:settings:update",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "settings update",
-        "aliases": ["su"],
-        "examples": ["su <args>"]
+        "aliases": [
+          "su"
+        ],
+        "examples": [
+          "su <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -8626,7 +10999,10 @@
       "label": "Theme Change",
       "description": "Change UI theme",
       "sourceConfidence": "medium",
-      "tags": ["theme", "change"],
+      "tags": [
+        "theme",
+        "change"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -8644,11 +11020,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:theme:change",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "theme change",
-        "aliases": ["tc"],
-        "examples": ["tc <args>"]
+        "aliases": [
+          "tc"
+        ],
+        "examples": [
+          "tc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -8670,7 +11056,10 @@
       "label": "Language Set",
       "description": "Set display language",
       "sourceConfidence": "medium",
-      "tags": ["language", "set"],
+      "tags": [
+        "language",
+        "set"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -8688,11 +11077,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:language:set",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "language set",
-        "aliases": ["ls"],
-        "examples": ["ls <args>"]
+        "aliases": [
+          "las"
+        ],
+        "examples": [
+          "las <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -8714,7 +11113,10 @@
       "label": "Privacy Manage",
       "description": "Manage privacy settings",
       "sourceConfidence": "medium",
-      "tags": ["privacy", "manage"],
+      "tags": [
+        "privacy",
+        "manage"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -8732,11 +11134,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:privacy:manage",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "privacy manage",
-        "aliases": ["pm"],
-        "examples": ["pm <args>"]
+        "aliases": [
+          "prm"
+        ],
+        "examples": [
+          "prm <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -8758,7 +11170,10 @@
       "label": "Notification Preferences",
       "description": "Set notification preferences",
       "sourceConfidence": "medium",
-      "tags": ["notification", "preferences"],
+      "tags": [
+        "notification",
+        "preferences"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -8776,11 +11191,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:notification:preferences",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "notification preferences",
-        "aliases": ["np"],
-        "examples": ["np <args>"]
+        "aliases": [
+          "np"
+        ],
+        "examples": [
+          "np <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -8802,7 +11227,10 @@
       "label": "Share Workspace",
       "description": "Share workspace with others",
       "sourceConfidence": "medium",
-      "tags": ["share", "workspace"],
+      "tags": [
+        "share",
+        "workspace"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8820,11 +11248,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:share:workspace",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "share workspace",
-        "aliases": ["sw"],
-        "examples": ["sw <args>"]
+        "aliases": [
+          "shw"
+        ],
+        "examples": [
+          "shw <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8850,7 +11288,10 @@
       "label": "Invite Member",
       "description": "Invite member to workspace",
       "sourceConfidence": "medium",
-      "tags": ["invite", "member"],
+      "tags": [
+        "invite",
+        "member"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8868,11 +11309,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:invite:member",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "invite member",
-        "aliases": ["im"],
-        "examples": ["im <args>"]
+        "aliases": [
+          "im"
+        ],
+        "examples": [
+          "im <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8898,7 +11349,10 @@
       "label": "Permission Manage",
       "description": "Manage permissions",
       "sourceConfidence": "medium",
-      "tags": ["permission", "manage"],
+      "tags": [
+        "permission",
+        "manage"
+      ],
       "shared": true,
       "capabilityKind": "config",
       "ui_component": "settings-panel",
@@ -8916,11 +11370,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:permission:manage",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "permission manage",
-        "aliases": ["pm"],
-        "examples": ["pm <args>"]
+        "aliases": [
+          "pem"
+        ],
+        "examples": [
+          "pem <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "PUT",
@@ -8942,7 +11406,10 @@
       "label": "Comment Thread",
       "description": "Comment on a thread",
       "sourceConfidence": "medium",
-      "tags": ["comment", "thread"],
+      "tags": [
+        "comment",
+        "thread"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -8960,11 +11427,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:comment:thread",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "comment thread",
-        "aliases": ["ct"],
-        "examples": ["ct <args>"]
+        "aliases": [
+          "ct"
+        ],
+        "examples": [
+          "ct <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -8990,7 +11467,10 @@
       "label": "Mention User",
       "description": "Mention a user",
       "sourceConfidence": "medium",
-      "tags": ["mention", "user"],
+      "tags": [
+        "mention",
+        "user"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9008,11 +11488,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:mention:user",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "mention user",
-        "aliases": ["mu"],
-        "examples": ["mu <args>"]
+        "aliases": [
+          "mu"
+        ],
+        "examples": [
+          "mu <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9038,7 +11528,10 @@
       "label": "Data Import",
       "description": "Import data from external source",
       "sourceConfidence": "medium",
-      "tags": ["data", "import"],
+      "tags": [
+        "data",
+        "import"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9056,11 +11549,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:data:import",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "data import",
-        "aliases": ["di"],
-        "examples": ["di <args>"]
+        "aliases": [
+          "di"
+        ],
+        "examples": [
+          "di <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9086,7 +11589,10 @@
       "label": "Data Export",
       "description": "Export data to file",
       "sourceConfidence": "medium",
-      "tags": ["data", "export"],
+      "tags": [
+        "data",
+        "export"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9104,11 +11610,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:data:export",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "data export",
-        "aliases": ["de"],
-        "examples": ["de <args>"]
+        "aliases": [
+          "dae"
+        ],
+        "examples": [
+          "dae <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9134,7 +11650,10 @@
       "label": "API Call",
       "description": "Make an API call",
       "sourceConfidence": "medium",
-      "tags": ["api", "call"],
+      "tags": [
+        "api",
+        "call"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9152,11 +11671,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:api:call",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "api call",
-        "aliases": ["ac"],
-        "examples": ["ac <args>"]
+        "aliases": [
+          "ac2"
+        ],
+        "examples": [
+          "ac2 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9182,7 +11711,10 @@
       "label": "Webhook Set",
       "description": "Set up a webhook",
       "sourceConfidence": "medium",
-      "tags": ["webhook", "set"],
+      "tags": [
+        "webhook",
+        "set"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9200,11 +11732,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:webhook:set",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "webhook set",
-        "aliases": ["ws"],
-        "examples": ["ws <args>"]
+        "aliases": [
+          "ws2"
+        ],
+        "examples": [
+          "ws2 <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9230,7 +11772,10 @@
       "label": "Integration Connect",
       "description": "Connect an integration",
       "sourceConfidence": "medium",
-      "tags": ["integration", "connect"],
+      "tags": [
+        "integration",
+        "connect"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9248,11 +11793,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:integration:connect",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "integration connect",
-        "aliases": ["ic"],
-        "examples": ["ic <args>"]
+        "aliases": [
+          "inc"
+        ],
+        "examples": [
+          "inc <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9278,7 +11833,10 @@
       "label": "Integration Disconnect",
       "description": "Disconnect an integration",
       "sourceConfidence": "medium",
-      "tags": ["integration", "disconnect"],
+      "tags": [
+        "integration",
+        "disconnect"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9296,11 +11854,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:integration:disconnect",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "integration disconnect",
-        "aliases": ["id"],
-        "examples": ["id <args>"]
+        "aliases": [
+          "id"
+        ],
+        "examples": [
+          "id <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9326,7 +11894,10 @@
       "label": "Global Search",
       "description": "Search across all content",
       "sourceConfidence": "medium",
-      "tags": ["global", "search"],
+      "tags": [
+        "global",
+        "search"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -9344,11 +11915,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:global:search",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "global search",
-        "aliases": ["gs"],
-        "examples": ["gs <args>"]
+        "aliases": [
+          "gs"
+        ],
+        "examples": [
+          "gs <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -9370,7 +11951,10 @@
       "label": "Filter Apply",
       "description": "Apply search filters",
       "sourceConfidence": "medium",
-      "tags": ["filter", "apply"],
+      "tags": [
+        "filter",
+        "apply"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9388,11 +11972,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:filter:apply",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "filter apply",
-        "aliases": ["fa"],
-        "examples": ["fa <args>"]
+        "aliases": [
+          "fia"
+        ],
+        "examples": [
+          "fia <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9418,7 +12012,10 @@
       "label": "Sort Results",
       "description": "Sort search results",
       "sourceConfidence": "medium",
-      "tags": ["sort", "results"],
+      "tags": [
+        "sort",
+        "results"
+      ],
       "shared": true,
       "capabilityKind": "action",
       "ui_component": "action-button",
@@ -9436,11 +12033,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:sort:results",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "sort results",
-        "aliases": ["sr"],
-        "examples": ["sr <args>"]
+        "aliases": [
+          "sor"
+        ],
+        "examples": [
+          "sor <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "POST",
@@ -9466,7 +12073,10 @@
       "label": "History View",
       "description": "View search history",
       "sourceConfidence": "medium",
-      "tags": ["history", "view"],
+      "tags": [
+        "history",
+        "view"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -9484,11 +12094,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:history:view",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "history view",
-        "aliases": ["hv"],
-        "examples": ["hv <args>"]
+        "aliases": [
+          "hv"
+        ],
+        "examples": [
+          "hv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",
@@ -9510,7 +12130,10 @@
       "label": "Trending View",
       "description": "View trending content",
       "sourceConfidence": "medium",
-      "tags": ["trending", "view"],
+      "tags": [
+        "trending",
+        "view"
+      ],
       "shared": true,
       "capabilityKind": "query",
       "ui_component": "result-card",
@@ -9528,11 +12151,21 @@
       "result_component": "text",
       "result_layout": "single",
       "capId": "cap:trending:view",
-      "surfaces": ["cli", "ui", "api", "mcp", "workflow"],
+      "surfaces": [
+        "cli",
+        "ui",
+        "api",
+        "mcp",
+        "workflow"
+      ],
       "cliCommand": {
         "name": "trending view",
-        "aliases": ["tv"],
-        "examples": ["tv <args>"]
+        "aliases": [
+          "tv"
+        ],
+        "examples": [
+          "tv <args>"
+        ]
       },
       "apiEndpoint": {
         "method": "GET",

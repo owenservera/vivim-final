@@ -28,10 +28,9 @@ export async function captureAndStore(
   await blockStore.storeBlocks(
     target.conversationId,
     target.messageId,
-    blocks.map((b, i) => ({
-      kind: b.blockKind === 'code' ? 'code' : 'text',
-      content: b.blockData,
-      index: startSequence + i,
+    blocks.map((b) => ({
+      type: b.blockKind === 'code' ? 'code' : 'text',
+      text: b.blockData,
     })),
   )
 

@@ -62,8 +62,8 @@ describe('StreamBlockStore', () => {
 
   it('storeBlocks() inserts all blocks in a batch', async () => {
     const blocks: ContentBlock[] = [
-      { kind: 'text', content: 'Hello', index: 0 },
-      { kind: 'code', content: 'const x = 1', language: 'typescript', index: 1 },
+      { type: 'text', text: 'Hello' },
+      { type: 'code', text: 'const x = 1', language: 'typescript' },
     ]
     await store.storeBlocks('conv_1', 'msg_1', blocks)
     expect(db.prisma.streamBlock.createMany).toHaveBeenCalled()
@@ -74,9 +74,8 @@ describe('StreamBlockStore', () => {
 
   it('getBlocksByConversation() returns paginated blocks', async () => {
     const blocks: ContentBlock[] = Array.from({ length: 5 }, (_, i) => ({
-      kind: 'text' as const,
-      content: `block ${i}`,
-      index: i,
+      type: 'text' as const,
+      text: `block ${i}`,
     }))
     await store.storeBlocks('conv_1', 'msg_1', blocks)
 
@@ -89,10 +88,10 @@ describe('StreamBlockStore', () => {
 
   it('getBlocksByMessage() returns all blocks for a message', async () => {
     await store.storeBlocks('conv_1', 'msg_1', [
-      { kind: 'text', content: 'a', index: 0 },
-      { kind: 'text', content: 'b', index: 1 },
+      { type: 'text', text: 'a' },
+      { type: 'text', text: 'b' },
     ])
-    await store.storeBlocks('conv_1', 'msg_2', [{ kind: 'code', content: 'c', index: 0 }])
+    await store.storeBlocks('conv_1', 'msg_2', [{ type: 'code', text: 'c' }])
 
     const msg1 = await store.getBlocksByMessage('msg_1')
     expect(msg1).toHaveLength(2)
@@ -101,9 +100,9 @@ describe('StreamBlockStore', () => {
 
   it('Filtering by blockKind returns only matching blocks', async () => {
     await store.storeBlocks('conv_1', 'msg_1', [
-      { kind: 'text', content: 'a', index: 0 },
-      { kind: 'code', content: 'b', index: 1 },
-      { kind: 'text', content: 'c', index: 2 },
+      { type: 'text', text: 'a' },
+      { type: 'code', text: 'b' },
+      { type: 'text', text: 'c' },
     ])
 
     const textOnly = await store.getBlocksByConversation('conv_1', { blockKind: 'text' })
@@ -113,9 +112,9 @@ describe('StreamBlockStore', () => {
 
   it('Blocks maintain correct block_index ordering', async () => {
     await store.storeBlocks('conv_1', 'msg_1', [
-      { kind: 'text', content: 'c', index: 2 },
-      { kind: 'text', content: 'a', index: 0 },
-      { kind: 'text', content: 'b', index: 1 },
+      { type: 'text', text: 'c' },
+      { type: 'text', text: 'a' },
+      { type: 'text', text: 'b' },
     ])
 
     const blocks = await store.getBlocksByMessage('msg_1')
@@ -124,9 +123,8 @@ describe('StreamBlockStore', () => {
 
   it('Handles 100-block messages efficiently', async () => {
     const blocks: ContentBlock[] = Array.from({ length: 100 }, (_, i) => ({
-      kind: 'text' as const,
-      content: `block ${i}`,
-      index: i,
+      type: 'text' as const,
+      text: `block ${i}`,
     }))
     await store.storeBlocks('conv_1', 'msg_1', blocks)
     const result = await store.getBlocksByMessage('msg_1')

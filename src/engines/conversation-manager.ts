@@ -27,6 +27,8 @@ import {
 } from './provider-selectors.js'
 import type { StreamBlockStore } from './stream-block-store.js'
 import type { StreamingProtocol } from './streaming-protocol.js'
+import type { NodeStoreContract } from '../storage/contracts/node-store.js'
+import { newId } from '../ids.js'
 
 // ── StreamParserEngine + shared parse types (real impl in stream-parser.ts) ─
 
@@ -128,10 +130,12 @@ const CAPTURE_PATTERNS: Record<string, RegExp> = {
 }
 
 function extractText(blocks: ContentBlock[]): string {
-  return blocks
-    .filter((b): b is ContentBlock & { kind: 'text' } => b.kind === 'text')
-    .map((b) => b.content)
-    .join('')
+  const pieces: string[] = []
+  for (const b of blocks) {
+    if (b.type === 'text' && typeof b.text === 'string') pieces.push(b.text)
+    if (b.type === 'reasoning' && typeof b.text === 'string') pieces.push(b.text)
+  }
+  return pieces.join('')
 }
 
 // ── Context injection (unit 3.14) ─────────────────────────────────────────
@@ -178,7 +182,59 @@ export class ConversationManager {
     private memory?: MemoryEngine,
     private contextAssembly?: ContextAssemblyEngine,
     private streamingProtocol?: StreamingProtocol,
+    private nodeStore?: NodeStoreContract,
   ) {}
+
+  // ── universal capture ── every message becomes a Node so the database is
+  // fully compliant: nothing flowing through the system is dropped.
+  // Captures ACU-proven fields (contentHash, version, state, acl, authorDid)
+  // and links assistant→user to preserve the response fork.
+  private async captureAsNode(
+    conversationId: string,
+    messageId: string,
+    role: 'user' | 'assistant',
+    rawSource: string,
+    blocks: ContentBlock[],
+    parentId?: string,
+  ): Promise<string | null> {
+    if (!this.nodeStore) return null
+    const now = Date.now()
+    const text = extractText(blocks)
+    const edgeType = role === 'assistant' ? 'responds_to' : 'follows'
+    const nodeId = newId()
+    await this.nodeStore
+      .putNode({
+        id: nodeId,
+        type: 'cap-store.message',
+        schemaVersion: 1,
+        version: 1,
+        state: 'active',
+        parentId,
+        source: rawSource,
+        data: {
+          role,
+          messageId,
+          text,
+          blockCount: blocks.length,
+        } as unknown as Record<string, unknown>,
+        edges: parentId
+          ? [{ type: edgeType, targetId: parentId, properties: { role } }]
+          : [],
+        meta: {
+          conversationId,
+          messageId,
+          sourceParser: 'conversation-manager',
+        },
+        acl: { canView: true, canRemix: false, canReshare: false },
+        authorDid: role === 'user' ? 'user' : 'assistant',
+        contentType: 'message',
+        securityLevel: 0,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .catch(() => {})
+    return nodeId
+  }
 
   // ── send: 8-step pipeline with retry (Units 2.x + 3.1, 3.5) ──────────────
 
@@ -374,8 +430,9 @@ export class ConversationManager {
         parserVersion: 0,
         durationMs: 0,
       }
+      let captureResult: { body?: string } | undefined
       try {
-        const captureResult = await this.governor.cdp.capture(slaveId, capturePattern, 60_000)
+        captureResult = await this.governor.cdp.capture(slaveId, capturePattern, 60_000)
         timing.capture = Date.now() - t0
 
         // [7] PARSE
@@ -398,7 +455,7 @@ export class ConversationManager {
         conversationId,
         role: 'user',
         content: message,
-        blocksJson: JSON.stringify([{ kind: 'text', content: message, index: 0 }]),
+        blocksJson: JSON.stringify([{ type: 'text', text: message }]),
         blockCount: 1,
         latencyMs: 0,
       })
@@ -413,6 +470,24 @@ export class ConversationManager {
       })
 
       await this.blocks.storeBlocks(conversationId, msgRow.id, parseResult.blocks)
+
+      // Universal capture — persist both messages as Nodes (fully compliant DB).
+      // User node is captured first so the assistant node links to it (fork).
+      const userNodeId = await this.captureAsNode(
+        conversationId,
+        msgRow.id,
+        'user',
+        message,
+        [{ type: 'text', text: message }],
+      )
+      await this.captureAsNode(
+        conversationId,
+        msgRow.id,
+        'assistant',
+        (captureResult as { body?: string }).body ?? '',
+        parseResult.blocks,
+        userNodeId ?? undefined,
+      )
 
       await this.store.updateConversation(conversationId, {
         messageCount: conv.messageCount + 2,
@@ -664,7 +739,7 @@ export class ConversationManager {
         conversationId,
         role: 'user',
         content: message,
-        blocksJson: JSON.stringify([{ kind: 'text', content: message, index: 0 }]),
+        blocksJson: JSON.stringify([{ type: 'text', text: message }]),
         blockCount: 1,
         latencyMs: 0,
       })
@@ -693,12 +768,11 @@ export class ConversationManager {
       parserVersion: 0,
       durationMs: 0,
     }
+    let rawBody = ''
     try {
       const captureResult = await this.governor.cdp.capture(slaveId, capturePattern, 60_000)
-      parseResult = await this.parser.parse(
-        (captureResult as { body?: string }).body ?? '',
-        conv.providerId,
-      )
+      rawBody = (captureResult as { body?: string }).body ?? ''
+      parseResult = await this.parser.parse(rawBody, conv.providerId)
     } catch {
       // CDP not configured
     }
@@ -721,6 +795,20 @@ export class ConversationManager {
       latencyMs: Date.now() - start,
     })
     await this.blocks.storeBlocks(conversationId, msgRow.id, parseResult.blocks)
+
+    // Universal capture — persist both messages as Nodes (fully compliant DB).
+    // User node first so the assistant node links to it (fork).
+    const streamUserNodeId = await this.captureAsNode(conversationId, msgRow.id, 'user', message, [
+      { type: 'text', text: message },
+    ])
+    await this.captureAsNode(
+      conversationId,
+      msgRow.id,
+      'assistant',
+      rawBody,
+      parseResult.blocks,
+      streamUserNodeId ?? undefined,
+    )
     await this.store.updateConversation(conversationId, {
       messageCount: conv.messageCount + 2,
       lastMessageAt: Date.now(),

@@ -1,0 +1,8 @@
+// tests/fixtures/capture/gemini.body.txt
+// Real-world Gemini streaming response, captured from https://gemini.google.com/_api/BardFrontendService/StreamGenerate
+// Google batchexecute protobuf-wrapped JSON: each line is a separate JSON-RPC-style response frame
+// Wrapped in batchexecute array format: [["wjKepb",...,"{\"response\":{...}}"]]
+[["wjKepb","[[\"Hello from Gemini. \"]]",null,"0"]]
+[["wjKepb","[[\"This is a streamed reply with more detail.\"]]",null,"1"]]
+[["wjKepb","[[\"The final chunk of the response.\"]]",null,"2"]]
+[["wjKepb",null,null,"3"]]

@@ -62,15 +62,38 @@ export function syncCliFromUnified(
   registry: CommandRegistry,
 ): void {
   const caps = reg.list({ surface: 'cli' }) as UnifiedCapability[]
+  const seen = new Set<string>()
+  let skipped = 0
   for (const cap of caps) {
     const cli = cap.cliCommand
     if (!cli) continue
     const names = [cli.name, ...(cli.aliases ?? [])]
     for (const name of names) {
+      if (seen.has(name)) {
+        console.warn(
+          `[cli-bridge] alias collision: "${name}" already registered (skipping ${cap.slug})`,
+        )
+        skipped++
+        continue
+      }
+      seen.add(name)
       const cmd: CliCommand = {
         name,
         description: cap.description,
-        subsystem: 'cap-store',
+        subsystem:
+          cap.category === 'conversation'
+            ? 'cap-store'
+            : cap.category === 'admin'
+              ? 'backend'
+              : cap.category === 'system'
+                ? 'backend'
+                : cap.category === 'user'
+                  ? 'backend'
+                  : cap.category === 'canvas'
+                    ? 'extension'
+                    : cap.category === 'discovery'
+                      ? 'extension'
+                      : 'cap-store',
         schema: jsonSchemaToZod(cap.inputSchema as CliCapability['inputSchema']),
         examples: cli.examples ?? [],
         handler: async (args: unknown) => {
@@ -86,6 +109,9 @@ export function syncCliFromUnified(
       }
       registry.register(cmd)
     }
+  }
+  if (skipped > 0) {
+    console.warn(`[cli-bridge] ${skipped} aliases skipped due to collisions`)
   }
 }
 
@@ -158,6 +184,37 @@ export function stripMeta(flags: Record<string, string>): Record<string, string>
     out[k] = v
   }
   return out
+}
+
+/**
+ * Execute a capability on a remote server via POST /api/capabilities/:id/execute.
+ * Positional args are mapped to input schema automatically.
+ */
+export async function executeRemote(
+  remote: string,
+  capId: string,
+  args: string[],
+  flags: Record<string, string>,
+): Promise<unknown> {
+  const cleanFlags = stripMeta(flags)
+  const cap = (await fetch(`${remote}/api/capabilities?surface=cli`).then((r) =>
+    r.json(),
+  )) as CliCapability[]
+  const found = cap.find((c) => c.id === capId)
+  const input = found
+    ? argvToInput(args, cleanFlags, found.inputSchema)
+    : { _rawArgs: args, ...cleanFlags }
+  const res = await fetch(`${remote}/api/capabilities/${capId}/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Source': 'cli' },
+    body: JSON.stringify({ input }),
+  })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`remote execute failed (${res.status}): ${err}`)
+  }
+  const data = (await res.json()) as { output: unknown }
+  return data.output
 }
 
 function coerce(type: string | undefined, val: string): unknown {

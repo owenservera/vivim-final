@@ -27,10 +27,9 @@ function defaultSink(deps: HarnessExecutorDeps): HarnessSink {
     onBlock(block) {
       void deps.blockStore.storeBlocks('harness', block.messageId, [
         {
-          kind: block.blockKind === 'code' ? 'code' : 'text',
-          content:
+          type: block.blockKind === 'code' ? 'code' : 'text',
+          text:
             typeof block.blockData === 'string' ? block.blockData : JSON.stringify(block.blockData),
-          index: block.sequence,
         },
       ])
       deps.eventBus.emit({ type: 'capability:streamBlock', ...block } as never)

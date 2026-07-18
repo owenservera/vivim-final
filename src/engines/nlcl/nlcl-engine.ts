@@ -19,6 +19,7 @@ import {
   ConversationExecutor,
   EmailExecutor,
   FileExecutor,
+  GenericBrowserExecutor,
   ProviderLLMExecutor,
   SystemExecutor,
   WorkflowExecutor,
@@ -45,6 +46,7 @@ import { DEFAULT_NLCL_CONFIG, classificationAtLeast } from './types.js'
 
 export interface NLCLEngineDeps {
   governor?: ChromeGovernor
+  automationOrchestrator?: import('../automation/orchestrator.js').AutomationOrchestrator
   conversationManager?: ConversationManager
   conversationStore?: ConversationStore
   registry?: UnifiedCapabilityRegistry
@@ -270,7 +272,7 @@ export class NLCLEngine {
   }
 
   private registerExecutors(): void {
-    const { governor, conversationManager, conversationStore, registry, db } = this.deps
+    const { governor, automationOrchestrator, conversationManager, conversationStore, registry, db } = this.deps
 
     const fileExec = new FileExecutor()
     const browserExec = new BrowserExecutor(governor, conversationManager)
@@ -281,6 +283,7 @@ export class NLCLEngine {
     const emailExec = new EmailExecutor()
     const appExec = new AppExecutor()
     const workflowExec = new WorkflowExecutor(registry)
+    const autoExec = new GenericBrowserExecutor(governor, automationOrchestrator)
 
     const executors: CommandExecutor[] = [
       fileExec,
@@ -292,6 +295,7 @@ export class NLCLEngine {
       emailExec,
       appExec,
       workflowExec,
+      autoExec,
     ]
     for (const exec of executors) {
       this.router.registerExecutor(exec)

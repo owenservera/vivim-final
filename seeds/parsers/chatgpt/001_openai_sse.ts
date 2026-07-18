@@ -10,7 +10,6 @@ export default {
 
   parse(rawBody: string): ContentBlock[] {
     const blocks: ContentBlock[] = []
-    let index = 0
     for (const line of rawBody.split('\n')) {
       const trimmed = line.trim()
       if (!trimmed.startsWith('data:')) continue
@@ -21,19 +20,19 @@ export default {
         const delta = json.choices?.[0]?.delta
         if (delta?.content) {
           const lastBlock = blocks[blocks.length - 1]
-          if (lastBlock && lastBlock.kind === 'text') {
-            lastBlock.content += delta.content
+          if (lastBlock && lastBlock.type === 'text' && typeof lastBlock.text === 'string') {
+            lastBlock.text += delta.content
           } else {
-            blocks.push({ kind: 'text', content: delta.content, index: index++ })
+            blocks.push({ type: 'text', text: delta.content })
           }
         }
         if (delta?.tool_calls) {
           for (const tc of delta.tool_calls) {
             blocks.push({
-              kind: 'tool_use',
+              type: 'tool-call',
+              toolCallId: tc.id ?? `tc_${blocks.length}`,
               toolName: tc.function?.name ?? 'unknown',
               input: tc.function?.arguments ?? {},
-              index: index++,
             })
           }
         }
@@ -42,7 +41,7 @@ export default {
       }
     }
     if (blocks.length === 0 && rawBody.trim().length > 0) {
-      blocks.push({ kind: 'text', content: rawBody, index: 0 })
+      blocks.push({ type: 'text', text: rawBody })
     }
     return blocks
   },

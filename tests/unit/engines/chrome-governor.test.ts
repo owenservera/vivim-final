@@ -102,6 +102,10 @@ function createMockStore() {
           slaveId === '*' ? [...traceEntries] : traceEntries.filter((e) => e.slaveId === slaveId)
         return limit ? matching.slice(-limit) : matching
       },
+      getProviderFleetConfig: async () => null,
+      getHarnessCommand: async () => null,
+      listHarnessCommands: async () => [],
+      upsertHarnessCommand: async () => {},
     } satisfies GovernorStore,
     accounts,
     fleetEvents,

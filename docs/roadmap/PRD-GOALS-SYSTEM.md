@@ -212,6 +212,7 @@ Goals map to roadmap phases, not the other way around:
 | G-003: Visual Workflows | 15 | DAG builder, node types, execution panel |
 | G-004: Memory & Learning | 16 | Episodic/semantic/procedural memory |
 | G-005: Production Quality | 17, 18, 19, 20 | Hardening, providers, collaboration, platform |
+| G-006: Knowledge Graph Substrate | 21 | Canonical property-graph backbone, traversal engine, domain bridge |
 
 ## Testing Decisions
 

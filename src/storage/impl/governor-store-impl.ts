@@ -8,8 +8,10 @@ import type {
   FleetEventInput,
   FleetEventRow,
   GovernorStore,
+  HarnessCommandRow,
   HealthTickRow,
   ProviderAccountRow,
+  ProviderFleetConfig,
   TraceEntryInput,
   TraceEntryRow,
 } from '../contracts/governor-store.js'
@@ -271,5 +273,95 @@ export class GovernorStoreImpl implements GovernorStore {
       take: limit ?? 100,
     })
     return rows.map((r) => toTraceRow(r as unknown as PrismaTrace))
+  }
+
+  async getProviderFleetConfig(providerSlug: string): Promise<ProviderFleetConfig | null> {
+    const def = await this.db.prisma.providerDefinition.findUnique({
+      where: { slug: providerSlug },
+      select: { fleetConfigJson: true },
+    })
+    if (!def?.fleetConfigJson) return null
+    try {
+      const raw = JSON.parse(def.fleetConfigJson) as Record<string, unknown>
+      return {
+        channel: (typeof raw.channel === 'string'
+          ? raw.channel
+          : undefined) as ProviderFleetConfig['channel'],
+        mode: (typeof raw.mode === 'string' ? raw.mode : undefined) as ProviderFleetConfig['mode'],
+        extraArgs: Array.isArray(raw.extra_args)
+          ? (raw.extra_args.filter((a): a is string => typeof a === 'string') as string[])
+          : undefined,
+        portRange:
+          Array.isArray(raw.port_range) && raw.port_range.length === 2
+            ? ([Number(raw.port_range[0]), Number(raw.port_range[1])] as [number, number])
+            : undefined,
+      }
+    } catch {
+      return null
+    }
+  }
+
+  // ── Harness Command Registry (017-harness-command-registry) ──
+
+  async getHarnessCommand(commandId: string, version: string): Promise<HarnessCommandRow | null> {
+    const row = await this.db.prisma.harnessCommand.findUnique({
+      where: { commandId_version: { commandId, version } },
+    })
+    return row ? toHarnessCommandRow(row as unknown as PrismaHarnessCommand) : null
+  }
+
+  async listHarnessCommands(commandId: string): Promise<HarnessCommandRow[]> {
+    const rows = await this.db.prisma.harnessCommand.findMany({ where: { commandId } })
+    return rows.map((r) => toHarnessCommandRow(r as unknown as PrismaHarnessCommand))
+  }
+
+  async upsertHarnessCommand(cmd: HarnessCommandRow): Promise<void> {
+    await this.db.prisma.harnessCommand.upsert({
+      where: { commandId_version: { commandId: cmd.commandId, version: cmd.version } },
+      create: {
+        id: cmd.id,
+        commandId: cmd.commandId,
+        version: cmd.version,
+        kind: cmd.kind,
+        paramsSchemaJson: cmd.paramsSchemaJson,
+        adaptorRef: cmd.adaptorRef,
+        description: cmd.description,
+        createdAt: cmd.createdAt,
+        updatedAt: cmd.updatedAt,
+      },
+      update: {
+        kind: cmd.kind,
+        paramsSchemaJson: cmd.paramsSchemaJson,
+        adaptorRef: cmd.adaptorRef,
+        description: cmd.description,
+        updatedAt: cmd.updatedAt,
+      },
+    })
+  }
+}
+
+interface PrismaHarnessCommand {
+  id: string
+  commandId: string
+  version: string
+  kind: string
+  paramsSchemaJson: string
+  adaptorRef: string
+  description: string
+  createdAt: number
+  updatedAt: number
+}
+
+function toHarnessCommandRow(r: PrismaHarnessCommand): HarnessCommandRow {
+  return {
+    id: r.id,
+    commandId: r.commandId,
+    version: r.version,
+    kind: r.kind,
+    paramsSchemaJson: r.paramsSchemaJson,
+    adaptorRef: r.adaptorRef,
+    description: r.description,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
   }
 }

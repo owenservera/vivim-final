@@ -462,6 +462,26 @@ Reuse: Whenever user selects Claude + this account, same profile + CDP connectio
 | `src/lib/api/ws.ts` | WebSocket client — VIVIMWebSocket class | Streaming pattern |
 | `src/components/ChatView.tsx` | Main chat UI (1624 lines) | Reference for new UI |
 
+---
+
+## Pending: Phase 21 — Knowledge Graph Substrate (G-006)
+
+**Status:** ⏳ PLANNED — not yet started
+**Spec:** `specs/018-agentic-knowledge-graph/spec.md`
+**Plan:** `specs/018-agentic-knowledge-graph/plan.md`
+**Tasks:** `specs/018-agentic-knowledge-graph/tasks.md`
+
+**Objective:** Make the entire database behave as a single canonical property graph so agents can reason over providers, conversations, topics, entities, and memories through one uniform traversal primitive.
+
+**Key deliverables:**
+- `GraphNode` / `GraphEdge` Prisma models (canonical property graph)
+- `GraphEngine` (neighbors, BFS, shortest-path, semantic-nearest, subgraph)
+- `GraphBridge` (live domain table → graph materialization)
+- `graph.*` capabilities (neighbors, path, link, search, subgraph)
+- REST router `/api/graph/*`
+- CLI commands `graph neighbors|path|link|search|subgraph|node`
+- 13 atomic units across schema, store, engine, bridge, caps, router, CLI, tests
+
 ### vivim-final (Current Codebase)
 
 | File | Purpose | Status |

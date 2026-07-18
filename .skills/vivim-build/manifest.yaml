@@ -1,0 +1,2 @@
+name: vivim-build
+description: Engine implementation workflow for vivim-final. Use when building new engines, porting engines from spec, or extending existing engine functionality. Follows the 13-engine architecture.

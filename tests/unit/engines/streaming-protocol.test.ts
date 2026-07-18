@@ -7,7 +7,7 @@ import {
 
 function makeParser(): ParserModule {
   return {
-    parse: (raw: string) => [{ kind: 'text', content: raw, index: 0 }],
+    parse: (raw: string) => [{ type: 'text', text: raw }],
   }
 }
 

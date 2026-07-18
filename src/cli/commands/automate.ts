@@ -28,8 +28,7 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T
 }
 
-async function main() {
-  const args = process.argv.slice(2)
+export async function runAutomate(args: string[]): Promise<void> {
   const action = args[0]
 
   try {
@@ -112,10 +111,9 @@ async function main() {
       }
 
       case 'screenshot': {
-        const result = await api<{ ok: boolean; screenshot?: string }>(
-          '/api/automate/screenshot',
-          { method: 'POST' },
-        )
+        const result = await api<{ ok: boolean; screenshot?: string }>('/api/automate/screenshot', {
+          method: 'POST',
+        })
         if (result.screenshot) {
           const path = `screenshot-${Date.now()}.png`
           const { writeFileSync } = await import('node:fs')
@@ -169,4 +167,9 @@ Examples:
   }
 }
 
-main()
+if (import.meta.main) {
+  runAutomate(process.argv.slice(2)).catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

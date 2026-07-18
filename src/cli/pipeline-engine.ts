@@ -22,9 +22,11 @@ export class PipelineEngine {
     let input: unknown = null
 
     for (const step of pipeline) {
-      const cmd = this.registry.find(step.command)
-      if (!cmd) throw new Error(`Unknown command: ${step.command}`)
-      const result = await cmd.handler({ args: step.args, input })
+      const tokens = step.command.split(/\s+/).concat(step.args)
+      const { command, consumed } = this.registry.resolve(tokens)
+      if (!command) throw new Error(`Unknown command: ${step.command}`)
+      const args = tokens.slice(consumed)
+      const result = await command.handler({ args, input })
       input = result.data
     }
 
