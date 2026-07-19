@@ -7,6 +7,11 @@
   "share": "manual",
   "autoupdate": true,
   "snapshot": false,
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
   "instructions": [
     "AGENTS.md"
   ],
@@ -89,6 +94,7 @@
       "template": "Load the devops-research skill and research the following topic: $ARGUMENTS. Steps: 1. Classify (unit/ADR/general). 2. Execute multi-source research (firecrawl + exa or web-search-prime fallback). 3. Produce full report, brief, and evidence. 4. Wire into devops (INDEX, FRESHNESS, CROSS-REF). 5. If unit-linked: update tracker. If ADR-linked: attach brief. 6. Report: paths + confidence + source count."
     }
   },
+  "plugin": ["opencode-agent-memory", "./.opencode/plugin-context-checkpoint/index.ts"],
   "mcp": {
     "playwright": {
       "type": "local",

@@ -5,6 +5,9 @@
 
 import { EngineError } from '../errors.js'
 import { ulid } from '../ids.js'
+import { getLogger } from '../lib/logger.js'
+
+const log = getLogger('capability-event-bus-v2')
 
 // ── Event Envelope ──────────────────────────────────────────────────────────
 
@@ -182,7 +185,7 @@ export class CapabilityEventBusV2 {
       Promise.resolve()
         .then(() => entry.handler(envelope))
         .catch((err) => {
-          console.error(`[bus] ${kind} handler ${entry.id} failed`, err)
+          log.error({ kind, handlerId: entry.id, err }, "[bus] handler failed")
           this.addToDLQ(envelope, err instanceof Error ? err : new EngineError(String(err)))
         })
     }

@@ -1,6 +1,9 @@
 import { EngineError } from '../../errors.js'
 import { ulid } from '../../ids.js'
 import type { KernelStore, TraceSpan } from '../../storage/contracts/kernel-store.js'
+import { getLogger } from '../../lib/logger.js'
+
+const log = getLogger('kernel:tracer')
 
 export class KernelTracer {
   private ringBuffer: TraceSpan[] = []
@@ -117,7 +120,7 @@ export class KernelTracer {
             engineId: s.engineId,
           })),
         )
-        .catch((err) => console.error('[tracer] persist batch failed', err))
+        .catch((err) => log.error({ err }, '[tracer] persist batch failed'))
     }
   }
 }

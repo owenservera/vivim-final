@@ -32,15 +32,18 @@
     "providers:smoke": "bun run scripts/provider-harness.ts",
     "taxonomy:generate": "bun run scripts/taxonomy-gen/run.ts",
     "taxonomy-gen": "bun run scripts/taxonomy-gen/run.ts",
-    "generate-skills": "bun run scripts/generate-skills.ts"
+    "generate-skills": "bun run scripts/generate-skills.ts",
+    "gen:protocol": "bun run src/engines/provider-protocol-generator.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
     "alasql": "^4.17.3",
+    "cozo-node": "^0.7.6",
     "mdast-util-from-markdown": "^2.0.3",
     "mdast-util-gfm": "^3.1.0",
     "micromark": "^4.0.2",
     "micromark-extension-gfm": "^3.0.0",
+    "pino": "^10.3.1",
     "ulid": "^2.3.0",
     "zod": "^3.24.2"
   },
@@ -48,6 +51,7 @@
     "@biomejs/biome": "^1.9.4",
     "@types/bun": "latest",
     "lefthook": "^1.11.3",
+    "pino-pretty": "^13.1.3",
     "prisma": "^6.5.0",
     "tsup": "^8.4.0",
     "typescript": "^5.6.0",

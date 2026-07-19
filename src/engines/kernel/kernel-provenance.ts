@@ -4,6 +4,9 @@
 
 import { newId } from '../../ids.js'
 import type { CausalNode, KernelStore } from '../../storage/contracts/kernel-store.js'
+import { getLogger } from '../../lib/logger.js'
+
+const log = getLogger('kernel:provenance')
 
 export interface ProvenanceChain {
   traceId: string
@@ -51,7 +54,7 @@ export class KernelProvenance {
           duration: fullNode.duration,
         })
       } catch (err) {
-        console.error('[provenance] persist failed', err)
+        log.error({ err }, '[provenance] persist failed')
       }
     }
 
