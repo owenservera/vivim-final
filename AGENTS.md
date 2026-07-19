@@ -24,6 +24,118 @@
 
 Design docs are in `docs/merged-design-v2/`. Read in order 00-08 for v1, then SOTA-00 through SOTA-09.
 
+## Provider System (KNOW THIS FIRST)
+
+### What Providers Exist
+
+The system supports **6 providers**: `chatgpt`, `claude`, `gemini`, `deepseek`, `qwen`, `grok`.
+Each is seeded from `seeds/providers/<slug>.json` (manifest with endpoints, parsers, models, capabilities).
+
+### Provider File Layout
+
+| File | Purpose |
+|------|---------|
+| `seeds/providers/<slug>.json` | Provider manifest (selectors, endpoints, parsers, models) |
+| `seeds/parsers/harvested/<slug>-*.ts` | Stream parser `LOGIC_CODE` (inline, DB-driven) |
+| `seeds/adapters/<slug>.ts` | Import adapter for external data portability |
+| `src/engine/provider-selectors.ts` | CDP selector fallback lists (composer, send button, URL patterns) |
+| `src/engine/conversation-manager.ts` | Provider-specific capture patterns + response parsing |
+
+### What "Testing a Provider" Means
+
+Testing a provider is an **8-phase onboarding pipeline** (`devops/onboard-controller.ts`):
+
+```
+discover → infer → test-selectors → test-parse → test-cap → test-frontend → verify → converge
+```
+
+| Phase | Command | What It Does | Pass Gate |
+|-------|---------|-------------|-----------|
+| discover | `bun run devops discover-protocol <url> --hint=<name>` | CDP protocol discovery: composer selectors, send method, capture patterns, response DOM | Returns manifest with detected selectors + format |
+| infer | `bun run devops runtime-test onboard infer --provider=<slug>` | Infer parser from real streaming data | Confidence >= 0.7 |
+| test-selectors | `bun run devops runtime-test onboard test-selectors --provider=<slug>` | Validate all CDP selectors against live DOM | All selectors match |
+| test-parse | `bun run devops runtime-test onboard test-parse --provider=<slug>` | Real wire-format parsing against fixtures | All known formats parse |
+| test-cap | `bun run devops runtime-test onboard test-cap --provider=<slug>` | Capability registration + execution via `/api/interpret` | Capability resolves |
+| test-frontend | `bun run devops runtime-test onboard test-frontend --provider=<slug>` | E2E frontend: canvas mount + capability invoke + DOM assert | UI renders capability |
+| verify | `bun run devops runtime-test onboard verify --provider=<slug>` | Final cross-surface verification | CLI + API + MCP + UI all resolve |
+| converge | `bun run devops runtime-test onboard converge --provider=<slug>` | Convergence analysis: spec + code + arch alignment | No drift from spec |
+
+### Existing Provider Test Status (Capability Matrix)
+
+Parsers live **only** in the DB (inline `logic_code`, `logic_type=inline`). The
+`provider-protocol.ts` static file is generated from the DB. Capabilities are
+**provider-bound** (e.g. `send_message`, `select_model`), NOT per-provider UnifiedCapability
+slugs like `gemini_send`. Verify a capability via the interpreter, not `--slug=gemini_send`:
+
+| Provider | Status | Parsers (DB) | Capabilities | Gaps |
+|----------|--------|--------------|--------------|------|
+| claude | `seeded + registered` | `claude/001_streaming_sse` (inline) | `send_message`, `select_model` | none |
+| gemini | `seeded + registered` | `gemini/001_batchexecute`, `gemini/002_ai_studio` + generic fallback | `send_message`, `select_model` | no stream_config row (custom batchexecute RPC) |
+| chatgpt | `seeded + partial` | `chatgpt/001_openai_sse` (inline) + generic fallback | `send_message` | parser uses API format; wire uses chat UI format — needs real-world validation |
+| deepseek | `seeded` | none configured | `send_message` | no parser row yet |
+| qwen | `seeded` | none configured | `send_message` | no parser row yet |
+| grok | `seeded` | none configured | `send_message` | no parser row yet |
+
+> The 13-provider protocol also includes `generic`, `facebook`, `x`, `mistral`, `cohere`,
+> `anthropic` (framework aliases). See `src/__generated__/provider-protocol.ts` for the full list.
+
+### How to Check Provider Status
+
+```bash
+# Full preflight (all providers)
+bun run devops runtime-test preflight
+
+# Single provider deep-dive
+bun run devops runtime-test status --provider=gemini
+
+# Check individual dimensions:
+bun run devops runtime-test health                     # DB + server
+bun run devops runtime-test setup --provider=gemini --account=gemini_owservera@gmail.com   # Restore profile → launch
+bun run devops runtime-test onboard --provider=gemini  # 8-phase onboarding pipeline
+bun run devops discover-protocol https://gemini.google.com/app --hint=gemini
+bun run devops runtime-test test --nl="send message to gemini"
+# Capabilities are provider-bound (e.g. send_message), exposed via the interpreter:
+bun run devops runtime-test test --nl="send message to gemini"
+```
+
+> **Provider Protocol Data Layer (`src/__generated__/provider-protocol.ts`):**
+> The DB is the single source of truth; `bun run gen:protocol` compiles it to a static file
+> (plus an editable dev clone `provider-protocol.dev.ts`). During testing/devops you can flip the
+> system to read the dev clone and promote fixes back:
+> ```bash
+> bun run devops protocol dev            # how to set PROVIDER_PROTOCOL_SOURCE=dev
+> bun run devops protocol diff           # show dev vs prod provider deltas
+> bun run devops protocol promote --provider=gemini   # push dev overrides → DB → regenerate prod
+> bun run devops protocol prod           # flip back to prod (default)
+> # regen prod, preserving the dev clone (default); --reset-dev resyncs dev from prod
+> bun run gen:protocol
+> bun run gen:protocol --reset-dev
+> ```
+
+### Chrome Profile Layout (CANONICAL — do not deviate)
+
+Chrome slaves (logged-in browser profiles) live **only** under `chrome-profiles/<providerSlug>/<accountId>`:
+
+```
+chrome-profiles/
+  gemini/owservera/      # one authenticated profile per provider
+  chatgpt/owservera/
+  claude/owservera/
+  discovery/protocol-probe/
+```
+
+- This is the resolved `profileBaseDir` (`ProfileAllocator` → `chrome-profiles/`; overridable via `dataDir`/config, see `src/config.ts` + `src/executor/profile-allocator.ts`).
+- **Never** create top-level `gemini/`, `chatgpt/`, `claude/` directories at the repo root — those are stray duplicates and get deleted.
+- **One account per provider** is the intended steady state (`owservera` for all three). When adopting/cleaning up, keep a single `owservera` profile and delete the rest.
+- Each profile dir holds a `.profile-meta.json` (`providerSlug`, `accountId`, `allocatedAt`, `lastUsed`).
+- The profile dir is the source of truth for "is this provider authenticated" (`ProfileAllocator.isAuthenticated` checks `Cookies`/`Network/Cookies`), not the `Account` DB row.
+
+### CDP Connection Gotchas (Provider-Specific)
+
+- **Gemini** uses Quill-based `div.ql-editor[contenteditable="true"]` composer. Send requires clicking the send button (Enter doesn't work in Quill). Streaming is custom Google RPC batchexecute format (NOT SSE).
+- **ChatGPT** uses `#prompt-textarea` / `textarea[data-testid="prompt-textarea"]`. Streaming is `data: {message: {content: {parts: [text]}}}` with `[DONE]` terminator.
+- **Claude** uses `div[contenteditable="true"]` with ProseMirror. Streaming is Anthropic SSE format (`data: {type, delta, content_block_start/stop}`).
+
 ## Code Conventions
 
 ### TypeScript
@@ -48,6 +160,11 @@ Design docs are in `docs/merged-design-v2/`. Read in order 00-08 for v1, then SO
 - Seeds in `seeds/` directory
 - Use transactions for multi-table writes
 - Never bypass Prisma for raw SQL unless performance-critical
+
+### Typecheck guardrail (CRITICAL)
+- **NEVER run `tsc` / `bunx tsc --noEmit` / `bun run typecheck` unless the human explicitly directs it.**
+- Only run a typecheck when the full task list / todos are complete AND you have asked the human first.
+- Mid-task typechecking is wasteful (the project has many pre-existing errors in `tests/` owned by other agents). Build the feature first; verify at the human's request.
 
 ### Testing
 - Unit tests: `tests/unit/` — test individual functions
@@ -97,6 +214,7 @@ Non-negotiable constraints enforced by `bun run devops invariants check`.
 2. **Store Contracts:** Engines depend on `src/storage/contracts/*.ts`, never `src/storage/impl/*.ts`.
 3. **Research-First:** No implementation without research report classification.
 4. **Phase Gates:** Phase N requires phase N-1 complete.
+5. **DB-Only Parser Logic:** `StreamParserEngine` loads parser logic **only** from DB (`parser_logic_code` with `logic_type=inline`). File-based parsers are rejected unless `allowFileLogic` is explicitly enabled. All seeded parsers live in `seeds/parsers/harvested/*.ts` as `LOGIC_CODE` strings and are upserted into DB via `seeds/parsers/harvest.seed.ts`.
 
 ### Harness Command Registry (Completed — spec 017)
 
@@ -123,6 +241,57 @@ Browser-free schema repair pipeline with declarative harness commands.
 - String schemas passthrough (never rewrite interior apostrophes)
 - Zod 3.23+ `_def.shape()` is a function — call it
 - Field-level `repairString({aliases})` for alias remapping (not top-level `registerRepair`)
+
+### Parser System (Completed — features 019 + 020)
+
+DB-only parser execution with real fallback chains. Parsers never live in engine code — they are DB rows executed via `SandboxRunner`.
+
+**Engines:**
+- `src/engines/stream-parser.ts` — `StreamParserEngine` loads inline `logic_code` from DB, resolves via `fallbackParserId` chain; `SandboxRunner` preferred (legacy `new Function` fallback only)
+- `src/engines/stream-align.ts` — `StreamAlignmentEngine` (`computeParserHash`, version resolution)
+- `src/engines/provider-registrar.ts` — 2-pass `fallbackParserId` wiring at seed time
+
+**Seed parsers (`seeds/parsers/harvested/`):**
+| Parser | Provider | Format |
+|--------|----------|--------|
+| `claude-streaming-sse` | Claude | SSE `content_block_delta` |
+| `chatgpt-openai-delta` | ChatGPT | `choices[].delta.content` + patches + parts |
+| `gemini-batchexecute` | Gemini | XSSI `decodeEnvelope` + `parseStreamChunk` |
+| `google-ai-studio` | Gemini | `candidates[].content.parts[].text` |
+| `generic-format-agnostic` | generic | SSE/JSON/array best-effort |
+| `system-raw-text` | system | Last-resort raw text (never throws) |
+
+**Fallback chain:** `provider/001` → `generic/001` → `system/001`. Wired by `seeds/parsers/harvest.seed.ts` via 2-pass upsert (`ProviderStore.upsertParser` + `setParserFallback`).
+
+**Provider manifests (`seeds/providers/*.json`):** Each provider declares `fallback` (parser name of the next tier). `ProviderRegistrar` reads this during registration and builds the `fallbackParserId` chain.
+
+**Inline `logic_code` contract:**
+```
+function(module, exports) {
+  exports.default = {
+    name, version, providerId,
+    parse(rawBody) -> ContentBlock[],
+    detectCompletion(rawBody) -> boolean,
+    getConfidence(rawBody) -> number
+  }
+}
+```
+`ContentBlock` shape: `{type:'text',text}`, `{type:'reasoning',text}`, `{type:'tool-call',...}`, `{type:'file',url,mediaType}`, `{type:'meta',key,value}`.
+
+**Boot snapshot (`CapabilitySnapshot`):** Loaded once at boot from `CapabilityBinding` rows for registered providers. `ChromeGovernor.executeSnapshotProgram` iterates `recipe.steps[]` (multi-step) via `browserHarness.runAction`.
+
+**Storage contracts:**
+- `ParserStore` — `getParserByProviderAndVersion`, `getParserById`, `getActiveParser`, `getParser`, `getGenericParser`, `getSystemFallbackParser`, `upsertParser`, `listParsers`, `getParserByFile`, `getParserByHash`
+- `ParserExecutionLogStore` — `logExecution`, `getRecentByProvider`, `getLowConfidenceEntries`, `getStatsByProvider`
+- `ContentUnitStore` — `upsertContentUnits`, `getByMessageId`, `getByType`, `getByConversationId`, `getStats`
+- `ProviderStore` — `upsertParser`, `listParsers`
+- `CapabilityStore` — `loadSnapshot` (active bindings for registered providers)
+
+**Tests:** `tests/unit/engines/harvested-parser.test.ts` (format correctness), `tests/unit/engines/stream-parser.test.ts` (fallback chain), `tests/unit/engines/capability-snapshot.test.ts` (boot snapshot).
+
+### Harness Executor (DB-Driven Protocol)
+
+The harness executor (`src/engines/harness/harness-executor-engine.ts`) uses `StreamParserEngine.parse()` — NOT `captureAndStore()` — to parse provider responses through the full parser chain with fallback support. Block metadata (`parserName`, `confidence`, `wireFormat`) is persisted as `blockMeta` JSON.
 
 ### One Entry Point (v10 Invariant)
 
@@ -227,6 +396,38 @@ Get-ChildItem -Path src/engines -Recurse -Filter *.ts
 Get-ChildItem -Path src -Recurse -Filter *.ts | Select-String -Pattern "TODO"
 ```
 
+### PowerShell Object-Pipeline Read Bug (CRITICAL — NEVER GET WRONG)
+
+**`Invoke-RestMethod | Select-Object -ExpandProperty <x> | Out-File` produces EMPTY
+files / empty output even when the API returns data.** This has silently broken
+multiple dev loops: the agent "reads" a capability list, gets nothing, and reports
+a false empty state ("no capabilities", "DB read issue"). The PowerShell object
+pipeline drops the deserialized JSON payload before it reaches `Out-File`/`Get-Content`.
+
+**✅ ALWAYS read API/JSON data through a BUN SCRIPT, never the PowerShell object pipeline:**
+```powershell
+# WRONG — silently yields empty output (DO NOT USE):
+$port = Get-Content .runtime/backend.port
+Invoke-RestMethod "http://localhost:$port/api/capabilities?surface=cli" |
+  Select-Object -ExpandProperty slug | Out-File -Encoding utf8 .runtime/caps.txt
+Get-Content .runtime/caps.txt          # -> EMPTY, even though 93 caps exist
+
+# CORRECT — write a .ts file and bun run it (reliable parse + write):
+#   .runtime/list-caps.ts:
+#     const port = (await Bun.file('.runtime/backend.port').text()).trim()
+#     const r = await fetch(`http://localhost:${port}/api/capabilities?surface=cli`)
+#     const j = await r.json()
+#     console.log('TOTAL', (j.capabilities ?? []).length)
+#     for (const c of (j.capabilities ?? [])) console.log(c.slug)
+bun run .runtime/list-caps.ts
+```
+
+Similarly, never pipe `ConvertFrom-Json | Select-Object -ExpandProperty ... | Out-File`
+for the same reason. If you must inspect JSON in PowerShell, pretty-print with
+`ConvertTo-Json -Depth 6 | Out-File` is also unreliable — prefer bun. Rule of thumb:
+**any structured data read/write goes through a bun script in `.runtime/`, not
+PowerShell's `Select-Object`/`Out-File` pipeline.**
+
 ## Testing Protocol
 
 - Run `bun test` before every commit
@@ -250,20 +451,83 @@ Get-ChildItem -Path src -Recurse -Filter *.ts | Select-String -Pattern "TODO"
 
 ---
 
-**For devops workflow, atomic task tracking, and implementation protocols:** Load the relevant skills from `.kilo/skill/`.
+**For devops workflow, atomic task tracking, and implementation protocols:** Load the relevant skills from `.opencode/skill/`.
+
+## Skill Management
+
+- **Source of truth:** `.opencode/skill/` (23 project skills)
+- **Sync to kilocode:** `pwsh scripts/sync-skills.ps1`
+- **Global skills:** `~/.agents/skills/` (171) + `~/.claude/skills/` (94)
+- **Adding new skills:** Create in `.opencode/skill/`, run sync, test
+- **Audit:** `docs/audits/SKILL-DEVOPS-AUDIT-2026-07-19.md`
+- **Architecture:** `docs/skill-architecture.md`
 
 ## Available Skills
 
-- **devops** — Autonomous implementation loop for atomic units
-- **devops-research** — Research-first intelligence layer with web search and brief generation
-- **devops-roadmap** — Research-first roadmap with truth scanning and gap discovery
-- **devops-generators** — Taxonomy generation (PlatformCatalog + ProviderCapabilityTaxonomy) with 4-round pipeline (skeleton → drill-down → UI slot mapping → cross-surface binding)
-- **source-audit** — P0-P3 source-code audit with 4 depth tiers
-- **arch-audit** — Module-level architecture audit (cycles, layering, coupling, cohesion, boundaries)
-- **prisma-workflow** — Prisma patterns and workflows for schema/migrations
+### Core DevOps
+- **devops** — Autonomous DevOps orchestrator (127 atomic units)
+- **devops-fullstack** — LLM-driven full-stack dev loop
+- **devops-db** — Database architecture & schema governance
+- **devops-generators** — Taxonomy generation pipeline (4-round)
+- **devops-research** — Research-first intelligence layer
+- **devops-roadmap** — Research-first roadmap system
+- **agentic** — Limited-context agentic dev loop
+
+#### DevOps Loop Commands (atomic unit pipeline)
+The `devops` CLI drives the atomic-unit tracker (`docs/atomic-v3-fork-canon/01-tracker.md`):
+```bash
+bun run devops select                 # next implementable unit as JSON
+bun run devops mark <id> <state>      # pending|in_progress|done|blocked
+bun run devops mark <id> done "<msg>" # SINGLE-PASS: mark done + PROGRESS.md audit line + ONE git commit
+bun run devops gate [--strict]        # quality gate, exit non-zero on fail
+bun run devops parallelize --max 4 [--dry-run] [--tracker <path>]  # fan out N units to isolated subagents
+bun run devops context                # durable task-state snapshot (resume after compaction)
+bun run devops audit <id> "<notes>"   # append PROGRESS.md line w/ resolved sha (post-commit)
+```
+**Single-pass commit rule:** always use `devops mark <id> done "<msg>"` — it transitions state,
+appends the PROGRESS.md audit line with the real resolved sha, and folds everything into ONE git
+commit (no `[PENDING-COMMIT]` placeholder, no second commit). Engines should `import { getLogger }`
+from `src/lib/logger.ts` (pino) instead of `console.*`; set `OTEL_EXPORTER_OTLP_ENDPOINT` to
+forward logs via `src/engines/otel-sink.ts`.
+
+### Implementation
 - **vivim-build** — Engine implementation workflow (13-engine architecture)
-- **vivim-testing** — Testing patterns and test infrastructure
-- **vivim-runtime** — DEPRECATED: Use `devops` skill instead
+- **vivim-runtime** — Agent-as-runtime dev loop
+- **vivi-frontend** — Hot-swappable frontend skill
+
+### Quality
+- **vivim-testing** — Testing patterns & workflows
+- **source-audit** — P0-P3 source-code audit (4 depth tiers)
+- **arch-audit** — Architecture audit (cycles, layering, coupling)
+- **provider-testing** — 8-phase provider onboarding
+- **db-agent** — Oracle-vision database agent
+- **prisma-workflow** — Prisma ORM patterns
+
+### Debugging
+- **diagnose** — Structured diagnosis loop (reproduce → fix)
+- **systematic-debugging** — Bug/test failure debugging workflow
+
+### Development Workflow
+- **tdd** — Test-driven development (red-green-refactor)
+- **review** — Two-axis code review (standards + spec)
+- **verification-before-completion** — Pre-ship verification gate
+- **handoff** — Session handoff for continuity
+- **visual-explainer** — HTML diagram generation
+
+## Memory Plugin (Compaction Survival)
+
+Plugin `opencode-agent-memory` gives you 3 tools that survive all compactions:
+- `memory_list` — list available memory blocks
+- `memory_set` — store/update a memory block (full overwrite)
+- `memory_replace` — update a substring within a block
+
+**Project block** at `.opencode/memory/project.md` is injected into system prompt on every request. Use `memory_set` to store files you've read and key intel — it persists across compaction. Blocks default to 5000 char limit.
+
+Regenerate `.opencode/memory/project.md` from real project data at any time:
+```bash
+bun run devops seed-memory
+```
+This reads package.json, Prisma schema, provider manifests, and test counts to produce an accurate snapshot. Run early in a session to maximize context survival after compaction.
 
 ## vivim-runtime — Agentic Dev Loop
 

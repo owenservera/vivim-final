@@ -2,6 +2,9 @@
 // Unit 7.7 — Configurable retry policy engine.
 
 import { EngineError } from '../errors.js'
+import { getLogger } from '../lib/logger.js'
+
+const log = getLogger('retry-engine')
 
 export interface RetryPolicy {
   maxAttempts: number
@@ -72,8 +75,9 @@ export class RetryEngine {
         if (attempt < policy.maxAttempts) {
           const delay = this.computeDelay(attempt, policy)
           if (policy.onRetry === 'log') {
-            console.log(
-              `[retry] ${operationKey} attempt ${attempt} failed: ${errorMsg}, retrying in ${delay}ms`,
+            log.info(
+              { operationKey, attempt, errorMsg, delayMs: delay },
+              "[retry] attempt failed, retrying",
             )
           }
           await new Promise((r) => setTimeout(r, delay))

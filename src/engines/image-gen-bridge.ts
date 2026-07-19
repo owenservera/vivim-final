@@ -4,6 +4,9 @@
 // Tries local model first (offline), falls back to provider LLM.
 
 import { EngineError } from '../errors.js'
+import { getLogger } from '../lib/logger.js'
+
+const log = getLogger('image-gen-bridge')
 
 export interface LocalModelAdapter {
   generateImage?: (prompt: string) => Promise<Uint8Array>
@@ -33,7 +36,7 @@ export async function generateImage(
       }
     } catch (err) {
       // Fall through to provider
-      console.warn('[image-gen] local model failed, trying provider:', err)
+      log.warn({ err }, "[image-gen] local model failed, trying provider")
     }
   }
 
@@ -46,7 +49,7 @@ export async function generateImage(
         return { dataUrl, source: 'provider' }
       }
     } catch (err) {
-      console.warn('[image-gen] provider fallback failed:', err)
+      log.warn({ err }, "[image-gen] provider fallback failed")
     }
   }
 

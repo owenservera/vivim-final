@@ -2,16 +2,17 @@
 // KernelContext — unified context object passed to every engine constructor.
 // Provides access to kernel subsystems through a single object.
 
-import type { KernelRegistry } from './kernel-registry.js'
-import type { KernelTracer } from './kernel-tracer.js'
-import type { KernelProvenance } from './kernel-provenance.js'
+import type { KernelStore } from '../../storage/contracts/kernel-store.js'
 import type { CapabilityEventBus } from '../capability-event-bus.js'
 import type { ConfigManager } from '../config-manager.js'
-import type { KernelStore } from '../../storage/contracts/kernel-store.js'
-import type { OracleQueryEngine } from './oracle-query.js'
-import type { OracleDiagnosticEngine } from './oracle-diagnostic.js'
+import { getLogger } from '../../lib/logger.js'
+import type { KernelProvenance } from './kernel-provenance.js'
+import type { KernelRegistry } from './kernel-registry.js'
+import type { KernelTracer } from './kernel-tracer.js'
 import type { OracleActuator } from './oracle-actuator.js'
+import type { OracleDiagnosticEngine } from './oracle-diagnostic.js'
 import type { OracleEventStream } from './oracle-event-stream.js'
+import type { OracleQueryEngine } from './oracle-query.js'
 
 export interface KernelLogger {
   info(msg: string, data?: Record<string, unknown>): void
@@ -25,27 +26,29 @@ export interface KernelLogger {
 export class ConsoleKernelLogger implements KernelLogger {
   private prefix: string
   private fields: Record<string, unknown>
+  private log: ReturnType<typeof getLogger>
 
   constructor(prefix = 'kernel', fields: Record<string, unknown> = {}) {
     this.prefix = prefix
     this.fields = fields
+    this.log = getLogger(`kernel:${prefix}`)
   }
 
   info(msg: string, data?: Record<string, unknown>): void {
-    console.log(`[${this.prefix}] ${msg}`, { ...this.fields, ...data })
+    this.log.info({ ...this.fields, ...data }, msg)
   }
 
   warn(msg: string, data?: Record<string, unknown>): void {
-    console.warn(`[${this.prefix}] ${msg}`, { ...this.fields, ...data })
+    this.log.warn({ ...this.fields, ...data }, msg)
   }
 
   error(msg: string, data?: Record<string, unknown>): void {
-    console.error(`[${this.prefix}] ${msg}`, { ...this.fields, ...data })
+    this.log.error({ ...this.fields, ...data }, msg)
   }
 
   debug(msg: string, data?: Record<string, unknown>): void {
     if (process.env.DEBUG) {
-      console.debug(`[${this.prefix}] ${msg}`, { ...this.fields, ...data })
+      this.log.debug({ ...this.fields, ...data }, msg)
     }
   }
 
