@@ -276,6 +276,27 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     console.warn('[boot] automation seed skipped:', err)
   }
 
+  // Seed capability taxonomy into DB (idempotent: only when table is empty, so
+  // a fresh clone or post-migration boot self-heals without `bun run seed`).
+  try {
+    const { ensureTaxonomySeeded } = await import('../../seeds/taxonomy/taxonomy-seed.js')
+    const tax = await ensureTaxonomySeeded(db.prisma)
+    if (tax.upserted > 0) {
+      console.log(`[boot] Seeded ${tax.upserted} capability-taxonomy rows`)
+    }
+  } catch (err) {
+    console.warn('[boot] taxonomy seed skipped:', err)
+  }
+
+  // Seed harness command registry (idempotent upsert; mirrors providers/parsers).
+  try {
+    const { seedHarnessCommands } = await import('../../seeds/harness/commands.seed.js')
+    const harnessCount = await seedHarnessCommands(db)
+    console.log(`[boot] Seeded ${harnessCount} harness commands`)
+  } catch (err) {
+    console.warn('[boot] harness command seed skipped:', err)
+  }
+
   // Store instances
   const convStore = new ConversationStoreImpl(db)
   const govStore = new GovernorStoreImpl(db)

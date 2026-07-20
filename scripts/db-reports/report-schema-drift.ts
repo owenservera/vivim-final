@@ -56,22 +56,37 @@ async function main() {
   try {
     const tmp = mkdtempSync(join(tmpdir(), "drift-"));
     const scratchSchema = join(tmp, "scratch.prisma");
-    const scratchDb = join(tmp, "scratch.db");
-    const tmpSchema = `
-datasource db { provider = "sqlite"; url = "file:./scratch.db" }
-generator client { provider = "prisma-client-js" }
-`;
+    // Point the scratch datasource directly at the real dev.db so `db pull`
+    // introspects its tables. (The previous `--url` flag form is unsupported
+    // by `prisma db pull` and silently pulled 0 tables.)
+    // Use forward slashes — Prisma's sqlite url parser rejects Windows backslashes.
+    const devDbPath = resolve(ROOT, "prisma/dev.db").split("\\").join("/");
+    const tmpSchema =
+      'datasource db {\n' +
+      '  provider = "sqlite"\n' +
+      '  url      = "file:' +
+      devDbPath +
+      '"\n' +
+      '}\n\n' +
+      'generator client {\n' +
+      '  provider = "prisma-client-js"\n' +
+      '}\n';
     writeFileSync(scratchSchema, tmpSchema);
-    // pull from the real dev.db into a scratch schema describing its tables
-    execSync(
-      `bunx prisma db pull --schema "${scratchSchema}" --url "file:${resolve(ROOT, "prisma/dev.db")}"`,
-      { cwd: tmp, stdio: "pipe" },
-    );
-    const pulled = readFileSync(scratchSchema, "utf-8");
+    const pulled = execSync(`bunx prisma db pull --schema "${scratchSchema}" --print`, {
+      cwd: tmp,
+      stdio: "pipe",
+    }).toString();
     liveTables = extractModels(pulled);
-    rmSync(tmp, { recursive: true, force: true });
+    try {
+      rmSync(tmp, { recursive: true, force: true });
+    } catch {
+      // WAL/lock may keep the temp dir busy; non-fatal for a read-only report.
+    }
   } catch (e) {
-    console.log("[db pull] could not introspect dev.db: " + String(e).split("\n")[0]);
+    const errOut = (e as { stdout?: Buffer; stderr?: Buffer }).stdout?.toString() ??
+      (e as { stderr?: Buffer }).stderr?.toString() ?? String(e);
+    console.log("[db pull] could not introspect dev.db:");
+    console.log(errOut.split("\n").slice(0, 12).join("\n"));
     console.log("  (is prisma/dev.db present and DATABASE_URL correct?)");
   }
 

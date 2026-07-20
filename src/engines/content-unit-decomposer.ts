@@ -4,19 +4,7 @@
 // Enables: per-block queries, quality scoring, content unit retrieval.
 
 import type { ContentBlock } from '../schema/streaming.js'
-
-export interface ContentUnitRow {
-  id: string
-  messageId: string
-  conversationId: string
-  unitType: string
-  content: string
-  mimeType: string | null
-  metadataJson: string
-  sequenceIndex: number
-  qualityScore: number | null
-  createdAt: number
-}
+import type { ContentUnitRow } from '../storage/contracts/content-unit-store.js'
 
 /** Map ContentPart.type → ContentUnit.unitType + mimeType. */
 function blockToUnit(

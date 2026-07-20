@@ -6,7 +6,11 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient()
+// Reuse the live PrismaClient when called from server boot (`ensureTaxonomySeeded`
+// receives `db.prisma`). Fall back to a fresh client only for the standalone CLI.
+function getPrismaForSeed(external?: PrismaClient): PrismaClient {
+  return external ?? new PrismaClient()
+}
 
 interface TaxonomyNode {
   id: string
@@ -76,28 +80,51 @@ function loadJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf-8')) as T
 }
 
-async function seedCapabilityTaxonomy(hierarchy: CapabilityHierarchy[]) {
-  console.log(`\n[seed] Loading ${hierarchy.length} capability taxonomy entries...`)
+/**
+ * Idempotent taxonomy seed used at server boot.
+ *
+ * Writes the capability hierarchy into `capabilityTaxonomy`. Sticky by design:
+ * if the table already has rows it does nothing (unless `force` is set), so a
+ * fresh clone or post-migration boot self-heals without a manual `bun run seed`.
+ *
+ * @param prisma   Live PrismaClient (pass `db.prisma` from boot).
+ * @param force    When true, re-upsert all rows even if the table is populated.
+ * @returns number of rows upserted.
+ */
+export async function ensureTaxonomySeeded(
+  prisma: PrismaClient,
+  force = false,
+): Promise<{ upserted: number }> {
+  const existing = await prisma.capabilityTaxonomy.count()
+  if (existing > 0 && !force) {
+    return { upserted: 0 }
+  }
+
+  const rootDir = join(import.meta.dir, '..', '..')
+  const hierarchyData = loadJson<{ hierarchy: CapabilityHierarchy[] }>(
+    join(rootDir, 'scripts', 'taxonomy-gen', 'output', 'capability-hierarchy.json'),
+  )
+  const hierarchy = hierarchyData.hierarchy
+
+  console.log(
+    `[seed] ${force ? 'Force-' : ''}seeding ${hierarchy.length} capability taxonomy entries ` +
+      `(existing=${existing})...`,
+  )
 
   const now = BigInt(Date.now())
-
-  // Build slug → id mapping for parent references
   const slugToCapId = new Map<string, string>()
   for (const node of hierarchy) {
     slugToCapId.set(node.slug, node.id)
   }
-
-  // Sort by uiLayerDepth to insert parents before children (topological order)
   const sorted = hierarchy
     .filter((n) => n.id !== 'root')
     .sort((a, b) => a.uiLayerDepth - b.uiLayerDepth)
 
+  let upserted = 0
   for (const node of sorted) {
     const parentSlug = node.parentCapabilityId
-    // Root is virtual (not in DB) — treat references to it as null
     const parentCapId =
       parentSlug && parentSlug !== 'root' ? (slugToCapId.get(parentSlug) ?? null) : null
-
     try {
       await prisma.capabilityTaxonomy.upsert({
         where: { slug: node.slug },
@@ -159,34 +186,28 @@ async function seedCapabilityTaxonomy(hierarchy: CapabilityHierarchy[]) {
           updatedAt: now,
         },
       })
-      console.log(`  ✅ ${node.slug} (${node.uiComponent})`)
+      upserted++
     } catch (err) {
       console.error(`  ❌ ${node.slug}: ${err}`)
     }
   }
+  return { upserted }
 }
 
 async function main() {
+  const prisma = getPrismaForSeed()
   const rootDir = join(import.meta.dir, '..', '..')
 
-  // Load hierarchy
-  const hierarchyData = loadJson<{ hierarchy: CapabilityHierarchy[] }>(
-    join(rootDir, 'scripts', 'taxonomy-gen', 'output', 'capability-hierarchy.json'),
-  )
-  console.log(`[seed] Taxonomy version: ${hierarchyData.hierarchy.length} nodes`)
-
-  // Load pool for platform/node stats
+  // Load pool for node/edge stats
   const pool = loadJson<TaxonomyPool>(join(rootDir, 'seeds', 'taxonomy', 'pool.taxonomy.json'))
-  console.log(
-    `[seed] Pool: ${pool.platforms.length} platforms, ${pool.nodes.length} nodes, ${pool.edges.length} edges`,
-  )
+  console.log(`[seed] Pool: ${pool.nodes.length} nodes, ${pool.edges.length} edges`)
 
-  // Seed capability taxonomy
-  await seedCapabilityTaxonomy(hierarchyData.hierarchy)
+  // Seed capability taxonomy (idempotent — force to overwrite existing rows)
+  const { upserted } = await ensureTaxonomySeeded(prisma, true)
 
   // Summary
   const count = await prisma.capabilityTaxonomy.count()
-  console.log(`\n[seed] Total CapabilityTaxonomy rows: ${count}`)
+  console.log(`\n[seed] Upserted ${upserted} rows. Total CapabilityTaxonomy rows: ${count}`)
 
   await prisma.$disconnect()
   console.log('[seed] Done.')
