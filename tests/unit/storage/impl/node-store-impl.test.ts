@@ -34,7 +34,16 @@ function mkNode(over: Partial<NodeBase> & Pick<NodeBase, 'id' | 'type'>): NodeBa
   }
 }
 
-const FIXTURE = join(import.meta.dir, '..', '..', '..', '..', 'tests', 'fixtures', 'node-store-test.db')
+const FIXTURE = join(
+  import.meta.dir,
+  '..',
+  '..',
+  '..',
+  '..',
+  'tests',
+  'fixtures',
+  'node-store-test.db',
+)
 
 beforeAll(async () => {
   dir = mkdtempSync(join(tmpdir(), 'node-store-test-'))

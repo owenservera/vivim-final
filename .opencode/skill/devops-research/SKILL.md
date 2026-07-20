@@ -1,6 +1,10 @@
 ---
 name: devops-research
 description: >
+  Research-first intelligence layer with web search synthesis and code convergence.
+  Bridges deep-research with devops (tracker + gate + ADRs + goals). Use before
+  implementing CREATE units, when creating ADRs, or when freshness check flags
+  stale research.
 ---
 # devops-research
 

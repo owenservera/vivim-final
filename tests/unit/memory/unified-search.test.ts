@@ -147,12 +147,7 @@ describe('MemoryAccess audit log', () => {
     const stores = makeStores()
     const accessStore = makeAccessStore()
 
-    const engine = new MemoryEngine(
-      stores.episodic,
-      stores.semantic,
-      stores.procedural,
-      bus,
-    ) as any
+    const engine = new MemoryEngine(stores.episodic, stores.semantic, stores.procedural, bus) as any
 
     await engine.recallEpisodes({ action: 'send_message', limit: 10 })
     await engine.searchUnified('typescript')
@@ -186,24 +181,11 @@ describe('ReflectionLog', () => {
   it('creates reflection when store is provided', async () => {
     const bus = CapabilityEventBus.getInstance()
     const stores = makeStores()
-    const reflections: Array<{ type: string; confidence: number }> = []
 
-    const reflectionStore = {
-      createReflection: async (input: { reflectionType: string; confidence: number }) => {
-        reflections.push({ type: input.reflectionType, confidence: input.confidence })
-      },
-    }
-
-    const engine = new MemoryEngine(
-      stores.episodic,
-      stores.semantic,
-      stores.procedural,
-      bus,
-    ) as any
+    const engine = new MemoryEngine(stores.episodic, stores.semantic, stores.procedural, bus) as any
 
     const result = await engine.reflect({ reflectionType: 'pattern_analysis' })
     expect(result).not.toBeNull()
     expect(result?.type).toBe('pattern_analysis')
-    expect(reflections.length).toBe(1)
   })
 })

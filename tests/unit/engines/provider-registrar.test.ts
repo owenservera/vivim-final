@@ -2,7 +2,6 @@
 // Unit tests for ProviderRegistrar — uses mock ProviderStore.
 
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { resolve } from 'node:path'
 import {
   ProviderRegistrar,
   type ProviderRegistrarEventBus,
@@ -150,12 +149,12 @@ describe('ProviderRegistrar', () => {
   let eventBus: ReturnType<typeof createMockEventBus>
   let registrar: ProviderRegistrar
 
-  const testSeedsDir = resolve(import.meta.dir, '../../../seeds/providers')
-
   beforeEach(() => {
     store = createMockStore()
     eventBus = createMockEventBus()
-    registrar = new ProviderRegistrar(store, undefined, eventBus, testSeedsDir)
+    // seedsDir arg is retained for API compatibility but seedAll() now reads the
+    // in-repo canonical manifests (seeds/providers/manifests.ts) — no disk access.
+    registrar = new ProviderRegistrar(store, undefined, eventBus)
   })
 
   it('register() creates a new provider with all table types', async () => {
@@ -254,12 +253,12 @@ describe('ProviderRegistrar', () => {
     expect(result.seeded.every((r) => r.status === 'updated')).toBe(true)
   })
 
-  it('seedAll() handles empty seeds directory', async () => {
-    const emptyRegistrar = new ProviderRegistrar(store, undefined, eventBus, '/tmp/nonexistent-dir')
-    const result = await emptyRegistrar.seedAll()
+  it('seedAll() reads from in-repo manifests (no disk dependency)', async () => {
+    const result = await registrar.seedAll()
 
-    expect(result.seeded.length).toBe(0)
-    expect(result.errors.length).toBeGreaterThan(0)
+    // All 13 canonical manifests are seeded regardless of any seedsDir on disk.
+    expect(result.seeded.length).toBe(13)
+    expect(result.errors.length).toBe(0)
   })
 
   // ── 1.3 taxonomy layer tests ──────────────────────────────────────────────────

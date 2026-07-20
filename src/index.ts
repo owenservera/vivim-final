@@ -26,6 +26,13 @@ export { ExecutionMemoizer } from './engines/execution-memoizer.js'
 export { HarnessRuntime } from './engines/harness-runtime.js'
 export { HarnessCheckpointEngine } from './engines/harness-checkpoint.js'
 export { CapabilityMacroEngine } from './engines/capability-macro.js'
+export { CapabilityComposer } from './engines/capability-composer.js'
+export type {
+  CompositeNode,
+  CompositeEdge,
+  CompositeCapability,
+  CompositeCapabilityStore,
+} from './engines/capability-composer.js'
 export { SessionCheckpointEngine } from './engines/session-checkpoint.js'
 export { StateTransitionEngine } from './engines/state-transition.js'
 export { MemoryEngine } from './engines/memory-engine.js'
@@ -99,6 +106,28 @@ export type {
   EpisodeRecord,
 } from './engines/agentic-loop.js'
 
+// ── Agentic Backbone (SOTA agentic system) ──
+export { GovernanceEngine } from './engines/governance-engine.js'
+export type { EndStrategy, AllocationCtx, ResolvedRole } from './engines/governance-engine.js'
+export { BudgetEngine } from './engines/budget-engine.js'
+export type { UsageLimits, RunUsage } from './engines/budget-engine.js'
+export { ObjectiveEngine } from './engines/objective-engine.js'
+export { BeliefStore } from './engines/belief-store.js'
+export { CapabilityBinder } from './engines/capability-binder.js'
+export type { BoundCapability } from './engines/capability-binder.js'
+export { AgentBuilderEngine } from './engines/agent-builder.js'
+export { EventRecordStore } from './engines/event-record-store.js'
+export type { EventRecordInput, EventRecordRow, EventSource } from './engines/event-record-store.js'
+export { AgenticStoreImpl } from './storage/impl/agentic-store-impl.js'
+export type { AgenticStoreContract } from './storage/contracts/agentic-store.js'
+export {
+  actorDid,
+  parseActorDid,
+  AGENTIC_EDGE,
+  AGENTIC_NODE_TYPES,
+} from './schema/agentic.js'
+export type { ActorRef, AgenticNodeType } from './schema/agentic.js'
+
 // Executor
 export { AsyncMutex } from './executor/async-mutex.js'
 export { CircuitBreaker } from './executor/circuit-breaker.js'
@@ -140,6 +169,16 @@ export type { SyncConfig, SyncPeer, SyncLogEntry, SyncStore, SyncResult } from '
 export { TelemetryAudit } from './engines/telemetry-audit.js'
 export type { NetworkCallRecord, AuditReport } from './engines/telemetry-audit.js'
 export { initPrismaWal } from './storage/prisma.js'
+
+// Cozo graph + vector projection layer (ADR-014)
+export {
+  CozoLayer,
+  CozoOpenError,
+  getCozo,
+  setCozo,
+  GRAPH_TREES,
+} from './storage/cozo/cozo-layer.js'
+export type { CozoLayerOpts, CozoQueryResult, CozoScriptResult } from './storage/cozo/cozo-layer.js'
 
 // Phase 21: Store Implementations
 export { WorkflowStoreImpl } from './storage/impl/workflow-store-impl.js'

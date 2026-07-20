@@ -10,9 +10,9 @@ function cosineSimilarity(a: number[], b: number[]): number {
   let magA = 0
   let magB = 0
   for (let i = 0; i < a.length; i++) {
-    dot += a[i]! * b[i]!
-    magA += a[i]! ** 2
-    magB += b[i]! ** 2
+    dot += (a[i] ?? 0) * (b[i] ?? 0)
+    magA += (a[i] ?? 0) ** 2
+    magB += (b[i] ?? 0) ** 2
   }
   return dot / (Math.sqrt(magA) * Math.sqrt(magB))
 }
@@ -21,7 +21,7 @@ function mockEmbeddingProvider(): EmbeddingProvider {
   async function embedOne(text: string): Promise<number[]> {
     const vec = new Array(8).fill(0)
     for (let i = 0; i < text.length; i++) {
-      vec[i % 8]! += text.charCodeAt(i)
+      vec[i % 8] = (vec[i % 8] ?? 0) + text.charCodeAt(i)
     }
     const mag = Math.sqrt(vec.reduce((s, v) => s + v * v, 0))
     return mag > 0 ? vec.map((v) => v / mag) : vec

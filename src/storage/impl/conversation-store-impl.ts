@@ -110,6 +110,13 @@ export class ConversationStoreImpl implements ConversationStore {
     return row ? toConversationRow(row as unknown as PrismaConversation) : null
   }
 
+  async ensureProviderSession(input: {
+    providerId: string
+    accountId?: string
+  }): Promise<{ id: string }> {
+    return this.db.ensureProviderSession(input)
+  }
+
   async createConversation(input: ConversationInput): Promise<ConversationRow> {
     const now = Date.now()
     const row = await this.db.prisma.conversation.create({

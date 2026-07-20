@@ -4,11 +4,13 @@
 
 import { EngineError } from '../errors.js'
 import type { DiscoverySessionRow, DiscoveryStore } from '../storage/contracts/discovery-store.js'
+import type { ProviderStore } from '../storage/contracts/provider-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { CapabilityShapeRegistry } from './capability-shape-registry.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { ManifestInferenceEngine } from './manifest-inference.js'
 import type { ProviderRegistrar } from './provider-registrar.js'
+import type { AlignmentReport } from './stream-align.js'
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -147,6 +149,7 @@ export class ProviderDiscoveryEngine {
     private readonly providerRegistrar: ProviderRegistrar | null,
     private readonly manifestInference: ManifestInferenceEngine | null,
     private readonly eventBus: CapabilityEventBus,
+    private readonly providerStore?: ProviderStore | null,
   ) {}
 
   // ── Session Management ────────────────────────────────────────────────
@@ -179,7 +182,8 @@ export class ProviderDiscoveryEngine {
 
   async getSession(sessionId: string): Promise<DiscoverySession | null> {
     if (this.sessions.has(sessionId)) {
-      return this.sessions.get(sessionId)!
+      const session = this.sessions.get(sessionId)
+      if (session) return session
     }
     if (this.store) {
       const row = await this.store.getSession(sessionId)
@@ -501,6 +505,43 @@ export class ProviderDiscoveryEngine {
     return 'html'
   }
 
+  /**
+   * Persist the derived streaming findings from an alignment report into
+   * `provider_stream_config`. Closes the gap where live CDP discovery produced a
+   * delta path but it was never written back to the DB (parser loop refinement).
+   * No-ops (without error) when no ProviderStore is wired or the report has no
+   * usable delta path, so callers can call unconditionally.
+   */
+  async persistParserFindings(providerId: string, report: AlignmentReport): Promise<void> {
+    if (!this.providerStore) return
+    if (!report.detectedDeltaPath || !report.ok) return
+
+    const now = Date.now()
+    const transport = report.inferredFormat
+    const id = `psc_${providerId}_${transport}_v1`
+    await this.providerStore.upsertStreamConfig({
+      id,
+      provider_id: providerId,
+      stream_transport: transport,
+      stream_terminal_json: '[]',
+      sse_format: report.parserName ?? null,
+      delta_path_json: JSON.stringify([report.detectedDeltaPath]),
+      content_type: null,
+      completion_detectors_json: JSON.stringify(report.streamFieldCandidates),
+      harness_js: null,
+      is_active: 1,
+      version: 1,
+      superseded_by: null,
+      created_at: now,
+      updated_at: now,
+    })
+
+    this.eventBus.emit({
+      type: 'discovery:streamConfigPersisted',
+      data: { providerId, transport, deltaPath: report.detectedDeltaPath },
+    })
+  }
+
   // ── Manifest ──────────────────────────────────────────────────────────
 
   async generateManifest(sessionId: string): Promise<ProviderManifestDraft> {
@@ -587,7 +628,7 @@ export class ProviderDiscoveryEngine {
 
   // ── Legacy Compatibility ──────────────────────────────────────────────
 
-  async discover(url: string, opts?: DiscoveryOptions): Promise<DiscoverySession> {
+  async discover(url: string, opts?: DiscoveryOptions): Promise<DiscoverySession | null> {
     const session = await this.createSession(url, opts)
 
     try {
@@ -631,13 +672,13 @@ export class ProviderDiscoveryEngine {
         data: { sessionId: session.id, url, shapeId, confidence },
       })
 
-      return this.sessions.get(session.id)!
+      return this.sessions.get(session.id) ?? null
     } catch (err) {
       await this.updateSession(session.id, {
         status: 'failed',
         error: err instanceof Error ? err.message : String(err),
       })
-      return this.sessions.get(session.id)!
+      return this.sessions.get(session.id) ?? null
     }
   }
 

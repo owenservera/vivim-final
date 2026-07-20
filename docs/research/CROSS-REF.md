@@ -2,7 +2,7 @@
 
 *Links between research artifacts and devops infrastructure (ADRs, units, goals).*
 
-*Last updated: 2026-07-12*
+*Last updated: 2026-07-19*
 
 ## Research → Unit Mapping
 
@@ -15,6 +15,11 @@
 | raw-cdp-patterns-brief | ChromeGovernor.CDPProxy, HarnessRuntime, anti-detection stealth | Direct implementation pattern for CDP proxy |
 | capability-ui-patterns-brief | CapabilityResolutionEngine, frontend UI | Reference for capability-driven UI contract design |
 | knowledge-graph-ulid-brief | capability_taxonomy, capability_binding, outcome tables | Knowledge graph patterns for capability modeling |
+| opencode-compaction-brief | devops-research skill, AGENTS.md survival strategy | Informs how all agents survive context compaction during long sessions |
+| non-tui-kilocode-opencode-brief | local-agent provider type, devops headless automation | Defines how to wire Kilo/OpenCode as vivim providers (Shape B) |
+| opencode-agentic-brief | local-agent caps (31), CapabilityComposer DAG, devops loop | Full capability inventory + impl manual for agentic loops & subagent orchestration |
+| openclaw-brief | CapabilityResolutionEngine, devops-generators, TelemetryAggregator, ChromeGovernor fleet | Harvest OpenClaw capability-ownership model + taxonomy.yaml corpus into vivim engines |
+| chrome-fleet-management-brief | ChromeGovernor, FleetConfig, GovernorStore.ProviderFleetConfig | SOTA fleet patterns (admission Limiter, pressure gate, retry, profile artifacts) vs. current Governor |
 
 ## Research → Goal Mapping
 
@@ -28,7 +33,8 @@
 
 | ADR | Research Brief(s) | Status |
 |-----|-------------------|--------|
-| (none yet) | — | — |
+| (proposed) ADR: Agent backends as vivim providers | non-tui-kilocode-opencode-brief, opencode-agentic-brief | 📋 Draft |
+| ADR-015: ChromeGovernor admission control & fleet limiter | chrome-fleet-management-brief, chrome-fleet-management-path, chrome-fleet-graceful-plan | 🟡 PROPOSED (docs/decisions/ADR-015.md) |
 
 ## Unit → Research Mapping
 

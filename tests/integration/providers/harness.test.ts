@@ -7,6 +7,7 @@ import type {
   ProviderEndpointRow,
   ProviderModelRow,
   ProviderParserRow,
+  ProviderStreamConfigRow,
 } from '../../../src/schema/types.js'
 import type { ProviderStore } from '../../../src/storage/contracts/provider-store.js'
 
@@ -18,6 +19,8 @@ class InMemoryProviderStore implements ProviderStore {
   }
   async upsertEndpoint(_ep: ProviderEndpointRow): Promise<void> {}
   async upsertParser(_p: ProviderParserRow): Promise<void> {}
+  async setParserFallback(_parserId: string, _fallbackParserId: string): Promise<void> {}
+  async upsertStreamConfig(_config: ProviderStreamConfigRow): Promise<void> {}
   async upsertCapability(_c: ProviderCapabilityRow): Promise<void> {}
   async upsertConfig(_c: ProviderConfigRow): Promise<void> {}
   async upsertModel(_m: ProviderModelRow): Promise<void> {}
@@ -68,10 +71,10 @@ describe('provider harness (Unit 32.1)', () => {
     const store = new InMemoryProviderStore()
     const report = await runProviderHarness({ store })
 
-    // There are 12 seed providers in seeds/providers.
-    expect(report.total).toBe(12)
+    // There are 13 canonical providers in seeds/providers/manifests.ts.
+    expect(report.total).toBe(13)
     expect(report.failed).toBe(0)
-    expect(report.passed).toBe(12)
+    expect(report.passed).toBe(13)
     for (const row of report.rows) {
       expect(row.registered).toBe(true)
       expect(row.passed).toBe(true)
@@ -82,6 +85,6 @@ describe('provider harness (Unit 32.1)', () => {
     const store = new InMemoryProviderStore()
     const report = await runProviderHarness({ store })
     const matrix = formatHarnessMatrix(report)
-    expect(matrix).toMatch(/Total 12 \| Passed 12 \| Failed 0/)
+    expect(matrix).toMatch(/Total 13 \| Passed 13 \| Failed 0/)
   })
 })

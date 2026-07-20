@@ -16,17 +16,26 @@ describe('CapabilityDiscoveryLoop', () => {
   it('discovers new capabilities on scan and emits events', async () => {
     const { emitted, bus } = makeEventBus()
     const caps = [
-      { id: 'cap:a', slug: 'a', name: 'A', description: 'd', category: 'cat', surfaces: ['cli', 'ui'] },
+      {
+        id: 'cap:a',
+        slug: 'a',
+        name: 'A',
+        description: 'd',
+        category: 'cat',
+        surfaces: ['cli', 'ui'],
+      },
     ]
     const loop = new CapabilityDiscoveryLoop(bus, makeRegistry(caps))
     const discovered = await loop.scan()
     expect(discovered.length).toBe(1)
-    expect(discovered[0]!.id).toBe('cap:a')
-    expect(emitted.some((e) => e.type === 'capability:discovered' && e.capabilityId === 'cap:a')).toBe(true)
+    expect(discovered[0]?.id).toBe('cap:a')
+    expect(
+      emitted.some((e) => e.type === 'capability:discovered' && e.capabilityId === 'cap:a'),
+    ).toBe(true)
   })
 
   it('does not re-discover already known capabilities', async () => {
-    const { emitted, bus } = makeEventBus()
+    const { bus } = makeEventBus()
     const caps = [
       { id: 'cap:a', slug: 'a', name: 'A', description: 'd', category: 'cat', surfaces: [] },
     ]
@@ -40,8 +49,22 @@ describe('CapabilityDiscoveryLoop', () => {
   it('aggregates a report by category and surface', async () => {
     const { bus } = makeEventBus()
     const caps = [
-      { id: 'cap:a', slug: 'a', name: 'A', description: 'd', category: 'comm', surfaces: ['cli', 'ui'] },
-      { id: 'cap:b', slug: 'b', name: 'B', description: 'd', category: 'comm', surfaces: ['ui', 'api'] },
+      {
+        id: 'cap:a',
+        slug: 'a',
+        name: 'A',
+        description: 'd',
+        category: 'comm',
+        surfaces: ['cli', 'ui'],
+      },
+      {
+        id: 'cap:b',
+        slug: 'b',
+        name: 'B',
+        description: 'd',
+        category: 'comm',
+        surfaces: ['ui', 'api'],
+      },
     ]
     const loop = new CapabilityDiscoveryLoop(bus, makeRegistry(caps))
     await loop.scan()

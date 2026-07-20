@@ -89,6 +89,18 @@
   - Target: 3 | Current: 3 | Progress: 100% ✓
   - Related Units: 6.1, 6.2, 6.3
 
+### Outcome Verification
+
+- **KR-OUT-001:** Zero-cloud proof passes (no non-provider egress)
+  - Metric: invariant B12a compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-002:** HITL coverage 100% of destructive actions
+  - Metric: invariant B10 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-003:** Agent-addressable UI = 100% of actions
+  - Metric: invariant B8 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+
 ---
 
 ## Goal G-002: SOTA Features
@@ -147,6 +159,18 @@
   - Target: 2 | Current: 2 | Progress: 100% ✓
   - Related Units: 10.11, 10.12
 
+### Outcome Verification
+
+- **KR-OUT-004:** Zero-cloud proof passes (no non-provider egress)
+  - Metric: invariant B12a compliance
+  - Target: 1 | Current: 1 | Progress: 100% ✓
+- **KR-OUT-005:** HITL coverage of destructive actions
+  - Metric: invariant B10 compliance
+  - Target: 1 | Current: 1 | Progress: 100% ✓
+- **KR-OUT-006:** Agent-addressable UI = 100% of actions
+  - Metric: invariant B8 compliance
+  - Target: 1 | Current: 1 | Progress: 100% ✓
+
 ---
 
 ## Goal G-003: Executor + Polish
@@ -196,6 +220,18 @@
   - Metric: units done
   - Target: 1 | Current: 0 | Progress: 0% ·
   - Related Units: 12.2
+
+### Outcome Verification
+
+- **KR-OUT-007:** Zero-cloud proof passes
+  - Metric: invariant B12a compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-008:** HITL coverage of destructive actions
+  - Metric: invariant B10 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-009:** Agent-addressable UI = 100% of actions
+  - Metric: invariant B8 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
 
 ---
 
@@ -262,6 +298,18 @@
   - Metric: units done
   - Target: 1 | Current: 1 | Progress: 100% ~
   - Related Units: 13.10
+
+### Outcome Verification
+
+- **KR-OUT-010:** Agent-addressable UI = 100% of actions
+  - Metric: invariant B8 compliance
+  - Target: 1 | Current: 1 | Progress: 100% ✓
+- **KR-OUT-011:** Zero-cloud proof passes
+  - Metric: invariant B12a compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-012:** HITL coverage of destructive actions
+  - Metric: invariant B10 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
 
 ---
 
@@ -360,6 +408,30 @@
   - Metric: units done
   - Target: 4 | Current: 0 | Progress: 0% ·
   - Related Units: 20.5, 20.6, 20.7, 20.8
+
+### Outcome Verification
+
+- **KR-OUT-013:** Zero-cloud proof passes (egress governance)
+  - Metric: invariant B12a compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-014:** Ingress capture telemetry formalized (model, tool-use, dates, doc metadata)
+  - Metric: invariant B12b compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-015:** Encryption-at-rest active (post-MVP)
+  - Metric: invariant B9 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-016:** Air-gap mode enforced (post-MVP)
+  - Metric: invariant B11 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-017:** HITL coverage 100% of destructive actions
+  - Metric: invariant B10 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-018:** Agent-addressable UI = 100% of actions
+  - Metric: invariant B8 compliance
+  - Target: 1 | Current: 0 | Progress: 0% ·
+- **KR-OUT-019:** Truth score ≥ 80%
+  - Metric: research confidence
+  - Target: 80 | Current: 58 | Progress: 72.5% ·
 
 ---
 

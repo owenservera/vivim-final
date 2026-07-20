@@ -1,8 +1,9 @@
 // src/engines/browser-automation/defs/extract.ts
 // Axis: extract — read & extraction (15 capabilities)
 
+import { z } from 'zod'
 import type { BrowserCapabilityDef } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 const sel = z.object({ selector: z.string().optional() })
 
@@ -60,7 +61,7 @@ export const extractJson: BrowserCapabilityDef = {
   handler: async (ctx) => {
     const expr = ctx.params.selector
       ? `JSON.parse(document.querySelector(${JSON.stringify(ctx.params.selector)})?.textContent||'null')`
-      : `(function(){try{return JSON.parse(document.body.innerText);}catch(e){return null;}})()`
+      : '(function(){try{return JSON.parse(document.body.innerText);}catch(e){return null;}})()'
     const out = await ctx.governor.evaluate(ctx.slaveId, expr)
     return { ok: true, output: out, detail: 'json extracted' }
   },
@@ -131,7 +132,10 @@ export const extractImages: BrowserCapabilityDef = {
   params: z.object({}),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const out = await ctx.governor.evaluate(ctx.slaveId, '[...document.images].map(function(i){return i.src})')
+    const out = await ctx.governor.evaluate(
+      ctx.slaveId,
+      '[...document.images].map(function(i){return i.src})',
+    )
     return { ok: true, output: out, detail: 'images extracted' }
   },
 }

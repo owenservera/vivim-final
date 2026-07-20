@@ -4,8 +4,6 @@
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
 
-// bun:test has no `jest` namespace — local stand-in matching jest.Mock semantics.
-// biome-ignore lint/suspicious/noExplicitAny: test mock, mirrors prior jest.Mock intent
 type MockFn = (...args: any[]) => any
 import { CanvasEngine } from '../../../src/canvas/canvas-engine.js'
 import { CanvasMirror, InMemoryCanvasMirrorStore } from '../../../src/canvas/canvas-mirror.js'

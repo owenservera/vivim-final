@@ -10,6 +10,7 @@ import type { ProgramStore } from '../../storage/contracts/program-store.js'
 import type { StreamBlockStoreContract } from '../../storage/contracts/stream-block-store.js'
 import type { CapabilityEventBus } from '../capability-event-bus.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
+import type { StreamParserEngine } from '../stream-parser.js'
 
 /** What the governor needs to find the right slave for a (provider,account). */
 export interface SlaveResolver {
@@ -42,6 +43,8 @@ export interface HarnessExecutorDeps {
   blockStore: StreamBlockStoreContract
   eventBus: CapabilityEventBus
   slaveResolver: SlaveResolver
+  /** Provider-aware stream parser for reconstructing captured bodies into ContentBlocks. */
+  parser: StreamParserEngine
   /** Default timeout for a full recipe execution, ms. */
   defaultTimeoutMs?: number
 }

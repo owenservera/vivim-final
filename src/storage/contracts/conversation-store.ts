@@ -83,6 +83,8 @@ export interface MessageAttachmentRow {
 
 export interface ConversationStore {
   getConversation(id: string): Promise<ConversationRow | null>
+  /** Idempotently ensure a valid ProviderSession exists for (providerId, accountId). Optional on the contract; provided by ConversationStoreImpl. */
+  ensureProviderSession?(input: { providerId: string; accountId?: string }): Promise<{ id: string }>
   createConversation(input: ConversationInput): Promise<ConversationRow>
   updateConversation(id: string, patch: Partial<ConversationRow>): Promise<void>
   deleteConversation(id: string): Promise<void>

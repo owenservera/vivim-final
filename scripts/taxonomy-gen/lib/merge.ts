@@ -46,6 +46,14 @@ export function collectNodes(): { nodes: TaxonomyNode[]; edges: TaxonomyEdge[] }
     }
   }
 
+  // OpenClaw harvest seed corpus (Step A of openclaw-harvest-path.md)
+  const ocPath = join(import.meta.dir, '..', '..', '..', 'seeds', 'taxonomy', 'openclaw-harvest.json')
+  if (existsSync(ocPath)) {
+    const doc = JSON.parse(readFileSync(ocPath, 'utf-8')) as { nodes?: TaxonomyNode[]; edges?: TaxonomyEdge[] }
+    nodes.push(...(doc.nodes ?? []))
+    edges.push(...(doc.edges ?? []))
+  }
+
   return { nodes, edges }
 }
 

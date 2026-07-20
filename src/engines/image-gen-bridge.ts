@@ -36,7 +36,7 @@ export async function generateImage(
       }
     } catch (err) {
       // Fall through to provider
-      log.warn({ err }, "[image-gen] local model failed, trying provider")
+      log.warn({ err }, '[image-gen] local model failed, trying provider')
     }
   }
 
@@ -49,7 +49,7 @@ export async function generateImage(
         return { dataUrl, source: 'provider' }
       }
     } catch (err) {
-      log.warn({ err }, "[image-gen] provider fallback failed")
+      log.warn({ err }, '[image-gen] provider fallback failed')
     }
   }
 

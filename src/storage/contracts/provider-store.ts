@@ -9,12 +9,15 @@ import type {
   ProviderEndpointRow,
   ProviderModelRow,
   ProviderParserRow,
+  ProviderStreamConfigRow,
 } from '../../schema/types.js'
 
 export interface ProviderStore {
   upsertDefinition(def: ProviderDefinitionRow): Promise<void>
   upsertEndpoint(endpoint: ProviderEndpointRow): Promise<void>
   upsertParser(parser: ProviderParserRow): Promise<void>
+  setParserFallback(parserId: string, fallbackParserId: string): Promise<void>
+  upsertStreamConfig(config: ProviderStreamConfigRow): Promise<void>
   upsertCapability(cap: ProviderCapabilityRow): Promise<void>
   upsertConfig(config: ProviderConfigRow): Promise<void>
   upsertModel(model: ProviderModelRow): Promise<void>

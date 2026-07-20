@@ -34,7 +34,7 @@ function parseCronField(field: string, min: number, max: number, allowNames?: bo
     let rangePart = part
     if (stepMatch) {
       step = Number.parseInt(stepMatch[4]?.slice(1) ?? '1', 10)
-      rangePart = stepMatch[1]!
+      rangePart = stepMatch[1] ?? ''
     }
 
     if (rangePart === '*') {
@@ -44,14 +44,14 @@ function parseCronField(field: string, min: number, max: number, allowNames?: bo
 
     const rangeMatch = rangePart.match(/^(\d+|([a-z]{3}))-(\d+|([a-z]{3}))$/i)
     if (rangeMatch) {
-      const startStr = rangeMatch[1]!
-      const endStr = rangeMatch[3]!
+      const startStr = rangeMatch[1] ?? ''
+      const endStr = rangeMatch[3] ?? ''
       let start: number
       let end: number
       if (allowNames && DAY_NAMES[startStr.toLowerCase()] !== undefined) {
-        start = DAY_NAMES[startStr.toLowerCase()]!
+        start = DAY_NAMES[startStr.toLowerCase()] ?? 0
         end = allowNames
-          ? (DAY_NAMES[endStr.toLowerCase()]! ?? Number.parseInt(endStr, 10))
+          ? (DAY_NAMES[endStr.toLowerCase()] ?? Number.parseInt(endStr, 10))
           : Number.parseInt(endStr, 10)
       } else {
         start = Number.parseInt(startStr, 10)
@@ -64,9 +64,9 @@ function parseCronField(field: string, min: number, max: number, allowNames?: bo
     const singleMatch = rangePart.match(/^(\d+|([a-z]{3}))$/i)
     if (singleMatch) {
       let val: number
-      const matchVal = singleMatch[1]!
+      const matchVal = singleMatch[1] ?? ''
       if (allowNames && DAY_NAMES[matchVal.toLowerCase()] !== undefined) {
-        val = DAY_NAMES[matchVal.toLowerCase()]!
+        val = DAY_NAMES[matchVal.toLowerCase()] ?? 0
       } else {
         val = Number.parseInt(matchVal, 10)
       }

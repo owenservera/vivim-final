@@ -34,7 +34,9 @@ function makeStore(): AutonomousExecutionStore {
       steps.set(id, { ...(steps.get(id) ?? {}), ...patch })
     },
     async getSteps(taskId: string) {
-      return (stepsByTask.get(taskId) ?? []).map((id) => steps.get(id)!)
+      return (stepsByTask.get(taskId) ?? [])
+        .map((id) => steps.get(id))
+        .filter((s): s is Record<string, unknown> => s != null)
     },
     async getStep(id: string) {
       return steps.get(id) ?? null

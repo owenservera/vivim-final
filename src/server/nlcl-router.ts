@@ -7,7 +7,7 @@
 
 import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
-import { json, errorResponse } from './response.js'
+import { errorResponse, json } from './response.js'
 
 export function createNLCLRouter(engine: NLCLEngine) {
   return async function nlclRouter(req: Request): Promise<Response> {
@@ -74,7 +74,7 @@ export function createNLCLRouter(engine: NLCLEngine) {
       }
 
       case 'audit': {
-        const limit = parseInt(url.searchParams.get('limit') ?? '50')
+        const limit = Number.parseInt(url.searchParams.get('limit') ?? '50')
         const log = engine.getAuditLog(limit)
         return json({ entries: log, count: log.length })
       }

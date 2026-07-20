@@ -69,13 +69,13 @@ describe('ChatGPT import adapter', () => {
 
   it('walks the mapping tree in chronological order', () => {
     const result = parseChatGPT(chatgptExport)
-    const messages = result[0]?.messages
+    const messages = result[0]?.messages ?? []
     expect(messages).toHaveLength(3)
-    expect(messages![0]?.role).toBe('user')
-    expect(messages![0]?.content).toContain('What is TypeScript?')
-    expect(messages![1]?.role).toBe('assistant')
-    expect(messages![1]?.content).toContain('typed superset')
-    expect(messages![2]?.role).toBe('user')
+    expect(messages[0]?.role).toBe('user')
+    expect(messages[0]?.content).toContain('What is TypeScript?')
+    expect(messages[1]?.role).toBe('assistant')
+    expect(messages[1]?.content).toContain('typed superset')
+    expect(messages[2]?.role).toBe('user')
   })
 
   it('extracts code parts correctly', () => {

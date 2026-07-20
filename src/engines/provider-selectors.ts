@@ -1,54 +1,67 @@
 // src/engines/provider-selectors.ts
 // Provider-specific selector fallback lists (Unit 3.2).
 // When a primary selector fails (SPA navigation, UI update), try fallback selectors.
+// ALL data is loaded from the DB via ProviderRegistry at boot.
 
-// ── Composer Selectors ────────────────────────────────────────────────────
+import { getProviderRegistry } from '../config/provider-registry.js'
 
-export const COMPOSER_SELECTORS: Record<string, string[]> = {
-  chatgpt: [
-    '#prompt-textarea',
-    'textarea[data-testid="prompt-textarea"]',
-    'textarea',
-    '[contenteditable][role="textbox"]',
-  ],
-  claude: ['div[contenteditable="true"]', '[role="textbox"]', 'fieldset textarea', 'textarea'],
-  gemini: [
-    'div.ql-editor[contenteditable="true"]',
-    '.ql-editor',
-    'rich-textarea [contenteditable]',
-    'textarea',
-  ],
+export function getComposerSelectors(providerId: string): string[] {
+  try {
+    return getProviderRegistry().getComposerSelectors(providerId)
+  } catch {
+    return ['textarea', '[contenteditable="true"]', '[role="textbox"]']
+  }
 }
 
-// ── Send Button Selectors ─────────────────────────────────────────────────
-
-export const SEND_BUTTON_SELECTORS: Record<string, string[]> = {
-  chatgpt: [
-    '[data-testid="send-button"]',
-    'button[data-testid="send-button"]',
-    'form button[type="submit"]',
-  ],
-  claude: [
-    "button[aria-label='Send Message']",
-    'button[aria-label="Send"]',
-    'button:has(svg[aria-hidden="true"])',
-  ],
-  gemini: ["button[aria-label='Send message']", 'button.send-button', 'button[aria-label="Send"]'],
+export function getSendButtonSelectors(providerId: string): string[] {
+  try {
+    return getProviderRegistry().getSendButtonSelectors(providerId)
+  } catch {
+    return ['button[type="submit"]']
+  }
 }
 
-// ── Provider URL Patterns ─────────────────────────────────────────────────
-
-export const PROVIDER_URLS: Record<string, string> = {
-  chatgpt: 'https://chatgpt.com',
-  claude: 'https://claude.ai/chat',
-  gemini: 'https://gemini.google.com/app',
+export function getProviderUrl(providerId: string): string {
+  try {
+    return getProviderRegistry().getProviderUrl(providerId)
+  } catch {
+    return `https://${providerId}.com`
+  }
 }
 
-export const PROVIDER_URL_PATTERNS: Record<string, RegExp> = {
-  chatgpt: /^https:\/\/chatgpt\.com\/(c\/.*)?$/,
-  claude: /^https:\/\/claude\.ai\/(chat(\/.*)?)?$/,
-  gemini: /^https:\/\/gemini\.google\.com\/(app(\/.*)?)?$/,
+export function getProviderUrlPattern(providerId: string): RegExp | undefined {
+  try {
+    return getProviderRegistry().getProviderUrlPattern(providerId)
+  } catch {
+    return undefined
+  }
 }
+
+// Legacy re-exports for backward compat — resolve from DB cache
+export const COMPOSER_SELECTORS: Record<string, string[]> = new Proxy(
+  {} as Record<string, string[]>,
+  {
+    get: (_, providerId: string) => getComposerSelectors(providerId),
+  },
+)
+
+export const SEND_BUTTON_SELECTORS: Record<string, string[]> = new Proxy(
+  {} as Record<string, string[]>,
+  {
+    get: (_, providerId: string) => getSendButtonSelectors(providerId),
+  },
+)
+
+export const PROVIDER_URLS: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get: (_, providerId: string) => getProviderUrl(providerId),
+})
+
+export const PROVIDER_URL_PATTERNS: Record<string, RegExp | undefined> = new Proxy(
+  {} as Record<string, RegExp | undefined>,
+  {
+    get: (_, providerId: string) => getProviderUrlPattern(providerId),
+  },
+)
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 

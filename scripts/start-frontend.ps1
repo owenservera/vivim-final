@@ -61,6 +61,14 @@ function Find-PidOnPort($port) {
     return $null
 }
 
+function Test-PortFree($port) {
+    try {
+        $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+        return ($null -eq $conns)
+    } catch {}
+    return $true
+}
+
 $bunExe = Resolve-Bun
 
 if (-not (Test-Path $frontendDir)) {
@@ -68,10 +76,26 @@ if (-not (Test-Path $frontendDir)) {
     exit 1
 }
 
-Write-Host "[frontend] Starting on :$Port" -ForegroundColor Cyan
+Write-Host "[frontend] Resolving port (start: $Port)" -ForegroundColor Cyan
 
 Stop-ByPidFile "frontend"
 Kill-Port $Port
+
+# Mirror backend: if the start port is still held by a foreign process, walk
+# UP to the first free port instead of hard-failing on --strictPort.
+$chosenPort = $Port
+if (-not (Test-PortFree $chosenPort)) {
+    LogWarn ":$Port not free (zombie or live). Scanning for free port..."
+    $candidate = $Port + 1
+    while ($candidate -lt ($Port + 50)) {
+        if (Test-PortFree $candidate) { $chosenPort = $candidate; break }
+        $candidate++
+    }
+    LogWarn "Falling back to :$chosenPort"
+}
+
+# Record the chosen port so all clients resolve it identically.
+$chosenPort | Set-Content (Join-Path $runtimeDir "frontend.port") -Force
 
 if (-not (Test-Path (Join-Path $frontendDir "node_modules"))) {
     Log "Installing deps..."
@@ -80,7 +104,7 @@ if (-not (Test-Path (Join-Path $frontendDir "node_modules"))) {
     Pop-Location
 }
 
-$proc = Start-Process -FilePath $bunExe -ArgumentList "run", "vite", "dev", "--port", $Port, "--strictPort" `
+$proc = Start-Process -FilePath $bunExe -ArgumentList "run", "vite", "dev", "--port", $chosenPort `
     -WorkingDirectory $frontendDir `
     -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
 
@@ -90,17 +114,17 @@ if ($proc) {
 
     $deadline = [DateTime]::Now.AddSeconds(25)
     while ([DateTime]::Now -lt $deadline) {
-        $portPid = Find-PidOnPort $Port
+        $portPid = Find-PidOnPort $chosenPort
         if ($portPid) {
             $portPid | Set-Content (Join-Path $runtimeDir "frontend.pid") -Force
-            LogOk "Listening on :$Port (PID $portPid)"
+            LogOk "Listening on :$chosenPort (PID $portPid)"
             exit 0
         }
         $alive = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
         if (-not $alive) { LogFail "Process died"; exit 1 }
         Start-Sleep -Milliseconds 500
     }
-    LogWarn "Started but :$Port not yet bound"
+    LogWarn "Started but :$chosenPort not yet bound"
     exit 0
 } else {
     LogFail "Failed to start"

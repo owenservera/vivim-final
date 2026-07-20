@@ -1,7 +1,7 @@
 import { EngineError } from '../../errors.js'
 import { ulid } from '../../ids.js'
-import type { KernelStore, TraceSpan } from '../../storage/contracts/kernel-store.js'
 import { getLogger } from '../../lib/logger.js'
+import type { KernelStore, TraceSpan } from '../../storage/contracts/kernel-store.js'
 
 const log = getLogger('kernel:tracer')
 

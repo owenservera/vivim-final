@@ -181,7 +181,10 @@ function makeStore(getConvUrl: (sendIdx: number) => string | null): Conversation
     getConversation: mock(async () => {
       const url = getConvUrl(sendIdx)
       sendIdx += 1
-      return { ...makeConv(), ...(url ? { providerConversationUrl: url } : {}) } as any as ConversationRow
+      return {
+        ...makeConv(),
+        ...(url ? { providerConversationUrl: url } : {}),
+      } as any as ConversationRow
     }),
     getAccount: mock(async () => makeAccount()),
     createConversation: mock(async (input) => makeConv({ id: 'conv_new', ...input })),

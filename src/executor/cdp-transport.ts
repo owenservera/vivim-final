@@ -227,7 +227,10 @@ export class CdpTransportImpl implements CDPTransport {
       const responseHandler = (params: unknown) => {
         const event = params as { response?: { url?: string } }
         if (event.response?.url && pattern.test(event.response.url)) {
-          matchingRequests.add((event as { requestId?: string }).requestId!)
+          const eventObj = event as { requestId?: string }
+          if (eventObj.requestId) {
+            matchingRequests.add(eventObj.requestId)
+          }
         }
       }
 

@@ -3,7 +3,7 @@
 // Data payload schemas for 'cap-store.message' and 'cap-store.conversation' nodes.
 
 import { z } from 'zod'
-import { ContentPartSchema, type ContentPart } from './streaming.js'
+import { type ContentPart, ContentPartSchema } from './streaming.js'
 
 // ── MessageEnvelope (data payload for cap-store.message nodes) ────────────
 // Requirements: immutable id (NodeBase.id), parentId for forking,

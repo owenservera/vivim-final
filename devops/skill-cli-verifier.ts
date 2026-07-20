@@ -10,58 +10,83 @@ interface DriftIssue {
 }
 
 /**
- * Known valid devops CLI command tree — the source of truth.
- * Synced with devops/index.ts dispatch.
+ * Parsed devops CLI command tree, derived directly from `devops/index.ts`
+ * (the single source of truth). Replaces a hand-maintained allowlist that
+ * drifted (it listed fictional commands like `speckit`, `ui-test`,
+ * `automerge`, `shell-completions`, `research` and omitted real ones like
+ * `features`, `production-build`, and the `agentic` / `runtime-test onboard`
+ * dispatchers). The verifier is now self-correcting: any command added to
+ * index.ts is automatically recognized.
+ *
+ * Structure: `Map<group, Set<subcommand>>`. A group with an empty subcommand
+ * set accepts no second token (or is a leaf command with no subcommands).
  */
-const KNOWN_COMMANDS: Record<string, string[]> = {
-  // Top-level
-  select: [],
-  mark: [],
-  gate: [],
-  fmt: [],
-  run: [],
-  audit: [],
-  gc: [],
-  report: [],
-  truth: [],
-  roadmap: [],
-  research: [],
-  invariants: [],
-  context: [],
-  'audit-arch': [],
-  'audit-code': [],
-  'verify-cross-surface': [],
-  'discover-protocol': [],
-  automerge: [],
-  'shell-completions': [],
-
-  // agentic { ... }
-  agentic: ['start', 'resume', 'done', 'status', 'probe', 'preflight', 'reset', 'adopt'],
-
-  // runtime-test { ... }
-  'runtime-test': [
-    'bootstrap', 'preflight', 'engage', 'discover-backend', 'discover-frontend',
-    'test-cap', 'discover-cdp', 'stop', 'status', 'report', 'catalog-gen',
-    'migrate', 'ensure-browser', 'watchdog', 'guard', 'discover-protocol',
-    'test', 'debug', 'build', 'loop', 'setup', 'health', 'discover',
-    'selectors', 'verify', 'verify-pipeline', 'onboard',
-  ],
-
-  // decision { ... }
-  decision: ['create', 'show', 'compare', 'list', 'review', 'prompt', 'prompt-review', 'decide', 'approve', 'reject', 'analyze'],
-
-  // goals { ... }
-  goals: ['list', 'show', 'create', 'update', 'progress', 'align', 'score', 'report', 'dashboard'],
-
-  // speckit { ... }
-  speckit: ['map-task', 'map-unit', 'sync', 'sync-feature', 'sync-unit', 'sync-all', 'validate', 'gate', 'find-brief', 'export-brief', 'import-research', 'audit', 'converge', 'help'],
-
-  // ui-test { ... }
-  'ui-test': ['list', 'status', 'record'],
-
-  // automate { ... }
-  automate: [],
+export interface CliTree {
+  groups: Map<string, Set<string>>
 }
+
+/**
+ * Brace-aware scan of `devops/index.ts`. The first `switch (...)` in the file
+ * is treated as the main dispatcher. Cases at the main-switch body depth are
+ * top-level command groups; cases nested deeper (inside a group's own
+ * `switch`) are subcommands of the most recently seen group.
+ */
+export function parseCliTree(indexTsPath?: string): CliTree {
+  const path = indexTsPath ?? join(process.cwd(), 'devops', 'index.ts')
+  const src = readFileSync(path, 'utf8')
+  const groups = new Map<string, Set<string>>()
+
+  let braceDepth = 0
+  let mainSwitchDepth = -1
+  let currentGroup: string | null = null
+
+  // Tokenize significant lexemes in file order.
+  const tokenRe =
+    /(\bswitch\s*\()|(case\s+'([^']+)':)|(case\s+"([^"]+)":)|(default\s*:)|(\{)|(\})/g
+  let m = tokenRe.exec(src)
+  while (m !== null) {
+    if (m[1] !== undefined) {
+      // `switch (`
+      if (mainSwitchDepth === -1) {
+        // First switch → main dispatcher. Its body opens at braceDepth+1.
+        mainSwitchDepth = braceDepth + 1
+      }
+    } else if (m[7] !== undefined) {
+      braceDepth++
+    } else if (m[8] !== undefined) {
+      braceDepth--
+      // Leaving a group's body → forget current group so sibling groups don't
+      // inherit each other's subcases.
+      if (braceDepth < mainSwitchDepth && currentGroup !== null) {
+        currentGroup = null
+      }
+    } else if (m[6] !== undefined) {
+      // `default:` — not a command group.
+    } else if (m[2] !== undefined || m[4] !== undefined) {
+      const name = m[3] ?? m[5]
+      if (braceDepth === mainSwitchDepth) {
+        // Top-level group.
+        if (!groups.has(name)) groups.set(name, new Set())
+        currentGroup = name
+      } else if (currentGroup !== null && braceDepth > mainSwitchDepth) {
+        // Subcommand of the current group.
+        groups.get(currentGroup)?.add(name)
+      }
+    }
+    m = tokenRe.exec(src)
+  }
+
+  return { groups }
+}
+
+// Backwards-compatible accessor used by verifySkillCliDrift.
+function getKnownCommands(): Record<string, string[]> {
+  const tree = parseCliTree()
+  const out: Record<string, string[]> = {}
+  for (const [group, subs] of tree.groups) out[group] = [...subs]
+  return out
+}
+const KNOWN_COMMANDS = getKnownCommands()
 
 /** Recursively find all SKILL.md files under .opencode/skill/ */
 function findSkillFiles(): string[] {

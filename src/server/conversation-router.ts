@@ -183,10 +183,18 @@ export function createConversationRouter(ctx: ServerContext) {
       }
 
       if (pathname === '/api/conversations' && method === 'POST') {
-        const body = (await req.json()) as { providerId: string; title?: string }
+        const body = (await req.json()) as {
+          providerId: string
+          accountId?: string
+          title?: string
+        }
+        const session = await ctx.db.ensureProviderSession({
+          providerId: body.providerId,
+          accountId: body.accountId,
+        })
         const conv = await ctx.db.createConversation({
           id: crypto.randomUUID(),
-          providerSessionId: 'default',
+          providerSessionId: session.id,
           providerId: body.providerId,
           title: body.title,
         })

@@ -48,14 +48,20 @@ describe('RequestQueue (Unit 8.3)', () => {
       order.push(0)
       return 0
     })
-    const low = q.enqueue(async () => {
-      order.push(1)
-      return 1
-    }, { priority: 1 })
-    const high = q.enqueue(async () => {
-      order.push(10)
-      return 10
-    }, { priority: 10 })
+    const low = q.enqueue(
+      async () => {
+        order.push(1)
+        return 1
+      },
+      { priority: 1 },
+    )
+    const high = q.enqueue(
+      async () => {
+        order.push(10)
+        return 10
+      },
+      { priority: 10 },
+    )
     await Promise.all([slow, low, high])
     expect(order[0]).toBe(0) // first enqueue grabs the only slot
     expect(order[1]).toBe(10) // higher priority drains first
@@ -68,10 +74,13 @@ describe('RequestQueue (Unit 8.3)', () => {
       maxQueued: 50,
       perProviderMaxConcurrent: 1,
     })
-    const first = q.enqueue(async () => {
-      await new Promise((r) => setTimeout(r, 20))
-      return 1
-    }, { providerId: 'p1' })
+    const first = q.enqueue(
+      async () => {
+        await new Promise((r) => setTimeout(r, 20))
+        return 1
+      },
+      { providerId: 'p1' },
+    )
     const second = q.enqueue(async () => 2, { providerId: 'p1' })
     await expect(second).rejects.toThrow(/at capacity/)
     await first

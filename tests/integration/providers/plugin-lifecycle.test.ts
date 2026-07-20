@@ -102,7 +102,7 @@ describe('Plugin Lifecycle Integration', () => {
     const emptyDir = join(testDir, 'empty-plugin')
     await mkdir(emptyDir, { recursive: true })
 
-    const isValid =     await (hotReload as any).verifyPluginDirectory(emptyDir)
+    const isValid = await (hotReload as any).verifyPluginDirectory(emptyDir)
     expect(isValid).toBe(false)
 
     await rm(emptyDir, { recursive: true, force: true })

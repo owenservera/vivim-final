@@ -1,0 +1,20 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capabilities for the main vivim window + backend sidecar",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "updater:default",
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/vivim-server",
+          "sidecar": true
+        }
+      ]
+    }
+  ]
+}

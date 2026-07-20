@@ -4,8 +4,8 @@
 // ChromeGovernor. The role + recipe are resolved from the intent's params.
 
 import { newId } from '../../../ids.js'
-import type { ChromeGovernor } from '../../chrome-governor.js'
 import type { AutomationOrchestrator } from '../../automation/orchestrator.js'
+import type { ChromeGovernor } from '../../chrome-governor.js'
 import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 export class GenericBrowserExecutor implements CommandExecutor {
@@ -16,7 +16,7 @@ export class GenericBrowserExecutor implements CommandExecutor {
     private orchestrator?: AutomationOrchestrator,
   ) {}
 
-  async execute(intent: ParsedIntent, ctx: NLCContext): Promise<CommandResult> {
+  async execute(intent: ParsedIntent, _ctx: NLCContext): Promise<CommandResult> {
     const start = Date.now()
     const traceId = newId()
 
@@ -56,7 +56,8 @@ export class GenericBrowserExecutor implements CommandExecutor {
   private inferRole(intent: string): string {
     if (intent.includes('research') || intent.includes('report')) return 'researcher'
     if (intent.includes('extract') || intent.includes('scrape')) return 'extractor'
-    if (intent.includes('summar') || intent.includes('rewrite') || intent.includes('translate')) return 'synthesizer'
+    if (intent.includes('summar') || intent.includes('rewrite') || intent.includes('translate'))
+      return 'synthesizer'
     if (intent.includes('monitor') || intent.includes('watch')) return 'monitor'
     if (intent.includes('test') || intent.includes('smoke')) return 'tester'
     return 'researcher'

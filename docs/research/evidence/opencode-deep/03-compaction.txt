@@ -1,0 +1,31 @@
+=== repo opencode.json compaction-related ===
+
+  "default_agent": "build",
+  "compaction": {
+    "prune": true,
+    "reserved": 10000
+    "AGENTS.md"
+  "agent": {
+    "build": {
+      "description": "Primary development agent. Full tool access for implementing features, writing code, running tests, and shipping.",
+      "description": "Planning and analysis agent. Read-only — cannot edit files or run commands. Use for architecture review, design decisions, and implementation planning.",
+      "mode": "subagent"
+      "description": "Code review agent. Analyzes code for quality, bugs, security, and performance. Read-only — reports findings without making changes.",
+      "mode": "subagent"
+      "mode": "subagent"
+      "mode": "subagent"
+      "agent": "build",
+      "agent": "build",
+      "agent": "build",
+      "agent": "test",
+      "agent": "review",
+      "agent": "build",
+      "description": "Run the agentic DevOps orchestrator loop to autonomously implement atomic units",
+      "agent": "build",
+      "template": "Load the devops skill and run the agentic DevOps orchestrator loop: read docs/atomic/01-tracker.md, then repeatedly `bun run devops select` to get the next unit, implement it per its atomic file, run `bun run devops gate`, and on pass run `bun run devops mark <id> done` + commit. Continue until all units are done or only blocked units remain. Never pause to ask."
+      "agent": "build",
+  "plugin": ["opencode-agent-memory", "./.opencode/plugin-context-checkpoint/index.ts"],
+
+EVENT_TYPES=step_finish,step_start,text
+HAS_COMPACTION_EVENT=False
+EXIT=0

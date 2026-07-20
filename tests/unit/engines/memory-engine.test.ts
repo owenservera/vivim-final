@@ -60,7 +60,7 @@ describe('MemoryEngine', () => {
     })
     expect(captured.length).toBe(1)
     expect(captured[0]?.length).toBe(26)
-    expect(ulidPattern.test(captured[0]!)).toBe(true)
+    expect(ulidPattern.test(captured[0] ?? '')).toBe(true)
   })
 
   it('recordEntity emits event', async () => {

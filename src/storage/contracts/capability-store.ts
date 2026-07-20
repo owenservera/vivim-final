@@ -76,6 +76,21 @@ export interface OutcomeInput {
   traceId: string
 }
 
+/** Bulk snapshot row for the boot loader (binding → taxonomy → best program). */
+export interface SnapshotRow {
+  globalId: string
+  slug: string
+  providerId: string
+  category: string
+  status: string
+  confidence: number
+  programId: string | null
+  configJson: string | null
+  uiComponent: string
+  uiPosition: string
+  uiInputSchema: string
+}
+
 export interface CapabilityStore {
   getCapability(id: string): Promise<CapabilityTaxonomyRow | null>
   getCapabilityBySlug(slug: string): Promise<CapabilityTaxonomyRow | null>
@@ -91,4 +106,9 @@ export interface CapabilityStore {
     capabilitySlug: string,
     providerId: string,
   ): Promise<CapabilityProgramRow | null>
+  /**
+   * Boot snapshot loader (019). One bulk query: active bindings for the given
+   * providers, joined to taxonomy + best program. No per-request DB hits.
+   */
+  loadSnapshot(providerIds: string[]): Promise<SnapshotRow[]>
 }

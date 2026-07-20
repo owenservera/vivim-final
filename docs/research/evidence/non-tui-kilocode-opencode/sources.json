@@ -1,0 +1,116 @@
+{
+  "topic": "non-tui-kilocode-opencode",
+  "collected": "2026-07-18",
+  "sources": [
+    {
+      "id": "kilo-cli-docs",
+      "title": "Run the AI Coding Agent from Your Terminal - Kilo Code CLI",
+      "url": "https://kilo.ai/docs/code-with-ai/platforms/cli",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "kilo run --auto runs non-interactive autonomous mode; kilo serve/acp for headless servers; permission config gates auto-approval",
+      "usedIn": ["report:non-tui-kilocode-opencode", "brief:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "opencode-cli-docs",
+      "title": "CLI | OpenCode",
+      "url": "https://opencode.ai/docs/cli/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "opencode run --auto non-interactive; --format json; --attach to warm serve; acp for stdin/stdout nd-JSON",
+      "usedIn": ["report:non-tui-kilocode-opencode", "brief:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "opencode-server-docs",
+      "title": "Server | OpenCode",
+      "url": "https://opencode.ai/docs/server/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "opencode serve exposes OpenAPI 3.1 at /doc; POST /session/:id/message (blocking) and /prompt_async; GET /event SSE; OPENCODE_SERVER_PASSWORD for auth",
+      "usedIn": ["report:non-tui-kilocode-opencode", "brief:non-tui-kilocode-opencode", "code-path:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "opencode-providers-docs",
+      "title": "Providers | OpenCode",
+      "url": "https://opencode.ai/docs/providers/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Providers are LLM API backends configured via provider block + models.dev; custom models via provider.<id>.models",
+      "usedIn": ["report:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "opencode-config-docs",
+      "title": "Config | OpenCode",
+      "url": "https://opencode.ai/docs/config/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "model/provider/mcp/permission/instructions schema; permission allow/ask/deny with wildcard patterns; {env:VAR} only in trusted config",
+      "usedIn": ["report:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "kilo-open-source-cli",
+      "title": "Kilo - Open Source Agentic CLI",
+      "url": "https://kilo.ai/open-source-agentic-cli",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Headless & CI-ready: run non-interactively for scheduled refactors, PR triage, gated checks with scoped permissions",
+      "usedIn": ["report:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "claude-headless-analog",
+      "title": "Claude Code in CI/CD and Headless Automation",
+      "url": "https://hidekazu-konishi.com/entry/claude_code_cicd_and_headless_automation.html",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Headless (-p/print) mode transforms CI into autonomous dev assistant; pattern transferable to Kilo/OpenCode",
+      "usedIn": ["report:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "kiro-headless-analog",
+      "title": "Run Kiro CLI programmatically: introducing headless mode",
+      "url": "https://kiro.dev/blog/introducing-headless-mode/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "--no-interactive prints response to stdout and exits; used from GitHub Actions",
+      "usedIn": ["report:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "opencode-serve-hang",
+      "title": "Agent hangs indefinitely when using opencode serve + client",
+      "url": "https://github.com/anomalyco/opencode/issues/16367",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "serve + client can enter infinite processing loop; prefer run for unattended jobs",
+      "usedIn": ["report:non-tui-kilocode-opencode", "brief:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "opencode-internals",
+      "title": "How Coding Agents Actually Work: Inside OpenCode",
+      "url": "https://cefboud.com/posts/coding-agents-internals-opencode-deepdive/",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Agentic loop: planning, tool calls, file I/O, shell exec; TUI is one client of a server",
+      "usedIn": ["report:non-tui-kilocode-opencode"]
+    },
+    {
+      "id": "vivim-provider-manifests",
+      "title": "vivim-final seeds/providers/manifests.ts",
+      "url": "file:///C:/0-BlackBoxProject-0/vivim-final/seeds/providers/manifests.ts",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "vivim providers are browser UIs: provider_type 'llm', auth_type 'browser', CDP selector endpoints, capabilities like send_message",
+      "usedIn": ["report:non-tui-kilocode-opencode", "brief:non-tui-kilocode-opencode", "code-path:non-tui-kilocode-opencode"]
+    }
+  ]
+}

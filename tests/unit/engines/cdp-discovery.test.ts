@@ -52,7 +52,10 @@ describe('cdp-discovery', () => {
   })
 
   it('dedupes by fullName', () => {
-    const dup = [...CDP_PROTOCOL_CATALOG, CDP_PROTOCOL_CATALOG[0]!]
+    const dup = [
+      ...CDP_PROTOCOL_CATALOG,
+      CDP_PROTOCOL_CATALOG[0] ?? ({} as (typeof CDP_PROTOCOL_CATALOG)[number]),
+    ]
     const out = discoverCdpMethods(dup)
     expect(out.length).toBe(CDP_PROTOCOL_CATALOG.length)
   })

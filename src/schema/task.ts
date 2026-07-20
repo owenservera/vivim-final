@@ -43,12 +43,14 @@ export const TaskDataSchema = z.object({
   dueAt: z.number().optional(),
   completedAt: z.number().optional(),
   startAt: z.number().optional(),
-  recurrence: z.object({
-    frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly', 'custom']),
-    interval: z.number().int().positive().optional(),
-    endAt: z.number().optional(),
-    daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
-  }).optional(),
+  recurrence: z
+    .object({
+      frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly', 'custom']),
+      interval: z.number().int().positive().optional(),
+      endAt: z.number().optional(),
+      daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
+    })
+    .optional(),
   assignee: z.string().optional(),
   tags: z.array(z.string()).optional(),
   parentTaskId: z.string().optional(),
@@ -118,7 +120,8 @@ export const taskNodeSchema = {
   type: 'cap-store.task' as const,
   version: 1,
   schema: TaskDataSchema,
-  indexContent: (data: TaskData) => `${data.title} ${data.description ?? ''} ${data.tags?.join(' ') ?? ''}`,
+  indexContent: (data: TaskData) =>
+    `${data.title} ${data.description ?? ''} ${data.tags?.join(' ') ?? ''}`,
   embeddingText: (data: TaskData) => data.title,
 }
 
@@ -126,6 +129,7 @@ export const projectNodeSchema = {
   type: 'cap-store.project' as const,
   version: 1,
   schema: ProjectDataSchema,
-  indexContent: (data: ProjectData) => `${data.name} ${data.description ?? ''} ${data.tags?.join(' ') ?? ''}`,
+  indexContent: (data: ProjectData) =>
+    `${data.name} ${data.description ?? ''} ${data.tags?.join(' ') ?? ''}`,
   embeddingText: (data: ProjectData) => data.name,
 }

@@ -2,9 +2,7 @@
 // StreamAlignmentEngine (Phase 23.1) — format inference, delta path, hashing.
 
 import { describe, expect, it } from 'bun:test'
-import {
-  StreamAlignmentEngine,
-} from '../../../src/engines/stream-align.js'
+import { StreamAlignmentEngine } from '../../../src/engines/stream-align.js'
 
 function mockParser() {
   return {
@@ -12,9 +10,7 @@ function mockParser() {
       parserName: 'mock',
       confidence: body.includes('content') ? 0.9 : 0.3,
       blocks:
-        body.includes('content') || body.includes('text')
-          ? [{ kind: 'text', text: 'hi' }]
-          : [],
+        body.includes('content') || body.includes('text') ? [{ kind: 'text', text: 'hi' }] : [],
     }),
   } as any
 }
@@ -42,7 +38,10 @@ describe('StreamAlignmentEngine (Phase 23.1)', () => {
 
   it('validates a configured delta path', () => {
     const eng = new StreamAlignmentEngine(mockParser())
-    const ok = eng.validateDeltaPath('choices[0].delta.content', '{"choices":[{"delta":{"content":"hi"}}]}')
+    const ok = eng.validateDeltaPath(
+      'choices[0].delta.content',
+      '{"choices":[{"delta":{"content":"hi"}}]}',
+    )
     expect(ok.valid).toBe(true)
     expect(ok.resolvedValue).toBe('hi')
     const bad = eng.validateDeltaPath('nope.path', '{"a":1}')

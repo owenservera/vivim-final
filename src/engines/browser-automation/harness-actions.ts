@@ -15,7 +15,10 @@ export class BrowserHarnessActions {
     switch (action) {
       case 'hover': {
         const s = String(params.selector ?? 'a')
-        await this.governor.evaluate(slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();e.dispatchEvent(new MouseEvent('mouseover',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2}));}})()`)
+        await this.governor.evaluate(
+          slaveId,
+          `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();e.dispatchEvent(new MouseEvent('mouseover',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2}));}})()`,
+        )
         return
       }
       case 'select': {
@@ -35,24 +38,35 @@ export class BrowserHarnessActions {
       }
       case 'upload': {
         const s = String(params.selector ?? 'input[type=file]')
-        await this.governor.evaluate(slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.setAttribute('data-vivim-files',${JSON.stringify(JSON.stringify(params.files ?? []))});e.dispatchEvent(new Event('change',{bubbles:true}));}})()`)
+        await this.governor.evaluate(
+          slaveId,
+          `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.setAttribute('data-vivim-files',${JSON.stringify(JSON.stringify(params.files ?? []))});e.dispatchEvent(new Event('change',{bubbles:true}));}})()`,
+        )
         return
       }
       case 'wait_selector': {
-        const deadline = Date.now() + (typeof params.timeoutMs === 'number' ? params.timeoutMs : 5000)
+        const deadline =
+          Date.now() + (typeof params.timeoutMs === 'number' ? params.timeoutMs : 5000)
         const s = String(params.selector ?? 'body')
         while (Date.now() < deadline) {
-          const found = (await this.governor.evaluate(slaveId, `!!document.querySelector(${JSON.stringify(s)})`)) as boolean
+          const found = (await this.governor.evaluate(
+            slaveId,
+            `!!document.querySelector(${JSON.stringify(s)})`,
+          )) as boolean
           if (found) return
           await new Promise((r) => setTimeout(r, 200))
         }
         return
       }
       case 'wait_text': {
-        const deadline = Date.now() + (typeof params.timeoutMs === 'number' ? params.timeoutMs : 5000)
+        const deadline =
+          Date.now() + (typeof params.timeoutMs === 'number' ? params.timeoutMs : 5000)
         const t = String(params.text ?? '')
         while (Date.now() < deadline) {
-          const found = (await this.governor.evaluate(slaveId, `document.body.innerText.includes(${JSON.stringify(t)})`)) as boolean
+          const found = (await this.governor.evaluate(
+            slaveId,
+            `document.body.innerText.includes(${JSON.stringify(t)})`,
+          )) as boolean
           if (found) return
           await new Promise((r) => setTimeout(r, 200))
         }
@@ -70,11 +84,17 @@ export class BrowserHarnessActions {
         return
       }
       case 'mock_request': {
-        await this.governor.evaluate(slaveId, `window.__mock=${JSON.stringify({ url: params.urlPattern, body: params.body, status: params.status ?? 200 })}`)
+        await this.governor.evaluate(
+          slaveId,
+          `window.__mock=${JSON.stringify({ url: params.urlPattern, body: params.body, status: params.status ?? 200 })}`,
+        )
         return
       }
       case 'cookie_set': {
-        await this.governor.evaluate(slaveId, `document.cookie=${JSON.stringify(`${params.name}=${params.value};path=${params.path ?? '/'}`)}`)
+        await this.governor.evaluate(
+          slaveId,
+          `document.cookie=${JSON.stringify(`${params.name}=${params.value};path=${params.path ?? '/'}`)}`,
+        )
         return
       }
       case 'observe': {

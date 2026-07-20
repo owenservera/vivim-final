@@ -38,7 +38,9 @@ function makeStore(): { store: AutonomousExecutionStore; capture: { gateId: stri
       steps.set(id, { ...(steps.get(id) ?? {}), ...patch })
     },
     async getSteps(taskId: string) {
-      return (stepsByTask.get(taskId) ?? []).map((id) => steps.get(id)!)
+      return (stepsByTask.get(taskId) ?? [])
+        .map((id) => steps.get(id))
+        .filter((s): s is Record<string, unknown> => s != null)
     },
     async getStep(id: string) {
       return steps.get(id) ?? null
@@ -136,13 +138,14 @@ describe('AutonomousExecutionEngine provider failover (Unit 34.5)', () => {
       waited += 5
     }
     expect(capture.gateId).not.toBeNull()
-    await engine.resolveGate(capture.gateId!, 'fb', 'tester')
+    await engine.resolveGate(capture.gateId ?? '', 'fb', 'tester')
     const task = await taskPromise
 
     expect(task.status).toBe('complete')
-    const step = task.steps[0]!
-    expect(step.status).toBe('complete')
-    expect(step.actionInput.provider).toBe('fb')
+    const step = task.steps[0]
+    expect(step).toBeDefined()
+    expect(step?.status).toBe('complete')
+    expect(step?.actionInput.provider).toBe('fb')
     expect(emitted.some((e) => (e as { type?: string }).type === 'agent:clarify')).toBe(true)
     expect(emitted.some((e) => (e as { type?: string }).type === 'autonomous:failover')).toBe(true)
   })
@@ -175,8 +178,9 @@ describe('AutonomousExecutionEngine provider failover (Unit 34.5)', () => {
     )
 
     const task = await engine.execute(makeGoal())
-    const step = task.steps[0]!
-    expect(step.status).toBe('failed')
-    expect(step.error).toContain('provider default crashed')
+    const step = task.steps[0]
+    expect(step).toBeDefined()
+    expect(step?.status).toBe('failed')
+    expect(step?.error).toContain('provider default crashed')
   })
 })

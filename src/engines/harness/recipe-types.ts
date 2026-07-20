@@ -4,8 +4,8 @@
 // programmatic action. It is stored as CapabilityProgramRow.configJson and
 // compiled to a ChromeGovernor HarnessDAG by recipe-compiler.ts.
 
-import type { Recipe, RecipeBranch, RecipeStep } from '../../storage/contracts/program-store.js'
 import { EngineError } from '../../errors.js'
+import type { Recipe, RecipeBranch, RecipeStep } from '../../storage/contracts/program-store.js'
 
 export type { RecipeStep, RecipeBranch, Recipe }
 

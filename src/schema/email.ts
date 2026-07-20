@@ -100,6 +100,6 @@ export const emailThreadNodeSchema = {
   type: 'cap-store.email-thread' as const,
   version: 1,
   schema: EmailThreadDataSchema,
-  indexContent: (data: EmailThreadData) => data.subject + ' ' + data.participants.join(' '),
+  indexContent: (data: EmailThreadData) => `${data.subject} ${data.participants.join(' ')}`,
   embeddingText: (data: EmailThreadData) => data.subject,
 }

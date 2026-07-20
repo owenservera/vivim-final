@@ -13,6 +13,7 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { getChangedFiles } from './changed.ts'
 import { checkInvariants } from './invariants.ts'
+import { verifySkillCliDrift } from './skill-cli-verifier.ts'
 import {
   diffBaseline,
   hasBaseline,
@@ -38,6 +39,8 @@ interface GateResult {
   integration?: { pass: boolean; skipped: boolean; tests: number; failures: number }
   audit?: { ok: boolean; vulnerabilities: number }
   coverage?: { ok: boolean; engines: number; overall: number }
+  /** Skill↔CLI drift: every `bun run devops <cmd>` in SKILL.md must exist. */
+  skillCliDrift?: { ok: boolean; issues: number }
 }
 
 function run(cmd: string, args: string[]): Promise<GateStep> {
@@ -117,7 +120,11 @@ function parseFailingTests(out: string): string[] {
 }
 
 // Run dependency audit (bun audit)
-async function runAudit(): Promise<GateResult['audit']> {
+interface AuditResult {
+  ok: boolean
+  vulnerabilities: number
+}
+async function runAudit(): Promise<AuditResult> {
   try {
     const proc = spawn('bun', ['audit'], { cwd: process.cwd() })
     let out = ''
@@ -153,7 +160,12 @@ const COVERAGE_THRESHOLD: Record<string, number> = {
 }
 
 // Run tests with coverage and check thresholds
-async function runCoverageCheck(): Promise<GateResult['coverage']> {
+interface CoverageResult {
+  ok: boolean
+  engines: number
+  overall: number
+}
+async function runCoverageCheck(): Promise<CoverageResult> {
   try {
     const proc = spawn('bun', ['test', '--test-dir=tests/unit', '--coverage'], {
       cwd: process.cwd(),
@@ -291,7 +303,14 @@ export async function runGate(
   const integrationFailed =
     integrationResult && !integrationResult.pass && !integrationResult.skipped
 
-  let ok = corePass && !strictFailed && !invariantFailed && !auditFailed && !coverageFailed && !integrationFailed
+  // Skill↔CLI drift: any `bun run devops <cmd>` referenced in a SKILL.md that
+  // does not exist in devops/index.ts is a broken command. Surfaces real drift
+  // (e.g. skills citing `speckit`, `ui-test`, top-level `discover-protocol`).
+  const driftIssues = verifySkillCliDrift()
+  const skillCliDrift = { ok: driftIssues.length === 0, issues: driftIssues.length }
+  const driftFailed = !skillCliDrift.ok
+
+  let ok = corePass && !strictFailed && !invariantFailed && !auditFailed && !coverageFailed && !integrationFailed && !driftFailed
   let baseline: BaselineDiff | undefined
   let baselineNote = ''
 
@@ -304,7 +323,7 @@ export async function runGate(
       typecheck: parseTypecheckErrors(steps[0]!.out),
       tests: parseFailingTests(steps[2]!.out),
       auditVulns: auditResult.vulnerabilities,
-      invariantViolations: invRaw.violations.map((v) => v.id ?? v.title ?? JSON.stringify(v)),
+      invariantViolations: invRaw.violations.map((v) => v.id ?? v.message ?? JSON.stringify(v)),
     }
     baseline = diffBaseline(current)
     // Without a baseline we cannot tolerate debt → behave as strict repo-wide.
@@ -337,14 +356,18 @@ export async function runGate(
         : ` | INTEGRATION FAIL (${integrationResult.failures}/${integrationResult.tests})`
     : ''
   const invSummary = ` | INVARIANTS ${invariantResult.pass ? 'PASS' : 'BLOCK'} (${invariantResult.blocks} blocks, ${invariantResult.warnings} warnings)`
+  const driftExtra = skillCliDrift.ok
+    ? ''
+    : ` | SKILL↔CLI DRIFT (${skillCliDrift.issues} broken command refs in SKILL.md)`
   return {
     pass: ok,
     steps,
-    summary: summary + strictExtra + auditExtra + coverageExtra + integExtra + invSummary + baselineNote,
+    summary: summary + strictExtra + auditExtra + coverageExtra + integExtra + invSummary + driftExtra + baselineNote,
     strict: strictResult,
     invariants: invariantResult,
     integration: integrationResult,
     audit: auditResult,
     coverage: coverageResult,
+    skillCliDrift,
   }
 }

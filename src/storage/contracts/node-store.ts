@@ -33,6 +33,13 @@ export interface NodeRow {
   validFrom: number | null
   validUntil: number | null
   parentVersion: number | null
+  // ── ACU fields (Phase 0 — doc 00 §9) ──
+  acuType: string | null
+  lineageKind: string | null
+  extractorVersion: string | null
+  parserVersion: string | null
+  valueScore: number | null
+  isHighValue: number
   createdAt: number
   updatedAt: number
 }
@@ -82,7 +89,15 @@ export interface NodeStoreContract {
   // Re-parse support: fetch the rawSource of a node for remux.
   getRawSource(id: string): Promise<string | null>
   // Edge graph operations.
-  putEdge(edge: { id: string; sourceId: string; targetId: string; edgeType: string; label?: string; properties?: Record<string, unknown>; createdAt: number }): Promise<void>
+  putEdge(edge: {
+    id: string
+    sourceId: string
+    targetId: string
+    edgeType: string
+    label?: string
+    properties?: Record<string, unknown>
+    createdAt: number
+  }): Promise<void>
   getOutgoingEdges(sourceId: string): Promise<Edge[]>
   getIncomingEdges(targetId: string): Promise<Edge[]>
   // Count of all stored nodes (compliance / coverage reporting).
@@ -90,14 +105,39 @@ export interface NodeStoreContract {
 
   // ── Node-layer v2: version chain (time travel) ──
   // Update an existing node, bumping its version and writing a NodeVersion entry.
-  updateNode(id: string, patch: Partial<Pick<NodeRow, 'dataJson' | 'edgesJson' | 'metaJson' | 'searchText' | 'state' | 'contentHash' | 'aclJson' | 'qualityJson' | 'validUntil' | 'securityLevel' | 'contentType' | 'authorDid' | 'signature'>>): Promise<void>
+  updateNode(
+    id: string,
+    patch: Partial<
+      Pick<
+        NodeRow,
+        | 'dataJson'
+        | 'edgesJson'
+        | 'metaJson'
+        | 'searchText'
+        | 'state'
+        | 'contentHash'
+        | 'aclJson'
+        | 'qualityJson'
+        | 'validUntil'
+        | 'securityLevel'
+        | 'contentType'
+        | 'authorDid'
+        | 'signature'
+      >
+    >,
+  ): Promise<void>
   // Point-in-time read of a node at a specific version.
   getNodeAtVersion(nodeId: string, version: number): Promise<NodeVersionRow | null>
   // Full version history of a node (oldest → newest).
   getNodeHistory(nodeId: string): Promise<NodeVersionRow[]>
 
   // ── Node-layer v2: alias → canonical resolution (entity merge) ──
-  registerAlias(aliasId: string, canonicalId: string, method: string, confidence?: number): Promise<void>
+  registerAlias(
+    aliasId: string,
+    canonicalId: string,
+    method: string,
+    confidence?: number,
+  ): Promise<void>
   resolveAlias(aliasId: string): Promise<string | null>
 
   // ── Node-layer v2: rebuildable graph (OG ADR-001) ──

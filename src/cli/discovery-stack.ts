@@ -66,6 +66,7 @@ export async function buildLocalDiscoveryStack(
     registrar,
     null,
     eventBus,
+    providerStore,
   )
 
   const parserStore = new ParserStoreImpl(db)

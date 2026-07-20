@@ -8,6 +8,7 @@ import type {
   ProviderEndpointRow,
   ProviderModelRow,
   ProviderParserRow,
+  ProviderStreamConfigRow,
 } from '../../schema/types.js'
 import type { CapStoreDb } from '../db.js'
 
@@ -20,7 +21,6 @@ export class ProviderStoreImpl {
     this.db = db as unknown as PrismaLoose
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Prisma escape hatch
   private get p(): any {
     return this.db.prisma
   }
@@ -217,8 +217,74 @@ export class ProviderStoreImpl {
     })
   }
 
+  async setParserFallback(parserId: string, fallbackParserId: string): Promise<void> {
+    await this.p.providerParser.update({
+      where: { id: parserId },
+      data: { fallbackParserId, updatedAt: Date.now() },
+    })
+  }
+
   async deleteProviderParsers(providerId: string): Promise<void> {
     await this.p.providerParser.deleteMany({ where: { providerId } })
+  }
+
+  // ── Stream Config (derived parser findings) ────────────────────────────────
+  // Persists the derived streaming parameters from a discovery/alignment report.
+  // On create, any prior active version for the same provider+transport is
+  // superseded so only one active config is live per transport.
+
+  async upsertStreamConfig(config: ProviderStreamConfigRow): Promise<void> {
+    const now = Date.now()
+    const existing = await this.p.providerStreamConfig.findUnique({ where: { id: config.id } })
+    if (existing) {
+      await this.p.providerStreamConfig.update({
+        where: { id: config.id },
+        data: {
+          streamTransport: config.stream_transport,
+          streamTerminalJson: config.stream_terminal_json ?? '[]',
+          sseFormat: config.sse_format ?? null,
+          deltaPathJson: config.delta_path_json ?? null,
+          contentType: config.content_type ?? null,
+          completionDetectorsJson: config.completion_detectors_json ?? '[]',
+          harnessJs: config.harness_js ?? null,
+          isActive: config.is_active ?? 1,
+          supersededById: config.superseded_by ?? null,
+          updatedAt: now,
+        },
+      })
+      return
+    }
+
+    // Supersede prior active version for the same provider+transport before insert.
+    if (config.version && config.version > 1) {
+      await this.p.providerStreamConfig.updateMany({
+        where: {
+          providerId: config.provider_id,
+          streamTransport: config.stream_transport,
+          isActive: 1,
+        },
+        data: { isActive: 0, supersededById: config.id, updatedAt: now },
+      })
+    }
+
+    await this.p.providerStreamConfig.create({
+      data: {
+        id: config.id,
+        providerId: config.provider_id,
+        streamTransport: config.stream_transport,
+        streamTerminalJson: config.stream_terminal_json ?? '[]',
+        sseFormat: config.sse_format ?? null,
+        deltaPathJson: config.delta_path_json ?? null,
+        contentType: config.content_type ?? null,
+        completionDetectorsJson: config.completion_detectors_json ?? '[]',
+        harnessJs: config.harness_js ?? null,
+        isActive: config.is_active ?? 1,
+        version: config.version ?? 1,
+        supersededById: config.superseded_by ?? null,
+        createdAt: config.created_at,
+        updatedAt: now,
+      },
+    })
   }
 
   // ── Capabilities ───────────────────────────────────────────────────────────

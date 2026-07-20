@@ -10,7 +10,7 @@
 // Output: TaskDAG with 5-15 tasks, each with: id, description, requiredFiles, producesFiles,
 //         dependsOn[], verification, contextBudget (token estimate)
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 export interface AgenticTask {
@@ -40,18 +40,20 @@ export interface TaskDAG {
   phases: number[][]
 }
 
-// Provider families and their known seed files — used for pattern matching
+// Provider families and their known seed files — used for pattern matching.
+// NOTE: provider manifests were consolidated into the single in-repo module
+// seeds/providers/manifests.ts (no more per-provider *.json files on disk).
 const PROVIDER_SEED_PATTERNS: Record<string, string[]> = {
-  chatgpt: ['seeds/providers/chatgpt.json'],
-  claude: ['seeds/providers/claude.json'],
-  gemini: ['seeds/providers/gemini.json'],
-  deepseek: ['seeds/providers/deepseek.json'],
-  qwen: ['seeds/providers/qwen.json'],
-  zai: ['seeds/providers/z-ai.json'],
-  slack: ['seeds/providers/slack.json'],
-  telegram: ['seeds/providers/telegram.json'],
-  whatsapp: ['seeds/providers/whatsapp.json'],
-  facebook: ['seeds/providers/facebook.json'],
+  chatgpt: ['seeds/providers/manifests.ts'],
+  claude: ['seeds/providers/manifests.ts'],
+  gemini: ['seeds/providers/manifests.ts'],
+  deepseek: ['seeds/providers/manifests.ts'],
+  qwen: ['seeds/providers/manifests.ts'],
+  zai: ['seeds/providers/manifests.ts'],
+  slack: ['seeds/providers/manifests.ts'],
+  telegram: ['seeds/providers/manifests.ts'],
+  whatsapp: ['seeds/providers/manifests.ts'],
+  facebook: ['seeds/providers/manifests.ts'],
 }
 
 // Known capability templates — maps objective keywords to task patterns
@@ -113,7 +115,7 @@ const CAPABILITY_TEMPLATES: Record<string, Partial<AgenticTask>> = {
       'src/schema/provider-manifest.ts',
       'src/engines/provider-registrar.ts',
       'src/storage/contracts/provider-store.ts',
-      'seeds/providers/',
+      'seeds/providers/manifests.ts',
     ],
     producesFiles: [],
     verification: 'bun test tests/unit/engines/provider-registrar.test.ts',
@@ -143,11 +145,7 @@ const CAPABILITY_TEMPLATES: Record<string, Partial<AgenticTask>> = {
     estimatedTokens: 18000,
   },
   test: {
-    requiredFiles: [
-      'tests/unit/engines/',
-      'tests/integration/',
-      'tests/helpers/',
-    ],
+    requiredFiles: ['tests/unit/engines/', 'tests/integration/', 'tests/helpers/'],
     producesFiles: [],
     verification: 'bun test',
     estimatedTokens: 5000,
@@ -174,11 +172,9 @@ const CAPABILITY_TEMPLATES: Record<string, Partial<AgenticTask>> = {
       'shared/conceptual-model.ts',
       'src/storage/impl/ui-component-store-impl.ts',
     ],
-    producesFiles: [
-      'seeds/conceptual-model/seed.ts',
-      'web/ui/src/ui/defaults/',
-    ],
-    verification: 'bunx tsc --noEmit 2>&1 | grep -q "conceptual-model\|ui-component" && exit 1 || exit 0',
+    producesFiles: ['seeds/conceptual-model/seed.ts', 'web/ui/src/ui/defaults/'],
+    verification:
+      'bunx tsc --noEmit 2>&1 | grep -q "conceptual-model|ui-component" && exit 1 || exit 0',
     estimatedTokens: 14000,
   },
   'slot-hotswap': {
@@ -189,23 +185,13 @@ const CAPABILITY_TEMPLATES: Record<string, Partial<AgenticTask>> = {
       'web/ui/src/ui/useSlot.ts',
       'web/ui/src/ui/defaults/index.tsx',
     ],
-    producesFiles: [
-      'web/ui/src/ui/registry.ts',
-      'web/ui/src/ui/defaults/',
-    ],
+    producesFiles: ['web/ui/src/ui/registry.ts', 'web/ui/src/ui/defaults/'],
     verification: 'cd web/ui && bun run typecheck',
     estimatedTokens: 10000,
   },
   'frontend-test': {
-    requiredFiles: [
-      'web/ui/src/features/',
-      'tests/unit/ui/',
-      'web/ui/package.json',
-    ],
-    producesFiles: [
-      'tests/unit/ui/',
-      'web/ui/src/features/',
-    ],
+    requiredFiles: ['web/ui/src/features/', 'tests/unit/ui/', 'web/ui/package.json'],
+    producesFiles: ['tests/unit/ui/', 'web/ui/src/features/'],
     verification: 'cd web/ui && bun run typecheck && bun test tests/unit/ui/',
     estimatedTokens: 12000,
   },
@@ -217,7 +203,8 @@ const CAPABILITY_TEMPLATES: Record<string, Partial<AgenticTask>> = {
       'src/schema/conceptual-model.ts',
     ],
     producesFiles: [],
-    verification: 'bun run devops agentic probe 2>/dev/null || bun test tests/unit/storage/ui-component-store-impl.test.ts',
+    verification:
+      'bun run devops agentic probe 2>/dev/null || bun test tests/unit/storage/ui-component-store-impl.test.ts',
     estimatedTokens: 8000,
   },
 }
@@ -249,9 +236,21 @@ function tokenEstimate(files: string[]): number {
 function detectProvider(objective: string): string | null {
   const lower = objective.toLowerCase()
   const known = [
-    'chatgpt', 'claude', 'gemini', 'deepseek', 'qwen', 'grok',
-    'slack', 'telegram', 'whatsapp', 'facebook', 'z-ai', 'copilot',
-    'perplexity', 'mistral', 'ollama',
+    'chatgpt',
+    'claude',
+    'gemini',
+    'deepseek',
+    'qwen',
+    'grok',
+    'slack',
+    'telegram',
+    'whatsapp',
+    'facebook',
+    'z-ai',
+    'copilot',
+    'perplexity',
+    'mistral',
+    'ollama',
   ]
   for (const p of known) {
     if (lower.includes(p)) return p
@@ -272,7 +271,16 @@ function detectKeywords(objective: string): string[] {
     frontend: ['frontend', 'ui', 'render', 'display', 'component', 'react', 'multiturn'],
     canvas: ['canvas', 'layer', 'node', 'surface', '3d'],
     test: ['test', 'verify', 'validate', 'check'],
-    'conceptual-component': ['conceptual', 'model', 'family', 'primitive', 'component', 'zod', 'schema', 'seed'],
+    'conceptual-component': [
+      'conceptual',
+      'model',
+      'family',
+      'primitive',
+      'component',
+      'zod',
+      'schema',
+      'seed',
+    ],
     'slot-hotswap': ['slot', 'hotswap', 'override', 'registry', 'bespoke'],
   }
   for (const [key, terms] of Object.entries(map)) {
@@ -293,8 +301,14 @@ export function decomposeObjective(objective: string): TaskDAG {
         {
           id: '0.discover',
           objective: `discover current state for: ${objective.slice(0, 80)}`,
-          description: 'Run discovery to understand what exists before building. Read the discover output, identify gaps, and propose concrete next steps.',
-          requiredFiles: ['src/engines/', 'src/server/', 'web/ui/src/features/', 'seeds/providers/'],
+          description:
+            'Run discovery to understand what exists before building. Read the discover output, identify gaps, and propose concrete next steps.',
+          requiredFiles: [
+            'src/engines/',
+            'src/server/',
+            'web/ui/src/features/',
+            'seeds/providers/manifests.ts',
+          ],
           producesFiles: [],
           dependsOn: [],
           verification: 'bun run devops runtime-test discover --offline',
@@ -304,7 +318,8 @@ export function decomposeObjective(objective: string): TaskDAG {
         {
           id: '0.plan',
           objective: `plan implementation for: ${objective.slice(0, 80)}`,
-          description: 'Based on the discovery output, create a concrete implementation plan. List every file to create/modify and every test to write.',
+          description:
+            'Based on the discovery output, create a concrete implementation plan. List every file to create/modify and every test to write.',
           requiredFiles: [],
           producesFiles: ['.runtime/plan.md'],
           dependsOn: ['0.discover'],
@@ -322,9 +337,7 @@ export function decomposeObjective(objective: string): TaskDAG {
   let tid = 0
 
   // Task 0: State probe — always first
-  const stateFiles = provider
-    ? (PROVIDER_SEED_PATTERNS[provider] ?? [])
-    : []
+  const stateFiles = provider ? (PROVIDER_SEED_PATTERNS[provider] ?? []) : []
   stateFiles.push(
     'src/engines/provider-selectors.ts',
     'src/engines/composer-typing.ts',
@@ -352,7 +365,7 @@ export function decomposeObjective(objective: string): TaskDAG {
     tasks.push({
       id: `${tid}.seed`,
       objective: `ensure ${provider} provider manifest is seeded`,
-      description: `Verify the ${provider} provider manifest in seeds/providers/${provider}.json has all required fields: endpoints (with correct selector JSON), parser config, stream config, models, capabilities. Update if incomplete.`,
+      description: `Verify the ${provider} provider manifest entry in seeds/providers/manifests.ts has all required fields: endpoints (with correct selector JSON), parser config, stream config, models, capabilities. Update if incomplete.`,
       requiredFiles: [
         ...(PROVIDER_SEED_PATTERNS[provider] ?? []),
         ...(tmpl.requiredFiles ?? []).filter((f) => !f.includes('*')),
@@ -385,7 +398,8 @@ export function decomposeObjective(objective: string): TaskDAG {
         'tests/unit/engines/composer-typing.test.ts',
       ],
       dependsOn: provider ? [`1.seed`] : [`0.state`],
-      verification: 'bun test tests/unit/engines/composer-typing.test.ts tests/unit/engines/provider-selectors.test.ts',
+      verification:
+        'bun test tests/unit/engines/composer-typing.test.ts tests/unit/engines/provider-selectors.test.ts',
       estimatedTokens: tmpl.estimatedTokens ?? 0,
       parallelizable: false,
     })
@@ -451,11 +465,10 @@ export function decomposeObjective(objective: string): TaskDAG {
         ? `Verify chat UI components render correctly for ${provider}. Ensure MessageBubble, Composer, and ConversationSidebar handle ${provider} provider context. Update useSlot resolution if needed.`
         : `Audit frontend provider coverage. Ensure every active provider has UI components registered.`,
       requiredFiles: tmpl.requiredFiles ?? [],
-      producesFiles: [
-        'web/ui/src/features/chat/',
-        'web/ui/src/ui/registry.ts',
+      producesFiles: ['web/ui/src/features/chat/', 'web/ui/src/ui/registry.ts'],
+      dependsOn: [
+        `${tasks.length > 0 ? tasks.length - 1 : 0}.${tasks.length > 0 ? 'state' : 'state'}`,
       ],
-      dependsOn: [`${tasks.length > 0 ? tasks.length - 1 : 0}.${tasks.length > 0 ? 'state' : 'state'}`],
       verification: 'cd web/ui && bun run typecheck',
       estimatedTokens: tmpl.estimatedTokens ?? 0,
       parallelizable: false,
@@ -475,9 +488,7 @@ export function decomposeObjective(objective: string): TaskDAG {
         'src/engines/conversation-manager.ts',
         'src/engines/chrome-governor.ts',
       ],
-      producesFiles: [
-        `tests/integration/providers/${provider}.test.ts`,
-      ],
+      producesFiles: [`tests/integration/providers/${provider}.test.ts`],
       dependsOn: tasks.map((t) => t.id),
       verification: `bun test tests/integration/providers/${provider}.test.ts`,
       estimatedTokens: 8000,
@@ -490,7 +501,8 @@ export function decomposeObjective(objective: string): TaskDAG {
   tasks.push({
     id: `${tid}.gate`,
     objective: 'run quality gate on all changes',
-    description: 'Run typecheck + lint + unit tests on all changes from this objective. Fix any failures.',
+    description:
+      'Run typecheck + lint + unit tests on all changes from this objective. Fix any failures.',
     requiredFiles: ['tests/'],
     producesFiles: [],
     dependsOn: tasks.map((t) => t.id),

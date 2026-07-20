@@ -81,9 +81,9 @@ describe('SyncEngine', () => {
     const engine = new SyncEngine(store, makeConfig(), encryption)
     const { pairingCode } = await engine.pair('device-remote', 'Laptop')
     await engine.confirmPair('device-remote', pairingCode)
-    const peer = store.peers[0]!
-    expect(peer.status).toBe('paired')
-    expect(peer.pairedAt).toBeTruthy()
+    const peer = store.peers[0]
+    expect(peer?.status).toBe('paired')
+    expect(peer?.pairedAt).toBeTruthy()
   })
 
   test('confirmPair throws on wrong code', async () => {

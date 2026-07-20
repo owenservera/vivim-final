@@ -260,7 +260,7 @@ describe('ChromeGovernor', () => {
       DEFAULT_CONFIG,
       mockBus.bus,
       mockTransport.transport,
-      mockFleetSupervisor.supervisor as import('../../../src/storage/contracts/fleet-supervisor.js').FleetSupervisor,
+      mockFleetSupervisor.supervisor as FleetSupervisor,
     )
   })
 

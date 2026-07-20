@@ -35,6 +35,7 @@ export type ExecutorId =
   | 'llm'
   | 'web'
   | 'generic-browser'
+  | 'opencode'
 
 export interface NLCContext {
   workspacePath?: string

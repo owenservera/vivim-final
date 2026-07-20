@@ -3,6 +3,61 @@
 All notable changes are documented here. This project follows the atomic-unit
 convention: work is tracked in `docs/atomic-v11/` and released in batches.
 
+## [Unreleased] — Production Build Standard
+
+### Professional Production Build Pipeline (devops subsystem)
+
+- **`bun run devops production-build`** — a gated, auditable, SpecKit-aware release
+  pipeline: `precheck → gate → cleanup → converge → build → docs → verify → report`.
+  Each phase is independently runnable; `--dry-run` previews without mutation;
+  `--out=report.json` captures the structured `BuildReport` for CI.
+- **Cleanup standard enforced:** removes stray top-level provider dirs
+  (`gemini/`,`chatgpt/`,`claude/`), temp artifacts, and caches; HARD BLOCK on secrets in
+  tracked files. (Caught and removed a real stray `gemini/` Chrome user-data dump.)
+- **SpecKit convergence:** runs `devops speckit-converge` + architectural invariant drift
+  check before build; invariant blocks fail the release.
+- **Docs reconciliation:** regenerates `docs/decisions/ADR-INDEX.md`, ensures `CHANGELOG.md`.
+- **Post-build smoke test:** `tests/e2e/tauri-sidecar.test.ts` probes `/health`,
+  `/readyz`, `/api/nlcl/help` (`--strict-verify` blocks on failure).
+- **Skill:** `.kilo/skills/production-build` (and `.opencode/skill/production-build`).
+- **Standard doc:** `docs/production-build/STANDARD.md` — the canonical professional
+  production-build standard.
+
+## [021] — 2026-07-18 (Provider Protocol Data Layer)
+
+### One DB, One Static File — Provider Protocol Data Layer (feature 021)
+
+> Spec: `specs/021-provider-protocol-data-layer/spec.md`. All 7 success criteria met.
+
+- **DB is single source of truth** for provider intel: definitions, selectors, parsers,
+  endpoints, capabilities, stream configs.
+- **`ProviderProtocolGenerator`** (`src/engines/provider-protocol-generator.ts`) reads the
+  DB (filters `protocol_status='Active'`) and renders `src/__generated__/provider-protocol.ts`
+  (prod) + `src/__generated__/provider-protocol.dev.ts` (editable dev clone, gitignored).
+  Render bug (R2.1 stray-quote import line) fixed; output compiles and lints clean.
+- **Toggleable injection** (`PROVIDER_PROTOCOL_SOURCE=generated|dev`, default `generated`) via
+  `src/engines/provider-protocol-loader.ts`; `ProviderRegistry` (`src/config/provider-registry.ts`)
+  consumes the generated protocol; `StreamParserEngine.primeFromProtocol()` primes the hot path
+  with zero DB reads.
+- **Zero boot-time filesystem reads**: `seeds/providers/manifests.ts` inlined (12 JSON manifests
+  deleted); `ProviderRegistrar.seedAll()` is DB-driven; `provider-harness.ts` reads `PROVIDER_MANIFESTS`.
+- **Legacy parser files removed**: `seeds/parsers/{chatgpt,claude,gemini,generic,system}/*.ts`
+  deleted; `seeds/parsers/harvested/*.ts` (canonical LOGIC_CODE) + `harvest.seed.ts` retained.
+- **Single consolidated Prisma migration** (`prisma/migrations/0001_init`); Node-layer tables and
+  `provider_definition.protocol_status` preserved; originals backed up under `prisma/migrations.bak/`.
+- **Verification**: `bun run gen:protocol` compiles; boot logs "primed from generated protocol";
+  `provider-harness` passes for all 6 live + 7 meta providers; `bun run lint` clean (0 errors);
+  `verify-cross-surface` 196/196 capabilities resolve.
+- **Out of scope**: automation system, harness commands, Node/NodeEdge/NodeVersion, Memory/Workflow/
+  NLCL/Stealth/Kernel telemetry, `seeds/automation/`, `seeds/harness/`.
+
+### Known follow-on (next phase, not in 021)
+
+- `src/engines/protocol-discovery.ts` carries 8 repo-wide P0 audit findings (eval-injection +
+  B1 type-import). These are pre-existing and belong to the **parser-loop refinement** phase
+  (capture→align→derive→persist→regen→prime), not 021. See the "Next Steps" section of
+  `specs/021-provider-protocol-data-layer/plan.md`.
+
 ## [v3.0.0] — 2026-07-13 (Knowledge Graph Rebuild completion layer)
 
 ### Completion Layer (units 31–37, 21 units, 100% done)

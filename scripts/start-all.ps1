@@ -209,6 +209,9 @@ if (-not $BackendOnly) {
 }
 
 # ── Summary ────────────────────────────────────────────────────────
+# Re-read the chosen port from .runtime/backend.port (the launcher may have
+# fallen back from :9420 to a free port due to a zombie socket). This ensures
+# the printed URL matches what clients actually resolve.
 $backendPort = 9420
 $portFile = Join-Path $runtimeDir "backend.port"
 if (Test-Path $portFile) { $backendPort = [int](Get-Content $portFile -ErrorAction SilentlyContinue) }

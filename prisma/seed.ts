@@ -9,8 +9,8 @@
 //
 // All upserts are idempotent — safe to run multiple times.
 
-import { getDb, type CapStoreDb } from '../src/storage/db.js'
 import { CapabilityEventBus } from '../src/engines/capability-event-bus.js'
+import { type CapStoreDb, getDb } from '../src/storage/db.js'
 
 export interface SeedResult {
   conceptual: {
@@ -54,18 +54,21 @@ export async function seedAllProviders(db?: CapStoreDb): Promise<SeedResult> {
 
   const providerStore = new ProviderStoreImpl(database)
   const providerTypeStore = new ProviderTypeStoreImpl(database)
-  const registrar = new ProviderRegistrar(
-    providerStore,
-    undefined,
-    eventBus,
-    providerTypeStore,
-  )
+  const registrar = new ProviderRegistrar(providerStore, undefined, eventBus, providerTypeStore)
 
   const seedResult = await registrar.seedAll()
+
+  // ── Phase 3: Canonical parser LOGIC_CODE (harvested/*.ts) ─────────────────
+  // The manifests' inline `parsers` are intentionally NOT used; the canonical
+  // parser source is seeds/parsers/harvested/*.ts, seeded here with the real
+  // fallback chain. This keeps parser logic DB-only (no file loading at runtime).
+  const { seedHarvestedParsers } = await import('../seeds/parsers/harvest.seed.js')
+  const parserCount = await seedHarvestedParsers(providerStore)
 
   return {
     conceptual: cmResult,
     providers: seedResult,
+    parsers: parserCount,
     durationMs: Date.now() - start,
   }
 }
@@ -84,29 +87,28 @@ export async function seedSingleProvider(
 }> {
   const eventBus = CapabilityEventBus.getInstance()
   try {
-    const { readFile } = await import('node:fs/promises')
-    const { join } = await import('node:path')
-
     const { ProviderStoreImpl } = await import('../src/storage/impl/provider-store-impl.js')
     const { ProviderRegistrar } = await import('../src/engines/provider-registrar.js')
-    const { ProviderTypeStoreImpl } = await import('../src/storage/impl/provider-type-store-impl.js')
+    const { ProviderTypeStoreImpl } = await import(
+      '../src/storage/impl/provider-type-store-impl.js'
+    )
+    const { PROVIDER_MANIFESTS } = await import('../seeds/providers/manifests.js')
     const { ProviderManifestSchema } = await import('../src/schema/provider-manifest.js')
 
     const providerStore = new ProviderStoreImpl(db)
     const providerTypeStore = new ProviderTypeStoreImpl(db)
-    const registrar = new ProviderRegistrar(
-      providerStore,
-      undefined,
-      eventBus,
-      providerTypeStore,
-    )
+    const registrar = new ProviderRegistrar(providerStore, undefined, eventBus, providerTypeStore)
 
-    const filePath = join(import.meta.dir, '..', 'seeds', 'providers', `${slug}.json`)
-    const raw = await readFile(filePath, 'utf-8')
-    const manifest = ProviderManifestSchema.parse(JSON.parse(raw))
-    const result = await registrar.register(manifest)
+    // Single-provider seed now reads from the in-repo canonical manifests (no disk).
+    for (const raw of PROVIDER_MANIFESTS) {
+      const candidate = ProviderManifestSchema.safeParse(raw)
+      if (candidate.success && candidate.data.provider.slug === slug) {
+        await registrar.register(candidate.data)
+        return { slug, ok: true }
+      }
+    }
 
-    return { slug, ok: true }
+    return { slug, ok: false, error: `Provider manifest not found for slug: ${slug}` }
   } catch (err: unknown) {
     return {
       slug,

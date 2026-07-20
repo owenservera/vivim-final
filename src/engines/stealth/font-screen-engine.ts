@@ -44,7 +44,9 @@ export class FontScreenModule implements StealthModule {
       | { width?: number; height?: number; devicePixelRatio?: number }
       | undefined
 
-    let resolution = COMMON_RESOLUTIONS[Math.floor(Math.random() * COMMON_RESOLUTIONS.length)]!
+    const resolutions = COMMON_RESOLUTIONS
+    let resolution: Resolution =
+      resolutions[Math.floor(Math.random() * resolutions.length)] ?? resolutions[0]
     if (screenConfig?.width && screenConfig?.height) {
       resolution = {
         width: screenConfig.width,

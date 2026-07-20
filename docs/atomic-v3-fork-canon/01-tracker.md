@@ -13,7 +13,7 @@
 
 ---
 
-**Total units:** 127 | **Done:** 58 | **Blocked:** 0 | **Pending:** 21 | **Exists (code, needs review):** 48
+**Total units:** 127 | **Done:** 58 | **Blocked:** 0 | **Pending:** 69
 
 ## Phase 1: Stabilization & Cleanup (12 units — COMPLETE)
 
@@ -57,9 +57,9 @@
 >
 > **Note:** IntentDecomposer/CapabilityComposer/LiveCapabilityRegistry were not implemented as named classes. Their functionality was absorbed into the NLCL resolver stack (`src/engines/nlcl/intent-resolver.ts`, `unified-registry.ts`) under different architecture. `SandboxRunner` class does not exist — sandboxing is in `canvas/capability-bridge.ts`.
 
-- [~] 3.1 (v3:2.1) — IntentDecomposer template strategy → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.1-intent-templates.md` — EXISTS as `DeterministicResolver` in `nlcl/intent-resolver.ts`
+- [ ] 3.1 (v3:2.1) — IntentDecomposer template strategy → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.1-intent-templates.md` — EXISTS as `DeterministicResolver` in `nlcl/intent-resolver.ts`
 - [~] 3.2 (v3:2.2) — IntentDecomposer LLM strategy → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.2-intent-llm.md` — EXISTS as `LocalLLMResolver` in `nlcl/intent-resolver.ts`
-- [~] 3.3 (v3:2.3) — IntentDecomposer clarification flow → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.3-intent-clarify.md` — EXISTS in `nlcl/layered-resolver.ts` + `nlcl-engine.ts`
+- [ ] 3.3 (v3:2.3) — IntentDecomposer clarification flow → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.3-intent-clarify.md` — EXISTS in `nlcl/layered-resolver.ts` + `nlcl-engine.ts`
 - [~] 3.4 (v3:2.4) — CapabilityComposer DAG definition + execution → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.4-composer-dag.md` — EXISTS in `nlcl/executors/` (DAG-like capability chains via NLCL)
 - [~] 3.5 (v3:2.5) — CapabilityComposer recursive composition + versioning → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.5-composer-recursive.md` — EXISTS as `capability-macro.ts` + workflow-engine.ts
 - [~] 3.6 (v3:2.6) — CapabilityComposer surface export → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.6-composer-surfaces.md` — EXISTS: `unified-registry.ts` exports to all surfaces via `cli/index.ts`
@@ -271,4 +271,4 @@
 
 ## Last Updated
 
-2026-07-13
+2026-07-19

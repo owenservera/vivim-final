@@ -8,7 +8,9 @@
     "vivim": "src/cli/index.ts"
   },
   "scripts": {
-    "dev": "bun run src/cli/index.ts serve",
+    "dev": "bun run scripts/dev-all.ts",
+    "dev:backend": "bun run src/cli/index.ts serve",
+    "dev:frontend": "bun run --cwd dev-poc/canvas/v9 dev",
     "serve": "bun run src/cli/index.ts serve",
     "build": "tsup src/index.ts --format esm --dts",
     "migrate": "bun run src/cli/index.ts migrate --source all",
@@ -32,8 +34,14 @@
     "providers:smoke": "bun run scripts/provider-harness.ts",
     "taxonomy:generate": "bun run scripts/taxonomy-gen/run.ts",
     "taxonomy-gen": "bun run scripts/taxonomy-gen/run.ts",
+    "taxonomy:openclaw": "bun run scripts/taxonomy-gen/run.ts openclaw-harvest",
     "generate-skills": "bun run scripts/generate-skills.ts",
-    "gen:protocol": "bun run src/engines/provider-protocol-generator.ts"
+    "devops:toolkit": "bun run devops/index.ts toolkit",
+    "gen:protocol": "bun run src/engines/provider-protocol-generator.ts",
+    "web:dev": "bun run --cwd web dev",
+    "web:build": "bun run --cwd web/ui build",
+    "tauri:sidecar": "pwsh scripts/tauri/build-sidecar.ps1",
+    "tauri:build": "pwsh scripts/tauri/build.ps1"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",

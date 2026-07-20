@@ -43,6 +43,8 @@ export interface UnifiedCapability {
   isAsync: boolean
   requiresConfirmation: boolean
   tags: string[]
+  isComposite?: boolean
+  compositeId?: string
 }
 
 // ── Validation helpers ────────────────────────────────────────────────────
@@ -108,13 +110,13 @@ export class UnifiedCapabilityRegistry {
   }): UnifiedCapability[] {
     let result = Array.from(this.capabilities.values())
     if (filter?.surface) {
-      result = result.filter((c) => c.surfaces.includes(filter.surface!))
+      result = result.filter((c) => c.surfaces.includes(filter.surface))
     }
     if (filter?.category) {
       result = result.filter((c) => c.category === filter.category)
     }
     if (filter?.tag) {
-      result = result.filter((c) => c.tags.includes(filter.tag!))
+      result = result.filter((c) => c.tags.includes(filter.tag))
     }
     return result
   }
@@ -177,7 +179,7 @@ export class UnifiedCapabilityRegistry {
       id: cap.id,
       slug: cap.slug,
       name: cap.name,
-      ui: cap.ui!,
+      ui: cap.ui as NonNullable<UnifiedCapability['ui']>,
       inputSchema: cap.inputSchema,
       apiEndpoint: cap.apiEndpoint,
       requiresConfirmation: cap.requiresConfirmation,

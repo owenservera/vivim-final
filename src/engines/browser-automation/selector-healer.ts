@@ -4,9 +4,9 @@
 // All DOM access via SemanticGroundingEngine (Governor Canon intact).
 
 import { EngineError } from '../../errors.js'
+import type { SelectorHealStore } from '../../storage/contracts/selector-heal-store.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
-import type { SelectorHealStore } from '../../storage/contracts/selector-heal-store.js'
 import type { ResolvedElement, SemanticSelector } from './types.js'
 
 /**
@@ -59,10 +59,9 @@ export class SelectorHealer {
 
     // 3. LLM proposal
     if (llmPropose) {
-      const dom = await this.governor.evaluate(
-        slaveId,
-        'document.body.innerText.slice(0,4000)',
-      ).catch(() => '')
+      const dom = await this.governor
+        .evaluate(slaveId, 'document.body.innerText.slice(0,4000)')
+        .catch(() => '')
       const url = (await this.governor.evaluate(slaveId, 'location.href').catch(() => '')) as string
       const candidate = await llmPropose({
         url,

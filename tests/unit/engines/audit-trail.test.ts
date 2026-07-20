@@ -8,10 +8,13 @@ describe('AuditTrail (Unit 9.4)', () => {
   it('records entries to all sinks', async () => {
     const entries: any[] = []
     const deferred = Promise.withResolvers<void>()
-    const sink = { name: 't', record: async (e: any) => {
-      entries.push(e)
-      deferred.resolve()
-    } }
+    const sink = {
+      name: 't',
+      record: async (e: any) => {
+        entries.push(e)
+        deferred.resolve()
+      },
+    }
     const at = new AuditTrail()
     at.addSink(sink)
     at.record({
@@ -31,10 +34,13 @@ describe('AuditTrail (Unit 9.4)', () => {
   it('redacts configured sensitive fields', async () => {
     const entries: any[] = []
     const deferred = Promise.withResolvers<void>()
-    const sink = { name: 't', record: async (e: any) => {
-      entries.push(e)
-      deferred.resolve()
-    } }
+    const sink = {
+      name: 't',
+      record: async (e: any) => {
+        entries.push(e)
+        deferred.resolve()
+      },
+    }
     const at = new AuditTrail({ redactFields: ['token'] })
     at.addSink(sink)
     at.record({
@@ -51,9 +57,12 @@ describe('AuditTrail (Unit 9.4)', () => {
 
   it('filters by action when not a wildcard', async () => {
     const entries: any[] = []
-    const sink = { name: 't', record: async (e: any) => {
-      entries.push(e)
-    } }
+    const sink = {
+      name: 't',
+      record: async (e: any) => {
+        entries.push(e)
+      },
+    }
     const at = new AuditTrail({ actions: ['delete'] })
     at.addSink(sink)
     at.record({ actor: 'u', action: 'read', targetType: 'x', result: 'success', details: {} })
@@ -63,9 +72,12 @@ describe('AuditTrail (Unit 9.4)', () => {
 
   it('does nothing when disabled', () => {
     const entries: any[] = []
-    const sink = { name: 't', record: async (e: any) => {
-      entries.push(e)
-    } }
+    const sink = {
+      name: 't',
+      record: async (e: any) => {
+        entries.push(e)
+      },
+    }
     const at = new AuditTrail({ enabled: false })
     at.addSink(sink)
     at.record({ actor: 'u', action: 'x', targetType: 'y', result: 'success', details: {} })

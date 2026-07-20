@@ -10,6 +10,7 @@ import type {
   OutcomeInput,
   OutcomeRow,
   SelectorStrategyRow,
+  SnapshotRow,
 } from '../contracts/capability-store.js'
 import type { CapStoreDb } from '../db.js'
 
@@ -128,8 +129,6 @@ export class CapabilityStoreImpl implements CapabilityStore {
     this.db = db as unknown as PrismaLoose
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Prisma escape hatch
-  // biome-ignore lint/style/noNonNullAssertion: Array access within bounds
   private get p(): any {
     return this.db.prisma
   }
@@ -254,5 +253,49 @@ export class CapabilityStoreImpl implements CapabilityStore {
         data: { missCount: { increment: 1 }, updatedAt: now },
       })
     }
+  }
+
+  async loadSnapshot(providerIds: string[]): Promise<SnapshotRow[]> {
+    if (providerIds.length === 0) return []
+    const bindings = (await this.p.capabilityBinding.findMany({
+      where: { providerId: { in: providerIds }, status: 'active' },
+      include: { capability: true, programs: true },
+    })) as Array<{
+      globalId: string
+      providerId: string
+      status: string
+      confidence: number
+      bestProgramId: string | null
+      currentProgramId: string | null
+      capability: {
+        id: string
+        slug: string
+        category: string
+        uiComponent: string
+        uiPosition: string
+        uiInputSchema: string
+      }
+      programs: Array<{ id: string; configJson: string; status: string }>
+    }>
+
+    const rows: SnapshotRow[] = []
+    for (const b of bindings) {
+      const programId = b.bestProgramId ?? b.currentProgramId ?? null
+      const program = programId ? (b.programs.find((p) => p.id === programId) ?? null) : null
+      rows.push({
+        globalId: b.globalId,
+        slug: b.capability.slug,
+        providerId: b.providerId,
+        category: b.capability.category,
+        status: b.status,
+        confidence: b.confidence,
+        programId,
+        configJson: program?.configJson ?? null,
+        uiComponent: b.capability.uiComponent,
+        uiPosition: b.capability.uiPosition,
+        uiInputSchema: b.capability.uiInputSchema,
+      })
+    }
+    return rows
   }
 }

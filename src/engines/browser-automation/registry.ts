@@ -4,29 +4,23 @@
 // not hardcoded logic), so adding a capability = one registry entry. The registry
 // satisfies the CapabilityResolver contract used by AgenticLoopEngine.
 
+import { z } from 'zod'
 import { EngineError } from '../../errors.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
-import type { SemanticGroundingEngine } from './semantic-grounding.js'
-import type {
-  BrowserCapabilityDef,
-  CapabilityAxis,
-  CapCtx,
-  CapResult,
-  TrustPolicy,
-} from './types.js'
-import { z } from 'zod'
-import * as nav from './defs/nav.js'
-import * as input from './defs/input.js'
-import * as scroll from './defs/scroll.js'
-import * as wait from './defs/wait.js'
-import * as extract from './defs/extract.js'
 import * as capture from './defs/capture.js'
-import * as tab from './defs/tab.js'
-import * as net from './defs/net.js'
-import * as state from './defs/state.js'
-import * as observe from './defs/observe.js'
+import * as extract from './defs/extract.js'
 import * as flow from './defs/flow.js'
+import * as input from './defs/input.js'
+import * as nav from './defs/nav.js'
+import * as net from './defs/net.js'
+import * as observe from './defs/observe.js'
 import * as os from './defs/os.js'
+import * as scroll from './defs/scroll.js'
+import * as state from './defs/state.js'
+import * as tab from './defs/tab.js'
+import * as wait from './defs/wait.js'
+import type { SemanticGroundingEngine } from './semantic-grounding.js'
+import type { BrowserCapabilityDef, CapCtx, CapResult, CapabilityAxis } from './types.js'
 
 export class BrowserCapabilityRegistry {
   private defs = new Map<string, BrowserCapabilityDef>()
@@ -117,7 +111,9 @@ export class BrowserCapabilityRegistry {
 // ── helpers shared by def files ────────────────────────────────────────────
 
 /** Extract a SemanticSelector from parsed params (text/selector/aria/placeholder). */
-export function parseSelector(params: Record<string, unknown>): import('./types.js').SemanticSelector | null {
+export function parseSelector(
+  params: Record<string, unknown>,
+): import('./types.js').SemanticSelector | null {
   if (typeof params.selector === 'string') return { css: params.selector }
   if (typeof params.text === 'string') return { text: params.text }
   if (typeof params.ariaLabel === 'string') return { label: params.ariaLabel }
@@ -138,17 +134,7 @@ function isCapabilityDef(v: unknown): v is BrowserCapabilityDef {
   )
 }
 
-/** Common trust presets. */
-export const TRUST: Record<'read' | 'write' | 'destructive', TrustPolicy> = {
-  read: { autoRead: true, confidenceThreshold: 0.5 },
-  write: { autoRead: true, autoWrite: true, confidenceThreshold: 0.6 },
-  destructive: {
-    autoRead: true,
-    autoWrite: true,
-    requireConfirmation: true,
-    destructiveBlock: true,
-    confidenceThreshold: 0.8,
-  },
-}
+/** Re-export trust presets (defined in types.ts to avoid module-init cycle). */
+export { TRUST } from './types.js'
 
 export { z }

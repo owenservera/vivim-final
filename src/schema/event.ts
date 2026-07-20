@@ -16,7 +16,11 @@ export interface EventData {
   location?: string
   locationNodeId?: string
   virtualMeetingUrl?: string
-  attendees?: Array<{ name?: string; email?: string; responseStatus?: 'accepted' | 'declined' | 'tentative' | 'pending' }>
+  attendees?: Array<{
+    name?: string
+    email?: string
+    responseStatus?: 'accepted' | 'declined' | 'tentative' | 'pending'
+  }>
   recurrence?: {
     frequency: 'daily' | 'weekly' | 'monthly' | 'yearly'
     interval?: number
@@ -50,13 +54,15 @@ export const EventDataSchema = z.object({
   locationNodeId: z.string().optional(),
   virtualMeetingUrl: z.string().optional(),
   attendees: z.array(AttendeeSchema).optional(),
-  recurrence: z.object({
-    frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']),
-    interval: z.number().int().positive().optional(),
-    endAt: z.number().optional(),
-    count: z.number().int().positive().optional(),
-    daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
-  }).optional(),
+  recurrence: z
+    .object({
+      frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']),
+      interval: z.number().int().positive().optional(),
+      endAt: z.number().optional(),
+      count: z.number().int().positive().optional(),
+      daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
+    })
+    .optional(),
   recurrenceId: z.string().optional(),
   organizer: z.string().optional(),
   status: z.enum(['confirmed', 'tentative', 'cancelled']).optional(),
@@ -132,7 +138,8 @@ export const eventNodeSchema = {
   type: 'cap-store.event' as const,
   version: 1,
   schema: EventDataSchema,
-  indexContent: (data: EventData) => `${data.title} ${data.description ?? ''} ${data.location ?? ''} ${data.attendees?.map(a => a.name ?? '').join(' ') ?? ''}`,
+  indexContent: (data: EventData) =>
+    `${data.title} ${data.description ?? ''} ${data.location ?? ''} ${data.attendees?.map((a) => a.name ?? '').join(' ') ?? ''}`,
   embeddingText: (data: EventData) => `${data.title} ${data.description ?? ''}`,
 }
 
@@ -140,7 +147,7 @@ export const reminderNodeSchema = {
   type: 'cap-store.reminder' as const,
   version: 1,
   schema: ReminderDataSchema,
-  indexContent: (data: ReminderData) => data.title + ' ' + (data.note ?? ''),
+  indexContent: (data: ReminderData) => `${data.title} ${data.note ?? ''}`,
   embeddingText: (data: ReminderData) => data.title,
 }
 
@@ -148,6 +155,7 @@ export const locationNodeSchema = {
   type: 'cap-store.location' as const,
   version: 1,
   schema: LocationDataSchema,
-  indexContent: (data: LocationData) => `${data.name ?? ''} ${data.address ?? ''} ${data.categories?.join(' ') ?? ''}`,
+  indexContent: (data: LocationData) =>
+    `${data.name ?? ''} ${data.address ?? ''} ${data.categories?.join(' ') ?? ''}`,
   embeddingText: (data: LocationData) => data.name ?? data.address ?? '',
 }

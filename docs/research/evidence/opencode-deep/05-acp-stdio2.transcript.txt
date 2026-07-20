@@ -1,0 +1,57 @@
+IN> {"jsonrpc":"2.0","id":"1","method":"initialize","params":{"protocolVersion":1}}
+IN> {"jsonrpc":"2.0","id":"1b","method":"initialize","params":{"protocolVersion":2025}}
+ERR> timestamp=2026-07-19T15:21:31.401Z level=INFO run=1e239289 message="creating instance" directory="C:\\0-BlackBoxProject-0\\vivim-final"
+timestamp=2026-07-19T15:21:31.407Z level=INFO run=1e239289 message=fromDirectory directory="C:\\0-BlackBoxProject-0\\vivim-final"
+IN> {"jsonrpc":"2.0","id":"2","method":"chat","params":{"parts":[{"type":"text","text":"Say OK"}]}}
+ERR> timestamp=2026-07-19T15:21:33.761Z level=INFO run=1e239289 message=bootstrapping directory="C:\\0-BlackBoxProject-0\\vivim-final"
+ERR> timestamp=2026-07-19T15:21:33.782Z level=INFO run=1e239289 message=loading path="C:\\Users\\VIVIM.inc\\.config\\opencode\\config.json"
+ERR> timestamp=2026-07-19T15:21:33.839Z level=INFO run=1e239289 message=loading path="C:\\Users\\VIVIM.inc\\.config\\opencode\\opencode.json"
+ERR> timestamp=2026-07-19T15:21:33.947Z level=INFO run=1e239289 message=loading path="C:\\Users\\VIVIM.inc\\.config\\opencode\\opencode.jsonc"
+ERR> timestamp=2026-07-19T15:21:34.092Z level=INFO run=1e239289 message=loading path="C:\\0-BlackBoxProject-0\\vivim-final\\opencode.json"
+ERR> timestamp=2026-07-19T15:21:34.634Z level=INFO run=1e239289 message=loading path="C:\\0-BlackBoxProject-0\\vivim-final\\.opencode\\opencode.json"
+ERR> timestamp=2026-07-19T15:21:34.636Z level=INFO run=1e239289 message=loading path="C:\\0-BlackBoxProject-0\\vivim-final\\.opencode\\opencode.jsonc"
+ERR> timestamp=2026-07-19T15:21:35.222Z level=INFO run=1e239289 message=loading path="C:\\Users\\VIVIM.inc\\.opencode\\opencode.json"
+ERR> timestamp=2026-07-19T15:21:35.311Z level=INFO run=1e239289 message=loading path="C:\\Users\\VIVIM.inc\\.opencode\\opencode.jsonc"
+IN> {"jsonrpc":"2.0","id":"3","method":"message","params":{"parts":[{"type":"text","text":"Say OK"}]}}
+ERR> timestamp=2026-07-19T15:21:37.677Z level=INFO run=1e239289 message="enabled LSP servers" serverIds="zls, yaml-ls, vue, typescript, tinymist, texlab, terraform, svelte, sourcekit-lsp, rust, ruby-lsp, razor, pyright, prisma, php intelephense, oxlint, ocaml-lsp, nixd, lua-ls, kotlin-ls, julials, jdtls, haskell-language-server, gopls, gleam, fsharp, elixir-ls, eslint, dockerfile, deno, dart, clojure-lsp, clangd, csharp, biome, bash, astro"
+ERR> timestamp=2026-07-19T15:21:37.694Z level=INFO run=1e239289 message="all formatters are disabled"
+ERR> timestamp=2026-07-19T15:21:37.694Z level=INFO run=1e239289 message=init
+ERR> timestamp=2026-07-19T15:21:39.618Z level=INFO run=1e239289 message="setup connection"
+OUT> {"jsonrpc":"2.0","id":"2","error":{"code":-32601,"message":"\"Method not found\": chat","data":{"method":"chat"}}}
+OUT> {"jsonrpc":"2.0","id":"1","result":{"protocolVersion":1,"agentCapabilities":{"loadSession":true,"mcpCapabilities":{"http":true,"sse":true},"promptCapabilities":{"embeddedContext":true,"image":true},"sessionCapabilities":{"close":{},"fork":{},"list":{},"resume":{}}},"authMethods":[{"description":"Run `opencode auth login` in the terminal","name":"Login with opencode","id":"opencode-login"}],"agentInfo":{"name":"OpenCode","version":"1.18.2"}}}
+OUT> {"jsonrpc":"2.0","id":"3","error":{"code":-32601,"message":"\"Method not found\": message","data":{"method":"message"}}}
+OUT> {"jsonrpc":"2.0","id":"1b","result":{"protocolVersion":1,"agentCapabilities":{"loadSession":true,"mcpCapabilities":{"http":true,"sse":true},"promptCapabilities":{"embeddedContext":true,"image":true},"sessionCapabilities":{"close":{},"fork":{},"list":{},"resume":{}}},"authMethods":[{"description":"Run `opencode auth login` in the terminal","name":"Login with opencode","id":"opencode-login"}],"agentInfo":{"name":"OpenCode","version":"1.18.2"}}}
+ERR> Error handling request {
+  jsonrpc: "2.0",
+  id: "2",
+  method: "chat",
+  params: {
+    parts: [
+      [Object ...]
+    ],
+  },
+} {
+  code: -32601,
+  message: "\"Method not found\": chat",
+  data: {
+    method: "chat",
+  },
+}
+Error handling request {
+  jsonrpc: "2.0",
+  id: "3",
+  method: "message",
+  params: {
+    parts: [
+      [Object ...]
+    ],
+  },
+} {
+  code: -32601,
+  message: "\"Method not found\": message",
+  data: {
+    method: "message",
+  },
+}
+ERR> timestamp=2026-07-19T15:21:40.270Z level=INFO run=1e239289 message="global event connected"
+=== TIMEOUT, killing ===

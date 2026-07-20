@@ -1,8 +1,9 @@
 // src/engines/browser-automation/defs/tab.ts
 // Axis: tab — tabs & windows (10 capabilities)
 
+import { z } from 'zod'
 import type { BrowserCapabilityDef } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 export const tabOpen: BrowserCapabilityDef = {
   id: 'auto:tab:open',
@@ -11,7 +12,9 @@ export const tabOpen: BrowserCapabilityDef = {
   params: z.object({ url: z.string().url().optional() }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Target.createTarget', { url: (ctx.params.url as string) ?? 'about:blank' })) as { targetId?: string }
+    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Target.createTarget', {
+      url: (ctx.params.url as string) ?? 'about:blank',
+    })) as { targetId?: string }
     return { ok: true, output: res.targetId, detail: 'tab opened' }
   },
 }
@@ -23,7 +26,10 @@ export const tabClose: BrowserCapabilityDef = {
   params: z.object({ targetId: z.string().optional() }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    if (ctx.params.targetId) await ctx.governor.cdp.send(ctx.slaveId, 'Target.closeTarget', { targetId: ctx.params.targetId })
+    if (ctx.params.targetId)
+      await ctx.governor.cdp.send(ctx.slaveId, 'Target.closeTarget', {
+        targetId: ctx.params.targetId,
+      })
     else await ctx.governor.cdp.send(ctx.slaveId, 'Page.close', {})
     return { ok: true, detail: 'tab closed' }
   },
@@ -36,7 +42,9 @@ export const tabSwitch: BrowserCapabilityDef = {
   params: z.object({ targetId: z.string() }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    await ctx.governor.cdp.send(ctx.slaveId, 'Target.activateTarget', { targetId: ctx.params.targetId }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Target.activateTarget', { targetId: ctx.params.targetId })
+      .catch(() => {})
     return { ok: true, detail: 'tab switched' }
   },
 }
@@ -48,7 +56,9 @@ export const tabList: BrowserCapabilityDef = {
   params: z.object({}),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Target.getTargets', {})) as { targetInfos?: Array<{ targetId: string; url: string; title: string }> }
+    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Target.getTargets', {})) as {
+      targetInfos?: Array<{ targetId: string; url: string; title: string }>
+    }
     return { ok: true, output: res.targetInfos ?? [], detail: 'tabs listed' }
   },
 }
@@ -61,7 +71,9 @@ export const tabDuplicate: BrowserCapabilityDef = {
   trust: TRUST.read,
   handler: async (ctx) => {
     const url = (await ctx.governor.evaluate(ctx.slaveId, 'location.href')) as string
-    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Target.createTarget', { url })) as { targetId?: string }
+    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Target.createTarget', { url })) as {
+      targetId?: string
+    }
     return { ok: true, output: res.targetId, detail: 'tab duplicated' }
   },
 }
@@ -73,7 +85,9 @@ export const tabPin: BrowserCapabilityDef = {
   params: z.object({ targetId: z.string(), pinned: z.boolean().default(true) }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.cdp.send(ctx.slaveId, 'Target.attachToTarget', { targetId: ctx.params.targetId, flatten: true }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Target.attachToTarget', { targetId: ctx.params.targetId, flatten: true })
+      .catch(() => {})
     return { ok: true, detail: 'tab pin (best-effort)' }
   },
 }
@@ -85,7 +99,12 @@ export const tabMute: BrowserCapabilityDef = {
   params: z.object({ targetId: z.string(), muted: z.boolean().default(true) }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.cdp.send(ctx.slaveId, 'Target.setAudioMuted', { targetId: ctx.params.targetId, muted: ctx.params.muted }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Target.setAudioMuted', {
+        targetId: ctx.params.targetId,
+        muted: ctx.params.muted,
+      })
+      .catch(() => {})
     return { ok: true, detail: 'tab mute (best-effort)' }
   },
 }
@@ -97,7 +116,9 @@ export const windowOpen: BrowserCapabilityDef = {
   params: z.object({ url: z.string().url().optional() }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Target.createBrowserContext', {})) as { browserContextId?: string }
+    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Target.createBrowserContext', {})) as {
+      browserContextId?: string
+    }
     return { ok: true, output: res.browserContextId, detail: 'window context created' }
   },
 }
@@ -109,7 +130,14 @@ export const windowResize: BrowserCapabilityDef = {
   params: z.object({ width: z.number(), height: z.number() }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    await ctx.governor.cdp.send(ctx.slaveId, 'Emulation.setDeviceMetricsOverride', { width: ctx.params.width, height: ctx.params.height, deviceScaleFactor: 1, mobile: false }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Emulation.setDeviceMetricsOverride', {
+        width: ctx.params.width,
+        height: ctx.params.height,
+        deviceScaleFactor: 1,
+        mobile: false,
+      })
+      .catch(() => {})
     return { ok: true, detail: 'window resized' }
   },
 }

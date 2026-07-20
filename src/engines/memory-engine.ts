@@ -2,9 +2,8 @@
 // MemoryEngine — episodic, semantic, and procedural memory with learning
 
 import { newId } from '../ids.js'
-import { hashContent } from '../ids.js'
-import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { NodeStoreContract } from '../storage/contracts/node-store.js'
+import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -95,6 +94,8 @@ export interface AgentMemoryContext {
   recentEpisodes: EpisodicMemory[]
   relevantFacts: SemanticMemory[]
   applicableRules: ProceduralRule[]
+  /** Frozen per-agent memory snapshot injected as the identity layer (spec 024 FR-005). */
+  identityContext?: string
 }
 
 export interface MiningResult {

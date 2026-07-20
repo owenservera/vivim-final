@@ -2,8 +2,9 @@
 // Axis: os — system & OS bridge (5 capabilities)
 
 import { writeFileSync } from 'node:fs'
+import { z } from 'zod'
 import type { BrowserCapabilityDef } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 export const clipboardRead: BrowserCapabilityDef = {
   id: 'auto:os:clipboard-read',
@@ -12,7 +13,10 @@ export const clipboardRead: BrowserCapabilityDef = {
   params: z.object({}),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const out = await ctx.governor.evaluate(ctx.slaveId, 'navigator.clipboard.readText().catch(function(){return ""})')
+    const out = await ctx.governor.evaluate(
+      ctx.slaveId,
+      'navigator.clipboard.readText().catch(function(){return ""})',
+    )
     return { ok: true, output: out, detail: 'clipboard read' }
   },
 }
@@ -24,7 +28,10 @@ export const clipboardWrite: BrowserCapabilityDef = {
   params: z.object({ text: z.string() }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.evaluate(ctx.slaveId, `navigator.clipboard.writeText(${JSON.stringify(ctx.params.text)}).catch(function(){})`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `navigator.clipboard.writeText(${JSON.stringify(ctx.params.text)}).catch(function(){})`,
+    )
     return { ok: true, detail: 'clipboard written' }
   },
 }
@@ -34,10 +41,20 @@ export const shellRun: BrowserCapabilityDef = {
   axis: 'os',
   description: 'Run a guarded shell command (destructive-gated).',
   params: z.object({ command: z.string() }),
-  trust: { autoRead: true, autoWrite: true, requireConfirmation: true, destructiveBlock: true, confidenceThreshold: 0.9 },
+  trust: {
+    autoRead: true,
+    autoWrite: true,
+    requireConfirmation: true,
+    destructiveBlock: true,
+    confidenceThreshold: 0.9,
+  },
   handler: async (ctx) => {
     // Guarded: harness only; never auto-runs without confirmation. Returns intent.
-    return { ok: true, detail: `shell intent registered: ${ctx.params.command}`, output: { command: ctx.params.command, executed: false } }
+    return {
+      ok: true,
+      detail: `shell intent registered: ${ctx.params.command}`,
+      output: { command: ctx.params.command, executed: false },
+    }
   },
 }
 
@@ -48,7 +65,11 @@ export const notify: BrowserCapabilityDef = {
   params: z.object({ message: z.string() }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    return { ok: true, detail: `notify: ${ctx.params.message}`, output: { message: ctx.params.message } }
+    return {
+      ok: true,
+      detail: `notify: ${ctx.params.message}`,
+      output: { message: ctx.params.message },
+    }
   },
 }
 

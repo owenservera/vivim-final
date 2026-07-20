@@ -28,11 +28,9 @@ describe('LockManager (Unit 7.3)', () => {
     const lm = new LockManager()
     await lm.acquire('conv:3', 'first')
     let secondResolved = false
-    const pending = lm
-      .acquire('conv:3', 'second')
-      .then(() => {
-        secondResolved = true
-      })
+    const pending = lm.acquire('conv:3', 'second').then(() => {
+      secondResolved = true
+    })
     await new Promise((r) => setTimeout(r, 80))
     expect(secondResolved).toBe(false)
     lm.release('conv:3', 'first')

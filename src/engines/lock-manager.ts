@@ -53,7 +53,8 @@ export class LockManager {
       // Wake next in queue
       const queue = this.queues.get(key)
       if (queue && queue.length > 0) {
-        const next = queue.shift()!
+        const next = queue.shift()
+        if (!next) return
         this.locks.set(key, {
           owner,
           acquiredAt: Date.now(),

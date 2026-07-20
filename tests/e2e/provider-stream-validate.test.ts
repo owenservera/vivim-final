@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { StreamParserEngine } from '../../src/engines/stream-parser.js'
+import { LOGIC_CODE as CLAUDE_LOGIC } from '../../seeds/parsers/harvested/claude-streaming-sse.js'
 import { StreamAlignmentEngine } from '../../src/engines/stream-align.js'
+import { StreamParserEngine } from '../../src/engines/stream-parser.js'
 
 const CAPTURE_DIR = join(import.meta.dir, '../fixtures/capture')
 
@@ -10,20 +11,20 @@ function loadFixture(name: string): string {
   const path = join(CAPTURE_DIR, name)
   const raw = readFileSync(path, 'utf-8')
   const lines = raw.split('\n')
-  const bodyLines = lines.filter(l => !l.startsWith('//') && l.trim().length > 0)
+  const bodyLines = lines.filter((l) => !l.startsWith('//') && l.trim().length > 0)
   return bodyLines.join('\n')
 }
 
-function mockStoreForProvider(providerId: string) {
+function mockStoreForProvider(_providerId: string) {
   const parsers: Record<string, any> = {
     claude: {
       id: 'claude-p1',
       providerId: 'claude',
       name: 'claude/001_streaming_sse',
       version: 1,
-      logicType: 'file',
-      filePath: join(import.meta.dir, '../../seeds/parsers/claude-streaming-sse.ts'),
-      logicCode: null,
+      logicType: 'inline',
+      filePath: null,
+      logicCode: CLAUDE_LOGIC,
       hash: 'claude-hash-1',
       isActive: 1,
       fallbackParserId: null,
@@ -33,6 +34,8 @@ function mockStoreForProvider(providerId: string) {
   }
   return {
     getActiveParser: async (id: string) => parsers[id] ?? null,
+    getParserByProviderAndVersion: async (_p: string, _v: string) => parsers.claude ?? null,
+    getParserById: async (id: string) => parsers[id] ?? null,
     getGenericParser: async () => null,
     getSystemFallbackParser: async () => null,
     getParser: async () => null,
@@ -53,12 +56,12 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
       const result = await engine.parse(body, 'claude')
       expect(result.blocks.length).toBeGreaterThan(0)
 
-      const textBlocks = result.blocks.filter(b => b.type === 'text')
+      const textBlocks = result.blocks.filter((b) => b.type === 'text')
       expect(textBlocks.length).toBeGreaterThan(0)
       const combinedText = textBlocks.map((b: any) => b.text).join('')
       expect(combinedText).toContain('Hello from Claude')
 
-      const metaBlocks = result.blocks.filter(b => b.type === 'meta')
+      const metaBlocks = result.blocks.filter((b) => b.type === 'meta')
       expect(metaBlocks.length).toBeGreaterThan(0)
 
       expect(result.confidence).toBeGreaterThan(0)
@@ -119,7 +122,7 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
       const blocks = p.parse(fixture)
       const imageBlocks = blocks.filter((b: any) => b.type === 'file')
       expect(imageBlocks.length).toBeGreaterThanOrEqual(1)
-      expect(imageBlocks[0].title).toBe('A chart')
+      expect(imageBlocks[0].filename).toBe('A chart')
     })
   })
 
@@ -150,7 +153,7 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
           const innerParsed = JSON.parse(innerStr)
           const textParts = innerParsed[0] as string[]
           expect(Array.isArray(textParts)).toBe(true)
-          if (textParts.length > 0 && textParts[0]!.length > 0) {
+          if (textParts.length > 0 && textParts[0]?.length > 0) {
             expect(typeof textParts[0]).toBe('string')
           }
         }
@@ -165,7 +168,15 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
       expect(fixture.startsWith('data:')).toBe(true)
       expect(fixture).toContain('[DONE]')
 
-      const mockParser = { parse: async () => ({ blocks: [], confidence: 0.5, parserName: 'mock', parserVersion: 1, durationMs: 0 }) }
+      const mockParser = {
+        parse: async () => ({
+          blocks: [],
+          confidence: 0.5,
+          parserName: 'mock',
+          parserVersion: 1,
+          durationMs: 0,
+        }),
+      }
       const align = new StreamAlignmentEngine(mockParser as any)
       const format = align.inferFormat(fixture)
       expect(format).toBe('sse')
@@ -218,11 +229,34 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
 
       const store = {
         getActiveParser: async () => ({
-          id: 'chatgpt-p2', providerId: 'chatgpt', name: 'chatgpt/002_web_sse',
-          version: 1, logicType: 'inline', logicCode: code, filePath: null,
-          hash: 'chatgpt-hash-2', isActive: 1, fallbackParserId: null,
-          createdAt: 0, updatedAt: 0,
+          id: 'chatgpt-p2',
+          providerId: 'chatgpt',
+          name: 'chatgpt/002_web_sse',
+          version: 1,
+          logicType: 'inline',
+          logicCode: code,
+          filePath: null,
+          hash: 'chatgpt-hash-2',
+          isActive: 1,
+          fallbackParserId: null,
+          createdAt: 0,
+          updatedAt: 0,
         }),
+        getParserByProviderAndVersion: async () => ({
+          id: 'chatgpt-p2',
+          providerId: 'chatgpt',
+          name: 'chatgpt/002_web_sse',
+          version: 1,
+          logicType: 'inline',
+          logicCode: code,
+          filePath: null,
+          hash: 'chatgpt-hash-2',
+          isActive: 1,
+          fallbackParserId: null,
+          createdAt: 0,
+          updatedAt: 0,
+        }),
+        getParserById: async () => null,
         getGenericParser: async () => null,
         getSystemFallbackParser: async () => null,
         getParser: async () => null,
@@ -274,11 +308,34 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
 
       const store = {
         getActiveParser: async () => ({
-          id: 'chatgpt-p1', providerId: 'chatgpt', name: 'chatgpt/001_openai_sse',
-          version: 1, logicType: 'inline', logicCode: code, filePath: null,
-          hash: 'chatgpt-hash-1', isActive: 1, fallbackParserId: null,
-          createdAt: 0, updatedAt: 0,
+          id: 'chatgpt-p1',
+          providerId: 'chatgpt',
+          name: 'chatgpt/001_openai_sse',
+          version: 1,
+          logicType: 'inline',
+          logicCode: code,
+          filePath: null,
+          hash: 'chatgpt-hash-1',
+          isActive: 1,
+          fallbackParserId: null,
+          createdAt: 0,
+          updatedAt: 0,
         }),
+        getParserByProviderAndVersion: async () => ({
+          id: 'chatgpt-p1',
+          providerId: 'chatgpt',
+          name: 'chatgpt/001_openai_sse',
+          version: 1,
+          logicType: 'inline',
+          logicCode: code,
+          filePath: null,
+          hash: 'chatgpt-hash-1',
+          isActive: 1,
+          fallbackParserId: null,
+          createdAt: 0,
+          updatedAt: 0,
+        }),
+        getParserById: async () => null,
         getGenericParser: async () => null,
         getSystemFallbackParser: async () => null,
         getParser: async () => null,
@@ -314,29 +371,72 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
         content_blocks: { text: true, thinking: true, tool_use: true, image: true, meta: true },
         delta_path: 'delta.text',
         completion_signal: 'message_stop',
-        model_config: { sonnet_4: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 },
-                         opus_4: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 },
-                         haiku_4: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 } },
-        capabilities: ['send_message', 'select_model', 'edit_message', 'regenerate_response',
-                       'toggle_extended_thinking', 'upload_file', 'create_new_chat', 'navigate_chat',
-                       'delete_chat', 'rename_chat', 'deep_research'],
+        model_config: {
+          sonnet_4: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 },
+          opus_4: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 },
+          haiku_4: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 },
+        },
+        capabilities: [
+          'send_message',
+          'select_model',
+          'edit_message',
+          'regenerate_response',
+          'toggle_extended_thinking',
+          'upload_file',
+          'create_new_chat',
+          'navigate_chat',
+          'delete_chat',
+          'rename_chat',
+          'deep_research',
+        ],
         config_gaps: [],
       },
       gemini: {
         stream_transport: 'batchexecute (custom Google RPC)',
         stream_format: 'newline-delimited JSON arrays [["rpcName","innerJson",null,counter]]',
-        parser: { name: 'gemini/001_batchexecute', type: 'inline', tested: false, confidence: 'unknown' },
+        parser: {
+          name: 'gemini/001_batchexecute',
+          type: 'inline',
+          tested: false,
+          confidence: 'unknown',
+        },
         content_blocks: { text: true, thinking: false, tool_use: false, image: false, meta: false },
         delta_path: 'batchexecute[1] -> innerArray[0] -> text',
         completion_signal: 'final frame with null text',
-        model_config: { '2.5_pro': { streaming: true, vision: true, thinking: true, tools: true, context: 1048576 },
-                         '2.5_flash': { streaming: true, vision: true, thinking: true, tools: true, context: 1048576 },
-                         '2.0_flash': { streaming: true, vision: true, tools: true, context: 1048576 } },
-        capabilities: ['send_message', 'select_model', 'edit_message', 'regenerate_response',
-                       'upload_file', 'create_new_chat', 'navigate_chat', 'delete_chat', 'rename_chat'],
-        config_gaps: ['missing stream_config', 'missing delta_path in provider manifest',
-                      'batchexecute parser needs real-world validation',
-                      'no SSE format — uses custom Google RPC protocol'],
+        model_config: {
+          '2.5_pro': {
+            streaming: true,
+            vision: true,
+            thinking: true,
+            tools: true,
+            context: 1048576,
+          },
+          '2.5_flash': {
+            streaming: true,
+            vision: true,
+            thinking: true,
+            tools: true,
+            context: 1048576,
+          },
+          '2.0_flash': { streaming: true, vision: true, tools: true, context: 1048576 },
+        },
+        capabilities: [
+          'send_message',
+          'select_model',
+          'edit_message',
+          'regenerate_response',
+          'upload_file',
+          'create_new_chat',
+          'navigate_chat',
+          'delete_chat',
+          'rename_chat',
+        ],
+        config_gaps: [
+          'missing stream_config',
+          'missing delta_path in provider manifest',
+          'batchexecute parser needs real-world validation',
+          'no SSE format — uses custom Google RPC protocol',
+        ],
       },
       chatgpt: {
         stream_transport: 'sse (OpenAI format)',
@@ -345,34 +445,48 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
         content_blocks: { text: true, thinking: false, tool_use: true, image: false, meta: false },
         delta_path: 'message.content.parts[0]',
         completion_signal: '[DONE]',
-        model_config: { gpt_4o: { streaming: true, vision: true, tools: true, context: 128000 },
-                         gpt_4o_mini: { streaming: true, vision: true, tools: true, context: 128000 },
-                         o3: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 },
-                         o4_mini: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 } },
-        capabilities: ['send_message', 'select_model', 'edit_message', 'regenerate_response',
-                       'upload_file', 'create_new_chat', 'navigate_chat', 'delete_chat', 'rename_chat',
-                       'browse_with_bing'],
-        config_gaps: ['missing stream_config', 'missing delta_path in provider manifest',
-                      'parser uses choices[i].delta.content (API format) but wire uses message.content.parts (chat UI format)'],
+        model_config: {
+          gpt_4o: { streaming: true, vision: true, tools: true, context: 128000 },
+          gpt_4o_mini: { streaming: true, vision: true, tools: true, context: 128000 },
+          o3: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 },
+          o4_mini: { streaming: true, vision: true, thinking: true, tools: true, context: 200000 },
+        },
+        capabilities: [
+          'send_message',
+          'select_model',
+          'edit_message',
+          'regenerate_response',
+          'upload_file',
+          'create_new_chat',
+          'navigate_chat',
+          'delete_chat',
+          'rename_chat',
+          'browse_with_bing',
+        ],
+        config_gaps: [
+          'missing stream_config',
+          'missing delta_path in provider manifest',
+          'parser uses choices[i].delta.content (API format) but wire uses message.content.parts (chat UI format)',
+        ],
       },
     }
 
     it('Claude has 11 capabilities', () => {
-      expect(CAPABILITY_MATRIX.claude!.capabilities.length).toBe(11)
+      expect(CAPABILITY_MATRIX.claude?.capabilities.length).toBe(11)
     })
 
     it('Gemini has 9 capabilities', () => {
-      expect(CAPABILITY_MATRIX.gemini!.capabilities.length).toBe(9)
+      expect(CAPABILITY_MATRIX.gemini?.capabilities.length).toBe(9)
     })
 
     it('ChatGPT has 10 capabilities', () => {
-      expect(CAPABILITY_MATRIX.chatgpt!.capabilities.length).toBe(10)
+      expect(CAPABILITY_MATRIX.chatgpt?.capabilities.length).toBe(10)
     })
 
     it('identifies config gaps for each provider', () => {
-      expect(CAPABILITY_MATRIX.claude!.config_gaps.length).toBe(0)
-      expect(CAPABILITY_MATRIX.gemini!.config_gaps.length).toBeGreaterThan(0)
-      expect(CAPABILITY_MATRIX.chatgpt!.config_gaps.length).toBeGreaterThan(0)
+      expect(CAPABILITY_MATRIX.claude?.config_gaps.length).toBe(0)
+      expect(CAPABILITY_MATRIX.gemini?.config_gaps.length).toBeGreaterThan(0)
+      expect(CAPABILITY_MATRIX.chatgpt?.config_gaps.length).toBeGreaterThan(0)
     })
   })
 })

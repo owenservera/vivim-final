@@ -14,7 +14,7 @@ function mockEmbeddingProvider(): EmbeddingProvider {
   async function embedOne(text: string): Promise<number[]> {
     const vec = new Array(8).fill(0)
     for (let i = 0; i < text.length; i++) {
-      vec[i % 8]! += text.charCodeAt(i)
+      vec[i % 8] = (vec[i % 8] ?? 0) + text.charCodeAt(i)
     }
     const mag = Math.sqrt(vec.reduce((s, v) => s + v * v, 0))
     return mag > 0 ? vec.map((v) => v / mag) : vec
@@ -57,9 +57,9 @@ function mockSemanticStore(): SemanticSearchStore {
         let mA = 0
         let mB = 0
         for (let i = 0; i < q.length; i++) {
-          dot += q[i]! * stored[i]!
-          mA += q[i]! ** 2
-          mB += stored[i]! ** 2
+          dot += (q[i] ?? 0) * (stored[i] ?? 0)
+          mA += (q[i] ?? 0) ** 2
+          mB += (stored[i] ?? 0) ** 2
         }
         const score = dot / (Math.sqrt(mA) * Math.sqrt(mB))
         if (score >= (opts.threshold ?? 0))

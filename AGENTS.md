@@ -471,6 +471,7 @@ PowerShell's `Select-Object`/`Out-File` pipeline.**
 - **devops-generators** — Taxonomy generation pipeline (4-round)
 - **devops-research** — Research-first intelligence layer
 - **devops-roadmap** — Research-first roadmap system
+- **feature-governance** — Feature registry, lifecycle, skill mapping, health dashboard
 - **agentic** — Limited-context agentic dev loop
 
 #### DevOps Loop Commands (atomic unit pipeline)

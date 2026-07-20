@@ -1,8 +1,9 @@
 // src/engines/browser-automation/defs/observe.ts
 // Axis: observe — sensing & observation (10 capabilities)
 
+import { z } from 'zod'
 import type { BrowserCapabilityDef } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 export const observeDom: BrowserCapabilityDef = {
   id: 'auto:observe:dom',
@@ -59,7 +60,10 @@ export const observeMutation: BrowserCapabilityDef = {
   params: z.object({ selector: z.string() }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const found = (await ctx.governor.evaluate(ctx.slaveId, `!!document.querySelector(${JSON.stringify(ctx.params.selector)})`)) as boolean
+    const found = (await ctx.governor.evaluate(
+      ctx.slaveId,
+      `!!document.querySelector(${JSON.stringify(ctx.params.selector)})`,
+    )) as boolean
     return { ok: true, output: { present: found }, detail: 'observed mutation' }
   },
 }
@@ -86,7 +90,10 @@ export const observePresence: BrowserCapabilityDef = {
   params: z.object({ text: z.string() }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const found = (await ctx.governor.evaluate(ctx.slaveId, `document.body.innerText.includes(${JSON.stringify(ctx.params.text)})`)) as boolean
+    const found = (await ctx.governor.evaluate(
+      ctx.slaveId,
+      `document.body.innerText.includes(${JSON.stringify(ctx.params.text)})`,
+    )) as boolean
     return { ok: true, output: { present: found }, detail: 'observed presence' }
   },
 }
@@ -100,7 +107,7 @@ export const observeStyle: BrowserCapabilityDef = {
   handler: async (ctx) => {
     const expr = ctx.params.property
       ? `getComputedStyle(document.querySelector(${JSON.stringify(ctx.params.selector)})).getPropertyValue(${JSON.stringify(ctx.params.property)})`
-      : 'getComputedStyle(document.querySelector(' + JSON.stringify(ctx.params.selector) + ')).cssText'
+      : `getComputedStyle(document.querySelector(${JSON.stringify(ctx.params.selector)})).cssText`
     const out = await ctx.governor.evaluate(ctx.slaveId, expr)
     return { ok: true, output: out, detail: 'observed style' }
   },
@@ -113,7 +120,10 @@ export const observePerformance: BrowserCapabilityDef = {
   params: z.object({}),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const out = await ctx.governor.evaluate(ctx.slaveId, '({ttfb:performance.timing.responseStart-performance.timing.navigationStart})')
+    const out = await ctx.governor.evaluate(
+      ctx.slaveId,
+      '({ttfb:performance.timing.responseStart-performance.timing.navigationStart})',
+    )
     return { ok: true, output: out, detail: 'observed performance' }
   },
 }
@@ -125,7 +135,10 @@ export const diffSnapshot: BrowserCapabilityDef = {
   params: z.object({ before: z.string(), after: z.string() }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const res = await ctx.grounding.diffSnapshot(ctx.params.before as string, ctx.params.after as string)
+    const res = await ctx.grounding.diffSnapshot(
+      ctx.params.before as string,
+      ctx.params.after as string,
+    )
     return { ok: true, output: res, detail: 'diffed snapshot' }
   },
 }

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Non-TUI Kilocode / OpenCode → vivim-final — Capability Map</title>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "dark", securityLevel: "loose",
+    themeVariables: { primaryColor: "#1e293b", primaryTextColor: "#e2e8f0", lineColor: "#38bdf8", fontFamily: "ui-monospace, monospace" } });
+</script>
+<style>
+  :root{
+    --bg:#0b1120; --panel:#111c33; --panel2:#16233f; --ink:#e2e8f0; --muted:#94a3b8;
+    --line:#26344f; --accent:#38bdf8; --accent2:#a78bfa; --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0b1120,#0d1526);color:var(--ink);
+    font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;line-height:1.55;}
+  header{padding:48px 32px 28px;border-bottom:1px solid var(--line);
+    background:radial-gradient(1200px 400px at 20% -10%,rgba(56,189,248,.12),transparent);}
+  header h1{margin:0 0 8px;font-size:30px;letter-spacing:-.5px}
+  header p{margin:4px 0;color:var(--muted);max-width:900px}
+  .tagrow{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+  .tag{font:600 12px/1 var(--mono);padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--accent)}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 32px 80px}
+  section{margin:42px 0}
+  h2{font-size:21px;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+  h2 .n{font:700 12px/1 var(--mono);color:var(--accent);border:1px solid var(--line);
+    border-radius:8px;padding:5px 8px}
+  .lead{color:var(--muted);margin:0 0 18px;max-width:920px}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:880px){.g2,.g3{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h3{margin:0 0 10px;font-size:15px}
+  .card p{margin:6px 0;color:var(--muted);font-size:13.5px}
+  table{width:100%;border-collapse:collapse;font-size:13px;overflow:hidden;border-radius:12px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+  th{background:var(--panel2);color:var(--accent);font:600 12px/1.4 var(--mono);text-transform:uppercase;letter-spacing:.5px}
+  tr:last-child td{border-bottom:none}
+  td code{font:600 12px/1.3 var(--mono);color:var(--accent2)}
+  .pill{display:inline-block;font:600 11px/1 var(--mono);padding:3px 7px;border-radius:6px}
+  .y{background:rgba(52,211,153,.16);color:var(--ok)}
+  .n{background:rgba(248,113,113,.16);color:var(--bad)}
+  .w{background:rgba(251,191,36,.16);color:var(--warn)}
+  .mermaid{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;overflow:auto}
+  pre{background:#0a1322;border:1px solid var(--line);border-radius:12px;padding:16px;
+    overflow:auto;font:13px/1.55 var(--mono);color:#cbd5e1}
+  pre .c{color:#64748b}.pre .k{color:#a78bfa}.pre .s{color:#86efac}.pre .f{color:#38bdf8}
+  .note{font-size:12.5px;color:var(--muted);margin-top:10px;padding-left:12px;border-left:2px solid var(--accent)}
+  .callout{background:linear-gradient(180deg,rgba(167,139,250,.10),rgba(56,189,248,.06));
+    border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .callout strong{color:var(--accent2)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+  footer{border-top:1px solid var(--line);padding:24px 32px;color:var(--muted);font-size:12px}
+  a{color:var(--accent);text-decoration:none}
+  .kpi{font:700 26px/1 var(--mono);color:var(--accent)}
+  .kpi small{display:block;font:500 11px/1.4 var(--mono);color:var(--muted);letter-spacing:.4px;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Non-TUI Kilocode / OpenCode</h1>
+  <p>Capabilities, limitations, and how top-tier teams wire headless agents into devops — plus the integration surface for <strong>vivim-final</strong>. Source: <a href="docs/research/reports/non-tui-kilocode-opencode-sota-2026.md">SOTA report</a> · Confidence: High · 18 sources · 2026-07-18.</p>
+  <div class="tagrow">
+    <span class="tag">kilo run --auto</span>
+    <span class="tag">opencode serve</span>
+    <span class="tag">opencode acp</span>
+    <span class="tag">Shape B · local-agent</span>
+    <span class="tag">Governor Canon-safe</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- KPIs -->
+  <section class="grid g3">
+    <div class="card"><div class="kpi">3<span><small>HEADLESS SURFACES</small></span></div>
+      <p style="margin-top:10px">run (one-shot) · serve (HTTP) · acp (nd-JSON)</p></div>
+    <div class="card"><div class="kpi">0<span><small>CDP / DOM VISION</small></span></div>
+      <p style="margin-top:10px">Non-TUI agents are file/shell only — pair with vivim's CDP layer only for their web UI.</p></div>
+    <div class="card"><div class="kpi">1<span><small>NEW PROVIDER TYPE</small></span></div>
+      <p style="margin-top:10px"><code>local-agent</code> — not a CDP entry beside chatgpt/gemini.</p></div>
+  </section>
+
+  <!-- 1. The provider semantics mismatch -->
+  <section>
+    <h2><span class="n">01</span> The Core Insight: "Provider" means the opposite thing</h2>
+    <p class="lead">vivim providers are <strong>browser UIs driven over CDP</strong>. Kilo/OpenCode providers are <strong>LLM API backends they call</strong>. Wiring them in is a new axis, not a new row in the CDP table.</p>
+    <div class="mermaid">
+graph LR
+  subgraph VIVIM["vivim-final provider = WEB UI (CDP)"]
+    A1[chatgpt] --> A2[ChromeGovernor: CDP]
+    B1[gemini] --> A2
+    C1[claude] --> A2
+    A2 --> A3[StreamParserEngine → ContentBlock]
+  end
+  subgraph KC["Kilo / OpenCode provider = LLM BACKEND (API)"]
+    D1[kilo run --auto] --> D2[LLM API: anthropic / openai / ...]
+    E1[opencode serve] --> D2
+  end
+  style A2 fill:#16233f,stroke:#38bdf8
+  style D2 fill:#1e1b4b,stroke:#a78bfa
+    </div>
+    <div class="note">vivim <code>seeds/providers/manifests.ts</code> uses <code>provider_type:'llm'</code>, <code>auth_type:'browser'</code>, CDP selector endpoints. Kilo/OpenCode use <code>provider.&lt;id&gt;.options.apiKey</code> + <code>models.dev</code>. Different axes.</div>
+  </section>
+
+  <!-- 2. Capability matrix -->
+  <section>
+    <h2><span class="n">02</span> Capability Matrix (Non-TUI)</h2>
+    <div class="card" style="padding:0">
+    <table>
+      <thead><tr><th>Capability</th><th>OpenCode</th><th>Kilocode</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>One-shot non-interactive prompt</td><td><span class="pill y">✅ run</span></td><td><span class="pill y">✅ run --auto</span></td><td>Both exit with code</td></tr>
+        <tr><td>Headless HTTP server (OpenAPI)</td><td><span class="pill y">✅ serve</span></td><td><span class="pill y">✅ serve</span></td><td>Full CRUD session/message/file/tool API</td></tr>
+        <tr><td>ACP (stdin/stdout nd-JSON)</td><td><span class="pill y">✅ acp</span></td><td><span class="pill y">✅ acp</span></td><td>Best embed contract</td></tr>
+        <tr><td>Auto-approve (no prompts)</td><td><span class="pill y">✅ --auto</span></td><td><span class="pill y">✅ --auto</span></td><td>Permission-gated</td></tr>
+        <tr><td>Attach to warm server</td><td><span class="pill y">✅ --attach</span></td><td><span class="pill y">✅ server</span></td><td>Avoids MCP cold boot</td></tr>
+        <tr><td>JSON event output</td><td><span class="pill y">✅ --format json</span></td><td><span class="pill w">⚠ TUI-derived</span></td><td>OpenCode explicit</td></tr>
+        <tr><td>SSE event stream</td><td><span class="pill y">✅ /event</span></td><td><span class="pill y">✅ serve</span></td><td>Streaming integration</td></tr>
+        <tr><td>Org/team routing (CI)</td><td><span class="pill n">n/a</span></td><td><span class="pill y">✅ KILO_ORG_ID</span></td><td>Kilo-only Gateway</td></tr>
+        <tr><td>Session export/import</td><td><span class="pill y">✅</span></td><td><span class="pill y">✅</span></td><td>Handoff</td></tr>
+        <tr><td>OTEL tracing export</td><td><span class="pill w">config</span></td><td><span class="pill y">✅ OTLP</span></td><td>Observability</td></tr>
+        <tr><td>DOM / browser vision</td><td><span class="pill n">❌ none</span></td><td><span class="pill n">❌ none</span></td><td>File/shell only</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- 3. How top teams use it -->
+  <section>
+    <h2><span class="n">03</span> How Top-Tier Teams Leverage Non-TUI Agents</h2>
+    <div class="grid g3">
+      <div class="card"><h3>① CI/CD gated checks</h3>
+        <p>Run <code>run --auto</code> in GitHub Actions for scheduled refactors, PR triage, pre-merge review. Pipeline-native: prints stdout + exits.</p></div>
+      <div class="card"><h3>② Agentic dev loops</h3>
+        <p>Launch <code>serve</code> once, then <code>run --attach</code> repeatedly — skip MCP cold-boot. Exactly vivim's <code>devops</code> / <code>vivim-runtime</code> pattern.</p></div>
+      <div class="card"><h3>③ Subagent orchestration</h3>
+        <p><code>agent create</code> (scoped perms/model) or ACP for embedding. Ralph-TUI wraps OpenCode as a managed, task-routed subagent.</p></div>
+    </div>
+    <div class="mermaid">
+flowchart TD
+  GHA[GitHub Actions / Cron] --> RUN["kilo run --auto 'msg'"]
+  RUN --> EXIT{"exit code"}
+  EXIT -->|0| OK[✅ merged / reported]
+  EXIT -->|124| TO[⏱ timeout → retry/alert]
+  EXIT -->|1| ERR[❌ error → log]
+  SERVE[opencode serve :4096] --> ATTACH["opencode run --attach :4096"]
+  ATTACH --> MCP[(reused MCP servers)]
+    </div>
+  </section>
+
+  <!-- 4. Integration shapes -->
+  <section>
+    <h2><span class="n">04</span> Two Integration Shapes into vivim</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3 style="color:var(--bad)">Shape A — CDP-wrap their Web UI ❌</h3>
+        <p>Register <code>kilo</code>/<code>opencode</code> like chatgpt, point endpoints at <code>web</code>, drive composer via ChromeGovernor.</p>
+        <p><strong>Why rejected:</strong> needs a logged-in browser, defeats headless purpose, loses structured JSON, and breaks the point of using an agent.</p>
+      </div>
+      <div class="callout">
+        <h3 style="color:var(--ok);margin-top:0">Shape B — <code>local-agent</code> provider type ✅ (recommended)</h3>
+        <p>Add <code>provider_type:'local-agent'</code> alongside <code>'llm'</code>. Capabilities execute by shelling out to <code>run --auto</code> or POSTing to <code>serve</code>, then parsing output into <code>ContentBlock[]</code> via <code>StreamParserEngine</code>.</p>
+        <p><strong>Wins:</strong> no CDP, ChromeGovernor untouched (Governor Canon safe), Store-Contracts honored. Enables "run unit X via Kilo agent", subagent fan-out, headless devops.</p>
+      </div>
+    </div>
+    <div class="mermaid">
+flowchart LR
+  API["POST /api/interpret"] --> REG[UnifiedCapabilityRegistry]
+  REG -->|provider_type=local-agent| EXEC["LocalAgentProviderExecutor"]
+  REG -->|provider_type=llm| GOV[ChromeGovernor → CDP]
+  EXEC --> CLI["kilo/opencode run --auto"]
+  EXEC --> HTTP["POST serve /session/:id/message"]
+  CLI --> PARSER[StreamParserEngine → ContentBlock]
+  HTTP --> PARSER
+  style EXEC fill:#16233f,stroke:#38bdf8
+  style GOV fill:#1e1b4b,stroke:#a78bfa
+    </div>
+  </section>
+
+  <!-- 5. Confirmed code path -->
+  <section>
+    <h2><span class="n">05</span> Confirmed Code Path (Convergence: CONFIRMED)</h2>
+    <p class="lead">A thin <code>LocalAgentProviderExecutor</code> — the only net-new surface. Spawns the CLI or hits <code>serve</code>, parses to <code>ContentBlock[]</code>.</p>
+    <pre><span class="c">// src/engines/local-agent-provider.ts — Shape B: agent backend as a vivim provider.</span>
+<span class="c">// No CDP. Spawns the CLI / hits serve HTTP. Governor Canon preserved.</span>
+<span class="k">import</span> { spawn } <span class="k">from</span> <span class="s">'node:child_process'</span>;
+<span class="k">import</span> { <span class="f">type</span> ContentBlock } <span class="k">from</span> <span class="s">'@/engines/stream-parser'</span>;
+
+<span class="k">export interface</span> LocalAgentRequest {
+  slug: <span class="s">'kilo'</span> | <span class="s">'opencode'</span>;
+  message: <span class="f">string</span>;
+  model?: <span class="f">string</span>;          <span class="c">// provider/model</span>
+  cwd?: <span class="f">string</span>;
+  timeoutMs?: <span class="f">number</span>;      <span class="c">// kilo returns 124 on timeout</span>
+}
+
+<span class="c">// Option 1: one-shot CLI (preferred for unattended devops jobs)</span>
+<span class="k">export async function</span> <span class="f">runLocalAgent</span>(req: LocalAgentRequest): <span class="f">Promise</span>&lt;ContentBlock[]&gt; {
+  <span class="k">const</span> bin = req.slug === <span class="s">'kilo'</span> ? <span class="s">'kilo'</span> : <span class="s">'opencode'</span>;
+  <span class="k">const</span> args = [<span class="s">'run'</span>, <span class="s">'--auto'</span>, req.message,
+    ...(req.model ? [<span class="s">'--model'</span>, req.model] : []),
+    ...(req.cwd  ? [<span class="s">'--dir'</span>,  req.cwd ] : [])];
+  <span class="k">if</span> (req.slug === <span class="s">'opencode'</span>) args.push(<span class="s">'--format'</span>, <span class="s">'json'</span>);
+
+  <span class="k">const</span> proc = <span class="f">spawn</span>(bin, args, { cwd: req.cwd, env: { ...process.env } });
+  <span class="k">const</span> chunks: Buffer[] = [];
+  proc.stdout.on(<span class="s">'data'</span>, (d) =&gt; chunks.push(d));
+
+  <span class="k">const</span> code = <span class="k">await new</span> <span class="f">Promise</span>&lt;<span class="f">number</span>&gt;((res) =&gt; {
+    proc.on(<span class="s">'close'</span>, (c) =&gt; res(c ?? 1));
+    <span class="f">setTimeout</span>(() =&gt; proc.<span class="f">kill</span>(<span class="s">'SIGTERM'</span>), req.timeoutMs ?? 120_000).unref();
+  });
+  <span class="k">if</span> (code === 124) <span class="k">throw new</span> <span class="f">Error</span>(<span class="s">'local-agent: timeout'</span>);
+  <span class="k">if</span> (code !== 0)   <span class="k">throw new</span> <span class="f">Error</span>(<span class="s">`local-agent: exit ${code}`</span>);
+
+  <span class="k">return</span> <span class="f">parseAgentOutput</span>(req.slug, Buffer.<span class="f">concat</span>(chunks).toString(<span class="s">'utf8'</span>));
+}
+
+<span class="c">// Option 2: persistent server (only if networked + OPENCODE_SERVER_PASSWORD set)</span>
+<span class="k">export async function</span> <span class="f">postToServe</span>(baseUrl: <span class="f">string</span>, sessionId: <span class="f">string</span>, message: <span class="f">string</span>) {
+  <span class="k">return</span> <span class="k">await</span> <span class="f">fetch</span>(<span class="s">`${baseUrl}/session/${sessionId}/message`</span>, {
+    method: <span class="s">'POST'</span>, headers: { <span class="s">'content-type'</span>: <span class="s">'application/json'</span> },
+    body: <span class="f">JSON</span>.<span class="f">stringify</span>({ parts: [{ type: <span class="s">'text'</span>, text: message }] }),
+  }).<span class="f">then</span>((r) =&gt; r.json()); <span class="c">// { info: Message, parts: Part[] }</span>
+}</pre>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--ok)"></i> CONFIRMED</span>
+      <span><i class="dot" style="background:var(--warn)"></i> needs caution</span>
+      <span><i class="dot" style="background:var(--bad)"></i> rejected</span>
+    </div>
+  </section>
+
+  <!-- 6. Limitations / risks -->
+  <section>
+    <h2><span class="n">06</span> Limitations &amp; Risk Controls</h2>
+    <div class="grid g2">
+      <div class="card"><h3>⚠ Blind follow-ups</h3>
+        <p>Autonomous mode auto-answers "decide autonomously". Set explicit <code>deny</code> for destructive tools.</p>
+        <pre style="margin-top:10px">permission: { "*": "ask",
+  bash: { "rm *": "deny" } }</pre></div>
+      <div class="card"><h3>⚠ serve hang risk</h3>
+        <p>Community reports <code>serve</code>+client infinite loops. Prefer <code>run</code> for unattended jobs; client-side timeout + <code>124</code> check.</p></div>
+      <div class="card"><h3>⚠ Unauth by default</h3>
+        <p><code>serve</code>/<code>web</code> are open unless <code>OPENCODE_SERVER_PASSWORD</code> set. Bind to localhost for devops.</p></div>
+      <div class="card"><h3>⚠ resume互斥</h3>
+        <p><code>--continue</code> can't combine with a prompt or <code>--auto</code>. Design pipelines around explicit session IDs.</p></div>
+    </div>
+  </section>
+
+  <!-- 7. Convergence trace -->
+  <section>
+    <h2><span class="n">07</span> Research Convergence Trace</h2>
+    <div class="mermaid">
+flowchart LR
+  I1["Iter 1: Shape A (CDP)\nConfidence: LOW"] -->|mismatch| I2["Iter 2: Shape B (local-agent)\nConfidence: MED-HIGH"]
+  I2 -->|validate pitfalls| I3["Iter 3: mitigations found\nConfidence: HIGH"]
+  I3 --> V["VERDICT: CONFIRMED\n3 iterations"]
+  style I1 fill:#3b1d1d,stroke:#f87171
+  style I2 fill:#3a2f12,stroke:#fbbf24
+  style I3 fill:#16301f,stroke:#34d399
+  style V fill:#16233f,stroke:#38bdf8
+    </div>
+  </section>
+
+  <!-- 8. Recommendations -->
+  <section>
+    <h2><span class="n">08</span> Recommendations for vivim-final</h2>
+    <div class="callout">
+      <strong>1.</strong> Adopt Shape B (<code>local-agent</code> provider type) as the headless devops execution backend.<br/>
+      <strong>2.</strong> Use <code>run --auto</code> (+ <code>--format json</code> for OpenCode) for jobs; reserve <code>serve</code>/<code>acp</code> for persistent MCP reuse.<br/>
+      <strong>3.</strong> Permission policy: explicit <code>deny</code> for risky tools; anything not auto-approved is blocked.<br/>
+      <strong>4.</strong> Candidate ADR: "Agent backends as vivim providers" — cross-refs the SOTA brief.<br/>
+      <strong>5.</strong> Do NOT give non-TUI agents DOM vision; keep CDP/ChromeGovernor for real web-chat providers.
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Generated 2026-07-18 · Research artifacts: <code>docs/research/{reports,briefs,evidence,code-paths}/non-tui-kilocode-opencode*</code> ·
+  Confidence: High · 18 sources · Convergence: CONFIRMED (3 iterations).
+</footer>
+</body>
+</html>

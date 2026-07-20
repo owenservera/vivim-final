@@ -1,6 +1,6 @@
 // src/schema/provider-manifest.ts
-// Zod schema for provider manifest JSON files.
-// Validates seeds/providers/*.json before registration.
+// Zod schema for provider manifests (in-repo canonical module seeds/providers/manifests.ts).
+// Validates manifest objects before registration.
 
 import { z } from 'zod'
 
@@ -24,7 +24,7 @@ const ParserSchema = z.object({
   version: z.number().int().positive(),
   is_active: z.boolean().optional().default(true),
   fallback: z.string().optional(),
-  logic_type: z.enum(['file', 'inline', 'composed']).optional().default('file'),
+  logic_type: z.enum(['file', 'inline', 'composed']).optional().default('inline'),
   logic_code: z.string().optional(), // Inline TypeScript/JavaScript for DB-driven loading
 })
 

@@ -38,14 +38,14 @@ describe('EvictionManager (Unit 8.1)', () => {
     const { handlers, eventBus, governor } = makeMocks()
     const em = make(eventBus, governor)
     expect(typeof handlers['capability:executed']).toBe('function')
-    handlers['capability:executed']!({ slaveId: 's1' })
+    handlers['capability:executed']?.({ slaveId: 's1' })
     expect((em as any).accessLog.has('s1')).toBe(true)
   })
 
   it('evicts slaves that exceed the idle TTL', async () => {
     const { handlers, eventBus, governor, killed } = makeMocks()
     const em = make(eventBus, governor)
-    handlers['capability:executed']!({ slaveId: 'busy' })
+    handlers['capability:executed']?.({ slaveId: 'busy' })
     governor.getAllSlaves = () => [
       { slaveId: 'busy', id: 'busy' },
       { slaveId: 'idle', id: 'idle' },
@@ -61,7 +61,7 @@ describe('EvictionManager (Unit 8.1)', () => {
   })
 
   it('does not evict slaves within the idle TTL', async () => {
-    const { handlers, eventBus, governor, killed } = makeMocks()
+    const { eventBus, governor, killed } = makeMocks()
     const em = make(eventBus, governor)
     governor.getAllSlaves = () => [{ slaveId: 'fresh', id: 'fresh' }]
     ;(em as any).accessLog.set('fresh', {

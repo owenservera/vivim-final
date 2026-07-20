@@ -110,32 +110,47 @@ Add deterministic intents (category `browser`/`automation`), all `executor:'gene
 
 ---
 
-## 5. Files (new / edited)
+## 5. Files (new / edited) — ACTUAL AS BUILT
 
-**New**
-- `src/engines/semantic-grounding.ts` (SemanticGroundingEngine + SemanticSelector types)
-- `src/engines/selector-healer.ts` (SelectorHealer + store contract `selector-heal-store.ts`)
-- `src/engines/agentic-loop.ts` (AgenticLoopEngine, Sense/Plan/Act/Observe/Reflect/Adapt)
-- `src/engines/nlcl/executors/generic-browser-executor.ts`
-- `src/engines/automation/recipes.ts` (recipe library + taxonomy constants)
-- `src/engines/automation/orchestrator.ts` (AutomationOrchestrator + agent roles)
-- `src/engines/automation/agents.ts` (researcher/extractor/synthesizer/monitor/tester definitions)
-- `src/server/automation-router.ts` (governor-mediated `/api/automate/*` + `/api/automate/loop`)
-- `tests/unit/engines/{semantic-grounding,selector-healer,agentic-loop,generic-browser-executor,orchestrator}.test.ts`
-- `tests/integration/automation.e2e.test.ts` (guarded, needs Chrome)
+**New — browser-automation backbone (`src/engines/browser-automation/`)**
+- `types.ts` — `SemanticSelector`, `ResolvedElement`, `BrowserCapabilityDef`, `TrustPolicy`, `TrustLevel`, and the `TRUST` presets (defined here to avoid a registry↔defs init cycle).
+- `semantic-grounding.ts` — `SemanticGroundingEngine` (multi-mode resolve: css/testid/role/aria/label/xpath/text/visual → live box; AX tree; screenshot; diff).
+- `selector-healer.ts` — `SelectorHealer` (persisted strategy → rule-based alternates → LLM propose; uses `SelectorHealStore`).
+- `registry.ts` — `BrowserCapabilityRegistry` (100+ declarative capabilities, 12 axes; re-exports `TRUST`/`z`).
+- `defs/*.ts` — 12 axis definition files (`nav input scroll wait extract capture tab net state observe flow os`), each exporting `BrowserCapabilityDef`s that read `TRUST` from `../types.js`.
+- `harness-actions.ts` — `BrowserHarnessActions` (CDPProxy-backed primitive ops; injected into governor).
+- `recipes.ts` — 43 composite `Recipe` definitions (`auto:<class>:<action>`).
+- `agentic-loop.ts` — `AgenticLoopEngine` (Sense/Plan/Act/Observe/Reflect/Adapt; trust + budget gates).
+
+**New — automation orchestration (`src/engines/automation/`)**
+- `types.ts` — `AgentRole`, `TrustPolicy`, `AutomationGoal`, `AutomationResult`.
+- `agents.ts` — 5 config-role agents (`researcher`/`extractor`/`synthesizer`/`monitor`/`tester`) with trust/fanOut/loopPolicy/defaultRecipe.
+- `orchestrator.ts` — `AutomationOrchestrator.run()` composes recipe + role via governor, trust-gates destructive goals, interpolates `{{param}}` into recipe steps.
+
+**New — NL + surfacing**
+- `src/engines/nlcl/executors/generic-browser-executor.ts` — thin router: NL intent → orchestrator (infers role from intent).
+- `src/server/automation-router.ts` — governor-mediated `createAutomationRouter()` (`/api/automate/recipes`, `/api/automate/roles`, `/api/automate/run`).
+
+**New — seeds + tests**
+- `seeds/automation/automation.seed.ts` — `seedAutomation(db)`: idempotent upserts of one `AgentLoopRun` + `AgentStep` per agent role (matches L15 schema).
+- `tests/unit/engines/automation-orchestrator.test.ts`
+- `tests/unit/engines/generic-browser-executor.test.ts`
+- `tests/unit/engines/browser-capability-registry.test.ts`
+- `tests/unit/engines/semantic-grounding.test.ts`
+- `tests/unit/engines/selector-healer.test.ts`
+- `tests/integration/engines/browser-automation.test.ts` (governor contract + recipe→DAG + healer end-to-end; no real browser).
 
 **Edited**
-- `src/engines/chrome-governor.ts` — `ensureGenericBrowser`, `executeAgenticLoop`, `getAccessibilityTree` helpers, `ToolUseProtocol` surface
-- `src/engines/nlcl/types.ts` — add `'generic-browser'` to `ExecutorId`; add `AgenticGoal`/loop types
-- `src/engines/nlcl/executors/index.ts` — export
-- `src/engines/nlcl/nlcl-engine.ts` — register `GenericBrowserExecutor`; route agentic/recipe intents
-- `src/engines/nlcl/catalog.ts` — new `automationPatterns` + export
-- `src/engines/harness/recipe-types.ts` + `recipe-compiler.ts` — extend `RecipeStep` union (scroll/hover/select/press/tab/observe/upload/extract_markdown) + compile
-- `src/storage/contracts/program-store.ts` — extend `RecipeStep` (shared union)
-- `src/engines/harness/harness-contract.ts` — `agentic_goal` already present; add loop request/result types
-- `src/server/index.ts` — mount automation router, wire `AgenticLoopEngine` + `AutomationOrchestrator` in `createServerWithEngines`
-- `prisma/schema.prisma` — add `selectorStrategy` (format/semantic_data/heal_count), `agentLoopRun`, `agentStep` (SOTA-07 deltas)
-- `seeds/` — seed the recipe library + agent roles
+- `src/engines/chrome-governor.ts` — `ensureGenericBrowser`, `clearGenericBrowser`, `captureScreenshot`, `getAccessibilityTree`; `browserHarness` field injected into `CDPProxy` via `cdp` getter; `executeHarnessPlan` switch handles new actions (`loop_while` etc.); `setBrowserHarness()`.
+- `src/engines/nlcl/types.ts` — add `'generic-browser'` to `ExecutorId`.
+- `src/engines/nlcl/executors/index.ts` — export `GenericBrowserExecutor`.
+- `src/engines/nlcl/nlcl-engine.ts` — register `GenericBrowserExecutor` via `AutomationOrchestrator` dep in `NLCLEngineDeps`.
+- `src/engines/nlcl/catalog.ts` — `automationPatterns` (`auto.research`/`auto.extract`/`auto.summarize`/`auto.monitor`/`auto.test`) wired into `getDefaultCommandPatterns`.
+- `src/engines/harness/recipe-compiler.ts` — extend `stepToNode` for new actions (incl. `loop_while` as type `'action'`).
+- `src/storage/contracts/program-store.ts` — extended `RecipeStep` union.
+- `src/server/index.ts` — instantiate `AutomationOrchestrator`, pass to `NLCLEngine`, add to `ServerContext`, mount automation router, and run `seedAutomation(db)` at boot (idempotent, try/catch).
+- `prisma/schema.prisma` — `AgentLoopRun`/`AgentStep` already present (L15); no new models needed. `SelectorStrategy` already present.
+- `src/index.ts` — export `seedAutomation`.
 
 ---
 

@@ -89,6 +89,14 @@ const DEFAULT_CONFIG: VersionConfig = {
   minSamplesForComparison: 30,
 }
 
+export interface CompositeSnapshot {
+  compositeId: string
+  version: number
+  nodes: unknown[]
+  edges: unknown[]
+  snapshotAt: number
+}
+
 export class VersionManager {
   private readonly store: VersionStore
   private readonly configManager: ConfigManager
@@ -133,25 +141,81 @@ export class VersionManager {
 
   // ── Taxonomy version chain ─────────────────────────────────────────────────
 
+  /**
+   * Snapshot a capability (or composite DAG). When `dag` is supplied the full
+   * composite DAG (nodes/edges) is persisted in the snapshot payload so it can
+   * be reconstructed later via `getCompositeAtVersion`.
+   *
+   * Overload 1: snapshot a leaf capability by id (changedFields only).
+   * Overload 2: snapshot a composite DAG with its nodes/edges.
+   */
   async snapshotCapability(
     capabilityId: string,
     changedFields?: string[],
     actor?: string,
+  ): Promise<string | null>
+  async snapshotCapability(
+    capabilityId: string,
+    dag: { nodes: unknown[]; edges: unknown[] },
+    actor?: string,
+  ): Promise<string | null>
+  async snapshotCapability(
+    capabilityId: string,
+    changedFieldsOrDag?: string[] | { nodes: unknown[]; edges: unknown[] },
+    actor?: string,
   ): Promise<string | null> {
     const latest = await this.store.getLatestTaxonomyVersion(capabilityId)
     const version = (latest?.version ?? 0) + 1
-    const snapshotJson = JSON.stringify({ capabilityId, version, snapshotAt: Date.now() })
+    const now = Date.now()
+    let snapshotJson: string
+    let changedFieldsJson: string
+    if (
+      changedFieldsOrDag &&
+      !Array.isArray(changedFieldsOrDag) &&
+      typeof changedFieldsOrDag === 'object'
+    ) {
+      const dag = changedFieldsOrDag as { nodes: unknown[]; edges: unknown[] }
+      snapshotJson = JSON.stringify({
+        compositeId: capabilityId,
+        version,
+        nodes: dag.nodes,
+        edges: dag.edges,
+        snapshotAt: now,
+      } satisfies CompositeSnapshot)
+      changedFieldsJson = JSON.stringify(['nodes', 'edges'])
+    } else {
+      const changedFields = (changedFieldsOrDag as string[] | undefined) ?? []
+      snapshotJson = JSON.stringify({ capabilityId, version, snapshotAt: now })
+      changedFieldsJson = JSON.stringify(changedFields)
+    }
     const row = await this.store.createTaxonomyVersion({
       id: newId(),
       capabilityId,
       version,
       snapshotJson,
-      changedFieldsJson: JSON.stringify(changedFields ?? []),
+      changedFieldsJson,
       actor: actor ?? 'system',
     })
     const max = this.getConfig().maxTaxonomyVersionsPerCapability ?? 50
     await this.store.pruneOldVersions(capabilityId, max)
     return row.id
+  }
+
+  /** Reconstruct a prior composite DAG version from the version chain. */
+  async getCompositeAtVersion(compositeId: string, version: number): Promise<CompositeSnapshot> {
+    const row = await this.store.getTaxonomyVersion(compositeId, version)
+    if (!row) throw new EngineError(`No version ${version} for composite ${compositeId}`)
+    const parsed = JSON.parse(row.snapshotJson) as Partial<CompositeSnapshot>
+    if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
+      throw new EngineError(`Version ${version} of ${compositeId} is not a composite DAG`)
+    }
+    return {
+      compositeId,
+      version,
+      nodes: parsed.nodes,
+      edges: parsed.edges,
+      snapshotAt: parsed.snapshotAt ?? row.createdAt,
+    }
   }
 
   async getCapabilityAtVersion(capabilityId: string, version: number): Promise<TaxonomyVersionRow> {

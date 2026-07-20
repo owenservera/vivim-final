@@ -24,7 +24,7 @@ describe('response.ts — ETag cache', () => {
   it('sendJson returns 304 when If-None-Match matches', () => {
     const body = { data: 'value' }
     const res1 = sendJson('test-cache', body)
-    const etag = res1.headers.get('ETag')!
+    const etag = res1.headers.get('ETag') ?? ''
 
     const res2 = sendJson('test-cache', body, { ifNoneMatch: etag })
     expect(res2.status).toBe(304)
@@ -32,9 +32,7 @@ describe('response.ts — ETag cache', () => {
 
   it('bustCache removes entry so next request is 200', () => {
     const body = { before: 'bust' }
-    const res1 = sendJson('test-cache', body)
-    const _etag1 = res1.headers.get('ETag')!
-
+    sendJson('test-cache', body)
     bustCache('test-cache')
 
     const res2 = sendJson('test-cache', { after: 'bust' })

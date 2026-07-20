@@ -3,8 +3,8 @@
 
 import { afterEach, describe, expect, it } from 'bun:test'
 import {
-  ErrorTracker,
   type ErrorReporter,
+  ErrorTracker,
   type TrackedError,
 } from '../../../src/engines/error-tracker.js'
 
@@ -36,7 +36,7 @@ describe('ErrorTracker (Unit 9.3)', () => {
     et.report(new Error('boom'))
     await deferred.promise
     expect(reported.length).toBe(1)
-    expect(reported[0]!.message).toBe('boom')
+    expect(reported[0]?.message).toBe('boom')
   })
 
   it('dedups identical errors within the dedup window', async () => {
@@ -107,7 +107,7 @@ describe('ErrorTracker (Unit 9.3)', () => {
     err.stack = 'x'.repeat(100)
     et.report(err)
     await deferred.promise
-    expect(reported[0]!.stack?.length).toBeLessThanOrEqual(10)
+    expect(reported[0]?.stack?.length).toBeLessThanOrEqual(10)
   })
 
   it('flush re-reports seen errors', async () => {

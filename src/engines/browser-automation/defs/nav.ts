@@ -1,8 +1,9 @@
 // src/engines/browser-automation/defs/nav.ts
 // Axis: nav — navigation & lifecycle (10 capabilities)
 
+import { z } from 'zod'
 import type { BrowserCapabilityDef } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 const navUrl = z.object({ url: z.string().url() })
 

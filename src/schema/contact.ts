@@ -115,13 +115,17 @@ export const OrganizationDataSchema = z.object({
   industry: z.string().optional(),
   employeeCount: z.number().int().positive().optional(),
   foundedYear: z.number().int().optional(),
-  addresses: z.array(z.object({
-    street: z.string().optional(),
-    city: z.string().optional(),
-    region: z.string().optional(),
-    postalCode: z.string().optional(),
-    country: z.string().optional(),
-  })).optional(),
+  addresses: z
+    .array(
+      z.object({
+        street: z.string().optional(),
+        city: z.string().optional(),
+        region: z.string().optional(),
+        postalCode: z.string().optional(),
+        country: z.string().optional(),
+      }),
+    )
+    .optional(),
   tags: z.array(z.string()).optional(),
   importedAt: z.number(),
 })
@@ -132,14 +136,17 @@ export const contactNodeSchema = {
   type: 'cap-store.contact' as const,
   version: 1,
   schema: ContactDataSchema,
-  indexContent: (data: ContactData) => `${data.displayName} ${data.emails?.map(e => e.address).join(' ') ?? ''} ${data.notes ?? ''}`,
-  embeddingText: (data: ContactData) => `${data.displayName} ${data.jobTitle ?? ''} ${data.organization ?? ''}`,
+  indexContent: (data: ContactData) =>
+    `${data.displayName} ${data.emails?.map((e) => e.address).join(' ') ?? ''} ${data.notes ?? ''}`,
+  embeddingText: (data: ContactData) =>
+    `${data.displayName} ${data.jobTitle ?? ''} ${data.organization ?? ''}`,
 }
 
 export const organizationNodeSchema = {
   type: 'cap-store.organization' as const,
   version: 1,
   schema: OrganizationDataSchema,
-  indexContent: (data: OrganizationData) => `${data.name} ${data.description ?? ''} ${data.industry ?? ''}`,
+  indexContent: (data: OrganizationData) =>
+    `${data.name} ${data.description ?? ''} ${data.industry ?? ''}`,
   embeddingText: (data: OrganizationData) => `${data.name} ${data.industry ?? ''}`,
 }

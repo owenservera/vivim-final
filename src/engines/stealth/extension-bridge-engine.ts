@@ -30,7 +30,7 @@ type CommandHandler = (
 
 const BRIDGE_INJECT_KEY = '__vivimBridgeInstalled'
 const MAGIC_INBOUND = 'VIVIM_BRIDGE_CMD:'
-const MAGIC_OUTBOUND = 'VIVIM_BRIDGE_RES:'
+const _MAGIC_OUTBOUND = 'VIVIM_BRIDGE_RES:'
 
 export class ExtensionBridgeEngine {
   private handlers = new Map<string, CommandHandler>()

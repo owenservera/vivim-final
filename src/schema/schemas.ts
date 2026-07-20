@@ -1,25 +1,31 @@
 // src/schema/schemas.ts
 // Schema registry initialization — call registerAllSchemas() at boot.
 
-import { schemaRegistry } from './node.js'
-import { messageNodeSchema, conversationNodeSchema } from './message.js'
-import { emailNodeSchema, emailThreadNodeSchema } from './email.js'
-import { documentNodeSchema, codeNodeSchema, knowledgeNodeSchema, webpageNodeSchema } from './document.js'
+import { AGENTIC_NODE_TYPES, agenticDataSchemas } from './agentic.js'
 import { contactNodeSchema, organizationNodeSchema } from './contact.js'
-import { taskNodeSchema, projectNodeSchema } from './task.js'
-import { eventNodeSchema, reminderNodeSchema, locationNodeSchema } from './event.js'
-import { mediaNodeSchema } from './media.js'
-import { socialPostNodeSchema } from './social.js'
 import {
-  MemoryDataSchema,
+  codeNodeSchema,
+  documentNodeSchema,
+  knowledgeNodeSchema,
+  webpageNodeSchema,
+} from './document.js'
+import { emailNodeSchema, emailThreadNodeSchema } from './email.js'
+import { eventNodeSchema, locationNodeSchema, reminderNodeSchema } from './event.js'
+import { mediaNodeSchema } from './media.js'
+import { conversationNodeSchema, messageNodeSchema } from './message.js'
+import {
   AcuDataSchema,
-  NotebookDataSchema,
-  NoteDataSchema,
-  BookmarkDataSchema,
   ArtifactDataSchema,
+  BookmarkDataSchema,
   DocumentNodeDataSchema,
   EmailNodeDataSchema,
+  MemoryDataSchema,
+  NoteDataSchema,
+  NotebookDataSchema,
 } from './node-data.js'
+import { schemaRegistry } from './node.js'
+import { socialPostNodeSchema } from './social.js'
+import { projectNodeSchema, taskNodeSchema } from './task.js'
 
 // Zod discriminated unions produce overly-broad inferred types (e.g. optional `data`
 // on CustomPart). Cast to `any` at registration — the schemas are correct at runtime;
@@ -101,4 +107,29 @@ export function registerAllSchemas(): void {
     indexContent: (d: any) => [d.subject, d.body, d.from].join('\n'),
     embeddingText: (d: any) => [d.subject, d.body].join('\n'),
   } as any)
+
+  // ── Agentic backbone (SOTA agentic system — cap-store.* sub-types) ──
+  // All agentic node types are validated by their Zod schemas in agentic.ts.
+  for (const type of AGENTIC_NODE_TYPES) {
+    const schema = agenticDataSchemas[type]
+    schemaRegistry.register({
+      type,
+      version: 1,
+      schema,
+      indexContent: (d: any) => {
+        if (d.handle) return [d.handle, d.displayName].filter(Boolean).join('\n')
+        if (d.name) return String(d.name)
+        if (d.title) return [d.title, d.description].filter(Boolean).join('\n')
+        if (d.topic) return [d.topic, d.claim].filter(Boolean).join('\n')
+        return JSON.stringify(d)
+      },
+      embeddingText: (d: any) => {
+        if (d.displayName) return d.displayName
+        if (d.title) return d.title
+        if (d.topic) return [d.topic, d.claim].filter(Boolean).join('\n')
+        if (d.description) return d.description
+        return String(d.name ?? '')
+      },
+    } as any)
+  }
 }

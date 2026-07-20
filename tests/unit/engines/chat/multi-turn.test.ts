@@ -272,6 +272,6 @@ describe('Multi-turn: State transitions', () => {
 
     db.addMessage(conv.id, 'assistant', 'resp1')
     const secondTime = conv.lastMessageAt
-    expect(secondTime!.getTime()).toBeGreaterThanOrEqual(firstTime!.getTime())
+    expect(secondTime?.getTime()).toBeGreaterThanOrEqual(firstTime?.getTime())
   })
 })

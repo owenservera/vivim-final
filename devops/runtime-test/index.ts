@@ -26,6 +26,8 @@ export { runMigrate, type MigrateResult } from './migrate.js'
 export { ensureBrowser, type BrowserStatus } from './ensure-browser.js'
 export { startWatchdog } from './watchdog.js'
 export { installProcessGuard } from './process-guard.js'
+export { discoverProtocol, type DiscoverProtocolResult } from './discover-protocol.js'
+export { providerStatus, type ProviderStatusResult } from './provider-status.js'
 export { assessGoal, type GoalAssessment } from './goal-gate.js'
 export { runGuard, type GuardResult } from './guard.js'
 export {

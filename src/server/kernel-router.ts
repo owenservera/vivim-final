@@ -66,7 +66,7 @@ export function createKernelRouter(
   const { kernel, configSurface } = deps
 
   return async (req: Request, url: URL): Promise<Response | null> => {
-    const source = extractSource(req)
+    const _source = extractSource(req)
 
     // Oracle query endpoint
     if (url.pathname === '/api/kernel/oracle/query' && req.method === 'POST') {
@@ -80,7 +80,6 @@ export function createKernelRouter(
         filter?: Record<string, unknown>
         limit?: number
       }
-
 
       if (!kernel?.context()?.oracle?.query) {
         return new Response(JSON.stringify({ error: 'Oracle not available' }), {

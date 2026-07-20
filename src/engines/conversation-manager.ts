@@ -3,12 +3,16 @@
 // RESOLVE → DERIVE SLAVE → LOCK → ENSURE → SEND → CAPTURE → PARSE → STORE+EMIT.
 
 import { EngineError } from '../errors.js'
+import { newId } from '../ids.js'
+import type { ContentUnitStore } from '../storage/contracts/content-unit-store.js'
 import type {
   ConversationMessageRow,
   ConversationRow,
   ConversationStore,
   ProviderAccountRow,
 } from '../storage/contracts/conversation-store.js'
+import type { NodeStoreContract } from '../storage/contracts/node-store.js'
+import type { BlockMeta } from '../storage/contracts/stream-block-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type {
   CapabilityResolutionEngine,
@@ -16,6 +20,7 @@ import type {
   ResolvedCapabilities,
 } from './capability-resolution.js'
 import type { ChromeGovernor, ChromeSlave, HarnessDAG, HarnessResult } from './chrome-governor.js'
+import { decomposeToContentUnits } from './content-unit-decomposer.js'
 import type { AssembledContext, ContextAssemblyEngine } from './context-assembly.js'
 import type { ExecutionMemoizer } from './execution-memoizer.js'
 import type { AgentMemoryContext, MemoryEngine } from './memory-engine.js'
@@ -27,12 +32,10 @@ import {
 } from './provider-selectors.js'
 import type { StreamBlockStore } from './stream-block-store.js'
 import type { StreamingProtocol } from './streaming-protocol.js'
-import type { NodeStoreContract } from '../storage/contracts/node-store.js'
-import { newId } from '../ids.js'
 
 // ── StreamParserEngine + shared parse types (real impl in stream-parser.ts) ─
 
-import type { ContentBlock, StreamParserEngine } from './stream-parser.js'
+import type { ContentBlock, ParseResult, StreamParserEngine } from './stream-parser.js'
 
 export type {
   ContentBlock,
@@ -122,12 +125,21 @@ function composerTypeForProvider(
   }
 }
 
-/** Provider-specific streaming API capture patterns (Unit 2.5). */
-const CAPTURE_PATTERNS: Record<string, RegExp> = {
-  chatgpt: /\/backend-api\/conversation($|\?|\/)/,
-  claude: /\/api\/organizations\/.*\/chat_conversations\/.*\/completion/,
-  gemini: /\/_api\/BardFrontendService\/StreamGenerate/,
+/** Provider-specific streaming API capture patterns (Unit 2.5) — loaded from DB via ProviderRegistry. */
+import { getProviderRegistry } from '../config/provider-registry.js'
+
+function getCapturePattern(providerId: string): RegExp | undefined {
+  try {
+    const raw = getProviderRegistry().getCapturePattern(providerId)
+    return raw ? new RegExp(raw) : undefined
+  } catch {
+    return undefined
+  }
 }
+
+const CAPTURE_PATTERNS: Record<string, RegExp> = new Proxy({} as Record<string, RegExp>, {
+  get: (_, providerId: string) => getCapturePattern(providerId),
+})
 
 function extractText(blocks: ContentBlock[]): string {
   const pieces: string[] = []
@@ -183,7 +195,20 @@ export class ConversationManager {
     private contextAssembly?: ContextAssemblyEngine,
     private streamingProtocol?: StreamingProtocol,
     private nodeStore?: NodeStoreContract,
+    private contentUnitStore?: ContentUnitStore,
+    private memoryFabric?: import('./memory/memory-fabric.js').MemoryFabric,
   ) {}
+
+  // Resolve the agent that owns a conversation's memory scope (spec 024 FR-005).
+  // Agent threads use providerId='agent:<agentId>'; plain user conversations fall
+  // back to the boot-provisioned 'system' agent.
+  private resolveOwningAgentId(conv: ConversationRow): string {
+    const prefix = 'agent:'
+    if (conv.providerId.startsWith(prefix)) {
+      return conv.providerId.slice(prefix.length)
+    }
+    return 'system'
+  }
 
   // ── universal capture ── every message becomes a Node so the database is
   // fully compliant: nothing flowing through the system is dropped.
@@ -196,11 +221,48 @@ export class ConversationManager {
     rawSource: string,
     blocks: ContentBlock[],
     parentId?: string,
+    parseResult?: ParseResult,
   ): Promise<string | null> {
     if (!this.nodeStore) return null
     const now = Date.now()
     const text = extractText(blocks)
     const edgeType = role === 'assistant' ? 'responds_to' : 'follows'
+
+    // Full block fidelity: store structured block data, not just text
+    const blocksSummary = blocks.map((b) => {
+      const base: Record<string, unknown> = { type: b.type }
+      if (b.type === 'text' || b.type === 'reasoning')
+        base.text = typeof b.text === 'string' ? b.text : '[rich-text]'
+      if (b.type === 'code') {
+        base.text = b.text
+        base.language = b.language
+      }
+      if (b.type === 'file') {
+        base.url = b.url
+        base.mediaType = b.mediaType
+      }
+      if (b.type === 'tool-call') {
+        base.toolName = b.toolName
+        base.input = b.input
+      }
+      if (b.type === 'tool-result') {
+        base.output = b.output
+        base.isError = b.isError
+      }
+      if (b.type === 'source') {
+        base.url = b.url
+        base.title = b.title
+      }
+      if (b.type === 'error') {
+        base.message = b.message
+      }
+      if (b.type === 'meta') {
+        base.key = b.key
+        base.value = b.value
+      }
+      return base
+    })
+
     const nodeId = newId()
     await this.nodeStore
       .putNode({
@@ -216,14 +278,25 @@ export class ConversationManager {
           messageId,
           text,
           blockCount: blocks.length,
+          // Full block structure for graph-layer queries
+          blocks: blocksSummary,
+          // Parser diagnostics when available
+          ...(parseResult
+            ? {
+                parserName: parseResult.parserName,
+                parserVersion: parseResult.parserVersion,
+                confidence: parseResult.confidence,
+                wireFormat: parseResult.wireFormat,
+                blockDiagnostics: parseResult.blockDiagnostics,
+              }
+            : {}),
         } as unknown as Record<string, unknown>,
-        edges: parentId
-          ? [{ type: edgeType, targetId: parentId, properties: { role } }]
-          : [],
+        edges: parentId ? [{ type: edgeType, targetId: parentId, properties: { role } }] : [],
         meta: {
           conversationId,
           messageId,
-          sourceParser: 'conversation-manager',
+          sourceParser: parseResult?.parserName ?? 'conversation-manager',
+          parserConfidence: parseResult?.confidence,
         },
         acl: { canView: true, canRemix: false, canReshare: false },
         authorDid: role === 'user' ? 'user' : 'assistant',
@@ -319,6 +392,22 @@ export class ConversationManager {
           memoryContext = await this.memory.getAgentContext(conv.providerId, '')
         } catch {
           // Memory recall is best-effort — don't block the pipeline
+        }
+      }
+
+      // FR-005 (spec 024): inject the active agent's frozen memory snapshot as the
+      // identity layer so the provider sees stable per-agent context at send time.
+      // The owning agent for a user conversation defaults to 'system' (provisioned
+      // at boot); agent-spawned threads resolve via their bound agentId.
+      if (this.memoryFabric && memoryContext) {
+        try {
+          const agentId = this.resolveOwningAgentId(conv)
+          const snapshot = await this.memoryFabric.snapshotForSession(agentId)
+          if (snapshot && snapshot.trim().length > 0) {
+            memoryContext.identityContext = snapshot
+          }
+        } catch {
+          // Snapshot injection is best-effort — don't block the pipeline
         }
       }
       timing.recall = Date.now() - t0
@@ -423,12 +512,24 @@ export class ConversationManager {
 
       // [6] CAPTURE — intercept streaming API response (provider-specific pattern)
       t0 = Date.now()
-      let parseResult = {
-        blocks: [] as ContentBlock[],
+      let parseResult: ParseResult = {
+        blocks: [],
         confidence: 0,
         parserName: '',
         parserVersion: 0,
         durationMs: 0,
+        blockDiagnostics: {
+          textBlocks: 0,
+          toolCallBlocks: 0,
+          fileBlocks: 0,
+          errorBlocks: 0,
+          reasoningBlocks: 0,
+          codeBlocks: 0,
+          sourceBlocks: 0,
+        },
+        wireFormat: 'unknown',
+        fallbackDepth: 0,
+        rawSizeBytes: 0,
       }
       let captureResult: { body?: string } | undefined
       try {
@@ -469,17 +570,26 @@ export class ConversationManager {
         latencyMs: Date.now() - totalStart,
       })
 
-      await this.blocks.storeBlocks(conversationId, msgRow.id, parseResult.blocks)
+      // Store blocks with parser metadata for diagnostics
+      const blockMeta: BlockMeta = {
+        parserName: parseResult.parserName,
+        parserVersion: parseResult.parserVersion,
+        confidence: parseResult.confidence,
+        wireFormat: parseResult.wireFormat,
+      }
+      await this.blocks.storeBlocks(conversationId, msgRow.id, parseResult.blocks, blockMeta)
+
+      // Decompose blocks into ContentUnit rows for per-block storage
+      if (this.contentUnitStore) {
+        const units = decomposeToContentUnits(parseResult.blocks, conversationId, msgRow.id)
+        await this.contentUnitStore.storeUnits(units).catch(() => {})
+      }
 
       // Universal capture — persist both messages as Nodes (fully compliant DB).
       // User node is captured first so the assistant node links to it (fork).
-      const userNodeId = await this.captureAsNode(
-        conversationId,
-        msgRow.id,
-        'user',
-        message,
-        [{ type: 'text', text: message }],
-      )
+      const userNodeId = await this.captureAsNode(conversationId, msgRow.id, 'user', message, [
+        { type: 'text', text: message },
+      ])
       await this.captureAsNode(
         conversationId,
         msgRow.id,
@@ -487,6 +597,7 @@ export class ConversationManager {
         (captureResult as { body?: string }).body ?? '',
         parseResult.blocks,
         userNodeId ?? undefined,
+        parseResult,
       )
 
       await this.store.updateConversation(conversationId, {
@@ -679,8 +790,8 @@ export class ConversationManager {
 
         const responseHandler = (params: unknown) => {
           const event = params as { requestId?: string; response?: { url?: string } }
-          if (event.response?.url && capturePattern.test(event.response.url)) {
-            matchingRequests.add(event.requestId!)
+          if (event.response?.url && event.requestId && capturePattern.test(event.response.url)) {
+            matchingRequests.add(event.requestId)
           }
         }
 
@@ -761,12 +872,24 @@ export class ConversationManager {
     }
 
     // Fallback: batch capture (non-streaming)
-    let parseResult = {
-      blocks: [] as ContentBlock[],
+    let parseResult: ParseResult = {
+      blocks: [],
       confidence: 0,
       parserName: '',
       parserVersion: 0,
       durationMs: 0,
+      blockDiagnostics: {
+        textBlocks: 0,
+        toolCallBlocks: 0,
+        fileBlocks: 0,
+        errorBlocks: 0,
+        reasoningBlocks: 0,
+        codeBlocks: 0,
+        sourceBlocks: 0,
+      },
+      wireFormat: 'unknown',
+      fallbackDepth: 0,
+      rawSizeBytes: 0,
     }
     let rawBody = ''
     try {
@@ -794,7 +917,20 @@ export class ConversationManager {
       blockCount: parseResult.blocks.length,
       latencyMs: Date.now() - start,
     })
-    await this.blocks.storeBlocks(conversationId, msgRow.id, parseResult.blocks)
+    // Store blocks with parser metadata for diagnostics
+    const batchBlockMeta: BlockMeta = {
+      parserName: parseResult.parserName,
+      parserVersion: parseResult.parserVersion,
+      confidence: parseResult.confidence,
+      wireFormat: parseResult.wireFormat,
+    }
+    await this.blocks.storeBlocks(conversationId, msgRow.id, parseResult.blocks, batchBlockMeta)
+
+    // Decompose blocks into ContentUnit rows for per-block storage
+    if (this.contentUnitStore) {
+      const units = decomposeToContentUnits(parseResult.blocks, conversationId, msgRow.id)
+      await this.contentUnitStore.storeUnits(units).catch(() => {})
+    }
 
     // Universal capture — persist both messages as Nodes (fully compliant DB).
     // User node first so the assistant node links to it (fork).
@@ -808,6 +944,7 @@ export class ConversationManager {
       rawBody,
       parseResult.blocks,
       streamUserNodeId ?? undefined,
+      parseResult,
     )
     await this.store.updateConversation(conversationId, {
       messageCount: conv.messageCount + 2,

@@ -37,13 +37,13 @@ export class WebGlSpoofModule implements StealthModule {
     const vendor = (config.vendor as string) ?? 'auto'
     const seed = config.seed as number | undefined
 
-    let gpu = REALISTIC_GPUS[0]!
+    let gpu = REALISTIC_GPUS[0]
     if (renderer === 'auto') {
       const idx =
         seed !== undefined
           ? seed % REALISTIC_GPUS.length
           : Math.floor(Math.random() * REALISTIC_GPUS.length)
-      gpu = REALISTIC_GPUS[idx]!
+      gpu = REALISTIC_GPUS[idx] ?? REALISTIC_GPUS[0]
     } else {
       gpu = { vendor: vendor !== 'auto' ? vendor : 'Google Inc. (NVIDIA)', renderer }
     }

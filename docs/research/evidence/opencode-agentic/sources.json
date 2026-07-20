@@ -1,0 +1,86 @@
+{
+  "topic": "opencode-agentic",
+  "collected": "2026-07-19",
+  "sources": [
+    {
+      "id": "opencode-agents",
+      "title": "Agents | OpenCode",
+      "url": "https://opencode.ai/docs/agents/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Primary/subagent/all modes; @-mention; Task tool; permission.task scoping; hidden subagents; 5 built-ins + hidden system agents; per-agent: model/temperature/top_p/steps/permission/mode/hidden/color/pass-through",
+      "usedIn": ["report:opencode-agentic-capabilities-sota-2026", "report:opencode-agentic-impl-docs-2026", "brief:opencode-agentic"]
+    },
+    {
+      "id": "opencode-tools",
+      "title": "Tools | OpenCode",
+      "url": "https://opencode.ai/docs/tools/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "17 built-in tools: bash/edit/write/read/grep/glob/lsp/patch/skill/todowrite/todoread/webfetch/websearch/question/task/external_directory/doom_loop; permission allow/ask/deny + glob; ripgrep-backed",
+      "usedIn": ["report:opencode-agentic-capabilities-sota-2026", "report:opencode-agentic-impl-docs-2026"]
+    },
+    {
+      "id": "opencode-cli",
+      "title": "CLI | OpenCode",
+      "url": "https://opencode.ai/docs/cli/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "run --auto/--format json/--attach/--agent; serve; acp (nd-JSON); exit codes 0/124/1; env overrides OPENCODE_CONFIG_CONTENT",
+      "usedIn": ["report:opencode-agentic-impl-docs-2026", "brief:opencode-agentic"]
+    },
+    {
+      "id": "opencode-server",
+      "title": "Server | OpenCode",
+      "url": "https://opencode.ai/docs/server/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "OpenAPI 3.1 at /doc; POST /session/:id/message (blocking) + /prompt_async (204); GET /event SSE; GET /file/content; GET /find*; POST /mcp; PUT /auth/:id; OPENCODE_SERVER_PASSWORD auth",
+      "usedIn": ["report:opencode-agentic-impl-docs-2026", "report:opencode-agentic-capabilities-sota-2026"]
+    },
+    {
+      "id": "opencode-config",
+      "title": "Config | OpenCode",
+      "url": "https://opencode.ai/docs/config/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "agent block; permission glob patterns; {env:VAR} trusted-config-only; model/provider/mcp schema",
+      "usedIn": ["report:opencode-agentic-impl-docs-2026"]
+    },
+    {
+      "id": "opencode-providers",
+      "title": "Providers | OpenCode",
+      "url": "https://opencode.ai/docs/providers/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Providers are LLM API backends (opposite of vivim CDP providers); custom models via provider.<id>.models",
+      "usedIn": ["report:opencode-agentic-capabilities-sota-2026"]
+    },
+    {
+      "id": "kilo-cli",
+      "title": "Kilo Code CLI",
+      "url": "https://kilo.ai/docs/code-with-ai/platforms/cli",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Kilo CLI 1.0 is OpenCode fork; same run/serve/acp/config; kilo run --auto autonomous CI mode",
+      "usedIn": ["report:opencode-agentic-impl-docs-2026", "brief:opencode-agentic"]
+    },
+    {
+      "id": "vivim-source",
+      "title": "vivim-final src/engines",
+      "url": "file:///C:/0-BlackBoxProject-0/vivim-final/src/engines",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "UnifiedCapabilityRegistry, CapabilityComposer, StreamParserEngine, CapabilityEventBus, ConversationManager, ProviderRegistrar, ChromeGovernor (CDP-only, untouched by local-agent)",
+      "usedIn": ["report:opencode-agentic-capabilities-sota-2026", "report:opencode-agentic-impl-docs-2026"]
+    }
+  ]
+}

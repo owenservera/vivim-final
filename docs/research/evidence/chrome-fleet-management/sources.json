@@ -1,0 +1,146 @@
+{
+  "topic": "chrome-fleet-management",
+  "collected": "2026-07-19",
+  "sources": [
+    {
+      "id": "browserless-repo",
+      "title": "browserless/browserless — Deploy headless browsers in Docker",
+      "url": "https://github.com/browserless/browserless",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Single orchestrator wires limiter + BrowserManager + metrics + monitoring; parallelism & queueing with configurable concurrency limits.",
+      "usedIn": ["report:chrome-fleet-management", "brief:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-arch",
+      "title": "browserless System Architecture (zread)",
+      "url": "https://zread.ai/browserless/browserless/6-system-architecture",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "DI subsystems: Limiter (queue-based concurrency control), BrowserManager (launch/track/close), Metrics, Monitoring, WebHooks.",
+      "usedIn": ["report:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-session-lifecycle",
+      "title": "browserless Session Lifecycle and Tracking (zread)",
+      "url": "https://zread.ai/browserless/browserless/10-session-lifecycle-and-tracking",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "numbConnected refcount, deferred cleanup timers Map keyed by session id, reconnect to live session, health-gated admission rejects on cpu/memory overloaded.",
+      "usedIn": ["report:chrome-fleet-management", "brief:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-monitoring",
+      "title": "browserless System Monitoring (zread)",
+      "url": "https://zread.ai/browserless/browserless/18-system-monitoring",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Priority cascade: concurrency/queue capacity -> CPU overload -> memory overload; systeminformation sampling feeds pressure evaluation.",
+      "usedIn": ["report:chrome-fleet-management", "brief:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-queueing",
+      "title": "Built-in Queueing System | Browserless Docs",
+      "url": "https://docs.browserless.io/enterprise/long-queues",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "CONCURRENT = max concurrent sessions (default 10); QUEUED = max queued requests.",
+      "usedIn": ["report:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-best-practices",
+      "title": "Production Best Practices | Browserless Docs",
+      "url": "https://docs.browserless.io/enterprise/docker/best-practices",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "QUEUED typically 1.5-2x CONCURRENT; TIMEOUT is session timeout in ms.",
+      "usedIn": ["report:chrome-fleet-management", "brief:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-performance",
+      "title": "Performance and Capacity | Browserless Docs",
+      "url": "https://docs.browserless.io/enterprise/private-deployment/performance",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "With 18 total slots, limit client concurrency to 15-16 to keep queue from filling on minor spikes.",
+      "usedIn": ["report:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-timeouts",
+      "title": "Timeouts | Browserless Docs",
+      "url": "https://docs.browserless.io/enterprise/private-deployment/timeouts",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Queue timeout: queued requests rejected if no slot opens in time.",
+      "usedIn": ["report:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-base-image",
+      "title": "browserless Base Image Build Process (zread)",
+      "url": "https://zread.ai/browserless/browserless/23-base-image-build-process",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "dumb-init forwards SIGTERM/SIGINT and reaps zombies; dbus-run-session for session bus lifecycle.",
+      "usedIn": ["report:chrome-fleet-management", "brief:chrome-fleet-management"]
+    },
+    {
+      "id": "browserless-auth-profiles",
+      "title": "Introducing Authenticated Profiles: Reusable Browser Logins",
+      "url": "https://www.browserless.io/blog/introducing-authenticated-profiles",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Separate login/auth state from the browser session; capture logged-in auth and inject into future sessions.",
+      "usedIn": ["report:chrome-fleet-management", "brief:chrome-fleet-management"]
+    },
+    {
+      "id": "puppeteer-cluster",
+      "title": "thomasdondorf/puppeteer-cluster — Puppeteer Pool",
+      "url": "https://github.com/thomasdondorf/puppeteer-cluster",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Auto-restart browser on crash; retryLimit/retryDelay; taskerror(err,data,willRetry); CONCURRENCY_PAGE/CONTEXT/BROWSER isolation models; workerCreationDelay staggers spawn.",
+      "usedIn": ["report:chrome-fleet-management", "brief:chrome-fleet-management", "code-path:chrome-fleet-management"]
+    },
+    {
+      "id": "browserbase-concurrency",
+      "title": "Concurrency management — Browserbase Docs",
+      "url": "https://docs.browserbase.com/optimizations/concurrency/overview",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Rate window on top of concurrency: max new sessions per 60s window (e.g. up to 25 in 60s).",
+      "usedIn": ["report:chrome-fleet-management"]
+    },
+    {
+      "id": "steel-profiles",
+      "title": "Profiles: Your Agent's Persistent Identity — Steel.dev",
+      "url": "https://steel.dev/blog/profiles",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Persistent browser identities across sessions; agents reuse authenticated state for all future runs.",
+      "usedIn": ["report:chrome-fleet-management", "brief:chrome-fleet-management"]
+    },
+    {
+      "id": "chromedp-234",
+      "title": "chromedp #234 — Run chrome headless and shutdown properly",
+      "url": "https://github.com/chromedp/chromedp/issues/234",
+      "type": "official",
+      "date": "2024",
+      "confidence": "medium",
+      "keyClaim": "Chrome processes not closing when run in a wait-group/pool without explicit cancel/close — pool shutdown pitfall.",
+      "usedIn": ["report:chrome-fleet-management"]
+    }
+  ]
+}
