@@ -45,6 +45,7 @@ import {
   ZLayerPanel,
   DrawerSystem,
   LivingCanvas,
+  ChatSurface,
 } from '@/components/canvas';
 import type { AccountContext, PlanTier } from '@/shared/route-context';
 import type { DocumentCard as DocumentCardRow } from '@/shared/document';
@@ -539,13 +540,7 @@ function CanvasApp() {
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
             <DrawerSystem workspaceId={workspaceId}>
               {activeSurface === 'chat' && (
-                <LivingCanvas
-                  workspaceId={workspaceId}
-                  userId="user:demo"
-                  providerIds={providerIds}
-                  accounts={accounts}
-                  variant={variant}
-                />
+                <ChatSurface defaultProviderId={providerIds[0]} />
             )}
             {activeSurface === 'docs' && (
               <CardGrid>

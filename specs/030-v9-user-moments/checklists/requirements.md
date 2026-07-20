@@ -51,15 +51,26 @@
 > `web/ui/src` + `sdk/backend-client.ts`.
 
 - [x] **Moment 5 — Command Palette**: wired to `listCapabilities('cli')` SDK call +
-      `executeCapability(id)` with result toast in `app/page.tsx`. Previously hit
-      stale `/api/search`. (RESOLVED)
-- [ ] **Moment 1 — First Contact**: no `/api/health` / auth indicator wired into canvas yet.
-- [ ] **Moment 2 — Send Message**: no conversation composer / streaming subscription in canvas yet.
-- [ ] **Moment 3 — Conversation List**: no sidebar conversation list component yet.
+       `executeCapability(id)` with result toast in `app/page.tsx`. Previously hit
+       stale `/api/search`. (RESOLVED)
+- [x] **Moment 1 — First Contact**: `components/chat/HealthIndicator.tsx` polls
+       `checkHealth()` + `getSession()` and shows Connected/Disconnected + user/retry,
+       mounted in `ChatSurface`. (BUILT — runtime WS connect not yet verified)
+- [x] **Moment 2 — Send Message**: `components/chat/Composer.tsx` sends via
+       `sendMessage()` and renders streamed `conversation:block` events from the
+       `conversation:<id>` WS topic; `StreamingIndicator` shows WS state. (BUILT)
+- [x] **Moment 3 — Conversation List**: `components/chat/ConversationList.tsx` lists
+       via `listConversations()`, create via `createConversation()`, delete via
+       `deleteConversation(id)`; selecting lifts `id` to parent. (BUILT)
+- [x] **Surface wiring**: `components/chat/ChatSurface.tsx` composes Moments 1/2/3,
+       owns the single `useWebSocket` subscription, and is mounted as the `chat`
+       surface in `app/page.tsx` (replacing the generic `LivingCanvas`). Exported
+       from `components/canvas/index.ts`.
 - [ ] **Moment 4 — Switch Provider**: providers listed in sidebar checkboxes, but no
-      capability refresh on switch.
-- [ ] **Moment 6 — Real-time Events**: `useWebSocket.ts` exists; not bridged to UI indicators.
+       capability refresh on switch.
+- [ ] **Moment 6 — Real-time Events**: WS now bridged to Composer streaming; other
+       UI indicators (presence/notifications) still use the older `useWebSocket` path.
 - [ ] **Moments 7–10**: endpoints exist in SDK; no UI components bound.
 
-**Next**: build `ConversationList` + `Composer` + `HealthIndicator` canvas components
-and mount them in `LivingCanvas` (or a chat surface) per `contracts/rest.md`.
+**Next**: verify P0 surface end-to-end against a running backend (health/WS on :9420);
+then build Moment 4 provider-switch capability refresh and revisit Moments 6–10.

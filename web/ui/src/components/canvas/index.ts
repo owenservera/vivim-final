@@ -63,6 +63,12 @@ export type { ObservabilityHUDProps } from './ObservabilityHUD';
 export { AgentOverlay } from './AgentOverlay';
 export type { AgentOverlayProps } from './AgentOverlay';
 
+// V9 — user moments (chat surface composing Moments 1/2/3)
+export { ChatSurface } from '../chat/ChatSurface';
+export { HealthIndicator } from '../chat/HealthIndicator';
+export { ConversationList } from '../chat/ConversationList';
+export { Composer } from '../chat/Composer';
+
 // Universal registry — single registry for ALL UI components
 export { UniversalComponentProvider } from './UniversalComponentProvider';
 export { registerAllComponents } from './register-all';
