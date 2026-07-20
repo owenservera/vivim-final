@@ -4,6 +4,8 @@
 // dependency required — uses Bun's native fetch. Designed to be a drop-in
 // forwarder that the logger can push to when OTEL_EXPORTER_OTLP_ENDPOINT is set.
 
+import { getOtelConfig } from '../config.js'
+
 export interface OtelLogRecord {
   timestamp: string // ISO
   severity: 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL'
@@ -208,13 +210,10 @@ let singleton: OtelSink | null = null
  * OTEL_EXPORTER_OTLP_ENDPOINT is not configured (no-op mode).
  */
 export function getOtelSink(): OtelSink | null {
-  const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+  const { endpoint, serviceName } = getOtelConfig()
   if (!endpoint) return null
   if (!singleton) {
-    singleton = new OtelSink({
-      endpoint,
-      serviceName: process.env.OTEL_SERVICE_NAME ?? 'vivim-final',
-    })
+    singleton = new OtelSink({ endpoint, serviceName })
   }
   return singleton
 }

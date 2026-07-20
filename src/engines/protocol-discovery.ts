@@ -8,6 +8,8 @@
 
 // Minimal surface this engine needs from a CDP client — injected by the
 // governor. Keeps the engine free of any direct CDP/transport import.
+import { EngineError } from '../errors.js'
+
 export interface CdpSender {
   send(
     method: string,
@@ -146,7 +148,7 @@ export class ProtocolDiscoveryEngine {
 
   private async evaluateInPage(expr: string): Promise<unknown> {
     if (!ProtocolDiscoveryEngine.ALLOWED_PROBES.has(expr)) {
-      throw new Error(
+      throw new EngineError(
         `Refused to evaluate non-whitelisted expression in page context (AU-0001). ` +
           `Only static protocol probes are permitted.`,
       )
