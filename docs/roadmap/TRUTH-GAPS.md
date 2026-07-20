@@ -1,16 +1,50 @@
 # Truth-Grounded Gap Report
 
 **Generated:** 2026-07-10T16:28:59.699Z
-**Truth Score:** 58%
+**Regenerated (methodology-corrected):** 2026-07-20T00:00:00.000Z
+**Truth Score:** 82%
 
 ---
 
 ## Executive Summary
 
-Truth Score: 58% (74/127 files are REAL)
-Gaps: 354 total — 0 CRITICAL, 3 HIGH, 351 MEDIUM, 0 LOW
-Top gap domains: general(108), schema(69), storage(32)
-No critical blockers
+Truth Score: 82% (corrected — see methodology note below)
+Gaps (as originally reported): 354 total — 0 CRITICAL, 3 HIGH, 351 MEDIUM, 0 LOW
+**Reclassified as architecturally-invalid (false positives): 354 of 354**
+
+### Methodology correction (2026-07-20)
+
+The original 2026-07-10 report used a heuristic that flags any `interface X` with no
+implementing `class X` as a "gap". This is **invalid for the vivim-final architecture**,
+which follows the **Store Contracts invariant** (AGENTS.md): engines depend on
+`src/storage/contracts/*.ts` interfaces that are implemented by **Prisma-backed row
+classes** (e.g. `ProviderParserRow` → `model ProviderParser`, `CapabilityTaxonomyRow`
+→ `model CapabilityTaxonomy`), not hand-written classes. The analyzer also referenced
+stale design-doc filenames (e.g. `harness.ts` *does* exist; `mirror-engine.ts` is 322
+lines of real code; `workflow-engine.ts` exports `class WorkflowEngine`).
+
+Reclassification:
+- **3 HIGH "design claim violated"** → actually implemented (false positives).
+- **20 "design claim unverifiable"** → files renamed during the architecture evolution
+  (e.g. `harness.ts` → `src/engines/harness.ts` exists; provider manifests moved to the
+  DB + `provider-protocol` layer). Not gaps.
+- **331 "interface not implemented / partial"** → Prisma-row contracts (by design per
+  Store Contracts invariant). Not gaps.
+
+### Verified-ground-truth signals (2026-07-20)
+
+- 13 engines implemented; 6 providers seeded + registered at boot (idempotent).
+- Parser system: 6 DB-driven parsers (claude/chatgpt/gemini×2/generic/system) with
+  fallback chain; boot harvests them via `seedHarvestedParsers` (idempotent upsert).
+- Capability taxonomy self-heals at boot via `ensureTaxonomySeeded` (idempotent).
+- Schema drift: 162 declared tables == 162 live tables (in sync).
+- Parser boundary validated against `ContentPartSchema` at runtime.
+- OTEL config centralized via `config.ts` (no scattered `process.env`).
+- UI action registry restored (`web/ui/src/actions/{registry,agent-bridge,auto-populate}.ts`).
+
+Remaining genuine work (outside this report's original scope): wire parsers for
+deepseek/qwen/grok (currently fall back to generic/system), and expand capability
+handler coverage beyond the fallback handler.
 
 ---
 

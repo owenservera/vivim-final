@@ -100,7 +100,21 @@ export const config = {
   storage: {
     encryptDb: process.env.CAP_STORE_ENCRYPT_DB === 'true',
   },
+
+  // OpenTelemetry (centralized so engines don't read process.env directly — B5)
+  otel: {
+    endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? null,
+    serviceName: process.env.OTEL_SERVICE_NAME ?? 'vivim-final',
+  },
 } as const
+
+/**
+ * Resolve OTEL sink configuration through the centralized config layer.
+ * Returns null endpoint when OTEL_EXPORTER_OTLP_ENDPOINT is unset (no-op mode).
+ */
+export function getOtelConfig(): { endpoint: string | null; serviceName: string } {
+  return { endpoint: config.otel.endpoint, serviceName: config.otel.serviceName }
+}
 
 // ── Runtime tunables registry (devops-toolkit configurable layer) ──────────
 //
