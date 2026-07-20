@@ -9,10 +9,9 @@
 // (or a human). `run` only *closes* the loop: it verifies the work against
 // the captured baseline and advances tracker state with zero supervision.
 
-import { execSync } from 'node:child_process'
 import { runGate } from './gate.ts'
 import { selectNext } from './select.ts'
-import { markUnit } from './mark.ts'
+import { markUnit, markUnitDoneLoop } from './mark.ts'
 import { ensureBaseline } from './baseline.ts'
 
 export interface LoopOptions {
@@ -46,18 +45,11 @@ export async function runLoop(opts: LoopOptions = {}): Promise<LoopResult> {
     const gate = await runGate(opts.strict ?? false, false, 'regression')
 
     if (gate.pass) {
-      await markUnit(sel.id, 'done')
+      // Single-pass completion: mark done + append PROGRESS audit line with
+      // the resolved sha, folded into ONE git commit (matches the documented
+      // invariant — no second commit, no [PENDING-COMMIT] placeholder left behind).
+      await markUnitDoneLoop(sel.id, `${sel.name} [autonomous loop]`)
       done.push(sel.id)
-      if (opts.commit) {
-        try {
-          execSync(
-            `git add -A && git commit -q -m "feat(devops): ${sel.id} ${sel.name} [autonomous loop]"`,
-            { stdio: 'ignore' },
-          )
-        } catch {
-          // Nothing staged / commit hook declined — non-fatal for the loop.
-        }
-      }
       console.log(`[loop] ${sel.id} -> done  (${gate.summary})`)
     } else {
       await markUnit(sel.id, 'blocked')

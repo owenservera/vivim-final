@@ -127,10 +127,7 @@ export class ConversationExecutor implements CommandExecutor {
     if (!providerId) {
       return this.fail(intent, traceId, start, 'No provider specified')
     }
-    const conv = await cm.createConversation(
-      providerId,
-      `Switched to ${providerId}`,
-    )
+    const conv = await cm.createConversation(providerId, `Switched to ${providerId}`)
     return {
       ok: true,
       intent: intent.intent,

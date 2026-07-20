@@ -6,9 +6,9 @@
 // CapabilityBindingRow (Governor Canon over schema) — the binding<->program
 // link is owned by ProgramStore (22.2/22.4).
 
+import { ValidationError } from '../../errors.js'
 import type { ProgramStatus } from '../../storage/contracts/program-store.js'
 import type { Recipe } from './recipe-types.js'
-import { ValidationError } from '../../errors.js'
 
 /** The serialisable payload stored in CapabilityProgramRow.configJson. */
 export interface ProgramConfig {
@@ -34,9 +34,12 @@ export function recipeToConfig(recipe: Recipe): string {
 /** Parse stored config JSON back into a ProgramConfig (throws on bad shape). */
 export function configToProgram(configJson: string): ProgramConfig {
   const parsed = JSON.parse(configJson) as unknown
-  if (!parsed || typeof parsed !== 'object') throw new ValidationError('ProgramConfig must be an object')
+  if (!parsed || typeof parsed !== 'object')
+    throw new ValidationError('ProgramConfig must be an object')
   const cfg = parsed as Record<string, unknown>
-  if (typeof cfg.schemaVersion !== 'number') throw new ValidationError('ProgramConfig.schemaVersion missing')
-  if (!cfg.recipe || typeof cfg.recipe !== 'object') throw new ValidationError('ProgramConfig.recipe missing')
+  if (typeof cfg.schemaVersion !== 'number')
+    throw new ValidationError('ProgramConfig.schemaVersion missing')
+  if (!cfg.recipe || typeof cfg.recipe !== 'object')
+    throw new ValidationError('ProgramConfig.recipe missing')
   return cfg as unknown as ProgramConfig
 }

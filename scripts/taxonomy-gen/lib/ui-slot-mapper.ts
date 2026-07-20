@@ -95,9 +95,10 @@ export function mapCapabilityToUI(node: TaxonomyNode): UIMapping | null {
   if (node.kind !== 'capability') return null
 
   const kindDefaults = KIND_DEFAULTS[node.capabilityKind] ?? KIND_DEFAULTS.action
-  const catPos = CATEGORY_POSITIONS[node.category] ?? {
+  const nodeCategory = (node as { category?: string }).category ?? 'uncategorized'
+  const catPos = CATEGORY_POSITIONS[nodeCategory] ?? {
     position: 'chat.actionBar',
-    group: node.category,
+    group: nodeCategory,
     baseOrder: 100,
   }
   const kindOffset = KIND_ORDER_OFFSET[node.capabilityKind] ?? 0

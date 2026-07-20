@@ -1,8 +1,9 @@
 // src/engines/browser-automation/defs/wait.ts
 // Axis: wait — timing & conditions (10 capabilities)
 
+import { z } from 'zod'
 import type { BrowserCapabilityDef } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 export const waitFixed: BrowserCapabilityDef = {
   id: 'auto:wait:wait-fixed',
@@ -25,7 +26,10 @@ export const waitSelector: BrowserCapabilityDef = {
   handler: async (ctx) => {
     const deadline = Date.now() + (ctx.params.timeoutMs as number)
     while (Date.now() < deadline) {
-      const found = (await ctx.governor.evaluate(ctx.slaveId, `!!document.querySelector(${JSON.stringify(ctx.params.selector)})`)) as boolean
+      const found = (await ctx.governor.evaluate(
+        ctx.slaveId,
+        `!!document.querySelector(${JSON.stringify(ctx.params.selector)})`,
+      )) as boolean
       if (found) return { ok: true, detail: 'selector present' }
       await new Promise((r) => setTimeout(r, 200))
     }
@@ -42,7 +46,10 @@ export const waitText: BrowserCapabilityDef = {
   handler: async (ctx) => {
     const deadline = Date.now() + (ctx.params.timeoutMs as number)
     while (Date.now() < deadline) {
-      const found = (await ctx.governor.evaluate(ctx.slaveId, `document.body.innerText.includes(${JSON.stringify(ctx.params.text)})`)) as boolean
+      const found = (await ctx.governor.evaluate(
+        ctx.slaveId,
+        `document.body.innerText.includes(${JSON.stringify(ctx.params.text)})`,
+      )) as boolean
       if (found) return { ok: true, detail: 'text present' }
       await new Promise((r) => setTimeout(r, 200))
     }
@@ -57,7 +64,7 @@ export const waitNetworkIdle: BrowserCapabilityDef = {
   params: z.object({ idleMs: z.number().default(500), timeoutMs: z.number().default(10000) }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    await new Promise((r) => setTimeout(r, (ctx.params.timeoutMs as number)))
+    await new Promise((r) => setTimeout(r, ctx.params.timeoutMs as number))
     return { ok: true, detail: 'network idle (best-effort)' }
   },
 }
@@ -71,7 +78,10 @@ export const waitFunction: BrowserCapabilityDef = {
   handler: async (ctx) => {
     const deadline = Date.now() + (ctx.params.timeoutMs as number)
     while (Date.now() < deadline) {
-      const ok = (await ctx.governor.evaluate(ctx.slaveId, ctx.params.expression as string)) as boolean
+      const ok = (await ctx.governor.evaluate(
+        ctx.slaveId,
+        ctx.params.expression as string,
+      )) as boolean
       if (ok) return { ok: true, detail: 'condition met' }
       await new Promise((r) => setTimeout(r, 200))
     }
@@ -118,7 +128,10 @@ export const waitModal: BrowserCapabilityDef = {
   handler: async (ctx) => {
     const deadline = Date.now() + (ctx.params.timeoutMs as number)
     while (Date.now() < deadline) {
-      const found = (await ctx.governor.evaluate(ctx.slaveId, `!!document.querySelector('dialog[open],.modal,[role=dialog]')`)) as boolean
+      const found = (await ctx.governor.evaluate(
+        ctx.slaveId,
+        `!!document.querySelector('dialog[open],.modal,[role=dialog]')`,
+      )) as boolean
       if (found) return { ok: true, detail: 'modal present' }
       await new Promise((r) => setTimeout(r, 200))
     }
@@ -147,7 +160,11 @@ export const pollUntil: BrowserCapabilityDef = {
   id: 'auto:wait:poll-until',
   axis: 'wait',
   description: 'Poll an expression until truthy, returning the value.',
-  params: z.object({ expression: z.string(), timeoutMs: z.number().default(5000), intervalMs: z.number().default(250) }),
+  params: z.object({
+    expression: z.string(),
+    timeoutMs: z.number().default(5000),
+    intervalMs: z.number().default(250),
+  }),
   trust: TRUST.read,
   handler: async (ctx) => {
     const deadline = Date.now() + (ctx.params.timeoutMs as number)

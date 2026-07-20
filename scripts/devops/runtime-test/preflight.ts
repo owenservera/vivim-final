@@ -23,7 +23,7 @@ export async function preflightCheck(opts: PreflightOptions): Promise<PreflightR
 
   // Check 1: Database connection + WAL mode
   try {
-    const prismaUrl = process.env.DATABASE_URL ?? 'file:dev.db'
+    const prismaUrl = process.env.DATABASE_URL ?? 'file:./dev.db'
     const dbCheck = await checkDatabaseWAL(prismaUrl)
     checks.push({ name: 'database-wal', ok: dbCheck.ok, detail: dbCheck.detail })
     if (!dbCheck.ok) {
@@ -82,11 +82,11 @@ async function checkDatabaseWAL(prismaUrl: string): Promise<{ ok: boolean; detai
     const { PrismaClient } = await import('@prisma/client')
     const prisma = new PrismaClient()
     await prisma.$connect()
-    
+
     // Check journal_mode
     const result = await prisma.$queryRaw<{ journal_mode: string }[]>`PRAGMA journal_mode`
     await prisma.$disconnect()
-    
+
     const mode = result[0]?.journal_mode?.toUpperCase() ?? 'UNKNOWN'
     return {
       ok: mode === 'WAL',
@@ -128,10 +128,10 @@ async function checkSlaves(): Promise<{ ok: boolean; detail?: string }> {
     const { PrismaClient } = await import('@prisma/client')
     const prisma = new PrismaClient()
     await prisma.$connect()
-    
+
     const count = await prisma.chromeSlave.count()
     await prisma.$disconnect()
-    
+
     return { ok: count > 0, detail: `slaves=${count}` }
   } catch (e) {
     return { ok: false, detail: String(e) }

@@ -23,6 +23,13 @@ class FakeParserStore implements ParserStore {
   async getActiveParser(p: string) {
     return this.active.get(p) ?? null
   }
+  async getParserByProviderAndVersion(p: string): Promise<ProviderParserRow | null> {
+    return this.active.get(p) ?? null
+  }
+  async getParserById(id: string): Promise<ProviderParserRow | null> {
+    for (const r of this.active.values()) if (r.id === id) return r
+    return null
+  }
   async upsertParser(row: ProviderParserRow) {
     this.active.set(row.providerId, row)
   }

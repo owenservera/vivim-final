@@ -11,7 +11,6 @@ import type { PrismaClientLike } from './prisma-like.js'
 export class CapabilityResolutionStoreImpl implements CapabilityResolutionStore {
   constructor(private prisma: PrismaClientLike) {}
 
-  // biome-ignore lint: Prisma escape hatch for dynamic raw SQL
   private get p(): any {
     return this.prisma
   }

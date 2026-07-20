@@ -5,7 +5,12 @@
 
 import type { Recipe } from '../../storage/contracts/program-store.js'
 
-function recipe(id: string, description: string, steps: Recipe['steps'], extra: Partial<Recipe> = {}): Recipe {
+function recipe(
+  id: string,
+  description: string,
+  steps: Recipe['steps'],
+  extra: Partial<Recipe> = {},
+): Recipe {
   return {
     id,
     providerId: 'generic',
@@ -20,12 +25,17 @@ function recipe(id: string, description: string, steps: Recipe['steps'], extra: 
 
 export const RECIPES: Recipe[] = [
   // ── research ──
-  recipe('auto:research:report', 'Deep research report: crawl N sources, extract, summarize.', [
-    { kind: 'navigate', url: '{{queryUrl}}' },
-    { kind: 'wait_text', text: '', timeoutMs: 3000 },
-    { kind: 'extract_markdown' },
-    { kind: 'observe', what: 'screenshot' },
-  ], { tags: ['auto', 'research'] }),
+  recipe(
+    'auto:research:report',
+    'Deep research report: crawl N sources, extract, summarize.',
+    [
+      { kind: 'navigate', url: '{{queryUrl}}' },
+      { kind: 'wait_text', text: '', timeoutMs: 3000 },
+      { kind: 'extract_markdown' },
+      { kind: 'observe', what: 'screenshot' },
+    ],
+    { tags: ['auto', 'research'] },
+  ),
   recipe('auto:research:crawl', 'Crawl a single URL and capture markdown + links.', [
     { kind: 'navigate', url: '{{url}}' },
     { kind: 'wait_selector', selector: 'body', timeoutMs: 5000 },
@@ -107,7 +117,10 @@ export const RECIPES: Recipe[] = [
     { kind: 'observe', what: 'dom' },
   ]),
   recipe('auto:data:join', 'Scrape multiple URLs (parallel tabs).', [
-    { kind: 'parallel', branches: [[{ kind: 'navigate', url: '{{url1}}' }], [{ kind: 'navigate', url: '{{url2}}' }]] },
+    {
+      kind: 'parallel',
+      branches: [[{ kind: 'navigate', url: '{{url1}}' }], [{ kind: 'navigate', url: '{{url2}}' }]],
+    },
   ]),
   recipe('auto:data:dedupe', 'Scrape then dedupe links.', [
     { kind: 'navigate', url: '{{url}}' },
@@ -262,7 +275,14 @@ export const RECIPES: Recipe[] = [
     { kind: 'screenshot' },
   ]),
   recipe('auto:flow:parallel-crawl', 'Crawl multiple URLs in parallel tabs.', [
-    { kind: 'parallel', branches: [[{ kind: 'navigate', url: '{{url1}}' }], [{ kind: 'navigate', url: '{{url2}}' }], [{ kind: 'navigate', url: '{{url3}}' }]] },
+    {
+      kind: 'parallel',
+      branches: [
+        [{ kind: 'navigate', url: '{{url1}}' }],
+        [{ kind: 'navigate', url: '{{url2}}' }],
+        [{ kind: 'navigate', url: '{{url3}}' }],
+      ],
+    },
   ]),
 ]
 

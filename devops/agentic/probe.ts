@@ -73,45 +73,41 @@ export interface StateSnapshot {
   criticalGaps: string[]
 }
 
-function extractProviderProbes(prismaSchema: string): ProviderProbe[] {
+function extractProviderProbes(_unused?: string): ProviderProbe[] {
   const probes: ProviderProbe[] = []
-  // Parse the schema for ProviderDefinition rows (from seed files is more reliable)
-  const seedDir = join(process.cwd(), 'seeds', 'providers')
-  if (!existsSync(seedDir)) return probes
+  // The provider manifests were deleted (seeds/providers/*.json removed in 021); the
+  // generated static protocol file is now the source of truth for the probe.
+  const protocolPath = join(process.cwd(), 'src', '__generated__', 'provider-protocol.ts')
+  if (!existsSync(protocolPath)) return probes
 
-  const files = readdirSync(seedDir).filter((f) => f.endsWith('.json'))
-  for (const file of files) {
-    try {
-      const raw = readFileSync(join(seedDir, file), 'utf8')
-      const manifest = JSON.parse(raw)
-      const p = manifest.provider ?? manifest
-      const endpoints = manifest.endpoints ?? []
-      const parsers = manifest.parsers ?? []
-      const streamConfigs = manifest.stream_config ?? []
-      const capabilities = manifest.capabilities_config ?? []
+  let protocol: { providers: any[] } | null = null
+  try {
+    const mod = require('node:module').createRequire(import.meta.url)(`file://${protocolPath}`)
+    protocol = mod.default ?? null
+  } catch {
+    return probes
+  }
+  if (!protocol) return probes
 
-      probes.push({
-        slug: p.slug ?? file.replace('.json', ''),
-        displayName: p.display_name ?? p.displayName ?? p.slug ?? '',
-        providerType: p.provider_type ?? 'llm',
-        isActive: true,
-        hasEndpoint: endpoints.length > 0,
-        hasParser: parsers.length > 0,
-        hasStreamConfig: streamConfigs.length > 0,
-        composerType: endpoints[0]?.composer_type ?? 'unknown',
-        sendMethod: endpoints[0]?.send_method ?? 'unknown',
-        capturePatterns: capabilities.length,
-        selectors: {
-          composer: endpoints[0]?.selectors_json
-            ? Math.max(1, Object.keys(JSON.parse(endpoints[0].selectors_json)).length)
-            : 0,
-          send: endpoints[0]?.selectors_json ? 1 : 0,
-        },
-        accounts: 0,
-      })
-    } catch {
-      // skip corrupt manifests
-    }
+  for (const p of protocol.providers) {
+    const chatEp = (p.endpoints ?? []).find((e: any) => e.endpointType === 'chat')
+    probes.push({
+      slug: p.slug,
+      displayName: p.displayName ?? p.slug,
+      providerType: p.providerType ?? 'llm',
+      isActive: p.isActive !== false,
+      hasEndpoint: (p.endpoints ?? []).length > 0,
+      hasParser: (p.parsers ?? []).length > 0,
+      hasStreamConfig: (p.streamConfigs ?? []).length > 0,
+      composerType: chatEp?.composerType ?? 'unknown',
+      sendMethod: chatEp?.sendMethod ?? 'unknown',
+      capturePatterns: (p.capabilities ?? []).length,
+      selectors: {
+        composer: (p.composerSelectors ?? []).length,
+        send: (p.sendButtonSelectors ?? []).length,
+      },
+      accounts: 0,
+    })
   }
   return probes
 }

@@ -35,7 +35,7 @@ function toDetail(cap: UnifiedCapability): Record<string, unknown> {
 export function createCapabilityRouter(ctx: ServerContext) {
   return async function capabilityRouter(req: Request, url: URL): Promise<Response> {
     const registry = ctx.registry
-    const source = extractSource(req)
+    const _source = extractSource(req)
     if (!registry) {
       return errorResponse('Capability registry not available', 'NotAvailable', 503)
     }

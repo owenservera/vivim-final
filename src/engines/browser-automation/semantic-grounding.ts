@@ -42,7 +42,7 @@ export class SemanticGroundingEngine {
           // try next
         }
       }
-      throw new EngineError(`SemanticGrounding: no composite candidate matched`)
+      throw new EngineError('SemanticGrounding: no composite candidate matched')
     }
 
     const modes = this.activeModes(sel)
@@ -52,7 +52,7 @@ export class SemanticGroundingEngine {
     }
     // Last resort: visual → coordinate (handled by caller via screenshot).
     if (sel.visual) {
-      throw new EngineError(`SemanticGrounding: visual grounding requires screenshot pipeline`)
+      throw new EngineError('SemanticGrounding: visual grounding requires screenshot pipeline')
     }
     throw new EngineError(`SemanticGrounding: no mode matched ${JSON.stringify(sel)}`)
   }
@@ -69,7 +69,16 @@ export class SemanticGroundingEngine {
   async getAccessibilityTree(slaveId: string): Promise<AccessibilityNode> {
     await this.governor.enableDomains(slaveId, ['Accessibility', 'Runtime'])
     const res = (await this.governor.cdp.send(slaveId, 'Accessibility.getFullAXTree', {})) as {
-      nodes?: Record<string, { role?: { value?: string }; name?: { value?: string }; ignored?: boolean; childIds?: string[]; properties?: Array<{ name: string; value?: { value?: unknown } }> }>
+      nodes?: Record<
+        string,
+        {
+          role?: { value?: string }
+          name?: { value?: string }
+          ignored?: boolean
+          childIds?: string[]
+          properties?: Array<{ name: string; value?: { value?: unknown } }>
+        }
+      >
     }
     if (!res?.nodes) throw new EngineError('SemanticGrounding: empty AX tree')
     const nodes = res.nodes
@@ -103,7 +112,10 @@ export class SemanticGroundingEngine {
   }
 
   /** Capture a screenshot (base64 PNG) for visual grounding / observe. */
-  async screenshot(slaveId: string, region?: { x: number; y: number; w: number; h: number }): Promise<string> {
+  async screenshot(
+    slaveId: string,
+    region?: { x: number; y: number; w: number; h: number },
+  ): Promise<string> {
     const params: Record<string, unknown> = { format: 'png' }
     if (region) {
       params.captureBeyondViewport = true

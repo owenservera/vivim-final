@@ -111,6 +111,11 @@ export class DiscoverySessionRunner {
       this.toFormat(session.parserFormat),
     )
 
+    // 6b. Persist the derived streaming findings back to the DB so live CDP
+    // discovery becomes the source of truth for parser config (parser loop
+    // refinement: capture -> align -> derive -> persist).
+    await this.deps.discovery.persistParserFindings(providerId, alignment)
+
     // 7. Persist + emit manifest draft.
     await this.deps.discovery.updateSession(session.id, {
       status: 'complete',

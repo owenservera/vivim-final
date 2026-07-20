@@ -2,9 +2,19 @@
 // ProtocolDiscoveryEngine — auto-discovers read/write protocol details
 // for any provider URL via Chrome CDP probing. No hardcoded selectors needed.
 //
-// Self-contained: takes a BunCdpClient + sessionId, needs no governor.
+// Governor Canon: this engine never imports CDP directly. The CDP client is
+// injected by ChromeGovernor as a narrow `CdpSender` surface (send only), so
+// the engine depends on a local interface, not on ../executor/cdp.js.
 
-import type { BunCdpClient } from '../executor/cdp.js'
+// Minimal surface this engine needs from a CDP client — injected by the
+// governor. Keeps the engine free of any direct CDP/transport import.
+export interface CdpSender {
+  send(
+    method: string,
+    params?: Record<string, unknown>,
+    session?: { sessionId: string },
+  ): Promise<unknown>
+}
 
 export interface DiscoveredComposer {
   selector: string
@@ -118,7 +128,7 @@ function _classifyFormat(body: string): DiscoveredNetworkPattern['format'] {
 
 export class ProtocolDiscoveryEngine {
   constructor(
-    private client: BunCdpClient,
+    private client: CdpSender,
     private sessionId: string,
   ) {}
 

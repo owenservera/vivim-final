@@ -39,6 +39,7 @@ model ProviderDefinition {
   category         String  @default("ai")
   providerType     String  @default("llm") @map("provider_type")
   isActive         Int     @default(1) @map("is_active")
+  protocolStatus   String  @default("Active") @map("protocol_status")
   websiteUrl       String? @map("website_url")
   documentationUrl String? @map("documentation_url")
   authType         String  @default("browser") @map("auth_type")
@@ -712,6 +713,38 @@ model StreamBlock {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// Parser Execution Log — every parse() call is recorded for diagnostics,
+// confidence tracking, and repair triggers. Enables the feedback loop:
+// parse → log → analyze → repair → reparse.
+// ═══════════════════════════════════════════════════════════════════
+
+model ParserExecutionLog {
+  id             String  @id
+  providerId     String  @map("provider_id")
+  parserName     String  @map("parser_name")
+  parserVersion  Int     @map("parser_version")
+  conversationId String? @map("conversation_id")
+  messageId      String? @map("message_id")
+  confidence     Float
+  blockCount     Int     @map("block_count")
+  textBlocks     Int     @default(0) @map("text_blocks")
+  toolCallBlocks Int     @default(0) @map("tool_call_blocks")
+  fileBlocks     Int     @default(0) @map("file_blocks")
+  errorBlocks    Int     @default(0) @map("error_blocks")
+  durationMs     Int     @map("duration_ms")
+  rawSizeBytes   Int     @default(0) @map("raw_size_bytes")
+  wireFormat     String? @map("wire_format")
+  fallbackUsed   Int     @default(0) @map("fallback_used")
+  metadataJson   String  @default("{}") @map("metadata_json")
+  createdAt      BigInt  @map("created_at")
+
+  @@index([providerId, createdAt], map: "idx_pel_provider")
+  @@index([conversationId], map: "idx_pel_conversation")
+  @@index([confidence], map: "idx_pel_confidence")
+  @@map("parser_execution_log")
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // Universal Node Layer — every piece of data in the second brain is a Node.
 // Messages, emails, documents, contacts, tasks, events, media, social posts,
 // financial records, and any future type are stored here. parentId enables
@@ -763,6 +796,18 @@ model Node {
   validUntil     BigInt? @map("valid_until")
   // Predecessor version in the version chain (OG LCG parent).
   parentVersion  Int?    @map("parent_version")
+  // ── ACU fields (Phase 0 — doc 00 §9) ──
+  // ACU type: conversation_root | claim | decision | code | preference | insight | fact
+  acuType        String? @map("acu_type")
+  // Lineage kind for derived ACUs: remix | fork | quote | extract
+  lineageKind    String? @map("lineage_kind")
+  // Extractor / parser version that produced this ACU (re-runnable lens).
+  extractorVersion String? @map("extractor_version")
+  parserVersion  String? @map("parser_version")
+  // Computed importance score (0.0–1.0) — high-value targeting heuristic.
+  valueScore     Float?  @map("value_score")
+  // Boolean flag: crossed the promotion threshold.
+  isHighValue    Int     @default(0) @map("is_high_value")
   createdAt      BigInt  @map("created_at")
   updatedAt      BigInt  @map("updated_at")
 
@@ -2838,4 +2883,175 @@ model WorkflowVersion {
   @@unique([workflowId, version], map: "uq_wv_wf_ver")
   @@index([workflowId], map: "idx_wv_wf")
   @@map("workflow_version")
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// Agentic Backbone (SOTA agentic system) — ADD only, never rewrite.
+// Backbone entities are cap-store.* Nodes (persisted via NodeStore).
+// These are the *materialized* helper tables + OpenCode/event substrate.
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Agent builder pipeline (human_led / agent_led) ──────────────────
+model AgentBuilderRun {
+  id              String   @id
+  initiatorJson   String   @map("initiator_json") // ActorRef JSON
+  intentJson      String   @map("intent_json")
+  mode            String   @default("human_led")
+  stage           String   @default("discover") // discover|infer|draft|validate|spawn|done|failed
+  producedAgentId String?  @map("produced_agent_id")
+  producedRunId   String?  @map("produced_run_id")
+  status          String   @default("pending") // pending|running|done|failed
+  resultJson      String   @default("{}") @map("result_json")
+  createdAt       BigInt   @map("created_at")
+  updatedAt       BigInt   @map("updated_at")
+
+  @@index([mode], map: "idx_abr_mode")
+  @@index([status], map: "idx_abr_status")
+  @@map("agent_builder_run")
+}
+
+// ── Mid-run task inbox (asap / when_idle) ────────────────────────────
+model RunInbox {
+  id          String   @id
+  runId       String   @map("run_id")
+  priority    String   @default("asap") // asap|when_idle
+  contentJson String   @map("content_json")
+  status      String   @default("pending") // pending|done|skipped
+  createdAt   BigInt   @map("created_at")
+  updatedAt   BigInt   @map("updated_at")
+
+  @@index([runId, status], map: "idx_ri_run")
+  @@map("run_inbox")
+}
+
+// ── Audited UI↔agent/role hot-swap binding ──────────────────────────
+model SlotBinding {
+  id            String   @id
+  slotId        String   @map("slot_id")
+  componentId   String   @map("component_id")
+  boundAgentId  String?  @map("bound_agent_id")
+  boundRoleId   String?  @map("bound_role_id")
+  boundByJson   String   @map("bound_by_json") // ActorRef JSON
+  active        Int      @default(1)
+  auditJson     String   @default("{}") @map("audit_json")
+  createdAt     BigInt   @map("created_at")
+  updatedAt     BigInt   @map("updated_at")
+
+  @@index([slotId, active], map: "idx_sb_slot")
+  @@map("slot_binding")
+}
+
+// ── Durable event outbox (source-tagged, hash-chained) ───────────────
+// Shared substrate: OpenCode + browser fleet + capability layer all write here.
+// This is the single source of truth for cross-surface event replay.
+model EventRecord {
+  id                String   @id
+  source            String   // opencode|browser_fleet|capability|...
+  entityType        String?  @map("entity_type")
+  entityId          String?  @map("entity_id")
+  providerSessionId String?  @map("provider_session_id")
+  type              String
+  payloadJson       String   @map("payload_json")
+  seq               Int
+  hash              String
+  createdAt         BigInt   @map("created_at")
+
+  @@unique([source, seq], map: "uq_er_src_seq")
+  @@index([source, entityType, entityId], map: "idx_er_src_ent")
+  @@index([providerSessionId], map: "idx_er_session")
+  @@map("event_record")
+}
+
+// ── OpenCode supervision extension of ProviderSession ────────────────
+model AgentSession {
+  id                String   @id
+  providerSessionId String   @unique @map("provider_session_id")
+  providerId        String   @default("opencode") @map("provider_id")
+  parentSessionId   String?  @map("parent_session_id")
+  agentName         String?  @map("agent_name")
+  model             String?
+  projectPath       String?  @map("project_path")
+  status            String   @default("idle")
+  createdAt         BigInt   @map("created_at")
+  updatedAt         BigInt   @map("updated_at")
+
+  parentSession AgentSession? @relation("AgentSessionFork", fields: [parentSessionId], references: [id], onDelete: SetNull)
+  childSessions AgentSession[] @relation("AgentSessionFork")
+  permissionDecisions AgentPermissionDecision[]
+  fileEdits AgentFileEdit[]
+
+  @@index([providerSessionId], map: "idx_as_session")
+  @@map("agent_session")
+}
+
+// ── Governor-owned permission decisions ──────────────────────────────
+model AgentPermissionDecision {
+  id                String   @id
+  agentSessionId    String   @map("agent_session_id")
+  providerPermissionId String @unique @map("provider_permission_id")
+  toolName          String   @map("tool_name")
+  riskTier          Int      @map("risk_tier") // local 1-5, maps onto Node.securityLevel
+  requestedAt       BigInt   @map("requested_at")
+  respondedAt       BigInt?  @map("responded_at")
+  decision          String?  // allow|deny|allow_always
+  decidedBy         String?  @map("decided_by")
+  payloadJson       String   @default("{}") @map("payload_json")
+  createdAt         BigInt   @map("created_at")
+
+  agentSession AgentSession @relation(fields: [agentSessionId], references: [id], onDelete: Cascade)
+
+  @@index([agentSessionId], map: "idx_apd_session")
+  @@map("agent_permission_decision")
+}
+
+// ── Filesystem truth from /session/:id/diff ──────────────────────────
+model AgentFileEdit {
+  id                String   @id
+  agentSessionId    String   @map("agent_session_id")
+  messageId         String?  @map("message_id")
+  filePath          String   @map("file_path")
+  patchJson         String   @map("patch_json") // RFC-6902 JSON Patch
+  beforeHash        String?  @map("before_hash")
+  afterHash         String?  @map("after_hash")
+  createdAt         BigInt   @map("created_at")
+
+  agentSession AgentSession @relation(fields: [agentSessionId], references: [id], onDelete: Cascade)
+
+  @@index([agentSessionId], map: "idx_afe_session")
+  @@map("agent_file_edit")
+}
+
+// ── Versioned agent / permission presets as data ─────────────────────
+model AgentDefinition {
+  id             String   @id
+  name           String   @unique
+  mode           String   @default("all") // all|primary|subagent
+  permissionsJson String  @map("permissions_json")
+  model          String?
+  systemPrompt   String?  @map("system_prompt")
+  version        Int      @default(1)
+  createdAt      BigInt   @map("created_at")
+
+  @@index([name], map: "idx_ad_name")
+  @@map("agent_definition")
+}
+
+// ── Command Language: NLP description + patterns ────────────────────
+model CommandDescription {
+  id          String  @id
+  commandId   String  @map("command_id") @unique
+  description String
+  patterns    String  // JSON array of pattern strings
+  category    String
+  prefix      String?
+  confidence  Float   @default(0.7)
+  enabled     Boolean @default(true)
+  createdAt   BigInt  @map("created_at")
+  updatedAt   BigInt  @map("updated_at")
+
+  @@index([commandId], map: "idx_cd_command_id")
+  @@index([category], map: "idx_cd_category")
+  @@index([enabled], map: "idx_cd_enabled")
+  @@map("command_description")
 }

@@ -4,18 +4,13 @@
 // role is pure config (trust, fan-out, loop, output). Destructive steps are
 // gated by the role's trust policy; human_gate recipe steps are enforced here.
 
+import { EngineError } from '../../errors.js'
+import type { Recipe, RecipeStep } from '../../storage/contracts/program-store.js'
+import { RECIPES, getRecipe } from '../browser-automation/recipes.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import { compileRecipe } from '../harness/recipe-compiler.js'
-import type { Recipe, RecipeStep } from '../../storage/contracts/program-store.js'
-import { EngineError } from '../../errors.js'
-import { RECIPES, getRecipe } from '../browser-automation/recipes.js'
-import type {
-  AgentRole,
-  AutomationGoal,
-  AutomationResult,
-  TrustPolicy,
-} from './types.js'
 import { getAgentRole } from './agents.js'
+import type { AgentRole, AutomationGoal, AutomationResult, TrustPolicy } from './types.js'
 
 export class AutomationOrchestrator {
   constructor(private governor: ChromeGovernor) {}
@@ -75,7 +70,8 @@ export class AutomationOrchestrator {
     return { ...recipe, steps }
   }
 
-  private assertTrust(trust: TrustPolicy, goal: AutomationGoal): void {    if (goal.destructive && trust.level === 'read') {
+  private assertTrust(trust: TrustPolicy, goal: AutomationGoal): void {
+    if (goal.destructive && trust.level === 'read') {
       throw new EngineError(`Role trust=${trust.level} forbids destructive goal`)
     }
     if (goal.destructive && trust.requiresConfirmation && !goal.params.__confirmed) {
@@ -91,7 +87,6 @@ export class AutomationOrchestrator {
         return observations.map((o) => o.data)
       case 'snapshot':
         return observations[observations.length - 1]?.data ?? null
-      case 'single':
       default:
         return observations[0]?.data ?? null
     }

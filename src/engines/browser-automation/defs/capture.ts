@@ -1,17 +1,23 @@
 // src/engines/browser-automation/defs/capture.ts
 // Axis: capture — media & capture (10 capabilities)
 
+import { z } from 'zod'
 import type { BrowserCapabilityDef } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 export const screenshot: BrowserCapabilityDef = {
   id: 'auto:capture:screenshot',
   axis: 'capture',
   description: 'Capture a screenshot (base64 PNG).',
-  params: z.object({ region: z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() }).optional() }),
+  params: z.object({
+    region: z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() }).optional(),
+  }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const data = await ctx.governor.captureScreenshot(ctx.slaveId, ctx.params.region as { x: number; y: number; w: number; h: number } | undefined)
+    const data = await ctx.governor.captureScreenshot(
+      ctx.slaveId,
+      ctx.params.region as { x: number; y: number; w: number; h: number } | undefined,
+    )
     return { ok: true, output: data, detail: 'screenshot captured' }
   },
 }
@@ -40,7 +46,9 @@ export const pdf: BrowserCapabilityDef = {
   params: z.object({}),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Page.printToPDF', {})) as { data?: string }
+    const res = (await ctx.governor.cdp.send(ctx.slaveId, 'Page.printToPDF', {})) as {
+      data?: string
+    }
     return { ok: true, output: res.data, detail: 'pdf printed' }
   },
 }
@@ -53,7 +61,9 @@ export const recordVideo: BrowserCapabilityDef = {
   trust: TRUST.read,
   handler: async (ctx) => {
     if (ctx.params.action === 'start') {
-      await ctx.governor.cdp.send(ctx.slaveId, 'Page.startScreencast', { format: 'png', everyNthFrame: 1 }).catch(() => {})
+      await ctx.governor.cdp
+        .send(ctx.slaveId, 'Page.startScreencast', { format: 'png', everyNthFrame: 1 })
+        .catch(() => {})
     } else {
       await ctx.governor.cdp.send(ctx.slaveId, 'Page.stopScreencast', {}).catch(() => {})
     }
@@ -92,7 +102,10 @@ export const capturePerformance: BrowserCapabilityDef = {
   params: z.object({}),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const out = await ctx.governor.evaluate(ctx.slaveId, 'JSON.stringify(performance.getEntries().map(function(e){return {name:e.name,duration:e.duration}}) )')
+    const out = await ctx.governor.evaluate(
+      ctx.slaveId,
+      'JSON.stringify(performance.getEntries().map(function(e){return {name:e.name,duration:e.duration}}) )',
+    )
     return { ok: true, output: out, detail: 'performance captured' }
   },
 }
@@ -105,7 +118,9 @@ export const captureTrace: BrowserCapabilityDef = {
   trust: TRUST.read,
   handler: async (ctx) => {
     if (ctx.params.action === 'start') {
-      await ctx.governor.cdp.send(ctx.slaveId, 'Tracing.start', { categories: 'devtools.timeline' }).catch(() => {})
+      await ctx.governor.cdp
+        .send(ctx.slaveId, 'Tracing.start', { categories: 'devtools.timeline' })
+        .catch(() => {})
     } else {
       await ctx.governor.cdp.send(ctx.slaveId, 'Tracing.end', {}).catch(() => {})
     }
@@ -120,7 +135,10 @@ export const clipCopy: BrowserCapabilityDef = {
   params: z.object({ text: z.string() }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.evaluate(ctx.slaveId, `navigator.clipboard.writeText(${JSON.stringify(ctx.params.text)}).catch(function(){})`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `navigator.clipboard.writeText(${JSON.stringify(ctx.params.text)}).catch(function(){})`,
+    )
     return { ok: true, detail: 'clipboard written' }
   },
 }
@@ -129,10 +147,15 @@ export const ocrRegion: BrowserCapabilityDef = {
   id: 'auto:capture:ocr-region',
   axis: 'capture',
   description: 'Capture a region (OCR delegated to caller; returns base64).',
-  params: z.object({ region: z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() }) }),
+  params: z.object({
+    region: z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() }),
+  }),
   trust: TRUST.read,
   handler: async (ctx) => {
-    const data = await ctx.governor.captureScreenshot(ctx.slaveId, ctx.params.region as { x: number; y: number; w: number; h: number })
+    const data = await ctx.governor.captureScreenshot(
+      ctx.slaveId,
+      ctx.params.region as { x: number; y: number; w: number; h: number },
+    )
     return { ok: true, output: data, detail: 'region captured for OCR' }
   },
 }

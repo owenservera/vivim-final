@@ -108,4 +108,11 @@ export function getConfidence(rawBody: string): number {
   return 1
 }
 
-export default { name: 'claude/001_streaming_sse', version: 1, providerId: 'claude', parse, detectCompletion, getConfidence }
+export default {
+  name: 'claude/001_streaming_sse',
+  version: 1,
+  providerId: 'claude',
+  parse,
+  detectCompletion,
+  getConfidence,
+}

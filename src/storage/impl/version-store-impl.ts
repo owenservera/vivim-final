@@ -141,7 +141,6 @@ export class VersionStoreImpl implements VersionStore {
 
   // Contained escape hatch: the generated Prisma client types are verbose and
   // add no safety at the call site. Typed through `any` here only.
-  // biome-ignore lint/suspicious/noExplicitAny: intentional Prisma escape hatch
   private get p(): any {
     return this.db.prisma
   }

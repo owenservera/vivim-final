@@ -185,7 +185,7 @@ export class CapabilityEventBusV2 {
       Promise.resolve()
         .then(() => entry.handler(envelope))
         .catch((err) => {
-          log.error({ kind, handlerId: entry.id, err }, "[bus] handler failed")
+          log.error({ kind, handlerId: entry.id, err }, '[bus] handler failed')
           this.addToDLQ(envelope, err instanceof Error ? err : new EngineError(String(err)))
         })
     }

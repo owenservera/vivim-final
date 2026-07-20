@@ -75,7 +75,7 @@ export function jaroWinkler(a: string, b: string, prefixScale = 0.1): number {
   let k = 0
   for (let i = 0; i < len1; i++) {
     if (!s1Matches[i]) continue
-    while (!s2Matches[k]!) k++
+    while (k < s2Matches.length && !s2Matches[k]) k++
     if (s1[i] !== s2[k]) transpositions++
     k++
   }

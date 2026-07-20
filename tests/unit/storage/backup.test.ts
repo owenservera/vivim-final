@@ -22,7 +22,12 @@ describe('BackupScheduler', () => {
 
   it('creates a backup snapshot with checksum', async () => {
     const dir = join(testDir, 'backups')
-    const scheduler = new BackupScheduler({ cadence: 'daily', retention: 5, backupDir: dir, passphrase: 'test' })
+    const scheduler = new BackupScheduler({
+      cadence: 'daily',
+      retention: 5,
+      backupDir: dir,
+      passphrase: 'test',
+    })
     const entry = await scheduler.runOnce(sourceFile)
 
     expect(entry.id).toBeString()
@@ -53,14 +58,24 @@ describe('BackupScheduler', () => {
 
   it('enforces retention count', async () => {
     const dir = join(testDir, 'backups-retention')
-    const s = new BackupScheduler({ cadence: 'daily', retention: 2, backupDir: dir, passphrase: 'test' })
+    const s = new BackupScheduler({
+      cadence: 'daily',
+      retention: 2,
+      backupDir: dir,
+      passphrase: 'test',
+    })
     for (let i = 0; i < 4; i++) await s.runOnce(sourceFile)
     expect(s.list().length).toBeLessThanOrEqual(2)
   })
 
   it('restores a backup snapshot', async () => {
     const dir = join(testDir, 'backups-restore')
-    const s = new BackupScheduler({ cadence: 'daily', retention: 5, backupDir: dir, passphrase: 'test' })
+    const s = new BackupScheduler({
+      cadence: 'daily',
+      retention: 5,
+      backupDir: dir,
+      passphrase: 'test',
+    })
     const entry = await s.runOnce(sourceFile)
     const restorePath = join(testDir, 'restored.db')
     s.restore(entry.id, restorePath)
@@ -70,7 +85,13 @@ describe('BackupScheduler', () => {
 
   it('throws on invalid retention', () => {
     expect(
-      () => new BackupScheduler({ cadence: 'daily', retention: 0, backupDir: testDir, passphrase: 'test' }),
+      () =>
+        new BackupScheduler({
+          cadence: 'daily',
+          retention: 0,
+          backupDir: testDir,
+          passphrase: 'test',
+        }),
     ).toThrow()
   })
 })

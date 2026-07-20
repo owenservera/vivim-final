@@ -63,6 +63,23 @@ export interface ProviderParserRow {
   updated_at: number
 }
 
+export interface ProviderStreamConfigRow {
+  id: string
+  provider_id: string
+  stream_transport: string // 'sse' | 'batchexecute' | 'websocket' | 'sse-patch'
+  stream_terminal_json?: string
+  sse_format?: string | null
+  delta_path_json?: string | null
+  content_type?: string | null
+  completion_detectors_json?: string
+  harness_js?: string | null
+  is_active?: number
+  version?: number
+  superseded_by?: string | null
+  created_at: number
+  updated_at: number
+}
+
 export interface ProviderCapabilityRow {
   id: string
   provider_id: string

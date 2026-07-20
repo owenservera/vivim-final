@@ -36,13 +36,13 @@ import { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import type { UserIdentityEngine } from '../engines/user-identity.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { createAuthMiddleware } from './auth-gate.js'
+import { createAutomationRouter } from './automation-router.js'
 import { createAutonomousRouter } from './autonomous-router.js'
 import { createCapabilityRouter } from './capability-router.js'
 import { createConversationRouter } from './conversation-router.js'
 import { createKnowledgeRouter } from './knowledge-router.js'
 import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
-import { createAutomationRouter } from './automation-router.js'
 import { errorResponse, json } from './response.js'
 import { createSetupRouter } from './setup-router.js'
 import { handleWebSocket, registerConversationForwarder, setCanvasWsHandler } from './websocket.js'
@@ -72,6 +72,8 @@ export interface ServerContext {
   retryEngine?: RetryEngine
   conceptualModel?: ConceptualModelService
   userIdentity?: UserIdentityEngine
+  memoryFabric?: import('../engines/memory/memory-fabric.js').MemoryFabric
+  agentBuilder?: import('../engines/agent-builder.js').AgentBuilderEngine
 }
 
 /** Shutdown hooks registered during server lifetime */
@@ -209,6 +211,8 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const { CapabilityResolutionEngine } = await import('../engines/capability-resolution.js')
   const { ChromeGovernor } = await import('../engines/chrome-governor.js')
   const { StreamParserEngine } = await import('../engines/stream-parser.js')
+  const { SandboxRunner } = await import('../engines/sandbox-runner.js')
+  const { SandboxAuditStoreImpl } = await import('../storage/impl/sandbox-audit-store-impl.js')
   const { StreamBlockStore } = await import('../engines/stream-block-store.js')
   const { NodeStoreImpl } = await import('../storage/impl/node-store-impl.js')
   const { ExecutionMemoizer } = await import('../engines/execution-memoizer.js')
@@ -219,6 +223,12 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     '../storage/impl/capability-resolution-store-impl.js'
   )
   const { ParserStoreImpl } = await import('../storage/impl/parser-store-impl.js')
+  const { ParserExecutionLogStoreImpl } = await import(
+    '../storage/impl/parser-execution-log-store-impl.js'
+  )
+  const { ContentUnitStoreImpl } = await import('../storage/impl/content-unit-store-impl.js')
+  const { CapabilityStoreImpl } = await import('../storage/impl/capability-store-impl.js')
+  const { CapabilitySnapshot } = await import('../engines/capability-snapshot.js')
   const { EpisodicMemoryStoreImpl } = await import('../storage/impl/episodic-memory-store-impl.js')
   const { SemanticMemoryStoreImpl } = await import('../storage/impl/semantic-memory-store-impl.js')
   const { ProceduralMemoryStoreImpl } = await import(
@@ -238,19 +248,70 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     console.warn('[boot] Seed errors:', seedResult.errors)
   }
 
+  // Harvest parser variants into DB inline rows (idempotent upsert). This is
+  // what populates providerParser so the protocol generator and the DB fallback
+  // chain both have a parser to resolve. Never called before this point.
+  try {
+    const { seedHarvestedParsers } = await import('../../seeds/parsers/harvest.seed.js')
+    const harvested = await seedHarvestedParsers(providerStore)
+    console.log(`[boot] Harvested ${harvested} parser variants into DB`)
+  } catch (err) {
+    console.warn('[boot] harvest parser seed skipped:', err)
+  }
+
+  // Initialize provider registry cache (loads all provider data from DB)
+  const { createProviderRegistry } = await import('../config/provider-registry.js')
+  const providerRegistry = createProviderRegistry(db)
+  await providerRegistry.initialize()
+  console.log(
+    `[boot] Provider registry initialized: ${providerRegistry.getProviderList().length} providers cached`,
+  )
+
+  // Seed browser-automation substrate (idempotent: agent-loop role anchors)
+  try {
+    const { seedAutomation } = await import('../../seeds/automation/automation.seed.js')
+    const autoCount = await seedAutomation(db)
+    console.log(`[boot] Seeded ${autoCount} browser-automation records`)
+  } catch (err) {
+    console.warn('[boot] automation seed skipped:', err)
+  }
+
   // Store instances
   const convStore = new ConversationStoreImpl(db)
   const govStore = new GovernorStoreImpl(db)
   const resStore = new CapabilityResolutionStoreImpl(db.prisma as any)
   const parserStore = new ParserStoreImpl(db)
+  const parserExecLogStore = new ParserExecutionLogStoreImpl(db.prisma as never)
+  const contentUnitStore = new ContentUnitStoreImpl(db.prisma as never)
+  const capabilityStore = new CapabilityStoreImpl(db)
   const episodicStore = new EpisodicMemoryStoreImpl(db)
   const semanticStore = new SemanticMemoryStoreImpl(db)
   const proceduralStore = new ProceduralMemoryStoreImpl(db)
 
   // Engine instances
   const resolutionEngine = new CapabilityResolutionEngine(resStore)
-  const parserEngine = new StreamParserEngine(parserStore)
+  const sandboxRunner = new SandboxRunner(new SandboxAuditStoreImpl(db))
+  const parserEngine = new StreamParserEngine(
+    parserStore,
+    undefined,
+    sandboxRunner,
+    parserExecLogStore,
+  )
   const streamBlocks = new StreamBlockStore(db)
+
+  // Prime parser cache from the generated protocol so the hot parse path does
+  // ZERO DB reads. Falls back to the DB resolver chain if a module is missing.
+  try {
+    const { loadProviderProtocol, normalizeProtocolSource } = await import(
+      '../engines/provider-protocol-loader.js'
+    )
+    const source = normalizeProtocolSource(process.env.PROVIDER_PROTOCOL_SOURCE)
+    const { protocol } = await loadProviderProtocol(source)
+    await parserEngine.primeFromProtocol(protocol)
+    console.log(`[boot] Stream parser cache primed from ${source} protocol`)
+  } catch (err) {
+    console.warn('[boot] protocol parser priming skipped:', err)
+  }
   const memoizer = new ExecutionMemoizer({
     emit: (event: string, data: unknown) => {
       eventBus.emit({ type: event, ...(data as Record<string, unknown>) } as any)
@@ -275,6 +336,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     profileBaseDir: workspaceHint,
   })
 
+  let memoryFabric: import('../engines/memory/memory-fabric.js').MemoryFabric | undefined
+  let agentBuilder: import('../engines/agent-builder.js').AgentBuilderEngine | undefined
+
   const conversationManager = new ConversationManager(
     governor,
     resolutionEngine,
@@ -287,6 +351,8 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     undefined,
     undefined,
     new NodeStoreImpl(db.prisma as never),
+    contentUnitStore,
+    memoryFabric,
   )
 
   // Wire CDP transport, trace log, and health monitor into governor
@@ -479,8 +545,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
           if (!convId) {
             // Create a transient conversation for this mux response
+            const session = await convStore.ensureProviderSession({ providerId })
             const conv = await convStore.createConversation({
-              providerSessionId: `mux_${providerId}_${Date.now()}`,
+              providerSessionId: session.id,
               providerId,
               title: `Mux: ${message.slice(0, 50)}`,
             })
@@ -515,7 +582,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       },
     }
 
-    async function estimateCost(providerId: string, latencyMs: number): Promise<number> {
+    async function estimateCost(providerId: string, _latencyMs: number): Promise<number> {
       if (costOptimizer) {
         return costOptimizer.estimateCost(providerId, 1000) // rough: 1000-char message
       }
@@ -546,6 +613,13 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     const pStore = new PolicyStoreImpl()
     const profileAllocator = new ProfileAllocator()
     registry = new UnifiedCapabilityRegistry()
+    const { LocalAgentStoreImpl } = await import('../storage/impl/local-agent-store-impl.js')
+    const { LocalAgentProviderExecutor } = await import(
+      '../engines/local-agent/local-agent-executor.js'
+    )
+    const localAgentStore = new LocalAgentStoreImpl(db)
+    const localAgentExecutor = new LocalAgentProviderExecutor(localAgentStore, eventBus)
+
     registerDefaultCapabilities(registry, {
       db,
       conversationStore: convStore,
@@ -556,6 +630,8 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       semanticSearch,
       knowledgeIngestion,
       synthesizer,
+      localAgentStore,
+      localAgentExecutor,
     })
 
     // Register generated capabilities from the taxonomy pool (196 caps)
@@ -570,6 +646,80 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       knowledgeIngestion,
       synthesizer,
     })
+
+    // ── Federated per-agent memory (spec 024) ───────────────────────────────
+    // Construct the MemoryFabric once and wire it into AgentBuilderEngine so
+    // every spawned agent auto-provisions a per-agent memory subsystem
+    // (MemoryOracle + MemoryWarden). Capabilities are registered into `registry`.
+    try {
+      const { BeliefStore } = await import('../engines/belief-store.js')
+      const { MemoryFabric } = await import('../engines/memory/memory-fabric.js')
+      const { AgentBuilderEngine } = await import('../engines/agent-builder.js')
+      const { AgenticStoreImpl } = await import('../storage/impl/agentic-store-impl.js')
+      const { KnowledgeExtractorStoreImpl } = await import(
+        '../storage/impl/knowledge-extractor-store-impl.js'
+      )
+      const { SemanticSearchStoreImpl } = await import(
+        '../storage/impl/semantic-search-store-impl.js'
+      )
+      const nodeStoreImpl = new NodeStoreImpl(db.prisma as never)
+      const agenticStoreImpl = new AgenticStoreImpl(nodeStoreImpl, db.prisma as never)
+      const kexStoreImpl = new KnowledgeExtractorStoreImpl(db)
+      const ssStoreImpl = new SemanticSearchStoreImpl(db)
+      const beliefStore = new BeliefStore(agenticStoreImpl)
+      memoryFabric = new MemoryFabric({
+        agenticStore: agenticStoreImpl,
+        registry,
+        nodeStore: nodeStoreImpl,
+        extractorStore: kexStoreImpl,
+        semanticStore: ssStoreImpl,
+        beliefStore,
+      })
+      agentBuilder = new AgentBuilderEngine(agenticStoreImpl, memoryFabric)
+      // Provision the host/system agent so a mem:* capability is live at boot
+      // (verifiable via devops verify-cross-surface). Per-agent subsystems for
+      // spawned agents are provisioned on spawn (FR-001/FR-002).
+      await memoryFabric
+        .provisionAgentMemory('system', 'system-run')
+        .catch((e) => console.warn('[boot] system memory subsystem provision skipped:', e))
+      console.log('[boot] MemoryFabric + AgentBuilderEngine wired (per-agent memory enabled)')
+    } catch (err) {
+      console.warn('[boot] memory fabric wiring skipped:', err)
+    }
+
+    // ── OpenCode `serve` supervisor (feature 027, ADDITIVE, OFF by default) ──
+    // Peer provider 'opencode'. Supervises a local `opencode serve` subprocess and
+    // ingests its sessions into AgentSession/EventRecord. Local-first: only starts
+    // when OPENCODE_SERVE_ENABLED=1. Never blocks other providers' boot.
+    // Synced with AGENT3 (owns the memory block above) — single additive region.
+    if (process.env.OPENCODE_SERVE_ENABLED === '1' && typeof agenticStoreImpl !== 'undefined') {
+      try {
+        const { EventRecordStore } = await import('../engines/event-record-store.js')
+        const { OpenCodeSupervisor } = await import('../engines/opencode/opencode-supervisor.js')
+        const { OpenCodeClient } = await import('../engines/opencode/opencode-client.js')
+        const { OpenCodeIngest } = await import('../engines/opencode/opencode-ingest.js')
+        const eventStore = new EventRecordStore(db.prisma as never)
+        const supervisor = new OpenCodeSupervisor({
+          port: Number(process.env.OPENCODE_SERVE_PORT ?? 0) || undefined,
+          password: process.env.OPENCODE_SERVER_PASSWORD,
+        })
+        const { port } = await supervisor.start()
+        const client = new OpenCodeClient({
+          port,
+          password: process.env.OPENCODE_SERVER_PASSWORD ?? '',
+          username: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
+        })
+        const ingest = new OpenCodeIngest({
+          client,
+          agenticStore: agenticStoreImpl,
+          eventRecordStore: eventStore,
+        })
+        ;(globalThis as Record<string, unknown>).__opencodeServe = { supervisor, client, ingest }
+        console.log(`[boot] OpenCode serve supervisor started on 127.0.0.1:${port}`)
+      } catch (err) {
+        console.warn('[boot] OpenCode serve supervisor skipped:', err)
+      }
+    }
 
     // ── G1/G2: Register discovered CDP methods as live capabilities ──────────
     // Every CDP command becomes a `cap:cdp:*` capability backed by the governor's
@@ -640,6 +790,19 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       `[boot] CDP capabilities: registered=${cdpResult.registered.length} bound=${cdpResult.bound.length} skipped=${cdpResult.skipped.length}`,
     )
 
+    // ── 019: DB-driven capability snapshot ──────────────────────────────────
+    // Load active bindings for registered (active) providers into an in-memory
+    // map at boot. Runtime resolution reads from the snapshot (no DB hit).
+    const registeredProviders = (await providerStore.listDefinitions({ isActive: true })).map(
+      (d) => d.id,
+    )
+    const capabilitySnapshot = new CapabilitySnapshot(capabilityStore)
+    const snapshotCount = await capabilitySnapshot.load(registeredProviders)
+    governor.setCapabilitySnapshot(capabilitySnapshot)
+    console.log(
+      `[boot] Capability snapshot: loaded=${snapshotCount} for ${registeredProviders.length} providers`,
+    )
+
     // Bridge: sync all cli-surface capabilities to the CLI CommandRegistry
     connectCapabilityRegistry(registry)
     policyEngine = new ExecutionPolicyEngine(pStore)
@@ -658,7 +821,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   // NLCL — Natural Language Command Layer (the "comms system")
   // Deterministic parser by default; pluggable local LLM / provider LLM for fallback.
   // Available on all surfaces: REST API, CLI, MCP, frontend.
-  const automationOrchestrator = new (await import('../engines/automation/orchestrator.js')).AutomationOrchestrator(governor)
+  const automationOrchestrator = new (
+    await import('../engines/automation/orchestrator.js')
+  ).AutomationOrchestrator(governor)
   const nlclEngine = new NLCLEngine({
     governor,
     automationOrchestrator,
@@ -666,6 +831,20 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     conversationStore: convStore,
     registry,
     db,
+    opencodeClient: (globalThis as Record<string, unknown>).__opencodeServe
+      ? (
+          (globalThis as Record<string, unknown>).__opencodeServe as {
+            client: import('../engines/opencode/opencode-client.js').OpenCodeClient
+          }
+        ).client
+      : undefined,
+    opencodeIngest: (globalThis as Record<string, unknown>).__opencodeServe
+      ? (
+          (globalThis as Record<string, unknown>).__opencodeServe as {
+            ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+          }
+        ).ingest
+      : undefined,
   })
   console.log(
     `[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`,
@@ -792,6 +971,8 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     lockManager,
     idempotencyGuard,
     retryEngine,
+    memoryFabric,
+    agentBuilder,
   }
 
   const auth = createAuthMiddleware()
@@ -811,6 +992,76 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   registerConversationForwarder(eventBus)
 
   let ready = false
+
+  // ── OpenCode `serve` routes (feature 029) ──────────────────────────────
+  async function handleOpenCodeRoutes(
+    req: Request,
+    url: URL,
+    serve: {
+      client: import('../engines/opencode/opencode-client.js').OpenCodeClient
+      ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+    },
+  ): Promise<Response> {
+    const { client, ingest } = serve
+    const path = url.pathname
+
+    // POST /api/opencode/send
+    if (path === '/api/opencode/send' && req.method === 'POST') {
+      const body = (await req.json()) as { prompt?: string; sessionId?: string; model?: string }
+      if (!body.prompt?.trim()) {
+        return json({ error: 'prompt is required' }, 400)
+      }
+      try {
+        let sessionId = body.sessionId
+        if (!sessionId) {
+          const created = await client.createSession({ model: body.model })
+          sessionId = created.sessionId
+        }
+        await ingest.start(sessionId, { model: body.model })
+        await client.sendPrompt(sessionId, body.prompt)
+        return json({ ok: true, sessionId, text: `Prompt sent to session ${sessionId}` })
+      } catch (err) {
+        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+      }
+    }
+
+    // POST /api/opencode/session
+    if (path === '/api/opencode/session' && req.method === 'POST') {
+      const body = (await req.json()) as { model?: string; cwd?: string }
+      try {
+        const { sessionId } = await client.createSession({ model: body.model, cwd: body.cwd })
+        return json({ ok: true, sessionId })
+      } catch (err) {
+        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+      }
+    }
+
+    // GET /api/opencode/sessions
+    if (path === '/api/opencode/sessions' && req.method === 'GET') {
+      return json({ ok: true, sessions: [], text: 'Session listing requires the ingest layer.' })
+    }
+
+    // POST /api/opencode/permission/:id
+    if (path.startsWith('/api/opencode/permission/') && req.method === 'POST') {
+      const permissionId = path.split('/').pop()
+      const body = (await req.json()) as { sessionId?: string; decision?: string }
+      if (!body.sessionId || !permissionId || !body.decision) {
+        return json({ error: 'sessionId, permissionId, and decision are required' }, 400)
+      }
+      try {
+        await client.respondPermission(
+          body.sessionId,
+          permissionId,
+          body.decision as 'allow' | 'deny' | 'allow_always',
+        )
+        return json({ ok: true, sessionId: body.sessionId, permissionId, decision: body.decision })
+      } catch (err) {
+        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+      }
+    }
+
+    return json({ error: 'Not found', code: 'NotFound' }, 404)
+  }
 
   Bun.serve({
     port,
@@ -857,6 +1108,20 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       // NLCL — Natural Language Command Layer routes
       if (url.pathname.startsWith('/api/nlcl/')) {
         return nlclRouter(req)
+      }
+
+      // OpenCode `serve` capability routes (feature 029)
+      if (url.pathname.startsWith('/api/opencode/')) {
+        const serve = (globalThis as Record<string, unknown>).__opencodeServe as
+          | {
+              client: import('../engines/opencode/opencode-client.js').OpenCodeClient
+              ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+            }
+          | undefined
+        if (!serve) {
+          return json({ error: 'OpenCode serve not enabled', code: 'OPENCODE_DISABLED' }, 503)
+        }
+        return handleOpenCodeRoutes(req, url, serve)
       }
 
       // Automation — governor-mediated browser automation (B9 / L7)

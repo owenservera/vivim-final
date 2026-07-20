@@ -48,6 +48,33 @@ export class SlaveNotRunningError extends CapStoreError {
   }
 }
 
+// Memory-orchestrator errors (spec 024 - Hermes memory harvest)
+export class MemoryError extends CapStoreError {
+  constructor(message: string, details?: unknown) {
+    super('MemoryError', message, details)
+  }
+}
+
+export class MemoryBackendLimitError extends MemoryError {
+  constructor(existing: string, rejected: string) {
+    super(
+      `Rejected memory backend '${rejected}' — external backend '${existing}' is ` +
+        `already registered. Only one external memory backend is allowed at a time.`,
+      { existing, rejected },
+    )
+  }
+}
+
+export class MemoryWardenQuotaError extends MemoryError {
+  constructor(agentId: string, used: number, limit: number) {
+    super(`Agent ${agentId} memory write quota breached (${used}/${limit}).`, {
+      agentId,
+      used,
+      limit,
+    })
+  }
+}
+
 export class SlaveBusyError extends CapStoreError {
   constructor(slaveId: string) {
     super('SlaveBusyError', `Slave ${slaveId} is busy`)
@@ -87,6 +114,23 @@ export class PortOccupiedError extends CapStoreError {
 export class EngineError extends CapStoreError {
   constructor(message: string) {
     super('EngineError', message)
+  }
+}
+
+// OpenCode `serve` supervisor/client errors (feature 027).
+export class OpenCodeServeError extends CapStoreError {
+  constructor(code: string, message: string, details?: unknown) {
+    super(code, message, details)
+  }
+}
+
+export class OpenCodePermissionDeniedError extends CapStoreError {
+  constructor(tool: string, tier: number) {
+    super(
+      'OPENCODE_PERMISSION_DENIED',
+      `OpenCode permission denied for '${tool}' (risk tier ${tier} > 3)`,
+      { tool, tier },
+    )
   }
 }
 
@@ -202,16 +246,103 @@ export class HarnessRetryExhaustedError extends CapStoreError {
   }
 }
 
+// ── Command Language ─────────────────────────────────────────────
+export class CommandLanguageError extends CapStoreError {
+  constructor(code: string, message: string, details?: unknown) {
+    super(code, message, details)
+  }
+}
+
+export class UnknownPrefixError extends CommandLanguageError {
+  constructor(prefix: string) {
+    super('UNKNOWN_PREFIX', `Unknown prefix character: ${prefix}`)
+  }
+}
+
+export class UnknownCommandError extends CommandLanguageError {
+  constructor(command: string) {
+    super('UNKNOWN_COMMAND', `Unknown command: ${command}`)
+  }
+}
+
+export class MissingArgsError extends CommandLanguageError {
+  constructor(command: string, missing: string[]) {
+    super('MISSING_ARGS', `Missing required args for ${command}: ${missing.join(', ')}`, {
+      command,
+      missing,
+    })
+  }
+}
+
+export class InvalidArgError extends CommandLanguageError {
+  constructor(command: string, arg: string, reason: string) {
+    super('INVALID_ARG', `Invalid arg '${arg}' for ${command}: ${reason}`, { command, arg, reason })
+  }
+}
+
+export class UnknownProviderError extends CommandLanguageError {
+  constructor(provider: string) {
+    super('UNKNOWN_PROVIDER', `Unknown provider: ${provider}`)
+  }
+}
+
+export class ContextNotFoundError extends CommandLanguageError {
+  constructor(ref: string) {
+    super('CONTEXT_NOT_FOUND', `Context not found for reference: ${ref}`)
+  }
+}
+
+export class NlpMatchError extends CommandLanguageError {
+  constructor(message: string, details?: unknown) {
+    super('NLP_MATCH_ERROR', message, details)
+  }
+}
+
+export class LowConfidenceError extends NlpMatchError {
+  constructor(input: string, confidence: number, threshold: number) {
+    super(`Low confidence match for "${input}": ${confidence.toFixed(2)} < ${threshold}`, {
+      input,
+      confidence,
+      threshold,
+    })
+  }
+}
+
+export class ComboAmbiguousError extends CommandLanguageError {
+  constructor(input: string, candidates: string[]) {
+    super('COMBO_AMBIGUOUS', `Ambiguous combo in "${input}": ${candidates.join(' vs ')}`, {
+      input,
+      candidates,
+    })
+  }
+}
+
 // ── SendResilience ────────────────────────────────────────────────
 
-export type RecoveryKind = 'chrome_crash' | 'cdp_down' | 'session_expired' | 'circuit_open' | 'unknown' | 'relogin'
+export type RecoveryKind =
+  | 'chrome_crash'
+  | 'cdp_down'
+  | 'session_expired'
+  | 'circuit_open'
+  | 'unknown'
+  | 'relogin'
 
 export class SendResilienceError extends CapStoreError {
   public readonly recoveryKind: RecoveryKind
   public readonly retryAfterMs?: number
   public readonly autoReconnectAttempted: boolean
 
-  constructor(message: string, meta: { recoveryKind: RecoveryKind; providerId: string; slaveId: string; retryAfterMs?: number; autoReconnectAttempted: boolean; defaultMessage: string }) {
+  constructor(
+    message: string,
+    meta: {
+      recoveryKind: RecoveryKind
+      providerId: string
+      slaveId: string
+      retryAfterMs?: number
+      autoReconnectAttempted: boolean
+      defaultMessage: string
+    },
+  ) {
     super('SendResilienceError', message, meta)
     this.recoveryKind = meta.recoveryKind
     this.retryAfterMs = meta.retryAfterMs

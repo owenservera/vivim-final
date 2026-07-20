@@ -262,6 +262,8 @@ export class ContextAssemblyEngine {
     private memory: MemoryEngine,
     private search: SemanticSearchEngine,
     private budget: number = DEFAULT_BUDGET,
+    /** Optional per-agent frozen memory snapshot provider (spec 024 FR-005). */
+    private memorySnapshotProvider?: (conversationId: string) => Promise<string | null>,
   ) {}
 
   async assemble(conversationId: string, userMessage: string): Promise<AssembledContext> {
@@ -286,6 +288,20 @@ export class ContextAssemblyEngine {
 
     // Stage 2: RECALL — pull all relevant context
     const rawLayers = await this.recall(conversationId, userMessage, situation.type)
+
+    // Stage 2b: per-agent frozen memory snapshot (spec 024 FR-005, cache-stable)
+    if (this.memorySnapshotProvider) {
+      const snapshot = await this.memorySnapshotProvider(conversationId).catch(() => null)
+      if (snapshot && snapshot.trim().length > 0) {
+        rawLayers.push({
+          name: 'identity',
+          content: snapshot,
+          tokenCount: Math.ceil(snapshot.length / 4),
+          priority: 0.5,
+          sources: ['memory-fabric:agent-snapshot'],
+        })
+      }
+    }
 
     // Stage 3: RANK — sort by task-aware priority, then by score
     const ranked = this.rank(rawLayers, situation.type)

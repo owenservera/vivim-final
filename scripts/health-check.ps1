@@ -50,12 +50,16 @@ function Test-FrontendHealth {
 
 function Test-WebSocket {
     try {
-        # Check if WebSocket upgrade endpoint is reachable (returns 426 or 200)
-        $res = Invoke-WebRequest -Uri "$BackendUrl/ws" -TimeoutSec 3 -UseBasicParsing -ErrorAction SilentlyContinue
+        # WebSocket upgrade endpoint: 426 Upgrade Required (or 200) means the
+        # server is listening and alive. Any connection failure means it's down.
+        $res = Invoke-WebRequest -Uri "$BackendUrl/ws" -TimeoutSec 3 -UseBasicParsing -ErrorAction Stop
         return $true
     } catch {
-        # WebSocket upgrade returns 426 Upgrade Required — still means server is alive
-        if ($_.Exception.Response.StatusCode -eq 426) { return $true }
+        # 426 Upgrade Required is the expected healthy response for a WS endpoint.
+        $statusCode = $null
+        if ($_.Exception.Response) { $statusCode = $_.Exception.Response.StatusCode.value__ }
+        if ($statusCode -eq 426) { return $true }
+        # Connection refused / timeout / DNS — server is NOT reachable.
         return $false
     }
 }

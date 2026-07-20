@@ -1,8 +1,9 @@
 // src/engines/browser-automation/defs/net.ts
 // Axis: net — network & requests (10 capabilities)
 
+import { z } from 'zod'
 import type { BrowserCapabilityDef } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 export const requestIntercept: BrowserCapabilityDef = {
   id: 'auto:net:request-intercept',
@@ -12,7 +13,9 @@ export const requestIntercept: BrowserCapabilityDef = {
   trust: TRUST.read,
   handler: async (ctx) => {
     await ctx.governor.cdp.send(ctx.slaveId, 'Network.enable', {}).catch(() => {})
-    await ctx.governor.cdp.send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [{ urlPattern: '*' }] }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [{ urlPattern: '*' }] })
+      .catch(() => {})
     return { ok: true, detail: 'interception enabled' }
   },
 }
@@ -50,7 +53,9 @@ export const requestContinue: BrowserCapabilityDef = {
   params: z.object({}),
   trust: TRUST.read,
   handler: async (ctx) => {
-    await ctx.governor.cdp.send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [] }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [] })
+      .catch(() => {})
     return { ok: true, detail: 'interception cleared' }
   },
 }
@@ -76,7 +81,9 @@ export const headerSet: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     await ctx.governor.cdp.send(ctx.slaveId, 'Network.enable', {}).catch(() => {})
-    await ctx.governor.cdp.send(ctx.slaveId, 'Network.setExtraHTTPHeaders', { headers: ctx.params.headers }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Network.setExtraHTTPHeaders', { headers: ctx.params.headers })
+      .catch(() => {})
     return { ok: true, detail: 'headers set' }
   },
 }
@@ -88,7 +95,10 @@ export const cookieSet: BrowserCapabilityDef = {
   params: z.object({ name: z.string(), value: z.string(), path: z.string().default('/') }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.evaluate(ctx.slaveId, `document.cookie=${JSON.stringify(`${ctx.params.name}=${ctx.params.value};path=${ctx.params.path}`)}`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `document.cookie=${JSON.stringify(`${ctx.params.name}=${ctx.params.value};path=${ctx.params.path}`)}`,
+    )
     return { ok: true, detail: 'cookie set' }
   },
 }
@@ -117,7 +127,11 @@ export const authBasic: BrowserCapabilityDef = {
   handler: async (ctx) => {
     const token = Buffer.from(`${ctx.params.user}:${ctx.params.pass}`).toString('base64')
     await ctx.governor.cdp.send(ctx.slaveId, 'Network.enable', {}).catch(() => {})
-    await ctx.governor.cdp.send(ctx.slaveId, 'Network.setExtraHTTPHeaders', { headers: { Authorization: `Basic ${token}` } }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Network.setExtraHTTPHeaders', {
+        headers: { Authorization: `Basic ${token}` },
+      })
+      .catch(() => {})
     return { ok: true, detail: 'basic auth set' }
   },
 }
@@ -129,7 +143,9 @@ export const proxySet: BrowserCapabilityDef = {
   params: z.object({ proxy: z.string() }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.cdp.send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [] }).catch(() => {})
+    await ctx.governor.cdp
+      .send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [] })
+      .catch(() => {})
     return { ok: true, detail: `proxy config noted: ${ctx.params.proxy}` }
   },
 }

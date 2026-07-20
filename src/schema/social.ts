@@ -85,6 +85,7 @@ export const socialPostNodeSchema = {
   type: 'cap-store.social-post' as const,
   version: 1,
   schema: SocialPostDataSchema,
-  indexContent: (data: SocialPostData) => `${data.author.displayName}: ${data.body} ${data.tags?.join(' ') ?? ''}`,
+  indexContent: (data: SocialPostData) =>
+    `${data.author.displayName}: ${data.body} ${data.tags?.join(' ') ?? ''}`,
   embeddingText: (data: SocialPostData) => data.body,
 }

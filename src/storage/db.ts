@@ -235,6 +235,63 @@ export class CapStoreDb {
     })
   }
 
+  /**
+   * Idempotently ensure a valid ProviderSession exists for (providerId, accountId),
+   * creating the prerequisite VivimSession + default ProviderAccount when missing.
+   * Conversations require a real providerSessionId FK (schema cascade), so callers
+   * MUST obtain the session id from here rather than inventing a literal string.
+   */
+  async ensureProviderSession(input: {
+    providerId: string
+    accountId?: string
+  }): Promise<{ id: string }> {
+    const providerId = input.providerId
+    const accountId = input.accountId ?? `${providerId}_default`
+    const now = Date.now()
+
+    const existing = await this.prisma.providerSession.findFirst({
+      where: { providerId, accountId },
+      select: { id: true },
+    })
+    if (existing) return { id: existing.id }
+
+    const vivimSession = await this.prisma.vivimSession.create({
+      data: { id: newId(), state: 'idle', contextJson: '{}', createdAt: now, updatedAt: now },
+    })
+
+    await this.prisma.providerAccount.upsert({
+      where: { id: accountId },
+      create: {
+        id: accountId,
+        providerId,
+        email: `${accountId}@local`,
+        planTier: 'free',
+        isDefault: 1,
+        isKind: 0,
+        loginState: 'unknown',
+        loginAttempts: 0,
+        providerStateJson: '{}',
+        createdAt: now,
+        updatedAt: now,
+      },
+      update: { updatedAt: now },
+    })
+
+    const session = await this.prisma.providerSession.create({
+      data: {
+        id: newId(),
+        vivimSessionId: vivimSession.id,
+        providerId,
+        accountId,
+        state: 'idle',
+        contextJson: '{}',
+        createdAt: now,
+        updatedAt: now,
+      },
+    })
+    return { id: session.id }
+  }
+
   async createMessage(input: {
     id: string
     conversationId: string
@@ -442,7 +499,10 @@ const DEFAULT_PRAGMAS: DbPragmaPolicy = {
   foreignKeys: true,
 }
 
-export async function configurePrisma(db: CapStoreDb, policy?: Partial<DbPragmaPolicy>): Promise<void> {
+export async function configurePrisma(
+  db: CapStoreDb,
+  policy?: Partial<DbPragmaPolicy>,
+): Promise<void> {
   const pragmas = { ...DEFAULT_PRAGMAS, ...policy }
 
   // All pragmas may return a row (e.g. journal_mode echoes the new mode,
@@ -457,9 +517,8 @@ export async function configurePrisma(db: CapStoreDb, policy?: Partial<DbPragmaP
   await db.prisma.$queryRawUnsafe(`PRAGMA wal_autocheckpoint = ${pragmas.walAutocheckpoint}`)
   await db.prisma.$queryRawUnsafe(`PRAGMA foreign_keys = ${pragmas.foreignKeys ? 'ON' : 'OFF'}`)
 
-  const journalMode = await db.prisma.$queryRawUnsafe<{ journal_mode: string }[]>(
-    'PRAGMA journal_mode',
-  )
+  const journalMode =
+    await db.prisma.$queryRawUnsafe<{ journal_mode: string }[]>('PRAGMA journal_mode')
   console.log(`[db] pragmas configured — journal_mode=${journalMode[0]?.journal_mode}`)
 }
 

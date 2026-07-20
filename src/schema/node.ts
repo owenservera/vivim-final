@@ -3,7 +3,7 @@
 // is a Node. NodeSchemaRegistry provides typed schemas + validation per type.
 
 import { z } from 'zod'
-import { newId, hashContent } from '../ids.js'
+import { hashContent, newId } from '../ids.js'
 
 // ── Edge ─────────────────────────────────────────────────────────────────
 // Directed relationship between two nodes. weight mirrors OG AcuLink.weight.
@@ -82,6 +82,16 @@ export type NodeType =
   | 'cap-store.bookmark'
   | 'cap-store.artifact'
   | 'cap-store.acu'
+  | 'cap-store.agent'
+  | 'cap-store.role'
+  | 'cap-store.governance_policy'
+  | 'cap-store.agent_run'
+  | 'cap-store.agent_step'
+  | 'cap-store.tool'
+  | 'cap-store.objective'
+  | 'cap-store.agent_belief'
+  | 'cap-store.memory-agent'
+  | 'cap-store.builder_run'
 
 export interface NodeBase {
   id: string
@@ -118,12 +128,19 @@ export interface NodeBase {
   data: unknown
   edges?: Edge[]
   meta?: Record<string, unknown>
+  // Denormalized search index text (NodeRow.searchText). Engines set this so
+  // recall works without re-parsing dataJson. Defaults to '' in the store.
+  searchText?: string
+  // Conversation scoping (NodeRow.conversationId). Memory subsystem isolates
+  // per-agent via conversationId = 'agentMem:<agentId>' (decision D11 / FR-013).
+  conversationId?: string
 }
 
 export function createNode<T extends NodeType>(
   type: T,
   data: unknown,
   opts?: {
+    id?: string
     parentId?: string
     source?: string
     edges?: Edge[]
@@ -138,11 +155,13 @@ export function createNode<T extends NodeType>(
     parentVersion?: number
     state?: NodeState
     version?: number
+    searchText?: string
+    conversationId?: string
   },
 ): NodeBase {
   const now = Date.now()
   return {
-    id: newId(),
+    id: opts?.id ?? newId(),
     type,
     parentId: opts?.parentId,
     createdAt: now,
@@ -160,6 +179,8 @@ export function createNode<T extends NodeType>(
     validUntil: opts?.validUntil,
     parentVersion: opts?.parentVersion,
     source: opts?.source,
+    searchText: opts?.searchText,
+    conversationId: opts?.conversationId,
     data,
     edges: opts?.edges,
     meta: opts?.meta,
@@ -207,7 +228,10 @@ export class SchemaRegistry {
     if (!def) return { ok: false, error: `No schema registered for '${type}'` }
     const result = def.schema.safeParse(data)
     if (result.success) return { ok: true }
-    return { ok: false, error: result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') }
+    return {
+      ok: false,
+      error: result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
+    }
   }
 
   indexContent(node: NodeBase): string {

@@ -29,11 +29,17 @@ interface CompiledParser {
 export function compileParser(logicCode: string): CompiledParser {
   type ModuleShape = { default?: unknown }
   // biome-ignore lint: harness compiles trusted, generated parser code
-  const factory = new Function('exports', `"use strict";\n${logicCode}\nreturn exports.default;`) as (
+  // Seed parsers assign `module.exports.default`; inject both `module` and
+  // `exports` so the CommonJS-style assignment resolves (mirrors
+  // StreamParserEngine.loadInlineParser).
+  const factory = new Function('module', 'exports', `"use strict";\n${logicCode}`) as (
+    module: ModuleShape & { exports: ModuleShape },
     exports: ModuleShape,
-  ) => unknown
-  const exports: ModuleShape = {}
-  const mod = factory(exports)
+  ) => void
+  const exportsObj: ModuleShape = {}
+  const moduleObj: ModuleShape & { exports: ModuleShape } = { exports: exportsObj }
+  factory(moduleObj, exportsObj)
+  const mod = moduleObj.default ?? exportsObj.default
   if (!mod || typeof (mod as { parse?: unknown }).parse !== 'function') {
     throw new Error('parser logic_code did not produce a parse function')
   }

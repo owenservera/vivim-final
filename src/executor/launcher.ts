@@ -88,14 +88,19 @@ export async function launchProfile(profile: ChromeInstanceProfile): Promise<Lau
 
   const args = buildChromeArgs({ ...profile, debugPort })
 
-    console.log(`[launcher] Spawning (${profile.channel}/${profile.mode}): ${binary} ${args.join(' ')}`)
+  console.log(
+    `[launcher] Spawning (${profile.channel}/${profile.mode}): ${binary} ${args.join(' ')}`,
+  )
 
   const proc = Bun.spawn([binary, ...args], {
     stdout: 'ignore',
     stderr: 'ignore',
     env: { ...process.env },
-    detached: profile.mode === 'headed',
+    detached: true,
   })
+
+  // Ensure Chrome survives after the parent Bun process exits
+  proc.unref()
 
   const pid = proc.pid
   const ready = await waitForPort(debugPort, profile.launchTimeoutMs)

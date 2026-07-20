@@ -20,9 +20,7 @@ export type {
   LegacyBlock,
 } from './streaming.js'
 
-export type {
-  MessageData,
-} from './message.js'
+export type { MessageData } from './message.js'
 
 export {
   ContentPartSchema,
@@ -88,7 +86,7 @@ export {
 // ── Boundary validation ──────────────────────────────────────────────────
 // Every parser output goes through this before reaching storage/UI.
 
-import { ContentPartSchema, type ContentPart } from './streaming.js'
+import { type ContentPart, ContentPartSchema } from './streaming.js'
 
 export interface ValidationResult {
   ok: boolean

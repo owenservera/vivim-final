@@ -20,12 +20,23 @@ export interface ProviderParserRow {
 export interface ParserStore {
   getParser(providerId: string): Promise<ProviderParserRow | null>
   getActiveParser(providerId: string): Promise<ProviderParserRow | null>
+  // By-need resolution: providerId@version (semver) or @latest. Returns the
+  // active row matching the resolved version, or the highest version when
+  // `version` is omitted/'latest'. The engine walks fallbackParserId from here.
+  getParserByProviderAndVersion(
+    providerId: string,
+    version?: string,
+  ): Promise<ProviderParserRow | null>
+  // Resolve a single parser row by its primary id (used to follow the
+  // fallbackParserId edge without re-querying by provider).
+  getParserById(id: string): Promise<ProviderParserRow | null>
   upsertParser(parser: ProviderParserRow): Promise<void>
   listParsers(providerId: string): Promise<ProviderParserRow[]>
   getParserByFile(filePath: string): Promise<ProviderParserRow | null>
   getParserByHash(hash: string): Promise<ProviderParserRow | null>
 
-  // DB-only fallback chain — no hardcoded parsers in engine
+  // DB-only fallback chain — generic/system are ordinary rows reached via the
+  // fallbackParserId edge (no hardcoded tiers in the engine).
   getGenericParser(): Promise<ProviderParserRow | null>
   getSystemFallbackParser(): Promise<ProviderParserRow | null>
 }

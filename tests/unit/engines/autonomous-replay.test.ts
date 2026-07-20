@@ -37,7 +37,7 @@ function seedStore(): { store: AutonomousExecutionStore; sourceId: string; stepI
     },
   ]
   stepIds.forEach((id, i) => {
-    const seed = seedSteps[i]!
+    const seed = seedSteps[i] ?? {}
     const rec = {
       id,
       taskId: sourceId,
@@ -81,7 +81,9 @@ function seedStore(): { store: AutonomousExecutionStore; sourceId: string; stepI
       steps.set(id, { ...(steps.get(id) ?? {}), ...patch })
     },
     async getSteps(taskId: string) {
-      return (stepsByTask.get(taskId) ?? []).map((id) => steps.get(id)!)
+      return (stepsByTask.get(taskId) ?? [])
+        .map((id) => steps.get(id))
+        .filter((s): s is Record<string, unknown> => s != null)
     },
     async getStep(id: string) {
       return steps.get(id) ?? null
@@ -140,7 +142,7 @@ describe('ReplayController branching (Unit 34.4)', () => {
     // original timeline intact
     const orig = await store.getTask(sourceId)
     expect(orig?.status).toBe('complete')
-    const origResult = JSON.parse((await store.getStep(stepIds[1]!))?.resultJson as string)
+    const origResult = JSON.parse((await store.getStep(stepIds[1] ?? ''))?.resultJson as string)
     expect(origResult.input.input.n).toBe(1)
   })
 })

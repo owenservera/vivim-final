@@ -1,6 +1,9 @@
 ---
 name: devops-roadmap
 description: >
+  Research-first roadmap system grounded in truth scanner. THE entry point for
+  new atomic tasks — both AI-recommended and user-suggested. Use before devops
+  loop starts, at phase boundaries, or when user suggests new features.
 ---
 # devops-roadmap
 

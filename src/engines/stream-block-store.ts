@@ -4,6 +4,7 @@
 
 import { newId } from '../ids.js'
 import type {
+  BlockMeta,
   ContentBlock,
   StreamBlockRow,
   StreamBlockStoreContract,
@@ -19,10 +20,12 @@ export class StreamBlockStore implements StreamBlockStoreContract {
     conversationId: string,
     messageId: string,
     blocks: ContentBlock[],
+    meta?: BlockMeta,
   ): Promise<void> {
     if (blocks.length === 0) return
 
     const now = Date.now()
+    const metaJson = meta ? JSON.stringify(meta) : '{}'
     const values = blocks.map((block, i) => ({
       id: newId(),
       conversationId,
@@ -30,7 +33,7 @@ export class StreamBlockStore implements StreamBlockStoreContract {
       blockIndex: i,
       blockKind: block.type,
       blockData: JSON.stringify(block),
-      blockMeta: '{}',
+      blockMeta: metaJson,
       createdAt: now,
     }))
 

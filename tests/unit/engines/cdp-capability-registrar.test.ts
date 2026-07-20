@@ -14,7 +14,8 @@ const executeCdp: CdpExecutor = (method, params) => Promise.resolve({ method, pa
 
 describe('cdp-capability-registrar', () => {
   it('builds a UnifiedCapability from a descriptor', () => {
-    const desc = CDP_PROTOCOL_CATALOG.find((m) => m.fullName === 'Runtime.evaluate')!
+    const desc = CDP_PROTOCOL_CATALOG.find((m) => m.fullName === 'Runtime.evaluate')
+    expect(desc).toBeDefined()
     const cap = cdpMethodToCapability(desc, { executeCdp })
     expect(cap.id).toBe('cap:cdp:Runtime.evaluate')
     expect(cap.slug).toBe('cdp-runtime-evaluate')
@@ -26,14 +27,16 @@ describe('cdp-capability-registrar', () => {
   })
 
   it('flags destructive commands for confirmation', () => {
-    const desc = CDP_PROTOCOL_CATALOG.find((m) => m.fullName === 'Page.navigate')!
+    const desc = CDP_PROTOCOL_CATALOG.find((m) => m.fullName === 'Page.navigate')
+    expect(desc).toBeDefined()
     const cap = cdpMethodToCapability(desc, { executeCdp })
     expect(cap.requiresConfirmation).toBe(true)
     expect(cap.ui?.requiresConfirmation).toBe(true)
   })
 
   it('handler dispatches through the injected executor (Governor Canon)', async () => {
-    const desc = CDP_PROTOCOL_CATALOG.find((m) => m.fullName === 'Runtime.evaluate')!
+    const desc = CDP_PROTOCOL_CATALOG.find((m) => m.fullName === 'Runtime.evaluate')
+    expect(desc).toBeDefined()
     const cap = cdpMethodToCapability(desc, { executeCdp })
     const out = (await cap.handler(
       { expression: '1+1' },

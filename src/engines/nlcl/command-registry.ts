@@ -98,7 +98,9 @@ export class CommandPatternRegistry {
 
     let result: CommandPattern[]
     if (ids) {
-      result = [...ids].map((id) => this.patterns.get(id)!).filter(Boolean)
+      result = [...ids]
+        .map((id) => this.patterns.get(id))
+        .filter((p): p is CommandPattern => p != null)
     } else {
       result = [...this.patterns.values()]
     }
@@ -107,7 +109,7 @@ export class CommandPatternRegistry {
       result = result.filter((p) => p.executor === filter.executor)
     }
     if (filter?.tag) {
-      result = result.filter((p) => p.tags.includes(filter.tag!))
+      result = result.filter((p) => p.tags.includes(filter.tag))
     }
     return result
   }
@@ -115,7 +117,9 @@ export class CommandPatternRegistry {
   listByCategory(): Record<string, CommandPattern[]> {
     const result: Record<string, CommandPattern[]> = {}
     for (const [category, ids] of this.categoryIndex) {
-      result[category] = [...ids].map((id) => this.patterns.get(id)!).filter(Boolean)
+      result[category] = [...ids]
+        .map((id) => this.patterns.get(id))
+        .filter((p): p is CommandPattern => p != null)
     }
     return result
   }

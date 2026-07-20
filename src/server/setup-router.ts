@@ -7,38 +7,33 @@ import { ProfileAllocator } from '../executor/profile-allocator.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
 
-// Provider login URLs (consumer-friendly names in UI)
-const PROVIDER_LOGIN_URLS: Record<string, string> = {
-  chatgpt: 'https://chatgpt.com/',
-  claude: 'https://claude.ai/',
-  gemini: 'https://gemini.google.com/',
+// Provider login URLs (consumer-friendly names in UI) — loaded from DB via ProviderRegistry
+import { getProviderRegistry } from '../config/provider-registry.js'
+
+function getLoginUrl(providerId: string): string {
+  try {
+    return getProviderRegistry().getLoginUrl(providerId)
+  } catch {
+    return `https://${providerId}.com/login`
+  }
 }
 
-// Provider-specific login detection indicators
-const LOGIN_INDICATORS: Record<
-  string,
-  {
-    urlPattern: RegExp
-    loggedInSelector?: string
-    loggedOutSelector?: string
-  }
-> = {
-  chatgpt: {
-    urlPattern: /login|auth|signin|sign-in/i,
-    loggedInSelector: 'nav button[aria-label*="Profile"]',
-    loggedOutSelector: '[data-testid="login-button"]',
-  },
-  claude: {
-    urlPattern: /login|signin/i,
-    loggedInSelector: 'button[aria-label*="Profile"]',
-    loggedOutSelector: 'a[href*="login"]',
-  },
-  gemini: {
-    urlPattern: /accounts\.google\.com\/ServiceLogin/i,
-    loggedInSelector: 'a[aria-label*="Google Account"]',
-    loggedOutSelector: 'a[href*="accounts.google.com"]',
-  },
+type LoginIndicatorEntry = {
+  urlPattern: RegExp
+  loggedInSelector?: string
+  loggedOutSelector?: string
 }
+
+const PROVIDER_LOGIN_URLS: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get: (_, providerId: string) => getLoginUrl(providerId),
+})
+
+const LOGIN_INDICATORS: Record<string, LoginIndicatorEntry> = new Proxy(
+  {} as Record<string, LoginIndicatorEntry>,
+  {
+    get: (_, _providerId: string) => ({ urlPattern: /login|auth|signin|sign-in/i }),
+  },
+)
 
 interface LoginCheckResult {
   alive: boolean
@@ -53,7 +48,7 @@ export function createSetupRouter(ctx: ServerContext) {
     const url = new URL(req.url)
     const { pathname } = url
     const method = req.method
-    const source = (req.headers.get('X-Source') ?? 'unknown') as
+    const _source = (req.headers.get('X-Source') ?? 'unknown') as
       | 'cli'
       | 'frontend'
       | 'agent'
@@ -61,8 +56,7 @@ export function createSetupRouter(ctx: ServerContext) {
       | 'unknown'
 
     // Audit log — every setup action is tagged with its source
-    const audit = (action: string, detail?: Record<string, unknown>) => {
-    }
+    const audit = (_action: string, _detail?: Record<string, unknown>) => {}
 
     try {
       // GET /api/setup/workspace - get stored workspace hint
@@ -346,8 +340,7 @@ export function createSetupRouter(ctx: ServerContext) {
           return errorResponse(`Workspace not found: ${workspace}`, 'ValidationError', 400)
         }
 
-        // Known providers to scan
-        const PROVIDERS = ['chatgpt', 'claude', 'gemini']
+        const PROVIDERS = getProviderRegistry().getProviderList()
         const restored: Array<{ providerId: string; accountId: string; profileDir: string }> = []
 
         for (const providerId of PROVIDERS) {
@@ -413,7 +406,7 @@ export function createSetupRouter(ctx: ServerContext) {
           return json({ profiles: [], workspacePath: hint })
         }
 
-        const PROVIDERS = ['chatgpt', 'claude', 'gemini']
+        const PROVIDERS = getProviderRegistry().getProviderList()
         const profiles: Array<{
           providerId: string
           accountSlug: string

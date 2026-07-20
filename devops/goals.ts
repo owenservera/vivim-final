@@ -18,6 +18,7 @@
 
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { parseUnits } from './tracker.js'
 
 const PROJECT_ROOT = join(import.meta.dir, '..')
 const GOALS_DIR = join(PROJECT_ROOT, 'docs', 'goals')
@@ -505,4 +506,177 @@ export function parseGoalsMarkdown(content: string): Goal[] {
   }
 
   return goals
+}
+
+// ── Drift detection ──────────────────────────────────────────────────────
+
+export interface DriftItem {
+  severity: 'error' | 'warning' | 'info'
+  scope: 'goal' | 'objective' | 'kr'
+  id: string
+  message: string
+  detail?: string
+}
+
+export interface DriftReport {
+  generatedAt: string
+  goalsChecked: number
+  krsChecked: number
+  drift: DriftItem[]
+  pass: boolean
+}
+
+/**
+ * Cross-check GOALS.md KR/goal state against the real atomic tracker.
+ * Detects:
+ *   - KR marked ≥100% but related units not all done in tracker
+ *   - Goal status "achieved" but completion < 100%
+ *   - Goal status "not_started" but completion > 0
+ *   - KR target = 0 (no measurable target)
+ *   - Related unit IDs that don't exist in tracker
+ * Soft signals only — never a hard gate. Reports drift for human review.
+ */
+export async function checkGoalsDrift(trackerPath?: string): Promise<DriftReport> {
+  const goals = await readGoalsFile()
+  const trackerFile = trackerPath ?? join(PROJECT_ROOT, 'docs', 'atomic-v3-fork-canon', '01-tracker.md')
+  const trackerLines = await readFile(trackerFile, 'utf8').catch(() => '')
+  const trackerUnits = parseUnits(trackerLines.split('\n'))
+
+  const unitState = new Map(trackerUnits.map(u => [u.id, u.state]))
+  const drift: DriftItem[] = []
+  let krsChecked = 0
+
+  for (const goal of goals) {
+    if (goal.status === 'achieved' && goal.completion < 100) {
+      drift.push({
+        severity: 'error',
+        scope: 'goal',
+        id: goal.id,
+        message: `Goal ${goal.id} ("${goal.title}") marked ACHIEVED but completion is ${goal.completion}%`,
+        detail: 'Goal status and completion percentage are inconsistent',
+      })
+    }
+    if (goal.status === 'not_started' && goal.completion > 0) {
+      drift.push({
+        severity: 'warning',
+        scope: 'goal',
+        id: goal.id,
+        message: `Goal ${goal.id} is "not_started" but shows ${goal.completion}% completion`,
+        detail: 'Either mark goal in_progress or reset completion to 0',
+      })
+    }
+
+    for (const obj of goal.objectives) {
+      if (obj.status === 'achieved' && obj.completion < 100) {
+        drift.push({
+          severity: 'warning',
+          scope: 'objective',
+          id: obj.id,
+          message: `Objective ${obj.id} marked ACHIEVED but completion is ${obj.completion}%`,
+        })
+      }
+
+      for (const kr of obj.keyResults) {
+        krsChecked++
+        const progress = kr.target > 0 ? Math.round((kr.current / kr.target) * 100) : 0
+
+        if (kr.target <= 0) {
+          drift.push({
+            severity: 'warning',
+            scope: 'kr',
+            id: kr.id,
+            message: `KR ${kr.id} has target=0 — not measurable`,
+            detail: `Title: "${kr.title}"`,
+          })
+        }
+
+        if (progress >= 100 && kr.status !== 'achieved') {
+          drift.push({
+            severity: 'warning',
+            scope: 'kr',
+            id: kr.id,
+            message: `KR ${kr.id} is at ${progress}% but status is "${kr.status}" (should be achieved)`,
+          })
+        }
+
+        if (progress >= 100 && kr.relatedUnits.length > 0) {
+          const notDone = kr.relatedUnits.filter(uid => {
+            const s = unitState.get(uid)
+            return s && s !== 'done'
+          })
+          if (notDone.length > 0) {
+            drift.push({
+              severity: 'error',
+              scope: 'kr',
+              id: kr.id,
+              message: `KR ${kr.id} claims 100% progress but ${notDone.length} related unit(s) are not done in tracker`,
+              detail: `Not-done units: ${notDone.join(', ')}`,
+            })
+          }
+        }
+
+        for (const uid of kr.relatedUnits) {
+          if (!unitState.has(uid)) {
+            drift.push({
+              severity: 'warning',
+              scope: 'kr',
+              id: kr.id,
+              message: `KR ${kr.id} references unknown unit ${uid}`,
+              detail: 'Unit ID not found in tracker — typo or stale reference?',
+            })
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    generatedAt: new Date().toISOString(),
+    goalsChecked: goals.length,
+    krsChecked,
+    drift,
+    pass: drift.filter(d => d.severity === 'error').length === 0,
+  }
+}
+
+export function renderDriftReport(report: DriftReport): string {
+  const lines: string[] = []
+  lines.push('# Goals Drift Report')
+  lines.push('')
+  lines.push(`**Generated:** ${report.generatedAt}`)
+  lines.push(`**Status:** ${report.pass ? 'CLEAN' : 'DRIFT DETECTED'}`)
+  lines.push(`**Goals checked:** ${report.goalsChecked} | **KRs checked:** ${report.krsChecked}`)
+  lines.push('')
+  lines.push('---')
+  lines.push('')
+
+  const errors = report.drift.filter(d => d.severity === 'error')
+  const warnings = report.drift.filter(d => d.severity === 'warning')
+
+  if (errors.length > 0) {
+    lines.push('## Errors')
+    lines.push('')
+    for (const e of errors) {
+      lines.push(`- **${e.id}:** ${e.message}`)
+      if (e.detail) lines.push(`  - ${e.detail}`)
+    }
+    lines.push('')
+  }
+
+  if (warnings.length > 0) {
+    lines.push('## Warnings')
+    lines.push('')
+    for (const w of warnings) {
+      lines.push(`- **${w.id}:** ${w.message}`)
+      if (w.detail) lines.push(`  - ${w.detail}`)
+    }
+    lines.push('')
+  }
+
+  if (report.drift.length === 0) {
+    lines.push('No drift detected. Goals and tracker are aligned.')
+    lines.push('')
+  }
+
+  return lines.join('\n')
 }

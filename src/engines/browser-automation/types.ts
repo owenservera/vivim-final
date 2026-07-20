@@ -2,10 +2,9 @@
 // Shared types for the provider-free browser-automation backbone (SOTA-03/05/09).
 // Objective-agnostic, config-driven. No scenario-specific logic lives here.
 
+import type { ZodType } from 'zod'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
-import type { z } from 'zod'
-import type { ZodType } from 'zod'
 
 // ── Grounding (SOTA-05) ─────────────────────────────────────────────────────
 
@@ -80,6 +79,21 @@ export interface TrustPolicy {
   sourceAllowlist?: string[]
   /** Citations / provenance must be tracked for outputs. */
   provenanceTrack?: boolean
+}
+
+/** Common trust presets (Axis E). Defined here (not registry.ts) to avoid a
+ *  module-init cycle: registry.ts imports the defs at top level, and the defs
+ *  read TRUST during module evaluation. */
+export const TRUST: Record<'read' | 'write' | 'destructive', TrustPolicy> = {
+  read: { autoRead: true, confidenceThreshold: 0.5 },
+  write: { autoRead: true, autoWrite: true, confidenceThreshold: 0.6 },
+  destructive: {
+    autoRead: true,
+    autoWrite: true,
+    requireConfirmation: true,
+    destructiveBlock: true,
+    confidenceThreshold: 0.8,
+  },
 }
 
 export interface BudgetCap {

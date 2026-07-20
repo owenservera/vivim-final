@@ -63,8 +63,9 @@ describe('IntentDecomposer (template strategy)', () => {
       availableCapabilities: ['navigate'],
     })
     expect(dag).not.toBeNull()
-    const nav = dag?.nodes.find((n) => n.capabilitySlug === 'navigate')!
-    expect(nav.inputMapping.url as string).toBe('https://foo.test')
+    const nav = dag?.nodes.find((n) => n.capabilitySlug === 'navigate')
+    expect(nav).toBeDefined()
+    expect(nav?.inputMapping.url as string).toBe('https://foo.test')
   })
 
   it('prunes nodes whose capability slug is not available', async () => {
@@ -78,8 +79,9 @@ describe('IntentDecomposer (template strategy)', () => {
       availableCapabilities: ['navigate'],
     })
     expect(dag).not.toBeNull()
-    const extract = dag?.nodes.find((n) => n.capabilitySlug === 'extract')!
-    expect(extract.unavailable).toBe(true)
+    const extract = dag?.nodes.find((n) => n.capabilitySlug === 'extract')
+    expect(extract).toBeDefined()
+    expect(extract?.unavailable).toBe(true)
     expect(dag?.edges.length).toBe(0)
   })
 

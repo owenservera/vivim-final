@@ -3,10 +3,10 @@
 // ChromeGovernor via the AutomationOrchestrator — never touches CDP directly
 // (Governor Canon). Replaces the legacy src/automation/automation-router.ts.
 
-import { json, errorResponse } from './response.js'
-import type { AutomationOrchestrator } from '../engines/automation/orchestrator.js'
 import { AGENT_ROLES } from '../engines/automation/agents.js'
+import type { AutomationOrchestrator } from '../engines/automation/orchestrator.js'
 import { EngineError } from '../errors.js'
+import { errorResponse, json } from './response.js'
 
 export interface AutomationRouterDeps {
   orchestrator: AutomationOrchestrator
@@ -21,12 +21,24 @@ export function createAutomationRouter(deps: AutomationRouterDeps) {
     try {
       // GET /api/automate/recipes — list composite recipe library
       if (url.pathname === '/api/automate/recipes' && req.method === 'GET') {
-        return json({ ok: true, recipes: orchestrator.listRecipes().map((r) => ({ id: r.id, description: r.description })) })
+        return json({
+          ok: true,
+          recipes: orchestrator
+            .listRecipes()
+            .map((r) => ({ id: r.id, description: r.description })),
+        })
       }
 
       // GET /api/automate/roles — list config-role agents
       if (url.pathname === '/api/automate/roles' && req.method === 'GET') {
-        return json({ ok: true, roles: Object.values(AGENT_ROLES).map((r) => ({ id: r.id, description: r.description, trust: r.trust })) })
+        return json({
+          ok: true,
+          roles: Object.values(AGENT_ROLES).map((r) => ({
+            id: r.id,
+            description: r.description,
+            trust: r.trust,
+          })),
+        })
       }
 
       // POST /api/automate/run — execute an AutomationGoal

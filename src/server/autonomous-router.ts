@@ -59,7 +59,7 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     // POST /api/autonomous/gates/:id/resolve
     const gateResolveMatch = path.match(/^\/api\/autonomous\/gates\/([^/]+)\/resolve$/)
     if (gateResolveMatch && req.method === 'POST') {
-      const gateId = gateResolveMatch[1]!
+      const gateId = gateResolveMatch[1] ?? ''
       const body = (await req.json()) as { response: string; resolvedBy: string }
       if (!body.response || !body.resolvedBy) return error('response and resolvedBy are required')
       await autonomousEngine.resolveGate(gateId, body.response, body.resolvedBy)
@@ -69,7 +69,7 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     // GET /api/autonomous/status/:id
     const statusMatch = path.match(/^\/api\/autonomous\/status\/([^/]+)$/)
     if (statusMatch && req.method === 'GET') {
-      const task = await autonomousEngine.getStatus(statusMatch[1]!)
+      const task = await autonomousEngine.getStatus(statusMatch[1] ?? '')
       if (!task) return error('Task not found', 404)
       return json({ task })
     }
@@ -77,22 +77,23 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     // POST /api/autonomous/:id/cancel
     const cancelMatch = path.match(/^\/api\/autonomous\/([^/]+)\/cancel$/)
     if (cancelMatch && req.method === 'POST') {
-      await autonomousEngine.cancel(cancelMatch[1]!)
-      return json({ ok: true, taskId: cancelMatch[1]! })
+      const taskId = cancelMatch[1] ?? ''
+      await autonomousEngine.cancel(taskId)
+      return json({ ok: true, taskId })
     }
 
     // POST /api/autonomous/:id/replay
     const replayMatch = path.match(/^\/api\/autonomous\/([^/]+)\/replay$/)
     if (replayMatch && req.method === 'POST') {
       const body = (await req.json().catch(() => ({}))) as { fromStep?: string }
-      const task = await autonomousEngine.replay(replayMatch[1]!, body.fromStep)
+      const task = await autonomousEngine.replay(replayMatch[1] ?? '', body.fromStep)
       return json({ taskId: task.id, status: task.status })
     }
 
     // GET /api/autonomous/:id/trace
     const traceMatch = path.match(/^\/api\/autonomous\/([^/]+)\/trace$/)
     if (traceMatch && req.method === 'GET') {
-      const task = await autonomousEngine.getStatus(traceMatch[1]!)
+      const task = await autonomousEngine.getStatus(traceMatch[1] ?? '')
       if (!task) return error('Task not found', 404)
       const trace = task.steps.map((s) => ({
         stepId: s.id,

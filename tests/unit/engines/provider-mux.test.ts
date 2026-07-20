@@ -296,7 +296,8 @@ describe('ProviderMuxEngine', () => {
     )
 
     const sessions = [...store.sessions.values()]
-    const lastSession = sessions[sessions.length - 1]!
+    const lastSession = sessions[sessions.length - 1]
+    if (!lastSession) throw new Error('expected at least one session')
     await engine.recordOutcome(lastSession.id, 'p1')
 
     const prefsAfter = await store.getRoutingPreferences('cap1')

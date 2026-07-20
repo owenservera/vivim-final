@@ -87,7 +87,7 @@ describe('NLCL Golden Test Set', () => {
       // For single intents, result should have capabilityId
       if (gc.expect.length === 1) {
         expect(result.ok).toBe(true)
-        const firstExpect = gc.expect[0]!
+        const firstExpect = gc.expect[0]
         expect(result.capabilityId ?? '').toBe(firstExpect.capabilityId)
         if (firstExpect.input) {
           const out = (result.output as Record<string, unknown> | undefined) ?? {}

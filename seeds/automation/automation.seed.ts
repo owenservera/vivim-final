@@ -1,10 +1,3 @@
-// seeds/automation/automation.seed.ts
-// Idempotent seeder for the browser-automation substrate (SOTA plan B9).
-// Persists one reference AgentLoopRun per config-role agent so the runtime
-// audit tables (agent_loop_run / agent_step) have enumerable role anchors.
-// Recipes (auto:*) and agent roles live in code (recipes.ts / agents.ts).
-
-import { newId } from '../../src/ids.js'
 import type { CapStoreDb } from '../../src/storage/db.js'
 
 const AGENT_ROLES = ['researcher', 'extractor', 'synthesizer', 'monitor', 'tester']
@@ -19,14 +12,19 @@ export async function seedAutomation(db: CapStoreDb): Promise<number> {
       where: { id: runId },
       create: {
         id: runId,
+        agentId: `agent:${role}`,
         goal: `Reference ${role} agent role (seeded)`,
-        role,
         status: 'completed',
-        stepsDone: 1,
+        inputJson: JSON.stringify({ role }),
+        outputJson: JSON.stringify({ kind: 'agent-role' }),
         startedAt: now,
-        finishedAt: now,
+        completedAt: now,
       },
-      update: { updatedAt: now },
+      update: {
+        status: 'completed',
+        outputJson: JSON.stringify({ kind: 'agent-role' }),
+        completedAt: now,
+      },
     })
     await db.prisma.agentStep.upsert({
       where: { id: `${runId}:0` },
@@ -34,12 +32,14 @@ export async function seedAutomation(db: CapStoreDb): Promise<number> {
         id: `${runId}:0`,
         runId,
         stepIndex: 0,
-        action: 'register_role',
-        observation: JSON.stringify({ kind: 'agent-role' }),
-        ok: 1,
+        actionType: 'register_role',
+        actionJson: JSON.stringify({ role }),
+        resultJson: JSON.stringify({ kind: 'agent-role' }),
+        success: true,
+        durationMs: 0,
         createdAt: now,
       },
-      update: { updatedAt: now },
+      update: { actionType: 'register_role', actionJson: JSON.stringify({ role }), success: true },
     })
     count += 2
   }

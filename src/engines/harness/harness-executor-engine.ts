@@ -19,7 +19,6 @@ import type {
 } from './harness-contract.js'
 import { configToProgram } from './program-schema.js'
 import { compileRecipe } from './recipe-compiler.js'
-import { captureAndStore } from './stream-capture-reconstruct.js'
 import { withTimeout } from './timeout-guard.js'
 
 function defaultSink(deps: HarnessExecutorDeps): HarnessSink {
@@ -112,14 +111,31 @@ export class HarnessExecutorEngine implements HarnessExecutor {
     const bindingId = req.bindingId ?? `${req.capabilitySlug}:${req.providerId}`
     let lastSeq = 0
     if (result.success && result.capturedBody) {
-      // 23.3 - reconstruct + persist + emit captured blocks.
-      lastSeq = await captureAndStore(
-        result.capturedBody,
-        { conversationId: req.conversationId ?? 'harness', messageId, bindingId },
-        this.deps.blockStore,
-        this.sink,
-        0,
-      )
+      // Parse captured body through provider-specific parser chain instead of
+      // naive text splitting — this gives us thinking blocks, tool calls, file
+      // references, and correct wire format detection.
+      const parseResult = await this.deps.parser.parse(result.capturedBody, req.providerId)
+      if (parseResult.blocks.length > 0) {
+        await this.deps.blockStore.storeBlocks(
+          req.conversationId ?? 'harness',
+          messageId,
+          parseResult.blocks,
+          {
+            parserName: parseResult.parserName,
+            confidence: parseResult.confidence,
+            wireFormat: parseResult.wireFormat,
+          },
+        )
+        for (const block of parseResult.blocks) {
+          this.sink.onBlock({
+            bindingId,
+            messageId,
+            sequence: lastSeq++,
+            blockKind: block.type,
+            blockData: block,
+          })
+        }
+      }
     }
     void traceId
     void lastSeq

@@ -21,7 +21,6 @@ export class UiComponentStoreImpl implements UiComponentStore {
     this.db = db as unknown as PrismaLoose
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Prisma escape hatch
   private get p(): any {
     return this.db.prisma
   }

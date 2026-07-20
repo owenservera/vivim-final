@@ -62,12 +62,19 @@ export function createConceptualRouter(ctx: ServerContext) {
           ok: true,
           providerId,
           family: family.slug,
-          slots: slots.map((s: { primitive: unknown; component: unknown; tier: unknown; fromSystemDefault: unknown }) => ({
-            primitive: s.primitive,
-            component: s.component,
-            tier: s.tier,
-            fromSystemDefault: s.fromSystemDefault,
-          })),
+          slots: slots.map(
+            (s: {
+              primitive: unknown
+              component: unknown
+              tier: unknown
+              fromSystemDefault: unknown
+            }) => ({
+              primitive: s.primitive,
+              component: s.component,
+              tier: s.tier,
+              fromSystemDefault: s.fromSystemDefault,
+            }),
+          ),
         })
       } catch (e) {
         return errorResponse((e as Error).message, 'SurfaceResolveFailed', 500)

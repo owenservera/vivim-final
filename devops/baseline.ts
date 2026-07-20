@@ -122,7 +122,7 @@ function auditVulnCount(): number {
 async function invariantViolationKeys(): Promise<string[]> {
   try {
     const res = await checkInvariants()
-    return res.violations.map((v) => v.id ?? v.title ?? JSON.stringify(v))
+    return res.violations.map((v) => v.id ?? v.message ?? JSON.stringify(v))
   } catch {
     return []
   }

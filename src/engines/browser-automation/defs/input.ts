@@ -1,8 +1,9 @@
 // src/engines/browser-automation/defs/input.ts
 // Axis: input — interaction primitives (20 capabilities)
 
+import { z } from 'zod'
 import type { BrowserCapabilityDef, CapCtx } from '../types.js'
-import { TRUST, z } from '../registry.js'
+import { TRUST } from '../types.js'
 
 const sel = z.object({
   selector: z.string().optional(),
@@ -15,12 +16,11 @@ const sel = z.object({
 const withSel = <T extends z.ZodRawShape>(extra: T) => sel.extend(extra)
 
 /** Click an element resolved via grounding (`__selector` injected by registry). */
-async function clickResolved(ctx: CapCtx): Promise<{ ok: boolean; detail?: string; error?: string }> {
+async function clickResolved(
+  ctx: CapCtx,
+): Promise<{ ok: boolean; detail?: string; error?: string }> {
   const s = (ctx.params.__selector as string) ?? 'button'
-  await ctx.governor.evaluate(
-    ctx.slaveId,
-    `document.querySelector(${JSON.stringify(s)})?.click()`,
-  )
+  await ctx.governor.evaluate(ctx.slaveId, `document.querySelector(${JSON.stringify(s)})?.click()`)
   return { ok: true, detail: `clicked ${s}` }
 }
 
@@ -43,7 +43,10 @@ export const doubleClick: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'button'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('dblclick',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('dblclick',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`,
+    )
     return { ok: true, detail: `double-clicked ${s}` }
   },
 }
@@ -57,7 +60,10 @@ export const rightClick: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'button'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('contextmenu',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('contextmenu',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`,
+    )
     return { ok: true, detail: `right-clicked ${s}` }
   },
 }
@@ -89,7 +95,10 @@ export const clear: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'textarea'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value='';e.dispatchEvent(new Event('input',{bubbles:true}));}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value='';e.dispatchEvent(new Event('input',{bubbles:true}));}})()`,
+    )
     return { ok: true, detail: `cleared ${s}` }
   },
 }
@@ -120,7 +129,10 @@ export const keyDown: BrowserCapabilityDef = {
   params: z.object({ key: z.string() }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', { type: 'keyDown', key: ctx.params.key as string })
+    await ctx.governor.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', {
+      type: 'keyDown',
+      key: ctx.params.key as string,
+    })
     return { ok: true, detail: `keydown ${ctx.params.key}` }
   },
 }
@@ -132,7 +144,10 @@ export const keyUp: BrowserCapabilityDef = {
   params: z.object({ key: z.string() }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', { type: 'keyUp', key: ctx.params.key as string })
+    await ctx.governor.cdp.send(ctx.slaveId, 'Input.dispatchKeyEvent', {
+      type: 'keyUp',
+      key: ctx.params.key as string,
+    })
     return { ok: true, detail: `keyup ${ctx.params.key}` }
   },
 }
@@ -146,7 +161,10 @@ export const hover: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'a'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('mouseover',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('mouseover',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`,
+    )
     return { ok: true, detail: `hovered ${s}` }
   },
 }
@@ -160,7 +178,10 @@ export const focus: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'input'
-    await ctx.governor.evaluate(ctx.slaveId, `document.querySelector(${JSON.stringify(s)})?.focus()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `document.querySelector(${JSON.stringify(s)})?.focus()`,
+    )
     return { ok: true, detail: `focused ${s}` }
   },
 }
@@ -232,7 +253,10 @@ export const check: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'input[type=checkbox]'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e&&!e.checked){e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e&&!e.checked){e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));}})()`,
+    )
     return { ok: true, detail: `checked ${s}` }
   },
 }
@@ -246,7 +270,10 @@ export const uncheck: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'input[type=checkbox]'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e&&e.checked){e.checked=false;e.dispatchEvent(new Event('change',{bubbles:true}));}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e&&e.checked){e.checked=false;e.dispatchEvent(new Event('change',{bubbles:true}));}})()`,
+    )
     return { ok: true, detail: `unchecked ${s}` }
   },
 }
@@ -260,7 +287,10 @@ export const rangeSet: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'input[type=range]'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=${JSON.stringify(ctx.params.value)};e.dispatchEvent(new Event('input',{bubbles:true}));}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=${JSON.stringify(ctx.params.value)};e.dispatchEvent(new Event('input',{bubbles:true}));}})()`,
+    )
     return { ok: true, detail: `range set ${ctx.params.value}` }
   },
 }
@@ -274,7 +304,10 @@ export const colorSet: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'input[type=color]'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=${JSON.stringify(ctx.params.value)};e.dispatchEvent(new Event('input',{bubbles:true}));}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=${JSON.stringify(ctx.params.value)};e.dispatchEvent(new Event('input',{bubbles:true}));}})()`,
+    )
     return { ok: true, detail: `color set ${ctx.params.value}` }
   },
 }
@@ -288,7 +321,10 @@ export const upload: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = (ctx.params.__selector as string) ?? 'input[type=file]'
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.setAttribute('data-vivim-files',${JSON.stringify(JSON.stringify(ctx.params.files))});e.dispatchEvent(new Event('change',{bubbles:true}));}})()`)
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.setAttribute('data-vivim-files',${JSON.stringify(JSON.stringify(ctx.params.files))});e.dispatchEvent(new Event('change',{bubbles:true}));}})()`,
+    )
     return { ok: true, detail: `upload set on ${s}` }
   },
 }
@@ -300,8 +336,11 @@ export const paste: BrowserCapabilityDef = {
   params: z.object({ text: z.string() }),
   trust: TRUST.write,
   handler: async (ctx) => {
-    await ctx.governor.evaluate(ctx.slaveId, `(()=>{var e=document.activeElement;if(e){var s=document.createEvent('TextEvent');s.initTextEvent('textInput',true,true,null,${JSON.stringify(ctx.params.text)});e.dispatchEvent(s);}else{throw new Error('no active element');}})()`)
-    return { ok: true, detail: `pasted` }
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      `(()=>{var e=document.activeElement;if(e){var s=document.createEvent('TextEvent');s.initTextEvent('textInput',true,true,null,${JSON.stringify(ctx.params.text)});e.dispatchEvent(s);}else{throw new Error('no active element');}})()`,
+    )
+    return { ok: true, detail: 'pasted' }
   },
 }
 
@@ -324,7 +363,10 @@ export const cut: BrowserCapabilityDef = {
   params: z.object({}),
   trust: TRUST.write,
   handler: async (ctx) => {
-    const text = await ctx.governor.evaluate(ctx.slaveId, '(function(){var t=window.getSelection().toString();window.getSelection().deleteFromDocument();return t;})()')
+    const text = await ctx.governor.evaluate(
+      ctx.slaveId,
+      '(function(){var t=window.getSelection().toString();window.getSelection().deleteFromDocument();return t;})()',
+    )
     return { ok: true, output: text, detail: 'cut selection' }
   },
 }

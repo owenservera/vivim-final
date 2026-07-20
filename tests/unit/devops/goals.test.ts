@@ -417,7 +417,7 @@ describe('GOALS System', () => {
       }
       const scores = suggestAlignmentScore(option, goals)
       expect(scores.length).toBe(1)
-      const s0 = scores[0]!
+      const s0 = scores[0]
       expect(s0.goalId).toBe('G-001')
       expect(s0.score).toBeGreaterThanOrEqual(1)
     })
@@ -463,7 +463,7 @@ describe('GOALS System', () => {
         relatedUnits: ['11.1'],
       }
       const scores = suggestAlignmentScore(option, goals)
-      const s0 = scores[0]!
+      const s0 = scores[0]
       expect(s0.reason).toContain('high effort penalty')
       expect(s0.reason).toContain('high risk penalty')
     })
@@ -498,7 +498,7 @@ describe('GOALS System', () => {
         relatedUnits: ['99.9'],
       }
       const scores = suggestAlignmentScore(option, goals)
-      const s0 = scores[0]!
+      const s0 = scores[0]
       expect(s0.score).toBeGreaterThanOrEqual(1)
     })
   })

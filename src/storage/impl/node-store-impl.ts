@@ -4,14 +4,13 @@
 // write path that makes the database fully compliant (nothing is dropped).
 
 import type { PrismaClient } from '@prisma/client'
-import type { Edge, NodeBase, NodeType } from '../../schema/node.js'
-import { newId, hashContent } from '../../ids.js'
+import { hashContent, newId } from '../../ids.js'
+import type { Edge, NodeBase } from '../../schema/node.js'
 import type {
   NodeQueryOpts,
   NodeRow,
   NodeStoreContract,
   NodeVersionRow,
-  NodeAliasRow,
 } from '../contracts/node-store.js'
 
 function toRow(n: NodeBase): NodeRow {
@@ -24,8 +23,8 @@ function toRow(n: NodeBase): NodeRow {
     dataJson: JSON.stringify(n.data ?? {}),
     edgesJson: JSON.stringify(n.edges ?? []),
     metaJson: JSON.stringify(n.meta ?? {}),
-    searchText: '',
-    conversationId: (n.meta?.conversationId as string | undefined) ?? null,
+    searchText: n.searchText ?? (n.meta?.searchText as string | undefined) ?? '',
+    conversationId: n.conversationId ?? (n.meta?.conversationId as string | undefined) ?? null,
     messageId: (n.meta?.messageId as string | undefined) ?? null,
     sourceParser: (n.meta?.sourceParser as string | undefined) ?? null,
     contentHash: n.contentHash ?? (n.data ? hashContent(JSON.stringify(n.data)) : null),
@@ -40,35 +39,15 @@ function toRow(n: NodeBase): NodeRow {
     validFrom: n.validFrom ?? null,
     validUntil: n.validUntil ?? null,
     parentVersion: n.parentVersion ?? null,
+    // ACU fields
+    acuType: (n as any).acuType ?? null,
+    lineageKind: (n as any).lineageKind ?? null,
+    extractorVersion: (n as any).extractorVersion ?? null,
+    parserVersion: (n as any).parserVersion ?? null,
+    valueScore: (n as any).valueScore ?? null,
+    isHighValue: (n as any).isHighValue ? 1 : 0,
     createdAt: n.createdAt,
     updatedAt: n.updatedAt,
-  }
-}
-
-function fromRow(r: NodeRow): NodeBase {
-  return {
-    id: r.id,
-    type: r.type as NodeType,
-    parentId: r.parentId ?? undefined,
-    schemaVersion: r.schemaVersion,
-    source: r.rawSource ?? undefined,
-    data: JSON.parse(r.dataJson),
-    edges: JSON.parse(r.edgesJson) as Edge[],
-    meta: JSON.parse(r.metaJson),
-    contentHash: r.contentHash ?? undefined,
-    version: r.version,
-    state: r.state as NodeBase['state'],
-    securityLevel: r.securityLevel ?? undefined,
-    contentType: r.contentType ?? undefined,
-    authorDid: r.authorDid ?? undefined,
-    signature: r.signature ?? undefined,
-    acl: JSON.parse(r.aclJson),
-    quality: JSON.parse(r.qualityJson),
-    validFrom: r.validFrom ?? undefined,
-    validUntil: r.validUntil ?? undefined,
-    parentVersion: r.parentVersion ?? undefined,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
   }
 }
 
@@ -232,12 +211,30 @@ export class NodeStoreImpl implements NodeStoreContract {
 
   async updateNode(
     id: string,
-    patch: Partial<Pick<NodeRow, 'dataJson' | 'edgesJson' | 'metaJson' | 'searchText' | 'state' | 'contentHash' | 'aclJson' | 'qualityJson' | 'validUntil' | 'securityLevel' | 'contentType' | 'authorDid' | 'signature'>>,
+    patch: Partial<
+      Pick<
+        NodeRow,
+        | 'dataJson'
+        | 'edgesJson'
+        | 'metaJson'
+        | 'searchText'
+        | 'state'
+        | 'contentHash'
+        | 'aclJson'
+        | 'qualityJson'
+        | 'validUntil'
+        | 'securityLevel'
+        | 'contentType'
+        | 'authorDid'
+        | 'signature'
+      >
+    >,
   ): Promise<void> {
     const current = await this.prisma.node.findUnique({ where: { id } })
     if (!current) throw new Error(`updateNode: node ${id} not found`)
     const nextVersion = (current.version as number) + 1
-    const nextContentHash = patch.contentHash ?? hashContent(patch.dataJson ?? (current.dataJson as string))
+    const nextContentHash =
+      patch.contentHash ?? hashContent(patch.dataJson ?? (current.dataJson as string))
     await this.prisma.node.update({
       where: { id },
       data: {
@@ -290,7 +287,12 @@ export class NodeStoreImpl implements NodeStoreContract {
 
   // ── Node-layer v2: alias → canonical resolution ──
 
-  async registerAlias(aliasId: string, canonicalId: string, method: string, confidence = 1.0): Promise<void> {
+  async registerAlias(
+    aliasId: string,
+    canonicalId: string,
+    method: string,
+    confidence = 1.0,
+  ): Promise<void> {
     await this.prisma.nodeAlias.upsert({
       where: { aliasId },
       create: {
@@ -315,23 +317,27 @@ export class NodeStoreImpl implements NodeStoreContract {
   async rebuildGraphFromNodes(): Promise<number> {
     // Clear materialized edges, then re-materialize from each node's edgesJson.
     await this.prisma.nodeEdge.deleteMany({})
-    const nodes = await this.prisma.node.findMany({ select: { id: true, edgesJson: true, createdAt: true } })
+    const nodes = await this.prisma.node.findMany({
+      select: { id: true, edgesJson: true, createdAt: true },
+    })
     let count = 0
     for (const n of nodes) {
       const edges = JSON.parse(n.edgesJson as string) as Edge[]
       for (const e of edges) {
-        await this.prisma.nodeEdge.create({
-          data: {
-            id: newId(),
-            sourceId: n.id,
-            targetId: e.targetId,
-            edgeType: e.type,
-            label: e.label ?? null,
-            weight: e.weight ?? null,
-            propertiesJson: JSON.stringify(e.properties ?? {}),
-            createdAt: n.createdAt,
-          },
-        }).catch(() => {})
+        await this.prisma.nodeEdge
+          .create({
+            data: {
+              id: newId(),
+              sourceId: n.id,
+              targetId: e.targetId,
+              edgeType: e.type,
+              label: e.label ?? null,
+              weight: e.weight ?? null,
+              propertiesJson: JSON.stringify(e.properties ?? {}),
+              createdAt: n.createdAt,
+            },
+          })
+          .catch(() => {})
         count++
       }
     }

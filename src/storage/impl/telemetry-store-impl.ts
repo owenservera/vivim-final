@@ -20,9 +20,7 @@ type Row = Record<string, unknown>
 export class TelemetryStoreImpl implements TelemetryStore {
   constructor(private prisma: PrismaClientLike) {}
 
-  // biome-ignore lint/suspicious/noExplicitAny: Prisma escape hatch for dynamic raw SQL
   private get p(): any {
-    // biome-ignore lint/suspicious/noExplicitAny: Prisma escape hatch for dynamic raw SQL
     return this.prisma as unknown as any
   }
 

@@ -1,68 +1,95 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { SelectorHealer } from '../../../src/engines/selector-healer.js'
-import type { SemanticSelector } from '../../../src/engines/semantic-grounding.js'
+import { SelectorHealer } from '../../../src/engines/browser-automation/selector-healer.js'
+import type { SemanticSelector } from '../../../src/engines/browser-automation/types.js'
 
-function makeGrounding() {
+function makeGov() {
   return {
-    getAccessibilityTree: mock(() =>
-      Promise.resolve({ nodeId: 1, backendNodeId: 1, role: 'root', children: [] }),
-    ),
-    resolve: mock(() =>
-      Promise.resolve({
-        nodeId: 1,
-        backendNodeId: 1,
-        selector: '#ok',
-        confidence: 0.8,
-        matchedBy: { type: 'aria', role: 'button' },
-      }),
-    ),
-    resolveAll: mock(() => Promise.resolve([])),
+    enableDomains: mock(() => Promise.resolve()),
+    evaluate: mock((_s: string, _expr: string) => Promise.resolve('https://example.com')),
   } as any
 }
 
+function selText(sel: SemanticSelector): string {
+  return sel.selector ?? sel.css ?? sel.text ?? sel.role ?? ''
+}
+
+function makeGrounding() {
+  return {
+    resolve: mock((_s: string, sel: SemanticSelector) => {
+      const s = selText(sel)
+      if (!s || s.includes('missing')) return Promise.reject(new Error('not found'))
+      return Promise.resolve({
+        selector: s,
+        mode: sel.mode ?? 'css',
+        box: { x: 0, y: 0, width: 5, height: 5 },
+      })
+    }),
+    resolveBySelector: mock((_s: string, selector: string) => {
+      if (selector.includes('missing')) return Promise.reject(new Error('stale'))
+      return Promise.resolve({ selector, mode: 'css', box: { x: 0, y: 0, width: 5, height: 5 } })
+    }),
+  } as any
+}
+
+function makeStore() {
+  return {
+    getStrategy: mock(() => Promise.resolve(null)),
+    recordUse: mock(() => Promise.resolve()),
+    saveStrategy: mock(() => Promise.resolve()),
+    upsertStrategy: mock(() => Promise.resolve()),
+    bumpHealCount: mock(() => Promise.resolve()),
+  } as any
+}
+
+const original: SemanticSelector = {
+  axis: 'input',
+  mode: 'css',
+  selector: '#submit-missing',
+  heuristics: [{ attr: 'text', value: 'Submit', weight: 1 }],
+}
+
 describe('SelectorHealer', () => {
+  let gov: ReturnType<typeof makeGov>
   let grounding: ReturnType<typeof makeGrounding>
+  let store: ReturnType<typeof makeStore>
   let healer: SelectorHealer
 
   beforeEach(() => {
+    gov = makeGov()
     grounding = makeGrounding()
-    healer = new SelectorHealer(grounding)
+    store = makeStore()
+    healer = new SelectorHealer(gov, grounding, store)
   })
 
-  test('heal tries ARIA relaxed for aria selectors', async () => {
-    const failedSelector: SemanticSelector = { type: 'aria', role: 'button', name: 'Submit' }
-    const result = await healer.heal({
-      slaveId: 's1',
-      failedSelector,
-      capabilityId: 'cap1',
-      providerId: 'prov1',
-    })
-    expect(result).not.toBeNull()
-    expect(result?.strategy).toBe('aria_relaxed')
-    expect(result?.healed.type).toBe('aria')
+  test('uses persisted strategy when still valid', async () => {
+    store.getStrategy = mock(() => Promise.resolve({ selectorFormat: '#submit-live' }))
+    const r = await healer.heal('s1', original, 'submit-btn')
+    expect(r.healed).toBe(true)
+    expect(r.selector).toBe('#submit-live')
+    expect(grounding.resolveBySelector).toHaveBeenCalledWith('s1', '#submit-live')
   })
 
-  test('heal returns null for text selectors without grounding match', async () => {
-    const failedSelector: SemanticSelector = { type: 'text', text: 'Hello' }
-    const result = await healer.heal({
-      slaveId: 's1',
-      failedSelector,
-      capabilityId: 'cap1',
-      providerId: 'prov1',
-    })
-    // text_match or visual_match may return null if no text found
-    expect(result === null || result !== null).toBe(true)
+  test('falls back to rule-based alternate when persisted stale', async () => {
+    store.getStrategy = mock(() => Promise.resolve({ selectorFormat: '#submit-missing' }))
+    const r = await healer.heal('s1', original, 'submit-btn')
+    expect(r.healed).toBe(true)
+    expect(grounding.resolve).toHaveBeenCalled()
   })
 
-  test('getHistory returns heal results for known provider:capability', async () => {
-    const failedSelector: SemanticSelector = { type: 'aria', role: 'button' }
-    await healer.heal({ slaveId: 's1', failedSelector, capabilityId: 'cap1', providerId: 'prov1' })
-    const history = healer.getHistory('prov1', 'cap1')
-    expect(history.length).toBeGreaterThanOrEqual(0)
+  test('falls back to LLM propose when rules exhausted', async () => {
+    store.getStrategy = mock(() => Promise.resolve(null))
+    grounding.resolve = mock(() => Promise.reject(new Error('no rule matched')))
+    const llm = mock(() => Promise.resolve('#submit-llm'))
+    const r = await healer.heal('s1', original, 'submit-btn', llm)
+    expect(r.selector).toBe('#submit-llm')
+    expect(llm).toHaveBeenCalled()
+    expect(store.upsertStrategy).toHaveBeenCalled()
   })
 
-  test('getHistory returns empty for unknown provider', () => {
-    const history = healer.getHistory('unknown', 'unknown')
-    expect(history).toHaveLength(0)
+  test('throws when everything fails', async () => {
+    store.getStrategy = mock(() => Promise.resolve(null))
+    grounding.resolve = mock(() => Promise.reject(new Error('no')))
+    const llm = mock(() => Promise.resolve(null))
+    await expect(healer.heal('s1', original, 'submit-btn', llm)).rejects.toThrow()
   })
 })

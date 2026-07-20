@@ -304,3 +304,36 @@ export function markTaskDone(taskId: string, status: 'done' | 'failed' | 'blocke
 
   return { ok: true, taskId: hf.taskId, status: hf.status, nextPrompt: prompt }
 }
+
+export interface ResetResult {
+  ok: boolean
+  clearedDirs: string[]
+  clearedFiles: string[]
+}
+
+/**
+ * Clear all agentic runtime state: the `.runtime/agentic` tree and the
+ * `.runtime/state-snapshot.json` probe output. Docs reference this as
+ * `bun run devops agentic reset`.
+ */
+export function resetLoop(): ResetResult {
+  const { rmSync, existsSync } = require('node:fs')
+  const { join } = require('node:path')
+
+  const clearedDirs: string[] = []
+  const clearedFiles: string[] = []
+
+  const agenticDir = join(process.cwd(), '.runtime', 'agentic')
+  if (existsSync(agenticDir)) {
+    rmSync(agenticDir, { recursive: true, force: true })
+    clearedDirs.push(agenticDir)
+  }
+
+  const snapshotFile = join(process.cwd(), '.runtime', 'state-snapshot.json')
+  if (existsSync(snapshotFile)) {
+    rmSync(snapshotFile, { force: true })
+    clearedFiles.push(snapshotFile)
+  }
+
+  return { ok: true, clearedDirs, clearedFiles }
+}

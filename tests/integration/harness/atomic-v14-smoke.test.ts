@@ -26,6 +26,30 @@ function makeGovernor() {
   }
 }
 
+function makeParser() {
+  return {
+    parse: mock(async () => ({
+      blocks: [{ type: 'text' as const, text: 'hello from harness' }],
+      confidence: 1,
+      parserName: 'mock-parser',
+      parserVersion: 1,
+      durationMs: 0,
+      blockDiagnostics: {
+        textBlocks: 1,
+        toolCallBlocks: 0,
+        fileBlocks: 0,
+        errorBlocks: 0,
+        reasoningBlocks: 0,
+        codeBlocks: 0,
+        sourceBlocks: 0,
+      },
+      wireFormat: 'plain-text' as const,
+      fallbackDepth: 0,
+      rawSizeBytes: 18,
+    })),
+  }
+}
+
 const recipe: Recipe = {
   id: 'chatgpt:send-message',
   providerId: 'chatgpt',
@@ -49,6 +73,7 @@ describe('atomic-v14 end-to-end smoke', () => {
       capabilityStore: { createOutcome } as never,
       blockStore: { storeBlocks } as never,
       eventBus: { emit } as never,
+      parser: makeParser() as never,
       registry,
     })
 
@@ -94,6 +119,7 @@ describe('atomic-v14 end-to-end smoke', () => {
       capabilityStore: { createOutcome: mock(async () => ({}) as never) } as never,
       blockStore: { storeBlocks: mock(async () => {}) } as never,
       eventBus: { emit: mock(() => {}) } as never,
+      parser: makeParser() as never,
     })
     await composition.registrar.register(recipe)
 

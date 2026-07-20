@@ -91,7 +91,7 @@ describe('M3 — capture patterns', () => {
 
   it('SC-M3-3: knows capture patterns exist for all 3 providers (chain non-empty)', () => {
     for (const provider of ['chatgpt', 'claude', 'gemini']) {
-      expect(matchesCapturePattern(provider, REAL_ENDPOINTS[provider]!)).toBe(true)
+      expect(matchesCapturePattern(provider, REAL_ENDPOINTS[provider] ?? '')).toBe(true)
     }
     // unknown provider has no patterns → never matches
     expect(matchesCapturePattern('unknown-provider', 'https://x/y/z')).toBe(false)

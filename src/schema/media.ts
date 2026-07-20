@@ -60,6 +60,7 @@ export const mediaNodeSchema = {
   type: 'cap-store.media' as const,
   version: 1,
   schema: MediaDataSchema,
-  indexContent: (data: MediaData) => `${data.title ?? ''} ${data.description ?? ''} ${data.transcription ?? ''} ${data.tags?.join(' ') ?? ''}`,
+  indexContent: (data: MediaData) =>
+    `${data.title ?? ''} ${data.description ?? ''} ${data.transcription ?? ''} ${data.tags?.join(' ') ?? ''}`,
   embeddingText: (data: MediaData) => `${data.title ?? ''} ${data.description ?? ''}`,
 }

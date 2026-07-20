@@ -35,11 +35,11 @@ LOOP:
      - null + blocked remain                -> print report + BLOCKED list; STOP
   2. `bun run devops mark <id> in_progress`
    3. Read the unit's atomic file (path in the select JSON `file` is the
-      SOURCE FILE; the unit spec lives at docs/atomic-v3/phase-*/<id>-*.md).
+       SOURCE FILE; the unit spec lives at docs/atomic-v3-fork-canon/phase-*/<id>-*.md).
       Follow its Interface + Store Contract + Test Contract + Gate exactly.
    4. Fidelity: at the FIRST unit of a phase, cross-check the atomic files
       for that phase against the design docs (docs/master-plan-v3/*).
-      Log any DRIFT into docs/atomic-v3/PROGRESS.md. Hard conflict -> mark blocked.
+       Log any DRIFT into docs/atomic-v3-fork-canon/PROGRESS.md. Hard conflict -> mark blocked.
    5. Implement ALL code edits first. Write every file the unit requires.
       Do NOT run typecheck, lint, or tests during this step — accumulate
       all edits, then write tests in a single batch. Delegate to db/review
@@ -51,7 +51,7 @@ LOOP:
                 goto LOOP
      - FAIL  -> fix, retry (max 3)
       - >3 fails -> `bun run devops mark <id> blocked`
-                 append BLOCKED reason to docs/atomic-v3/PROGRESS.md
+                  append BLOCKED reason to docs/atomic-v3-fork-canon/PROGRESS.md
                 git checkout -- .   (reset unit's working changes)
                 goto LOOP
 ```
@@ -104,6 +104,10 @@ Track UI test results with `bun run devops ui-test <list|status|record>` — per
 | `bun run devops runtime-test status --provider=<slug>` | Per-provider capability status (seed, profile, slave, cap reg, selectors, UI tests) |
 | `bun run devops ui-test <list\|status\|record>` | Query/record UI frontend test registry (timestamps + notes) |
 
+> **Timeout note:** `devops select` parses the full tracker (127 units) and resolves
+> dependencies — it needs **60s** timeout, not 15s. The default 15s tool timeout will
+> cause a false "hang". Use `timeout: 60000` when calling this command.
+
 ## Resume
 
 Re-running always resumes at the first non-`done` selectable unit. The
@@ -111,5 +115,5 @@ tracker is authoritative; if file state disagrees, trust the tracker.
 
 ## Audit trail
 
-Every pass and block is appended to `docs/atomic-v3/PROGRESS.md`:
+Every pass and block is appended to `docs/atomic-v3-fork-canon/PROGRESS.md`:
 `[timestamp] <id> <name> -> <done|blocked> [sha] <gate summary>`.

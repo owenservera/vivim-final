@@ -102,6 +102,147 @@ export const config = {
   },
 } as const
 
+// ── Runtime tunables registry (devops-toolkit configurable layer) ──────────
+//
+// Engines read static `config` from env above. `tunables` is the runtime-
+// reconfigurable layer: any value here can be overridden at runtime via
+// `bun run devops toolkit config set <key> <value>` and persisted to
+// `.runtime/config.tunables.json`, then hot-read by the running server.
+// This is the "configurability" axis of the devops toolkit — additive, does
+// not change existing engine reads of `config`.
+
+export interface TunableMeta {
+  key: string
+  type: 'string' | 'number' | 'boolean' | 'string[]'
+  default: unknown
+  description: string
+}
+
+export const TUNABLE_SCHEMA: TunableMeta[] = [
+  {
+    key: 'server.port',
+    type: 'number',
+    default: config.port,
+    description: 'HTTP port for the cap-store server',
+  },
+  {
+    key: 'server.host',
+    type: 'string',
+    default: config.host,
+    description: 'Bind host for the cap-store server',
+  },
+  {
+    key: 'server.corsOrigin',
+    type: 'string[]',
+    default: config.corsOrigin,
+    description: 'Allowed CORS origins (comma-separated)',
+  },
+  {
+    key: 'log.level',
+    type: 'string',
+    default: config.logLevel,
+    description: 'Logging verbosity (debug|info|warn|error)',
+  },
+  {
+    key: 'fleet.autoStart',
+    type: 'boolean',
+    default: config.autoStartFleet,
+    description: 'Auto-launch Chrome slave fleet on boot',
+  },
+  {
+    key: 'fleet.portStart',
+    type: 'number',
+    default: config.fleetPortRangeStart,
+    description: 'First port in CDP fleet range',
+  },
+  {
+    key: 'fleet.portEnd',
+    type: 'number',
+    default: config.fleetPortRangeEnd,
+    description: 'Last port in CDP fleet range',
+  },
+  {
+    key: 'health.probeIntervalMs',
+    type: 'number',
+    default: config.healthProbeIntervalMs,
+    description: 'Health probe cadence',
+  },
+  {
+    key: 'surfaces.cliAliases',
+    type: 'boolean',
+    default: true,
+    description: 'Auto-derive CLI aliases from slug',
+  },
+  {
+    key: 'surfaces.enforceParity',
+    type: 'boolean',
+    default: true,
+    description: 'Fail boot if a capability is out of cross-surface parity',
+  },
+]
+
+const TUNABLE_FILE = join(process.cwd(), '.runtime', 'config.tunables.json')
+
+function loadTunables(): Record<string, unknown> {
+  try {
+    if (existsSync(TUNABLE_FILE)) {
+      const raw = JSON.parse(readFileSync(TUNABLE_FILE, 'utf-8')) as Record<string, unknown>
+      return raw ?? {}
+    }
+  } catch {
+    // ignore corrupt file — fall back to defaults
+  }
+  return {}
+}
+
+const tunableOverrides = loadTunables()
+
+function coerce(meta: TunableMeta, value: unknown): unknown {
+  switch (meta.type) {
+    case 'number':
+      return typeof value === 'number' ? value : Number(value)
+    case 'boolean':
+      return value === true || value === 'true'
+    case 'string[]':
+      return Array.isArray(value) ? value : String(value).split(',')
+    default:
+      return String(value)
+  }
+}
+
+/** Resolve a tunable's effective value (override > default). */
+export function getTunable(key: string): unknown {
+  const meta = TUNABLE_SCHEMA.find((t) => t.key === key)
+  if (!meta) throw new Error(`Unknown tunable: ${key}`)
+  if (key in tunableOverrides) return coerce(meta, tunableOverrides[key])
+  return meta.default
+}
+
+/** Set + persist a tunable to .runtime/config.tunables.json. */
+export function setTunable(key: string, value: unknown): void {
+  const meta = TUNABLE_SCHEMA.find((t) => t.key === key)
+  if (!meta) throw new Error(`Unknown tunable: ${key}`)
+  const next = { ...tunableOverrides, [key]: value }
+  try {
+    if (!existsSync(join(process.cwd(), '.runtime'))) {
+      // best-effort; callers ensure .runtime exists
+    }
+    writeFileSync(TUNABLE_FILE, JSON.stringify(next, null, 2), 'utf-8')
+  } catch {
+    throw new Error(`Failed to persist tunable ${key} (cannot write ${TUNABLE_FILE})`)
+  }
+  tunableOverrides[key] = value
+}
+
+/** Snapshot all tunable effective values (for `devops toolkit config list`). */
+export function listTunables(): { key: string; value: unknown; source: 'override' | 'default' }[] {
+  return TUNABLE_SCHEMA.map((t) => ({
+    key: t.key,
+    value: t.key in tunableOverrides ? coerce(t, tunableOverrides[t.key]) : t.default,
+    source: t.key in tunableOverrides ? 'override' : 'default',
+  }))
+}
+
 export function isAuthenticated(): boolean {
   return config.authToken !== null
 }

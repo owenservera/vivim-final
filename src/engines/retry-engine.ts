@@ -77,7 +77,7 @@ export class RetryEngine {
           if (policy.onRetry === 'log') {
             log.info(
               { operationKey, attempt, errorMsg, delayMs: delay },
-              "[retry] attempt failed, retrying",
+              '[retry] attempt failed, retrying',
             )
           }
           await new Promise((r) => setTimeout(r, delay))

@@ -1,14 +1,13 @@
 // src/cli/provider-harness.ts
 // Unit 32.1 — Provider Test Harness.
-// Iterates every provider manifest discovered in seeds/providers, registers it
-// through ProviderRegistrar, and runs a golden scenario (definition present,
-// capabilities present, endpoints present). Emits a per-provider pass/fail
-// matrix. Local providers are flagged for fixture-model verification; cloud/
-// API providers are flagged for recorded-mock verification. The harness is the
-// test: it discovers N providers and fails (non-zero) on any provider regression.
+// Iterates every provider manifest from the in-repo canonical module
+// (seeds/providers/manifests.ts), registers it through ProviderRegistrar, and
+// runs a golden scenario (definition present, capabilities present, endpoints
+// present). Emits a per-provider pass/fail matrix. The harness is the test:
+// it discovers N providers and fails (non-zero) on any provider regression.
 
-import { readFile, readdir } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
+import { PROVIDER_MANIFESTS } from '../../seeds/providers/manifests.js'
 import { ProviderRegistrar } from '../engines/provider-registrar.js'
 import { type ProviderManifest, ProviderManifestSchema } from '../schema/provider-manifest.js'
 import type { ProviderStore } from '../storage/contracts/provider-store.js'
@@ -43,20 +42,18 @@ export interface ProviderHarnessOptions {
 
 export async function runProviderHarness(opts: ProviderHarnessOptions): Promise<HarnessReport> {
   const seedsDir = opts.seedsDir ?? resolve(import.meta.dir, '../../seeds/providers')
-  const files = (await readdir(seedsDir)).filter((f) => f.endsWith('.json')).sort()
-
   const registrar = new ProviderRegistrar(opts.store, undefined, undefined, seedsDir)
   const rows: HarnessRow[] = []
 
-  for (const file of files) {
-    const raw = await readFile(join(seedsDir, file), 'utf8')
+  // In-repo canonical manifests (seeds/providers/manifests.ts) — zero filesystem reads.
+  for (const raw of PROVIDER_MANIFESTS) {
     let manifest: ProviderManifest
     try {
-      manifest = ProviderManifestSchema.parse(JSON.parse(raw))
+      manifest = ProviderManifestSchema.parse(raw)
     } catch (err) {
       rows.push({
-        slug: file,
-        displayName: file,
+        slug: '(manifest)',
+        displayName: '(manifest)',
         providerType: '?',
         isLocal: false,
         registered: false,

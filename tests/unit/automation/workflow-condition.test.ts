@@ -33,8 +33,12 @@ describe('WorkflowEngine.evaluateCondition', () => {
   })
 
   test('evaluates simple equality condition', () => {
-    expect((engine as any).evaluateCondition('$result.status === "ok"', { status: 'ok' })).toBe(true)
-    expect((engine as any).evaluateCondition('$result.status === "ok"', { status: 'error' })).toBe(false)
+    expect((engine as any).evaluateCondition('$result.status === "ok"', { status: 'ok' })).toBe(
+      true,
+    )
+    expect((engine as any).evaluateCondition('$result.status === "ok"', { status: 'error' })).toBe(
+      false,
+    )
   })
 
   test('evaluates numeric condition', () => {

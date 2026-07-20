@@ -87,7 +87,7 @@ export class AppExecutor implements CommandExecutor {
       }
 
       const { exec } = await import('node:child_process')
-      const exe = cmdParts[0]!
+      const exe = cmdParts[0] ?? appName
       const args = cmdParts.slice(1)
 
       exec(`${exe} ${args.join(' ')}`, (err: Error | null) => {

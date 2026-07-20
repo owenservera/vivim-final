@@ -37,7 +37,7 @@ describe('ObjectiveDecomposer', () => {
         const depTask = dag.tasks.find((t) => t.id === depId)
         expect(depTask).toBeDefined()
         // Dependency should appear before the dependent in the task list
-        const depIdx = dag.tasks.indexOf(depTask!)
+        const depIdx = dag.tasks.indexOf(depTask ?? '')
         const taskIdx = dag.tasks.indexOf(task)
         expect(depIdx).toBeLessThan(taskIdx)
       }
@@ -80,10 +80,10 @@ describe('ObjectiveDecomposer', () => {
   it('tasks never depend on tasks in the same phase', () => {
     const dag = decomposeObjective('wire chatgpt and add parser for gemini')
     for (let p = 0; p < dag.phases.length; p++) {
-      const taskIndices = dag.phases[p]!
+      const taskIndices = dag.phases[p] ?? []
       const taskIds = new Set(taskIndices.map((i) => dag.tasks[i]?.id))
       for (const idx of taskIndices) {
-        const task = dag.tasks[idx]!
+        const task = dag.tasks[idx]
         for (const dep of task.dependsOn) {
           // Dependency must NOT be in the same phase
           if (taskIds.has(dep)) {

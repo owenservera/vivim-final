@@ -21,6 +21,24 @@ interface PrismaParserRow {
   updatedAt: number
 }
 
+// Semver helpers (mirrors harness-command-registry). Parser versions are stored
+// as a single integer, normalized to `X.0.0` for comparison so `@latest` and
+// `providerId@N` resolve with numeric ordering, not lexicographic strings.
+function parseSemver(v: string): [number, number, number] {
+  const m = v.match(/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?/)
+  if (!m) return [0, 0, 0]
+  return [Number(m[1]), Number(m[2] ?? 0), Number(m[3] ?? 0)]
+}
+
+function cmpSemver(a: string, b: string): number {
+  const pa = parseSemver(a)
+  const pb = parseSemver(b)
+  for (let i = 0; i < 3; i++) {
+    if (pa[i] !== pb[i]) return (pa[i] ?? 0) - (pb[i] ?? 0)
+  }
+  return 0
+}
+
 function toParserRow(r: PrismaParserRow): ProviderParserRow {
   return {
     id: r.id,
@@ -45,7 +63,6 @@ export class ParserStoreImpl implements ParserStore {
     this.db = db as unknown as PrismaLoose
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Prisma escape hatch
   private get p(): any {
     return this.db.prisma
   }
@@ -53,7 +70,7 @@ export class ParserStoreImpl implements ParserStore {
   async getParser(providerId: string): Promise<ProviderParserRow | null> {
     const r = await this.p.providerParser.findFirst({
       where: { providerId },
-      orderBy: { version: 'desc' },
+      orderBy: { parserVersion: 'desc' },
     })
     return r ? toParserRow(r as PrismaParserRow) : null
   }
@@ -62,6 +79,41 @@ export class ParserStoreImpl implements ParserStore {
     const r = await this.p.providerParser.findFirst({
       where: { providerId, isActive: 1 },
     })
+    return r ? toParserRow(r as PrismaParserRow) : null
+  }
+
+  async getParserByProviderAndVersion(
+    providerId: string,
+    version?: string,
+  ): Promise<ProviderParserRow | null> {
+    const rows = (await this.p.providerParser.findMany({
+      where: { providerId },
+      orderBy: { parserVersion: 'desc' },
+    })) as PrismaParserRow[]
+
+    if (rows.length === 0) return null
+
+    // @latest (or omitted) → highest version that is active; fall back to the
+    // highest version overall so resolution still works for inactive rows.
+    if (!version || version === 'latest') {
+      const active = rows.find((r) => r.isActive === 1)
+      const chosen = active ?? rows[0]
+      if (!chosen) return null
+      return toParserRow(chosen)
+    }
+
+    const target = parseSemver(version)
+    // Highest version <= target (semver-aware, not lexicographic).
+    const candidates = rows
+      .filter((r) => cmpSemver(`${r.version}.0.0`, `${target[0]}.0.0`) >= 0)
+      .sort((a, b) => cmpSemver(`${b.version}.0.0`, `${a.version}.0.0`))
+    const chosen = candidates[0] ?? rows[0]
+    if (!chosen) return null
+    return toParserRow(chosen)
+  }
+
+  async getParserById(id: string): Promise<ProviderParserRow | null> {
+    const r = await this.p.providerParser.findFirst({ where: { id } })
     return r ? toParserRow(r as PrismaParserRow) : null
   }
 
@@ -100,7 +152,7 @@ export class ParserStoreImpl implements ParserStore {
   async listParsers(providerId: string): Promise<ProviderParserRow[]> {
     const rows = await this.p.providerParser.findMany({
       where: { providerId },
-      orderBy: { version: 'desc' },
+      orderBy: { parserVersion: 'desc' },
     })
     return (rows as PrismaParserRow[]).map(toParserRow)
   }

@@ -53,7 +53,9 @@ describe('WorkflowEngine retry queue', () => {
   })
 
   test('startRetryPoller does nothing when retryStore is undefined', () => {
-    const emptyEngine = new (WorkflowEngine as any)({} as any, store, { emit: mock(() => {}) } as any)
+    const emptyEngine = new (WorkflowEngine as any)({} as any, store, {
+      emit: mock(() => {}),
+    } as any)
     expect(() => (emptyEngine as any).startRetryPoller(1000)).not.toThrow()
     ;(emptyEngine as any).stopRetryPoller()
   })

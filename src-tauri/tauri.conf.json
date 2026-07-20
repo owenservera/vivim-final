@@ -1,0 +1,70 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "vivim",
+  "version": "0.1.0",
+  "identifier": "com.vivim.desktop",
+  "build": {
+    "beforeDevCommand": "bun run web:dev",
+    "devUrl": "http://127.0.0.1:5173",
+    "beforeBuildCommand": "bun run web:build",
+    "frontendDist": "../web/ui/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "vivim",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:9421 ws://127.0.0.1:9421"
+    },
+    "withGlobalTauri": false
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis", "updater"],
+    "category": "Productivity",
+    "shortDescription": "vivim — local-first AI conversation workspace",
+    "longDescription": "vivim is a local-first AI conversation platform. The desktop app bundles the vivim backend (Bun sidecar) and a React frontend; all data stays on your machine.",
+    "publisher": "vivim",
+    "copyright": "Copyright © 2026 vivim",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png"
+    ],
+    "createUpdaterArtifacts": true,
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      },
+      "nsis": {
+        "installMode": "perMachine"
+      },
+      "wix": {
+        "language": "en-US"
+      }
+    },
+    "externalBin": ["binaries/vivim-server"]
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    },
+    "updater": {
+      "endpoints": ["https://updates.vivim.app/latest.json"],
+      "pubkey": "REPLACE_WITH_TAURI_SIGNING_PUBKEY"
+    }
+  }
+}

@@ -99,6 +99,18 @@ function makeParseResult(blocks?: ContentBlock[]): ParseResult {
     parserName: 'test',
     parserVersion: 1,
     durationMs: 5,
+    blockDiagnostics: {
+      textBlocks: 1,
+      toolCallBlocks: 0,
+      fileBlocks: 0,
+      errorBlocks: 0,
+      reasoningBlocks: 0,
+      codeBlocks: 0,
+      sourceBlocks: 0,
+    },
+    wireFormat: 'unknown',
+    fallbackDepth: 0,
+    rawSizeBytes: 0,
   }
 }
 

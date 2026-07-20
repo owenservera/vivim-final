@@ -1,9 +1,11 @@
 // src/engines/provider-registrar.ts
-// Reads provider JSON manifests from seeds/providers/ and writes them to the DB.
-// Handles atomic multi-table inserts. Can reload all providers or a single provider.
+// Seeds provider intel from the canonical in-repo manifests (seeds/providers/manifests.ts)
+// into the DB. Handles atomic multi-table inserts. Can reload all providers or a single provider.
+// The generator (provider-protocol-generator.ts) then reads the DB into a static file.
 
-import { readFile, readdir } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
+import { PROVIDER_MANIFESTS } from '../../seeds/providers/manifests.js'
+import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import { type ProviderManifest, ProviderManifestSchema } from '../schema/provider-manifest.js'
 import type {
@@ -133,14 +135,25 @@ export class ProviderRegistrar {
     if (manifest.endpoints.length > 0) tablesAffected.push('provider_endpoint')
 
     // [3] Delete old parsers → Upsert new parsers
+    // Two-pass: (1) insert every parser with null fallback, recording name→id;
+    // (2) patch fallback_parser_id from each parser's `fallback` reference so
+    // the DB parser graph reflects the manifest's fallback chain (019).
     await this.store.deleteProviderParsers(providerId)
+    const parserNameToId = new Map<string, string>()
     for (const parser of manifest.parsers) {
+      const logicType = parser.logic_type ?? 'inline'
+      if (logicType === 'inline' && !parser.logic_code) {
+        throw new EngineError(
+          `Provider ${manifest.provider.slug} parser '${parser.name}': inline logic_type requires logic_code`,
+        )
+      }
+      const parserId = newId()
       const parserRow: ProviderParserRow = {
-        id: newId(),
+        id: parserId,
         provider_id: providerId,
         parser_name: parser.name,
         parser_version: parser.version,
-        parser_logic_type: parser.logic_type ?? 'file',
+        parser_logic_type: logicType,
         parser_file_path: parser.file ?? null,
         parser_logic_code: parser.logic_code ?? null,
         // Unit 2.15 — autocompute a stable hash so the parser cache stays in sync.
@@ -153,7 +166,22 @@ export class ProviderRegistrar {
         updated_at: now,
       }
       await this.store.upsertParser(parserRow)
+      parserNameToId.set(parser.name, parserId)
       rowsAdded++
+    }
+    // Patch fallback references now that all parser ids are known.
+    for (const parser of manifest.parsers) {
+      if (
+        parser.fallback &&
+        parserNameToId.has(parser.name) &&
+        parserNameToId.has(parser.fallback)
+      ) {
+        const fromId = parserNameToId.get(parser.name)
+        const fallbackId = parserNameToId.get(parser.fallback)
+        if (fromId && fallbackId) {
+          await this.store.setParserFallback(fromId, fallbackId)
+        }
+      }
     }
     if (manifest.parsers.length > 0) tablesAffected.push('provider_parser')
 
@@ -280,26 +308,16 @@ export class ProviderRegistrar {
   async seedAll(): Promise<SeedAllResult> {
     const result: SeedAllResult = { seeded: [], skipped: [], errors: [] }
 
-    let files: string[]
-    try {
-      const entries = await readdir(this.seedsDir)
-      files = entries.filter((f) => f.endsWith('.json'))
-    } catch (err) {
-      result.errors.push({ file: this.seedsDir, error: `Cannot read seeds dir: ${err}` })
-      return result
-    }
-
-    for (const file of files) {
-      const filePath = join(this.seedsDir, file)
+    // In-repo canonical manifests (seeds/providers/manifests.ts) — zero filesystem reads.
+    // The generator inlined the 12 JSON manifests at build time; validation happens here.
+    for (const raw of PROVIDER_MANIFESTS) {
       try {
-        const raw = await readFile(filePath, 'utf-8')
-        const parsed: unknown = JSON.parse(raw)
-        const manifest = ProviderManifestSchema.parse(parsed)
+        const manifest = ProviderManifestSchema.parse(raw)
         const registerResult = await this.register(manifest)
         result.seeded.push(registerResult)
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        result.errors.push({ file, error: msg })
+        result.errors.push({ file: '(in-repo manifest)', error: msg })
       }
     }
 
@@ -307,61 +325,38 @@ export class ProviderRegistrar {
   }
 
   async seedProvider(providerSlug: string): Promise<RegisterResult> {
-    const filePath = join(this.seedsDir, `${providerSlug}.json`)
-    const raw = await readFile(filePath, 'utf-8')
-    const parsed: unknown = JSON.parse(raw)
-    const manifest = ProviderManifestSchema.parse(parsed)
-    return this.register(manifest)
+    for (const raw of PROVIDER_MANIFESTS) {
+      const candidate = ProviderManifestSchema.safeParse(raw)
+      if (candidate.success && candidate.data.provider.slug === providerSlug) {
+        return this.register(candidate.data)
+      }
+    }
+    throw new EngineError(`Provider manifest not found for slug: ${providerSlug}`)
   }
 
   async verifySeeds(): Promise<VerifyResult> {
     const result: VerifyResult = { valid: true, providers: [] }
 
-    let files: string[]
-    try {
-      const entries = await readdir(this.seedsDir)
-      files = entries.filter((f) => f.endsWith('.json'))
-    } catch {
-      result.valid = false
-      result.providers.push({
-        slug: '(dir)',
-        status: 'missing_file',
-        details: `Cannot read seeds directory: ${this.seedsDir}`,
-      })
-      return result
-    }
+    for (const raw of PROVIDER_MANIFESTS) {
+      const parseResult = ProviderManifestSchema.safeParse(raw)
+      const slug =
+        parseResult.success && parseResult.data.provider.slug
+          ? parseResult.data.provider.slug
+          : '(manifest)'
 
-    for (const file of files) {
-      const filePath = join(this.seedsDir, file)
-      const slug = file.replace('.json', '')
-
-      try {
-        const raw = await readFile(filePath, 'utf-8')
-        const parsed: unknown = JSON.parse(raw)
-        const parseResult = ProviderManifestSchema.safeParse(parsed)
-
-        if (!parseResult.success) {
-          result.valid = false
-          result.providers.push({
-            slug,
-            status: 'schema_mismatch',
-            details: parseResult.error.issues
-              .map((i) => `${i.path.join('.')}: ${i.message}`)
-              .join('; '),
-          })
-          continue
-        }
-
-        result.providers.push({ slug, status: 'ok', details: 'Valid manifest' })
-      } catch (err) {
+      if (!parseResult.success) {
         result.valid = false
-        const msg = err instanceof Error ? err.message : String(err)
         result.providers.push({
           slug,
-          status: 'parse_error',
-          details: msg,
+          status: 'schema_mismatch',
+          details: parseResult.error.issues
+            .map((i) => `${i.path.join('.')}: ${i.message}`)
+            .join('; '),
         })
+        continue
       }
+
+      result.providers.push({ slug, status: 'ok', details: 'Valid manifest' })
     }
 
     return result

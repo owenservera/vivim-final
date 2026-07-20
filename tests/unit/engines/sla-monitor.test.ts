@@ -23,10 +23,12 @@ describe('SlaMonitor (Unit 9.5)', () => {
       operations: [{ name: 'op.x', target: { p50Ms: 100, p95Ms: 200, p99Ms: 300 } }],
       evaluationWindowMs: 60_000,
     })
-    ;(m as any).metrics = { histogram: (name: string, value: number) => histograms.push({ name, value }) }
+    ;(m as any).metrics = {
+      histogram: (name: string, value: number) => histograms.push({ name, value }),
+    }
     m.record('op.x', 150)
     expect(histograms.length).toBe(1)
-    expect(histograms[0]!.name).toBe('sla_latency_ms')
+    expect(histograms[0]?.name).toBe('sla_latency_ms')
   })
 
   it('emits a violation when p50 exceeds target', () => {
@@ -38,7 +40,7 @@ describe('SlaMonitor (Unit 9.5)', () => {
       alertThreshold: 0.1,
       cooldownMs: 1000,
     })
-    ;(m as any).logger = { warn: (msg: string, meta: unknown) => warns.push(meta) }
+    ;(m as any).logger = { warn: (_msg: string, meta: unknown) => warns.push(meta) }
     ;(m as any).eventBus = { emit: (e: unknown) => events.push(e) }
     for (let i = 0; i < 12; i++) m.record('op.slow', 5000)
     ;(m as any).evaluate()

@@ -85,8 +85,9 @@ async function showHelp(): Promise<void> {
   const bySubsystem = new Map<string, { name: string; description: string }[]>()
   for (const cmd of cmds) {
     const group = cmd.subsystem ?? 'general'
-    if (!bySubsystem.has(group)) bySubsystem.set(group, [])
-    bySubsystem.get(group)!.push({ name: cmd.name, description: cmd.description })
+    const list = bySubsystem.get(group) ?? []
+    list.push({ name: cmd.name, description: cmd.description })
+    bySubsystem.set(group, list)
   }
   for (const [group, entries] of bySubsystem) {
     console.log(`\n  [${group}]`)
@@ -148,9 +149,11 @@ async function main(): Promise<void> {
   process.exit(1)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+if (import.meta.main) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
 
 export { registry }

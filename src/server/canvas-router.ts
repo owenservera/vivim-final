@@ -28,7 +28,7 @@ export function createCanvasRouter(ctx: ServerContext) {
   }
 
   return async (req: Request, url: URL): Promise<Response> => {
-    const source = extractSource(req)
+    const _source = extractSource(req)
     const cap = (id: string, input: Record<string, unknown>) =>
       registry.execute(id, input, ctxFrom(req)) as Promise<unknown>
 

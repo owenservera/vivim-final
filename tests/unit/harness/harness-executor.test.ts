@@ -46,7 +46,37 @@ function makeDeps(overrides: Partial<HarnessExecutorDeps> = {}): HarnessExecutor
   const slaveResolver = {
     resolve: mock(async () => 'slave1'),
   } as unknown as HarnessExecutorDeps['slaveResolver']
-  return { governor, programStore, store, blockStore, eventBus, slaveResolver, ...overrides }
+  const parser = {
+    parse: mock(async () => ({
+      blocks: [{ type: 'text', text: 'hello' }],
+      confidence: 1,
+      parserName: 'mock-parser',
+      parserVersion: 1,
+      durationMs: 0,
+      blockDiagnostics: {
+        textBlocks: 1,
+        toolCallBlocks: 0,
+        fileBlocks: 0,
+        errorBlocks: 0,
+        reasoningBlocks: 0,
+        codeBlocks: 0,
+        sourceBlocks: 0,
+      },
+      wireFormat: 'plain-text' as const,
+      fallbackDepth: 0,
+      rawSizeBytes: 5,
+    })),
+  } as unknown as HarnessExecutorDeps['parser']
+  return {
+    governor,
+    programStore,
+    store,
+    blockStore,
+    eventBus,
+    slaveResolver,
+    parser,
+    ...overrides,
+  }
 }
 
 describe('HarnessExecutorEngine', () => {
@@ -123,6 +153,7 @@ describe('composeHarness wiring', () => {
       programStore: deps.programStore,
       blockStore: deps.blockStore,
       eventBus: deps.eventBus,
+      parser: deps.parser,
     })
     expect(comp.executor).toBeInstanceOf(HarnessExecutorEngine)
     expect(comp.registrar).toBeDefined()

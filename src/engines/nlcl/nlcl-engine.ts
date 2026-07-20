@@ -9,6 +9,7 @@ import type { ConversationStore } from '../../storage/contracts/conversation-sto
 import type { CapStoreDb } from '../../storage/db.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { ConversationManager } from '../conversation-manager.js'
+import { OpenCodeExecutor } from '../opencode/opencode-executor.js'
 import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
 import { getDefaultCommandPatterns } from './catalog.js'
 import { CommandPatternRegistry } from './command-registry.js'
@@ -54,6 +55,8 @@ export interface NLCLEngineDeps {
   config?: Partial<NLCLEngineConfig>
   localLLM?: LocalLLMAdapter
   providerLLM?: ProviderLLMAdapter
+  opencodeClient?: import('../opencode/opencode-client.js').OpenCodeClient
+  opencodeIngest?: import('../opencode/opencode-ingest.js').OpenCodeIngest
 }
 
 const COMPOSITE_SPLITTERS = [
@@ -272,7 +275,14 @@ export class NLCLEngine {
   }
 
   private registerExecutors(): void {
-    const { governor, automationOrchestrator, conversationManager, conversationStore, registry, db } = this.deps
+    const {
+      governor,
+      automationOrchestrator,
+      conversationManager,
+      conversationStore,
+      registry,
+      db,
+    } = this.deps
 
     const fileExec = new FileExecutor()
     const browserExec = new BrowserExecutor(governor, conversationManager)
@@ -297,6 +307,15 @@ export class NLCLEngine {
       workflowExec,
       autoExec,
     ]
+
+    if (this.deps.opencodeClient && this.deps.opencodeIngest) {
+      executors.push(
+        new OpenCodeExecutor({
+          client: this.deps.opencodeClient,
+          ingest: this.deps.opencodeIngest,
+        }),
+      )
+    }
     for (const exec of executors) {
       this.router.registerExecutor(exec)
     }
@@ -356,7 +375,8 @@ export class NLCLEngine {
     let pipelineData: unknown = undefined
 
     for (let i = 0; i < steps.length; i++) {
-      const step = steps[i]!
+      const step = steps[i]
+      if (!step) continue
       const stepCtx = { ...ctx }
 
       if (pipelineData && i > 0) {

@@ -177,7 +177,6 @@ export async function generatePreflightContext(): Promise<PreflightSnapshot> {
     const { getDb } = await import('../../src/storage/db.js')
     const db = getDb()
     const rows = await db.prisma.providerAccount.findMany({
-      where: { isDeleted: 0 },
       orderBy: { isDefault: 'desc' },
     })
     dbAccounts = rows.map((r) => ({

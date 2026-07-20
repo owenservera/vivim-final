@@ -4,10 +4,14 @@
 // every commit hook). Use `bun run devops gc --force` to run unconditionally.
 
 import { execSync } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const STAMP = join(process.cwd(), 'node_modules', '.cache', 'vivim-gc.txt')
+// Stamp lives in .runtime (the canonical gitignored runtime dir), NOT
+// node_modules/.cache — the latter is wiped on clean checkout / npm ci, which
+// made the 24h guard ineffective (stamp vanished, gc ran every time).
+const RUNTIME_DIR = join(process.cwd(), '.runtime')
+const STAMP = join(RUNTIME_DIR, '.gc-stamp')
 const DAY = 24 * 60 * 60 * 1000
 
 export function gc(force = false): void {
@@ -26,6 +30,7 @@ export function gc(force = false): void {
     console.error('devops gc: git gc failed', e)
     process.exit(1)
   }
+  mkdirSync(RUNTIME_DIR, { recursive: true })
   writeFileSync(STAMP, String(Date.now()))
   console.log('devops gc: done')
 }

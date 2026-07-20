@@ -33,12 +33,20 @@ export type RecipeStep =
   | { kind: 'tab_open'; url?: string; outputKey?: string }
   | { kind: 'tab_close'; targetId?: string; outputKey?: string }
   | { kind: 'tab_switch'; targetId: string; outputKey?: string }
-  | { kind: 'observe'; what: 'dom' | 'a11y' | 'network' | 'console' | 'screenshot'; outputKey?: string }
+  | {
+      kind: 'observe'
+      what: 'dom' | 'a11y' | 'network' | 'console' | 'screenshot'
+      outputKey?: string
+    }
   | { kind: 'upload'; selector: string; files: string[]; outputKey?: string }
   | { kind: 'extract_markdown'; outputKey?: string }
   | { kind: 'wait_selector'; selector: string; timeoutMs?: number; outputKey?: string }
   | { kind: 'wait_text'; text: string; timeoutMs?: number; outputKey?: string }
-  | { kind: 'screenshot'; region?: { x: number; y: number; w: number; h: number }; outputKey?: string }
+  | {
+      kind: 'screenshot'
+      region?: { x: number; y: number; w: number; h: number }
+      outputKey?: string
+    }
   | { kind: 'assert'; condition: string; outputKey?: string }
   | { kind: 'branch_if'; condition: string; then: RecipeStep[]; outputKey?: string }
   | { kind: 'loop_while'; condition: string; body: RecipeStep[]; max?: number; outputKey?: string }

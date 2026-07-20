@@ -22,17 +22,70 @@ export type ToolCallState = z.infer<typeof ToolCallStateSchema>
 
 // ── ContentPart — discriminated union of message parts ─────────────────────
 
-export interface TextPart { type: 'text'; text: RichText; state?: 'streaming' | 'done'; lang?: string }
-export interface ReasoningPart { type: 'reasoning'; text: RichText; state?: 'streaming' | 'done'; signature?: string }
-export interface CodePart { type: 'code'; text: string; language?: string }
-export interface FilePart { type: 'file'; mediaType: string; url: string; filename?: string; data?: string }
-export interface ToolCallPart { type: 'tool-call'; toolCallId: string; toolName: string; input: Record<string, unknown>; state?: ToolCallState; approvalId?: string }
-export interface ToolResultPart { type: 'tool-result'; toolCallId: string; output?: unknown; isError?: boolean }
-export interface SourcePart { type: 'source'; sourceId: string; url?: string; title?: string; mediaType?: string }
-export interface CustomPart { type: 'custom'; kind: string; data: unknown; state?: 'streaming' | 'done' }
-export interface ErrorPart { type: 'error'; message: string; code?: string }
-export interface MetaPart { type: 'meta'; key: string; value: unknown }
-export interface StepStartPart { type: 'step-start' }
+export interface TextPart {
+  type: 'text'
+  text: RichText
+  state?: 'streaming' | 'done'
+  lang?: string
+}
+export interface ReasoningPart {
+  type: 'reasoning'
+  text: RichText
+  state?: 'streaming' | 'done'
+  signature?: string
+}
+export interface CodePart {
+  type: 'code'
+  text: string
+  language?: string
+}
+export interface FilePart {
+  type: 'file'
+  mediaType: string
+  url: string
+  filename?: string
+  data?: string
+}
+export interface ToolCallPart {
+  type: 'tool-call'
+  toolCallId: string
+  toolName: string
+  input: Record<string, unknown>
+  state?: ToolCallState
+  approvalId?: string
+}
+export interface ToolResultPart {
+  type: 'tool-result'
+  toolCallId: string
+  output?: unknown
+  isError?: boolean
+}
+export interface SourcePart {
+  type: 'source'
+  sourceId: string
+  url?: string
+  title?: string
+  mediaType?: string
+}
+export interface CustomPart {
+  type: 'custom'
+  kind: string
+  data: unknown
+  state?: 'streaming' | 'done'
+}
+export interface ErrorPart {
+  type: 'error'
+  message: string
+  code?: string
+}
+export interface MetaPart {
+  type: 'meta'
+  key: string
+  value: unknown
+}
+export interface StepStartPart {
+  type: 'step-start'
+}
 
 export type ContentPart =
   | TextPart
@@ -171,29 +224,70 @@ export function isStreaming(parts: ContentPart[]): boolean {
 // ── Legacy migration (old {kind, content, index} blocks) ──────────────────
 
 export interface LegacyBlock {
-  kind: string; content: string; index: number
-  language?: string; url?: string; alt?: string; source?: string
-  toolName?: string; input?: Record<string, unknown>
-  message?: string; code?: string; key?: string; value?: unknown; artifactType?: string
+  kind: string
+  content: string
+  index: number
+  language?: string
+  url?: string
+  alt?: string
+  source?: string
+  toolName?: string
+  input?: Record<string, unknown>
+  message?: string
+  code?: string
+  key?: string
+  value?: unknown
+  artifactType?: string
 }
 
 export function isLegacyBlock(obj: unknown): obj is LegacyBlock {
   const b = obj as LegacyBlock
-  return typeof b === 'object' && b !== null && typeof b.kind === 'string' && typeof b.index === 'number'
+  return (
+    typeof b === 'object' && b !== null && typeof b.kind === 'string' && typeof b.index === 'number'
+  )
 }
 
 export function migrateLegacyBlock(legacy: LegacyBlock): ContentPart {
   switch (legacy.kind) {
-    case 'text': return { type: 'text', text: legacy.content }
-    case 'thinking': return { type: 'reasoning', text: legacy.content }
-    case 'code': return { type: 'code', text: legacy.content, language: legacy.language }
-    case 'image': return { type: 'file', mediaType: 'image/png', url: legacy.url ?? legacy.content, filename: legacy.alt }
-    case 'tool_use': return { type: 'tool-call', toolCallId: `tc_${legacy.index}`, toolName: legacy.toolName ?? 'unknown', input: legacy.input ?? {} }
-    case 'artifact': return { type: 'custom', kind: 'artifact', data: { content: legacy.content, artifactType: legacy.artifactType } }
-    case 'citation': return { type: 'source', sourceId: `src_${legacy.index}`, url: legacy.url ?? legacy.source, title: legacy.content }
-    case 'error': return { type: 'error', message: legacy.message ?? legacy.content, code: legacy.code }
-    case 'meta': return { type: 'meta', key: legacy.key ?? 'unknown', value: legacy.value }
-    default: return { type: 'text', text: legacy.content }
+    case 'text':
+      return { type: 'text', text: legacy.content }
+    case 'thinking':
+      return { type: 'reasoning', text: legacy.content }
+    case 'code':
+      return { type: 'code', text: legacy.content, language: legacy.language }
+    case 'image':
+      return {
+        type: 'file',
+        mediaType: 'image/png',
+        url: legacy.url ?? legacy.content,
+        filename: legacy.alt,
+      }
+    case 'tool_use':
+      return {
+        type: 'tool-call',
+        toolCallId: `tc_${legacy.index}`,
+        toolName: legacy.toolName ?? 'unknown',
+        input: legacy.input ?? {},
+      }
+    case 'artifact':
+      return {
+        type: 'custom',
+        kind: 'artifact',
+        data: { content: legacy.content, artifactType: legacy.artifactType },
+      }
+    case 'citation':
+      return {
+        type: 'source',
+        sourceId: `src_${legacy.index}`,
+        url: legacy.url ?? legacy.source,
+        title: legacy.content,
+      }
+    case 'error':
+      return { type: 'error', message: legacy.message ?? legacy.content, code: legacy.code }
+    case 'meta':
+      return { type: 'meta', key: legacy.key ?? 'unknown', value: legacy.value }
+    default:
+      return { type: 'text', text: legacy.content }
   }
 }
 

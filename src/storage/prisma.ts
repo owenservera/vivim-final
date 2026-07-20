@@ -3,6 +3,8 @@
 // Provides typed access to all tables via Prisma ORM.
 // 20.2: WAL mode + busy_timeout + cache_size + foreign_keys for performance
 
+import { join, resolve } from 'node:path'
+import { env } from 'node:process'
 import { PrismaClient } from '@prisma/client'
 
 // Singleton pattern — one PrismaClient instance for the entire app
@@ -32,8 +34,18 @@ export async function initPrismaWal(prisma?: PrismaClient): Promise<void> {
 
 export function getPrisma(): PrismaClient {
   if (!client) {
+    let url = env.DATABASE_URL ?? 'file:./dev.db'
+    if (url.startsWith('file:.')) {
+      // Resolve relative DATABASE_URL the same way prisma migrate does:
+      // relative to the prisma/ directory (where schema.prisma lives).
+      const relPath = url.slice(5)
+      const schemaDir = join(import.meta.dir, '..', '..', 'prisma')
+      const absPath = resolve(schemaDir, relPath)
+      url = `file:${absPath}`
+    }
     client = new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+      log: env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+      datasources: { db: { url } },
     })
     // Fire-and-forget WAL init — completes before first real query in practice
     if (!walApplied) {

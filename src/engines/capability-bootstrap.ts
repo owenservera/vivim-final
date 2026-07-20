@@ -5,6 +5,7 @@
 import { buildLocalDiscoveryStack, createPageEvalCapturer } from '../cli/discovery-stack.js'
 import type { ProfileAllocator } from '../executor/profile-allocator.js'
 import type { ConversationStore } from '../storage/contracts/conversation-store.js'
+import type { LocalAgentStore } from '../storage/contracts/local-agent-store.js'
 import type { CapStoreDb } from '../storage/db.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import { type ComposerType, submitMessage, typeMessage } from './composer-typing.js'
@@ -12,9 +13,15 @@ import type { ConversationManager } from './conversation-manager.js'
 import type { CrossConversationSynthesizer } from './cross-conversation-synthesis.js'
 import { DiscoverySessionRunner } from './discovery-session-runner.js'
 import type { KnowledgeIngestionEngine } from './knowledge-ingestion.js'
+import {
+  LOCAL_AGENT_SLUG,
+  type LocalAgentProviderExecutor,
+} from './local-agent/local-agent-executor.js'
 import type { MemoryEngine } from './memory-engine.js'
 import type { NLCLEngine } from './nlcl/nlcl-engine.js'
 import type { NLCContext } from './nlcl/types.js'
+import type { OpenCodeClient } from './opencode/opencode-client.js'
+import type { OpenCodeIngest } from './opencode/opencode-ingest.js'
 import type { SemanticSearchEngine } from './semantic-search.js'
 import type {
   CapabilitySurface,
@@ -32,6 +39,10 @@ export interface BootstrapServices {
   semanticSearch?: SemanticSearchEngine
   knowledgeIngestion?: KnowledgeIngestionEngine
   synthesizer?: CrossConversationSynthesizer
+  localAgentStore?: LocalAgentStore
+  localAgentExecutor?: LocalAgentProviderExecutor
+  opencodeClient?: OpenCodeClient
+  opencodeIngest?: OpenCodeIngest
 }
 
 const ALL_SURFACES: CapabilitySurface[] = ['cli', 'ui', 'workflow', 'mcp', 'api']
@@ -60,10 +71,10 @@ export function makeCapability(
  * Handlers are Option-A closures over `services`; stubs here return safe defaults
  * and are fleshed out by later phases. Called once after the registry is constructed.
  */
-export function registerDefaultCapabilities(
+export async function registerDefaultCapabilities(
   registry: UnifiedCapabilityRegistry,
   services: BootstrapServices,
-): void {
+): Promise<void> {
   const defaults: UnifiedCapability[] = [
     // ── Conversation ──────────────────────────────────────────────
     makeCapability(
@@ -611,11 +622,267 @@ export function registerDefaultCapabilities(
         }
       },
     ),
+    ...(services.localAgentExecutor
+      ? [
+          makeCapability(
+            {
+              id: 'cap:agent:run',
+              slug: 'agent_run',
+              name: 'Run Local Agent Task',
+              description:
+                'Run a one-shot agentic task via the opencode CLI with a verified free model. No API key required.',
+              category: 'agent',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  prompt: { type: 'string' },
+                  model: { type: 'string' },
+                  sessionId: { type: 'string' },
+                  cwd: { type: 'string' },
+                },
+                required: ['prompt'],
+              },
+              outputSchema: { type: 'object', properties: { blocks: { type: 'array' } } },
+              cliCommand: {
+                name: 'agent run',
+                aliases: ['ar'],
+                examples: [
+                  'agent run "summarize this repo" --model opencode/deepseek-v4-flash-free',
+                ],
+              },
+              ui: { component: 'text_input', position: 'composer', order: 1 },
+              mcpToolName: 'agent_run',
+              apiEndpoint: { method: 'POST', path: '/api/agent/run' },
+            },
+            async (input) => {
+              if (typeof input.prompt !== 'string' || input.prompt.trim().length === 0) {
+                return { ok: false, error: 'prompt is required' }
+              }
+              const result = await services.localAgentExecutor?.run({
+                prompt: String(input.prompt),
+                model: input.model ? String(input.model) : undefined,
+                sessionId: input.sessionId ? String(input.sessionId) : undefined,
+                cwd: input.cwd ? String(input.cwd) : undefined,
+              })
+              return {
+                ok: result.exitCode === 0 && !result.timedOut && !result.permissionDenied,
+                blocks: result.blocks,
+                model: result.model,
+                sessionId: result.sessionId,
+                cost: result.cost,
+                tokens: result.tokens,
+                timedOut: result.timedOut,
+                permissionDenied: result.permissionDenied,
+              }
+            },
+          ),
+        ]
+      : []),
   ]
+
+  // Seed the local-agent provider manifest (idempotent) so cap:agent:run can dispatch.
+  if (services.localAgentStore && services.localAgentExecutor) {
+    await seedLocalAgentProvider(services.localAgentStore)
+  }
+
+  // ── OpenCode `serve` capabilities (feature 029, env-gated) ────────────────
+  // Handlers lazily read from globalThis.__opencodeServe (set in server/index.ts boot).
+  {
+    const getServe = () =>
+      (globalThis as Record<string, unknown>).__opencodeServe as
+        | { client: OpenCodeClient; ingest: OpenCodeIngest }
+        | undefined
+
+    defaults.push(
+      makeCapability(
+        {
+          id: 'cap:opencode:send',
+          slug: 'opencode_send',
+          name: 'Send to OpenCode',
+          description: 'Send a prompt to a live opencode serve session and return the response.',
+          category: 'agent',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              prompt: { type: 'string' },
+              sessionId: { type: 'string' },
+              model: { type: 'string' },
+            },
+            required: ['prompt'],
+          },
+          outputSchema: { type: 'object', properties: { blocks: { type: 'array' } } },
+          cliCommand: {
+            name: 'opencode send',
+            aliases: ['os'],
+            examples: ['opencode send "refactor the auth module"'],
+          },
+          ui: { component: 'text_input', position: 'composer', order: 2 },
+          mcpToolName: 'opencode_send',
+          apiEndpoint: { method: 'POST', path: '/api/opencode/send' },
+        },
+        async (input) => {
+          const serve = getServe()
+          if (!serve)
+            return { ok: false, error: 'OpenCode serve not enabled (OPENCODE_SERVE_ENABLED=1)' }
+          if (typeof input.prompt !== 'string' || input.prompt.trim().length === 0) {
+            return { ok: false, error: 'prompt is required' }
+          }
+          const { client, ingest } = serve
+
+          // Resolve or create session
+          let sessionId = input.sessionId ? String(input.sessionId) : undefined
+          if (!sessionId) {
+            const { sessionId: newId } = await client.createSession({
+              model: input.model ? String(input.model) : undefined,
+            })
+            sessionId = newId
+          }
+
+          // Start ingest and send
+          await ingest.start(sessionId, { model: input.model ? String(input.model) : undefined })
+          await client.sendPrompt(sessionId, String(input.prompt))
+
+          return {
+            ok: true,
+            sessionId,
+            text: `Prompt sent to session ${sessionId}`,
+          }
+        },
+      ),
+      makeCapability(
+        {
+          id: 'cap:opencode:session.create',
+          slug: 'opencode_session_create',
+          name: 'Create OpenCode Session',
+          description: 'Create a new persistent opencode serve session.',
+          category: 'agent',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              model: { type: 'string' },
+              cwd: { type: 'string' },
+            },
+          },
+          outputSchema: { type: 'object', properties: { sessionId: { type: 'string' } } },
+          cliCommand: {
+            name: 'opencode session create',
+            aliases: ['osc'],
+            examples: ['opencode session create --model opencode/deepseek-v4-flash-free'],
+          },
+          ui: { component: 'action-button', position: 'sidebar', order: 4 },
+          mcpToolName: 'opencode_session_create',
+          apiEndpoint: { method: 'POST', path: '/api/opencode/session' },
+        },
+        async (input) => {
+          const serve = getServe()
+          if (!serve) return { ok: false, error: 'OpenCode serve not enabled' }
+          const { sessionId } = await serve.client.createSession({
+            model: input.model ? String(input.model) : undefined,
+            cwd: input.cwd ? String(input.cwd) : undefined,
+          })
+          return { ok: true, sessionId }
+        },
+      ),
+      makeCapability(
+        {
+          id: 'cap:opencode:session.list',
+          slug: 'opencode_session_list',
+          name: 'List OpenCode Sessions',
+          description: 'List active opencode serve sessions.',
+          category: 'agent',
+          inputSchema: { type: 'object', properties: {} },
+          outputSchema: { type: 'object', properties: { sessions: { type: 'array' } } },
+          cliCommand: {
+            name: 'opencode session list',
+            aliases: ['osl'],
+            examples: ['opencode session list'],
+          },
+          ui: { component: 'action-button', position: 'sidebar', order: 5 },
+          mcpToolName: 'opencode_session_list',
+          apiEndpoint: { method: 'GET', path: '/api/opencode/sessions' },
+        },
+        async () => {
+          const serve = getServe()
+          if (!serve) return { ok: false, error: 'OpenCode serve not enabled' }
+          return { ok: true, sessions: [], text: 'Session listing requires the ingest layer.' }
+        },
+      ),
+      makeCapability(
+        {
+          id: 'cap:opencode:permission.respond',
+          slug: 'opencode_permission_respond',
+          name: 'Respond to OpenCode Permission',
+          description: 'Respond to a pending permission request from opencode.',
+          category: 'agent',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              sessionId: { type: 'string' },
+              permissionId: { type: 'string' },
+              decision: { type: 'string', enum: ['allow', 'deny', 'allow_always'] },
+            },
+            required: ['sessionId', 'permissionId', 'decision'],
+          },
+          outputSchema: { type: 'object' },
+          cliCommand: {
+            name: 'opencode permission',
+            aliases: ['op'],
+            examples: ['opencode permission --session abc --permission def --decision deny'],
+          },
+          ui: { component: 'action-button', position: 'sidebar', order: 6 },
+          mcpToolName: 'opencode_permission_respond',
+          apiEndpoint: { method: 'POST', path: '/api/opencode/permission/:id' },
+        },
+        async (input) => {
+          const serve = getServe()
+          if (!serve) return { ok: false, error: 'OpenCode serve not enabled' }
+          const sessionId = String(input.sessionId)
+          const permissionId = String(input.permissionId)
+          const decision = String(input.decision) as 'allow' | 'deny' | 'allow_always'
+          await serve.client.respondPermission(sessionId, permissionId, decision)
+          return { ok: true, sessionId, permissionId, decision }
+        },
+      ),
+    )
+  }
 
   for (const cap of defaults) {
     registry.register(cap)
   }
+}
+
+/**
+ * Seed the `local-agent` provider (`slug: opencode`) with the 4 verified Zen free
+ * models (opencode v1.17.15, 2026-07-19). Idempotent via the store's upsert.
+ * `nemotron-3-ultra-free` is intentionally excluded (>5 min cold timeout in test).
+ */
+const LOCAL_AGENT_FREE_MODELS: Array<{ slug: string; displayName: string }> = [
+  { slug: 'opencode/deepseek-v4-flash-free', displayName: 'DeepSeek V4 Flash (free)' },
+  { slug: 'opencode/hy3-free', displayName: 'HY3 (free)' },
+  { slug: 'opencode/mimo-v2.5-free', displayName: 'Mimo 2.5 (free)' },
+  { slug: 'opencode/north-mini-code-free', displayName: 'North Mini Code (free)' },
+]
+
+export async function seedLocalAgentProvider(store: LocalAgentStore): Promise<void> {
+  const models = LOCAL_AGENT_FREE_MODELS.map((m, i) => ({
+    slug: m.slug,
+    displayName: m.displayName,
+    isDefault: i === 0,
+  }))
+  await store.upsertAgentProvider(
+    {
+      slug: LOCAL_AGENT_SLUG,
+      displayName: 'OpenCode Local Agent',
+      authType: 'none',
+      models,
+    },
+    {
+      binary: 'opencode',
+      timeoutMs: 180_000,
+      allowedModels: models.map((m) => m.slug),
+      defaultModel: models[0].slug,
+    },
+  )
 }
 
 /**
@@ -1045,7 +1312,9 @@ export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistr
           .filter(Boolean)
         const stack = await buildLocalDiscoveryStack()
         const configured = input.format ? (String(input.format) as never) : null
-        return stack.align.alignCaptured(bodies, slug, configured)
+        const report = await stack.align.alignCaptured(bodies, slug, configured)
+        await stack.discovery.persistParserFindings(slug, report)
+        return report
       },
     ),
   )

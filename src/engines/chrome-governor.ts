@@ -13,7 +13,9 @@ import type {
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
 import type { BrowserHarnessActions } from './browser-automation/harness-actions.js'
+import type { CapabilitySnapshot, CapabilitySnapshotEntry } from './capability-snapshot.js'
 import { submitMessage, typeMessage } from './composer-typing.js'
+import { configToProgram } from './harness/program-schema.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -33,6 +35,16 @@ export interface FleetConfig {
   maxRestarts: number
   circuitBreakerThreshold: number
   circuitBreakerResetMs: number
+  // ── admission control (SOTA: browserless Limiter) ──
+  maxConcurrent?: number // active slave cap; default = port range span
+  maxQueued?: number // queue depth; default = maxConcurrent * 2
+  queueTimeoutMs?: number // reject if no slot within window; default 30000
+  // ── pre-spawn pressure gate (SOTA: browserless priority cascade) ──
+  cpuOverloadPct?: number // reject/defer above this; default 100 (disabled)
+  memOverloadPct?: number // default 100 (disabled)
+  // ── launch-time crash recovery (SOTA: puppeteer-cluster) ──
+  spawnRetryLimit?: number // launch retries; default 0 (preserve single-attempt)
+  spawnRetryDelayMs?: number // exp-backoff base; default 1000
 }
 
 export interface LaunchOptions {
@@ -177,6 +189,14 @@ export class CDPProxy {
     private eventBus?: GovernorEventBus,
     private browserHarness?: BrowserHarnessActions,
   ) {}
+
+  /** 019 — in-memory snapshot of DB-backed capabilities, loaded at boot. */
+  private capabilitySnapshot?: CapabilitySnapshot
+
+  /** Wire the boot-loaded capability snapshot (source of truth for execution). */
+  setCapabilitySnapshot(snapshot: CapabilitySnapshot): void {
+    this.capabilitySnapshot = snapshot
+  }
 
   async send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown> {
     const slave = await this.ensureConnected(slaveId)
@@ -717,6 +737,14 @@ export class ChromeGovernor {
   /** Extended browser-automation recipe actions (set by bootstrap). */
   browserHarness?: import('./browser-automation/harness-actions.js').BrowserHarnessActions
 
+  /** 019 — in-memory snapshot of DB-backed capabilities, loaded at boot. */
+  private capabilitySnapshot?: CapabilitySnapshot
+
+  /** Wire the boot-loaded capability snapshot (source of truth for execution). */
+  setCapabilitySnapshot(snapshot: CapabilitySnapshot): void {
+    this.capabilitySnapshot = snapshot
+  }
+
   constructor(
     private store: GovernorStore,
     private config: FleetConfig,
@@ -737,6 +765,13 @@ export class ChromeGovernor {
         circuitBreakerThreshold: this.config.circuitBreakerThreshold ?? 5,
         circuitBreakerResetMs: this.config.circuitBreakerResetMs ?? 60_000,
         chromeProfileBase: this.config.profileBaseDir ?? 'chrome-profiles',
+        maxConcurrent: this.config.maxConcurrent ?? undefined,
+        maxQueued: this.config.maxQueued ?? undefined,
+        queueTimeoutMs: this.config.queueTimeoutMs ?? undefined,
+        cpuOverloadPct: this.config.cpuOverloadPct ?? undefined,
+        memOverloadPct: this.config.memOverloadPct ?? undefined,
+        spawnRetryLimit: this.config.spawnRetryLimit ?? undefined,
+        spawnRetryDelayMs: this.config.spawnRetryDelayMs ?? undefined,
       })) as FleetSupervisorContract
   }
 
@@ -1072,15 +1107,75 @@ export class ChromeGovernor {
       params?: Record<string, unknown>
     },
   ): Promise<unknown> {
+    // CDP capabilities resolve through the in-memory registry (static catalog).
     const cap = opts?.capabilityLookup?.(slug)
-    if (!cap) {
-      throw new EngineError(`Capability not found for slug: ${slug}`)
+    if (cap?.id.startsWith('cap:cdp:')) {
+      const cdpMethod = cap.id.slice('cap:cdp:'.length)
+      return this.executeCdpMethod(ref, cdpMethod, opts?.params ?? {}, opts?.resolver)
     }
-    if (!cap.id.startsWith('cap:cdp:')) {
-      throw new EngineError(`Not a CDP capability: ${cap.id}`)
+
+    // 019 — DB-backed capabilities resolve from the boot snapshot (no DB hit).
+    if (this.capabilitySnapshot) {
+      const providerId = opts?.resolver
+        ? await opts.resolver.getConversationProviderId?.(ref)
+        : undefined
+      let entry: CapabilitySnapshotEntry | null = null
+      if (cap) {
+        // Registry entry exists (e.g. generated cap) — resolve by globalId if present.
+        entry =
+          this.capabilitySnapshot.getById(cap.id, providerId ?? undefined) ??
+          this.capabilitySnapshot.getById(cap.id)
+      }
+      entry = entry ?? this.capabilitySnapshot.getBySlug(slug, providerId ?? undefined)
+      if (entry) {
+        if (!entry.executable || !entry.configJson) {
+          throw new EngineError(`Capability '${slug}' has no executable program in snapshot`)
+        }
+        return this.executeSnapshotProgram(ref, entry, opts?.params ?? {}, opts?.resolver)
+      }
     }
-    const cdpMethod = cap.id.slice('cap:cdp:'.length)
-    return this.executeCdpMethod(ref, cdpMethod, opts?.params ?? {}, opts?.resolver)
+
+    throw new EngineError(`Capability not found for slug: ${slug}`)
+  }
+
+  /**
+   * 019 — execute a snapshot-resolved capability's best program via the browser
+   * harness. The program's configJson is a Recipe (action + params); only
+   * browser-automation actions are supported through the governor transport.
+   */
+  private async executeSnapshotProgram(
+    ref: string,
+    entry: CapabilitySnapshotEntry,
+    params: Record<string, unknown>,
+    resolver?: { getConversationProviderId?: (id: string) => Promise<string | null> },
+  ): Promise<unknown> {
+    if (!this.browserHarness) {
+      throw new EngineError('Browser harness not configured; cannot execute snapshot capability')
+    }
+    const recipe = configToProgram(entry.configJson as string).recipe
+    const slave = await this.resolveSlaveForExecution(ref, resolver ?? {})
+    const slaveId = slave.slaveId
+    // Multi-step recipe: dispatch each step through the browser harness with
+    // failure capture. Each RecipeStep is a discriminated union keyed by `kind`;
+    // `kind` maps to the harness action and the remaining fields become params.
+    const results: unknown[] = []
+    for (const step of recipe.steps) {
+      const { kind, outputKey: _outputKey, ...stepParams } = step as Record<string, unknown>
+      try {
+        const result = await this.browserHarness.runAction(slaveId, String(kind), {
+          ...stepParams,
+          ...params,
+        })
+        results.push(result)
+      } catch (err) {
+        const wrapped = err instanceof Error ? err : new EngineError(String(err))
+        throw new EngineError(
+          `Snapshot program step '${String(kind)}' failed for capability ${entry.globalId}: ${wrapped.message}`,
+          { cause: wrapped },
+        )
+      }
+    }
+    return { ok: true, capabilityId: entry.globalId, steps: recipe.steps.length, results }
   }
 
   // ── Provider-free generic browser (automation backbone) ───────────────────

@@ -10,6 +10,7 @@ import type { StreamBlockStoreContract } from '../../storage/contracts/stream-bl
 import type { CapabilityEventBus } from '../capability-event-bus.js'
 import { programToCapability } from '../cdp-capability-registrar.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
+import type { StreamParserEngine } from '../stream-parser.js'
 import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
 import { CapabilityProgramRegistrar } from './capability-program-registrar.js'
 import { createGovernorSlaveResolver } from './fleet-lifecycle-adapter.js'
@@ -27,6 +28,8 @@ export interface ComposeHarnessDeps {
   programStore: ProgramStore
   blockStore: StreamBlockStoreContract
   eventBus: CapabilityEventBus
+  /** Provider-aware stream parser for harness capture reconstruction. */
+  parser: StreamParserEngine
   /** Optional registry to auto-publish seeded programs as capabilities (One Entry Point). */
   registry?: UnifiedCapabilityRegistry
   defaultTimeoutMs?: number
@@ -41,6 +44,7 @@ export function composeHarness(deps: ComposeHarnessDeps): HarnessComposition {
     blockStore: deps.blockStore,
     eventBus: deps.eventBus,
     slaveResolver: createGovernorSlaveResolver(deps.governor),
+    parser: deps.parser,
     defaultTimeoutMs: deps.defaultTimeoutMs ?? 30_000,
   }
   const executor = new HarnessExecutorEngine(executorDeps)

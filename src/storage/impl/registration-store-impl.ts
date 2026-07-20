@@ -22,7 +22,6 @@ export class RegistrationStoreImpl implements RegistrationStore {
     this.db = db as unknown as PrismaLoose
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: Prisma escape hatch
   private get p(): any {
     return this.db.prisma
   }

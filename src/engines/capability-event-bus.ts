@@ -1,6 +1,12 @@
 // src/engines/capability-event-bus.ts
 // CapabilityEventBus — typed in-process pub/sub for all inter-engine communication.
 // Transient events, no DB persistence. Singleton per process.
+//
+// Extended (agentic backbone) to ALSO mirror every emitted event into the durable
+// EventRecord outbox when a EventRecordStore is attached — so cross-surface replay
+// (OpenCode ingest, browser fleet, capability layer) has a single source of truth.
+
+import type { EventRecordStore } from './event-record-store.js'
 
 // ── Event types (v1) ──────────────────────────────────────────────────────
 
@@ -104,6 +110,20 @@ export type CapabilityEvent =
       rowsWritten: number
       durationMs: number
     }
+  | {
+      type: 'intent:clarify'
+      clarification: {
+        goal: string
+        question: string
+        options: Array<{
+          label: string
+          capabilitySlug: string
+          inputMapping: Record<string, unknown>
+        }>
+        timeoutMs: number
+      }
+      ts: number
+    }
 
 export type GenericEvent = { type: string; [key: string]: unknown }
 
@@ -124,6 +144,9 @@ export class CapabilityEventBus {
   private onceHandlers = new Map<string, Set<EventHandler>>()
   private wsSubscriptions = new Map<WsLike, Map<string, Set<string>>>()
   private recent: EngineEvent[] = []
+  // Optional durable mirror (agentic backbone). When set, every emit is also
+  // appended to the EventRecord outbox for cross-surface replay.
+  private durable: EventRecordStore | null = null
 
   static getInstance(): CapabilityEventBus {
     if (!CapabilityEventBus.instance) {
@@ -137,10 +160,26 @@ export class CapabilityEventBus {
     CapabilityEventBus.instance = null
   }
 
+  /** Attach a durable EventRecord outbox so emits are persisted too. */
+  setDurableStore(store: EventRecordStore): void {
+    this.durable = store
+  }
+
   // ── Emit ───────────────────────────────────────────────────────────────
 
   emit<T extends EngineEvent>(event: T): void {
     const type = event.type
+
+    // Mirror into the durable outbox (best-effort; never blocks the bus).
+    if (this.durable) {
+      this.durable
+        .append({
+          source: 'capability',
+          type,
+          payload: event as unknown,
+        })
+        .catch(() => {})
+    }
 
     // Fire regular handlers
     const handlers = this.handlers.get(type)

@@ -1,55 +1,74 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import {
-  SemanticGroundingEngine,
-  type SemanticSelector,
-} from '../../../src/engines/semantic-grounding.js'
+import { SemanticGroundingEngine } from '../../../src/engines/browser-automation/semantic-grounding.js'
 
-function makeTransport() {
+const BOX = { x: 1, y: 2, width: 10, height: 4 }
+
+function makeGov() {
   return {
-    send: mock(() =>
-      Promise.resolve({
-        result: { root: { nodeId: 1, backendNodeId: 1, role: 'root', children: [] } },
-      }),
+    enableDomains: mock(() => Promise.resolve()),
+    evaluate: mock((_slaveId: string, expr: string) =>
+      Promise.resolve(expr.includes('missing') ? null : BOX),
     ),
+    cdp: {
+      send: mock((_slaveId: string, method: string, params: any) => {
+        if (method === 'DOM.getBoxModel' && params?.nodeId) {
+          return Promise.resolve({ model: { content: BOX } })
+        }
+        if (method === 'DOM.getDocument') {
+          return Promise.resolve({ root: { nodeId: 7, backendNodeId: 1, nodeType: 1 } })
+        }
+        if (method === 'DOM.querySelector') {
+          return Promise.resolve({ nodeId: 42 })
+        }
+        if (method === 'Accessibility.getFullAXTree') {
+          return Promise.resolve({
+            nodes: {
+              root: { role: { value: 'root' }, childIds: ['a'] },
+              a: { role: { value: 'button' }, name: { value: 'OK' }, childIds: [] },
+            },
+          })
+        }
+        return Promise.resolve({})
+      }),
+    },
   } as any
 }
 
 describe('SemanticGroundingEngine', () => {
-  let transport: ReturnType<typeof makeTransport>
-  let engine: SemanticGroundingEngine
+  let gov: ReturnType<typeof makeGov>
+  let eng: SemanticGroundingEngine
 
   beforeEach(() => {
-    transport = makeTransport()
-    engine = new SemanticGroundingEngine(transport)
+    gov = makeGov()
+    eng = new SemanticGroundingEngine(gov)
   })
 
-  test('resolve returns null when transport returns no tree', async () => {
-    transport.send.mockResolvedValue({ result: null })
-    const sel: SemanticSelector = { type: 'aria', role: 'button' }
-    const result = await engine.resolve('s1', sel)
-    expect(result).toBeNull()
+  test('resolveBySelector returns box when present', async () => {
+    const r = await eng.resolveBySelector('s1', '#ok')
+    expect(r.selector).toBe('#ok')
+    expect(r.mode).toBe('css')
+    expect(r.box.width).toBe(10)
   })
 
-  test('resolve css selector returns null when transport fails', async () => {
-    transport.send.mockRejectedValue(new Error('no element'))
-    const sel: SemanticSelector = { type: 'css', selector: '#missing' }
-    const result = await engine.resolve('s1', sel)
-    expect(result).toBeNull()
+  test('resolveBySelector throws when node absent', async () => {
+    gov.evaluate = mock(() => Promise.resolve(null))
+    await expect(eng.resolveBySelector('s1', '#missing')).rejects.toThrow()
   })
 
-  test('resolveAll returns empty array when tree is empty', async () => {
-    transport.send.mockResolvedValue({
-      result: { root: { nodeId: 1, backendNodeId: 1, role: 'root', children: [] } },
+  test('getAccessibilityTree rebuilds a tree', async () => {
+    const tree = await eng.getAccessibilityTree('s1')
+    expect(tree.role).toBe('root')
+    expect(tree.children?.[0]?.name).toBe('OK')
+  })
+
+  test('composite selector falls through to a working candidate', async () => {
+    const r = await eng.resolve('s1', {
+      axis: 'input',
+      composite: [
+        { axis: 'input', mode: 'css', css: '#missing' },
+        { axis: 'input', mode: 'css', css: '#ok' },
+      ],
     })
-    const sel: SemanticSelector = { type: 'aria', role: 'button' }
-    const results = await engine.resolveAll('s1', sel)
-    expect(results).toHaveLength(0)
-  })
-
-  test('resolveAll css returns empty on failure', async () => {
-    transport.send.mockRejectedValue(new Error('fail'))
-    const sel: SemanticSelector = { type: 'css', selector: '.x' }
-    const results = await engine.resolveAll('s1', sel)
-    expect(results).toHaveLength(0)
+    expect(r.selector).toBe('#ok')
   })
 })

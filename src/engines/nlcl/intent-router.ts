@@ -145,7 +145,8 @@ export class IntentRouter {
     let pipelineData: unknown
 
     for (let i = 0; i < composite.steps.length; i++) {
-      const step = composite.steps[i]!
+      const step = composite.steps[i]
+      if (!step) continue
       const stepCtx = { ...ctx }
 
       // Unit 25.4: Pipeline data propagation

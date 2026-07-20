@@ -9,6 +9,7 @@
 //   harvest <vocab-file> [--mode auto|agent] — Round 3: probability-table harvesting
 //   status       — print gen state (progress per platform)
 //   merge        — merge all nodes/edges → seeds/taxonomy/pool.taxonomy.json (master DB pool)
+//   openclaw-harvest — Step A: parse OpenClaw taxonomy.yaml → seeds/taxonomy/openclaw-harvest.json
 //
 // Global flag: --mode auto|agent (default agent)
 
@@ -19,6 +20,7 @@ import { runSession } from './lib/provider-session.ts'
 import { runSharedPool } from './lib/shared-pool.ts'
 import { runMerge } from './lib/merge.ts'
 import { runHarvestPipeline } from './lib/harvest.ts'
+import { runOpenClawHarvest } from './lib/openclaw-harvest.ts'
 import { getState } from './lib/state.ts'
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -85,6 +87,11 @@ async function main() {
     case 'merge':
       runMerge()
       break
+    case 'openclaw-harvest': {
+      const r = runOpenClawHarvest()
+      console.log(`   wrote ${r.nodeCount} nodes / ${r.edgeCount} edges → ${r.docPath}`)
+      break
+    }
     default:
       console.error(`Unknown command: ${cmd}`)
       console.error('Commands: scan, shared-pool, skeleton, session <slug>, harvest <vocab-file>, status, merge')

@@ -41,8 +41,8 @@ export function createSourceContext(req: Request): SourceContext {
  * Usage: const audit = createAuditLogger(req); audit('action_name', { detail: 'value' });
  */
 export function createAuditLogger(req: Request) {
-  const ctx = createSourceContext(req)
-  return (action: string, detail?: Record<string, unknown>) => {
-    const detailStr = detail ? ` ${JSON.stringify(detail)}` : ''
+  const _ctx = createSourceContext(req)
+  return (_action: string, detail?: Record<string, unknown>) => {
+    const _detailStr = detail ? ` ${JSON.stringify(detail)}` : ''
   }
 }

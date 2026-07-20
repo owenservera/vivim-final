@@ -29,11 +29,15 @@ export const DocumentDataSchema = z.object({
   author: z.string().optional(),
   language: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  toc: z.array(z.object({
-    level: z.number().int().min(1).max(6),
-    title: z.string(),
-    anchor: z.string().optional(),
-  })).optional(),
+  toc: z
+    .array(
+      z.object({
+        level: z.number().int().min(1).max(6),
+        title: z.string(),
+        anchor: z.string().optional(),
+      }),
+    )
+    .optional(),
 })
 
 // ── CodeNode (cap-store.code) ─────────────────────────────────────────────
@@ -83,15 +87,23 @@ export const KnowledgeDataSchema = z.object({
   bodyType: z.enum(['markdown', 'plain']),
   summary: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  references: z.array(z.object({
-    title: z.string(),
-    url: z.string().optional(),
-    nodeId: z.string().optional(),
-  })).optional(),
-  flashcards: z.array(z.object({
-    front: z.string(),
-    back: z.string(),
-  })).optional(),
+  references: z
+    .array(
+      z.object({
+        title: z.string(),
+        url: z.string().optional(),
+        nodeId: z.string().optional(),
+      }),
+    )
+    .optional(),
+  flashcards: z
+    .array(
+      z.object({
+        front: z.string(),
+        back: z.string(),
+      }),
+    )
+    .optional(),
   confidence: z.number().min(0).max(1).optional(),
 })
 
@@ -134,8 +146,8 @@ export const documentNodeSchema = {
   type: 'cap-store.document' as const,
   version: 1,
   schema: DocumentDataSchema,
-  indexContent: (data: DocumentData) => data.title + '\n' + data.body,
-  embeddingText: (data: DocumentData) => data.title + '\n' + data.body,
+  indexContent: (data: DocumentData) => `${data.title}\n${data.body}`,
+  embeddingText: (data: DocumentData) => `${data.title}\n${data.body}`,
 }
 
 export const codeNodeSchema = {
@@ -150,7 +162,8 @@ export const knowledgeNodeSchema = {
   type: 'cap-store.knowledge' as const,
   version: 1,
   schema: KnowledgeDataSchema,
-  indexContent: (data: KnowledgeData) => `${data.title}\n${data.body}\n${data.tags?.join(' ') ?? ''}`,
+  indexContent: (data: KnowledgeData) =>
+    `${data.title}\n${data.body}\n${data.tags?.join(' ') ?? ''}`,
   embeddingText: (data: KnowledgeData) => `${data.title}\n${data.summary ?? data.body}`,
 }
 
@@ -159,5 +172,6 @@ export const webpageNodeSchema = {
   version: 1,
   schema: WebpageDataSchema,
   indexContent: (data: WebpageData) => `${data.title}\n${data.content}`,
-  embeddingText: (data: WebpageData) => `${data.title}\n${data.description ?? data.content.slice(0, 1000)}`,
+  embeddingText: (data: WebpageData) =>
+    `${data.title}\n${data.description ?? data.content.slice(0, 1000)}`,
 }
