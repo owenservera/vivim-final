@@ -132,7 +132,25 @@ export class ProtocolDiscoveryEngine {
     private sessionId: string,
   ) {}
 
-  private async eval(expr: string): Promise<unknown> {
+  // Whitelist of probe expressions permitted in the page context. Protocol
+  // discovery only ever evaluates these hardcoded probes (AU-0001: no
+  // untrusted input may reach Runtime.evaluate). Any other expression is
+  // rejected, closing the dynamic-eval injection vector.
+  private static readonly ALLOWED_PROBES = new Set<string>([
+    PROBE_COMPOSERS,
+    PROBE_BUTTONS,
+    PROBE_DOM,
+    PROBE_FRAMEWORK,
+    "document.title",
+  ])
+
+  private async evaluateInPage(expr: string): Promise<unknown> {
+    if (!ProtocolDiscoveryEngine.ALLOWED_PROBES.has(expr)) {
+      throw new Error(
+        `Refused to evaluate non-whitelisted expression in page context (AU-0001). ` +
+          `Only static protocol probes are permitted.`,
+      )
+    }
     const r = (await this.client.send(
       'Runtime.evaluate',
       { expression: expr, returnByValue: true },
@@ -148,11 +166,11 @@ export class ProtocolDiscoveryEngine {
     await this.client.send('Page.navigate', { url }, { sessionId: this.sessionId }).catch(() => {})
     await new Promise((r) => setTimeout(r, 5000))
 
-    const pageTitle = ((await this.eval('document.title')) as string) ?? hint
+    const pageTitle = ((await this.evaluateInPage('document.title')) as string) ?? hint
 
     // WRITE: composers
     const rawC =
-      ((await this.eval(PROBE_COMPOSERS)) as
+      ((await this.evaluateInPage(PROBE_COMPOSERS)) as
         | Array<{
             selector: string
             tagName: string
@@ -196,7 +214,7 @@ export class ProtocolDiscoveryEngine {
 
     // WRITE: send buttons
     const rawB =
-      ((await this.eval(PROBE_BUTTONS)) as
+      ((await this.evaluateInPage(PROBE_BUTTONS)) as
         | Array<{
             selector: string
             text: string
@@ -230,7 +248,7 @@ export class ProtocolDiscoveryEngine {
 
     // READ: DOM response containers
     const rawD =
-      ((await this.eval(PROBE_DOM)) as
+      ((await this.evaluateInPage(PROBE_DOM)) as
         | Array<{
             selector: string
             tagName: string
@@ -247,7 +265,7 @@ export class ProtocolDiscoveryEngine {
       evidence: [`tag:${d.tagName}`, `children:${d.childCount}`, `textLen:${d.textLength}`],
     }))
 
-    const framework = (await this.eval(PROBE_FRAMEWORK)) as string | null
+    const framework = (await this.evaluateInPage(PROBE_FRAMEWORK)) as string | null
 
     const primaryComposer = composers[0] ?? null
     const primarySendButton = sendButtons[0] ?? null

@@ -7,7 +7,7 @@
 // Legacy {kind,content,index} blocks from seed parsers are auto-migrated at the boundary.
 
 import { EngineError } from '../errors.js'
-import { isLegacyBlock, migrateLegacyParts } from '../schema/streaming.js'
+import { isLegacyBlock, migrateLegacyParts, ContentPartSchema } from '../schema/streaming.js'
 import type { ContentPart } from '../schema/streaming.js'
 import type { ParserExecutionLogStore } from '../storage/contracts/parser-execution-log-store.js'
 import type { ParserStore, ProviderParserRow } from '../storage/contracts/parser-store.js'
@@ -163,7 +163,30 @@ function normalizeBlocks(blocks: ContentBlock[]): ContentBlock[] {
   if (isLegacyBlock(blocks[0])) {
     return migrateLegacyParts(blocks as unknown as Parameters<typeof migrateLegacyParts>[0])
   }
-  return blocks
+  return validateBlocks(blocks)
+}
+
+/**
+ * Enforce the unified ContentPart contract at the parser boundary. A parser
+ * (DB-inline or protocol-primed) may emit malformed parts; we drop them here
+ * rather than letting bad shapes reach the ContentUnit decomposition / DB layer.
+ * Returns only schema-valid parts and logs a warning for any rejected ones.
+ */
+function validateBlocks(blocks: ContentBlock[]): ContentBlock[] {
+  const valid: ContentBlock[] = []
+  let rejected = 0
+  for (const block of blocks) {
+    const result = ContentPartSchema.safeParse(block)
+    if (result.success) {
+      valid.push(result.data as ContentBlock)
+    } else {
+      rejected++
+    }
+  }
+  if (rejected > 0) {
+    console.warn(`[stream-parser] rejected ${rejected} schema-invalid block(s) at boundary`)
+  }
+  return valid
 }
 
 export class StreamParserEngine {
