@@ -164,6 +164,9 @@ export type {
   LocalModelConfig,
   LocalModelResponse,
 } from './engines/local-model-adapter.js'
+export { OllamaEmbeddingProvider } from './engines/embedding-ollama.js'
+export { MiniLmEmbeddingProvider } from './engines/embedding-minilm.js'
+export type { EmbeddingProvider } from './engines/semantic-search.js'
 export { SyncEngine } from './engines/sync.js'
 export type { SyncConfig, SyncPeer, SyncLogEntry, SyncStore, SyncResult } from './engines/sync.js'
 export { TelemetryAudit } from './engines/telemetry-audit.js'

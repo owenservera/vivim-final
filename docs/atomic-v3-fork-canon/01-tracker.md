@@ -13,7 +13,7 @@
 
 ---
 
-**Total units:** 132 | **Done:** 85 | **Blocked:** 0 | **Pending:** 47
+**Total units:** 132 | **Done:** 86 | **Blocked:** 0 | **Pending:** 46
 
 ## Phase 1: Stabilization & Cleanup (12 units — COMPLETE)
 
@@ -138,7 +138,7 @@
 
 > **Source:** v3 Phase 6 (`docs/atomic-v3-fork-canon/phase-07-memory-knowledge/`)
 
-- [~] 7.1 (v3:6.1) — Real embedding provider (local-first) → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.1-embedding-provider.md` — EXISTS via `local-model-adapter.ts` + `semantic-search.ts`, needs dedicated provider
+- [x] 7.1 (v3:6.1) — Real embedding provider (local-first) → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.1-embedding-provider.md` — EXISTS via `local-model-adapter.ts` + `semantic-search.ts`, needs dedicated provider
 - [ ] 7.2 (v3:6.2) — Continuous indexing pipeline → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.2-continuous-indexing.md`
 - [ ] 7.3 (v3:6.3) — Knowledge extractor continuous mode → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.3-extractor-continuous.md`
 - [x] 7.4 (v3:6.4) — Cross-conversation synthesis v2 → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.4-synthesis-v2.md`
