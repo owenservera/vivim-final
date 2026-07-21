@@ -74,6 +74,25 @@ export class OpenCodeClient {
   }
 
   /**
+   * Blocking send — returns the full response as ContentBlock[].
+   * Uses `POST /session/:id/message` with the `parts` body format
+   * (opencode v1.17.15 official API, verified 2026-07-19).
+   */
+  async sendMessage(sessionId: string, text: string): Promise<{ blocks: ContentBlock[] }> {
+    const res = await this.req(`/session/${sessionId}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parts: [{ type: 'text', text }] }),
+    })
+    // The /message endpoint returns ContentBlock[] directly (not wrapped).
+    const data = await res.json()
+    const blocks: ContentBlock[] = Array.isArray(data)
+      ? data
+      : (data?.blocks ?? data?.content ?? [])
+    return { blocks }
+  }
+
+  /**
    * Subscribe to the SSE event stream for a session. Returns an unsubscribe fn.
    * Each frame is parsed via parseOpencodeJson; non-event lines are skipped.
    */
@@ -96,11 +115,16 @@ export class OpenCodeClient {
           if (done) break
           buf += decoder.decode(value, { stream: true })
           let nl: number
-          while ((nl = buf.indexOf('\n')) >= 0) {
+          nl = buf.indexOf('\n')
+          while (nl >= 0) {
             const line = buf.slice(0, nl).trim()
             buf = buf.slice(nl + 1)
-            if (!line || line.startsWith(':')) continue
+            if (!line || line.startsWith(':')) {
+              nl = buf.indexOf('\n')
+              continue
+            }
             this.dispatchFrame(line, onEvent)
+            nl = buf.indexOf('\n')
           }
         }
       } catch {

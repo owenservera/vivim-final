@@ -14,54 +14,12 @@ if (-not $projectRoot) { $projectRoot = $PWD.Path }
 $runtimeDir = Join-Path $projectRoot ".runtime"
 
 New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null
+. (Join-Path $PSScriptRoot '_shared.ps1')
 
-function Log($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') $msg" -ForegroundColor DarkGray }
-function LogOk($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [OK] $msg" -ForegroundColor Green }
-function LogWarn($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [WARN] $msg" -ForegroundColor Yellow }
-function LogFail($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [FAIL] $msg" -ForegroundColor Red }
-
-function Resolve-Bun {
-    $candidates = @(
-        "C:\Users\VIVIM.inc\.bun\bin\bun.exe",
-        (Join-Path $env:LOCALAPPDATA "bun\bun.exe"),
-        "C:\Program Files\bun\bun.exe"
-    )
-    foreach ($c in $candidates) {
-        if ($c -and (Test-Path $c)) { return $c }
-    }
-    $cmd = Get-Command bun -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
-    return "bun"
-}
-
-function Kill-Port($port) {
-    try {
-        $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
-        foreach ($conn in $conns) {
-            try { Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue } catch {}
-        }
-        Start-Sleep -Milliseconds 300
-    } catch {}
-}
-
-function Stop-ByPidFile($name) {
-    $pidFile = Join-Path $runtimeDir "$name.pid"
-    if (Test-Path $pidFile) {
-        $procPid = Get-Content $pidFile -ErrorAction SilentlyContinue
-        if ($procPid) {
-            try { Stop-Process -Id ([int]$procPid) -Force -ErrorAction SilentlyContinue } catch {}
-        }
-        Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
-    }
-}
-
-function Find-PidOnPort($port) {
-    try {
-        $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
-        if ($conns) { return $conns | Select-Object -First 1 -ExpandProperty OwningProcess }
-    } catch {}
-    return $null
-}
+function Log($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') $msg" }
+function LogOk($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [OK] $msg" }
+function LogWarn($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [WARN] $msg" }
+function LogFail($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [FAIL] $msg" }
 
 # ── Main ────────────────────────────────────────────────────────────
 
@@ -91,21 +49,12 @@ if (-not $FrontendOnly) {
         }
     } catch {}
 
-    # Clear old logs
-    $backendLog = Join-Path $runtimeDir "backend-out.log"
-    $backendErr = Join-Path $runtimeDir "backend-err.log"
-    if (Test-Path $backendLog) { Clear-Content $backendLog -ErrorAction SilentlyContinue }
-    if (Test-Path $backendErr) { Clear-Content $backendErr -ErrorAction SilentlyContinue }
-
     # ── Resolve backend port (zombie-safe) ──
     $backendPort = 9420
     $portPid = Find-PidOnPort $backendPort
     if ($portPid) {
-        $proc = Get-Process -Id $portPid -ErrorAction SilentlyContinue
-        if ($proc) {
-            Stop-Process -Id $portPid -Force -ErrorAction SilentlyContinue
-            Start-Sleep -Milliseconds 400
-        }
+        Kill-Pid $portPid
+        Start-Sleep -Milliseconds 400
     }
     # Re-check after kill attempt — zombie sockets can't be killed
     $portPid = Find-PidOnPort $backendPort
@@ -127,8 +76,6 @@ if (-not $FrontendOnly) {
     if ($existingChromePort) { $env:VIVIM_ADOPT_PORT = [string]$existingChromePort } else { Remove-Item Env:VIVIM_ADOPT_PORT -ErrorAction SilentlyContinue }
     $proc = Start-Process -FilePath $bunExe -ArgumentList "run", "serve" `
         -WorkingDirectory $projectRoot `
-        -RedirectStandardOutput $backendLog `
-        -RedirectStandardError $backendErr `
         -WindowStyle Hidden `
         -PassThru `
         -ErrorAction SilentlyContinue
@@ -158,8 +105,7 @@ if (-not $FrontendOnly) {
 
 # ── Frontend ───────────────────────────────────────────────────────
 if (-not $BackendOnly) {
-    Stop-ByPidFile "frontend"
-    Kill-Port 5173
+    Stop-ByPidFile $runtimeDir "frontend"
 
     $frontendDir = Join-Path $projectRoot "web\ui"
     if (-not (Test-Path $frontendDir)) {
@@ -172,11 +118,24 @@ if (-not $BackendOnly) {
             Pop-Location
         }
 
-        Log "Phase 3: Launch frontend on :5173"
-        $proc = Start-Process -FilePath $bunExe -ArgumentList "run", "vite", "dev", "--port", "5173", "--strictPort" `
+        # Port scan for frontend (mirror backend: walk UP from 5173 if zombie-held)
+        $frontendPort = 5173
+        Kill-Port $frontendPort
+        if (-not (Test-PortFree $frontendPort)) {
+            LogWarn ":$frontendPort zombie-held. Scanning for free port..."
+            $candidate = $frontendPort + 1
+            while ($candidate -lt ($frontendPort + 50)) {
+                if (Test-PortFree $candidate) { $frontendPort = $candidate; break }
+                $candidate++
+            }
+            LogWarn "Using :$frontendPort"
+        }
+        $frontendPort | Set-Content (Join-Path $runtimeDir "frontend.port") -Force
+
+        Log "Phase 3: Launch frontend on :$frontendPort"
+        $frontendPort = 3000  # Next.js dev server
+        $proc = Start-Process -FilePath $bunExe -ArgumentList "run", "dev" `
             -WorkingDirectory $frontendDir `
-            -RedirectStandardOutput (Join-Path $runtimeDir "frontend-out.log") `
-            -RedirectStandardError (Join-Path $runtimeDir "frontend-err.log") `
             -WindowStyle Hidden `
             -PassThru `
             -ErrorAction SilentlyContinue
@@ -187,10 +146,10 @@ if (-not $BackendOnly) {
 
             $deadline = [DateTime]::Now.AddSeconds(25)
             while ([DateTime]::Now -lt $deadline) {
-                $portPid = Find-PidOnPort 5173
+                $portPid = Find-PidOnPort $frontendPort
                 if ($portPid) {
                     $portPid | Set-Content (Join-Path $runtimeDir "frontend.pid") -Force
-                    LogOk "Frontend listening on :5173 (PID $portPid)"
+                    LogOk "Frontend listening on :$frontendPort (PID $portPid)"
                     $frontendOk = $true
                     break
                 }
@@ -200,7 +159,7 @@ if (-not $BackendOnly) {
             }
             if (-not $frontendOk -and $proc) {
                 $stillAlive = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
-                if ($stillAlive) { LogWarn "Frontend started but :5173 not yet bound" }
+                if ($stillAlive) { LogWarn "Frontend started but :$frontendPort not yet bound" }
             }
         } else {
             LogFail "Failed to start frontend"
@@ -209,19 +168,21 @@ if (-not $BackendOnly) {
 }
 
 # ── Summary ────────────────────────────────────────────────────────
-# Re-read the chosen port from .runtime/backend.port (the launcher may have
-# fallen back from :9420 to a free port due to a zombie socket). This ensures
-# the printed URL matches what clients actually resolve.
+# Re-read the chosen ports from .runtime/*.port (the launcher may have
+# fallen back from defaults to free ports due to zombie sockets).
 $backendPort = 9420
 $portFile = Join-Path $runtimeDir "backend.port"
 if (Test-Path $portFile) { $backendPort = [int](Get-Content $portFile -ErrorAction SilentlyContinue) }
 
+$frontendPort = 5173
+$fePortFile = Join-Path $runtimeDir "frontend.port"
+if (Test-Path $fePortFile) { $frontendPort = [int](Get-Content $fePortFile -ErrorAction SilentlyContinue) }
+
 Write-Host ""
 Write-Host "========================================" -ForegroundColor White
 if ($backendOk) { Write-Host "  Backend:  http://localhost:$backendPort" -ForegroundColor Cyan } else { Write-Host "  Backend:  FAILED" -ForegroundColor Red }
-if ($frontendOk) { Write-Host "  Frontend: http://localhost:5173" -ForegroundColor Cyan } elseif (-not $BackendOnly) { Write-Host "  Frontend: FAILED" -ForegroundColor Red }
+if ($frontendOk) { Write-Host "  Frontend: http://localhost:$frontendPort" -ForegroundColor Cyan } elseif (-not $BackendOnly) { Write-Host "  Frontend: FAILED" -ForegroundColor Red }
 Write-Host "  Health:   http://localhost:$backendPort/health" -ForegroundColor Gray
-Write-Host "  Logs:     .runtime/*.log" -ForegroundColor Gray
 Write-Host "========================================" -ForegroundColor White
 Write-Host ""
 Write-Host "Stop: pwsh scripts/stop-all.ps1" -ForegroundColor Yellow

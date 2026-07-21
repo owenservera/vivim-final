@@ -77,7 +77,7 @@ function readFlag(name: string): string | undefined {
 const PROFILE_BASE =
   readFlag('--profile-base') ??
   process.env.CAP_STORE_PROFILE_DIR ??
-  join(process.cwd(), 'data', 'chrome-profiles', 'by-provider-then-account')
+  'chrome-profiles'  // matches default in ProfileAllocator + FleetSupervisor
 
 const BASE_PORT = 9222
 

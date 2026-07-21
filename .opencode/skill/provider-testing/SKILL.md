@@ -19,7 +19,7 @@ discover → infer → test-selectors → test-parse → test-cap → test-front
 | infer | `bun run devops runtime-test onboard infer --provider=<slug>` | Confidence >= 0.7 |
 | test-selectors | `bun run devops runtime-test onboard test-selectors --provider=<slug>` | All selectors match live DOM |
 | test-parse | `bun run devops runtime-test onboard test-parse --provider=<slug>` | All known formats parse |
-| test-cap | `bun run devops runtime-test onboard test-cap --provider=<slug>` | Capability resolves via `/api/interpret` |
+| test-cap | `bun run devops runtime-test onboard test-cap --provider=<slug>` | Capability resolves via `/api/capabilities/:id/execute` |
 | test-frontend | `bun run devops runtime-test onboard test-frontend --provider=<slug>` | UI renders capability |
 | verify | `bun run devops runtime-test onboard verify --provider=<slug>` | CLI + API + MCP + UI all resolve |
 | converge | `bun run devops runtime-test onboard converge --provider=<slug>` | No drift from spec |
@@ -112,7 +112,7 @@ bun test tests/e2e/provider-stream-validate.test.ts
 bun run devops runtime-test test --nl="send message to gemini"
 
 # Test capability by slug
-bun run devops runtime-test test-cap --slug=gemini_send
+bun run devops runtime-test test-cap --slug=conversation_send
 
 # Full onboarding cycle
 bun run devops runtime-test onboard run --provider=gemini

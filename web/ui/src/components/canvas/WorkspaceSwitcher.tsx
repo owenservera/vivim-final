@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import type { WorkspaceTaxonomy } from '../../shared/workspace';
+import { getApiUrl } from '../../shared/api-config';
 
 export interface WorkspaceSwitcherProps {
   currentWorkspaceId: string;
@@ -32,7 +33,7 @@ export function WorkspaceSwitcher({
 
   useEffect(() => {
     let cancelled = false;
-    fetch('http://localhost:9420/api/workspace/list')
+    fetch(getApiUrl('/api/workspace/list'))
       .then((r) => r.json())
       .then((data: { ok: boolean; workspaces: WorkspaceTaxonomy[] }) => {
         if (!cancelled && data.ok) {

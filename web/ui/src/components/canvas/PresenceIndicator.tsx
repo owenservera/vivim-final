@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 /**
  * components/canvas/PresenceIndicator.tsx (#7)
@@ -8,37 +8,42 @@
  * are a separate component (CanvasCursors).
  */
 
-import { useEffect, useState } from 'react';
-import type { PresenceUser, PresenceCursor } from '../../shared/presence';
+import { useEffect, useState } from 'react'
+import { getApiUrl } from '../../shared/api-config'
+import type { PresenceCursor, PresenceUser } from '../../shared/presence'
 
 export function PresenceIndicator({ workspaceId }: { workspaceId: string }) {
-  const [users, setUsers] = useState<PresenceUser[]>([]);
-  const [cursors, setCursors] = useState<PresenceCursor[]>([]);
+  const [users, setUsers] = useState<PresenceUser[]>([])
+  const [cursors, setCursors] = useState<PresenceCursor[]>([])
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
     const fetchPresence = async () => {
       try {
-        const res = await fetch(`/api/presence/list?workspaceId=${encodeURIComponent(workspaceId)}`);
-        const data = (await res.json()) as { ok: boolean; users: PresenceUser[] };
-        if (!cancelled && data.ok) setUsers(data.users);
-        const cRes = await fetch(`/api/presence/cursors?workspaceId=${encodeURIComponent(workspaceId)}`);
-        const cData = (await cRes.json()) as { ok: boolean; cursors: PresenceCursor[] };
-        if (!cancelled && cData.ok) setCursors(cData.cursors);
+        const res = await fetch(
+          getApiUrl(`/api/presence/list?workspaceId=${encodeURIComponent(workspaceId)}`),
+        )
+        const data = (await res.json()) as { ok: boolean; users: PresenceUser[] }
+        if (!cancelled && data.ok) setUsers(data.users)
+        const cRes = await fetch(
+          getApiUrl(`/api/presence/cursors?workspaceId=${encodeURIComponent(workspaceId)}`),
+        )
+        const cData = (await cRes.json()) as { ok: boolean; cursors: PresenceCursor[] }
+        if (!cancelled && cData.ok) setCursors(cData.cursors)
       } catch {
         // ignore
       }
-    };
-    fetchPresence();
-    const t = setInterval(fetchPresence, 5_000);
+    }
+    fetchPresence()
+    const t = setInterval(fetchPresence, 5_000)
     return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
-  }, [workspaceId]);
+      cancelled = true
+      clearInterval(t)
+    }
+  }, [workspaceId])
 
-  const visibleUsers = users.slice(0, 5);
-  const overflow = users.length - visibleUsers.length;
+  const visibleUsers = users.slice(0, 5)
+  const overflow = users.length - visibleUsers.length
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -94,11 +99,11 @@ export function PresenceIndicator({ workspaceId }: { workspaceId: string }) {
         </span>
       )}
     </div>
-  );
+  )
 }
 
 function CursorLayer({ cursors }: { cursors: PresenceCursor[] }) {
-  if (cursors.length === 0) return null;
+  if (cursors.length === 0) return null
   return (
     <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 900 }}>
       {cursors.map((c) => (
@@ -115,7 +120,12 @@ function CursorLayer({ cursors }: { cursors: PresenceCursor[] }) {
           }}
         >
           <svg width="20" height="20" viewBox="0 0 20 20">
-            <path d="M2 2 L18 10 L10 11 L8 18 Z" fill={c.user.avatarColor} stroke="white" strokeWidth="1.5" />
+            <path
+              d="M2 2 L18 10 L10 11 L8 18 Z"
+              fill={c.user.avatarColor}
+              stroke="white"
+              strokeWidth="1.5"
+            />
           </svg>
           <span
             style={{
@@ -135,5 +145,5 @@ function CursorLayer({ cursors }: { cursors: PresenceCursor[] }) {
         </div>
       ))}
     </div>
-  );
+  )
 }

@@ -3,10 +3,12 @@
 
 import { newId } from '../../ids.js'
 import type {
+  CapabilityBindingMatrixRow,
   CapabilityBindingRow,
   CapabilityProgramRow,
   CapabilityStore,
   CapabilityTaxonomyRow,
+  DriftEventInput,
   OutcomeInput,
   OutcomeRow,
   SelectorStrategyRow,
@@ -297,5 +299,45 @@ export class CapabilityStoreImpl implements CapabilityStore {
       })
     }
     return rows
+  }
+
+  async listBindings(providers?: string[]): Promise<CapabilityBindingMatrixRow[]> {
+    const where: PrismaLoose = providers?.length ? { providerId: { in: providers } } : {}
+    const rows = (await this.p.capabilityBinding.findMany({
+      where,
+      select: {
+        id: true,
+        globalId: true,
+        providerId: true,
+        status: true,
+        confidence: true,
+      },
+    })) as Array<{
+      id: string
+      globalId: string
+      providerId: string
+      status: string
+      confidence: number
+    }>
+    return rows.map((r) => ({
+      id: r.id,
+      globalId: r.globalId,
+      providerId: r.providerId,
+      status: r.status,
+      confidence: r.confidence,
+    }))
+  }
+
+  async recordDrift(input: DriftEventInput): Promise<void> {
+    await this.p.driftEvent.create({
+      data: {
+        id: input.id,
+        providerId: input.providerId,
+        capabilitySlug: input.capabilitySlug,
+        selector: input.selector,
+        status: input.status,
+        detectedAt: Date.now(),
+      },
+    })
   }
 }

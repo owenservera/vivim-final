@@ -456,8 +456,8 @@ describe('slot binding audit hook', () => {
       componentId: string
     }>
     expect(active.length).toBe(1)
-    expect(active[0]!.id).toBe(s2)
-    expect(active[0]!.componentId).toBe('B')
+    expect(active[0]?.id).toBe(s2)
+    expect(active[0]?.componentId).toBe('B')
     void s1
   })
 })

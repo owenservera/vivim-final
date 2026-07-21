@@ -91,6 +91,29 @@ export interface SnapshotRow {
   uiInputSchema: string
 }
 
+export interface CapabilityBindingMatrixRow {
+  id: string
+  globalId: string
+  providerId: string
+  status: string
+  confidence: number
+}
+
+export interface DriftEventInput {
+  id: string
+  providerId: string
+  capabilitySlug: string
+  selector: string
+  status: string
+}
+
+export interface SelectorDriftRow {
+  id: string
+  providerId: string
+  capabilitySlug: string
+  selector: string
+}
+
 export interface CapabilityStore {
   getCapability(id: string): Promise<CapabilityTaxonomyRow | null>
   getCapabilityBySlug(slug: string): Promise<CapabilityTaxonomyRow | null>
@@ -111,4 +134,8 @@ export interface CapabilityStore {
    * providers, joined to taxonomy + best program. No per-request DB hits.
    */
   loadSnapshot(providerIds: string[]): Promise<SnapshotRow[]>
+  /** Provider test harness — list capability bindings for testing. (Unit 6.10) */
+  listBindings(providers?: string[]): Promise<CapabilityBindingMatrixRow[]>
+  /** Provider test harness — record selector drift. (Unit 6.10) */
+  recordDrift(input: DriftEventInput): Promise<void>
 }

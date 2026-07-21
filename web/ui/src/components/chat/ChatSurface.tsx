@@ -17,6 +17,8 @@ import { useWebSocket, type WsMessage } from '@/hooks/useWebSocket';
 import { HealthIndicator } from './HealthIndicator';
 import { ConversationList } from './ConversationList';
 import { Composer } from './Composer';
+import { bootMlSlots } from '@/ml/ml-boot';
+import { RelatedNodes } from '@/components/canvas/RelatedNodes';
 
 export function ChatSurface({ defaultProviderId }: { defaultProviderId?: string }) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -45,6 +47,11 @@ export function ChatSurface({ defaultProviderId }: { defaultProviderId?: string 
     setActiveId(id || null);
   }, []);
 
+  // Register host-canvas ML slot defaults once.
+  useEffect(() => {
+    bootMlSlots();
+  }, []);
+
   const forwardedWs = useMemo(() => lastWs, [lastWs]);
 
   return (
@@ -52,9 +59,9 @@ export function ChatSurface({ defaultProviderId }: { defaultProviderId?: string 
       data-moment-surface="chat"
       style={{
         display: 'grid',
-        gridTemplateColumns: '260px 1fr',
+        gridTemplateColumns: '260px 240px 1fr',
         gridTemplateRows: 'auto 1fr',
-        gridTemplateAreas: `'health health' 'list composer'`,
+        gridTemplateAreas: `'health health health' 'list related composer'`,
         height: '100%',
         width: '100%',
         minHeight: 0,
@@ -68,6 +75,9 @@ export function ChatSurface({ defaultProviderId }: { defaultProviderId?: string 
       </div>
       <div style={{ gridArea: 'list', borderRight: '1px solid var(--border)', minHeight: 0 }}>
         <ConversationList activeId={activeId} onSelect={handleSelect} defaultProviderId={defaultProviderId} />
+      </div>
+      <div style={{ gridArea: 'related', borderRight: '1px solid var(--border)', minHeight: 0, overflowY: 'auto' }}>
+        <RelatedNodes query={activeId ?? undefined} />
       </div>
       <div style={{ gridArea: 'composer', minHeight: 0, display: 'flex' }}>
         <Composer conversationId={activeId} wsStatus={status} wsMessage={forwardedWs} />

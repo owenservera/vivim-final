@@ -10,7 +10,6 @@
 //
 // Agent-safe: all operations have bounded timeouts.
 
-import { existsSync } from 'node:fs'
 import { EngineError } from '../errors.js'
 import { launchChrome } from '../executor/launcher.js'
 import type { ProfileAllocator } from '../executor/profile-allocator.js'
@@ -45,8 +44,11 @@ export class ChromeSetupWizard {
     const account = await this.db.prisma.providerAccount.findFirst({
       where: { providerId: providerDbId, email: accountId },
     })
-    if (account?.profileDir && account?.loginState === 'logged_in') {
-      if (existsSync(account.profileDir)) return false
+    // The profile directory's cookies are the source of truth for "logged in"
+    // (AGENTS.md:131). A DB loginState row alone is not sufficient — the
+    // cleanup tool may have removed the dir while the row lingered.
+    if (account?.profileDir && (await this.profileAllocator.isAuthenticated(account.profileDir))) {
+      return false
     }
     return true
   }
@@ -266,34 +268,44 @@ export class ChromeSetupWizard {
   ): Promise<void> {
     const now = BigInt(Date.now())
 
-    await this.db.prisma.providerAccount.upsert({
-      where: {
-        providerId_email: { providerId: providerDbId, email: accountId },
-      },
-      create: {
-        id: `setup_${providerDbId}_${accountId}_${Date.now()}`,
-        providerId: providerDbId,
-        email: accountId,
-        planTier: 'free',
-        isDefault: 1,
-        isKind: 0,
-        loginState: 'logged_in',
-        loginAttempts: 1,
-        lastLoginAt: now,
-        profileDir,
-        debugPort,
-        createdAt: now,
-        updatedAt: now,
-      },
-      update: {
-        loginState: 'logged_in',
-        lastLoginAt: now,
-        profileDir,
-        debugPort,
-        loginAttempts: { increment: 1 },
-        updatedAt: now,
-      },
-    })
+    // Enforce a single isDefault per provider: demote any existing default
+    // before promoting this account (specs/033-profile-cleanup FR — DB sync
+    // with the cleanup tool's keep-candidate).
+    await this.db.prisma.$transaction([
+      this.db.prisma.providerAccount.updateMany({
+        where: { providerId: providerDbId, isDefault: 1 },
+        data: { isDefault: 0 },
+      }),
+      this.db.prisma.providerAccount.upsert({
+        where: {
+          providerId_email: { providerId: providerDbId, email: accountId },
+        },
+        create: {
+          id: `setup_${providerDbId}_${accountId}_${Date.now()}`,
+          providerId: providerDbId,
+          email: accountId,
+          planTier: 'free',
+          isDefault: 1,
+          isKind: 0,
+          loginState: 'logged_in',
+          loginAttempts: 1,
+          lastLoginAt: now,
+          profileDir,
+          debugPort,
+          createdAt: now,
+          updatedAt: now,
+        },
+        update: {
+          loginState: 'logged_in',
+          lastLoginAt: now,
+          profileDir,
+          debugPort,
+          isDefault: 1,
+          loginAttempts: { increment: 1 },
+          updatedAt: now,
+        },
+      }),
+    ])
   }
 
   /**

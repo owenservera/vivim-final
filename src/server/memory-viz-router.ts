@@ -95,6 +95,28 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       }
     }
 
+    // POST /api/memory/assert  { content } — persist a semantic fact
+    if (path === '/api/memory/assert' && req.method === 'POST') {
+      let body: { content?: string }
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+      } catch {
+        return { status: 400, body: { error: 'invalid json body' } }
+      }
+      const content = (body.content ?? '').trim()
+      if (!content) {
+        return { status: 400, body: { error: 'content required' } }
+      }
+      await memory.assertFact({
+        subject: content,
+        predicate: 'asserted',
+        object: content,
+        confidence: 1.0,
+        source: 'memory-viz-router',
+      })
+      return { status: 201, body: { ok: true } }
+    }
+
     // POST /api/memory/curate  { id, memoryType, memoryId, action }
     if (path === '/api/memory/curate' && req.method === 'POST') {
       if (!curatedStore) {

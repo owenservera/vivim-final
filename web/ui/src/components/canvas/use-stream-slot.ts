@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { StreamEvent, StreamSession, StreamState } from '../../shared/streaming';
 import { STREAM_STATE_INDICATOR } from '../../shared/streaming';
+import { getApiUrl } from '../../shared/api-config';
 
 export interface UseStreamSlotOptions {
   nodeId: string;
@@ -74,7 +75,7 @@ export function useStreamSlot(opts: UseStreamSlotOptions): UseStreamSlotResult {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    fetch('http://localhost:9420/api/canvas/node/stream', {
+    fetch(getApiUrl('/api/canvas/node/stream'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nodeId, capabilityId, input: input ?? {} }),

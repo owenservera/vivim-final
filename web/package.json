@@ -4,16 +4,14 @@
   "type": "module",
   "workspaces": [
     "sandbox",
-    "app",
     "ui",
     "api-client"
   ],
   "scripts": {
     "dev": "bun run --cwd sandbox dev",
     "dev:sandbox": "bun run --cwd sandbox dev",
-    "dev:app": "bun run --cwd app dev",
-    "build": "bun run --cwd sandbox build && bun run --cwd app build",
-    "typecheck": "bun run --cwd sandbox typecheck && bun run --cwd app typecheck && bun run --cwd ui typecheck && bun run --cwd api-client typecheck",
+    "build": "bun run --cwd sandbox build",
+    "typecheck": "bun run --cwd sandbox typecheck && bun run --cwd ui typecheck && bun run --cwd api-client typecheck",
     "lint": "biome check web/"
   }
 }

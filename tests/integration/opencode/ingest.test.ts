@@ -91,14 +91,14 @@ describe('S1/S2: ingest projection + thread render', () => {
     expect(agentSession?.providerId).toBe('opencode')
 
     const perms = await prisma.agentPermissionDecision.findMany({
-      where: { agentSessionId: agentSession!.id },
+      where: { agentSessionId: agentSession?.id },
     })
     expect(perms.length).toBe(1)
     expect(perms[0].toolName).toBe('read')
     expect(perms[0].decidedBy).toBe('governor')
 
     const edits = await prisma.agentFileEdit.findMany({
-      where: { agentSessionId: agentSession!.id },
+      where: { agentSessionId: agentSession?.id },
     })
     expect(edits.length).toBe(1)
     expect(JSON.parse(edits[0].patchJson)[0].op).toBe('add')
@@ -106,13 +106,14 @@ describe('S1/S2: ingest projection + thread render', () => {
     const recs = await prisma.eventRecord.findMany({ where: { source: 'opencode' } })
     expect(recs.length).toBeGreaterThanOrEqual(4)
 
+    // biome-ignore lint/style/noNonNullAssertion: agentSession is validated not.toBeNull() above
     const msgs = await store.getAgentMessages(agentSession!.conversationId)
     expect(msgs.length).toBeGreaterThan(0)
 
     // Idempotency: re-ingest same permission id -> no new row.
     await ingest.start(SESSION, {})
     const perms2 = await prisma.agentPermissionDecision.findMany({
-      where: { agentSessionId: agentSession!.id },
+      where: { agentSessionId: agentSession?.id },
     })
     expect(perms2.length).toBe(1)
 

@@ -87,7 +87,7 @@ describe('parseOpencodeJson', () => {
   })
 
   test('ignores malformed lines', () => {
-    const { blocks } = parseOpencodeJson('not json\n' + NDJSON)
+    const { blocks } = parseOpencodeJson(`not json\n${NDJSON}`)
     expect(blocks.some((b) => b.type === 'text')).toBe(true)
   })
 })

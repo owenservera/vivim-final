@@ -231,13 +231,13 @@ export class FleetSupervisor {
   /** Kill any Chrome process whose --user-data-dir contains `profileDir`. */
   private async killExistingChromeForProfile(profileDir: string): Promise<void> {
     try {
-      const ps = Bun.spawnSync(
+      const _ps = Bun.spawnSync(
         process.platform === 'win32'
           ? [
               'powershell',
               '-NoProfile',
               '-Command',
-              `Get-Process chrome -ErrorAction SilentlyContinue | ForEach-Object { try { $_.Path } catch {} }`,
+              'Get-Process chrome -ErrorAction SilentlyContinue | ForEach-Object { try { $_.Path } catch {} }',
             ]
           : ['pgrep', '-f', 'chrome'],
         { stdout: 'pipe', stderr: 'pipe' },
@@ -280,24 +280,50 @@ export class FleetSupervisor {
     }
   }
 
+  private spawnCounter = 0
+
   async spawn(
     providerSlug: string,
     accountId: string,
     opts?: Partial<FleetSpawnOptions>,
   ): Promise<FleetInstance> {
-    const id = `${providerSlug}_${accountId}_${Date.now()}`
+    const id = `${providerSlug}_${accountId}_${Date.now()}_${++this.spawnCounter}`
+
+    // Guard: return existing running instance for this provider+account
+    const existing = [...this.instances.values()].find(
+      (i) =>
+        i.providerSlug === providerSlug &&
+        i.accountId === accountId &&
+        i.status !== 'stopped' &&
+        i.status !== 'crashed' &&
+        i.status !== 'error',
+    )
+    if (existing) return existing
 
     // Check if account has a persisted profile from setup wizard
-    const compositeAccountId = `${providerSlug}_${accountId}`
-    const existingAccount = await this.store.getAccount(compositeAccountId)
+    const existingAccounts = await this.store.getAccountsByProvider(providerSlug)
+    const existingAccount = existingAccounts.find((a) => a.accountSlug === accountId) ?? null
     const profileDir =
       existingAccount?.profileDir ?? (await this.profileAllocator.allocate(providerSlug, accountId))
 
     // Kill any existing Chrome holding this profile's SingletonLock
     await this.killExistingChromeForProfile(profileDir)
 
-    // Use persisted debug port if available
-    const debugPort = opts?.debugPort ?? existingAccount?.debugPort ?? this.allocatePort()
+    // Probe persisted port — if something is listening, don't reuse (could be stale)
+    const persistedPort = existingAccount?.debugPort
+    let reusePort: number | null = null
+    if (persistedPort && !opts?.debugPort) {
+      try {
+        await fetch(`http://127.0.0.1:${persistedPort}/json/version`, {
+          signal: AbortSignal.timeout(500),
+        })
+        // fetch returned a response = port is occupied, don't reuse
+      } catch {
+        // fetch threw = nothing listening, safe to reuse
+        reusePort = persistedPort
+      }
+    }
+    const debugPort = opts?.debugPort ?? reusePort ?? this.allocatePort()
 
     const instance: FleetInstance = {
       id,

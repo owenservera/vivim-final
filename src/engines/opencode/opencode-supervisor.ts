@@ -64,7 +64,9 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
   }
 
   on(event: 'ready' | 'exit' | 'error', cb: (info: unknown) => void): void {
-    ;(this.listeners[event] ??= []).push(cb)
+    const listeners = this.listeners[event] ?? []
+    listeners.push(cb)
+    this.listeners[event] = listeners
   }
 
   private emit(event: string, info: unknown): void {

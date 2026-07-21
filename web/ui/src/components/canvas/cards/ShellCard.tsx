@@ -13,6 +13,7 @@
  */
 
 import { useState } from 'react';
+import { getApiUrl } from '../../../shared/api-config';
 
 interface HistoryEntry {
   command: string;
@@ -50,7 +51,7 @@ export function ShellCard({ workspaceId }: { workspaceId: string }) {
     const entry: HistoryEntry = { command, pending: true };
     setHistory((h) => [...h, entry]);
     try {
-      const res = await fetch('http://localhost:9420/api/canvas/shell', {
+      const res = await fetch(getApiUrl('/api/canvas/shell'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ command, workspaceId }),

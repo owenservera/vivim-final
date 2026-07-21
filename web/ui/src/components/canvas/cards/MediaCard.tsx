@@ -12,6 +12,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { MediaCard as MediaCardRow } from '../../../shared/media';
+import { useMediaStore } from '@/ml/media-runtime';
 
 export interface MediaCardProps {
   media: MediaCardRow;
@@ -24,6 +25,7 @@ export interface MediaCardProps {
 export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: MediaCardProps) {
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [localCaption, setLocalCaption] = useState<{ name: string; score: number }[] | null>(null);
 
   useEffect(() => {
     const el = mediaRef.current;
@@ -107,7 +109,25 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
           </div>
         )}
         {media.kind === 'image' && (
-          <img src={media.sourceUrl} alt={media.title} style={{ width: '100%', borderRadius: 4 }} />
+          <div>
+            <img src={media.sourceUrl} alt={media.title} style={{ width: '100%', borderRadius: 4 }} />
+            <LocalCaption sourceUrl={media.sourceUrl} onResult={setLocalCaption} />
+            {localCaption && localCaption.length > 0 && (
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  border: '1px solid #e5e7eb',
+                  background: '#eef2ff',
+                  fontSize: 11,
+                  color: '#374151',
+                }}
+              >
+                <strong>local caption</strong>: {localCaption.map((l) => l.name).join(', ')}
+              </div>
+            )}
+          </div>
         )}
         {media.kind === 'stream' && (
           <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>
@@ -214,6 +234,53 @@ function formatTime(sec: number): string {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60);
   return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+/**
+ * LocalCaption — runs the MobileNetV2 labels model (host canvas only) on an
+ * image selected by the user. Renders nothing on its own; reports labels up
+ * via `onResult`. Never uploads the image (privacy: local-only understanding).
+ */
+function LocalCaption({
+  sourceUrl,
+  onResult,
+}: {
+  sourceUrl: string;
+  onResult: (labels: { name: string; score: number }[]) => void;
+}) {
+  useEffect(() => {
+    let cancelled = false;
+    // Convert the image to a data URL so the local model can ingest it without
+    // a cross-origin fetch (same-origin model path; image stays on-device).
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      useMediaStore
+        .getState()
+        .label(dataUrl)
+        .then((labels) => {
+          if (!cancelled) onResult(labels);
+        })
+        .catch(() => {
+          if (!cancelled) onResult([]);
+        });
+    };
+    img.onerror = () => {
+      if (!cancelled) onResult([]);
+    };
+    img.src = sourceUrl;
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceUrl, onResult]);
+  return null;
 }
 
 const btnStyle: React.CSSProperties = {

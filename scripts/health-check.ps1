@@ -1,11 +1,12 @@
 #!/usr/bin/env pwsh
 # scripts/health-check.ps1
 # Continuous health check for Vivim backend + frontend
-# Usage: .\scripts\health-check.ps1 [-Interval 30] [-MaxFailures 3]
+# Usage: pwsh scripts/health-check.ps1 [-Interval 30] [-MaxFailures 3] [-Once]
 
 param(
     [int]$Interval = 30,
-    [int]$MaxFailures = 3
+    [int]$MaxFailures = 3,
+    [switch]$Once
 )
 
 # Resolve backend port from .runtime/backend.port (zombie-safe).
@@ -28,6 +29,7 @@ Write-Host "Vivim Health Check" -ForegroundColor Cyan
 Write-Host "Backend:  $BackendUrl" -ForegroundColor Gray
 Write-Host "Frontend: $FrontendUrl" -ForegroundColor Gray
 Write-Host "Interval: ${Interval}s | Max failures: $MaxFailures" -ForegroundColor Gray
+if ($Once) { Write-Host "Mode: single check (no loop)" -ForegroundColor Gray }
 Write-Host ""
 
 function Test-BackendHealth {
@@ -74,10 +76,15 @@ function Show-Status {
     Write-Host "  $icon $Component" -ForegroundColor $color
 }
 
-while ($true) {
-    $totalChecks++
+function Run-Check {
+    param(
+        [ref]$failures,
+        [ref]$totalChecks,
+        [ref]$startTime
+    )
+    $totalChecks.Value++
     $timestamp = Get-Date -Format "HH:mm:ss"
-    Write-Host "[$timestamp] Check #$totalChecks" -ForegroundColor Yellow
+    Write-Host "[$timestamp] Check #$($totalChecks.Value)" -ForegroundColor Yellow
 
     $backendHealthy = Test-BackendHealth
     $frontendHealthy = Test-FrontendHealth
@@ -88,21 +95,33 @@ while ($true) {
     Show-Status "WebSocket" $wsHealthy
 
     if (-not $backendHealthy -or -not $frontendHealthy) {
-        $failures++
-        Write-Host "  WARNING: Failure $failures/$MaxFailures" -ForegroundColor Yellow
+        $failures.Value++
+        Write-Host "  WARNING: Failure $($failures.Value)/$MaxFailures" -ForegroundColor Yellow
 
-        if ($failures -ge $MaxFailures) {
+        if ($failures.Value -ge $MaxFailures) {
             Write-Host ""
             Write-Host "Max failures reached. Exiting." -ForegroundColor Red
-            exit 1
+            return $false
         }
     } else {
-        $failures = 0
+        $failures.Value = 0
     }
 
-    $uptime = (Get-Date) - $startTime
+    $uptime = (Get-Date) - $startTime.Value
     Write-Host "  Uptime: $($uptime.Hours)h $($uptime.Minutes)m $($uptime.Seconds)s" -ForegroundColor Gray
     Write-Host ""
+    return $true
+}
 
+if ($Once) {
+    # Single check — safe for agent sessions, CI, scripts.
+    $ok = Run-Check ([ref]$failures) ([ref]$totalChecks) ([ref]$startTime)
+    if (-not $ok) { exit 1 }
+    exit 0
+}
+
+while ($true) {
+    $ok = Run-Check ([ref]$failures) ([ref]$totalChecks) ([ref]$startTime)
+    if (-not $ok) { exit 1 }
     Start-Sleep -Seconds $Interval
 }

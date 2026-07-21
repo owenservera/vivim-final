@@ -20,50 +20,12 @@ if (-not $projectRoot) { $projectRoot = $PWD.Path }
 $runtimeDir = Join-Path $projectRoot ".runtime"
 
 New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null
+. (Join-Path $PSScriptRoot '_shared.ps1')
 
-function Log($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') $msg" -ForegroundColor DarkGray }
-function LogOk($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [OK] $msg" -ForegroundColor Green }
-function LogWarn($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [WARN] $msg" -ForegroundColor Yellow }
-function LogFail($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [FAIL] $msg" -ForegroundColor Red }
-
-function Resolve-Bun {
-    $candidates = @(
-        "C:\Users\VIVIM.inc\.bun\bin\bun.exe",
-        (Join-Path $env:LOCALAPPDATA "bun\bun.exe"),
-        "C:\Program Files\bun\bun.exe"
-    )
-    foreach ($c in $candidates) {
-        if ($c -and (Test-Path $c)) { return $c }
-    }
-    $cmd = Get-Command bun -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
-    return "bun"
-}
-
-function Find-PidOnPort($port) {
-    try {
-        $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
-        if ($conns) { return $conns | Select-Object -First 1 -ExpandProperty OwningProcess }
-    } catch {}
-    return $null
-}
-
-function Kill-Pid($pidv) {
-    if (-not $pidv) { return }
-    try {
-        $proc = Get-Process -Id $pidv -ErrorAction SilentlyContinue
-        if ($proc) { Stop-Process -Id $pidv -Force -ErrorAction SilentlyContinue }
-    } catch {}
-}
-
-function Stop-ByPidFile($name) {
-    $pidFile = Join-Path $runtimeDir "$name.pid"
-    if (Test-Path $pidFile) {
-        $procPid = Get-Content $pidFile -ErrorAction SilentlyContinue
-        if ($procPid) { Kill-Pid ([int]$procPid) }
-        Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
-    }
-}
+function Log($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') $msg" }
+function LogOk($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [OK] $msg" }
+function LogWarn($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [WARN] $msg" }
+function LogFail($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [FAIL] $msg" }
 
 # A port is "safe to bind" if nothing LISTENING is on it, OR the listener is a
 # zombie (PID dead) which we can't kill but Windows will eventually reclaim —
@@ -90,10 +52,10 @@ function Free-Port($port) {
 $startPort = if ($Port -gt 0) { $Port } elseif ($env:CAP_STORE_PORT -and $env:CAP_STORE_PORT -match '^\d+$') { [int]$env:CAP_STORE_PORT } else { 9420 }
 
 $bunExe = Resolve-Bun
-Write-Host "[backend] Resolving port (start: $startPort)" -ForegroundColor Cyan
+Log "[backend] Resolving port (start: $startPort)"
 
 # Stop any prior backend we own, then try to free the start port.
-Stop-ByPidFile "backend"
+Stop-ByPidFile $runtimeDir "backend"
 $freed = Free-Port $startPort
 
 $chosenPort = $startPort
@@ -111,11 +73,11 @@ if (-not $freed) {
 # Record the chosen port so all clients resolve it identically.
 $chosenPort | Set-Content (Join-Path $runtimeDir "backend.port") -Force
 
+# Launch backend — NO stdout/stderr redirect (prevents pipe deadlock with bun.exe).
+# Output goes to the terminal; log files are unnecessary since we poll the port.
 $env:CAP_STORE_PORT = [string]$chosenPort
 $proc = Start-Process -FilePath $bunExe -ArgumentList "run", "serve" `
     -WorkingDirectory $projectRoot `
-    -RedirectStandardOutput (Join-Path $runtimeDir "backend-out.log") `
-    -RedirectStandardError (Join-Path $runtimeDir "backend-err.log") `
     -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
 
 if ($proc) {

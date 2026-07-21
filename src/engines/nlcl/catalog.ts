@@ -570,6 +570,75 @@ const llmPatterns: CommandPattern[] = [
     aiFallback: true,
     execute: async () => ({}),
   }),
+
+  // ── LLM-as-Human testing (Spec 032) ──────────────────────────────────
+  // Source-level NL bindings so "run llm tests" / "check capability parity"
+  // resolve through the catalog → UnifiedCapabilityRegistry (One Entry Point).
+  pattern('llm.test.run', 'llm.test.run', 'Run the LLM-as-Human test suite', {
+    patterns: [
+      {
+        regex:
+          /^(?:run\s+)?llm[- ]?tests?(?:\s+(?:in|on|across)\s+(\w+))?|test\s+(?:the\s+)?(?:platform|system|all\s+surfaces)/,
+        priority: 16,
+        keywords: ['llm test', 'llm-test', 'run tests', 'test suite'],
+        extract: (m) => ({
+          mode: 'smoke',
+          surfaces: m[1] ? [m[1]] : undefined,
+        }),
+      },
+    ],
+    aliases: ['llm-test run', 'run llm tests', 'test platform'],
+    examples: ['run llm tests', 'llm-test run --mode full', 'test the platform'],
+    inputSchema: z.object({
+      mode: z.string().optional(),
+      surfaces: z.array(z.string()).optional(),
+      providers: z.array(z.string()).optional(),
+    }),
+    executor: 'capability',
+    category: 'llm',
+    classification: 'system',
+    capabilityId: 'cap:llm_test:run',
+    execute: async () => ({}),
+  }),
+
+  pattern('llm.test.parity', 'llm.test.parity', 'Verify cross-surface capability parity', {
+    patterns: [
+      {
+        regex:
+          /(?:check|verify|show)\s+(?:cross[- ]?surface\s+)?(?:parity|capability\s+parity)|is\s+(?:everything\s+)?frontend\s*=?\s*backend/,
+        priority: 16,
+        keywords: ['parity', 'cross-surface', 'frontend backend'],
+        extract: () => ({}),
+      },
+    ],
+    aliases: ['llm-test parity', 'check parity', 'verify parity'],
+    examples: ['check parity', 'verify cross-surface parity', 'is frontend = backend'],
+    inputSchema: z.object({}),
+    executor: 'capability',
+    category: 'llm',
+    classification: 'system',
+    capabilityId: 'cap:llm_test:parity',
+    execute: async () => ({}),
+  }),
+
+  pattern('llm.test.status', 'llm.test.status', 'Show LLM test coverage and priorities', {
+    patterns: [
+      {
+        regex: /llm[- ]?test\s+(?:status|coverage)|test\s+coverage/,
+        priority: 15,
+        keywords: ['llm test status', 'test coverage'],
+        extract: () => ({}),
+      },
+    ],
+    aliases: ['llm-test status', 'test coverage'],
+    examples: ['llm-test status', 'show test coverage'],
+    inputSchema: z.object({}),
+    executor: 'capability',
+    category: 'llm',
+    classification: 'system',
+    capabilityId: 'cap:llm_test:status',
+    execute: async () => ({}),
+  }),
 ]
 
 // ── EMAIL patterns ────────────────────────────────────────────────────────

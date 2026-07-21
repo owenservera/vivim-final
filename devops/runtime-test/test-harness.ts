@@ -16,10 +16,10 @@ export async function runLiveTest(spec: TestSpec): Promise<{ ok: boolean; failur
   const failures: string[] = []
   for (const step of spec.steps) {
     try {
-      const res = await fetch(`${backendBaseUrl()}/api/interpret`, {
+      const res = await fetch(`${backendBaseUrl()}/api/nlcl/interpret`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: step.nl }),
+        body: JSON.stringify({ input: step.nl }),
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       })
       const data = (await res.json()) as { ok: boolean; text?: string }

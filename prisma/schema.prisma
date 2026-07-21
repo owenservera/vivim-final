@@ -1345,16 +1345,13 @@ model CircuitBreakerState {
 }
 
 model DriftEvent {
-  id           String  @id
-  providerId   String  @map("provider_id")
-  capabilityId String? @map("capability_id")
-  bindingId    String? @map("binding_id")
-  driftType    String  @map("drift_type")
-  severity     String  @default("warning")
-  description  String?
-  resolved     Int     @default(0)
+  id            String  @id
+  providerId    String  @map("provider_id")
+  capabilitySlug  String  @map("capability_slug") // Per-provider capability slug (not taxonomy id)
+  selector      String? @map("selector") // The drifted selector (optional)
   detectedAt   BigInt  @map("detected_at")
   resolvedAt   BigInt? @map("resolved_at")
+  status        String   @default("open") // open | resolved | accepted
 
   provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
@@ -1931,11 +1928,11 @@ model SemanticMemory {
   subject    String
   predicate  String
   objectJson String  @map("object_json")
-  confidence Float   @default(1.0)
-  source     String
-  timestamp  Int
-  expiresAt  BigInt? @map("expires_at")
-  createdAt  BigInt  @map("created_at")
+    confidence Float   @default(1.0)
+    source     String
+    timestamp  BigInt
+    expiresAt  BigInt? @map("expires_at")
+    createdAt  BigInt  @map("created_at")
 
   @@map("semantic_memory")
 }

@@ -356,10 +356,12 @@ export class ConversationManager {
         }
       }
     }
+    // Use ensureRunningForAccount so the duplicate-instance guard in
+    // FleetSupervisor.spawn prevents concurrent callers from spawning extras.
     try {
-      await this.governor.spawn(conv.providerId, account.id, { visible: false })
+      await this.governor.ensureRunningForAccount(conv.providerId, account.id)
     } catch {
-      // ignore — ensureRunningForAccount will try again
+      // ignore — sendInternal will retry
     }
   }
 

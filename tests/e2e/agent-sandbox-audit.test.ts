@@ -154,7 +154,7 @@ describe('AGENT4 — agent-sandbox-audit (offline parser contract)', () => {
   })
 
   it('tolerates malformed lines without throwing', () => {
-    const raw = 'not-json\n' + ndjsonFixture({ text: 'ok', sessionID: 'sess_4' }) + '\n\n'
+    const raw = `not-json\n${ndjsonFixture({ text: 'ok', sessionID: 'sess_4' })}\n\n`
     expect(() => parseOpencodeJson(raw)).not.toThrow()
     const { blocks } = parseOpencodeJson(raw)
     expect(blocks.some((b) => b.type === 'text')).toBe(true)

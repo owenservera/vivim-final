@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 /**
  * components/canvas/AuditDashboard.tsx (#8)
@@ -10,47 +10,50 @@
  * Export as JSON lines (NDJSON).
  */
 
-import { useEffect, useState } from 'react';
-import type { AuditEntry, AuditStats } from '../../shared/audit';
+import { useEffect, useState } from 'react'
+import { getApiUrl } from '../../shared/api-config'
+import type { AuditEntry, AuditStats } from '../../shared/audit'
 
 export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
-  const [entries, setEntries] = useState<AuditEntry[]>([]);
-  const [stats, setStats] = useState<AuditStats | null>(null);
-  const [filter, setFilter] = useState<{ engine?: string; ok?: boolean; limit: number }>({ limit: 100 });
+  const [entries, setEntries] = useState<AuditEntry[]>([])
+  const [stats, setStats] = useState<AuditStats | null>(null)
+  const [filter, setFilter] = useState<{ engine?: string; ok?: boolean; limit: number }>({
+    limit: 100,
+  })
 
   const fetchAudit = async () => {
-    const params = new URLSearchParams({ limit: String(filter.limit) });
-    if (filter.engine) params.set('engine', filter.engine);
-    if (filter.ok !== undefined) params.set('ok', String(filter.ok));
-    const res = await fetch(`/api/audit/list?${params}`);
-    const data = (await res.json()) as { ok: boolean; entries: AuditEntry[] };
-    if (data.ok) setEntries(data.entries);
+    const params = new URLSearchParams({ limit: String(filter.limit) })
+    if (filter.engine) params.set('engine', filter.engine)
+    if (filter.ok !== undefined) params.set('ok', String(filter.ok))
+    const res = await fetch(getApiUrl(`/api/audit/list?${params}`))
+    const data = (await res.json()) as { ok: boolean; entries: AuditEntry[] }
+    if (data.ok) setEntries(data.entries)
 
-    const sRes = await fetch(`/api/audit/stats?${params}`);
-    const sData = (await sRes.json()) as { ok: boolean; stats: AuditStats };
-    if (sData.ok) setStats(sData.stats);
-  };
+    const sRes = await fetch(getApiUrl(`/api/audit/stats?${params}`))
+    const sData = (await sRes.json()) as { ok: boolean; stats: AuditStats }
+    if (sData.ok) setStats(sData.stats)
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchAudit();
-    const t = setInterval(fetchAudit, 15_000);
-    return () => clearInterval(t);
-  }, [filter, workspaceId]);
+    fetchAudit()
+    const t = setInterval(fetchAudit, 15_000)
+    return () => clearInterval(t)
+  }, [filter, workspaceId])
 
   const exportAudit = async () => {
-    const params = new URLSearchParams();
-    if (filter.engine) params.set('engine', filter.engine);
-    const res = await fetch(`/api/audit/export?${params}`);
-    const text = await res.text();
-    const blob = new Blob([text], { type: 'application/x-ndjson' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `audit-${Date.now()}.ndjson`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    const params = new URLSearchParams()
+    if (filter.engine) params.set('engine', filter.engine)
+    const res = await fetch(getApiUrl(`/api/audit/export?${params}`))
+    const text = await res.text()
+    const blob = new Blob([text], { type: 'application/x-ndjson' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `audit-${Date.now()}.ndjson`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div
@@ -63,14 +66,30 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
         overflowY: 'auto',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <h2 style={{ margin: 0, fontSize: 18 }}>Audit Trail</h2>
-        <button onClick={exportAudit} style={btnPrimary}>⬇ Export NDJSON</button>
+        <button onClick={exportAudit} style={btnPrimary}>
+          ⬇ Export NDJSON
+        </button>
       </div>
 
       {/* Stats cards */}
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 8,
+            marginBottom: 16,
+          }}
+        >
           <StatCard label="Total" value={stats.total} color="var(--text)" />
           <StatCard label="OK" value={stats.ok} color="#10b981" />
           <StatCard label="Failed" value={stats.failed} color="#ef4444" />
@@ -89,14 +108,16 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
             marginBottom: 16,
           }}
         >
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8 }}>
+          <div
+            style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8 }}
+          >
             Last 24 hours
           </div>
           <div style={{ display: 'flex', gap: 1, alignItems: 'flex-end', height: 60 }}>
             {stats.hourlyBuckets.map((b, i) => {
-              const maxCount = Math.max(...stats.hourlyBuckets.map((x) => x.count), 1);
-              const h = (b.count / maxCount) * 50;
-              const failRatio = b.count > 0 ? b.failed / b.count : 0;
+              const maxCount = Math.max(...stats.hourlyBuckets.map((x) => x.count), 1)
+              const h = (b.count / maxCount) * 50
+              const failRatio = b.count > 0 ? b.failed / b.count : 0
               return (
                 <div
                   key={i}
@@ -109,10 +130,18 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
                     opacity: 0.85,
                   }}
                 />
-              );
+              )
             })}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 9, color: 'var(--text-subtle)' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: 4,
+              fontSize: 9,
+              color: 'var(--text-subtle)',
+            }}
+          >
             <span>{stats.hourlyBuckets[0]?.hour}</span>
             <span>{stats.hourlyBuckets[Math.floor(stats.hourlyBuckets.length / 2)]?.hour}</span>
             <span>{stats.hourlyBuckets[stats.hourlyBuckets.length - 1]?.hour}</span>
@@ -163,7 +192,9 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
       {/* Timeline */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {entries.length === 0 && (
-          <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 12 }}>
+          <div
+            style={{ padding: 24, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 12 }}
+          >
             No audit entries
           </div>
         )}
@@ -182,7 +213,13 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
               alignItems: 'center',
             }}
           >
-            <span style={{ color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace', fontSize: 10 }}>
+            <span
+              style={{
+                color: 'var(--text-muted)',
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: 10,
+              }}
+            >
               {new Date(e.createdAt).toLocaleTimeString()}
             </span>
             <span style={{ fontWeight: 600, minWidth: 120 }}>{e.engine}</span>
@@ -190,17 +227,25 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
             {e.capabilityId && (
               <code style={{ fontSize: 9, color: 'var(--text-subtle)' }}>{e.capabilityId}</code>
             )}
-            <span style={{ color: 'var(--text-subtle)', fontFamily: 'ui-monospace, monospace', fontSize: 10 }}>
+            <span
+              style={{
+                color: 'var(--text-subtle)',
+                fontFamily: 'ui-monospace, monospace',
+                fontSize: 10,
+              }}
+            >
               {e.durationMs}ms
             </span>
             {e.workspaceId && (
-              <span style={{ fontSize: 9, color: 'var(--text-subtle)' }}>{e.workspaceId.slice(0, 16)}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-subtle)' }}>
+                {e.workspaceId.slice(0, 16)}
+              </span>
             )}
           </div>
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
@@ -213,10 +258,21 @@ function StatCard({ label, value, color }: { label: string; value: number; color
         borderRadius: 8,
       }}
     >
-      <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color, marginTop: 2 }}>{value.toLocaleString()}</div>
+      <div
+        style={{
+          fontSize: 10,
+          color: 'var(--text-muted)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        }}
+      >
+        {label}
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 700, color, marginTop: 2 }}>
+        {value.toLocaleString()}
+      </div>
     </div>
-  );
+  )
 }
 
 const btnPrimary: React.CSSProperties = {
@@ -229,7 +285,7 @@ const btnPrimary: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 600,
   fontFamily: 'inherit',
-};
+}
 const selectStyle: React.CSSProperties = {
   padding: '4px 8px',
   border: '1px solid var(--border)',
@@ -238,4 +294,4 @@ const selectStyle: React.CSSProperties = {
   borderRadius: 4,
   fontSize: 11,
   fontFamily: 'inherit',
-};
+}

@@ -50,11 +50,11 @@ function resolveDbUrl(): string {
 }
 function joinPaths(...parts: string[]): string {
   return parts.reduce((acc, p) =>
-    acc.endsWith('/') || acc.endsWith('\\') ? acc + p : acc + '/' + p,
+    acc.endsWith('/') || acc.endsWith('\\') ? acc + p : `${acc}/${p}`,
   )
 }
 function mkdirRecursive(dir: string): void {
-  const fs = require('fs') as typeof import('fs')
+  const fs = require('node:fs') as typeof import('fs')
   fs.mkdirSync(dir, { recursive: true })
 }
 process.env.DATABASE_URL = resolveDbUrl()

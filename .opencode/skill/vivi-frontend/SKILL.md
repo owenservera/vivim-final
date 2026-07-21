@@ -394,6 +394,61 @@ pre-push:
 
 ---
 
+## 14. Sandbox Harvest (completed)
+
+All sandbox behavioral concepts have been collapsed into the main UI (`web/ui/`).
+The empty `web/sandbox/` dir remains (stale file lock, harmless).
+
+### What was harvested (10 components)
+
+| Tier | Component | File | Surface |
+|------|-----------|------|---------|
+| 1 — Chat UX | RAF-batched WS streaming + block rendering | `Composer.tsx`, `MessageBlock.tsx` | `chat` |
+| 1 — Chat UX | Latency breakdown bar chart | `LatencyBreakdown.tsx` | `chat` |
+| 1 — Chat UX | Provider badges/colors | `ConversationList.tsx` | sidebar |
+| 2 — Capability | Searchable capability grid | `CapabilityCatalog.tsx` | `capabilities` |
+| 3 — Dev Tools | WS event firehose + NL inject + latency monitor | `DevConsole.tsx` | overlay |
+| 4 — Admin | Provider health cards | `HealthDashboard.tsx` | `health` |
+| 4 — Admin | Account CRUD modal | `ProviderManager.tsx` | modal |
+| 4 — Admin | Fleet/chrome config modal | `WorkspaceSettings.tsx` | modal |
+
+**Barrel exports:** `components/canvas/index.ts` exports all 7 new components + 2 types.
+
+### Keyboard Shortcuts
+
+| Shortcut | Action | Component |
+|----------|--------|-----------|
+| `Ctrl+K` / `⌘K` | Command Palette | `CommandPalette.tsx` |
+| `Ctrl+\`` / `⌘\`` | Dev Console toggle | `DevConsole.tsx` (wired in `page.tsx`) |
+| `Ctrl+Tab` / `⌘+Tab` | Cycle surface tabs | `SurfaceTabs.tsx` |
+| `Ctrl+Shift+Tab` / `⌘+Shift+Tab` | Cycle surface tabs (reverse) | `SurfaceTabs.tsx` |
+
+### UX Patterns Used
+
+- **Conversation search** — text filter with memoized list (`ConversationList.tsx`)
+- **Execution toast** — 2s auto-dismiss green/red toast on capability execute (`CapabilityCatalog.tsx`)
+- **Error states** — all components catch HTTP + network errors with red message
+- **Empty states** — "No X yet" / "No X match your filter" for all lists
+- **Auto-refresh** — HealthDashboard refreshes every 15s
+- **WS streaming** — RAF-batched (60fps flush) via `pendingBlocksRef` + `requestAnimationFrame`
+
+### TypeScript
+
+All new/modified files pass `tsc --noEmit`. The only error is pre-existing `LoginPanel.tsx:37` (`Property 'token' does not exist`).
+
+### Next Steps for Professional Frontend
+
+1. **Virtual scrolling** for large conversation/message lists (react-window or similar)
+2. **Theme system** — light/dark/auto + 6 accent colors + font scale (already seeded as `#4` in `page.tsx` Phase 3)
+3. **Onboarding tour** (already seeded as `#5` in `page.tsx`)
+4. **Responsive layout** — mobile breakpoints for sidebar/overlay/surfaces
+5. **CSS transitions** — smooth surface tab transitions, modal open/close, toast animations
+6. **Accessibility** — aria labels, focus trapping in modals, keyboard navigation for all surfaces
+7. **Loading skeletons** — placeholder UI during data fetches (not just text "Loading…")
+8. **Error recovery** — retry buttons on failed API calls
+9. **Undo/redo** for destructive actions (delete conversation, capability execute)
+10. **Moment (time-relative)** formatting in conversation list timestamps
+
 ## SpecKit Integration
 
 Frontend work for SpecKit specs is tracked through the unified pipeline.

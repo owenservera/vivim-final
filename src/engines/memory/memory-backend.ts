@@ -155,14 +155,14 @@ export function normalizeToolSchema(
 ): { name: string; description: string; parameters: unknown } | null {
   if (!schema || typeof schema !== 'object') return null
   let s = schema as Record<string, unknown>
-  if (s['type'] === 'function' && s['function'] && typeof s['function'] === 'object') {
-    s = s['function'] as Record<string, unknown>
+  if (s.type === 'function' && s.function && typeof s.function === 'object') {
+    s = s.function as Record<string, unknown>
   }
-  const name = s['name']
+  const name = s.name
   if (typeof name !== 'string' || !name) return null
   return {
     name,
-    description: typeof s['description'] === 'string' ? s['description'] : '',
-    parameters: s['parameters'] ?? {},
+    description: typeof s.description === 'string' ? s.description : '',
+    parameters: s.parameters ?? {},
   }
 }

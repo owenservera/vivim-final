@@ -19,6 +19,7 @@
 import { useEffect, useState } from 'react';
 import type { WorkspaceDrawerConfig, DrawerConfig, DrawerEdge, DrawerPanel } from '../../shared/drawer';
 import { useIO } from './UnifiedIOProvider';
+import { getApiUrl } from '../../shared/api-config';
 
 export function DrawerSystem({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {
   const io = useIO();
@@ -296,7 +297,7 @@ function ConversationsPanel({ workspaceId }: { workspaceId: string }) {
 function AgentsPanel({ workspaceId }: { workspaceId: string }) {
   const [agents, setAgents] = useState<Array<{ name: string; status: string; steps: number }>>([]);
   useEffect(() => {
-    fetch(`/api/agent/list?workspaceId=${encodeURIComponent(workspaceId)}`)
+    fetch(getApiUrl(`/api/agent/list?workspaceId=${encodeURIComponent(workspaceId)}`))
       .then((r) => r.json())
       .then((d: { ok: boolean; agents: Array<{ name: string; status: string; steps: unknown[] }> }) => {
         if (d.ok) setAgents(d.agents.map((a) => ({ name: a.name, status: a.status, steps: a.steps.length })));
@@ -371,7 +372,7 @@ function HitsTipsPanel() {
 function NotificationsPanel() {
   const [items, setItems] = useState<Array<{ title: string; kind: string; createdAt: number }>>([]);
   useEffect(() => {
-    fetch('http://localhost:9420/api/notification/list?userId=user:demo&limit=10')
+    fetch(getApiUrl('/api/notification/list?userId=user:demo&limit=10'))
       .then((r) => r.json())
       .then((d: { ok: boolean; notifications: Array<{ title: string; kind: string; createdAt: number }> }) => {
         if (d.ok) setItems(d.notifications);
@@ -393,7 +394,7 @@ function NotificationsPanel() {
 function PresencePanel({ workspaceId }: { workspaceId: string }) {
   const [users, setUsers] = useState<Array<{ displayName: string; avatarEmoji: string; avatarColor: string }>>([]);
   useEffect(() => {
-    fetch(`/api/presence/list?workspaceId=${encodeURIComponent(workspaceId)}`)
+    fetch(getApiUrl(`/api/presence/list?workspaceId=${encodeURIComponent(workspaceId)}`))
       .then((r) => r.json())
       .then((d: { ok: boolean; users: Array<{ displayName: string; avatarEmoji: string; avatarColor: string }> }) => {
         if (d.ok) setUsers(d.users);
@@ -415,7 +416,7 @@ function PresencePanel({ workspaceId }: { workspaceId: string }) {
 function AuditPanel() {
   const [entries, setEntries] = useState<Array<{ engine: string; method: string; ok: boolean; durationMs: number }>>([]);
   useEffect(() => {
-    fetch('http://localhost:9420/api/audit/list?limit=10')
+    fetch(getApiUrl('/api/audit/list?limit=10'))
       .then((r) => r.json())
       .then((d: { ok: boolean; entries: Array<{ engine: string; method: string; ok: boolean; durationMs: number }> }) => {
         if (d.ok) setEntries(d.entries);
