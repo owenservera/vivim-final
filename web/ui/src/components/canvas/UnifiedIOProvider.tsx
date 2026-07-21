@@ -34,7 +34,7 @@ import type {
 } from '../../shared/unified-io';
 import { IOError } from '../../shared/unified-io';
 import { ulid } from '../../lib/ulid';
-import { getApiBase } from '../../shared/api-config';
+import { getApiUrl } from '../../shared/api-config';
 
 class BrowserUnifiedIO implements UnifiedIO {
   private listeners = new Set<IOEventListener>();
@@ -55,7 +55,7 @@ class BrowserUnifiedIO implements UnifiedIO {
 
   private buildUrl(url: string, query?: Record<string, string | number | boolean | undefined>): string {
     // Resolve relative paths to backend
-    const resolved = url.startsWith('/') ? `${getApiBase()}${url}` : url;
+    const resolved = url.startsWith('/') ? getApiUrl(url) : url;
     if (!query) return resolved;
     const params = new URLSearchParams();
     for (const [k, v] of Object.entries(query)) {

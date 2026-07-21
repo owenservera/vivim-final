@@ -8,7 +8,8 @@ export interface ContentBlock {
 }
 
 export function MessageBlock({ block }: { block: ContentBlock }) {
-  switch (block.kind) {
+  const kind = block.kind ?? 'text'
+  switch (kind) {
     case 'code':
       return (
         <pre
@@ -53,7 +54,7 @@ export function RenderBlocks({ blocks }: { blocks: ContentBlock[] }) {
   const merged: ContentBlock[] = [];
   for (const block of blocks) {
     const last = merged[merged.length - 1];
-    if (block.kind === 'text' && last?.kind === 'text') {
+    if ((block.kind === 'text' || !block.kind) && last?.kind === 'text') {
       last.content += block.content;
     } else {
       merged.push({ ...block });

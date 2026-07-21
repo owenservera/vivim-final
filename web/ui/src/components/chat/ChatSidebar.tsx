@@ -89,7 +89,7 @@ export function ChatSidebar({
       {/* Provider List */}
       <div style={{ padding: 8, borderBottom: '1px solid var(--border)' }}>
         <div style={{ marginBottom: 6, ...labelStyle }}>Providers</div>
-        {['openai', 'anthropic', 'google'].map((id) => {
+        {['chatgpt', 'claude', 'gemini', 'deepseek', 'qwen', 'grok'].map((id) => {
           const acct = accounts.find((a) => a.providerId === id);
           return (
             <div
