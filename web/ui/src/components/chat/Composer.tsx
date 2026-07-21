@@ -29,6 +29,21 @@ interface PendingBlock {
   text: string;
 }
 
+function normalizeKind(raw: string | undefined): string {
+  const map: Record<string, string> = {
+    text: 'text',
+    reasoning: 'thinking',
+    code: 'code',
+    file: 'file',
+    'tool-call': 'tool-call',
+    'tool-result': 'tool-result',
+    meta: 'meta',
+    error: 'error',
+    'step-start': 'step-start',
+  }
+  return map[raw ?? ''] ?? 'text'
+}
+
 export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
@@ -85,12 +100,12 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
     if (msg.type === 'conversation:block') {
       const payload = msg.payload as {
         conversationId?: string;
-        block?: { kind?: string; text?: string; content?: string };
+        block?: { type?: string; kind?: string; text?: string; content?: string };
         timing?: TimingInfo;
       };
       if (payload?.conversationId !== conversationId) return;
       setStreaming(true);
-      const kind = payload.block?.kind ?? 'text';
+      const kind = normalizeKind(payload.block?.type ?? payload.block?.kind);
       const chunk = payload.block?.text ?? payload.block?.content ?? '';
       if (chunk) {
         pendingBlocksRef.current.push({ kind, text: chunk });

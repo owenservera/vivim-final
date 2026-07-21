@@ -34,7 +34,6 @@ export function LoginPanel() {
     setLoading(false)
 
     if (res.ok && res.data) {
-      setSessionToken(res.data.token)
       setSession({ authenticated: true, userId: res.data.userId, email: res.data.email })
       setPassword("")
     } else {
