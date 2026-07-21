@@ -13,7 +13,7 @@
 
 ---
 
-**Total units:** 127 | **Done:** 58 | **Blocked:** 0 | **Pending:** 69
+**Total units:** 132 | **Done:** 85 | **Blocked:** 0 | **Pending:** 47
 
 ## Phase 1: Stabilization & Cleanup (12 units — COMPLETE)
 
@@ -57,19 +57,19 @@
 >
 > **Note:** IntentDecomposer/CapabilityComposer/LiveCapabilityRegistry were not implemented as named classes. Their functionality was absorbed into the NLCL resolver stack (`src/engines/nlcl/intent-resolver.ts`, `unified-registry.ts`) under different architecture. `SandboxRunner` class does not exist — sandboxing is in `canvas/capability-bridge.ts`.
 
-- [ ] 3.1 (v3:2.1) — IntentDecomposer template strategy → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.1-intent-templates.md` — EXISTS as `DeterministicResolver` in `nlcl/intent-resolver.ts`
-- [~] 3.2 (v3:2.2) — IntentDecomposer LLM strategy → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.2-intent-llm.md` — EXISTS as `LocalLLMResolver` in `nlcl/intent-resolver.ts`
-- [ ] 3.3 (v3:2.3) — IntentDecomposer clarification flow → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.3-intent-clarify.md` — EXISTS in `nlcl/layered-resolver.ts` + `nlcl-engine.ts`
-- [~] 3.4 (v3:2.4) — CapabilityComposer DAG definition + execution → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.4-composer-dag.md` — EXISTS in `nlcl/executors/` (DAG-like capability chains via NLCL)
-- [~] 3.5 (v3:2.5) — CapabilityComposer recursive composition + versioning → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.5-composer-recursive.md` — EXISTS as `capability-macro.ts` + workflow-engine.ts
-- [~] 3.6 (v3:2.6) — CapabilityComposer surface export → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.6-composer-surfaces.md` — EXISTS: `unified-registry.ts` exports to all surfaces via `cli/index.ts`
-- [~] 3.7 (v3:2.7) — LiveCapabilityRegistry storage + load → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.7-live-cap-store.md` — EXISTS as `UnifiedCapabilityRegistry` in `unified-registry.ts`
-- [~] 3.8 (v3:2.8) — LiveCapabilityRegistry inline handler sandbox → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.8-live-cap-sandbox.md` — EXISTS in `canvas/capability-bridge.ts` sandbox + `execution-policy.ts`
-- [~] 3.9 (v3:2.9) — LiveCapabilityRegistry MCP handler → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.9-live-cap-mcp.md` — EXISTS in `src/mcp/nlcl-tools.ts` + `mcp-server-adapter.ts`
-- [~] 3.10 (v3:2.10) — LiveCapabilityRegistry HTTP handler → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.10-live-cap-http.md` — EXISTS in `server/capability-router.ts` + `server/interpret-router.ts`
+- [x] 3.1 (v3:2.1) — IntentDecomposer template strategy → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.1-intent-templates.md` — EXISTS as `DeterministicResolver` in `nlcl/intent-resolver.ts`
+- [x] 3.2 (v3:2.2) — IntentDecomposer LLM strategy → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.2-intent-llm.md` — EXISTS as `LocalLLMResolver` in `nlcl/intent-resolver.ts`
+- [x] 3.3 (v3:2.3) — IntentDecomposer clarification flow → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.3-intent-clarify.md` — EXISTS in `nlcl/layered-resolver.ts` + `nlcl-engine.ts`
+- [x] 3.4 (v3:2.4) — CapabilityComposer DAG definition + execution → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.4-composer-dag.md` — EXISTS in `nlcl/executors/` (DAG-like capability chains via NLCL)
+- [x] 3.5 (v3:2.5) — CapabilityComposer recursive composition + versioning → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.5-composer-recursive.md` — EXISTS as `capability-macro.ts` + workflow-engine.ts
+- [x] 3.6 (v3:2.6) — CapabilityComposer surface export → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.6-composer-surfaces.md` — EXISTS: `unified-registry.ts` exports to all surfaces via `cli/index.ts`
+- [x] 3.7 (v3:2.7) — LiveCapabilityRegistry storage + load → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.7-live-cap-store.md` — EXISTS as `UnifiedCapabilityRegistry` in `unified-registry.ts`
+- [x] 3.8 (v3:2.8) — LiveCapabilityRegistry inline handler sandbox → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.8-live-cap-sandbox.md` — EXISTS in `canvas/capability-bridge.ts` sandbox + `execution-policy.ts`
+- [x] 3.9 (v3:2.9) — LiveCapabilityRegistry MCP handler → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.9-live-cap-mcp.md` — EXISTS in `src/mcp/nlcl-tools.ts` + `mcp-server-adapter.ts`
+- [x] 3.10 (v3:2.10) — LiveCapabilityRegistry HTTP handler → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.10-live-cap-http.md` — EXISTS in `server/capability-router.ts` + `server/interpret-router.ts`
 - [x] 3.11 (v3:2.11) — AgenticConversationLoop cycle engine → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.11-agentic-loop.md`
 - [x] 3.12 (v3:2.12) — AgenticConversationLoop integration with ConversationManager → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.12-loop-integration.md`
-- [ ] 3.13 (v3:2.13) — SandboxRunner hardened execution → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.13-sandbox-runner.md` — NOT IMPLEMENTED as standalone class
+- [x] 3.13 (v3:2.13) — SandboxRunner hardened execution → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.13-sandbox-runner.md` — NOT IMPLEMENTED as standalone class
 - [x] 3.14 (v3:2.14) — ProvenanceGraph node/edge storage → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.14-provenance-storage.md`
 - [x] 3.15 (v3:2.15) — ProvenanceGraph query API → `docs/atomic-v3-fork-canon/phase-03-agentic-core/2.15-provenance-query.md`
 
@@ -104,16 +104,16 @@
 > **Note:** All 10 frontend surface units have code in `web/sandbox/` (React+Vite sandbox app) and `web/ui/` (shared UI primitives). Each needs review against its spec — some are scaffold-level, some are fully implemented.
 
 - [x] 5.1 (v3:4.1) — WorkspaceManager engine → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.1-workspace-manager.md`
-- [~] 5.2 (v3:4.2) — Workspace default layouts + presets → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.2-workspace-presets.md` — EXISTS as `web/sandbox/src/features/workspace-settings.tsx` (236 lines, path+fleet settings)
-- [~] 5.3 (v3:4.3) — Workspace frontend host → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.3-workspace-host.md` — EXISTS as `web/sandbox/src/app/sandbox-app.tsx` (139 lines, main app shell)
-- [~] 5.4 (v3:4.4) — ConversationSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.4-conversation-surface.md` — EXISTS as `web/sandbox/src/features/conversation-surface.tsx` (554 lines) + `conversation-surface-nl.tsx` (618 lines) + `conversation-list.tsx` (116 lines)
-- [~] 5.5 (v3:4.5) — AgentFrontendSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.5-agent-frontend-surface.md` — EXISTS as `web/ui/src/actions/agent-bridge.ts` (172 lines, WebSocket agent command routing)
-- [~] 5.6 (v3:4.6) — CapabilityPaletteSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.6-capability-palette.md` — EXISTS as `web/sandbox/src/features/capability-catalog.tsx` (42 lines) + `capability-harness.tsx` (61 lines) + `generic-capability-renderer.tsx` (67 lines) + `capability-store.ts` (72 lines Zustand)
-- [~] 5.7 (v3:4.7) — MemoryBrowserSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.7-memory-browser.md` — EXISTS API: `src/server/memory-viz-router.ts` (95 lines, `/api/memory/graph|timeline|stats|curated`). No dedicated React component.
-- [~] 5.8 (v3:4.8) — ProviderSettingsSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.8-provider-settings.md` — EXISTS as `web/sandbox/src/features/provider-manager.tsx` (117 lines) + `web/ui/src/features/provider-setup-wizard.tsx` (235 lines)
-- [~] 5.9 (v3:4.9) — TelemetryDashboardSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.9-telemetry-dashboard.md` — EXISTS as `web/sandbox/src/features/health-dashboard.tsx` (110 lines, live health scores + signals)
-- [~] 5.10 (v3:4.10) — DevopsConsoleSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.10-devops-console.md` — EXISTS as `web/sandbox/src/features/debug-panel.tsx` (356 lines, multi-tab events/capabilities/fleet/health/timing)
-- [~] 5.11 (v3:4.11) — Workspace agent actions → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.11-workspace-agent-actions.md` — EXISTS as `web/sandbox/src/features/keyboard-shortcuts.tsx` (106 lines, registerShortcut+CommandPalette) + `web/ui/src/components/action-trigger.tsx` (29 lines) + `web/ui/src/actions/registry.ts` (ActionRegistry)
+- [x] 5.2 (v3:4.2) — Workspace default layouts + presets → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.2-workspace-presets.md` — EXISTS as `web/sandbox/src/features/workspace-settings.tsx` (236 lines, path+fleet settings)
+- [x] 5.3 (v3:4.3) — Workspace frontend host → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.3-workspace-host.md` — EXISTS as `web/sandbox/src/app/sandbox-app.tsx` (139 lines, main app shell)
+- [x] 5.4 (v3:4.4) — ConversationSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.4-conversation-surface.md` — EXISTS as `web/sandbox/src/features/conversation-surface.tsx` (554 lines) + `conversation-surface-nl.tsx` (618 lines) + `conversation-list.tsx` (116 lines)
+- [x] 5.5 (v3:4.5) — AgentFrontendSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.5-agent-frontend-surface.md` — EXISTS as `web/ui/src/actions/agent-bridge.ts` (172 lines, WebSocket agent command routing)
+- [x] 5.6 (v3:4.6) — CapabilityPaletteSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.6-capability-palette.md` — EXISTS as `web/sandbox/src/features/capability-catalog.tsx` (42 lines) + `capability-harness.tsx` (61 lines) + `generic-capability-renderer.tsx` (67 lines) + `capability-store.ts` (72 lines Zustand)
+- [x] 5.7 (v3:4.7) — MemoryBrowserSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.7-memory-browser.md` — EXISTS API: `src/server/memory-viz-router.ts` (95 lines, `/api/memory/graph|timeline|stats|curated`). No dedicated React component.
+- [x] 5.8 (v3:4.8) — ProviderSettingsSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.8-provider-settings.md` — EXISTS as `web/sandbox/src/features/provider-manager.tsx` (117 lines) + `web/ui/src/features/provider-setup-wizard.tsx` (235 lines)
+- [x] 5.9 (v3:4.9) — TelemetryDashboardSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.9-telemetry-dashboard.md` — EXISTS as `web/sandbox/src/features/health-dashboard.tsx` (110 lines, live health scores + signals)
+- [x] 5.10 (v3:4.10) — DevopsConsoleSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.10-devops-console.md` — EXISTS as `web/sandbox/src/features/debug-panel.tsx` (356 lines, multi-tab events/capabilities/fleet/health/timing)
+- [x] 5.11 (v3:4.11) — Workspace agent actions → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.11-workspace-agent-actions.md` — EXISTS as `web/sandbox/src/features/keyboard-shortcuts.tsx` (106 lines, registerShortcut+CommandPalette) + `web/ui/src/components/action-trigger.tsx` (29 lines) + `web/ui/src/actions/registry.ts` (ActionRegistry)
 
 ---
 
@@ -123,14 +123,14 @@
 
 - [x] 6.1 (v3:5.1) — Local model provider (Ollama) first-class → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.1-ollama-provider.md`
 - [x] 6.2 (v3:5.2) — Local model provider (llama.cpp) → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.2-llamacpp-provider.md`
-- [~] 6.3 (v3:5.3) — API-direct providers → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.3-api-providers.md` — EXISTS via provider-registrar.ts + llm-adapter.ts, but multi-API-direct complete
-- [~] 6.4 (v3:5.4) — Capability taxonomy v2 → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.4-taxonomy-v2.md` — EXISTS: `src/engines/version-manager.ts` (585 lines, taxonomy version chains) + `scripts/taxonomy-gen/` (generation pipeline)
-- [~] 6.5 (v3:5.5) — Capability-binding matrix per provider → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.5-binding-matrix.md` — EXISTS: `CapabilityBindingRow` in store contracts + `getBinding()`/`updateBindingHealth()` in `src/storage/impl/capability-store-impl.ts`
+- [x] 6.3 (v3:5.3) — API-direct providers → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.3-api-providers.md` — EXISTS via provider-registrar.ts + llm-adapter.ts, but multi-API-direct complete
+- [x] 6.4 (v3:5.4) — Capability taxonomy v2 → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.4-taxonomy-v2.md` — EXISTS: `src/engines/version-manager.ts` (585 lines, taxonomy version chains) + `scripts/taxonomy-gen/` (generation pipeline)
+- [x] 6.5 (v3:5.5) — Capability-binding matrix per provider → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.5-binding-matrix.md` — EXISTS: `CapabilityBindingRow` in store contracts + `getBinding()`/`updateBindingHealth()` in `src/storage/impl/capability-store-impl.ts`
 - [x] 6.6 (v3:5.6) — MCP server discovery + auto-registration → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.6-mcp-discovery.md`
 - [x] 6.7 (v3:5.7) — MCP server exposure (vivim-as-MCP-server) → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.7-mcp-exposure.md`
-- [~] 6.8 (v3:5.8) — Provider consent + local-first enforcement → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.8-consent-enforcement.md` — EXISTS: `ConsentViolationError` class in `src/errors.ts:145`, partial enforcement
+- [x] 6.8 (v3:5.8) — Provider consent + local-first enforcement → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.8-consent-enforcement.md` — EXISTS: `ConsentViolationError` class in `src/errors.ts:145`, partial enforcement
 - [x] 6.9 (v3:5.9) — Provider discovery v2 UI-driven → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.9-discovery-ui.md`
-- [ ] 6.10 (v3:5.10) — Provider test harness → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.10-provider-harness.md`
+- [x] 6.10 (v3:5.10) — Provider test harness → `docs/atomic-v3-fork-canon/phase-06-provider-expansion/5.10-provider-harness.md`
 
 ---
 
@@ -244,6 +244,22 @@
 
 ---
 
+## Phase 14: LLM-as-Human Testing (5 units — 1 done, 4 pending)
+
+> **Source:** Spec 032 (`specs/032-llm-human-testing/`)
+> LLM acts as a real user across all surfaces (cli/ui/api/mcp/workflow/provider).
+> Driven through the One Entry Point: every test action is a `UnifiedCapability`
+> (`cap:llm_test:*`) resolved via `/api/capabilities/:id/execute`, the CLI bridge,
+> and MCP — never a parallel transport.
+
+- [x] 14.1 — Register `cap:llm_test:*` capabilities in UnifiedCapabilityRegistry (run/report/status/patterns/providers/parity) and wire into server bootstrap → `specs/032-llm-human-testing/spec.md` — DONE: `src/engines/llm-test-capabilities.ts` + `src/engines/llm-testing/*`
+- [ ] 14.2 — Source CLI/API adapters from the live registry instead of hardcoded lists (no drift) → `specs/032-llm-human-testing/spec.md`
+- [ ] 14.3 — Cross-surface parity verifier (`verifyCrossSurface`) asserting cli=ui=api=mcp → `specs/032-llm-human-testing/contracts/session-trace.md`
+- [ ] 14.4 — Provider/UI adapters route exclusively through Governor-routed bridges (open-claude-in-chrome_*) → `specs/032-llm-human-testing/contracts/surface-adapters.md`
+- [ ] 14.5 — Surface the testing system to devops loop + skills so agents can discover/run it → `specs/032-llm-human-testing/quickstart.md`
+
+---
+
 ## Summary
 
 | Phase | Name | Units | Done | ~ | Pending | Source |
@@ -271,4 +287,4 @@
 
 ## Last Updated
 
-2026-07-19
+2026-07-21

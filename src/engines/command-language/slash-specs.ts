@@ -245,7 +245,7 @@ export const slashSpecs: UnifiedCommandSpec[] = [
     category: 'system',
     surfaces: ['cli', 'ui'],
     args: [{ name: 'content', kind: 'text', placeholder: 'Content to copy', required: true }],
-    run: async (args) => ({
+    run: async (_args) => ({
       ok: true,
       toast: 'Copied to clipboard',
     }),

@@ -9,6 +9,8 @@
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..' '..')
+. (Join-Path $repoRoot 'scripts' '_shared.ps1')
+$bunExe = Resolve-Bun
 
 # 1) Compile the Bun backend sidecar.
 & pwsh (Join-Path $repoRoot 'scripts' 'tauri' 'build-sidecar.ps1')
@@ -16,7 +18,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # 2) Build the web/ui frontend for production (frontendDist = web/ui/dist).
 Write-Host "Building web/ui frontend..."
-$proc = Start-Process -FilePath 'bun' -ArgumentList @('run', 'web:build') -WorkingDirectory $repoRoot -NoNewWindow -PassThru -Wait
+$proc = Start-Process -FilePath $bunExe -ArgumentList @('run', 'web:build') -WorkingDirectory $repoRoot -NoNewWindow -PassThru -Wait
 if ($proc.ExitCode -ne 0) { exit $proc.ExitCode }
 
 # 3) Invoke the Tauri CLI to bundle the MSI/NSIS/updater artifacts.

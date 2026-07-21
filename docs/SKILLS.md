@@ -11,6 +11,7 @@ Skill routing table — maps user intents to the correct skill.
 | "build an engine" / "implement engine" | `devops` (Backend Build) | Engine implementation patterns |
 | "automate the browser" / "type in the UI" / "click" | `devops` (automate) | `bun run devops automate <action>` |
 | "research X" / "deep dive on Y" / "web search" | `devops-research` | Research-first intelligence layer |
+| "find code" / "where is X defined" / "index the codebase" | `devops` (code-index) | `bun run devops code-index <build\|search\|stats\|watch\|mcp>` — local offline hybrid code search |
 | "plan the roadmap" / "what should we build?" | `devops-roadmap` | Truth scanning, gap discovery |
 | "generate taxonomy for X" / "build provider library" | `devops-generators` | PlatformCatalog + ProviderCapabilityTaxonomy |
 | "audit the codebase" / "find bugs" / "code quality" | `source-audit` | `bun run devops audit-code <scope>` |

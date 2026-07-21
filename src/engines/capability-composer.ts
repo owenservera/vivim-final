@@ -6,7 +6,12 @@
 // composite's version and snapshots the prior DAG via VersionManager.
 
 import { EngineError } from '../errors.js'
-import type { CapabilityContext, UnifiedCapabilityRegistry } from './unified-registry.js'
+import type {
+  CapabilityContext,
+  CapabilitySurface,
+  UnifiedCapability,
+  UnifiedCapabilityRegistry,
+} from './unified-registry.js'
 import type { VersionManager } from './version-manager.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -162,6 +167,49 @@ export class CapabilityComposer {
     return this.store.update(compositeId, { ...next, version: current.version + 1 })
   }
 
+  /** Register a composite AND export it to all five surfaces via the registry. */
+  async registerComposite(
+    input: Omit<CompositeCapability, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<CompositeCapability> {
+    // Register-time cycle detection (unit 2.4).
+    this.assertAcyclic(input.nodes, input.edges)
+    const created = await this.store.create(input)
+    this.registry.register(this.toUnifiedCapability(created))
+    return created
+  }
+
+  /** Detect cycles before registration. Throws EngineError on cycle. */
+  private assertAcyclic(nodes: CompositeNode[], edges: CompositeEdge[]): void {
+    // topoSort throws on cycle; we just call it without capturing the order.
+    this.topoSort(nodes, edges)
+  }
+
+  /** Build the UnifiedCapability for a composite, auto-filling all five surfaces. */
+  private toUnifiedCapability(c: CompositeCapability): UnifiedCapability {
+    const surfaces: CapabilitySurface[] = ['cli', 'ui', 'workflow', 'mcp', 'api']
+    return {
+      id: `composite:${c.id}`,
+      slug: c.slug,
+      name: c.name,
+      description: c.description,
+      category: 'composite',
+      surfaces,
+      inputSchema: { type: 'object', properties: {} },
+      outputSchema: { type: 'object' },
+      handler: (input, ctx) => this.execute(c.id, input, ctx),
+      cliCommand: { name: `composite ${c.slug}`, aliases: [], examples: [] },
+      uiAction: { component: 'composite-run', position: 'palette', order: 0 },
+      workflowNodeType: `composite:${c.slug}`,
+      mcpToolName: c.slug,
+      apiEndpoint: { method: 'POST', path: `/api/composite/${c.slug}` },
+      isAsync: true,
+      requiresConfirmation: false,
+      tags: ['composite'],
+      isComposite: true,
+      compositeId: c.id,
+    }
+  }
+
   async define(
     input: Omit<CompositeCapability, 'id' | 'createdAt' | 'updatedAt'>,
   ): Promise<CompositeCapability> {
@@ -178,5 +226,6 @@ export class CapabilityComposer {
 
   async remove(compositeId: string): Promise<void> {
     await this.store.delete(compositeId)
+    this.registry.unregister(`composite:${compositeId}`)
   }
 }

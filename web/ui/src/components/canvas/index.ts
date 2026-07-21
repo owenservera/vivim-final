@@ -68,6 +68,15 @@ export { ChatSurface } from '../chat/ChatSurface';
 export { HealthIndicator } from '../chat/HealthIndicator';
 export { ConversationList } from '../chat/ConversationList';
 export { Composer } from '../chat/Composer';
+export { MessageBlock, RenderBlocks } from '../chat/MessageBlock';
+export type { ContentBlock } from '../chat/MessageBlock';
+export { LatencyBreakdown } from '../chat/LatencyBreakdown';
+export type { TimingInfo } from '../chat/LatencyBreakdown';
+export { CapabilityCatalog } from '../chat/CapabilityCatalog';
+export { DevConsole } from '../chat/DevConsole';
+export { HealthDashboard } from '../chat/HealthDashboard';
+export { ProviderManager } from '../chat/ProviderManager';
+export { WorkspaceSettings } from '../chat/WorkspaceSettings';
 
 // Universal registry — single registry for ALL UI components
 export { UniversalComponentProvider } from './UniversalComponentProvider';

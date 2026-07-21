@@ -79,6 +79,12 @@ Get-ChildItem -Path $source -Directory | ForEach-Object {
                 Copy-Item $srcAsset $dstAsset -Recurse -Force
             }
         }
+
+        # Sync companion markdown files so skills with cross-references stay coherent.
+        Get-ChildItem -Path $_.FullName -Filter "*.md" | ForEach-Object {
+            $dstMd = Join-Path $dstDir $_.Name
+            Copy-Item $_.FullName $dstMd -Force
+        }
         $synced++
         Write-Host "  SYNCED: $skillName" -ForegroundColor Green
     } catch {

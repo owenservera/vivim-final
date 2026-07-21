@@ -13,6 +13,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import type { ResolvedSurface, RouteContext } from '../../shared/route-context';
+import { getApiUrl } from '../../shared/api-config';
 
 export interface ResolveRequest {
   workspaceId: string;
@@ -27,7 +28,7 @@ export function useResolvedNodes(req: ResolveRequest) {
   return useQuery<ResolvedSurface>({
     queryKey: ['canvas:resolve', req],
     queryFn: async () => {
-      const res = await fetch('http://localhost:9420/api/canvas/resolve', {
+      const res = await fetch(getApiUrl('/api/canvas/resolve'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(req),

@@ -18,7 +18,7 @@ export function parseInput(input: string): ParsedCommand {
     }
   }
 
-  const firstChar = trimmed[0]!
+  const firstChar = trimmed[0] as string
   const prefix = isPrefix(firstChar) ? (firstChar as Prefix) : null
 
   if (prefix) {

@@ -1,24 +1,20 @@
 'use client';
 
-/**
- * components/chat/Composer.tsx — Moment 2: Send a Message (Streaming)
- * --------------------------------------------------------------------
- * Composer + message history for a single conversation. Sends via
- * `POST /api/conversations/:id/messages` and renders streamed response
- * chunks delivered over WebSocket `conversation:<id>` topic
- * (`conversation:block` / `conversation:complete` / `conversation:error`).
- * Per spec FR-003/FR-004 and AC 1-5.
- */
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sendMessage, getMessages } from '@/sdk/backend-client';
 import { useWebSocket, type WsMessage } from '@/hooks/useWebSocket';
 import { StreamingIndicator } from '@/components/canvas/StreamingIndicator';
+import { classify } from '@/ml/prerouter';
+import { useMlStore } from '@/ml/ml-store';
+import { RenderBlocks, type ContentBlock } from './MessageBlock';
+import { LatencyBreakdown, type TimingInfo } from './LatencyBreakdown';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  blocks?: ContentBlock[];
+  timing?: TimingInfo;
   createdAt: string;
 }
 
@@ -28,13 +24,47 @@ interface ComposerProps {
   wsMessage?: WsMessage | null;
 }
 
+interface PendingBlock {
+  kind: string;
+  text: string;
+}
+
 export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState(false);
-  const [streamingText, setStreamingText] = useState('');
+  const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
+  const [streamingTiming, setStreamingTiming] = useState<TimingInfo | null>(null);
   const [lastEvent, setLastEvent] = useState<string | undefined>();
+  const [localSuggestion, setLocalSuggestion] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const pendingBlocksRef = useRef<PendingBlock[]>([]);
+  const pendingTimingRef = useRef<TimingInfo | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  // RAF-batched flush for streaming blocks
+  const scheduleFlush = useCallback(() => {
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const batch = pendingBlocksRef.current.splice(0);
+      if (batch.length > 0) {
+        setStreamingBlocks((prev) => [
+          ...prev,
+          ...batch.map((b, i) => ({
+            kind: b.kind,
+            content: b.text,
+            index: prev.length + i,
+          })),
+        ]);
+      }
+      if (pendingTimingRef.current) {
+        setStreamingTiming(pendingTimingRef.current);
+        pendingTimingRef.current = null;
+      }
+    });
+  }, []);
 
   const loadHistory = useCallback(async (id: string) => {
     const res = await getMessages(id).catch(() => null);
@@ -43,55 +73,87 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
 
   useEffect(() => {
     setMessages([]);
-    setStreamingText('');
+    setStreamingBlocks([]);
+    setStreamingTiming(null);
     setStreaming(false);
     if (conversationId) loadHistory(conversationId);
   }, [conversationId, loadHistory]);
 
-  // Handle streamed WS events for this conversation (driven by wsMessage prop).
   useEffect(() => {
     const msg = wsMessage;
     if (!msg || !conversationId) return;
     if (msg.type === 'conversation:block') {
-      const payload = msg.payload as { conversationId?: string; block?: { text?: string; content?: string } };
+      const payload = msg.payload as {
+        conversationId?: string;
+        block?: { kind?: string; text?: string; content?: string };
+        timing?: TimingInfo;
+      };
       if (payload?.conversationId !== conversationId) return;
-      const chunk = payload.block?.text ?? payload.block?.content ?? '';
       setStreaming(true);
-      setStreamingText((t) => t + chunk);
+      const kind = payload.block?.kind ?? 'text';
+      const chunk = payload.block?.text ?? payload.block?.content ?? '';
+      if (chunk) {
+        pendingBlocksRef.current.push({ kind, text: chunk });
+        scheduleFlush();
+      }
+      if (payload.timing) {
+        pendingTimingRef.current = payload.timing;
+        scheduleFlush();
+      }
       setLastEvent('block');
     } else if (msg.type === 'conversation:complete') {
-      const payload = msg.payload as { conversationId?: string };
+      const payload = msg.payload as { conversationId?: string; timing?: TimingInfo };
       if (payload?.conversationId !== conversationId) return;
+      // Flush any remaining buffered blocks
+      const batch = pendingBlocksRef.current.splice(0);
+      const finalTiming = payload.timing ?? pendingTimingRef.current;
       setStreaming(false);
       setLastEvent('complete');
+      // Persist completed blocks as an assistant message
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `stream-${Date.now()}`,
+          role: 'assistant',
+          content: '',
+          blocks:
+            batch.length > 0
+              ? batch.map((b, i) => ({ kind: b.kind, content: b.text, index: i }))
+              : undefined,
+          timing: finalTiming ?? undefined,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+      setStreamingBlocks([]);
+      setStreamingTiming(null);
+      pendingTimingRef.current = null;
     } else if (msg.type === 'conversation:error') {
       const payload = msg.payload as { conversationId?: string; error?: string };
       if (payload?.conversationId !== conversationId) return;
       setStreaming(false);
       setLastEvent(`error: ${payload.error ?? 'unknown'}`);
     }
+    // scheduleFlush is intentionally excluded to avoid re-running on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wsMessage, conversationId]);
 
   useEffect(() => {
-    if (!conversationId) return;
-    if (!streaming && streamingText) {
-      // Persist completed streamed text as an assistant message.
-      const completed = streamingText;
-      setMessages((prev) => [
-        ...prev,
-        { id: `stream-${Date.now()}`, role: 'assistant', content: completed, createdAt: new Date().toISOString() },
-      ]);
-      setStreamingText('');
-    }
-  }, [conversationId, streaming, streamingText]);
-
-  useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages, streamingText]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, streamingBlocks]);
 
   const send = async () => {
     if (!conversationId || !draft.trim()) return;
     const text = draft.trim();
+
+    const route = classify(text);
+    if (route.route === 'local' && route.action) {
+      useMlStore.getState().recordLocalAction();
+      setLocalSuggestion(`Local action detected: ${route.action} (remote fallback used)`);
+    } else {
+      setLocalSuggestion(null);
+    }
+
     const optimistic: Message = {
       id: `local-${Date.now()}`,
       role: 'user',
@@ -100,11 +162,12 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
     };
     setMessages((prev) => [...prev, optimistic]);
     setDraft('');
-    setStreamingText('');
+    setStreamingBlocks([]);
+    setStreamingTiming(null);
     setStreaming(true);
     const res = await sendMessage(conversationId, text).catch(() => null);
-    if (res?.ok && res.data) {
-      setMessages((prev) => [...prev, res.data as Message]);
+    if (res?.ok) {
+      if (res.data?.error) setLastEvent(`send note: ${res.data.error}`);
     } else if (!res?.ok) {
       setStreaming(false);
       setLastEvent(`send failed: ${res?.error ?? 'unknown'}`);
@@ -142,47 +205,102 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
         minHeight: 0,
       }}
     >
-      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div
+        ref={scrollRef}
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: 12,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+        }}
+      >
         {messages.map((m) => (
-          <div
-            key={m.id}
-            style={{
-              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-              maxWidth: '80%',
-              padding: '8px 12px',
-              borderRadius: 10,
-              background: m.role === 'user' ? 'var(--accent)' : 'var(--bg-elevated)',
-              color: m.role === 'user' ? 'var(--accent-foreground, #fff)' : 'var(--text)',
-              border: '1px solid var(--border)',
-              fontSize: 13,
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            {m.content}
+          <div key={m.id}>
+            <div
+              style={{
+                alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth: '80%',
+                padding: '8px 12px',
+                borderRadius: 10,
+                background:
+                  m.role === 'user' ? 'var(--accent)' : 'var(--bg-elevated)',
+                color:
+                  m.role === 'user'
+                    ? 'var(--accent-foreground, #fff)'
+                    : 'var(--text)',
+                border: '1px solid var(--border)',
+                fontSize: 13,
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {m.blocks && m.blocks.length > 0 ? (
+                <RenderBlocks blocks={m.blocks} />
+              ) : (
+                m.content
+              )}
+            </div>
+            {m.role === 'assistant' && m.timing && (
+              <LatencyBreakdown timing={m.timing} />
+            )}
           </div>
         ))}
         {streaming && (
-          <div
-            style={{
-              alignSelf: 'flex-start',
-              maxWidth: '80%',
-              padding: '8px 12px',
-              borderRadius: 10,
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border)',
-              fontSize: 13,
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            {streamingText}
-            <span style={{ opacity: 0.5 }}>▍</span>
+          <div>
+            <div
+              style={{
+                alignSelf: 'flex-start',
+                maxWidth: '80%',
+                padding: '8px 12px',
+                borderRadius: 10,
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                fontSize: 13,
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {streamingBlocks.length > 0 ? (
+                <RenderBlocks blocks={streamingBlocks} />
+              ) : (
+                <span style={{ opacity: 0.5 }}>▍</span>
+              )}
+            </div>
+            {streamingTiming && <LatencyBreakdown timing={streamingTiming} />}
           </div>
         )}
       </div>
 
-      <StreamingIndicator wsStatus={wsStatus} isStreaming={streaming} lastEvent={lastEvent} />
+      <StreamingIndicator
+        wsStatus={wsStatus}
+        isStreaming={streaming}
+        lastEvent={lastEvent}
+      />
 
-      <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: '1px solid var(--border)' }}>
+      {localSuggestion && (
+        <div
+          style={{
+            margin: '0 10px',
+            padding: '6px 10px',
+            borderRadius: 6,
+            border: '1px solid var(--border)',
+            background: 'var(--bg-elevated)',
+            fontSize: 12,
+            opacity: 0.85,
+          }}
+        >
+          {localSuggestion}
+        </div>
+      )}
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          padding: 10,
+          borderTop: '1px solid var(--border)',
+        }}
+      >
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -215,7 +333,9 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
             border: '1px solid var(--border)',
             borderRadius: 8,
             background: draft.trim() ? 'var(--accent)' : 'var(--bg-subtle)',
-            color: draft.trim() ? 'var(--accent-foreground, #fff)' : 'var(--text-muted)',
+            color: draft.trim()
+              ? 'var(--accent-foreground, #fff)'
+              : 'var(--text-muted)',
             cursor: draft.trim() ? 'pointer' : 'not-allowed',
             fontSize: 13,
             fontFamily: 'inherit',

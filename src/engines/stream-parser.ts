@@ -7,7 +7,7 @@
 // Legacy {kind,content,index} blocks from seed parsers are auto-migrated at the boundary.
 
 import { EngineError } from '../errors.js'
-import { isLegacyBlock, migrateLegacyParts, ContentPartSchema } from '../schema/streaming.js'
+import { ContentPartSchema, isLegacyBlock, migrateLegacyParts } from '../schema/streaming.js'
 import type { ContentPart } from '../schema/streaming.js'
 import type { ParserExecutionLogStore } from '../storage/contracts/parser-execution-log-store.js'
 import type { ParserStore, ProviderParserRow } from '../storage/contracts/parser-store.js'

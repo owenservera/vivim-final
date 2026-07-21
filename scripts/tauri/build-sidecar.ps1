@@ -15,6 +15,9 @@
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..' '..')
+. (Join-Path $repoRoot 'scripts' '_shared.ps1')
+$bunExe = Resolve-Bun
+
 $triple = (& rustc --print host-tuple).Trim()
 $binDir = Join-Path $repoRoot 'src-tauri' 'binaries'
 New-Item -ItemType Directory -Force -Path $binDir | Out-Null
@@ -23,7 +26,7 @@ $entry = Join-Path $repoRoot 'src' 'desktop' 'sidecar-entry.ts'
 $outExe = Join-Path $binDir "vivim-server-$triple.exe"
 
 Write-Host "Compiling sidecar: $entry -> $outExe"
-& bun build --compile $entry --outfile $outExe 2>&1 | ForEach-Object { Write-Host $_ }
+& $bunExe build --compile $entry --outfile $outExe 2>&1 | ForEach-Object { Write-Host $_ }
 if (-not (Test-Path $outExe)) { throw "sidecar compile failed: $outExe not produced" }
 
 Write-Host "Sidecar built: $outExe"

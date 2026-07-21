@@ -67,27 +67,27 @@ describe('matchPatterns', () => {
   test('matches exact pattern', () => {
     const results = matchPatterns('health', sampleDescriptions)
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0]!.commandId).toBe('health')
-    expect(results[0]!.confidence).toBeGreaterThanOrEqual(0.8)
+    expect(results[0]?.commandId).toBe('health')
+    expect(results[0]?.confidence).toBeGreaterThanOrEqual(0.8)
   })
 
   test('matches partial pattern', () => {
     const results = matchPatterns('check health', sampleDescriptions)
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0]!.commandId).toBe('health')
+    expect(results[0]?.commandId).toBe('health')
   })
 
   // ─── Fuzzy Matching ──────────────────────────────────────────
   test('matches fuzzy input', () => {
     const results = matchPatterns('health check', sampleDescriptions, { minConfidence: 0.2 })
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0]!.commandId).toBe('health')
+    expect(results[0]?.commandId).toBe('health')
   })
 
   test('matches partial word', () => {
     const results = matchPatterns('switch', sampleDescriptions)
     expect(results.length).toBeGreaterThan(0)
-    expect(results[0]!.commandId).toBe('switch_provider')
+    expect(results[0]?.commandId).toBe('switch_provider')
   })
 
   // ─── Confidence Threshold ────────────────────────────────────
@@ -136,15 +136,15 @@ describe('detectIntent', () => {
   test('detects health intent', () => {
     const intent = detectIntent('health check', sampleDescriptions)
     expect(intent).not.toBeNull()
-    expect(intent!.commandId).toBe('health')
-    expect(intent!.confidence).toBeGreaterThanOrEqual(0.4)
-    expect(intent!.source).toBe('nlp')
+    expect(intent?.commandId).toBe('health')
+    expect(intent?.confidence).toBeGreaterThanOrEqual(0.4)
+    expect(intent?.source).toBe('nlp')
   })
 
   test('detects provider switch intent', () => {
     const intent = detectIntent('switch to claude', sampleDescriptions)
     expect(intent).not.toBeNull()
-    expect(intent!.commandId).toBe('switch_provider')
+    expect(intent?.commandId).toBe('switch_provider')
   })
 
   test('returns null for low confidence', () => {
@@ -155,8 +155,8 @@ describe('detectIntent', () => {
   test('returns color for detected intent', () => {
     const intent = detectIntent('health', sampleDescriptions)
     expect(intent).not.toBeNull()
-    expect(intent!.color).toBeDefined()
-    expect(typeof intent!.color.primary).toBe('string')
+    expect(intent?.color).toBeDefined()
+    expect(typeof intent?.color.primary).toBe('string')
   })
 
   test('filters by category', () => {

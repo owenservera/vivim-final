@@ -1,6 +1,6 @@
 # Research Library — FRESHNESS
 
-*Last updated: 2026-07-19*
+*Last updated: 2026-07-20*
 
 | Report/Brief | Generated | Last Verified | Status |
 |--------------|-----------|---------------|--------|
@@ -18,6 +18,9 @@
 | Tooling Best Practices (report) | 2026-07-12 | — | ⚠️ Verify |
 | OpenClaw & Ecosystem (report + brief) | 2026-07-19 | 2026-07-19 | ✅ Fresh |
 | Chrome Fleet Management (report + brief + code-path) | 2026-07-19 | 2026-07-19 | ✅ Fresh |
+| LiteRT.js (Google AI Edge) (report + brief + code-path) | 2026-07-20 | 2026-07-20 | ✅ Fresh |
+| LiteRT.js × vivim integration analysis | 2026-07-20 | 2026-07-20 | ✅ Fresh |
+| Local Source-Code Indexing (LLM/Vibe) (report + brief + code-path) | 2026-07-20 | 2026-07-20 | ✅ Fresh |
 
 ## Rules
 

@@ -83,6 +83,7 @@ import {
   verifyFrontend,
 } from './runtime-test/index.ts'
 import { selectNext } from './select.ts'
+import { runStressTests } from './runtime-test/stress/runner.js'
 import { runTruthCommand } from './truth/cli.ts'
 import { productionBuildCli } from './production-build.ts'
 import {
@@ -198,6 +199,15 @@ async function main() {
     }
     case 'gc': {
       gc(args.includes('--force'))
+      break
+    }
+    case 'profiles': {
+      // Profile dedupe / cleanup operator command (specs/033-profile-cleanup).
+      // `devops profiles cleanup [--force] [--provider=<slug>] [--account=<email>]
+      //   [--reconcile-db] [--json]` — defaults to dry-run (never mutates).
+      const { runProfileCleanup } = await import('./profile-cleanup.js')
+      const code = await runProfileCleanup(args)
+      process.exit(code)
       break
     }
     case 'report': {
@@ -1441,9 +1451,24 @@ async function main() {
       }
       break
     }
+    case 'stress-test': {
+      const scenarioIdArg = args.find((a) => a.startsWith('--scenario='))
+      const scenarioId = scenarioIdArg ? Number.parseInt(scenarioIdArg.split('=')[1], 10) : undefined
+      const result = await runStressTests(scenarioId)
+      console.log(JSON.stringify(result, null, 2))
+      process.exit(result.ok ? 0 : 1)
+      break
+    }
+    case 'code-index': {
+      // Local-first, offline source-code indexer for LLM / vibe coding.
+      //   bun run devops code-index <index|search|stats|watch|mcp|clear> [path] [--db=...] [--k=N] [--token-budget=N] [--json]
+      const { mainCli } = await import('./code-index.ts')
+      await mainCli(args)
+      break
+    }
     default: {
       console.error(
-        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|features> [--tracker <path>]',
+        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|stress-test|features|code-index> [--tracker <path>]',
       )
       process.exit(1)
     }

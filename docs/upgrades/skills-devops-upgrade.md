@@ -29,6 +29,7 @@
 | File | Purpose | Status |
 |------|---------|--------|
 | `index.ts` | CLI entry — 1103 lines | ✅ Wiring works for core commands |
+| `code-index.ts` | Local offline code-indexing primitive (FTS5 + RRF, MCP) | ✅ Working |
 | `select.ts` | Next unit selector | ✅ Working |
 | `mark.ts` | State transitions | ✅ Working |
 | `gate.ts` | Quality gate (typecheck + lint + test) | ✅ Working |

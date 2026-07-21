@@ -37,6 +37,7 @@
     "engines/agent-builder",
     "engines/agentic-loop",
     "engines/airgap",
+    "engines/api-provider-adapter",
     "engines/audit-trail",
     "engines/automation",
     "engines/autonomous-execution",
@@ -57,6 +58,7 @@
     "engines/capability-resolution",
     "engines/capability-shape-registry",
     "engines/capability-snapshot",
+    "engines/capability-taxonomy",
     "engines/capability",
     "engines/cdp-capability-registrar",
     "engines/cdp-discovery",
@@ -99,6 +101,7 @@
     "engines/kernel",
     "engines/knowledge-extractor",
     "engines/knowledge-ingestion",
+    "engines/live-capability-registry",
     "engines/local-agent",
     "engines/local-model-adapter",
     "engines/lock-manager",
@@ -131,6 +134,7 @@
     "engines/provider-protocol-loader",
     "engines/provider-registrar",
     "engines/provider-selectors",
+    "engines/provider-test-harness",
     "engines/registration-auditor",
     "engines/request-queue",
     "engines/retry-engine",
@@ -165,6 +169,7 @@
     "engines/workflow-compiler",
     "engines/workflow-engine",
     "engines/workflow-templates",
+    "engines/workspace-presets",
     "errors",
     "executor/async-mutex",
     "executor/cdp-error-classifier",
@@ -712,6 +717,10 @@
       "to": "engines/unified-registry"
     },
     {
+      "from": "engines/api-provider-adapter",
+      "to": "errors"
+    },
+    {
       "from": "engines/audit-trail",
       "to": "ids"
     },
@@ -996,6 +1005,10 @@
       "to": "storage/contracts"
     },
     {
+      "from": "engines/capability-taxonomy",
+      "to": "engines/unified-registry"
+    },
+    {
       "from": "engines/capability",
       "to": "errors"
     },
@@ -1162,6 +1175,10 @@
     {
       "from": "engines/content-unit-decomposer",
       "to": "schema/streaming"
+    },
+    {
+      "from": "engines/content-unit-decomposer",
+      "to": "storage/contracts"
     },
     {
       "from": "engines/context-assembly",
@@ -1461,6 +1478,14 @@
     },
     {
       "from": "engines/intent-decomposer",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/intent-decomposer",
+      "to": "engines/local-model-adapter"
+    },
+    {
+      "from": "engines/intent-decomposer",
       "to": "engines/unified-registry"
     },
     {
@@ -1538,6 +1563,38 @@
     {
       "from": "engines/knowledge-ingestion",
       "to": "engines/knowledge-extractor"
+    },
+    {
+      "from": "engines/live-capability-registry",
+      "to": "errors"
+    },
+    {
+      "from": "engines/live-capability-registry",
+      "to": "ids"
+    },
+    {
+      "from": "engines/live-capability-registry",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/live-capability-registry",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/live-capability-registry",
+      "to": "engines/mcp-client-adapter"
+    },
+    {
+      "from": "engines/live-capability-registry",
+      "to": "engines/sandbox-runner"
+    },
+    {
+      "from": "engines/live-capability-registry",
+      "to": "engines/telemetry-audit"
+    },
+    {
+      "from": "engines/live-capability-registry",
+      "to": "engines/unified-registry"
     },
     {
       "from": "engines/local-agent",
@@ -1776,6 +1833,10 @@
       "to": "engines/event-record-store"
     },
     {
+      "from": "engines/otel-sink",
+      "to": "config"
+    },
+    {
       "from": "engines/parser-repair",
       "to": "storage/contracts"
     },
@@ -1798,6 +1859,10 @@
     {
       "from": "engines/plugin-system",
       "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/protocol-discovery",
+      "to": "errors"
     },
     {
       "from": "engines/protocol-loop-parser",
@@ -1938,6 +2003,22 @@
     {
       "from": "engines/provider-selectors",
       "to": "config/provider-registry"
+    },
+    {
+      "from": "engines/provider-test-harness",
+      "to": "ids"
+    },
+    {
+      "from": "engines/provider-test-harness",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/provider-test-harness",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/provider-test-harness",
+      "to": "engines/chrome-governor"
     },
     {
       "from": "engines/registration-auditor",
@@ -2637,6 +2718,18 @@
     },
     {
       "from": "index",
+      "to": "engines/workspace-presets"
+    },
+    {
+      "from": "index",
+      "to": "engines/capability-taxonomy"
+    },
+    {
+      "from": "index",
+      "to": "engines/provider-test-harness"
+    },
+    {
+      "from": "index",
       "to": "engines/streaming-channel-caps"
     },
     {
@@ -2654,6 +2747,10 @@
     {
       "from": "index",
       "to": "engines/observability"
+    },
+    {
+      "from": "index",
+      "to": "engines/api-provider-adapter"
     },
     {
       "from": "index",
@@ -3125,6 +3222,10 @@
     },
     {
       "from": "server/index",
+      "to": "server/memory-viz-router"
+    },
+    {
+      "from": "server/index",
       "to": "server/mux-router"
     },
     {
@@ -3165,6 +3266,10 @@
     },
     {
       "from": "server/index",
+      "to": "engines/memory-engine"
+    },
+    {
+      "from": "server/index",
       "to": "engines/stream-parser"
     },
     {
@@ -3182,10 +3287,6 @@
     {
       "from": "server/index",
       "to": "engines/execution-memoizer"
-    },
-    {
-      "from": "server/index",
-      "to": "engines/memory-engine"
     },
     {
       "from": "server/index",
@@ -3214,6 +3315,10 @@
     {
       "from": "server/index",
       "to": "executor/profile-allocator"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/mcp-server-adapter"
     },
     {
       "from": "server/index",
@@ -3702,6 +3807,10 @@
       "layer": 5
     },
     {
+      "module": "engines/api-provider-adapter",
+      "layer": 3
+    },
+    {
       "module": "engines/audit-trail",
       "layer": 3
     },
@@ -3779,6 +3888,10 @@
     },
     {
       "module": "engines/capability-snapshot",
+      "layer": 3
+    },
+    {
+      "module": "engines/capability-taxonomy",
       "layer": 3
     },
     {
@@ -3950,6 +4063,10 @@
       "layer": 3
     },
     {
+      "module": "engines/live-capability-registry",
+      "layer": 3
+    },
+    {
       "module": "engines/local-agent",
       "layer": 3
     },
@@ -4076,6 +4193,10 @@
     {
       "module": "engines/provider-selectors",
       "layer": 1
+    },
+    {
+      "module": "engines/provider-test-harness",
+      "layer": 3
     },
     {
       "module": "engines/registration-auditor",
@@ -4211,6 +4332,10 @@
     },
     {
       "module": "engines/workflow-templates",
+      "layer": 3
+    },
+    {
+      "module": "engines/workspace-presets",
       "layer": 3
     },
     {
@@ -4911,7 +5036,7 @@
     },
     {
       "module": "config",
-      "fanIn": 2,
+      "fanIn": 3,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -4967,6 +5092,16 @@
       "selfDeps": 0,
       "totalDeps": 0,
       "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/api-provider-adapter",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
       "files": 1
     },
     {
@@ -5121,9 +5256,9 @@
     },
     {
       "module": "engines/capability-event-bus",
-      "fanIn": 36,
+      "fanIn": 39,
       "fanOut": 1,
-      "instability": 0.02702702702702703,
+      "instability": 0.025,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -5170,6 +5305,16 @@
       "files": 1
     },
     {
+      "module": "engines/capability-taxonomy",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/capability",
       "fanIn": 1,
       "fanOut": 5,
@@ -5201,9 +5346,9 @@
     },
     {
       "module": "engines/chrome-governor",
-      "fanIn": 25,
+      "fanIn": 26,
       "fanOut": 8,
-      "instability": 0.24242424242424243,
+      "instability": 0.23529411764705882,
       "selfDeps": 0,
       "totalDeps": 8,
       "cohesion": 0,
@@ -5292,10 +5437,10 @@
     {
       "module": "engines/content-unit-decomposer",
       "fanIn": 1,
-      "fanOut": 1,
-      "instability": 0.5,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
       "selfDeps": 0,
-      "totalDeps": 1,
+      "totalDeps": 2,
       "cohesion": 0,
       "files": 1
     },
@@ -5552,10 +5697,10 @@
     {
       "module": "engines/intent-decomposer",
       "fanIn": 2,
-      "fanOut": 2,
-      "instability": 0.5,
+      "fanOut": 4,
+      "instability": 0.6666666666666666,
       "selfDeps": 0,
-      "totalDeps": 2,
+      "totalDeps": 4,
       "cohesion": 0,
       "files": 1
     },
@@ -5590,6 +5735,16 @@
       "files": 1
     },
     {
+      "module": "engines/live-capability-registry",
+      "fanIn": 0,
+      "fanOut": 8,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 8,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/local-agent",
       "fanIn": 2,
       "fanOut": 4,
@@ -5601,9 +5756,9 @@
     },
     {
       "module": "engines/local-model-adapter",
-      "fanIn": 1,
+      "fanIn": 2,
       "fanOut": 1,
-      "instability": 0.5,
+      "instability": 0.3333333333333333,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -5641,9 +5796,9 @@
     },
     {
       "module": "engines/mcp-client-adapter",
-      "fanIn": 1,
+      "fanIn": 2,
       "fanOut": 1,
-      "instability": 0.5,
+      "instability": 0.3333333333333333,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -5651,9 +5806,9 @@
     },
     {
       "module": "engines/mcp-server-adapter",
-      "fanIn": 0,
+      "fanIn": 1,
       "fanOut": 2,
-      "instability": 1,
+      "instability": 0.6666666666666666,
       "selfDeps": 0,
       "totalDeps": 2,
       "cohesion": 0,
@@ -5772,11 +5927,11 @@
     {
       "module": "engines/otel-sink",
       "fanIn": 0,
-      "fanOut": 0,
-      "instability": 0,
+      "fanOut": 1,
+      "instability": 1,
       "selfDeps": 0,
-      "totalDeps": 0,
-      "cohesion": 1,
+      "totalDeps": 1,
+      "cohesion": 0,
       "files": 1
     },
     {
@@ -5822,11 +5977,11 @@
     {
       "module": "engines/protocol-discovery",
       "fanIn": 0,
-      "fanOut": 0,
-      "instability": 0,
+      "fanOut": 1,
+      "instability": 1,
       "selfDeps": 0,
-      "totalDeps": 0,
-      "cohesion": 1,
+      "totalDeps": 1,
+      "cohesion": 0,
       "files": 1
     },
     {
@@ -5910,6 +6065,16 @@
       "files": 1
     },
     {
+      "module": "engines/provider-test-harness",
+      "fanIn": 1,
+      "fanOut": 4,
+      "instability": 0.8,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/registration-auditor",
       "fanIn": 1,
       "fanOut": 3,
@@ -5951,9 +6116,9 @@
     },
     {
       "module": "engines/sandbox-runner",
-      "fanIn": 4,
+      "fanIn": 5,
       "fanOut": 3,
-      "instability": 0.42857142857142855,
+      "instability": 0.375,
       "selfDeps": 0,
       "totalDeps": 3,
       "cohesion": 0,
@@ -6151,7 +6316,7 @@
     },
     {
       "module": "engines/telemetry-audit",
-      "fanIn": 1,
+      "fanIn": 2,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6191,9 +6356,9 @@
     },
     {
       "module": "engines/unified-registry",
-      "fanIn": 31,
+      "fanIn": 33,
       "fanOut": 1,
-      "instability": 0.03125,
+      "instability": 0.029411764705882353,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -6250,8 +6415,18 @@
       "files": 5
     },
     {
+      "module": "engines/workspace-presets",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
       "module": "errors",
-      "fanIn": 69,
+      "fanIn": 72,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6451,7 +6626,7 @@
     },
     {
       "module": "ids",
-      "fanIn": 50,
+      "fanIn": 52,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6462,10 +6637,10 @@
     {
       "module": "index",
       "fanIn": 0,
-      "fanOut": 85,
+      "fanOut": 89,
       "instability": 1,
       "selfDeps": 0,
-      "totalDeps": 85,
+      "totalDeps": 89,
       "cohesion": 0,
       "files": 1
     },
@@ -6982,10 +7157,10 @@
     {
       "module": "server/index",
       "fanIn": 11,
-      "fanOut": 61,
-      "instability": 0.8472222222222222,
+      "fanOut": 63,
+      "instability": 0.8513513513513513,
       "selfDeps": 0,
-      "totalDeps": 61,
+      "totalDeps": 63,
       "cohesion": 0,
       "files": 1
     },
@@ -7021,9 +7196,9 @@
     },
     {
       "module": "server/memory-viz-router",
-      "fanIn": 0,
+      "fanIn": 1,
       "fanOut": 2,
-      "instability": 1,
+      "instability": 0.6666666666666666,
       "selfDeps": 0,
       "totalDeps": 2,
       "cohesion": 0,
@@ -7131,9 +7306,9 @@
     },
     {
       "module": "storage/contracts",
-      "fanIn": 69,
+      "fanIn": 72,
       "fanOut": 13,
-      "instability": 0.15853658536585366,
+      "instability": 0.15294117647058825,
       "selfDeps": 1,
       "totalDeps": 13,
       "cohesion": 0.07692307692307693,

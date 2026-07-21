@@ -10,7 +10,8 @@ export function corsHeaders(): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers':
+      'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
   }
 }
 
@@ -22,6 +23,27 @@ export function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data, replacer), {
     status,
     headers: { 'Content-Type': 'application/json', ETag: etag, ...corsHeaders() },
+  })
+}
+
+// Add CORS headers to any Response (including ones created from Next.js)
+export function withCORS(res: Response): Response {
+  // If it already has CORS headers, return as-is
+  if (res.headers.get('Access-Control-Allow-Headers')) {
+    return res
+  }
+  // Clone to avoid mutating the original
+  const headers = new Headers(res.headers)
+  const cors = corsHeaders()
+  for (const [k, v] of Object.entries(cors)) {
+    headers.set(k, v)
+  }
+  const body = res.body ? res.arrayBuffer() : null
+  return new Response(body, {
+    status: res.status,
+    headers,
+    // Preserve other response properties
+    statusText: res.statusText,
   })
 }
 

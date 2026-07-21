@@ -297,6 +297,27 @@ export { buildNewsletterWorkflow } from './engines/workflow-templates/newsletter
 export type { NewsletterOpts } from './engines/workflow-templates/newsletter.js'
 export { registerSendCaps } from './engines/send-capability.js'
 
+// Phase 4.2: Workspace Presets
+export { WorkspacePresets } from './engines/workspace-presets.js'
+export type {
+  PresetId,
+  PanelKind,
+  BuiltinPanel,
+  CanvasPanel,
+  PanelSpec,
+  WorkspaceLayoutRow,
+  WorkspaceManager,
+  CanvasSpawner,
+} from './engines/workspace-presets.js'
+
+// Phase 5.4: Capability Taxonomy v2
+export { CAPABILITY_TAXONOMY_V2 } from './engines/capability-taxonomy.js'
+export type { CapabilityTaxonomyEntry } from './engines/capability-taxonomy.js'
+
+// Phase 6.10: Provider Test Harness
+export { ProviderTestHarness } from './engines/provider-test-harness.js'
+export type { HarnessOutcome, ProviderCapabilityRow } from './engines/provider-test-harness.js'
+
 // Phase 27: Streaming Channels
 export { registerStreamingChannelCaps } from './engines/streaming-channel-caps.js'
 export { InMemoryChannelStore } from './storage/impl/channel-store-impl.js'
@@ -311,6 +332,10 @@ export { ImageGenBridge, generateImage } from './engines/image-gen-bridge.js'
 
 // Phase 9: Observability
 export * from './engines/observability/index.js'
+
+// Phase 5.3: API-direct providers
+export { ApiProviderAdapter } from './engines/api-provider-adapter.js'
+export type { ApiProviderConfig } from './engines/api-provider-adapter.js'
 
 // Phase 11: Stealth Core
 export * from './engines/stealth/index.js'

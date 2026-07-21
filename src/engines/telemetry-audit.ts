@@ -34,9 +34,9 @@ const MAX_RECORDS = 10_000
 export class TelemetryAudit {
   private records: NetworkCallRecord[] = []
   private providerDomains: string[]
+  private consentMode: boolean
 
-  constructor(providerUrls: string[]) {
-    // Extract domain from each provider URL for matching
+  constructor(providerUrls: string[], consentMode = false) {
     this.providerDomains = providerUrls.map((url) => {
       try {
         return new URL(url).hostname
@@ -44,6 +44,33 @@ export class TelemetryAudit {
         return url
       }
     })
+    this.consentMode = consentMode
+  }
+
+  /** Consent-gated fetch. Blocks non-consented hosts when consentMode is true. */
+  async fetch(
+    url: string,
+    init: RequestInit,
+    initiator = 'live-capability-http',
+  ): Promise<Response> {
+    if (this.consentMode) {
+      const hostname = this.extractHostname(url)
+      const isConsented = this.providerDomains.some((d) => hostname.includes(d))
+      if (!isConsented) {
+        throw new EngineError(`Host not consented: ${hostname}`)
+      }
+    }
+    const start = Date.now()
+    const res = await globalThis.fetch(url, init)
+    this.recordCall({
+      timestamp: Date.now(),
+      method: init.method ?? 'GET',
+      url,
+      initiator,
+      responseStatus: res.status,
+      durationMs: Date.now() - start,
+    })
+    return res
   }
 
   recordCall(record: Omit<NetworkCallRecord, 'id'>): void {

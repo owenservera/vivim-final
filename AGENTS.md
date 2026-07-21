@@ -128,7 +128,7 @@ chrome-profiles/
 - **Never** create top-level `gemini/`, `chatgpt/`, `claude/` directories at the repo root — those are stray duplicates and get deleted.
 - **One account per provider** is the intended steady state (`owservera` for all three). When adopting/cleaning up, keep a single `owservera` profile and delete the rest.
 - Each profile dir holds a `.profile-meta.json` (`providerSlug`, `accountId`, `allocatedAt`, `lastUsed`).
-- The profile dir is the source of truth for "is this provider authenticated" (`ProfileAllocator.isAuthenticated` checks `Cookies`/`Network/Cookies`), not the `Account` DB row.
+- The profile dir is the source of truth for "is this provider authenticated" (`ProfileAllocator.isAuthenticated` checks `Default/Network/Cookies` or `Profile N/Network/Cookies`), not the `Account` DB row.
 
 ### CDP Connection Gotchas (Provider-Specific)
 
@@ -215,6 +215,12 @@ Non-negotiable constraints enforced by `bun run devops invariants check`.
 3. **Research-First:** No implementation without research report classification.
 4. **Phase Gates:** Phase N requires phase N-1 complete.
 5. **DB-Only Parser Logic:** `StreamParserEngine` loads parser logic **only** from DB (`parser_logic_code` with `logic_type=inline`). File-based parsers are rejected unless `allowFileLogic` is explicitly enabled. All seeded parsers live in `seeds/parsers/harvested/*.ts` as `LOGIC_CODE` strings and are upserted into DB via `seeds/parsers/harvest.seed.ts`.
+6. **Chrome Slave Profile = Source of Truth:** Cookie files in profile directory determine "logged in" state — NOT DB loginState row. `isAuthenticated()` checks cookie files.
+7. **One Profile Per (Provider, Account):** ProfileAllocator enforces singleton — no duplicate profiles for same provider+account combination.
+8. **Lazy Startup:** Chrome slaves auto-launch when first needed, keep alive until `stop` command. No always-on requirement for dev loop.
+9. **No Runaway Creation:** FleetSupervisor limits (maxConcurrent, queue, timeout) + ProfileAllocator singleton + spawn guard prevent duplicate Chrome instances.
+10. **Triple-Layer State:** Profile + DB + runtime must stay consistent. Profile dir is canonical, DB and runtime are derived from profile state.
+11. **Relogin Ready:** Agent detects session expiry via `isAuthenticated()`, suggests relogin to user, user confirms, system executes relogin flow.
 
 ### Harness Command Registry (Completed — spec 017)
 
@@ -311,6 +317,18 @@ Use Unit 24.1 (registry contract), Unit 24.3 (CLI generation), and Unit 25.1 (ca
 3. Add NL patterns to `src/engines/nlcl/catalog.ts` linking to your capabilityId
 4. Add `cliCommand`, `ui`, and `mcpToolName` for cross-surface parity
 
+#### LLM-as-Human Testing (Spec 032)
+
+The LLM-as-Human production test suite is itself a `UnifiedCapability` set (no second
+transport). Source of truth is `devops/llm-testing/capabilities.ts`, which registers
+`cap:llm_test:{run,report,status,patterns,providers,parity}` (surfaces: cli/api/mcp) and is
+wired into `src/server/index.ts` bootstrap (registration in `devops/llm-testing/capabilities.ts`). The orchestrator lives in
+`devops/llm-testing/`; adapters for cli/ui/api/mcp/workflow/provider all derive their
+test cases from the live `UnifiedCapabilityRegistry` (never hardcoded). NL phrases
+(`run llm tests`, `check parity`) bind in `src/engines/nlcl/catalog.ts` to the
+`cap:llm_test:*` ids. `llm_test_parity` asserts the frontend=backend=cli=api=mcp mandate.
+
+
 #### CLI Dispatch (how the thin-client actually routes)
 
 `src/cli/index.ts` is **not** a second transport — it is a thin client to a running
@@ -360,7 +378,7 @@ These scripts start/stop the backend, frontend, and health monitor:
 | `scripts/start-backend.ps1` | Launch backend only |
 | `scripts/start-frontend.ps1` | Launch frontend only |
 | `scripts/stop-all.ps1` | Stop all services (infallible) |
-| `scripts/health-check.ps1` | Continuous health monitoring |
+| `scripts/health-check.ps1` | Continuous health monitoring (use `-Once` for single check) |
 
 **✅ CORRECT — always use `pwsh scripts/<name>.ps1` from repo root:**
 ```powershell
@@ -380,6 +398,30 @@ pwsh -Command ".\scripts\start-all.ps1"               # -Command → $null
 Start-Process pwsh -ArgumentList "scripts\start-all.ps1"  # nested pwsh → path broken
 pwsh -File scripts/start-all.ps1                      # -File from wrong CWD → path wrong
 ```
+
+### PS1 Internal Invariants (agents must know these)
+
+When editing or creating PS1 scripts, these rules prevent hangs:
+
+1. **Never use `-RedirectStandardOutput`/`-RedirectStandardError` in `Start-Process`.** On this
+   machine, `bun` resolves to `bun.ps1` (npm wrapper at `AppData\Roaming\npm\bun.ps1`). The real
+   exe is at `C:\Users\VIVIM.inc\.bun\bin\bun.exe`. `Resolve-Bun` in `_shared.ps1` unwraps it.
+   Even with the real `bun.exe`, `-RedirectStandardOutput` creates a pipe. If `bun.exe` writes
+   >4KB to stdout before the parent reads, the pipe buffer fills, `bun.exe` blocks, the parent
+   never reads (it's in a polling loop), and the backend never starts. **Fix:** remove the
+   redirect — output goes to the terminal directly.
+
+2. **Use `Write-Output` for Log functions, not `Write-Host`.** `Write-Host` goes to stream 6
+   (Information), which `2>&1 | Select-Object` does not capture. If you need the agent to see
+   log output, use `Write-Output` (stream 1).
+
+3. **All shared helpers live in `scripts/_shared.ps1`.** Dot-source it:
+   `. (Join-Path $PSScriptRoot '_shared.ps1')`. Provides `Resolve-Bun`, `Kill-Pid`,
+   `Kill-Port`, `Find-PidOnPort`, `Stop-ByPidFile`, `Test-PortFree`.
+
+4. **Smoke tests must have client-side timeouts.** Endpoints like `/api/conversations/:id/send`
+   block forever waiting for a CDP browser that isn't attached. Always wrap `fetch` calls with
+   `AbortController` + timeout so the test completes.
 
 ### PowerShell Command Patterns
 ```powershell
@@ -484,6 +526,7 @@ bun run devops gate [--strict]        # quality gate, exit non-zero on fail
 bun run devops parallelize --max 4 [--dry-run] [--tracker <path>]  # fan out N units to isolated subagents
 bun run devops context                # durable task-state snapshot (resume after compaction)
 bun run devops audit <id> "<notes>"   # append PROGRESS.md line w/ resolved sha (post-commit)
+bun run devops code-index <build|search|stats|watch|mcp> [--all] [--no-embed] [--no-watch]  # local offline code indexing
 ```
 **Single-pass commit rule:** always use `devops mark <id> done "<msg>"` — it transitions state,
 appends the PROGRESS.md audit line with the real resolved sha, and folds everything into ONE git
@@ -553,6 +596,91 @@ bun run devops runtime-test test --nl "list conversations"
 
 **Skill source:** `.kilo/skills/vivim-runtime/SKILL.md` (devops dir, source of truth)
 **Harness copy:** `.opencode/skill/vivim-runtime/SKILL.md` (generated from source)
+
+## Local Code Indexing (devops `code-index`)
+
+Locally-indexed, offline code retrieval for agents. **Prefer `code-index search` over
+grep+read for code discovery** — it returns ranked `path:line` chunks within a token budget
+instead of forcing full-file reads (cuts the ~60–70% exploration tax). Native
+(`devops/code-index.ts`, Bun `Bun.sqlite` FTS5), zero runtime deps, fully offline. See
+`docs/decisions/ADR-017.md` and the A5 research brief
+(`docs/research/briefs/local-code-indexing-llm-brief.md`).
+
+```bash
+bun run devops code-index build            # index code-only roots (src, devops, web, scripts, seeds, prisma); watch by default
+bun run devops code-index build --all      # index the whole repo
+bun run devops code-index build --no-watch # one-shot, no file watcher
+bun run devops code-index search "StreamParserEngine fallback"
+bun run devops code-index stats
+bun run devops code-index mcp              # stdio MCP: code_index_search + code_index_stats
+```
+
+- **Scope:** code-only roots by default; `--all` for the whole repo. `harvest/` dumps and
+  `.html` are excluded to avoid OOM.
+- **Retrieval:** lexical FTS5/BM25 by default; semantic opt-in via a pluggable HTTP embedder
+  (`nomic-embed-text` at `localhost:11434/v1` by default). Falls back to lexical if no local
+  model is reachable (one-time warning). Override with `CODE_INDEX_EMBEDDER_URL` /
+  `CODE_INDEX_EMBEDDER_MODEL`. Semantic + lexical are fused with RRF(k=60).
+- **Store:** `.runtime/code-index.sqlite` (`chunks`, `chunks_fts` FTS5 external-content, `files`
+  hash table, `meta`). Incremental by content hash; watch mode keeps it fresh in-session.
+- **Surfaces:** CLI for sub-agents (they can't call MCP directly) + stdio MCP for the
+  top-level agent. This is the recommended replacement for `grep`/`Read` during exploration.
+
+## Frontend Convergence (Sandbox Harvest — completed)
+
+All sandbox behavioral concepts have been collapsed into the main UI (`web/ui/`).
+The empty `web/sandbox/` dir remains (stale file lock from bun watcher, harmless).
+
+### Architecture Rules
+- **Design system:** CSS variables (`var(--bg)`, `var(--text)`, `var(--border)`, `var(--accent)`) with inline styles — NOT Tailwind.
+- **FRONTEND = BACKEND:** capability `slug` is the single link; no `if (slug === 'x')` conditionals.
+- **Backend:** `http://localhost:9420`, WebSocket `ws://localhost:9420/ws`.
+
+### Harvested Components (10 total)
+
+| Tier | Component | File | Surface |
+|------|-----------|------|---------|
+| 1 — Chat UX | RAF-batched WS streaming + block rendering | `Composer.tsx`, `MessageBlock.tsx` | `chat` |
+| 1 — Chat UX | Latency breakdown bar chart | `LatencyBreakdown.tsx` | `chat` |
+| 1 — Chat UX | Provider badges/colors | `ConversationList.tsx` | sidebar |
+| 2 — Capability | Searchable capability grid | `CapabilityCatalog.tsx` | `capabilities` |
+| 3 — Dev Tools | WS event firehose + NL inject + latency monitor | `DevConsole.tsx` | overlay |
+| 4 — Admin | Provider health cards | `HealthDashboard.tsx` | `health` |
+| 4 — Admin | Account CRUD modal | `ProviderManager.tsx` | modal |
+| 4 — Admin | Fleet/chrome config modal | `WorkspaceSettings.tsx` | modal |
+
+**Barrel exports:** `components/canvas/index.ts` exports all 7 new components + 2 types.
+
+### Keyboard Shortcuts
+| Shortcut | Action | Component |
+|----------|--------|-----------|
+| `Ctrl+K` / `⌘K` | Command Palette | `CommandPalette.tsx` |
+| `Ctrl+\`` / `⌘\`` | Dev Console toggle | `DevConsole.tsx` (wired in `page.tsx`) |
+| `Ctrl+Tab` / `⌘+Tab` | Cycle surface tabs | `SurfaceTabs.tsx` |
+| `Ctrl+Shift+Tab` / `⌘+Shift+Tab` | Cycle surface tabs (reverse) | `SurfaceTabs.tsx` |
+
+### UX Patterns
+- **Conversation search** — text filter with memoized list (`ConversationList.tsx`)
+- **Execution toast** — 2s auto-dismiss green/red toast on capability execute (`CapabilityCatalog.tsx`)
+- **Error states** — all components catch HTTP + network errors with red message
+- **Empty states** — "No X yet" / "No X match your filter" for all lists
+- **Auto-refresh** — HealthDashboard refreshes every 15s
+- **WS streaming** — RAF-batched (60fps flush) via `pendingBlocksRef` + `requestAnimationFrame`
+
+### TypeScript
+- All new/modified files pass `tsc --noEmit`. The only error is pre-existing `LoginPanel.tsx:37` (`Property 'token' does not exist`).
+
+### Next Steps for Professional Frontend
+1. **Virtual scrolling** for large conversation/message lists (react-window or similar)
+2. **Theme system** — light/dark/auto + 6 accent colors + font scale (already seeded as `#4` in `page.tsx` Phase 3)
+3. **Onboarding tour** (already seeded as `#5` in `page.tsx`)
+4. **Responsive layout** — mobile breakpoints for sidebar/overlay/surfaces
+5. **CSS transitions** — smooth surface tab transitions, modal open/close, toast animations
+6. **Accessibility** — aria labels, focus trapping in modals, keyboard navigation for all surfaces
+7. **Loading skeletons** — placeholder UI during data fetches (not just text "Loading…")
+8. **Error recovery** — retry buttons on failed API calls
+9. **Undo/redo** for destructive actions (delete conversation, capability execute)
+10. **Moment (time-relative)** formatting in conversation list timestamps
 
 ## Node-Layer v2 (Universal Node DB — completed)
 

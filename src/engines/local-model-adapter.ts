@@ -36,6 +36,15 @@ export class LocalModelAdapter {
     this.config = config
   }
 
+  /** Alias for generate() returning just the response string. Used by IntentDecomposer LLM strategy. */
+  async complete(
+    prompt: string,
+    _opts?: { temperature?: number; maxTokens?: number },
+  ): Promise<string> {
+    const result = await this.generate(prompt)
+    return result.response
+  }
+
   async isAvailable(): Promise<boolean> {
     try {
       const controller = new AbortController()

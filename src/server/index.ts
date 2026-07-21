@@ -41,6 +41,7 @@ import { createAutonomousRouter } from './autonomous-router.js'
 import { createCapabilityRouter } from './capability-router.js'
 import { createConversationRouter } from './conversation-router.js'
 import { createKnowledgeRouter } from './knowledge-router.js'
+import { createMemoryVizRouter } from './memory-viz-router.js'
 import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
 import { errorResponse, json } from './response.js'
@@ -74,6 +75,7 @@ export interface ServerContext {
   userIdentity?: UserIdentityEngine
   memoryFabric?: import('../engines/memory/memory-fabric.js').MemoryFabric
   agentBuilder?: import('../engines/agent-builder.js').AgentBuilderEngine
+  memoryEngine?: import('../engines/memory-engine.js').MemoryEngine
 }
 
 /** Shutdown hooks registered during server lifetime */
@@ -125,7 +127,19 @@ export async function createServer(port = 9420): Promise<ServerContext> {
     fetch(req, server) {
       const url = new URL(req.url)
 
-      // Liveness — always 200 if process is running (no auth)
+      // CORS preflight — allow all origins, methods, headers
+      if (req.method === 'OPTIONS') {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
+            'Access-Control-Allow-Headers':
+              'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
+            'Access-Control-Max-Age': '86400',
+          },
+        })
+      }
+
       if (url.pathname === '/health') {
         return json({ status: 'ok', version: '1.0.0' })
       }
@@ -655,6 +669,28 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       localAgentExecutor,
     })
 
+    // ── Spec 032: LLM-as-Human testing as a single UnifiedCapability ──────
+    // Collapses `llm-test` into the One Entry Point — no parallel CLI command
+    // tree, the orchestrator runs through the registry handler.
+    {
+      const { registerLlmTestCapabilities } = await import(
+        '../../devops/llm-testing/capabilities.js'
+      )
+      registerLlmTestCapabilities(registry, {
+        db,
+        conversationStore: convStore,
+        governor,
+        conversationManager,
+        profileAllocator,
+        memoryEngine,
+        semanticSearch,
+        knowledgeIngestion,
+        synthesizer,
+        localAgentStore,
+        localAgentExecutor,
+      })
+    }
+
     // Register generated capabilities from the taxonomy pool (196 caps)
     registerGeneratedCapabilities(registry, {
       db,
@@ -668,6 +704,23 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       synthesizer,
     })
 
+    // ── MCP server (Spec 032 cross-surface) ─────────────────────────────────
+    // Expose every mcp-surface capability as a live MCP tool over WebSocket so
+    // the llm-testing mcp adapter can actually discover + invoke them. Without
+    // this the mcp surface silently yields 0 tests and parity is meaningless.
+    try {
+      const { McpServerAdapter } = await import('../engines/mcp-server-adapter.js')
+      const mcpPort = Number(process.env.MCP_PORT ?? 0) || port + 1
+      const mcpServer = new McpServerAdapter(governor, registry)
+      await mcpServer.start({ port: mcpPort, hostname: '127.0.0.1' })
+      ;(globalThis as Record<string, unknown>).__mcpServer = mcpServer
+      console.log(
+        `[boot] MCP server listening on 127.0.0.1:${mcpPort} (${mcpServer.getTools().length} tools)`,
+      )
+    } catch (err) {
+      console.warn('[boot] MCP server skipped:', err)
+    }
+
     // ── Federated per-agent memory (spec 024) ───────────────────────────────
     // Construct the MemoryFabric once and wire it into AgentBuilderEngine so
     // every spawned agent auto-provisions a per-agent memory subsystem
@@ -677,6 +730,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       const { MemoryFabric } = await import('../engines/memory/memory-fabric.js')
       const { AgentBuilderEngine } = await import('../engines/agent-builder.js')
       const { AgenticStoreImpl } = await import('../storage/impl/agentic-store-impl.js')
+      const { EventRecordStore } = await import('../engines/event-record-store.js')
       const { KnowledgeExtractorStoreImpl } = await import(
         '../storage/impl/knowledge-extractor-store-impl.js'
       )
@@ -685,6 +739,14 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       )
       const nodeStoreImpl = new NodeStoreImpl(db.prisma as never)
       const agenticStoreImpl = new AgenticStoreImpl(nodeStoreImpl, db.prisma as never)
+      const eventStore = new EventRecordStore(db.prisma as never)
+      // Expose memory stores globally so the LLM-testing orchestrator (Spec 032)
+      // can project provider test results into agent memory (T16) without a
+      // BootstrapServices change — the supervisor may not be enabled at boot.
+      ;(globalThis as Record<string, unknown>).__capStoreMemory = {
+        agenticStore: agenticStoreImpl,
+        eventRecordStore: eventStore,
+      }
       const kexStoreImpl = new KnowledgeExtractorStoreImpl(db)
       const ssStoreImpl = new SemanticSearchStoreImpl(db)
       const beliefStore = new BeliefStore(agenticStoreImpl)
@@ -704,42 +766,40 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         .provisionAgentMemory('system', 'system-run')
         .catch((e) => console.warn('[boot] system memory subsystem provision skipped:', e))
       console.log('[boot] MemoryFabric + AgentBuilderEngine wired (per-agent memory enabled)')
+
+      // ── OpenCode `serve` supervisor (feature 027, ADDITIVE, OFF by default) ──
+      // Peer provider 'opencode'. Supervises a local `opencode serve` subprocess and
+      // ingests its sessions into AgentSession/EventRecord. Local-first: only starts
+      // when OPENCODE_SERVE_ENABLED=1. Never blocks other providers' boot.
+      // Nested inside memory-fabric block — requires agenticStoreImpl in scope.
+      if (process.env.OPENCODE_SERVE_ENABLED === '1') {
+        try {
+          const { OpenCodeSupervisor } = await import('../engines/opencode/opencode-supervisor.js')
+          const { OpenCodeClient } = await import('../engines/opencode/opencode-client.js')
+          const { OpenCodeIngest } = await import('../engines/opencode/opencode-ingest.js')
+          const supervisor = new OpenCodeSupervisor({
+            port: Number(process.env.OPENCODE_SERVE_PORT ?? 0) || undefined,
+            password: process.env.OPENCODE_SERVER_PASSWORD,
+          })
+          const { port } = await supervisor.start()
+          const client = new OpenCodeClient({
+            port,
+            password: process.env.OPENCODE_SERVER_PASSWORD ?? '',
+            username: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
+          })
+          const ingest = new OpenCodeIngest({
+            client,
+            agenticStore: agenticStoreImpl,
+            eventRecordStore: eventStore,
+          })
+          ;(globalThis as Record<string, unknown>).__opencodeServe = { supervisor, client, ingest }
+          console.log(`[boot] OpenCode serve supervisor started on 127.0.0.1:${port}`)
+        } catch (err) {
+          console.warn('[boot] OpenCode serve supervisor skipped:', err)
+        }
+      }
     } catch (err) {
       console.warn('[boot] memory fabric wiring skipped:', err)
-    }
-
-    // ── OpenCode `serve` supervisor (feature 027, ADDITIVE, OFF by default) ──
-    // Peer provider 'opencode'. Supervises a local `opencode serve` subprocess and
-    // ingests its sessions into AgentSession/EventRecord. Local-first: only starts
-    // when OPENCODE_SERVE_ENABLED=1. Never blocks other providers' boot.
-    // Synced with AGENT3 (owns the memory block above) — single additive region.
-    if (process.env.OPENCODE_SERVE_ENABLED === '1' && typeof agenticStoreImpl !== 'undefined') {
-      try {
-        const { EventRecordStore } = await import('../engines/event-record-store.js')
-        const { OpenCodeSupervisor } = await import('../engines/opencode/opencode-supervisor.js')
-        const { OpenCodeClient } = await import('../engines/opencode/opencode-client.js')
-        const { OpenCodeIngest } = await import('../engines/opencode/opencode-ingest.js')
-        const eventStore = new EventRecordStore(db.prisma as never)
-        const supervisor = new OpenCodeSupervisor({
-          port: Number(process.env.OPENCODE_SERVE_PORT ?? 0) || undefined,
-          password: process.env.OPENCODE_SERVER_PASSWORD,
-        })
-        const { port } = await supervisor.start()
-        const client = new OpenCodeClient({
-          port,
-          password: process.env.OPENCODE_SERVER_PASSWORD ?? '',
-          username: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
-        })
-        const ingest = new OpenCodeIngest({
-          client,
-          agenticStore: agenticStoreImpl,
-          eventRecordStore: eventStore,
-        })
-        ;(globalThis as Record<string, unknown>).__opencodeServe = { supervisor, client, ingest }
-        console.log(`[boot] OpenCode serve supervisor started on 127.0.0.1:${port}`)
-      } catch (err) {
-        console.warn('[boot] OpenCode serve supervisor skipped:', err)
-      }
     }
 
     // ── G1/G2: Register discovered CDP methods as live capabilities ──────────
@@ -994,6 +1054,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     retryEngine,
     memoryFabric,
     agentBuilder,
+    memoryEngine,
   }
 
   const auth = createAuthMiddleware()
@@ -1008,6 +1069,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const nlclRouter = createNLCLRouter(nlclEngine)
   const capabilityRouter = ctx.registry ? createCapabilityRouter(ctx) : null
   const automationRouter = createAutomationRouter({ orchestrator: automationOrchestrator })
+  const memoryRouter = ctx.memoryEngine ? createMemoryVizRouter(ctx.memoryEngine) : null
 
   // Unit 2.7 — forward conversation events to subscribed WebSocket frontends
   registerConversationForwarder(eventBus)
@@ -1086,8 +1148,21 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
   Bun.serve({
     port,
-    fetch(req, server) {
+    async fetch(req, server) {
       const url = new URL(req.url)
+
+      // CORS preflight — allow all origins, methods, headers
+      if (req.method === 'OPTIONS') {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
+            'Access-Control-Allow-Headers':
+              'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
+            'Access-Control-Max-Age': '86400',
+          },
+        })
+      }
 
       if (url.pathname === '/health') {
         return json({ status: 'ok', version: '1.0.0' })
@@ -1152,6 +1227,17 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
       if (url.pathname.startsWith('/api/knowledge/')) {
         return knowledgeRouter(req)
+      }
+
+      if (url.pathname.startsWith('/api/memory/') && memoryRouter) {
+        const bodyText = req.method === 'GET' ? undefined : await req.text()
+        return memoryRouter({ url: req.url, method: req.method, body: bodyText }).then(
+          (r) =>
+            new Response(JSON.stringify(r.body), {
+              status: r.status,
+              headers: { 'Content-Type': 'application/json' },
+            }),
+        )
       }
 
       // vivim-canvas routes (v7.12) — capability plane over HTTP

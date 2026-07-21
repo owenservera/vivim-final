@@ -1,7 +1,7 @@
 // devops/runtime-test/goal-gate.ts
 // Unit 1.5 — Goal-resolution gate.
 //
-// AGENT-SAFE: prefers offline catalog match (no server); only probes /api/interpret if
+// AGENT-SAFE: prefers offline catalog match (no server); only probes /api/nlcl/interpret if
 // the catalog yields nothing AND a server is likely up (bounded fetch). If the goal
 // cannot be reduced to a known capability id + slug, the loop must HALT and ask rather
 // than build the wrong thing. This enforces the SKILL's "interview-first" rule as code.
@@ -38,10 +38,10 @@ export async function assessGoal(goal: string, opts?: { probe?: boolean }): Prom
   // 2) Optional NL probe (only if caller opted in and a server may be up)
   if (opts?.probe) {
     try {
-      const res = await fetch(`${backendBaseUrl()}/api/interpret`, {
+      const res = await fetch(`${backendBaseUrl()}/api/nlcl/interpret`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: goal }),
+        body: JSON.stringify({ input: goal }),
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       })
       const data = (await res.json()) as { ok?: boolean; capabilityId?: string; text?: string }

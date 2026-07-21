@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import type { WorkspaceTemplate } from '../../shared/template';
+import { getApiUrl } from '../../shared/api-config';
 
 export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: string) => void }) {
   const [templates, setTemplates] = useState<WorkspaceTemplate[]>([]);
@@ -19,7 +20,7 @@ export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: stri
   const [created, setCreated] = useState<Record<string, string>>({}); // templateId → workspaceId
 
   useEffect(() => {
-    fetch('http://localhost:9420/api/template/list')
+    fetch(getApiUrl('/api/template/list'))
       .then((r) => r.json())
       .then((data: { ok: boolean; templates: WorkspaceTemplate[] }) => {
         if (data.ok) setTemplates(data.templates);
@@ -30,7 +31,7 @@ export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: stri
   const create = async (tpl: WorkspaceTemplate) => {
     setCreating(tpl.id);
     try {
-      const res = await fetch('http://localhost:9420/api/template/instantiate', {
+      const res = await fetch(getApiUrl('/api/template/instantiate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ templateId: tpl.id, ownerId: 'user:demo' }),

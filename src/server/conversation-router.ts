@@ -208,7 +208,24 @@ export function createConversationRouter(ctx: ServerContext) {
         if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
         if (!ctx.conversationManager) return errorResponse('Engine not wired', 'InternalError', 500)
         const body = (await req.json()) as { message: string }
-        const result = await ctx.conversationManager.send(conversationId, body.message)
+        // 30s timeout — prevents hanging when no Chrome slave is connected.
+        const SEND_TIMEOUT_MS = 30_000
+        const result = await Promise.race([
+          ctx.conversationManager.send(conversationId, body.message),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error('Send timed out — no Chrome slave connected')),
+              SEND_TIMEOUT_MS,
+            ),
+          ),
+        ]).catch((err) => ({
+          ok: false as const,
+          messageId: '',
+          blocks: [] as never[],
+          text: '',
+          latencyMs: SEND_TIMEOUT_MS,
+          error: err instanceof Error ? err.message : String(err),
+        }))
         return json(result)
       }
 
@@ -220,6 +237,25 @@ export function createConversationRouter(ctx: ServerContext) {
         const limit = Number(url.searchParams.get('limit') ?? '100')
         const messages = await ctx.db.getMessages(conversationId, { limit })
         return json(messages)
+      }
+
+      // DELETE /api/conversations/:id — delegate to ConversationStore.deleteConversation()
+      const delMatch = pathname.match(/^\/api\/conversations\/([^/]+)$/)
+      if (delMatch && method === 'DELETE') {
+        const conversationId = delMatch[1]
+        if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
+        await ctx.db.prisma.conversation.delete({ where: { id: conversationId } })
+        return json({ ok: true })
+      }
+
+      // GET /api/health — general liveness (local-first, single-user)
+      if (pathname === '/api/health' && method === 'GET') {
+        return json({ status: 'ok' })
+      }
+
+      // GET /api/session — session stub (no auth in local-first mode)
+      if (pathname === '/api/session' && method === 'GET') {
+        return json({ authenticated: false, userId: null, email: null })
       }
 
       // Admin

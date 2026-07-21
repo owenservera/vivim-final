@@ -1,6 +1,6 @@
 # Research Library — INDEX
 
-*Last updated: 2026-07-19*
+*Last updated: 2026-07-20*
 
 ## Reports
 
@@ -14,6 +14,9 @@
 | OpenCode Agentic — Full Implementation Docs | [opencode-agentic-impl-docs-2026.md](reports/opencode-agentic-impl-docs-2026.md) | 2026-07-19 | 8+ | High |
 | OpenClaw & Ecosystem (harvestable capabilities) | [openclaw-sota-2026.md](reports/openclaw-sota-2026.md) | 2026-07-19 | 28 | High |
 | Chrome Fleet Management (browserless/puppeteer-cluster/Steel) | [chrome-fleet-management-sota-2026.md](reports/chrome-fleet-management-sota-2026.md) | 2026-07-19 | 14 | High |
+| LiteRT.js (Google AI Edge) — Web on-device inference | [litert-js-sota-2026.md](reports/litert-js-sota-2026.md) | 2026-07-20 | 18 | High |
+| LiteRT.js × vivim-final — Deep Integration Analysis | [litert-js-integration-analysis-2026.md](reports/litert-js-integration-analysis-2026.md) | 2026-07-20 | 18 | High |
+| Local Source-Code Indexing for LLM / Vibe Coding | [local-code-indexing-llm-sota-2026.md](reports/local-code-indexing-llm-sota-2026.md) | 2026-07-20 | 22 | High |
 
 ## Briefs
 
@@ -29,6 +32,8 @@
 | Knowledge Graph + ULID Patterns | [knowledge-graph-ulid-brief.md](briefs/knowledge-graph-ulid-brief.md) | 2026-07-12 | High | capability_taxonomy, capability_binding, selector_strategy, outcome tables |
 | OpenClaw Harvest (capability model + taxonomy) | [openclaw-brief.md](briefs/openclaw-brief.md) | 2026-07-19 | High | CapabilityResolutionEngine, devops-generators, TelemetryAggregator, ChromeGovernor fleet |
 | Chrome Fleet Management | [chrome-fleet-management-brief.md](briefs/chrome-fleet-management-brief.md) | 2026-07-19 | High | ChromeGovernor, FleetConfig, GovernorStore.ProviderFleetConfig |
+| LiteRT.js (Google AI Edge) | [litert-js-brief.md](briefs/litert-js-brief.md) | 2026-07-20 | High | Frontend ML capability slot, knowledge-graph embeddings, NL pre-router |
+| Local Source-Code Indexing for LLM / Vibe Coding | [local-code-indexing-llm-brief.md](briefs/local-code-indexing-llm-brief.md) | 2026-07-20 | High | devops/code-index.ts (CREATE unit), devops loop / sub-agents |
 
 ## Evidence
 
@@ -46,6 +51,8 @@
 | Non-TUI Kilocode / OpenCode | [evidence/non-tui-kilocode-opencode/](evidence/non-tui-kilocode-opencode/) | 11 |
 | OpenCode Agentic | [evidence/opencode-agentic/](evidence/opencode-agentic/) | 8 |
 | Chrome Fleet Management | [evidence/chrome-fleet-management/](evidence/chrome-fleet-management/) | 14 |
+| LiteRT.js (Google AI Edge) | [evidence/litert-js/](evidence/litert-js/) | 18 |
+| Local Source-Code Indexing (LLM/Vibe) | [evidence/local-code-indexing-llm/](evidence/local-code-indexing-llm/) | 22 |
 
 ## Code Paths
 
@@ -56,6 +63,8 @@
 | Non-TUI Kilocode / OpenCode | [non-tui-kilocode-opencode-path.md](code-paths/non-tui-kilocode-opencode-path.md) | CONFIRMED | 2026-07-18 |
 | OpenClaw Harvest | [openclaw-harvest-path.md](code-paths/openclaw-harvest-path.md) | CONFIRMED/PROBABLE | 2026-07-19 |
 | Chrome Fleet Management | [chrome-fleet-management-path.md](code-paths/chrome-fleet-management-path.md) | PROBABLE | 2026-07-19 |
+| LiteRT.js (Google AI Edge) | [litert-js-path.md](code-paths/litert-js-path.md) | CONFIRMED/PROBABLE | 2026-07-20 |
+| Local Source-Code Indexing (LLM/Vibe) | [local-code-indexing-llm-path.md](code-paths/local-code-indexing-llm-path.md) | CONFIRMED | 2026-07-20 |
 
 ## Existing Research (Pre-NLCL)
 

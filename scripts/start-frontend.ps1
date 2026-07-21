@@ -1,10 +1,10 @@
 # scripts/start-frontend.ps1
-# Start the vivim frontend dev server on :5173
+# Start the vivim frontend dev server on :3000 (Next.js)
 # FULLY DETACHED — exits immediately. No hangs.
-# Usage: pwsh scripts/start-frontend.ps1 [-Port 5173]
+# Usage: pwsh scripts/start-frontend.ps1 [-Port 3000]
 
 param(
-    [int]$Port = 5173
+    [int]$Port = 3000
 )
 
 $ErrorActionPreference = "Continue"
@@ -14,60 +14,12 @@ $frontendDir = Join-Path $projectRoot "web\ui"
 $runtimeDir = Join-Path $projectRoot ".runtime"
 
 New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null
+. (Join-Path $PSScriptRoot '_shared.ps1')
 
-function Log($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') $msg" -ForegroundColor DarkGray }
-function LogOk($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [OK] $msg" -ForegroundColor Green }
-function LogWarn($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [WARN] $msg" -ForegroundColor Yellow }
-function LogFail($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [FAIL] $msg" -ForegroundColor Red }
-
-function Resolve-Bun {
-    $candidates = @(
-        "C:\Users\VIVIM.inc\.bun\bin\bun.exe",
-        (Join-Path $env:LOCALAPPDATA "bun\bun.exe"),
-        "C:\Program Files\bun\bun.exe"
-    )
-    foreach ($c in $candidates) {
-        if ($c -and (Test-Path $c)) { return $c }
-    }
-    $cmd = Get-Command bun -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
-    return "bun"
-}
-
-function Kill-Port($port) {
-    try {
-        $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
-        foreach ($conn in $conns) {
-            try { Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue } catch {}
-        }
-        Start-Sleep -Milliseconds 300
-    } catch {}
-}
-
-function Stop-ByPidFile($name) {
-    $pidFile = Join-Path $runtimeDir "$name.pid"
-    if (Test-Path $pidFile) {
-        $procPid = Get-Content $pidFile -ErrorAction SilentlyContinue
-        if ($procPid) { try { Stop-Process -Id ([int]$procPid) -Force -ErrorAction SilentlyContinue } catch {} }
-        Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
-    }
-}
-
-function Find-PidOnPort($port) {
-    try {
-        $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
-        if ($conns) { return $conns | Select-Object -First 1 -ExpandProperty OwningProcess }
-    } catch {}
-    return $null
-}
-
-function Test-PortFree($port) {
-    try {
-        $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
-        return ($null -eq $conns)
-    } catch {}
-    return $true
-}
+function Log($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') $msg" }
+function LogOk($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [OK] $msg" }
+function LogWarn($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [WARN] $msg" }
+function LogFail($msg) { Write-Output "  $(Get-Date -Format 'HH:mm:ss.fff') [FAIL] $msg" }
 
 $bunExe = Resolve-Bun
 
@@ -76,9 +28,9 @@ if (-not (Test-Path $frontendDir)) {
     exit 1
 }
 
-Write-Host "[frontend] Resolving port (start: $Port)" -ForegroundColor Cyan
+Write-Output "[frontend] Resolving port (start: $Port)"
 
-Stop-ByPidFile "frontend"
+Stop-ByPidFile $runtimeDir "frontend"
 Kill-Port $Port
 
 # Mirror backend: if the start port is still held by a foreign process, walk
@@ -104,7 +56,7 @@ if (-not (Test-Path (Join-Path $frontendDir "node_modules"))) {
     Pop-Location
 }
 
-$proc = Start-Process -FilePath $bunExe -ArgumentList "run", "vite", "dev", "--port", $chosenPort `
+$proc = Start-Process -FilePath $bunExe -ArgumentList "run", "dev" `
     -WorkingDirectory $frontendDir `
     -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
 

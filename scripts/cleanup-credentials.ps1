@@ -45,7 +45,6 @@ $legacyRoots = @(
   'claude'
   'gemini'
   'prov_claude'
-  '--url'
   'chrome-profiles'
   'data/chrome-profiles'
 ) | ForEach-Object { Join-Path $repoRoot $_ }

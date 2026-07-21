@@ -82,20 +82,24 @@ export class OpenCodeExecutor implements CommandExecutor {
     const done = new Promise<void>((resolve) => {
       const timer = setTimeout(() => resolve(), SEND_TIMEOUT_MS)
       void this.client
-        .subscribe(resolvedSessionId!, (ev: OpencodeEvent) => {
-          if (ev.type === 'step_finish' || ev.type === 'done') {
-            clearTimeout(timer)
-            resolve()
-          }
-          if (ev.type === 'text' && ev.part?.text) {
-            text += ev.part.text
-            blocks.push({ type: 'text', text: ev.part.text })
-          }
-          if (ev.type === 'error') {
-            clearTimeout(timer)
-            resolve()
-          }
-        })
+        .subscribe(
+          // biome-ignore lint/style/noNonNullAssertion: resolvedSessionId is validated before subscribe
+          resolvedSessionId!,
+          (ev: OpencodeEvent) => {
+            if (ev.type === 'step_finish' || ev.type === 'done') {
+              clearTimeout(timer)
+              resolve()
+            }
+            if (ev.type === 'text' && ev.part?.text) {
+              text += ev.part.text
+              blocks.push({ type: 'text', text: ev.part.text })
+            }
+            if (ev.type === 'error') {
+              clearTimeout(timer)
+              resolve()
+            }
+          },
+        )
         .then((unsub) => {
           // Auto-cleanup on timeout — unsub called after resolve
           void unsub

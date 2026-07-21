@@ -1,13 +1,21 @@
 /**
- * backend-client.ts — Zod-validated fetch layer to localhost:9420.
+ * backend-client.ts — Zod-validated fetch layer to backend API.
+ *
+ * @deprecated Use useUnifiedIO() from '@/components/canvas/UnifiedIOProvider' instead.
+ * This module will be removed in a future version.
+ *
+ * Migration guide:
+ * 1. Import useUnifiedIO from '@/components/canvas/UnifiedIOProvider'
+ * 2. Call useUnifiedIO() to get the fetch function
+ * 3. Replace direct fetch calls with the unified fetch
  *
  * ALL API calls go through this module. Never call fetch() directly.
  * Validates every response at the boundary with Zod schemas.
  */
 import { z } from "zod"
 
-const BACKEND = "http://localhost:9420"
-const WS_BACKEND = "ws://localhost:9420"
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9420"
+const WS_BACKEND = BACKEND.replace("http", "ws")
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,10 +61,14 @@ export const InterpretRequestSchema = z.object({
 })
 
 export const InterpretResponseSchema = z.object({
-  capabilityId: z.string().optional(),
+  ok: z.boolean().optional(),
+  intent: z.string().optional(),
   slug: z.string().optional(),
   result: z.unknown().optional(),
   error: z.string().optional(),
+  latencyMs: z.number().optional(),
+  traceId: z.string().optional(),
+  classification: z.string().optional(),
 })
 
 export const ExecuteResponseSchema = z.object({
@@ -78,13 +90,25 @@ export const ConversationSchema = z.object({
   updatedAt: z.string().optional(),
 })
 
-export const MessageSchema = z.object({
-  id: z.string(),
-  role: z.enum(["user", "assistant", "system"]),
-  content: z.string(),
-  createdAt: z.string(),
-  metadata: z.record(z.unknown()).optional(),
-})
+  export const MessageSchema = z.object({
+    id: z.string(),
+    role: z.enum(["user", "assistant", "system"]),
+    content: z.string(),
+    createdAt: z.string(),
+    metadata: z.record(z.unknown()).optional(),
+  })
+
+  // SendResult — returned by POST /api/conversations/:id/send
+  // (ConversationManager.send → SendResult), NOT a Message.
+  export const SendResultSchema = z.object({
+    ok: z.boolean(),
+    messageId: z.string(),
+    blocks: z.array(z.record(z.unknown())),
+    text: z.string(),
+    latencyMs: z.number(),
+    timing: z.record(z.unknown()).optional(),
+    error: z.string().optional(),
+  })
 
 // ---------------------------------------------------------------------------
 // Internal fetch wrapper
@@ -149,11 +173,11 @@ export async function listCapabilities(surface?: string) {
   return request(`/api/capabilities${qs}`, CapabilityListSchema)
 }
 
-/** Interpret natural language — POST /api/interpret */
+/** Interpret natural language — POST /api/nlcl/interpret */
 export async function interpret(nl: string, context?: Record<string, unknown>) {
-  return request("/api/interpret", InterpretResponseSchema, {
+  return request("/api/nlcl/interpret", InterpretResponseSchema, {
     method: "POST",
-    body: JSON.stringify({ nl, context }),
+    body: JSON.stringify({ input: nl, surface: "ui", ...context }),
   })
 }
 
@@ -177,28 +201,29 @@ export async function getMessages(conversationId: string) {
 
 /** Send message — POST /api/conversations/:id/messages */
 export async function sendMessage(conversationId: string, content: string) {
-  return request(`/api/conversations/${encodeURIComponent(conversationId)}/messages`, MessageSchema, {
-    method: "POST",
-    body: JSON.stringify({ content }),
+    return request(`/api/conversations/${encodeURIComponent(conversationId)}/send`, SendResultSchema, {
+      method: "POST",
+    body: JSON.stringify({ message: content }),
   })
 }
 
-/** Login — POST /api/auth/login */
-export async function login(email: string, password: string) {
-  return request("/api/auth/login", z.object({ token: z.string(), userId: z.string(), email: z.string() }), {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  })
+/** Login — local-first mode has no auth server; resolve against session stub. */
+export async function login(_email: string, _password: string) {
+  return request("/api/session", z.object({
+    authenticated: z.boolean(),
+    userId: z.string().nullable(),
+    email: z.string().nullable(),
+  }))
 }
 
-/** Logout — POST /api/auth/logout */
+/** Logout — local-first mode: no server session to terminate. */
 export async function logout() {
-  return request("/api/auth/logout", z.object({ ok: z.boolean() }), { method: "POST" })
+  return request("/api/session", z.object({ authenticated: z.boolean() }))
 }
 
-/** Get current session — GET /api/auth/session */
+/** Get current session — GET /api/session */
 export async function getSession() {
-  return request("/api/auth/session", z.object({
+  return request("/api/session", z.object({
     authenticated: z.boolean(),
     userId: z.string().nullable(),
     email: z.string().nullable(),
@@ -294,22 +319,22 @@ export const MemoryFactSchema = z.object({
 
 /** Assert memory — POST /api/memory/assert */
 export async function assertMemory(content: string) {
-  return request("/api/memory/assert", MemoryFactSchema, {
+  return request("/api/memory/assert", z.object({ ok: z.boolean() }), {
     method: "POST",
     body: JSON.stringify({ content }),
   })
 }
 
-/** Query memory — GET /api/memory/query?q=<query> */
-export async function queryMemory(query: string) {
-  const qs = encodeURIComponent(query)
-  return request(`/api/memory/query?q=${qs}`, z.object({ facts: z.array(MemoryFactSchema) }))
+/** Query memory — GET /api/memory/curated (returns curated facts). */
+export async function queryMemory(_query?: string) {
+  return request("/api/memory/curated", z.object({ entries: z.array(MemoryFactSchema) }))
 }
 
-/** Forget memory — DELETE /api/memory/:id */
+/** Forget memory — POST /api/memory/curate { action: 'hide' } */
 export async function forgetMemory(factId: string) {
-  return request(`/api/memory/${encodeURIComponent(factId)}`, z.object({ ok: z.boolean() }), {
-    method: "DELETE",
+  return request("/api/memory/curate", z.object({ ok: z.boolean() }), {
+    method: "POST",
+    body: JSON.stringify({ memoryId: factId, action: "hide" }),
   })
 }
 
@@ -325,9 +350,26 @@ export const ProviderHealthSchema = z.object({
   lastCheck: z.string().optional(),
 })
 
-/** Get fleet health — GET /api/telemetry/health */
-export async function getHealth() {
-  return request("/api/telemetry/health", z.object({ providers: z.array(ProviderHealthSchema) }))
+/** Get fleet health — GET /api/health/providers (ProviderHealthKernel map). */
+export async function getHealth(): Promise<BackendResponse<{ providers: z.infer<typeof ProviderHealthSchema>[] }>> {
+  const raw = await request("/api/health/providers", z.record(z.object({
+    status: z.string(),
+    score: z.number().optional(),
+    latencyMs: z.number().optional(),
+    errorCount: z.number().optional(),
+    lastCheck: z.string().optional(),
+  })))
+  if (!raw.ok || !raw.data) {
+    return { ok: false, error: raw.error, status: raw.status }
+  }
+  const providers = Object.entries(raw.data).map(([providerId, h]) => ({
+    providerId,
+    status: h.status,
+    latency: h.latencyMs,
+    errorCount: h.errorCount,
+    lastCheck: h.lastCheck,
+  }))
+  return { ok: true, data: { providers }, status: raw.status }
 }
 
 // ---------------------------------------------------------------------------
@@ -342,24 +384,22 @@ export const SessionSchema = z.object({
   createdAt: z.string().optional(),
 })
 
-/** Load session — POST /api/session/load */
+/** Load session — POST /api/fleet/start (spawns a Chrome slave). */
 export async function loadSession(providerId: string, accountId?: string) {
-  return request("/api/session/load", SessionSchema, {
+  return request("/api/fleet/start", SessionSchema, {
     method: "POST",
     body: JSON.stringify({ providerId, accountId }),
   })
 }
 
-/** List sessions — GET /api/session/list */
+/** List sessions — GET /api/fleet/status */
 export async function listSessions() {
-  return request("/api/session/list", z.object({ sessions: z.array(SessionSchema) }))
+  return request("/api/fleet/status", z.array(SessionSchema))
 }
 
-/** End session — DELETE /api/session/:id */
-export async function endSession(sessionId: string) {
-  return request(`/api/session/${encodeURIComponent(sessionId)}`, z.object({ ok: z.boolean() }), {
-    method: "DELETE",
-  })
+/** End session — local-first: no server session teardown route. */
+export async function endSession(_sessionId: string) {
+  return request("/api/fleet/status", z.array(SessionSchema))
 }
 
 // ---------------------------------------------------------------------------

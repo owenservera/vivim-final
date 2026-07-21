@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 /**
  * components/canvas/RbacManager.tsx (#9)
@@ -10,74 +10,82 @@
  * Includes a capability-check tester.
  */
 
-import { useEffect, useState } from 'react';
-import type { WorkspaceMembership, Role, RoleSpec, PermissionCheck } from '../../shared/rbac';
+import { useEffect, useState } from 'react'
+import { getApiUrl } from '../../shared/api-config'
+import type { PermissionCheck, Role, RoleSpec, WorkspaceMembership } from '../../shared/rbac'
 
 export function RbacManager({ workspaceId }: { workspaceId: string }) {
-  const [roles, setRoles] = useState<RoleSpec[]>([]);
-  const [members, setMembers] = useState<WorkspaceMembership[]>([]);
-  const [checkResult, setCheckResult] = useState<PermissionCheck | null>(null);
-  const [checkUser, setCheckUser] = useState('user:demo');
-  const [checkCap, setCheckCap] = useState('cap:canvas:shell-command');
-  const [grantUserId, setGrantUserId] = useState('');
-  const [grantRole, setGrantRole] = useState<Role>('member');
+  const [roles, setRoles] = useState<RoleSpec[]>([])
+  const [members, setMembers] = useState<WorkspaceMembership[]>([])
+  const [checkResult, setCheckResult] = useState<PermissionCheck | null>(null)
+  const [checkUser, setCheckUser] = useState('user:demo')
+  const [checkCap, setCheckCap] = useState('cap:canvas:shell-command')
+  const [grantUserId, setGrantUserId] = useState('')
+  const [grantRole, setGrantRole] = useState<Role>('member')
 
   const fetchRoles = async () => {
-    const res = await fetch('http://localhost:9420/api/rbac/roles');
-    const data = (await res.json()) as { ok: boolean; roles: RoleSpec[] };
-    if (data.ok) setRoles(data.roles);
-  };
+    const res = await fetch(getApiUrl('/api/rbac/roles'))
+    const data = (await res.json()) as { ok: boolean; roles: RoleSpec[] }
+    if (data.ok) setRoles(data.roles)
+  }
 
   const fetchMembers = async () => {
-    const res = await fetch(`/api/rbac/members?workspaceId=${encodeURIComponent(workspaceId)}`);
-    const data = (await res.json()) as { ok: boolean; members: WorkspaceMembership[] };
-    if (data.ok) setMembers(data.members);
-  };
+    const res = await fetch(
+      getApiUrl(`/api/rbac/members?workspaceId=${encodeURIComponent(workspaceId)}`),
+    )
+    const data = (await res.json()) as { ok: boolean; members: WorkspaceMembership[] }
+    if (data.ok) setMembers(data.members)
+  }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchRoles();
-    fetchMembers();
-  }, [workspaceId]);
+    fetchRoles()
+    fetchMembers()
+  }, [workspaceId])
 
   const grant = async () => {
-    if (!grantUserId.trim()) return;
-    await fetch('http://localhost:9420/api/rbac/grant', {
+    if (!grantUserId.trim()) return
+    await fetch(getApiUrl('/api/rbac/grant'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workspaceId, userId: grantUserId, role: grantRole, grantedBy: 'user:demo' }),
-    });
-    setGrantUserId('');
-    fetchMembers();
-  };
+      body: JSON.stringify({
+        workspaceId,
+        userId: grantUserId,
+        role: grantRole,
+        grantedBy: 'user:demo',
+      }),
+    })
+    setGrantUserId('')
+    fetchMembers()
+  }
 
   const updateRole = async (userId: string, role: Role) => {
-    await fetch('http://localhost:9420/api/rbac/update_role', {
+    await fetch(getApiUrl('/api/rbac/update_role'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ workspaceId, userId, role }),
-    });
-    fetchMembers();
-  };
+    })
+    fetchMembers()
+  }
 
   const revoke = async (userId: string) => {
-    await fetch('http://localhost:9420/api/rbac/revoke', {
+    await fetch(getApiUrl('/api/rbac/revoke'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ workspaceId, userId }),
-    });
-    fetchMembers();
-  };
+    })
+    fetchMembers()
+  }
 
   const check = async () => {
-    const res = await fetch('http://localhost:9420/api/rbac/check', {
+    const res = await fetch(getApiUrl('/api/rbac/check'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ workspaceId, userId: checkUser, capabilityId: checkCap }),
-    });
-    const data = (await res.json()) as { ok: boolean; check: PermissionCheck };
-    if (data.ok) setCheckResult(data.check);
-  };
+    })
+    const data = (await res.json()) as { ok: boolean; check: PermissionCheck }
+    if (data.ok) setCheckResult(data.check)
+  }
 
   return (
     <div
@@ -94,7 +102,9 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
 
       {/* Roles reference */}
       <section style={{ marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--text-muted)' }}>Role reference</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--text-muted)' }}>
+          Role reference
+        </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
           {roles.map((r) => (
             <div
@@ -108,7 +118,11 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
               }}
             >
               <div style={{ fontSize: 12, fontWeight: 600, color: r.color }}>{r.label}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.4 }}>{r.description}</div>
+              <div
+                style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.4 }}
+              >
+                {r.description}
+              </div>
               <div style={{ marginTop: 6, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 {r.canPublish && <span style={pillStyle}>publish</span>}
                 {r.canManageMembers && <span style={pillStyle}>manage</span>}
@@ -129,7 +143,11 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
             placeholder="user id (e.g. user:demo)"
             style={{ ...inputStyle, flex: 1 }}
           />
-          <select value={grantRole} onChange={(e) => setGrantRole(e.target.value as Role)} style={selectStyle}>
+          <select
+            value={grantRole}
+            onChange={(e) => setGrantRole(e.target.value as Role)}
+            style={selectStyle}
+          >
             {roles.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.label}
@@ -148,12 +166,21 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
           Members ({members.length})
         </h3>
         {members.length === 0 && (
-          <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-subtle)', fontSize: 12, background: 'var(--bg-elevated)', borderRadius: 8 }}>
+          <div
+            style={{
+              padding: 16,
+              textAlign: 'center',
+              color: 'var(--text-subtle)',
+              fontSize: 12,
+              background: 'var(--bg-elevated)',
+              borderRadius: 8,
+            }}
+          >
             No members yet. Grant a role above.
           </div>
         )}
         {members.map((m) => {
-          const role = roles.find((r) => r.id === m.role);
+          const role = roles.find((r) => r.id === m.role)
           return (
             <div
               key={m.id}
@@ -170,7 +197,9 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
                 fontSize: 12,
               }}
             >
-              <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, flex: 1 }}>{m.userId}</span>
+              <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, flex: 1 }}>
+                {m.userId}
+              </span>
               <select
                 value={m.role}
                 onChange={(e) => updateRole(m.userId, e.target.value as Role)}
@@ -186,13 +215,15 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
                 Revoke
               </button>
             </div>
-          );
+          )
         })}
       </section>
 
       {/* Capability checker */}
       <section>
-        <h3 style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--text-muted)' }}>Capability checker</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--text-muted)' }}>
+          Capability checker
+        </h3>
         <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
           <input
             value={checkUser}
@@ -224,15 +255,19 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
             <strong style={{ color: checkResult.allowed ? '#10b981' : '#ef4444' }}>
               {checkResult.allowed ? '✓ ALLOWED' : '✗ DENIED'}
             </strong>
-            <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>reason: {checkResult.reason}</span>
+            <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>
+              reason: {checkResult.reason}
+            </span>
             {checkResult.role && (
-              <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>role: {checkResult.role}</span>
+              <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>
+                role: {checkResult.role}
+              </span>
             )}
           </div>
         )}
       </section>
     </div>
-  );
+  )
 }
 
 const btnPrimary: React.CSSProperties = {
@@ -245,7 +280,7 @@ const btnPrimary: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 600,
   fontFamily: 'inherit',
-};
+}
 const btnDanger: React.CSSProperties = {
   padding: '4px 10px',
   background: 'transparent',
@@ -255,7 +290,7 @@ const btnDanger: React.CSSProperties = {
   cursor: 'pointer',
   fontSize: 10,
   fontFamily: 'inherit',
-};
+}
 const inputStyle: React.CSSProperties = {
   padding: '4px 8px',
   border: '1px solid var(--border)',
@@ -264,11 +299,11 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 4,
   fontSize: 11,
   fontFamily: 'ui-monospace, monospace',
-};
+}
 const selectStyle: React.CSSProperties = {
   ...inputStyle,
   fontFamily: 'inherit',
-};
+}
 const pillStyle: React.CSSProperties = {
   padding: '1px 6px',
   background: 'var(--accent-subtle)',
@@ -276,4 +311,4 @@ const pillStyle: React.CSSProperties = {
   borderRadius: 3,
   fontSize: 9,
   fontWeight: 600,
-};
+}

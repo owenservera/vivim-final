@@ -34,7 +34,7 @@ describe('CategoryColors', () => {
   })
 
   it('each category has valid HSL values', () => {
-    for (const [cat, colors] of Object.entries(CATEGORY_COLORS)) {
+    for (const [_cat, colors] of Object.entries(CATEGORY_COLORS)) {
       expect(colors.light.h).toBeGreaterThanOrEqual(0)
       expect(colors.light.h).toBeLessThanOrEqual(360)
       expect(colors.light.s).toBeGreaterThanOrEqual(0)

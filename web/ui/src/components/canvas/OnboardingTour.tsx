@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 /**
  * components/canvas/OnboardingTour.tsx (#5)
@@ -10,80 +10,88 @@
  * from the settings menu.
  */
 
-import { useEffect, useState } from 'react';
-import type { OnboardingStep } from '../../shared/onboarding';
-import { ONBOARDING_STEPS } from '../../shared/onboarding';
+import { useEffect, useState } from 'react'
+import { getApiUrl } from '../../shared/api-config'
+import type { OnboardingStep } from '../../shared/onboarding'
+import { ONBOARDING_STEPS } from '../../shared/onboarding'
 
 export interface OnboardingTourProps {
-  userId: string;
-  onAction?: (command: string) => void;
+  userId: string
+  onAction?: (command: string) => void
 }
 
 export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
-  const [open, setOpen] = useState(false);
-  const [stepIdx, setStepIdx] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false)
+  const [stepIdx, setStepIdx] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/onboarding/state?userId=${encodeURIComponent(userId)}`)
+    fetch(getApiUrl(`/api/onboarding/state?userId=${encodeURIComponent(userId)}`))
       .then((r) => r.json())
       .then((data: { ok: boolean; state?: { dismissed: boolean; completedSteps: string[] } }) => {
-        if (data.ok && data.state && !data.state.dismissed && data.state.completedSteps.length < ONBOARDING_STEPS.length) {
-          const nextIdx = ONBOARDING_STEPS.findIndex((s) => !data.state!.completedSteps.includes(s.id));
+        if (
+          data.ok &&
+          data.state &&
+          !data.state.dismissed &&
+          data.state.completedSteps.length < ONBOARDING_STEPS.length
+        ) {
+          const nextIdx = ONBOARDING_STEPS.findIndex(
+            (s) => !data.state!.completedSteps.includes(s.id),
+          )
           if (nextIdx >= 0) {
-            setStepIdx(nextIdx);
-            setOpen(true);
+            setStepIdx(nextIdx)
+            setOpen(true)
           }
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [userId]);
+      .finally(() => setLoading(false))
+  }, [userId])
 
   const completeStep = async (stepId: string) => {
-    await fetch('http://localhost:9420/api/onboarding/complete', {
+    await fetch(getApiUrl('/api/onboarding/complete'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, stepId }),
-    });
-  };
+    })
+  }
 
   const dismiss = async () => {
-    await fetch('http://localhost:9420/api/onboarding/dismiss', {
+    await fetch(getApiUrl('/api/onboarding/dismiss'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
-    });
-    setOpen(false);
-  };
+    })
+    setOpen(false)
+  }
 
   const next = async () => {
-    const step = ONBOARDING_STEPS[stepIdx];
+    const step = ONBOARDING_STEPS[stepIdx]
     if (step) {
-      await completeStep(step.id);
-      if (step.actionCommand) onAction?.(step.actionCommand);
+      await completeStep(step.id)
+      if (step.actionCommand) onAction?.(step.actionCommand)
     }
     if (stepIdx < ONBOARDING_STEPS.length - 1) {
-      setStepIdx(stepIdx + 1);
+      setStepIdx(stepIdx + 1)
     } else {
-      setOpen(false);
+      setOpen(false)
     }
-  };
+  }
 
   const skip = async () => {
-    await dismiss();
-  };
+    await dismiss()
+  }
 
-  if (loading || !open) return null;
+  if (loading || !open) return null
 
-  const step: OnboardingStep = ONBOARDING_STEPS[stepIdx] ?? ONBOARDING_STEPS[0]!;
-  const isLast = stepIdx === ONBOARDING_STEPS.length - 1;
+  const step: OnboardingStep = ONBOARDING_STEPS[stepIdx] ?? ONBOARDING_STEPS[0]!
+  const isLast = stepIdx === ONBOARDING_STEPS.length - 1
 
-  const isCenter = step.placement === 'center' || !step.targetSelector;
-  let targetRect: DOMRect | null = null;
+  const isCenter = step.placement === 'center' || !step.targetSelector
+  let targetRect: DOMRect | null = null
   if (step.targetSelector) {
-    const el = document.querySelector(step.targetSelector);
-    if (el) targetRect = el.getBoundingClientRect();
+    const el = document.querySelector(step.targetSelector)
+    if (el) targetRect = el.getBoundingClientRect()
   }
 
   const popoverStyle: React.CSSProperties = isCenter
@@ -109,7 +117,7 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
                 ? targetRect.left - 340
                 : targetRect.left,
         }
-      : { position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)' };
+      : { position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)' }
 
   return (
     <div
@@ -122,7 +130,7 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
         pointerEvents: 'auto',
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) skip();
+        if (e.target === e.currentTarget) skip()
       }}
     >
       {/* Highlight target */}
@@ -157,14 +165,35 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
           zIndex: 1102,
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              color: 'var(--text-muted)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
+          >
             Tour · {stepIdx + 1} / {ONBOARDING_STEPS.length}
           </div>
-          <button onClick={skip} style={skipBtnStyle}>Skip</button>
+          <button onClick={skip} style={skipBtnStyle}>
+            Skip
+          </button>
         </div>
         <h3 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 600 }}>{step.title}</h3>
-        <p style={{ margin: '0 0 14px', fontSize: 12, lineHeight: 1.5, color: 'var(--text-muted)' }}>{step.body}</p>
+        <p
+          style={{ margin: '0 0 14px', fontSize: 12, lineHeight: 1.5, color: 'var(--text-muted)' }}
+        >
+          {step.body}
+        </p>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: 4 }}>
             {ONBOARDING_STEPS.map((_, i) => (
@@ -174,7 +203,12 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
                   width: 6,
                   height: 6,
                   borderRadius: '50%',
-                  background: i === stepIdx ? 'var(--accent)' : i < stepIdx ? 'var(--accent)' : 'var(--border-strong)',
+                  background:
+                    i === stepIdx
+                      ? 'var(--accent)'
+                      : i < stepIdx
+                        ? 'var(--accent)'
+                        : 'var(--border-strong)',
                   opacity: i === stepIdx ? 1 : i < stepIdx ? 0.5 : 1,
                 }}
               />
@@ -199,7 +233,7 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 const skipBtnStyle: React.CSSProperties = {
@@ -211,4 +245,4 @@ const skipBtnStyle: React.CSSProperties = {
   cursor: 'pointer',
   fontSize: 10,
   fontFamily: 'inherit',
-};
+}

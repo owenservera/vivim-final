@@ -143,14 +143,14 @@ export class ProtocolDiscoveryEngine {
     PROBE_BUTTONS,
     PROBE_DOM,
     PROBE_FRAMEWORK,
-    "document.title",
+    'document.title',
   ])
 
   private async evaluateInPage(expr: string): Promise<unknown> {
     if (!ProtocolDiscoveryEngine.ALLOWED_PROBES.has(expr)) {
       throw new EngineError(
-        `Refused to evaluate non-whitelisted expression in page context (AU-0001). ` +
-          `Only static protocol probes are permitted.`,
+        'Refused to evaluate non-whitelisted expression in page context (AU-0001). ' +
+          'Only static protocol probes are permitted.',
       )
     }
     const r = (await this.client.send(

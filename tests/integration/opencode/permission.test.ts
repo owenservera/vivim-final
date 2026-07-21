@@ -24,7 +24,7 @@ class MockClient extends OpenCodeClient {
     super({ port, password })
   }
   async respondPermission(
-    sessionId: string,
+    _sessionId: string,
     permissionId: string,
     decision: string,
   ): Promise<void> {
@@ -70,7 +70,7 @@ describe('S2b: Governor permission (tier > 3 auto-deny)', () => {
       where: { providerSessionId: SESSION },
     })
     const perms = await prisma.agentPermissionDecision.findMany({
-      where: { agentSessionId: agentSession!.id },
+      where: { agentSessionId: agentSession?.id },
     })
     expect(perms.length).toBe(1)
     expect(perms[0].decision).toBe('deny')

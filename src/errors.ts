@@ -58,8 +58,7 @@ export class MemoryError extends CapStoreError {
 export class MemoryBackendLimitError extends MemoryError {
   constructor(existing: string, rejected: string) {
     super(
-      `Rejected memory backend '${rejected}' — external backend '${existing}' is ` +
-        `already registered. Only one external memory backend is allowed at a time.`,
+      `Rejected memory backend '${rejected}' — external backend '${existing}' is already registered. Only one external memory backend is allowed at a time.`,
       { existing, rejected },
     )
   }
@@ -119,6 +118,7 @@ export class EngineError extends CapStoreError {
 
 // OpenCode `serve` supervisor/client errors (feature 027).
 export class OpenCodeServeError extends CapStoreError {
+  // biome-ignore lint/complexity/noUselessConstructor: required to pass parameters to CapStoreError
   constructor(code: string, message: string, details?: unknown) {
     super(code, message, details)
   }
@@ -248,6 +248,7 @@ export class HarnessRetryExhaustedError extends CapStoreError {
 
 // ── Command Language ─────────────────────────────────────────────
 export class CommandLanguageError extends CapStoreError {
+  // biome-ignore lint/complexity/noUselessConstructor: required to pass parameters to CapStoreError
   constructor(code: string, message: string, details?: unknown) {
     super(code, message, details)
   }

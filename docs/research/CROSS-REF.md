@@ -2,7 +2,7 @@
 
 *Links between research artifacts and devops infrastructure (ADRs, units, goals).*
 
-*Last updated: 2026-07-19*
+*Last updated: 2026-07-20*
 
 ## Research → Unit Mapping
 
@@ -20,6 +20,9 @@
 | opencode-agentic-brief | local-agent caps (31), CapabilityComposer DAG, devops loop | Full capability inventory + impl manual for agentic loops & subagent orchestration |
 | openclaw-brief | CapabilityResolutionEngine, devops-generators, TelemetryAggregator, ChromeGovernor fleet | Harvest OpenClaw capability-ownership model + taxonomy.yaml corpus into vivim engines |
 | chrome-fleet-management-brief | ChromeGovernor, FleetConfig, GovernorStore.ProviderFleetConfig | SOTA fleet patterns (admission Limiter, pressure gate, retry, profile artifacts) vs. current Governor |
+| litert-js-brief | web/ui canvas (MLSurface slot), knowledge-graph embeddings, CommandPalette/CapabilityBar NL pre-router | Frontend-only ML capability via LiteRT.js; complements remote providers, privacy/latency/cost win |
+| litert-js-integration-analysis | SandboxedNode (host vs sandbox boundary), register-slot/UniversalComponentRegistry, Composer NL prerouter, backend-client knowledge API, MediaCard | Concrete seam map: embeddings + NL prerouter in HOST canvas; ML forbidden inside opaque-origin sandbox; expose via CapabilityBus |
+| local-code-indexing-llm-brief | devops/code-index.ts (new CREATE unit), devops loop / sub-agents | SOTA local code indexing (AST chunk + hybrid RRF + token-budgeted path:line + offline SQLite + MCP) built natively into the devops system for LLM/vibe coding |
 
 ## Research → Goal Mapping
 
@@ -35,6 +38,7 @@
 |-----|-------------------|--------|
 | (proposed) ADR: Agent backends as vivim providers | non-tui-kilocode-opencode-brief, opencode-agentic-brief | 📋 Draft |
 | ADR-015: ChromeGovernor admission control & fleet limiter | chrome-fleet-management-brief, chrome-fleet-management-path, chrome-fleet-graceful-plan | 🟡 PROPOSED (docs/decisions/ADR-015.md) |
+| (proposed) ADR: In-browser ML via LiteRT.js | litert-js-brief, litert-js-path | 📋 Draft |
 
 ## Unit → Research Mapping
 
@@ -57,3 +61,4 @@
 | v8.6 — Capability resolution | provider-taxonomy-brief | ✅ Research complete |
 | v8.7 — Discovery acceleration | provider-taxonomy-brief | ✅ Research complete |
 | v8.8 — Tests | provider-taxonomy-path | ✅ Research complete |
+| devops/code-index.ts (CREATE unit) | local-code-indexing-llm-brief, local-code-indexing-llm-path | ✅ Research complete |

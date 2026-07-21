@@ -41,7 +41,7 @@ export class MemoryWarden {
   gateWrite(
     content: string,
     ctx: { agentContext: 'primary' | 'subagent' | 'cron' | 'flush' },
-    metadata?: MemoryWriteMetadata,
+    _metadata?: MemoryWriteMetadata,
   ): string | null {
     if (ctx.agentContext !== 'primary') {
       // Sub-agents / cron / flush must not mutate the primary agent's memory.
@@ -59,7 +59,7 @@ export class MemoryWarden {
 
   /** Build provenance metadata for a memory write (D7). */
   buildProvenance(
-    target: string,
+    _target: string,
     content: string,
     metadata?: MemoryWriteMetadata,
   ): MemoryWriteMetadata {

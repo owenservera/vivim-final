@@ -1,18 +1,18 @@
 {
   "run": {
     "scope": "surface",
-    "commit": "73b6a01",
-    "date": "2026-07-20",
-    "filesScanned": 506,
+    "commit": "6d095ad",
+    "date": "2026-07-21",
+    "filesScanned": 511,
     "root": "C:\\0-BlackBoxProject-0\\vivim-final\\devops\\audit-arch"
   },
   "summary": {
     "P0": 0,
-    "P1": 49,
+    "P1": 51,
     "P2": 0,
     "P3": 0,
     "risk": "M",
-    "total": 49
+    "total": 51
   },
   "findings": [
     {
@@ -618,6 +618,50 @@
       "id": "AR-0028",
       "priority": "P1",
       "dimension": "layering",
+      "title": "Upward dependency: engines/live-capability-registry -> engines/mcp-client-adapter",
+      "description": "Layer 3 module `engines/live-capability-registry` imports layer 4 module `engines/mcp-client-adapter`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/live-capability-registry",
+      "line": 0,
+      "evidence": "edge engines/live-capability-registry -> engines/mcp-client-adapter (layers 3 -> 4)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/mcp-client-adapter` rather than `engines/mcp-client-adapter` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0029",
+      "priority": "P1",
+      "dimension": "layering",
+      "title": "Upward dependency: engines/live-capability-registry -> engines/telemetry-audit",
+      "description": "Layer 3 module `engines/live-capability-registry` imports layer 5 module `engines/telemetry-audit`. Dependencies should flow toward the foundation, not upward.",
+      "file": "src/engines/live-capability-registry",
+      "line": 0,
+      "evidence": "edge engines/live-capability-registry -> engines/telemetry-audit (layers 3 -> 5)",
+      "impact": "Upward dependencies invert the intended layering and couple foundation modules to surface concerns.",
+      "fix": {
+        "summary": "Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/telemetry-audit` rather than `engines/telemetry-audit` itself.",
+        "steps": [
+          "Identify the symbols imported from the higher layer.",
+          "Decide whether they belong in a shared lower-layer contract.",
+          "Re-point the import; otherwise accept the edge as an explicit policy exception."
+        ],
+        "effort": "M",
+        "autoFixable": false
+      },
+      "status": "open"
+    },
+    {
+      "id": "AR-0030",
+      "priority": "P1",
+      "dimension": "layering",
       "title": "Upward dependency: engines/opencode -> engines/nlcl",
       "description": "Layer 3 module `engines/opencode` imports layer 4 module `engines/nlcl`. Dependencies should flow toward the foundation, not upward.",
       "file": "src/engines/opencode",
@@ -637,7 +681,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0029",
+      "id": "AR-0031",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-discovery -> engines/capability-event-bus",
@@ -659,7 +703,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0030",
+      "id": "AR-0032",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-discovery -> engines/capability-shape-registry",
@@ -681,7 +725,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0031",
+      "id": "AR-0033",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-discovery -> engines/manifest-inference",
@@ -703,7 +747,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0032",
+      "id": "AR-0034",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-discovery -> engines/stream-align",
@@ -725,7 +769,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0033",
+      "id": "AR-0035",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-health -> engines/capability-event-bus",
@@ -747,7 +791,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0034",
+      "id": "AR-0036",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-mux -> router/router",
@@ -769,7 +813,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0035",
+      "id": "AR-0037",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-mux -> engines/capability-event-bus",
@@ -791,7 +835,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0036",
+      "id": "AR-0038",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-mux -> engines/messaging-archetypes",
@@ -813,7 +857,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0037",
+      "id": "AR-0039",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/provider-registrar -> engines/stream-align",
@@ -835,7 +879,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0038",
+      "id": "AR-0040",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: engines/send-capability -> engines/unified-registry",
@@ -857,7 +901,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0039",
+      "id": "AR-0041",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: schema/chrome -> executor/chrome-instance-profile",
@@ -879,7 +923,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0040",
+      "id": "AR-0042",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: schema/chrome -> executor/slave-states",
@@ -901,7 +945,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0041",
+      "id": "AR-0043",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/contracts -> engines/browser-automation",
@@ -923,7 +967,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0042",
+      "id": "AR-0044",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/contracts -> canvas/types",
@@ -945,7 +989,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0043",
+      "id": "AR-0045",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/contracts -> executor/slave-states",
@@ -967,7 +1011,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0044",
+      "id": "AR-0046",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/contracts -> engines/intent-decomposer",
@@ -989,7 +1033,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0045",
+      "id": "AR-0047",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/contracts -> engines/mirror-engine",
@@ -1011,7 +1055,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0046",
+      "id": "AR-0048",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/contracts -> engines/provider-mux",
@@ -1033,7 +1077,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0047",
+      "id": "AR-0049",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/contracts -> engines/sandbox-runner",
@@ -1055,7 +1099,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0048",
+      "id": "AR-0050",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/db -> storage/impl",
@@ -1077,7 +1121,7 @@
       "status": "open"
     },
     {
-      "id": "AR-0049",
+      "id": "AR-0051",
       "priority": "P1",
       "dimension": "layering",
       "title": "Upward dependency: storage/impl -> engines/harness",

@@ -1,23 +1,23 @@
 # Architecture Audit — system-wide (surface) — 2026-07-20
 
 - **Scope:** surface
-- **Base commit:** 73b6a01
+- **Base commit:** 6d095ad
 - **Root:** C:\0-BlackBoxProject-0\vivim-final\devops\audit-arch
 - **Mode:** system-wide
 
 ## Graph Overview
 
-- **Modules:** 261
-- **Module edges:** 822
+- **Modules:** 266
+- **Module edges:** 846
 - **Cycles:** 5
-- **Layer histogram:** L0=43  L1=27  L2=7  L3=120  L4=6  L5=58
-- **Top hubs:** index(85)  storage/contracts(82)  server/index(72)  errors(69)  ids(50)  engines/capability-event-bus(37)  engines/chrome-governor(33)  engines/unified-registry(32)
+- **Layer histogram:** L0=43  L1=27  L2=7  L3=125  L4=6  L5=58
+- **Top hubs:** index(88)  storage/contracts(85)  server/index(74)  errors(72)  ids(52)  engines/capability-event-bus(40)  engines/chrome-governor(34)  engines/unified-registry(34)
 
 ## Executive Summary
 
 - **Risk score:** Medium (M)
-- **Priorities:** P0: 0  P1: 49  P2: 0  P3: 0
-- **Total findings:** 49
+- **Priorities:** P0: 0  P1: 51  P2: 0  P3: 0
+- **Total findings:** 51
 
 ## Priority Legend
 
@@ -26,7 +26,7 @@
 - **P2** — Medium — quality of the module graph
 - **P3** — Low — hygiene
 
-## P1 — 49 finding(s)
+## P1 — 51 finding(s)
 
 ### Dimension: cycles
 
@@ -389,7 +389,33 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0028 — Upward dependency: engines/opencode -> engines/nlcl
+### [P1] AR-0028 — Upward dependency: engines/live-capability-registry -> engines/mcp-client-adapter
+- **Dimension:** layering
+- **Location:** `src/engines/live-capability-registry:0`
+- **Evidence:** `edge engines/live-capability-registry -> engines/mcp-client-adapter (layers 3 -> 4)`
+- **Impact:** Upward dependencies invert the intended layering and couple foundation modules to surface concerns.
+- **Fix Instructions:**
+  - Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/mcp-client-adapter` rather than `engines/mcp-client-adapter` itself.
+  - Steps:
+    - Identify the symbols imported from the higher layer.
+    - Decide whether they belong in a shared lower-layer contract.
+    - Re-point the import; otherwise accept the edge as an explicit policy exception.
+  - Effort: M  - Auto-fixable: no
+
+### [P1] AR-0029 — Upward dependency: engines/live-capability-registry -> engines/telemetry-audit
+- **Dimension:** layering
+- **Location:** `src/engines/live-capability-registry:0`
+- **Evidence:** `edge engines/live-capability-registry -> engines/telemetry-audit (layers 3 -> 5)`
+- **Impact:** Upward dependencies invert the intended layering and couple foundation modules to surface concerns.
+- **Fix Instructions:**
+  - Move the shared responsibility into a lower layer, or depend on a contract exposed by `engines/telemetry-audit` rather than `engines/telemetry-audit` itself.
+  - Steps:
+    - Identify the symbols imported from the higher layer.
+    - Decide whether they belong in a shared lower-layer contract.
+    - Re-point the import; otherwise accept the edge as an explicit policy exception.
+  - Effort: M  - Auto-fixable: no
+
+### [P1] AR-0030 — Upward dependency: engines/opencode -> engines/nlcl
 - **Dimension:** layering
 - **Location:** `src/engines/opencode:0`
 - **Evidence:** `edge engines/opencode -> engines/nlcl (layers 3 -> 4)`
@@ -402,7 +428,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0029 — Upward dependency: engines/provider-discovery -> engines/capability-event-bus
+### [P1] AR-0031 — Upward dependency: engines/provider-discovery -> engines/capability-event-bus
 - **Dimension:** layering
 - **Location:** `src/engines/provider-discovery:0`
 - **Evidence:** `edge engines/provider-discovery -> engines/capability-event-bus (layers 1 -> 2)`
@@ -415,7 +441,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0030 — Upward dependency: engines/provider-discovery -> engines/capability-shape-registry
+### [P1] AR-0032 — Upward dependency: engines/provider-discovery -> engines/capability-shape-registry
 - **Dimension:** layering
 - **Location:** `src/engines/provider-discovery:0`
 - **Evidence:** `edge engines/provider-discovery -> engines/capability-shape-registry (layers 1 -> 2)`
@@ -428,7 +454,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0031 — Upward dependency: engines/provider-discovery -> engines/manifest-inference
+### [P1] AR-0033 — Upward dependency: engines/provider-discovery -> engines/manifest-inference
 - **Dimension:** layering
 - **Location:** `src/engines/provider-discovery:0`
 - **Evidence:** `edge engines/provider-discovery -> engines/manifest-inference (layers 1 -> 3)`
@@ -441,7 +467,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0032 — Upward dependency: engines/provider-discovery -> engines/stream-align
+### [P1] AR-0034 — Upward dependency: engines/provider-discovery -> engines/stream-align
 - **Dimension:** layering
 - **Location:** `src/engines/provider-discovery:0`
 - **Evidence:** `edge engines/provider-discovery -> engines/stream-align (layers 1 -> 3)`
@@ -454,7 +480,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0033 — Upward dependency: engines/provider-health -> engines/capability-event-bus
+### [P1] AR-0035 — Upward dependency: engines/provider-health -> engines/capability-event-bus
 - **Dimension:** layering
 - **Location:** `src/engines/provider-health:0`
 - **Evidence:** `edge engines/provider-health -> engines/capability-event-bus (layers 1 -> 2)`
@@ -467,7 +493,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0034 — Upward dependency: engines/provider-mux -> router/router
+### [P1] AR-0036 — Upward dependency: engines/provider-mux -> router/router
 - **Dimension:** layering
 - **Location:** `src/engines/provider-mux:0`
 - **Evidence:** `edge engines/provider-mux -> router/router (layers 1 -> 5)`
@@ -480,7 +506,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0035 — Upward dependency: engines/provider-mux -> engines/capability-event-bus
+### [P1] AR-0037 — Upward dependency: engines/provider-mux -> engines/capability-event-bus
 - **Dimension:** layering
 - **Location:** `src/engines/provider-mux:0`
 - **Evidence:** `edge engines/provider-mux -> engines/capability-event-bus (layers 1 -> 2)`
@@ -493,7 +519,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0036 — Upward dependency: engines/provider-mux -> engines/messaging-archetypes
+### [P1] AR-0038 — Upward dependency: engines/provider-mux -> engines/messaging-archetypes
 - **Dimension:** layering
 - **Location:** `src/engines/provider-mux:0`
 - **Evidence:** `edge engines/provider-mux -> engines/messaging-archetypes (layers 1 -> 3)`
@@ -506,7 +532,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0037 — Upward dependency: engines/provider-registrar -> engines/stream-align
+### [P1] AR-0039 — Upward dependency: engines/provider-registrar -> engines/stream-align
 - **Dimension:** layering
 - **Location:** `src/engines/provider-registrar:0`
 - **Evidence:** `edge engines/provider-registrar -> engines/stream-align (layers 1 -> 3)`
@@ -519,7 +545,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0038 — Upward dependency: engines/send-capability -> engines/unified-registry
+### [P1] AR-0040 — Upward dependency: engines/send-capability -> engines/unified-registry
 - **Dimension:** layering
 - **Location:** `src/engines/send-capability:0`
 - **Evidence:** `edge engines/send-capability -> engines/unified-registry (layers 2 -> 3)`
@@ -532,7 +558,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0039 — Upward dependency: schema/chrome -> executor/chrome-instance-profile
+### [P1] AR-0041 — Upward dependency: schema/chrome -> executor/chrome-instance-profile
 - **Dimension:** layering
 - **Location:** `src/schema/chrome:0`
 - **Evidence:** `edge schema/chrome -> executor/chrome-instance-profile (layers 0 -> 1)`
@@ -545,7 +571,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0040 — Upward dependency: schema/chrome -> executor/slave-states
+### [P1] AR-0042 — Upward dependency: schema/chrome -> executor/slave-states
 - **Dimension:** layering
 - **Location:** `src/schema/chrome:0`
 - **Evidence:** `edge schema/chrome -> executor/slave-states (layers 0 -> 1)`
@@ -558,7 +584,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0041 — Upward dependency: storage/contracts -> engines/browser-automation
+### [P1] AR-0043 — Upward dependency: storage/contracts -> engines/browser-automation
 - **Dimension:** layering
 - **Location:** `src/storage/contracts:0`
 - **Evidence:** `edge storage/contracts -> engines/browser-automation (layers 0 -> 3)`
@@ -571,7 +597,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0042 — Upward dependency: storage/contracts -> canvas/types
+### [P1] AR-0044 — Upward dependency: storage/contracts -> canvas/types
 - **Dimension:** layering
 - **Location:** `src/storage/contracts:0`
 - **Evidence:** `edge storage/contracts -> canvas/types (layers 0 -> 5)`
@@ -584,7 +610,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0043 — Upward dependency: storage/contracts -> executor/slave-states
+### [P1] AR-0045 — Upward dependency: storage/contracts -> executor/slave-states
 - **Dimension:** layering
 - **Location:** `src/storage/contracts:0`
 - **Evidence:** `edge storage/contracts -> executor/slave-states (layers 0 -> 1)`
@@ -597,7 +623,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0044 — Upward dependency: storage/contracts -> engines/intent-decomposer
+### [P1] AR-0046 — Upward dependency: storage/contracts -> engines/intent-decomposer
 - **Dimension:** layering
 - **Location:** `src/storage/contracts:0`
 - **Evidence:** `edge storage/contracts -> engines/intent-decomposer (layers 0 -> 3)`
@@ -610,7 +636,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0045 — Upward dependency: storage/contracts -> engines/mirror-engine
+### [P1] AR-0047 — Upward dependency: storage/contracts -> engines/mirror-engine
 - **Dimension:** layering
 - **Location:** `src/storage/contracts:0`
 - **Evidence:** `edge storage/contracts -> engines/mirror-engine (layers 0 -> 3)`
@@ -623,7 +649,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0046 — Upward dependency: storage/contracts -> engines/provider-mux
+### [P1] AR-0048 — Upward dependency: storage/contracts -> engines/provider-mux
 - **Dimension:** layering
 - **Location:** `src/storage/contracts:0`
 - **Evidence:** `edge storage/contracts -> engines/provider-mux (layers 0 -> 1)`
@@ -636,7 +662,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0047 — Upward dependency: storage/contracts -> engines/sandbox-runner
+### [P1] AR-0049 — Upward dependency: storage/contracts -> engines/sandbox-runner
 - **Dimension:** layering
 - **Location:** `src/storage/contracts:0`
 - **Evidence:** `edge storage/contracts -> engines/sandbox-runner (layers 0 -> 3)`
@@ -649,7 +675,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0048 — Upward dependency: storage/db -> storage/impl
+### [P1] AR-0050 — Upward dependency: storage/db -> storage/impl
 - **Dimension:** layering
 - **Location:** `src/storage/db:0`
 - **Evidence:** `edge storage/db -> storage/impl (layers 0 -> 3)`
@@ -662,7 +688,7 @@
     - Re-point the import; otherwise accept the edge as an explicit policy exception.
   - Effort: M  - Auto-fixable: no
 
-### [P1] AR-0049 — Upward dependency: storage/impl -> engines/harness
+### [P1] AR-0051 — Upward dependency: storage/impl -> engines/harness
 - **Dimension:** layering
 - **Location:** `src/storage/impl:0`
 - **Evidence:** `edge storage/impl -> engines/harness (layers 3 -> 4)`
@@ -707,28 +733,30 @@
 | AR-0025 | P1 | layering | `src/engines/kernel:0` | M | no |
 | AR-0026 | P1 | layering | `src/engines/kernel:0` | M | no |
 | AR-0027 | P1 | layering | `src/engines/kernel:0` | M | no |
-| AR-0028 | P1 | layering | `src/engines/opencode:0` | M | no |
-| AR-0029 | P1 | layering | `src/engines/provider-discovery:0` | M | no |
-| AR-0030 | P1 | layering | `src/engines/provider-discovery:0` | M | no |
+| AR-0028 | P1 | layering | `src/engines/live-capability-registry:0` | M | no |
+| AR-0029 | P1 | layering | `src/engines/live-capability-registry:0` | M | no |
+| AR-0030 | P1 | layering | `src/engines/opencode:0` | M | no |
 | AR-0031 | P1 | layering | `src/engines/provider-discovery:0` | M | no |
 | AR-0032 | P1 | layering | `src/engines/provider-discovery:0` | M | no |
-| AR-0033 | P1 | layering | `src/engines/provider-health:0` | M | no |
-| AR-0034 | P1 | layering | `src/engines/provider-mux:0` | M | no |
-| AR-0035 | P1 | layering | `src/engines/provider-mux:0` | M | no |
+| AR-0033 | P1 | layering | `src/engines/provider-discovery:0` | M | no |
+| AR-0034 | P1 | layering | `src/engines/provider-discovery:0` | M | no |
+| AR-0035 | P1 | layering | `src/engines/provider-health:0` | M | no |
 | AR-0036 | P1 | layering | `src/engines/provider-mux:0` | M | no |
-| AR-0037 | P1 | layering | `src/engines/provider-registrar:0` | M | no |
-| AR-0038 | P1 | layering | `src/engines/send-capability:0` | M | no |
-| AR-0039 | P1 | layering | `src/schema/chrome:0` | M | no |
-| AR-0040 | P1 | layering | `src/schema/chrome:0` | M | no |
-| AR-0041 | P1 | layering | `src/storage/contracts:0` | M | no |
-| AR-0042 | P1 | layering | `src/storage/contracts:0` | M | no |
+| AR-0037 | P1 | layering | `src/engines/provider-mux:0` | M | no |
+| AR-0038 | P1 | layering | `src/engines/provider-mux:0` | M | no |
+| AR-0039 | P1 | layering | `src/engines/provider-registrar:0` | M | no |
+| AR-0040 | P1 | layering | `src/engines/send-capability:0` | M | no |
+| AR-0041 | P1 | layering | `src/schema/chrome:0` | M | no |
+| AR-0042 | P1 | layering | `src/schema/chrome:0` | M | no |
 | AR-0043 | P1 | layering | `src/storage/contracts:0` | M | no |
 | AR-0044 | P1 | layering | `src/storage/contracts:0` | M | no |
 | AR-0045 | P1 | layering | `src/storage/contracts:0` | M | no |
 | AR-0046 | P1 | layering | `src/storage/contracts:0` | M | no |
 | AR-0047 | P1 | layering | `src/storage/contracts:0` | M | no |
-| AR-0048 | P1 | layering | `src/storage/db:0` | M | no |
-| AR-0049 | P1 | layering | `src/storage/impl:0` | M | no |
+| AR-0048 | P1 | layering | `src/storage/contracts:0` | M | no |
+| AR-0049 | P1 | layering | `src/storage/contracts:0` | M | no |
+| AR-0050 | P1 | layering | `src/storage/db:0` | M | no |
+| AR-0051 | P1 | layering | `src/storage/impl:0` | M | no |
 
 ---
 *Generated by `bun run devops audit-arch surface`. Machine-readable findings: arch-findings.json*

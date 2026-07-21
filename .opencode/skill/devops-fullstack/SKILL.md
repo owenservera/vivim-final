@@ -81,6 +81,19 @@ literally; each one was learned from a concrete failure.
 9. **If the backend won't bind, check `.runtime/backend-out.log`.** A zombie-held port makes
    `bun run serve` fail silently; the launcher reports the fallback port in `.runtime/backend.port`.
 
+10. **Never use `-RedirectStandardOutput`/`-RedirectStandardError` in `Start-Process`.**
+    `bun.exe` writing >4KB to a redirected pipe deadlocks the backend launch. Remove the
+    redirect — output goes to the terminal directly.
+
+11. **Use `Write-Output` for Log functions, not `Write-Host`.** `Write-Host` goes to stream 6
+    which `2>&1 | Select-Object` does not capture. Agent-visible log output must use `Write-Output`.
+
+12. **All shared PS1 helpers live in `scripts/_shared.ps1`.** Dot-source it:
+    `. (Join-Path $PSScriptRoot '_shared.ps1')`.
+
+13. **Smoke tests must have client-side timeouts.** `/api/conversations/:id/send` blocks forever
+    waiting for CDP. Wrap `fetch` calls with `AbortController` + timeout.
+
 ## The Operating Procedure (playbook)
 
 Run these phases in order. Each phase is an agent action, not an automated step.
@@ -109,7 +122,7 @@ Run these phases in order. Each phase is an agent action, not an automated step.
      or failure tells you what to build. Map the goal to a `cap:<category>:<action>` id + `slug`.
 5. **Build (do the real work as the LLM).** See Recipe A/B/C below:
    - Backend: engine → Store Contract → `makeCapability(..., handler)` with `surfaces: ALL_SURFACES`
-     → API route (if not covered by `/api/interpret` or `/api/capabilities/:id/execute`).
+     → API route (if not covered by `/api/nlcl/interpret` or `/api/capabilities/:id/execute`).
     - Frontend: use the `vivi-frontend` skill — contract-first, generic-first renderer; promote to
       bespoke only on merit. Never hardcode feature logic; render from `ResolvedCapability`.
       For any new region/provider-family UI, prefer the **unified canvas + conceptual model** path
@@ -152,7 +165,7 @@ PowerShell launchers (run from repo root):
 - `pwsh scripts/start-bg.ps1`                     — NON-BLOCKING: launch backend+frontend, adopt Chrome, return immediately (poll health after)
 - `pwsh scripts/start-all.ps1`                    — BLOCKING: launch backend+frontend, adopt Chrome, health-wait
 - `pwsh scripts/stop-all.ps1`                     — stop both via PID files + port scan (infallible)
-- `pwsh scripts/health-check.ps1 [-Interval 30]`  — continuous health monitor (optional)
+- `pwsh scripts/health-check.ps1 [-Interval 30] [-Once]`  — health monitor (use `-Once` for single check, safe for agent sessions)
 - `pwsh scripts/test-selectors.ps1`               — provider selector health (optional, needs Chrome)
 
 CLI harness (`bun run devops runtime-test <subcmd>`):
@@ -164,7 +177,7 @@ CLI harness (`bun run devops runtime-test <subcmd>`):
 - `discover-cdp [--port=9222]` — CDP protocol methods from live Chrome or catalog fallback
 - `discover-protocol <url> [--hint=name]` — **auto-discover read/write protocol** for any provider URL: composer selectors, composer type, send buttons, capture patterns, DOM response selectors, response format. Generates a complete manifest draft. Uses live Chrome CDP. Also available as `bun run devops discover-protocol <url>` (top-level).
 - `catalog-gen`       — regenerate the static capability catalog from `capability-bootstrap.ts`
-- `test --nl="..."`   — drive one NL command through `POST /api/interpret`
+- `test --nl="..."`   — drive one NL command through `POST /api/nlcl/interpret`
 - `test-cap <slug> [--input=JSON]` — execute a capability by slug via `/api/capabilities/:id/execute`
 - `engage [--provider= --account= --url=]` — attach adopted Chrome, navigate
 - `verify [--url=]`   — render-proof to `.runtime/screenshots/verify-0.html`
@@ -212,7 +225,6 @@ Top-level devops CLI (outside `runtime-test`):
 - `bun run devops ui-test list|status|record` — query/record the UI frontend test registry (tracks which capabilities have been verified in the browser, with timestamps and notes).
 
 Backend API (for manual probing):
-- `POST /api/interpret`            body `{text, ctx?}` → `{ok, capabilityId, text, error, ...}`
 - `POST /api/nlcl/interpret`       body `{input, surface?}` → NLCL engine result
 - `GET  /api/capabilities?surface=ui` → capability list (id/slug)
 - `GET  /api/health`               → 200 when backend up
@@ -291,7 +303,7 @@ Goal: "add conversation rename capability".
    ```
    `surfaces` defaults to `ALL_SURFACES` (cli/ui/api/mcp/workflow) — cross-surface parity, no second
    transport.
-3. API route (only if not covered by `/api/interpret` or `/api/capabilities/:id/execute`): add a handler
+3. API route (only if not covered by `/api/nlcl/interpret` or `/api/capabilities/:id/execute`): add a handler
    in `src/server/` following the existing router pattern.
 4. Frontend: invoke the `vivi-frontend` skill. Generic-first — a new `slug` often renders via the
    GenericCapabilityRenderer with zero new code. Promote to a bespoke renderer only on merit (custom
@@ -372,7 +384,7 @@ Goal: "add 10x more platforms", "expand taxonomy", "add capabilities for X".
   transport. `cdp-discovery.ts` / `discover-cdp.ts` are exempt (pure protocol descriptor).
 - **Store Contracts (B2):** Engines depend on `src/storage/contracts/*`, never `src/storage/impl/*`.
 - **One Entry Point (25.7):** Every operation is a `UnifiedCapability`. CLI/UI/API are thin shells over
-  `POST /api/interpret` and `/api/capabilities/:id/execute`.
+  `POST /api/nlcl/interpret` and `/api/capabilities/:id/execute`.
 - **FRONTEND=BACKEND (5.1):** The capability `slug` links backend and frontend.
 - **Capability Registry always created** — never inside try/catch, so caps surface even if an engine
   fails to boot.
@@ -384,6 +396,66 @@ Goal: "add 10x more platforms", "expand taxonomy", "add capabilities for X".
   earlier passes. The single gate at the end is the only one that counts.
 - **Type safety:** No `any` — use `unknown` + narrowing. Errors via custom classes, never swallowed.
 - **DB-Driven Protocol (P1):** Provider-specific composer selectors, send methods, capture patterns, fetch URL patterns, and DOM selectors live in the DB (`ProviderEndpoint` rows, seeded from `seeds/providers/*.json`). NEVER hardcode these in TypeScript. The hardcoded maps in `provider-selectors.ts` and `conversation-manager.ts` are FALLBACKS only. New providers: write JSON → `bun run seed`. Use `bun run devops discover-protocol <url>` to auto-discover.
+- **Chrome Slave Profile = Source of Truth:** Cookie files in profile directory determine "logged in" state — NOT DB loginState row. `isAuthenticated()` checks cookie files.
+- **One Profile Per (Provider, Account):** ProfileAllocator enforces singleton — no duplicate profiles for same provider+account combination.
+- **Lazy Startup:** Chrome slaves auto-launch when first needed, keep alive until `stop` command. No always-on requirement for dev loop.
+- **No Runaway Creation:** FleetSupervisor limits (maxConcurrent, queue, timeout) + ProfileAllocator singleton + spawn guard prevent duplicate Chrome instances.
+- **Triple-Layer State:** Profile + DB + runtime must stay consistent. Profile dir is canonical, DB and runtime are derived from profile state.
+- **Relogin Ready:** Agent detects session expiry via `isAuthenticated()`, suggests relogin to user, user confirms, system executes relogin flow.
+
+## Chrome Slave Lifecycle (Strategic Design)
+
+**Full design document:** `docs/designs/chrome-slave-system-design.md`
+
+### Purpose & Role
+- CDP bridge to manage registered providers (chatgpt.com, gemini.google.com, claude.ai)
+- Stream responses back to the system with frontend rendering
+- Already working — this is the core functionality
+
+### Scale & Concurrency
+- **Concurrent slaves:** 3-5 (gemini, chatgpt, claude + room for growth)
+- **Enforcement:** FleetSupervisor limits exist and work properly
+- **Admission control:** Bounded concurrency + queue + timeout (browserless pattern)
+
+### Lifecycle Model
+- **Type:** Stateful, dedicated slaves
+- **Pattern:** Login once per provider + account, use indefinitely
+- **Dev loop:** Lazy startup (auto-launch when first needed, keep alive until `stop`)
+
+### State Management (Triple-Layer)
+| Layer | Purpose |
+|-------|---------|
+| **Profile dirs** | Chrome's `--user-data-dir` — cookies, localStorage, session state |
+| **DB (ProviderAccount)** | loginState, debugPort, profileDir, isDefault |
+| **Runtime (.runtime/)** | Fast agent access, port files, PID files, health status |
+
+### Crash Recovery
+- **Transient failure:** Auto-restart with same profile (state preserved via cookies)
+- **Persistent failure:** Manual intervention — agent must detect and decide
+- **Circuit breaker:** Opens after 5 failures, resets after 60s
+
+### Session Expiry & Relogin
+- **Detection:** `isAuthenticated()` checks cookie files in profile dir
+- **Alerting:** Flag in preflight, agent decides
+- **Relogin sequence:** Hybrid — agent detects + suggests, user confirms, system executes
+
+### Key Commands
+```bash
+# Check provider status
+bun run devops runtime-test status --provider=gemini
+
+# Engage browser (attach-first)
+bun run devops runtime-test engage --provider=gemini
+
+# Ensure browser is available
+bun run devops runtime-test ensure-browser
+
+# Profile cleanup
+bun run devops profiles cleanup [--force] [--provider=<slug>]
+
+# Relogin flow
+bun run devops runtime-test setup --provider=gemini --account=gemini_owservera@gmail.com
+```
 
 ## Preflight: Always Know the Current State
 

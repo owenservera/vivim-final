@@ -7,6 +7,7 @@ $ErrorActionPreference = "Continue"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 if (-not $projectRoot) { $projectRoot = $PWD.Path }
 $runtimeDir = Join-Path $projectRoot ".runtime"
+. (Join-Path $PSScriptRoot '_shared.ps1')
 
 function Log($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') $msg" -ForegroundColor DarkGray }
 function LogOk($msg) { Write-Host "  $(Get-Date -Format 'HH:mm:ss.fff') [OK] $msg" -ForegroundColor Green }
@@ -17,24 +18,6 @@ function Kill-Tree($procId) {
     if (-not $procId) { return }
     Log "  taskkill /PID $procId /T /F"
     try { taskkill.exe /PID $procId /T /F 2>$null } catch {}
-}
-
-function Kill-Port($port) {
-    Log "Scanning port $port for LISTENING sockets..."
-    try {
-        $conns = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
-        $found = @()
-        foreach ($conn in $conns) {
-            $foundPid = $conn.OwningProcess
-            $found += $foundPid
-            try {
-                $procName = (Get-Process -Id $foundPid -ErrorAction SilentlyContinue).ProcessName
-                Log "  Killing PID $foundPid ($procName) on port $port"
-                Stop-Process -Id $foundPid -Force -ErrorAction SilentlyContinue
-            } catch { Log "  Failed to kill PID $foundPid" }
-        }
-        if ($found.Count -eq 0) { Log "  Port $port is free" }
-    } catch { Log "  Get-NetTCPConnection unavailable" }
 }
 
 function Stop-Service($name, $port) {
@@ -82,12 +65,14 @@ function Stop-Service($name, $port) {
     # Verify port free
     Start-Sleep -Milliseconds 300
     $stillOpen = $false
+    $tcp = $null
     try {
         $tcp = New-Object System.Net.Sockets.TcpClient
         $tcp.Connect("127.0.0.1", $port)
-        $tcp.Close()
         $stillOpen = $true
-    } catch {}
+    } catch {} finally {
+        if ($tcp) { $tcp.Dispose() }
+    }
 
     if ($stillOpen) { LogWarn "$name may still be on :$port" }
     else { LogOk "$name stopped (port $port free)" }
