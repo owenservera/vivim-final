@@ -31,7 +31,7 @@ import { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { ProviderHealthKernel } from '../engines/provider-health.js'
 import type { ProviderMuxEngine } from '../engines/provider-mux.js'
 import type { RetryEngine } from '../engines/retry-engine.js'
-import type { SemanticSearchEngine } from '../engines/semantic-search.js'
+import type { EmbeddingProvider, SemanticSearchEngine } from '../engines/semantic-search.js'
 import { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import type { UserIdentityEngine } from '../engines/user-identity.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
@@ -451,13 +451,19 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       '../storage/impl/semantic-search-store-impl.js'
     )
     const ssStore = new SemanticSearchStoreImpl(db)
-    const noopEmbedding = {
-      name: 'noop',
-      dimensions: 384,
-      embed: async (_t: string) => new Array(384).fill(0),
-      embedBatch: async (ts: string[]) => ts.map(() => new Array(384).fill(0)),
+
+    let embedding: EmbeddingProvider
+    try {
+      const { OllamaEmbeddingProvider } = await import('../engines/embedding-ollama.js')
+      const provider = new OllamaEmbeddingProvider()
+      await provider.embed('ping')
+      embedding = provider
+    } catch {
+      const { MiniLmEmbeddingProvider } = await import('../engines/embedding-minilm.js')
+      embedding = new MiniLmEmbeddingProvider()
     }
-    semanticSearch = new SemanticSearchEngine(ssStore, noopEmbedding)
+
+    semanticSearch = new SemanticSearchEngine(ssStore, embedding)
   } catch {
     /* semantic search not available */
   }
