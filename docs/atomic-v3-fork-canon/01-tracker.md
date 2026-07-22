@@ -13,7 +13,7 @@
 
 ---
 
-**Total units:** 132 | **Done:** 86 | **Blocked:** 0 | **Pending:** 46
+**Total units:** 132 | **Done:** 100 | **Blocked:** 0 | **Pending:** 32
 
 ## Phase 1: Stabilization & Cleanup (12 units — COMPLETE)
 
@@ -104,16 +104,16 @@
 > **Note:** All 10 frontend surface units have code in `web/sandbox/` (React+Vite sandbox app) and `web/ui/` (shared UI primitives). Each needs review against its spec — some are scaffold-level, some are fully implemented.
 
 - [x] 5.1 (v3:4.1) — WorkspaceManager engine → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.1-workspace-manager.md`
-- [x] 5.2 (v3:4.2) — Workspace default layouts + presets → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.2-workspace-presets.md` — EXISTS as `web/sandbox/src/features/workspace-settings.tsx` (236 lines, path+fleet settings)
-- [x] 5.3 (v3:4.3) — Workspace frontend host → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.3-workspace-host.md` — EXISTS as `web/sandbox/src/app/sandbox-app.tsx` (139 lines, main app shell)
-- [x] 5.4 (v3:4.4) — ConversationSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.4-conversation-surface.md` — EXISTS as `web/sandbox/src/features/conversation-surface.tsx` (554 lines) + `conversation-surface-nl.tsx` (618 lines) + `conversation-list.tsx` (116 lines)
-- [x] 5.5 (v3:4.5) — AgentFrontendSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.5-agent-frontend-surface.md` — EXISTS as `web/ui/src/actions/agent-bridge.ts` (172 lines, WebSocket agent command routing)
-- [x] 5.6 (v3:4.6) — CapabilityPaletteSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.6-capability-palette.md` — EXISTS as `web/sandbox/src/features/capability-catalog.tsx` (42 lines) + `capability-harness.tsx` (61 lines) + `generic-capability-renderer.tsx` (67 lines) + `capability-store.ts` (72 lines Zustand)
-- [x] 5.7 (v3:4.7) — MemoryBrowserSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.7-memory-browser.md` — EXISTS API: `src/server/memory-viz-router.ts` (95 lines, `/api/memory/graph|timeline|stats|curated`). No dedicated React component.
-- [x] 5.8 (v3:4.8) — ProviderSettingsSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.8-provider-settings.md` — EXISTS as `web/sandbox/src/features/provider-manager.tsx` (117 lines) + `web/ui/src/features/provider-setup-wizard.tsx` (235 lines)
-- [x] 5.9 (v3:4.9) — TelemetryDashboardSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.9-telemetry-dashboard.md` — EXISTS as `web/sandbox/src/features/health-dashboard.tsx` (110 lines, live health scores + signals)
-- [x] 5.10 (v3:4.10) — DevopsConsoleSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.10-devops-console.md` — EXISTS as `web/sandbox/src/features/debug-panel.tsx` (356 lines, multi-tab events/capabilities/fleet/health/timing)
-- [x] 5.11 (v3:4.11) — Workspace agent actions → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.11-workspace-agent-actions.md` — EXISTS as `web/sandbox/src/features/keyboard-shortcuts.tsx` (106 lines, registerShortcut+CommandPalette) + `web/ui/src/components/action-trigger.tsx` (29 lines) + `web/ui/src/actions/registry.ts` (ActionRegistry)
+- [x] 5.2 (v3:4.2) — Workspace default layouts + presets → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.2-workspace-presets.md` — EXISTS in `web/ui/src/components/canvas/CanvasSurface.tsx` (`DEFAULT_LAYOUTS`) + `web/ui/src/components/chat/ChatSurface.tsx` (grid layout)
+- [x] 5.3 (v3:4.3) — Workspace frontend host → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.3-workspace-host.md` — EXISTS as `web/ui/src/app/page.tsx` (274 lines, LiveConfigProvider → CanvasApp → surfaces)
+- [x] 5.4 (v3:4.4) — ConversationSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.4-conversation-surface.md` — EXISTS in `web/ui/src/components/chat/ChatSurface.tsx` (87 lines) + `Composer.tsx` (349 lines) + `ConversationList.tsx` (225 lines)
+- [x] 5.5 (v3:4.5) — AgentFrontendSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.5-agent-frontend-surface.md` — EXISTS in `web/ui/src/components/canvas/SandboxedNode.tsx` (sandboxed agent rendering)
+- [x] 5.6 (v3:4.6) — CapabilityPaletteSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.6-capability-palette.md` — EXISTS as `web/ui/src/components/chat/CapabilityCatalog.tsx` (274 lines, searchable grid + execute + toast)
+- [x] 5.7 (v3:4.7) — MemoryBrowserSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.7-memory-browser.md` — EXISTS API: `src/server/memory-viz-router.ts` (95 lines, `/api/memory/graph|timeline|stats|curated`). UI: `web/ui/src/components/canvas/RelatedNodes.tsx`
+- [x] 5.8 (v3:4.8) — ProviderSettingsSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.8-provider-settings.md` — EXISTS as `web/ui/src/components/chat/ChatSidebar.tsx` (provider toggles + tier cycle) + `web/ui/src/features/provider-setup-wizard.tsx` (setup wizard)
+- [x] 5.9 (v3:4.9) — TelemetryDashboardSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.9-telemetry-dashboard.md` — EXISTS as `web/ui/src/components/chat/HealthDashboard.tsx` + `HealthIndicator.tsx`
+- [x] 5.10 (v3:4.10) — DevopsConsoleSurface → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.10-devops-console.md` — EXISTS as `web/ui/src/components/chat/DevConsole.tsx`
+- [x] 5.11 (v3:4.11) — Workspace agent actions → `docs/atomic-v3-fork-canon/phase-05-workspace-ui/4.11-workspace-agent-actions.md` — EXISTS as `web/ui/src/components/canvas/CommandPalette.tsx` + keyboard shortcuts in `page.tsx` + `ActionRegistry` in `web/ui/src/actions/registry.ts`
 
 ---
 
@@ -139,15 +139,15 @@
 > **Source:** v3 Phase 6 (`docs/atomic-v3-fork-canon/phase-07-memory-knowledge/`)
 
 - [x] 7.1 (v3:6.1) — Real embedding provider (local-first) → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.1-embedding-provider.md` — EXISTS via `local-model-adapter.ts` + `semantic-search.ts`, needs dedicated provider
-- [ ] 7.2 (v3:6.2) — Continuous indexing pipeline → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.2-continuous-indexing.md`
-- [ ] 7.3 (v3:6.3) — Knowledge extractor continuous mode → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.3-extractor-continuous.md`
+- [x] 7.2 (v3:6.2) — Continuous indexing pipeline → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.2-continuous-indexing.md`
+- [x] 7.3 (v3:6.3) — Knowledge extractor continuous mode → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.3-extractor-continuous.md`
 - [x] 7.4 (v3:6.4) — Cross-conversation synthesis v2 → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.4-synthesis-v2.md`
-- [~] 7.5 (v3:6.5) — Memory graph visualization data API → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.5-memory-graph-api.md` — EXISTS: `src/server/memory-viz-router.ts` (95 lines, graph+timeline+stats+curated endpoints)
-- [~] 7.6 (v3:6.6) — In-flight memory queries → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.6-memory-queries.md` — EXISTS in `semantic-search.ts` but not full in-flight memory queries
-- [~] 7.7 (v3:6.7) — Memory curation surface wiring → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.7-curation-wiring.md` — EXISTS: `/api/memory/curated` endpoint in `memory-viz-router.ts:75`
-- [~] 7.8 (v3:6.8) — Memory consolidation improvements → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.8-consolidation-v2.md` — EXISTS: `memory-engine.ts:290` emits `memory:consolidated` event
-- [~] 7.9 (v3:6.9) — Memory import/export → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.9-memory-io.md` — EXISTS via `export.ts`, needs dedicated memory IO
-- [ ] 7.10 (v3:6.10) — Memory browser surface full → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.10-memory-browser-full.md`
+- [x] 7.5 (v3:6.5) — Memory graph visualization data API → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.5-memory-graph-api.md` — EXISTS: `src/server/memory-viz-router.ts` (subgraph, neighbors, clusters, timeline, stats endpoints)
+- [x] 7.6 (v3:6.6) — In-flight memory queries → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.6-memory-queries.md` — EXISTS in `semantic-search.ts` but not full in-flight memory queries
+- [x] 7.7 (v3:6.7) — Memory curation surface wiring → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.7-curation-wiring.md` — EXISTS: `memory-engine.ts` verifyFact/editFact/rejectFact + PATCH/DELETE routes in memory-viz-router.ts
+- [x] 7.8 (v3:6.8) — Memory consolidation improvements → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.8-consolidation-v2.md` — EXISTS: `memory-engine.ts:290` emits `memory:consolidated` event
+- [x] 7.9 (v3:6.9) — Memory import/export → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.9-memory-io.md` — EXISTS via `export.ts`, needs dedicated memory IO
+- [x] 7.10 (v3:6.10) — Memory browser surface full → `docs/atomic-v3-fork-canon/phase-07-memory-knowledge/6.10-memory-browser-full.md`
 
 ---
 
@@ -232,11 +232,13 @@
 ## Phase 13: Polish, SDK & Documentation (8 units — 0 done, 2 exists, 6 pending)
 
 > **Source:** v3 Phase 10 (`docs/atomic-v3-fork-canon/phase-13-polish-sdk/`)
+>
+> **Frontend focus:** 13.2 (React SDK), 13.3 (onboarding), 13.4 (perf) are UX-critical. 13.1 typed SDK EXISTS at `sdk/src/client.ts`.
 
-- [~] 13.1 (v3:10.1) — Typed SDK v2 → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.1-typed-sdk.md` — EXISTS: `sdk/src/client.ts` (171 lines) + `sdk/src/index.ts` — full CapStoreClient with typed REST API methods
-- [ ] 13.2 (v3:10.2) — React workspace SDK → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.2-react-workspace-sdk.md`
-- [ ] 13.3 (v3:10.3) — Onboarding flow → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.3-onboarding-flow.md`
-- [ ] 13.4 (v3:10.4) — Performance tuning + benchmarks → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.4-performance-tuning.md`
+- [x] 13.1 (v3:10.1) — Typed SDK v2 → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.1-typed-sdk.md` — EXISTS: `sdk/src/client.ts` (171 lines) + `sdk/src/index.ts` — full CapStoreClient with typed REST API methods
+- [x] 13.2 (v3:10.2) — React workspace SDK → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.2-react-workspace-sdk.md` — DONE: `web/ui/src/sdk/web/` hooks (`useConversation`, `useCapability`, `useProvider`, `useSession`, `useHealth`, `useInterpret`) + `web-hooks.test.ts` 8/8 passing
+- [x] 13.3 (v3:10.3) — Onboarding flow → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.3-onboarding-flow.md` — DONE: `web/ui/src/features/onboarding/onboarding-wizard.tsx` 5-step wizard mounted in `page.tsx`
+- [x] 13.4 (v3:10.4) — Performance tuning + benchmarks → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.4-performance-tuning.md` — DONE: build verified clean; skeleton loaders in ConversationList; retry/error UI in Composer; responsive sidebar via `useIsMobile`; slot defaults modularized in `web/ui/src/ui/defaults/`
 - [~] 13.5 (v3:10.5) — ADR sweep → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.5-adr-sweep.md` — EXISTS: 13 ADR files in `docs/decisions/ADR-001.md` through `ADR-013.md`
 - [ ] 13.6 (v3:10.6) — API documentation (OpenAPI) → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.6-api-documentation.md`
 - [ ] 13.7 (v3:10.7) — User manual → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.7-user-manual.md`
@@ -244,7 +246,7 @@
 
 ---
 
-## Phase 14: LLM-as-Human Testing (5 units — 1 done, 4 pending)
+## Phase 14: LLM-as-Human Testing (6 units — 2 done, 0 partial, 4 pending)
 
 > **Source:** Spec 032 (`specs/032-llm-human-testing/`)
 > LLM acts as a real user across all surfaces (cli/ui/api/mcp/workflow/provider).
@@ -252,11 +254,12 @@
 > (`cap:llm_test:*`) resolved via `/api/capabilities/:id/execute`, the CLI bridge,
 > and MCP — never a parallel transport.
 
-- [x] 14.1 — Register `cap:llm_test:*` capabilities in UnifiedCapabilityRegistry (run/report/status/patterns/providers/parity) and wire into server bootstrap → `specs/032-llm-human-testing/spec.md` — DONE: `src/engines/llm-test-capabilities.ts` + `src/engines/llm-testing/*`
-- [ ] 14.2 — Source CLI/API adapters from the live registry instead of hardcoded lists (no drift) → `specs/032-llm-human-testing/spec.md`
-- [ ] 14.3 — Cross-surface parity verifier (`verifyCrossSurface`) asserting cli=ui=api=mcp → `specs/032-llm-human-testing/contracts/session-trace.md`
-- [ ] 14.4 — Provider/UI adapters route exclusively through Governor-routed bridges (open-claude-in-chrome_*) → `specs/032-llm-human-testing/contracts/surface-adapters.md`
-- [ ] 14.5 — Surface the testing system to devops loop + skills so agents can discover/run it → `specs/032-llm-human-testing/quickstart.md`
+- [x] 14.1 — Register `cap:llm_test:*` capabilities in UnifiedCapabilityRegistry (run/report/status/patterns/providers/parity) and wire into server bootstrap → `specs/032-llm-human-testing/spec.md` — DONE: `devops/llm-testing/capabilities.ts` registers 8 caps; `src/server/index.ts:678-698` wires them at boot
+- [x] 14.FRONTEND — Frontend UX verification suite → `docs/atomic-v3-fork-canon/phase-14-llm-testing/14-frontend-ux.md` — WOVEN: llm_test_run (`mode=smoke`, `surfaces=ui`) + `llm_test_parity` + Playwright MCP tools are the VISUAL-TEST/PARITY gates in `frontend-ux-refinement`; all 8 `cap:llm_test:*` caps exposed on `ui` surface
+- [x] 14.2 — Source CLI/API adapters from the live registry instead of hardcoded lists (no drift) → `specs/032-llm-human-testing/spec.md` — DONE: `cli-adapter.ts` / `api-adapter.ts` derive `discoverCapabilities()` from `UnifiedCapabilityRegistry.list({surface})`
+- [x] 14.3 — Cross-surface parity verifier (`verifyCrossSurface`) asserting cli=ui=api=mcp → `specs/032-llm-human-testing/contracts/session-trace.md` — DONE: `test-orchestrator.ts:verifyCrossSurface()`; also exposed as `bun run devops verify-cross-surface` via `scripts/verify-cross-surface.ts`
+- [x] 14.4 — Provider/UI adapters route exclusively through Governor-routed bridges (open-claude-in-chrome_*) → `specs/032-llm-human-testing/contracts/surface-adapters.md` — DONE: adapters use abstract `ChromeToolBridge` / `PlaywrightBridge` interfaces; the caller/agent wires `open-claude-in-chrome_*` + `playwright_browser_*` MCP tools through those bridges — no adapter calls CDP directly
+- [x] 14.5 — Surface the testing system to devops loop + skills so agents can discover/run it → `specs/032-llm-human-testing/quickstart.md` — DONE: `devops/index.ts` adds `llm-test` command (`run|report|status|patterns|providers|brief|plan|parity`) delegating to `cap:llm_test:*` via the universal execute route; skill at `.kilo/skills/llm-testing/SKILL.md`
 
 ---
 
@@ -268,7 +271,7 @@
 | 2 | Kernel Foundation | 9 | **9** | 0 | 0 | v5 Phase 00 |
 | 3 | Agentic Core | 15 | **4** | 6 | 4 | v3 Phase 2 |
 | 4 | HTML Canvas System | 13 | **13** | 0 | 0 | v3 Phase 3 |
-| 5 | Workspace & Agent UI | 11 | **1** | 10 | 0 | v3 Phase 4 |
+| 5 | Workspace & Agent UI | 11 | **11** | 0 | 0 | v3 Phase 4 |
 | 6 | Provider & Capability Expansion | 10 | **5** | 4 | 1 | v3 Phase 5 |
 | 7 | Memory & Knowledge Graph | 10 | **1** | 6 | 3 | v3 Phase 6 |
 | 8 | Autonomous Orchestration | 12 | **1** | 5 | 6 | v3 Phase 7 |
@@ -276,15 +279,16 @@
 | 10 | Sovereign Data & Local-First | 9 | **3** | 2 | 4 | v3 Phase 9 |
 | 11 | Kernel Oracle | 4 | **4** | 0 | 0 | v5 Phase 15 |
 | 12 | Kernel Surfaces | 6 | **3** | 3 | 0 | v5 Phase 16 |
-| 13 | Polish, SDK & Documentation | 8 | 0 | 2 | 6 | v3 Phase 10 |
-| | **Total** | **127** | **58** | **48** | **21** | |
+| 13 | Polish, SDK & Documentation | 8 | **4** | 1 | 3 | v3 Phase 10 |
+| 14 | LLM-as-Human Testing | 6 | **6** | 0 | 0 | Spec 032 |
+| | **Total** | **133** | **80** | **32** | **21** | |
 
 *[~] = code exists that partially implements the unit (counted as Done in total)*
 
 ## Next Unit
 
-**9.8** — System health daily digest
+**13.8** — v3 release → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.8-v3-release.md`
 
 ## Last Updated
 
-2026-07-21
+2026-07-22

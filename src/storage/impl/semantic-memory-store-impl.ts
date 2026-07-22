@@ -59,4 +59,52 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
   async delete(id: string): Promise<void> {
     await this.p.semanticMemory.delete({ where: { id } })
   }
+
+  async findAll(): Promise<SemanticMemory[]> {
+    const rows = await this.p.semanticMemory.findMany({
+      orderBy: { timestamp: 'desc' },
+    })
+
+    return (rows as PrismaLoose[]).map((r) => ({
+      id: r.id as string,
+      subject: r.subject as string,
+      predicate: r.predicate as string,
+      object: JSON.parse((r.object_json as string) ?? '{}') as unknown,
+      confidence: r.confidence as number,
+      source: r.source as string,
+      timestamp: r.timestamp as number,
+      expiresAt: (r.expires_at as number) ?? undefined,
+    }))
+  }
+
+  async updateConfidence(id: string, confidence: number): Promise<void> {
+    await this.p.semanticMemory.update({
+      where: { id },
+      data: { confidence },
+    })
+  }
+
+  async update(id: string, patch: Partial<Pick<SemanticMemory, 'subject' | 'predicate' | 'object' | 'confidence'>>): Promise<void> {
+    const data: PrismaLoose = {}
+    if (patch.subject !== undefined) data.subject = patch.subject
+    if (patch.predicate !== undefined) data.predicate = patch.predicate
+    if (patch.object !== undefined) data.objectJson = JSON.stringify(patch.object)
+    if (patch.confidence !== undefined) data.confidence = patch.confidence
+    await this.p.semanticMemory.update({ where: { id }, data })
+  }
+
+  async findById(id: string): Promise<SemanticMemory | null> {
+    const row = await this.p.semanticMemory.findUnique({ where: { id } })
+    if (!row) return null
+    return {
+      id: row.id as string,
+      subject: row.subject as string,
+      predicate: row.predicate as string,
+      object: JSON.parse((row.object_json as string) ?? '{}') as unknown,
+      confidence: row.confidence as number,
+      source: row.source as string,
+      timestamp: row.timestamp as number,
+      expiresAt: (row.expires_at as number) ?? undefined,
+    }
+  }
 }

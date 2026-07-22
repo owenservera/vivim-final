@@ -16,6 +16,7 @@ interface MemoryVizRequest {
 interface MemoryVizResponse {
   status: number
   body: unknown
+  headers?: Record<string, string>
 }
 
 export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: MemoryCuratedStore) {
@@ -40,6 +41,107 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
             confidence: f.confidence,
           })),
         },
+      }
+    }
+
+    // GET /api/memory/graph/subgraph?focal=<id>&depth=2
+    if (path === '/api/memory/graph/subgraph' && req.method === 'GET') {
+      const focal = url.searchParams.get('focal')
+      const depth = Number(url.searchParams.get('depth') ?? 2)
+      if (!focal) {
+        return { status: 400, body: { error: 'focal entity required' } }
+      }
+      const allFacts = await memory.getAllFacts()
+      const nodes = new Map<string, { id: string; label: string; type: 'entity' | 'fact'; confidence: number }>()
+      const edges: Array<{ source: string; target: string; label: string; weight: number }> = []
+
+      const visited = new Set<string>()
+      const queue: Array<{ entity: string; currentDepth: number }> = [{ entity: focal, currentDepth: 0 }]
+
+      while (queue.length > 0) {
+        const { entity, currentDepth: d } = queue.shift()!
+        if (visited.has(entity) || d > depth) continue
+        visited.add(entity)
+
+        nodes.set(entity, { id: entity, label: entity, type: 'entity', confidence: 1.0 })
+
+        for (const f of allFacts) {
+          if (f.subject === entity || f.object === entity) {
+            const other = f.subject === entity ? f.object : f.subject
+            if (typeof other === 'string') {
+              nodes.set(other, { id: other, label: other, type: 'entity', confidence: f.confidence })
+              edges.push({ source: f.subject, target: String(f.object), label: f.predicate, weight: f.confidence })
+              if (d < depth) queue.push({ entity: other, currentDepth: d + 1 })
+            }
+          }
+        }
+      }
+
+      return {
+        status: 200,
+        body: { nodes: [...nodes.values()], edges },
+      }
+    }
+
+    // GET /api/memory/graph/neighbors?entity=<id>&k=10
+    if (path === '/api/memory/graph/neighbors' && req.method === 'GET') {
+      const entity = url.searchParams.get('entity')
+      const k = Number(url.searchParams.get('k') ?? 10)
+      if (!entity) {
+        return { status: 400, body: { error: 'entity required' } }
+      }
+      const facts = await memory.recallFacts(entity)
+      const neighbors = new Map<string, { id: string; label: string; confidence: number; predicate: string }>()
+      for (const f of facts.slice(0, k)) {
+        const other = f.subject === entity ? String(f.object) : f.subject
+        if (!neighbors.has(other)) {
+          neighbors.set(other, { id: other, label: other, confidence: f.confidence, predicate: f.predicate })
+        }
+      }
+      return {
+        status: 200,
+        body: { entity, neighbors: [...neighbors.values()] },
+      }
+    }
+
+    // GET /api/memory/graph/clusters
+    if (path === '/api/memory/graph/clusters' && req.method === 'GET') {
+      const allFacts = await memory.getAllFacts()
+      const adj = new Map<string, Set<string>>()
+      for (const f of allFacts) {
+        if (!adj.has(f.subject)) adj.set(f.subject, new Set())
+        if (!adj.has(String(f.object))) adj.set(String(f.object), new Set())
+        adj.get(f.subject)!.add(String(f.object))
+        adj.get(String(f.object))!.add(f.subject)
+      }
+      // Simple label-propagation community detection
+      const labels = new Map<string, string>()
+      for (const node of adj.keys()) labels.set(node, node)
+      for (let iter = 0; iter < 10; iter++) {
+        let changed = false
+        for (const [node, neighbors] of adj) {
+          const neighborLabels = new Map<string, number>()
+          for (const n of neighbors) {
+            const l = labels.get(n) ?? n
+            neighborLabels.set(l, (neighborLabels.get(l) ?? 0) + 1)
+          }
+          let bestLabel = labels.get(node) ?? node
+          let bestCount = 0
+          for (const [l, c] of neighborLabels) {
+            if (c > bestCount) { bestCount = c; bestLabel = l }
+          }
+          if (labels.get(node) !== bestLabel) { labels.set(node, bestLabel); changed = true }
+        }
+        if (!changed) break
+      }
+      const groups = new Map<string, string[]>()
+      for (const [node, label] of labels) {
+        if (!groups.has(label)) groups.set(label, [])
+        groups.get(label)!.push(node)
+      }
+      return {
+        status: 200,
+        body: { clusters: [...groups.entries()].map(([id, members]) => ({ id, members })) },
       }
     }
 
@@ -154,6 +256,88 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
           return { status: 400, body: { error: 'unknown action' } }
       }
       return { status: 200, body: { ok: true, action: body.action, memoryId } }
+    }
+
+    // GET /api/memory/export?format=json|markdown
+    if (path === '/api/memory/export' && req.method === 'GET') {
+      const { MemoryExportEngine } = await import('../engines/memory-export.js')
+      const exportEngine = new MemoryExportEngine(memory)
+      const format = (url.searchParams.get('format') ?? 'json') as 'json' | 'markdown'
+      const data = await exportEngine.export(format)
+      return {
+        status: 200,
+        body: data,
+        headers: {
+          'Content-Type': format === 'json' ? 'application/json' : 'text/markdown',
+          'Content-Disposition': `attachment; filename="memory-export.${format}"`,
+        },
+      }
+    }
+
+    // POST /api/memory/import  { json: string }
+    if (path === '/api/memory/import' && req.method === 'POST') {
+      const { MemoryExportEngine } = await import('../engines/memory-export.js')
+      const exportEngine = new MemoryExportEngine(memory)
+      let body: { json?: string }
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+      } catch {
+        return { status: 400, body: { error: 'invalid json body' } }
+      }
+      if (!body.json) {
+        return { status: 400, body: { error: 'json field required' } }
+      }
+      const result = await exportEngine.import(body.json)
+      return { status: 200, body: result }
+    }
+
+    // PATCH /api/memory/facts/:id — verify or edit a fact
+    if (path.startsWith('/api/memory/facts/') && req.method === 'PATCH') {
+      const id = path.split('/api/memory/facts/')[1]
+      if (!id) {
+        return { status: 400, body: { error: 'fact id required' } }
+      }
+      let body: { verified?: boolean; object?: unknown; predicate?: string; by?: string }
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+      } catch {
+        return { status: 400, body: { error: 'invalid json body' } }
+      }
+      const by = (body.by as string) ?? 'user'
+      try {
+        if (body.verified === true) {
+          await memory.verifyFact(id, by)
+          return { status: 200, body: { ok: true, action: 'verify', id } }
+        }
+        if (body.object !== undefined || body.predicate !== undefined) {
+          await memory.editFact(id, { object: body.object, predicate: body.predicate }, by)
+          return { status: 200, body: { ok: true, action: 'edit', id } }
+        }
+        return { status: 400, body: { error: 'no valid patch fields (verified, object, predicate)' } }
+      } catch (err) {
+        return { status: 404, body: { error: `fact not found: ${id}` } }
+      }
+    }
+
+    // DELETE /api/memory/facts/:id — reject/deprecate a fact
+    if (path.startsWith('/api/memory/facts/') && req.method === 'DELETE') {
+      const id = path.split('/api/memory/facts/')[1]
+      if (!id) {
+        return { status: 400, body: { error: 'fact id required' } }
+      }
+      let body: { by?: string }
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+      } catch {
+        body = {}
+      }
+      const by = (body?.by as string) ?? 'user'
+      try {
+        await memory.rejectFact(id, by)
+        return { status: 200, body: { ok: true, action: 'reject', id } }
+      } catch (err) {
+        return { status: 404, body: { error: `fact not found: ${id}` } }
+      }
     }
 
     return { status: 404, body: { error: 'Not found' } }
