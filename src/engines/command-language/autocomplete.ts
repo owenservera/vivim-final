@@ -90,7 +90,8 @@ export class AutocompleteEngine {
         const score = this.calculateScore(query, spec)
         suggestions.push({
           id: spec.id,
-          title: spec.title,
+          label: spec.title,
+          description: spec.subtitle ?? '',
           category: spec.category,
           prefix: spec.prefix,
           score,

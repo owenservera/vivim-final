@@ -1,7 +1,7 @@
 // tests/unit/engines/embedding-ollama.test.ts
 import { describe, expect, it, vi } from 'bun:test'
-import { OllamaEmbeddingProvider } from '../../../src/engines/embedding-ollama.js'
 import { MiniLmEmbeddingProvider } from '../../../src/engines/embedding-minilm.js'
+import { OllamaEmbeddingProvider } from '../../../src/engines/embedding-ollama.js'
 
 describe('OllamaEmbeddingProvider', () => {
   it('embedBatch parses data.embeddings with correct shape and dims', async () => {
@@ -16,7 +16,7 @@ describe('OllamaEmbeddingProvider', () => {
         status: 200,
         headers: { 'content-type': 'application/json' },
       })
-    }) as typeof fetch
+    }) as unknown as typeof fetch
 
     try {
       const provider = new OllamaEmbeddingProvider('http://localhost:11434')
@@ -35,11 +35,13 @@ describe('OllamaEmbeddingProvider', () => {
     const originalFetch = globalThis.fetch
     globalThis.fetch = vi.fn(async () => {
       return new Response('not found', { status: 404 })
-    }) as typeof fetch
+    }) as unknown as typeof fetch
 
     try {
       const provider = new OllamaEmbeddingProvider('http://localhost:11434')
-      await expect((provider as any).embedBatch(['hello'])).rejects.toThrow('Ollama embed failed: 404')
+      await expect((provider as any).embedBatch(['hello'])).rejects.toThrow(
+        'Ollama embed failed: 404',
+      )
     } finally {
       globalThis.fetch = originalFetch
     }

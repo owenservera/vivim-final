@@ -265,14 +265,17 @@ export async function registerDefaultCapabilities(
         id: 'cap:memory:query',
         slug: 'memory_query',
         name: 'Query Memory',
-        description: 'Query episodic/semantic/procedural memory.',
+        description: 'Semantic query over episodic/semantic/procedural memory.',
         category: 'memory',
         inputSchema: {
           type: 'object',
-          properties: { query: { type: 'string' } },
+          properties: {
+            query: { type: 'string' },
+            k: { type: 'number' },
+          },
           required: ['query'],
         },
-        outputSchema: { type: 'object' },
+        outputSchema: { type: 'array' },
         cliCommand: {
           name: 'memory query',
           aliases: ['mq'],
@@ -282,19 +285,31 @@ export async function registerDefaultCapabilities(
         mcpToolName: 'memory_query',
         apiEndpoint: { method: 'GET', path: '/api/memory/query' },
       },
-      async () => ({ results: [] }),
+      async (input) => {
+        if (!services.semanticSearch) return { results: [], error: 'Semantic search not available' }
+        const hits = await services.semanticSearch.search({
+          text: String(input.query),
+          limit: Number(input.k ?? 8),
+        })
+        return { results: hits }
+      },
     ),
     makeCapability(
       {
         id: 'cap:memory:assert',
         slug: 'memory_assert',
         name: 'Assert Fact',
-        description: 'Assert a semantic fact into memory.',
+        description: 'Assert a subject-predicate-object fact immediately.',
         category: 'memory',
         inputSchema: {
           type: 'object',
-          properties: { fact: { type: 'string' } },
-          required: ['fact'],
+          properties: {
+            subject: { type: 'string' },
+            predicate: { type: 'string' },
+            object: { type: 'string' },
+            confidence: { type: 'number' },
+          },
+          required: ['subject', 'predicate', 'object'],
         },
         outputSchema: { type: 'object' },
         cliCommand: {
@@ -304,21 +319,67 @@ export async function registerDefaultCapabilities(
         },
         ui: { component: 'action-button', position: 'sidebar', order: 13 },
         mcpToolName: 'memory_assert',
-        apiEndpoint: { method: 'POST', path: '/api/memory/assert' },
+        apiEndpoint: { method: 'POST', path: '/api/memory/facts' },
       },
-      async () => ({ ok: true }),
+      async (input) => {
+        if (!services.memoryEngine) return { ok: false, error: 'Memory engine not available' }
+        await services.memoryEngine.assertFact({
+          subject: String(input.subject),
+          predicate: String(input.predicate),
+          object: String(input.object),
+          confidence: Number(input.confidence ?? 0.6),
+          source: 'agent',
+        })
+        return { ok: true }
+      },
+    ),
+    makeCapability(
+      {
+        id: 'cap:memory:remember',
+        slug: 'memory_remember',
+        name: 'Remember Episode',
+        description: 'Record an episodic memory.',
+        category: 'memory',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string' },
+            topic: { type: 'string' },
+          },
+          required: ['content'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'memory remember',
+          aliases: ['mremember'],
+          examples: ['memory remember "deployed v2.1 to prod"'],
+        },
+        ui: { component: 'action-button', position: 'sidebar', order: 15 },
+        mcpToolName: 'memory_remember',
+        apiEndpoint: { method: 'POST', path: '/api/memory/episodes' },
+      },
+      async (input) => {
+        if (!services.memoryEngine) return { ok: false, error: 'Memory engine not available' }
+        const id = await services.memoryEngine.recordMemory({
+          content: String(input.content),
+          memoryType: 'episodic',
+          category: input.topic as string ?? 'general',
+          tags: input.topic ? [String(input.topic)] : [],
+        })
+        return { ok: true, id }
+      },
     ),
     makeCapability(
       {
         id: 'cap:memory:forget',
         slug: 'memory_forget',
         name: 'Forget Fact',
-        description: 'Remove a previously asserted semantic fact from memory.',
+        description: 'Deprecate a fact by id (not hard delete).',
         category: 'memory',
         inputSchema: {
           type: 'object',
-          properties: { factId: { type: 'string' } },
-          required: ['factId'],
+          properties: { id: { type: 'string' } },
+          required: ['id'],
         },
         outputSchema: { type: 'object' },
         cliCommand: {
@@ -328,9 +389,13 @@ export async function registerDefaultCapabilities(
         },
         ui: { component: 'action-button', position: 'sidebar', order: 14 },
         mcpToolName: 'memory_forget',
-        apiEndpoint: { method: 'DELETE', path: '/api/memory/{id}' },
+        apiEndpoint: { method: 'DELETE', path: '/api/memory/facts/{id}' },
       },
-      async () => ({ ok: true }),
+      async (input) => {
+        if (!services.memoryEngine) return { ok: false, error: 'Memory engine not available' }
+        await services.memoryEngine.forgetFact(String(input.id))
+        return { ok: true }
+      },
     ),
 
     // ── Admin ──────────────────────────────────────────────────
@@ -664,6 +729,9 @@ export async function registerDefaultCapabilities(
                 sessionId: input.sessionId ? String(input.sessionId) : undefined,
                 cwd: input.cwd ? String(input.cwd) : undefined,
               })
+              if (!result) {
+                return { ok: false, error: 'local agent executor returned no result' }
+              }
               return {
                 ok: result.exitCode === 0 && !result.timedOut && !result.permissionDenied,
                 blocks: result.blocks,
@@ -880,7 +948,7 @@ export async function seedLocalAgentProvider(store: LocalAgentStore): Promise<vo
       binary: 'opencode',
       timeoutMs: 180_000,
       allowedModels: models.map((m) => m.slug),
-      defaultModel: models[0].slug,
+      defaultModel: models[0]?.slug ?? '',
     },
   )
 }

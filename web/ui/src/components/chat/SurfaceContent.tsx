@@ -24,6 +24,7 @@ import {
 } from '@/components/canvas';
 import { CapabilityCatalog } from '@/components/chat/CapabilityCatalog';
 import { HealthDashboard } from '@/components/chat/HealthDashboard';
+import { MemoryBrowser } from '@/components/memory/MemoryBrowser';
 import { getApiUrl } from '@/shared/api-config';
 import type { DocumentCard as DocumentCardRow } from '@/shared/document';
 import type { MediaCard as MediaCardRow } from '@/shared/media';
@@ -269,6 +270,7 @@ export function SurfaceContent({
         )}
         {activeSurface === 'health' && <HealthDashboard />}
         {activeSurface === 'capabilities' && <CapabilityCatalog />}
+        {activeSurface === 'memory' && <MemoryBrowser />}
         {activeSurface === 'zlayers' && (
           <div style={{ padding: 16, overflowY: 'auto' }}>
             <ZLayerPanel workspaceId={workspaceId} />

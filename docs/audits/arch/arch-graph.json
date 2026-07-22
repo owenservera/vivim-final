@@ -79,6 +79,8 @@
     "engines/cross-conversation-synthesis",
     "engines/db-encryption",
     "engines/discovery-session-runner",
+    "engines/embedding-minilm",
+    "engines/embedding-ollama",
     "engines/encryption",
     "engines/error-tracker",
     "engines/event-record-store",
@@ -97,8 +99,10 @@
     "engines/health-digest",
     "engines/idempotency-guard",
     "engines/image-gen-bridge",
+    "engines/indexing-pipeline",
     "engines/intent-decomposer",
     "engines/kernel",
+    "engines/knowledge-extractor-continuous",
     "engines/knowledge-extractor",
     "engines/knowledge-ingestion",
     "engines/live-capability-registry",
@@ -111,6 +115,7 @@
     "engines/mcp-server-adapter",
     "engines/memory",
     "engines/memory-engine",
+    "engines/memory-export",
     "engines/memory-indexer",
     "engines/messaging-archetypes",
     "engines/metrics",
@@ -247,6 +252,7 @@
     "server/interpret-router",
     "server/kernel-router",
     "server/knowledge-router",
+    "server/memory-router",
     "server/memory-viz-router",
     "server/mux-router",
     "server/nlcl-router",
@@ -1321,6 +1327,18 @@
       "to": "engines/stream-parser"
     },
     {
+      "from": "engines/embedding-minilm",
+      "to": "engines/semantic-search"
+    },
+    {
+      "from": "engines/embedding-ollama",
+      "to": "errors"
+    },
+    {
+      "from": "engines/embedding-ollama",
+      "to": "engines/semantic-search"
+    },
+    {
       "from": "engines/encryption",
       "to": "errors"
     },
@@ -1473,6 +1491,10 @@
       "to": "lib/logger"
     },
     {
+      "from": "engines/indexing-pipeline",
+      "to": "engines/semantic-search"
+    },
+    {
       "from": "engines/intent-decomposer",
       "to": "errors"
     },
@@ -1535,6 +1557,18 @@
     {
       "from": "engines/kernel",
       "to": "errors"
+    },
+    {
+      "from": "engines/knowledge-extractor-continuous",
+      "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/knowledge-extractor-continuous",
+      "to": "engines/knowledge-extractor"
+    },
+    {
+      "from": "engines/knowledge-extractor-continuous",
+      "to": "engines/memory-engine"
     },
     {
       "from": "engines/knowledge-extractor",
@@ -1687,6 +1721,10 @@
     {
       "from": "engines/memory-engine",
       "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/memory-export",
+      "to": "engines/memory-engine"
     },
     {
       "from": "engines/memory-indexer",
@@ -2662,6 +2700,18 @@
     },
     {
       "from": "index",
+      "to": "engines/embedding-ollama"
+    },
+    {
+      "from": "index",
+      "to": "engines/embedding-minilm"
+    },
+    {
+      "from": "index",
+      "to": "engines/semantic-search"
+    },
+    {
+      "from": "index",
       "to": "engines/sync"
     },
     {
@@ -3222,6 +3272,10 @@
     },
     {
       "from": "server/index",
+      "to": "server/memory-router"
+    },
+    {
+      "from": "server/index",
       "to": "server/memory-viz-router"
     },
     {
@@ -3310,6 +3364,14 @@
     },
     {
       "from": "server/index",
+      "to": "engines/embedding-ollama"
+    },
+    {
+      "from": "server/index",
+      "to": "engines/embedding-minilm"
+    },
+    {
+      "from": "server/index",
       "to": "router/router"
     },
     {
@@ -3389,12 +3451,32 @@
       "to": "server/source-middleware"
     },
     {
+      "from": "server/memory-router",
+      "to": "server/index"
+    },
+    {
+      "from": "server/memory-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/memory-router",
+      "to": "server/source-middleware"
+    },
+    {
+      "from": "server/memory-router",
+      "to": "engines/memory-export"
+    },
+    {
       "from": "server/memory-viz-router",
       "to": "engines/memory-engine"
     },
     {
       "from": "server/memory-viz-router",
       "to": "storage/contracts"
+    },
+    {
+      "from": "server/memory-viz-router",
+      "to": "engines/memory-export"
     },
     {
       "from": "server/mux-router",
@@ -3975,6 +4057,14 @@
       "layer": 3
     },
     {
+      "module": "engines/embedding-minilm",
+      "layer": 3
+    },
+    {
+      "module": "engines/embedding-ollama",
+      "layer": 3
+    },
+    {
       "module": "engines/encryption",
       "layer": 3
     },
@@ -4047,12 +4137,20 @@
       "layer": 3
     },
     {
+      "module": "engines/indexing-pipeline",
+      "layer": 3
+    },
+    {
       "module": "engines/intent-decomposer",
       "layer": 3
     },
     {
       "module": "engines/kernel",
       "layer": 1
+    },
+    {
+      "module": "engines/knowledge-extractor-continuous",
+      "layer": 3
     },
     {
       "module": "engines/knowledge-extractor",
@@ -4100,6 +4198,10 @@
     },
     {
       "module": "engines/memory-engine",
+      "layer": 3
+    },
+    {
+      "module": "engines/memory-export",
       "layer": 3
     },
     {
@@ -4644,6 +4746,10 @@
     },
     {
       "module": "server/knowledge-router",
+      "layer": 5
+    },
+    {
+      "module": "server/memory-router",
       "layer": 5
     },
     {
@@ -5256,9 +5362,9 @@
     },
     {
       "module": "engines/capability-event-bus",
-      "fanIn": 39,
+      "fanIn": 40,
       "fanOut": 1,
-      "instability": 0.025,
+      "instability": 0.024390243902439025,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -5515,6 +5621,26 @@
       "files": 1
     },
     {
+      "module": "engines/embedding-minilm",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/embedding-ollama",
+      "fanIn": 2,
+      "fanOut": 2,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/encryption",
       "fanIn": 3,
       "fanOut": 1,
@@ -5695,6 +5821,16 @@
       "files": 1
     },
     {
+      "module": "engines/indexing-pipeline",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/intent-decomposer",
       "fanIn": 2,
       "fanOut": 4,
@@ -5715,10 +5851,20 @@
       "files": 10
     },
     {
+      "module": "engines/knowledge-extractor-continuous",
+      "fanIn": 0,
+      "fanOut": 3,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/knowledge-extractor",
-      "fanIn": 2,
+      "fanIn": 3,
       "fanOut": 2,
-      "instability": 0.5,
+      "instability": 0.4,
       "selfDeps": 0,
       "totalDeps": 2,
       "cohesion": 0,
@@ -5826,11 +5972,21 @@
     },
     {
       "module": "engines/memory-engine",
-      "fanIn": 9,
+      "fanIn": 11,
       "fanOut": 3,
-      "instability": 0.25,
+      "instability": 0.21428571428571427,
       "selfDeps": 0,
       "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/memory-export",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
       "cohesion": 0,
       "files": 1
     },
@@ -6146,9 +6302,9 @@
     },
     {
       "module": "engines/semantic-search",
-      "fanIn": 7,
+      "fanIn": 11,
       "fanOut": 2,
-      "instability": 0.2222222222222222,
+      "instability": 0.15384615384615385,
       "selfDeps": 0,
       "totalDeps": 2,
       "cohesion": 0,
@@ -6426,7 +6582,7 @@
     },
     {
       "module": "errors",
-      "fanIn": 72,
+      "fanIn": 73,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6637,10 +6793,10 @@
     {
       "module": "index",
       "fanIn": 0,
-      "fanOut": 89,
+      "fanOut": 92,
       "instability": 1,
       "selfDeps": 0,
-      "totalDeps": 89,
+      "totalDeps": 92,
       "cohesion": 0,
       "files": 1
     },
@@ -7156,11 +7312,11 @@
     },
     {
       "module": "server/index",
-      "fanIn": 11,
-      "fanOut": 63,
-      "instability": 0.8513513513513513,
+      "fanIn": 12,
+      "fanOut": 66,
+      "instability": 0.8461538461538461,
       "selfDeps": 0,
-      "totalDeps": 63,
+      "totalDeps": 66,
       "cohesion": 0,
       "files": 1
     },
@@ -7195,12 +7351,22 @@
       "files": 1
     },
     {
+      "module": "server/memory-router",
+      "fanIn": 1,
+      "fanOut": 4,
+      "instability": 0.8,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "server/memory-viz-router",
       "fanIn": 1,
-      "fanOut": 2,
-      "instability": 0.6666666666666666,
+      "fanOut": 3,
+      "instability": 0.75,
       "selfDeps": 0,
-      "totalDeps": 2,
+      "totalDeps": 3,
       "cohesion": 0,
       "files": 1
     },
@@ -7236,7 +7402,7 @@
     },
     {
       "module": "server/response",
-      "fanIn": 14,
+      "fanIn": 15,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7266,7 +7432,7 @@
     },
     {
       "module": "server/source-middleware",
-      "fanIn": 6,
+      "fanIn": 7,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,

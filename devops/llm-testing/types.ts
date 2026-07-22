@@ -152,7 +152,7 @@ export interface ProvidersFile {
 }
 
 export interface SurfacesFile {
-  [surface in TestSurface]?: SurfaceCoverage
+  [surface: string]: SurfaceCoverage
 }
 
 export interface ErrorsFile {

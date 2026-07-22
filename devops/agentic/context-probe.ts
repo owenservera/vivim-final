@@ -65,8 +65,6 @@ export interface PreflightSnapshot {
   readyProviders: string[]
   /** On-disk profiles with cookies but NOT DB-linked — can be restored immediately via agentic adopt */
   restoreCandidates: RestoreCandidate[]
-  /** On-disk profiles with cookies but NOT DB-linked — can be restored immediately via agentic adopt */
-  restoreCandidates: RestoreCandidate[]
   /** Capabilities registered in DB but never UI-tested, or whose last UI test failed */
   untestedCapabilities: UntestedCapability[]
   /** Which providers need: login, seeding, profile creation */
@@ -201,7 +199,7 @@ export async function generatePreflightContext(): Promise<PreflightSnapshot> {
   for (const a of dbAccounts) {
     const prof = profiles.find((p) =>
       p.providerId === a.providerId &&
-      p.accountId.toLowerCase() === (a.email ?? '').replace(/@/g, '-at-').toLowerCase(),
+      String(a.accountId ?? '').toLowerCase() === String(a.email ?? '').replace(/@/g, '-at-').toLowerCase(),
     )
     accounts.push({
       providerId: String(a.providerId ?? ''),

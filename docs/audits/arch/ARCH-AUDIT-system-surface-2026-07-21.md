@@ -1,17 +1,17 @@
 # Architecture Audit — system-wide (surface) — 2026-07-21
 
 - **Scope:** surface
-- **Base commit:** 6d095ad
+- **Base commit:** f19efaf
 - **Root:** C:\0-BlackBoxProject-0\vivim-final\devops\audit-arch
 - **Mode:** system-wide
 
 ## Graph Overview
 
-- **Modules:** 266
-- **Module edges:** 847
+- **Modules:** 268
+- **Module edges:** 855
 - **Cycles:** 5
-- **Layer histogram:** L0=43  L1=27  L2=7  L3=125  L4=6  L5=58
-- **Top hubs:** index(89)  storage/contracts(85)  server/index(74)  errors(72)  ids(52)  engines/capability-event-bus(40)  engines/chrome-governor(34)  engines/unified-registry(34)
+- **Layer histogram:** L0=43  L1=27  L2=7  L3=127  L4=6  L5=58
+- **Top hubs:** index(92)  storage/contracts(85)  server/index(76)  errors(73)  ids(52)  engines/capability-event-bus(40)  engines/chrome-governor(34)  engines/unified-registry(34)
 
 ## Executive Summary
 

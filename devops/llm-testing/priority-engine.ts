@@ -68,7 +68,7 @@ export class PriorityEngine {
 
   getNextTest(): PriorityEntry | null {
     const queue = this.knowledge.getPriorities()
-    return queue.length > 0 ? queue[0] : null
+    return queue.length > 0 ? queue[0]! : null
   }
 
   private computeErrorRate(errors: Array<{ occurrences: number }>): number {

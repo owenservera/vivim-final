@@ -9,7 +9,7 @@
 
 import { backendBaseUrl } from './port.js'
 
-const FETCH_TIMEOUT_MS = 10_000
+const FETCH_TIMEOUT_MS = Number.parseInt(process.env.CAP_TEST_TIMEOUT_MS ?? '60000', 10)
 
 export interface TestCapResult {
   ok: boolean
@@ -32,7 +32,7 @@ export async function testCapability(slug: string, input: unknown): Promise<Test
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body ?? {}),
+        body: JSON.stringify({ input: body ?? {} }),
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       },
     )

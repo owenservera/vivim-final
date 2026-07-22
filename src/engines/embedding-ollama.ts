@@ -49,7 +49,9 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
     } catch (err) {
       clearTimeout(timeout)
       if (err instanceof EngineError) throw err
-      throw new EngineError(`Ollama embed request failed: ${err instanceof Error ? err.message : String(err)}`)
+      throw new EngineError(
+        `Ollama embed request failed: ${err instanceof Error ? err.message : String(err)}`,
+      )
     }
   }
 }

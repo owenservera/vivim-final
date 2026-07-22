@@ -1,9 +1,9 @@
 {
   "run": {
     "scope": "surface",
-    "commit": "6d095ad",
-    "date": "2026-07-21",
-    "filesScanned": 511,
+    "commit": "f19efaf",
+    "date": "2026-07-22",
+    "filesScanned": 517,
     "root": "C:\\0-BlackBoxProject-0\\vivim-final\\devops\\audit-arch"
   },
   "summary": {
@@ -88,11 +88,11 @@
       "id": "AR-0004",
       "priority": "P1",
       "dimension": "cycles",
-      "title": "Cyclic module dependency (7 modules)",
-      "description": "Modules form a compile/load-time cycle: src/server/canvas-router -> src/server/setup-router -> src/server/knowledge-router -> src/server/conversation-router -> src/server/capability-router -> src/server/index -> src/cli/index.",
+      "title": "Cyclic module dependency (8 modules)",
+      "description": "Modules form a compile/load-time cycle: src/server/canvas-router -> src/server/setup-router -> src/server/memory-router -> src/server/knowledge-router -> src/server/conversation-router -> src/server/capability-router -> src/server/index -> src/cli/index.",
       "file": "src/server/canvas-router",
       "line": 0,
-      "evidence": "cycle: server/canvas-router -> server/setup-router -> server/knowledge-router -> server/conversation-router -> server/capability-router -> server/index -> cli/index -> server/canvas-router",
+      "evidence": "cycle: server/canvas-router -> server/setup-router -> server/memory-router -> server/knowledge-router -> server/conversation-router -> server/capability-router -> server/index -> cli/index -> server/canvas-router",
       "impact": "Cycles complicate reasoning, break lazy init, and make refactoring risky.",
       "fix": {
         "summary": "Introduce an interface/contract module that the cycle participants depend on, or invert one of the dependency directions.",

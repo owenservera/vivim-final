@@ -31,6 +31,7 @@ import {
   OnboardingTour,
   QuickActionsMenu,
 } from '@/components/canvas';
+import { OnboardingWizard } from '@/features/onboarding/onboarding-wizard';
 import { ProviderSetupWizard, checkNeedsSetup } from '@/features/provider-setup-wizard';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
@@ -75,6 +76,7 @@ const SURFACES = [
   { slug: 'zlayers', label: 'Z-Layers', icon: '📚' },
   { slug: 'health', label: 'Health', icon: '❤️' },
   { slug: 'capabilities', label: 'Capabilities', icon: '🧩' },
+  { slug: 'memory', label: 'Memory', icon: '🧠' },
 ] as const;
 
 export default function Home() {
@@ -269,6 +271,7 @@ function CanvasApp() {
           onClose={() => setWizardOpen(false)}
         />
       )}
+      <OnboardingWizard />
     </div>
   );
 }

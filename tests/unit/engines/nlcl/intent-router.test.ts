@@ -8,6 +8,8 @@ import type {
   ParsedIntent,
 } from '../../../../src/engines/nlcl/types.js'
 
+type UCR = import('../../../../src/engines/unified-registry.js').UnifiedCapabilityRegistry
+
 const ctx: NLCContext = {
   surface: 'cli',
   metadata: {},
@@ -97,9 +99,7 @@ describe('IntentRouter — unresolved handling', () => {
 describe('IntentRouter — registry routing', () => {
   it('routes via registry when capabilityId present', async () => {
     const execute = mock(async () => ({ result: 'from-registry' }))
-    const registry = { execute } as unknown as import(
-      '../../../../src/engines/unified-registry.js',
-    ).UnifiedCapabilityRegistry
+    const registry = { execute } as unknown as UCR
     const r = new IntentRouter(registry)
     const res = await r.route(
       intent({ intent: 'send_message', capabilityId: 'cap:message:send' }),
@@ -114,9 +114,7 @@ describe('IntentRouter — registry routing', () => {
     const execute = mock(async () => {
       throw new Error('boom')
     })
-    const registry = { execute } as unknown as import(
-      '../../../../src/engines/unified-registry.js',
-    ).UnifiedCapabilityRegistry
+    const registry = { execute } as unknown as UCR
     const r = new IntentRouter(registry)
     const res = await r.route(
       intent({ intent: 'send_message', capabilityId: 'cap:message:send' }),
