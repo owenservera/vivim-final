@@ -44,7 +44,7 @@ export class ApiProviderAdapter {
   }
 
   private async parseSseStream(
-    body: NodeJS.ReadableStream | null,
+    body: ReadableStream<any> | null,
     onToken: (t: string) => void,
   ): Promise<string> {
     if (!body) throw new EngineError('No response body')
@@ -60,6 +60,7 @@ export class ApiProviderAdapter {
         const m = line.match(/^data: (.+)$/)
         if (m) {
           const data = m[1]
+          if (data === undefined) continue
           if (data === '[DONE]') continue
           try {
             const json = JSON.parse(data)

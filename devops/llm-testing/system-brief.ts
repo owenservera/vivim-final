@@ -294,7 +294,7 @@ export class SystemBrief {
       const out: Array<{ id: string; name: string; phase: string; status: string }> = []
       let m = re.exec(raw)
       while (m !== null) {
-        out.push({ id: m[1], name: m[2].trim(), phase: '14', status: m[3].toLowerCase() })
+        out.push({ id: m[1]!, name: (m[2] ?? '').trim(), phase: '14', status: (m[3] ?? '').toLowerCase() })
         m = re.exec(raw)
       }
       return out.slice(0, 40)

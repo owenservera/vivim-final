@@ -5,6 +5,7 @@
 // generates per-model test cases, and verifies multi-turn context retention.
 
 import { getLogger } from '../../../src/lib/logger.js'
+import type { ContentPart, TextPart } from '../../../src/schema/streaming.js'
 import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { LocalAgentStore } from '../../../src/storage/contracts/local-agent-store.js'
 import type { AgenticStoreContract } from '../../../src/storage/contracts/agentic-store.js'
@@ -147,7 +148,7 @@ export class ProviderAdapter implements SurfaceAdapter {
             expected: `${slug} retains context across messages`,
             input: {
               provider: slug,
-              model: models[0].slug,
+              model: models[0]!.slug,
               messages: [
                 'My secret code is BLUE-ELEPHANT-42. Remember this.',
                 'What was the secret code I just told you?',
@@ -380,8 +381,8 @@ export class ProviderAdapter implements SurfaceAdapter {
       for (const msg of messages) {
         const { blocks } = await this.opencodeClient.sendMessage(sessionId, msg)
         const received = blocks
-          .filter((b: { type?: string; text?: string }) => b.type === 'text' && typeof b.text === 'string')
-          .map((b: { text?: string }) => b.text ?? '')
+          .filter((b): b is TextPart => b.type === 'text' && typeof b.text === 'string')
+          .map((b) => b.text)
           .join('')
         allResponses += received
       }

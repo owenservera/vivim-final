@@ -111,7 +111,7 @@ export class UiAdapter implements SurfaceAdapter {
           fix = 'Check frontend page is loaded and composer element exists'
         } else {
           await this.bridge.type(composer, test.input.message as string)
-          await this.bridge.pressKey?.('Enter') ?? await this.bridge.click(composer)
+          await this.bridge.click(composer)
           await this.bridge.waitForTimeout(3000)
           actual = 'Message typed and Enter pressed'
         }

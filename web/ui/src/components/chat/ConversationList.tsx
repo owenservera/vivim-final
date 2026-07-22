@@ -147,8 +147,25 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 6 }}>
-        {loading && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: 12 }}>Loading…</div>}
-        {error && <div style={{ padding: 12, color: '#ef4444', fontSize: 12 }}>{error}</div>}
+        {loading && (
+          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} style={{ height: 36, borderRadius: 6, background: 'var(--bg-subtle)', animation: 'skeleton-pulse 1.5s infinite' }} />
+            ))}
+          </div>
+        )}
+        {error && (
+          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ color: '#ef4444', fontSize: 12 }}>{error}</div>
+            <button
+              type="button"
+              onClick={load}
+              style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
         {!loading && conversations.length === 0 && (
           <div style={{ padding: 16, color: 'var(--text-subtle)', fontSize: 12 }}>No conversations yet.</div>
         )}

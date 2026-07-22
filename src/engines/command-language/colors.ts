@@ -127,7 +127,8 @@ export function getBlendedColor(
   }
 
   if (categories.length === 1) {
-    return getShade(categories[0], shade)
+    const first = categories[0]!
+    return getShade(first, shade)
   }
 
   // Circular mean for hue
@@ -174,10 +175,13 @@ export function getContrastRatio(fg: HslColor, bg: HslColor): number {
  */
 function getRelativeLuminance(color: HslColor): number {
   const rgb = hslToRgb(color.h, color.s, color.l)
-  const [r, g, b] = rgb.map((c) => {
+  const mapped = rgb.map((c) => {
     const s = c / 255
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
   })
+  const r = mapped[0]!
+  const g = mapped[1]!
+  const b = mapped[2]!
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
@@ -234,9 +238,9 @@ export function hexToHsl(hex: string): HslColor {
     throw new Error(`Invalid hex color: ${hex}`)
   }
 
-  const r = Number.parseInt(result[1], 16) / 255
-  const g = Number.parseInt(result[2], 16) / 255
-  const b = Number.parseInt(result[3], 16) / 255
+  const r = Number.parseInt(result[1]!, 16) / 255
+  const g = Number.parseInt(result[2]!, 16) / 255
+  const b = Number.parseInt(result[3]!, 16) / 255
 
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)

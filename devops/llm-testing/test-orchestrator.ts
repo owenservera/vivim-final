@@ -82,7 +82,7 @@ export class TestOrchestrator {
     const surfaces = options?.surfaces ?? ['cli', 'api', 'mcp', 'workflow', 'provider']
     const start = new Date().toISOString()
 
-    log.info(`Starting test session ${sessionId}`, { mode, surfaces })
+    log.info({ mode, surfaces }, `Starting test session ${sessionId}`)
 
     const allResults: TestResult[] = []
     const beforeCoverage = this.captureCoverage()
@@ -102,13 +102,10 @@ export class TestOrchestrator {
         for (const test of selected) {
           const result = await adapter.execute(test)
           allResults.push(result)
-          log.info(`Test ${result.id}: ${result.status}`, {
-            surface: result.surface,
-            capability: result.capability,
-          })
+          log.info({ surface: result.surface, capability: result.capability }, `Test ${result.id}: ${result.status}`)
         }
       } catch (err) {
-        log.error(`Surface ${surface} failed`, { error: String(err) })
+        log.error({ err }, `Surface ${surface} failed`)
       }
     }
 
@@ -118,7 +115,7 @@ export class TestOrchestrator {
     this.priorities.computePriorities()
 
     const afterCoverage = this.captureCoverage()
-    const summary = this.buildSummary(allResults, delta.newPatternsLearned, delta.newErrors.length, beforeCoverage, afterCoverage)
+    const summary = this.buildSummary(allResults, delta.newPatterns.length, delta.newErrors.length, beforeCoverage, afterCoverage)
 
     const trace: SessionTrace = {
       sessionId,
@@ -137,11 +134,7 @@ export class TestOrchestrator {
     this.writer.writeSession(trace)
     this.writer.writeReport(trace)
 
-    log.info(`Session ${sessionId} complete`, {
-      total: summary.total,
-      passed: summary.passed,
-      failed: summary.failed,
-    })
+    log.info({ total: summary.total, passed: summary.passed, failed: summary.failed }, `Session ${sessionId} complete`)
 
     await this.cleanup()
 
@@ -219,7 +212,7 @@ export class TestOrchestrator {
     }
 
     const serve = (globalThis as Record<string, unknown>).__opencodeServe as
-      | { client?: import('../opencode/opencode-client.js').OpenCodeClient }
+      | { client?: import('../../src/engines/opencode/opencode-client.js').OpenCodeClient }
       | undefined
     if (serve?.client) provider.setOpenCodeClient(serve.client)
 
@@ -264,7 +257,7 @@ export class TestOrchestrator {
       newPatternsLearned: newPatterns,
       errorsEncountered: newErrors,
       coverageDelta: Object.fromEntries(
-        Object.keys(after).map((s) => [s, { before: before[s] ?? 0, after: after[s] ?? 0 }]),
+        Object.keys(after).map((s) => [s as TestSurface, { before: before[s as TestSurface] ?? 0, after: after[s as TestSurface] ?? 0 }]),
       ) as Record<TestSurface, { before: number; after: number }>,
     }
   }

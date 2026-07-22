@@ -1,13 +1,8 @@
 'use client';
 
-/**
- * components/chat/ChatSidebar.tsx
- * --------------------------------------------------------------------
- * Left sidebar with workspace switcher, provider list, variant controls.
- * Extracted from page.tsx to reduce monolith complexity.
- */
-
+import { useState } from 'react';
 import { WorkspaceSwitcher } from '@/components/canvas';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { AccountContext } from '@/shared/route-context';
 
 interface ChatSidebarProps {
@@ -30,7 +25,7 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: '0.05em',
 };
 
-export function ChatSidebar({
+function SidebarContent({
   workspaceId,
   setWorkspace,
   providerIds,
@@ -42,11 +37,11 @@ export function ChatSidebar({
   onSetupWizard,
 }: ChatSidebarProps) {
   return (
-    <aside
+    <div
       data-onboarding="sidebar"
       style={{
         width: 240,
-        flexShrink: 0,
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         borderRight: '1px solid var(--border)',
@@ -171,6 +166,57 @@ export function ChatSidebar({
           ⚙️ Setup Providers
         </button>
       </div>
-    </aside>
+    </div>
   );
+}
+
+export function ChatSidebar(props: ChatSidebarProps) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
+  if (isMobile) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{
+            position: 'fixed',
+            top: 8,
+            left: 8,
+            zIndex: 1000,
+            padding: '6px 10px',
+            borderRadius: 6,
+            border: '1px solid var(--border)',
+            background: 'var(--bg-elevated)',
+            color: 'var(--text)',
+            fontSize: 12,
+            cursor: 'pointer',
+          }}
+        >
+          ☰ Menu
+        </button>
+        {open && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1100,
+              display: 'flex',
+            }}
+          >
+            <div
+              onClick={() => setOpen(false)}
+              style={{ flex: 1, background: 'rgba(0,0,0,0.35)' }}
+            />
+            <div style={{ width: 240, height: '100%', overflow: 'hidden' }}>
+              <SidebarContent {...props} />
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return <aside style={{ width: 240, flexShrink: 0, height: '100%' }}><SidebarContent {...props} /></aside>;
 }

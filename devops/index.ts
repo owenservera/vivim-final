@@ -1164,7 +1164,7 @@ async function main() {
       break
     }
     case 'verify-cross-surface': {
-      // Unit 19.4 gate: every capability resolves across CLI/API/MCP/UI.
+      // Unit 19.4 / cross-surface parity gate + 14.3 in-process verifyCrossSurface.
       // Forwards args: [--live] [--base=<url>]
       const proc = Bun.spawn(['bun', 'run', 'scripts/verify-cross-surface.ts', ...args], {
         stdout: 'inherit',
@@ -1172,6 +1172,66 @@ async function main() {
       })
       await proc.exited
       process.exit(proc.exitCode === 0 ? 0 : 1)
+      break
+    }
+    case 'llm-test': {
+      // Phase 14 / Spec 032 — thin devops entry point for the LLM-as-Human
+      // production testing system. Delegates to cap:llm_test:* capabilities
+      // via the universal execute route so it never drifts from the registry.
+      const subcmd = args[0] ?? 'run'
+      const rest = args.slice(1)
+
+      const CAP_MAP: Record<string, string> = {
+        run: 'cap:llm_test:run',
+        report: 'cap:llm_test:report',
+        status: 'cap:llm_test:status',
+        patterns: 'cap:llm_test:patterns',
+        providers: 'cap:llm_test:providers',
+        brief: 'cap:llm_test:brief',
+        plan: 'cap:llm_test:plan',
+        parity: 'cap:llm_test:parity',
+      }
+
+      const capId = CAP_MAP[subcmd]
+      if (!capId) {
+        console.error(
+          'usage: devops llm-test <run|report|status|patterns|providers|brief|plan|parity> [--input=JSON]',
+        )
+        process.exit(1)
+      }
+
+      let input: unknown = {}
+      const inputArg = rest.find((a) => a.startsWith('--input='))
+      if (inputArg) {
+        try {
+          input = JSON.parse(inputArg.slice('--input='.length))
+        } catch {
+          input = { raw: inputArg.slice('--input='.length) }
+        }
+      } else if (subcmd === 'run') {
+        const mode = rest.find((a) => a.startsWith('--mode='))?.slice('--mode='.length) ?? 'smoke'
+        const surfaces = rest
+          .filter((a) => a.startsWith('--surface='))
+          .map((a) => a.slice('--surface='.length))
+        const providers = rest
+          .find((a) => a.startsWith('--providers='))
+          ?.slice('--providers='.length)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+        input = { mode, surfaces, providers }
+      } else if (subcmd === 'report') {
+        const sessionId = rest.find((a) => !a.startsWith('--')) ?? rest[rest.length - 1]
+        input = { sessionId: String(sessionId ?? '') }
+      } else if (subcmd === 'parity') {
+        const category = rest.find((a) => a.startsWith('--category='))?.slice('--category='.length)
+        const tag = rest.find((a) => a.startsWith('--tag='))?.slice('--tag='.length)
+        input = { ...(category ? { category } : {}), ...(tag ? { tag } : {}) }
+      }
+
+      const result = await testCapability(capId, input)
+      console.log(JSON.stringify(result, null, 2))
+      process.exit(result.ok ? 0 : 1)
       break
     }
     case 'audit-code': {
@@ -1468,7 +1528,7 @@ async function main() {
     }
     default: {
       console.error(
-        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|stress-test|features|code-index> [--tracker <path>]',
+        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|llm-test|stress-test|features|code-index> [--tracker <path>]',
       )
       process.exit(1)
     }

@@ -157,9 +157,29 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, streamingBlocks]);
 
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+
+  const retryLast = useCallback(async () => {
+    const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+    if (!lastUser || !conversationId) return;
+    setRetrying(true);
+    setLastError(null);
+    setStreaming(true);
+    setStreamingBlocks([]);
+    setStreamingTiming(null);
+    const res = await sendMessage(conversationId, lastUser.content).catch(() => null);
+    if (!res?.ok) {
+      setStreaming(false);
+      setLastError(res?.error ?? 'Retry failed');
+    }
+    setRetrying(false);
+  }, [conversationId, messages]);
+
   const send = async () => {
     if (!conversationId || !draft.trim()) return;
     const text = draft.trim();
+    setLastError(null);
 
     const route = classify(text);
     if (route.route === 'local' && route.action) {
@@ -186,6 +206,7 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
     } else if (!res?.ok) {
       setStreaming(false);
       setLastEvent(`send failed: ${res?.error ?? 'unknown'}`);
+      setLastError(res?.error ?? 'Send failed');
     }
   };
 
@@ -305,6 +326,41 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
           }}
         >
           {localSuggestion}
+        </div>
+      )}
+
+      {lastError && (
+        <div
+          style={{
+            margin: '0 10px',
+            padding: '8px 10px',
+            borderRadius: 6,
+            border: '1px solid #ef4444',
+            background: 'rgba(239,68,68,0.08)',
+            color: '#ef4444',
+            fontSize: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span style={{ flex: 1 }}>{lastError}</span>
+          <button
+            type="button"
+            onClick={retryLast}
+            disabled={retrying}
+            style={{
+              fontSize: 11,
+              padding: '2px 8px',
+              borderRadius: 4,
+              border: '1px solid #ef4444',
+              background: retrying ? 'transparent' : '#ef4444',
+              color: retrying ? '#ef4444' : '#fff',
+              cursor: retrying ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {retrying ? 'Retrying…' : 'Retry'}
+          </button>
         </div>
       )}
 

@@ -39,7 +39,7 @@ export class McpAdapter implements SurfaceAdapter {
         input: { toolName: t.name, toolArgs: {} },
       }))
     } catch (err) {
-      log.warn('MCP discovery failed, returning empty list', { error: String(err) })
+      log.warn({ err }, 'MCP discovery failed, returning empty list')
       return []
     }
   }

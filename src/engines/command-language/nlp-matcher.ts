@@ -165,7 +165,8 @@ export function getCategoryColor(category: CommandCategory): CategoryColor {
  * Get a specific shade for a category.
  */
 export function getShade(category: CommandCategory, shade: 'light' | 'medium' | 'dark'): string {
-  return getCategoryColor(category).shades[shade]
+  const color = getCategoryColor(category)
+  return color.shades?.[shade] ?? color.shades?.light ?? '#888888'
 }
 
 // ─── Fuzzy Pattern Matching ──────────────────────────────────────────
@@ -326,6 +327,7 @@ export function detectIntent(
     source: 'nlp',
     color,
     interpretation: best.description,
+    matchedPattern: best.matchedPattern,
   }
 }
 

@@ -36,7 +36,7 @@ export class PatternAnalyzer {
         const pattern = this.createPattern(result)
         newPatterns.push(pattern)
       } else {
-        const updated = this.updatePattern(existing[0], result)
+        const updated = this.updatePattern(existing[0]!, result)
         if (updated) updatedPatterns.push(updated)
       }
 

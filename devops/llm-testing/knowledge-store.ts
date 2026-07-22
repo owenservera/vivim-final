@@ -8,6 +8,8 @@ import { getLogger } from '../../src/lib/logger.js'
 import type {
   ErrorEntry,
   KnowledgeDelta,
+  Pattern,
+  PatternFailure,
   PatternsFile,
   PrioritiesFile,
   PriorityEntry,

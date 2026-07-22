@@ -261,7 +261,13 @@ export class CDPProxy {
             const composerType = (
               typeof params.composerType === 'string' ? params.composerType : 'textarea'
             ) as 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
-            await typeMessage(this.transport, slaveId, selector, text, composerType)
+            const typeStart = Date.now()
+            const typeResult = await typeMessage(this.transport, slaveId, selector, text, composerType)
+            const typeMs = Date.now() - typeStart
+            console.log(`[governor] type_text ${slaveId}: ${typeMs}ms, success=${typeResult.success}, landed="${typeResult.text?.slice(0, 50)}", error=${typeResult.error ?? 'none'}`)
+            if (!typeResult.success) {
+              throw new Error(`Type failed: ${typeResult.error ?? 'text did not land in composer'}`)
+            }
             stepsCompleted++
             break
           }
@@ -269,7 +275,16 @@ export class CDPProxy {
             const sendSelector =
               typeof params.sendSelector === 'string' ? params.sendSelector : undefined
             const key = typeof params.key === 'string' ? params.key : 'Enter'
-            await submitMessage(this.transport, slaveId, sendSelector, key)
+            const sendSelectorCandidates = Array.isArray(params.sendSelectorCandidates)
+              ? (params.sendSelectorCandidates.filter((s) => typeof s === 'string') as string[])
+              : []
+            const submitStart = Date.now()
+            const submitResult = await submitMessage(this.transport, slaveId, sendSelector, key, sendSelectorCandidates)
+            const submitMs = Date.now() - submitStart
+            console.log(`[governor] submit ${slaveId}: ${submitMs}ms, confirmed=${submitResult.confirmed}, method=${submitResult.method}, selector=${submitResult.selector ?? 'none'}`)
+            if (!submitResult.confirmed) {
+              throw new Error(`Submit failed: no button clicked and Enter not confirmed`)
+            }
             stepsCompleted++
             break
           }
@@ -301,7 +316,10 @@ export class CDPProxy {
           case 'capture': {
             const pattern = params.pattern instanceof RegExp ? params.pattern : undefined
             const timeoutMs = typeof params.timeoutMs === 'number' ? params.timeoutMs : 5000
+            const captureStart = Date.now()
             const cap = await this.capture(slaveId, pattern ?? /.*/s, timeoutMs)
+            const captureMs = Date.now() - captureStart
+            console.log(`[governor] capture ${slaveId}: ${captureMs}ms, bodyLen=${cap?.body?.length ?? 0}, chunks=${cap?.chunks?.length ?? 0}`)
             if (cap?.body) capturedBody = cap.body
             stepsCompleted++
             break

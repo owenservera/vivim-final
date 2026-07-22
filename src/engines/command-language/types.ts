@@ -141,15 +141,18 @@ export interface CommandIntent {
   source: 'prefix' | 'nlp' | 'nlcl'
   color: CategoryColor
   interpretation: string
+  matchedPattern: string
 }
 
-// ─── Command Combo ───────────────────────────────────────────────────
+export interface ComboStep {
+  intent: CommandIntent
+  dependsOn: string[]
+  parallel: boolean
+}
+
 export interface CommandCombo {
-  intents: CommandIntent[]
-  executionOrder: 'sequential' | 'parallel' | 'mixed'
-  dependencies: Array<[number, number]>
-  interpretation: string
-  dominantCategory: CommandCategory
+  steps: ComboStep[]
+  executionMode: 'sequential' | 'parallel'
 }
 
 // ─── Disclosure Levels ───────────────────────────────────────────────
@@ -158,12 +161,16 @@ export type DisclosureLevel = 'L0' | 'L1' | 'L2' | 'L3'
 // ─── Interpretation State ────────────────────────────────────────────
 export interface InterpretationState {
   level: DisclosureLevel
-  intent: CommandIntent | null
-  combo: CommandCombo | null
-  color: CategoryColor
-  position: 'above' | 'below' | 'floating' | 'inline'
-  visible: boolean
-  expanded: boolean
+  intent?: CommandIntent | null
+  combo?: CommandCombo | null
+  color?: CategoryColor | undefined
+  position?: 'above' | 'below' | 'floating' | 'inline'
+  visible?: boolean
+  expanded?: boolean
+  label?: string
+  preview?: string
+  details?: string
+  dismissed?: boolean
 }
 
 // ─── Interpretation Config ───────────────────────────────────────────
@@ -175,16 +182,27 @@ export interface InterpretationConfig {
   animationDuration: number
 }
 
+// ─── HSL Color ───────────────────────────────────────────────────────────
+export interface HslColor {
+  h: number // 0-360
+  s: number // 0-100
+  l: number // 0-100
+}
+
 // ─── Category Color ──────────────────────────────────────────────────
 export interface CategoryColor {
-  category: CommandCategory
-  primary: string
-  hsl: [number, number, number]
-  shades: {
-    light: string
-    medium: string
-    dark: string
+  category?: CommandCategory
+  primary?: string
+  hsl?: [number, number, number]
+  shades?: {
+    light?: string
+    medium?: string
+    dark?: string
   }
+  // Also support HslColor shape for interpretation rendering
+  h?: number
+  s?: number
+  l?: number
 }
 
 // ─── Pattern Match Result (NLP) ──────────────────────────────────────

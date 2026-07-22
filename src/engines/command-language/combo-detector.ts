@@ -28,7 +28,7 @@ export function detectCombo(intents: CommandIntent[], _ctx: CommandContext): Com
     return {
       steps: [
         {
-          intent: intents[0],
+          intent: intents[0]!,
           dependsOn: [],
           parallel: false,
         },
@@ -46,16 +46,15 @@ export function detectCombo(intents: CommandIntent[], _ctx: CommandContext): Com
 
   // Analyze dependencies
   for (let i = 0; i < intents.length; i++) {
-    const intent = intents[i]
+    const intent = intents[i]!
     const deps = CATEGORY_DEPENDENCIES[intent.category] ?? []
 
     for (let j = 0; j < intents.length; j++) {
       if (i === j) continue
-      const other = intents[j]
+      const other = intents[j]!
 
-      // If this intent depends on the other's category
       if (deps.includes(other.category)) {
-        steps[i].dependsOn.push(`step-${j}`)
+        steps[i]!.dependsOn.push(`step-${j}`)
       }
     }
   }
@@ -90,18 +89,17 @@ function topologicalSort(steps: ComboStep[]): ComboStep[] {
 
   const stepMap = new Map<string, ComboStep>()
   for (let i = 0; i < steps.length; i++) {
-    stepMap.set(`step-${i}`, steps[i])
+    stepMap.set(`step-${i}`, steps[i]!)
   }
 
   function visit(index: number) {
     if (visited.has(index)) return
     if (visiting.has(index)) {
-      // Cycle detected — skip
       return
     }
     visiting.add(index)
 
-    const step = steps[index]
+    const step = steps[index]!
     for (const dep of step.dependsOn) {
       const depIndex = Number.parseInt(dep.replace('step-', ''), 10)
       if (!Number.isNaN(depIndex)) {
