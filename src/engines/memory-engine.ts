@@ -2,6 +2,7 @@
 // MemoryEngine — episodic, semantic, and procedural memory with learning
 
 import { newId } from '../ids.js'
+import { NotFoundError } from '../errors.js'
 import type { NodeStoreContract } from '../storage/contracts/node-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
@@ -83,6 +84,20 @@ export interface EpisodeQueryOpts {
   successOnly?: boolean
 }
 
+export interface ConsolidationConfig {
+  decayDays: number
+  decayFactor: number
+  minConfidence: number
+  promoteThreshold: number
+}
+
+export interface ConsolidationReport {
+  merged: number
+  decayed: number
+  deprecated: number
+  promoted: number
+}
+
 export interface RuleContext {
   providerId?: string
   capabilityId?: string
@@ -110,12 +125,17 @@ export interface EpisodicMemoryStore {
   save(episode: EpisodicMemory): Promise<void>
   query(opts: EpisodeQueryOpts): Promise<EpisodicMemory[]>
   count(): Promise<number>
+  findAll(): Promise<EpisodicMemory[]>
 }
 
 export interface SemanticMemoryStore {
   save(fact: SemanticMemory): Promise<void>
   findBySubject(subject: string, predicate?: string): Promise<SemanticMemory[]>
   delete(id: string): Promise<void>
+  findAll(): Promise<SemanticMemory[]>
+  updateConfidence(id: string, confidence: number): Promise<void>
+  update(id: string, patch: Partial<Pick<SemanticMemory, 'subject' | 'predicate' | 'object' | 'confidence'>>): Promise<void>
+  findById(id: string): Promise<SemanticMemory | null>
 }
 
 export interface ProceduralMemoryStore {
@@ -136,6 +156,20 @@ export class MemoryEngine {
     private readonly procedural: ProceduralMemoryStore,
     private readonly eventBus: CapabilityEventBus,
   ) {}
+
+  // ── Export helpers ───────────────────────────────────────────────────────
+
+  async getAllFacts(): Promise<SemanticMemory[]> {
+    return this.semantic.findAll()
+  }
+
+  async getAllEpisodes(): Promise<EpisodicMemory[]> {
+    return this.episodic.findAll()
+  }
+
+  async getAllRules(): Promise<ProceduralRule[]> {
+    return this.procedural.findAll()
+  }
 
   // ── Recording ───────────────────────────────────────────────────────────
 
@@ -159,6 +193,70 @@ export class MemoryEngine {
     }
     await this.semantic.save(fact)
     this.eventBus.emit({ type: 'memory:fact_asserted', data: { id: fact.id } })
+  }
+
+  async forgetFact(id: string): Promise<void> {
+    await this.semantic.delete(id)
+    this.eventBus.emit({ type: 'memory:fact_forgotten', data: { id } })
+  }
+
+  // ── Curation (unit 7.7) ────────────────────────────────────────────────
+
+  async verifyFact(id: string, by: string): Promise<void> {
+    const fact = await this.semantic.findById(id)
+    if (!fact) throw new NotFoundError(`Fact ${id} not found`)
+    const newConfidence = Math.min(1, fact.confidence + 0.15)
+    await this.semantic.updateConfidence(id, newConfidence)
+    this.eventBus.emit({ type: 'memory:curated', data: { id, action: 'verify', by, confidence: newConfidence } })
+  }
+
+  async editFact(id: string, patch: { object?: unknown; predicate?: string }, by: string): Promise<void> {
+    const fact = await this.semantic.findById(id)
+    if (!fact) throw new NotFoundError(`Fact ${id} not found`)
+    await this.semantic.update(id, patch)
+    this.eventBus.emit({ type: 'memory:curated', data: { id, action: 'edit', by, patch } })
+  }
+
+  async rejectFact(id: string, by: string): Promise<void> {
+    const fact = await this.semantic.findById(id)
+    if (!fact) throw new NotFoundError(`Fact ${id} not found`)
+    await this.semantic.updateConfidence(id, 0)
+    this.eventBus.emit({ type: 'memory:curated', data: { id, action: 'reject', by } })
+  }
+
+  async findFactByContent(
+    subject: string,
+    predicate: string,
+    object: unknown,
+  ): Promise<SemanticMemory | null> {
+    const facts = await this.semantic.findBySubject(subject, predicate)
+    return facts.find((f) => JSON.stringify(f.object) === JSON.stringify(object)) ?? null
+  }
+
+  async assertProcedureRule(input: ProceduralRuleInput): Promise<void> {
+    const now = Date.now()
+    const rules = await this.procedural.findByContext({ action: input.action })
+    const existing = rules.find((r) => r.condition === input.condition && r.action === input.action)
+
+    if (existing) {
+      existing.confidence = Math.max(existing.confidence, input.confidence ?? 0.5)
+      existing.successCount++
+      existing.updatedAt = now
+      await this.procedural.save(existing)
+    } else {
+      const rule: ProceduralRule = {
+        id: newId(),
+        name: input.name,
+        condition: input.condition,
+        action: input.action,
+        confidence: input.confidence ?? 0.5,
+        successCount: 1,
+        failureCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      }
+      await this.procedural.save(rule)
+    }
   }
 
   // ── Node-layer v2: emit a durable `cap-store.memory` Node (OG Memory +
@@ -355,16 +453,101 @@ export class MemoryEngine {
     return { patternsFound: actionCounts.size, rulesCreated, rulesUpdated }
   }
 
-  async consolidate(): Promise<void> {
+  async consolidate(cfg: Partial<ConsolidationConfig> = {}): Promise<ConsolidationReport> {
+    const c: ConsolidationConfig = {
+      decayDays: 30,
+      decayFactor: 0.9,
+      minConfidence: 0.2,
+      promoteThreshold: 3,
+      ...cfg,
+    }
+    const report: ConsolidationReport = { merged: 0, decayed: 0, deprecated: 0, promoted: 0 }
     const now = Date.now()
-    const pruneThreshold = now - 30 * 24 * 60 * 60 * 1000
-    const rules = await this.procedural.findAll()
 
+    // 1. Dedupe — group by subject+predicate+object, keep highest confidence
+    const allFacts = await this.semantic.findAll()
+    const groups = new Map<string, SemanticMemory[]>()
+    for (const fact of allFacts) {
+      const key = `${fact.subject}::${fact.predicate}::${JSON.stringify(fact.object)}`
+      const group = groups.get(key) ?? []
+      group.push(fact)
+      groups.set(key, group)
+    }
+
+    for (const [, group] of groups) {
+      if (group.length <= 1) continue
+      // Sort by confidence descending, keep the best
+      group.sort((a, b) => b.confidence - a.confidence)
+      const survivor = group[0]
+      // Delete duplicates
+      for (let i = 1; i < group.length; i++) {
+        const dupe = group[i]
+        if (dupe) await this.semantic.delete(dupe.id)
+      }
+      report.merged += group.length - 1
+    }
+
+    // 2. Decay — reduce confidence of old unverified facts
+    const decayThreshold = now - c.decayDays * 24 * 60 * 60 * 1000
+    const freshFacts = await this.semantic.findAll()
+    for (const fact of freshFacts) {
+      if (fact.timestamp < decayThreshold) {
+        const newConfidence = fact.confidence * c.decayFactor
+        if (newConfidence <= c.minConfidence) {
+          await this.semantic.delete(fact.id)
+          report.deprecated++
+        } else {
+          await this.semantic.updateConfidence(fact.id, newConfidence)
+          report.decayed++
+        }
+      }
+    }
+
+    // 3. Promote — frequent high-confidence pairs become ProceduralRules
+    const pairCounts = new Map<string, { count: number; avgConfidence: number; subject: string; predicate: string }>()
+    const finalFacts = await this.semantic.findAll()
+    for (const fact of finalFacts) {
+      const pairKey = `${fact.subject}::${fact.predicate}`
+      const existing = pairCounts.get(pairKey)
+      if (existing) {
+        existing.count++
+        existing.avgConfidence = (existing.avgConfidence * (existing.count - 1) + fact.confidence) / existing.count
+      } else {
+        pairCounts.set(pairKey, {
+          count: 1,
+          avgConfidence: fact.confidence,
+          subject: fact.subject,
+          predicate: fact.predicate,
+        })
+      }
+    }
+
+    for (const [, pair] of pairCounts) {
+      if (pair.count >= c.promoteThreshold && pair.avgConfidence >= 0.7) {
+        const rule: ProceduralRule = {
+          id: newId(),
+          name: `${pair.subject}_${pair.predicate}`,
+          condition: pair.subject,
+          action: pair.predicate,
+          confidence: pair.avgConfidence,
+          successCount: pair.count,
+          failureCount: 0,
+          createdAt: now,
+          updatedAt: now,
+        }
+        await this.procedural.save(rule)
+        report.promoted++
+      }
+    }
+
+    // 4. Prune weak procedural rules
+    const rules = await this.procedural.findAll()
+    const pruneThreshold = now - 30 * 24 * 60 * 60 * 1000
     for (const rule of rules) {
-      if (rule.confidence < 0.2 && rule.failureCount > rule.successCount * 2) {
+      if (rule.confidence < c.minConfidence && rule.failureCount > rule.successCount * 2) {
         await this.procedural.delete(rule.id)
       } else if (rule.lastTriggered && rule.lastTriggered < pruneThreshold) {
-        rule.confidence *= 0.9
+        rule.confidence *= c.decayFactor
         rule.updatedAt = now
         await this.procedural.save(rule)
       }
@@ -372,8 +555,9 @@ export class MemoryEngine {
 
     this.eventBus.emit({
       type: 'memory:consolidated',
-      data: { rulesPruned: rules.length },
+      data: report,
     })
+    return report
   }
 
   // ── Knowledge types (Phase 15) ────────────────────────────────────────
