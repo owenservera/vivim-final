@@ -1,0 +1,680 @@
+================================================================================
+MASTER PROMPT: BUILD V6 — "THE LIVING CANVAS"
+================================================================================
+INPUT FILES (read all 3 first):
+  1. prompt-file-1-backend-api-contracts.txt   — vivim-final backend API surface
+  2. prompt-file-2-schema-shared-types.txt     — Prisma schema + shared domain types
+  3. prompt-file-3-v5-reference-code.txt        — V5 frontend patterns to preserve
+
+OUTPUT DIRECTORY:
+  dev-poc\canvas\V6\   (3 source files + package.json + vite config)
+
+GOAL:
+  Build a Vite+React+TypeScript frontend that is plug-and-play with vivim-final
+  running at localhost:9420. No duplicate backend. No own Prisma. No own engines.
+  All data comes from the real backend.
+================================================================================
+
+## ARCHITECTURE RULES (NON-NEGOTIABLE)
+
+1. ZERO BACKEND CODE — no `src/server/`, no `src/engines/`, no `src/storage/`,
+   no Prisma schema, no API route handlers. The backend is localhost:9420.
+2. ALL FETCH CALLS USE ABSOLUTE URLS to `http://localhost:9420/api/...`
+3. WebSocket connects to `ws://localhost:9420/ws` (protocol from file 1 §WebSocket)
+4. USE ZOD v3.23+ (NOT v4) — vivim-final uses v3.23, see file 2
+5. TypeScript `strict: true`, `noImplicitAny: true`, `reactStrictMode: true`
+6. No `ignoreBuildErrors` — fix every error
+7. Preserve ALL V5 canvas components (CanvasSurface, CanvasNode, SandboxedNode,
+   CommandStack, QuadTree, use-canvas-events, transform) — adapt but don't rebuild
+8. V6 resolves capabilities from the backend, not from own `/api/canvas/resolve`
+
+## WHAT V6 IS
+
+"The Living Canvas" — a spatial node-based workspace where each UI element
+is a "node" that streams real-time data from the vivim-final backend.
+
+### 10 Killer Solutions (from brief)
+
+1. **Streaming-Native Nodes** — every node opens an SSE/WS channel to
+   `/api/capabilities/:id/execute` (file 1 §Capability Router). The node's
+   `onCapabilityRequest` callback sends the execute request; the response
+   streams in as ContentPart[] chunks (file 1 §Streaming Response Helper).
+
+2. **Agent Co-Pilot (Canvas Intelligence)** — an AI assistant embedded in the
+   canvas that can: create/delete nodes, connect them, adjust layouts.
+   Uses `POST /api/interpret` (file 1 §Interpret Router) with
+   `{ nlText: "create a chat node for provider X", routeHints: { surfaces: ['ui'] } }`.
+   The returned `capabilitiesToExecute` array drives node creation.
+
+3. **Semantic Zoom** — zoom levels don't just scale; they change what's
+   visible:
+   - zoom > 2: show full node internals (sandbox iframe content)
+   - zoom 0.5-2: show node shells with titles and status
+   - zoom < 0.5: show collapsed node summaries with connection lines
+   Implement in CanvasSurface's `visibleSlots` filter using viewport.zoom.
+
+4. **Universal Node Type System** — use vivim-final's actual
+   `UnifiedCapability` interface (file 1 §Engine Types) as the node type
+   contract. Each node displays: capability slug, provider, tier, status,
+   streaming state. The `Primitive` type (file 3 v5 conceptual-model)
+   maps directly to capability surfaces.
+
+5. **Real-time Collaboration (CRDT)** — multiple users see the same canvas
+   state. Use the WebSocket protocol (file 1 §WebSocket):
+   - On connect: send `{ type: 'hello', sessionId, role: 'frontend' }`
+   - Subscribe to canvas events: `{ type: 'subscribe', entityType: 'canvas', entityId }`
+   - Broadcast layout changes via `{ type: 'canvas:node:moved', nodeId, layout }`
+   Use Yjs or Automerge for CRDT state sync.
+
+6. **Intent-Based Auto Layout** — nodes auto-arrange based on:
+   - Capability category (from `category` field on UnifiedCapability)
+   - Provider grouping (nodes from same provider cluster together)
+   - User intent hints from the command palette
+   Implement as a layout engine that computes node positions from
+   capability metadata, then animates to positions.
+
+7. **Local-First / Offline** — canvas layout + node definitions cached
+   in IndexedDB. On reconnect, sync changes to backend via:
+   - `POST /api/capabilities/:id/execute` for capability changes
+   - WebSocket for layout state sync
+   Use a sync queue pattern: pending changes stored locally, flushed on reconnect.
+
+8. **Command Palette as OS** — the command palette (from V5's Phase 3)
+   is the primary interaction surface:
+   - Type `/` to open palette
+   - Search capabilities from backend: `GET /api/capabilities?surface=ui`
+   - Execute directly: `POST /api/capabilities/:id/execute`
+   - Create nodes from palette results
+   - Navigate: switch conversations, providers, workspaces
+
+9. **Accessibility (WCAG 2.1 AA)** — every node is focusable, has aria
+   labels, keyboard navigation (arrow keys move focus between nodes),
+   screen reader announcements for streaming updates.
+   Use `role="application"` on canvas, `role="article"` on nodes.
+
+10. **Observability Panel** — a collapsible side panel showing:
+    - Active WebSocket connections and their status
+    - Capability execution history (from WS events)
+    - Provider health (from `GET /api/providers/:id/health`)
+    - Engine metrics (from WS `engine:*` events)
+    This panel subscribes to the WS event stream and renders a live log.
+
+## vCARD SYSTEM (WIDGET CAPABILITY MENU)
+
+Every node on the canvas is a "vCard" — a self-contained widget with a
+hierarchical capability menu. The menu has two layers:
+
+### Global Actions (available on ALL vCards)
+
+These appear in every node's context menu (right-click or `⋯` button):
+
+| Action | Icon | Description |
+|---|---|---|
+| Collapse | `▾` | Minimize to title bar only (height → 32px) |
+| Expand | `▴` | Restore from collapsed state |
+| Pin | `📌` | Fix node position — disables drag. Toggle. |
+| Full Screen | `⛶` | Maximize node to fill entire canvas viewport |
+| Duplicate | `⧉` | Clone node with same config, offset position |
+| Detach | `↗` | Pop out into a separate browser window |
+| Settings | `⚙` | Open node-specific settings drawer (right panel) |
+| Connections | `⤴` | Toggle I/O line visibility for this node |
+| Thread | `💬` | Open dedicated conversation thread for this node |
+| Remux | `🔀` | Re-route this node's output to a different target |
+| Inspect | `🔍` | Show raw capability response, WS events, timing |
+| Remove | `✕` | Disconnect and remove node from canvas |
+| Export | `↓` | Export node config as JSON / share link |
+| History | `↻` | Show undo/redo stack for this node |
+| Lock | `🔒` | Prevent all changes (layout, config, connections) |
+
+### Per-Widget-Type Actions
+
+Each capability category adds its own actions to the global set:
+
+**Chat nodes** (`category: chat`):
+- `New Thread` — start fresh conversation in this node
+- `Branch` — fork current conversation into a new thread
+- `Merge` — merge two conversation threads
+- `Clear Context` — reset conversation history
+- `Export Transcript` — download as markdown/JSON
+- `Model Select` — switch provider model mid-conversation
+- `System Prompt` — edit the system prompt for this thread
+- `Temperature` — adjust creativity slider
+
+**Tool nodes** (`category: tool`):
+- `Configure` — open tool settings drawer
+- `Test Run` — execute with sample input
+- `View Schema` — show input/output JSON schema
+- `Enable/Disable` — toggle tool availability
+- `Permissions` — manage access scope
+
+**Memory nodes** (`category: memory`):
+- `Recall` — search memory entries
+- `Forget` — delete specific memory entries
+- `Consolidate` — merge duplicate memories
+- `Export` — download memory store
+- `Import` — upload memory entries
+
+**File nodes** (`category: file`):
+- `Open` — open file in viewer/editor
+- `Download` — save to local disk
+- `Upload` — replace file content
+- `Version History` — show file versions
+- `Diff` — compare with another version
+
+**Provider nodes** (`category: provider`):
+- `Health` — show provider health dashboard
+- `Rate Limits` — show current rate limit status
+- `Switch Model` — change model within provider
+- `Test Connection` — verify API key works
+- `Usage` — show token/cost usage
+
+## INPUT WIDGET: COMMAND & CONTROL CENTER
+
+The input widget (chat composer / message entry) gets special treatment.
+It's not just a text box — it's the user's command and control center.
+
+### Layout
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ InputWidget (Command & Control Center)                  │
+├─────────────┬───────────────────────────────────────────┤
+│ Provider    │ Model selector dropdown                   │
+│ Selector    │ Shows: provider name, model, tier badge   │
+├─────────────┴───────────────────────────────────────────┤
+│ Composer Area                                          │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ [contenteditable div — supports @mentions, /cmds]  │ │
+│ │ Type / for commands, @ for provider mentions        │ │
+│ │ Shift+Enter for newline, Enter to send              │ │
+│ └─────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────┤
+│ Action Bar                                              │
+│ [📎Attach] [⚙Settings] [🧵Thread] [📊Context] [▶Send] │
+├─────────────────────────────────────────────────────────┤
+│ Settings Drawer (toggle)                                │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ Temperature: [====|----] 0.7                        │ │
+│ │ Max Tokens:  [========|] 4096                       │ │
+│ │ System: [textarea]                                  │ │
+│ │ Tools: [checkbox list of available tools]           │ │
+│ │ Context: [file picker for context bundles]          │ │
+│ └─────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────┤
+│ Thread Panel (toggle)                                   │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ Thread: "Research session"        [🔀 Remux] [✕]   │ │
+│ │ ├── msg 1: user "search for..."                    │ │
+│ │ ├── msg 2: assistant "here are the results..."     │ │
+│ │ ├── msg 3: user "now summarize..."                 │ │
+│ │ └── msg 4: assistant "summary:..."                 │ │
+│ │ [+ New Thread] [Merge] [Export]                     │ │
+│ └─────────────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────┤
+│ Context Bundles (toggle)                                │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ Active Context:                                     │ │
+│ │  • 📄 design-spec.md (from local)                  │ │
+│ │  • 💬 ChatGPT conversation #12345 (synced)         │ │
+│ │  • 🧠 Memory: "user prefers dark mode"             │ │
+│ │  • 🔧 Tool: web-search (enabled)                   │ │
+│ │ [+ Add Context] [Clear All]                         │ │
+│ └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Input Widget Features
+
+1. **@Mention System** — type `@` to mention:
+   - Providers: `@claude`, `@gpt-4`, `@gemini`
+   - Tools: `@web-search`, `@code-executor`
+   - Memories: `@memory:dark-mode`
+   - Files: `@file:design-spec.md`
+   - Conversations: `@conv:research-session`
+
+2. **Slash Commands** — type `/` to trigger:
+   - `/create [type]` — create a new node
+   - `/connect [a] [b]` — connect two nodes
+   - `/layout [preset]` — apply layout preset
+   - `/export [format]` — export canvas
+   - `/import [source]` — import from URL/file
+   - `/search [query]` — search across all data
+   - `/remap [from] [to]` — remap node output
+
+3. **Context Bundle Builder** — drag-and-drop or click-to-add:
+   - Local files from the file picker
+   - Synced conversations (see Data Layer below)
+   - Memory entries
+   - Tool configurations
+   - Provider-specific context
+   - Each bundle item shows: icon, name, size, source, remove button
+
+4. **Thread Management** — inline thread panel:
+   - Create new thread (auto-names from first message)
+   - Switch between threads
+   - Merge threads (combines message histories)
+   - Remux: redirect this thread's output to a different node
+   - Export thread as markdown
+
+5. **Settings Drawer** — collapsible settings panel:
+   - Model parameters (temperature, max tokens, top-p, etc.)
+   - System prompt editor (textarea with monospace font)
+   - Tool toggles (checkbox list of available tools)
+   - Context bundle management
+   - Provider-specific settings
+
+## VISUAL CONNECTION I/O LINES
+
+Nodes can be connected via configurable I/O lines. Lines represent
+data flow between capabilities.
+
+### Line Types
+
+| Line Type | Visual | Use Case |
+|---|---|---|
+| Data Flow | `───→` solid arrow | Output of A feeds input of B |
+| Reference | `╌╌╌→` dashed arrow | A references B's data (no copy) |
+| Stream | `≋≋≋→` wavy arrow | Real-time streaming data |
+| Control | `···→` dotted arrow | A triggers B (no data transfer) |
+| Feedback | `←───` reverse arrow | B's result feeds back into A |
+
+### Line Configuration
+
+Each line has configurable properties:
+
+```typescript
+interface ConnectionLine {
+  id: string
+  from: { nodeId: string; port: 'output' | 'stream' | 'error' }
+  to: { nodeId: string; port: 'input' | 'config' | 'context' }
+  type: 'data' | 'reference' | 'stream' | 'control' | 'feedback'
+  label?: string           // optional label on the line
+  color?: string           // customizable color
+  animated?: boolean       // animate flow direction
+  throttleMs?: number      // rate limit data flow
+  transform?: string       // optional data transform expression
+  conditional?: string     // only connect if condition is true
+}
+```
+
+### Line Rendering
+
+- Lines follow bezier curves between node ports
+- Port positions are calculated from node layout (right = output, left = input)
+- Animated lines show flow direction (CSS animation on stroke-dashoffset)
+- Hovering a line shows its label and data type
+- Clicking a line opens a config popover (change type, add transform, etc.)
+- Lines are viewport-culled (same as nodes) for performance
+
+### Port System
+
+Each vCard has standardized ports:
+
+| Port | Side | Type | Description |
+|---|---|---|---|
+| `input` | Left | data | Primary data input |
+| `config` | Left | config | Configuration/settings input |
+| `context` | Left | context | Context bundle input |
+| `output` | Right | data | Primary data output |
+| `stream` | Right | stream | Real-time streaming output |
+| `error` | Bottom | error | Error/exception output |
+
+## THREADS, REMUX & AGENTIC WORKLOADS
+
+### Dedicated Threads
+
+Every vCard can own a dedicated conversation thread. This thread is:
+- Persisted in the backend (`POST /api/conversations`)
+- Subscribed via WebSocket for real-time updates
+- Visually distinct: shown as a mini-chat inside the node
+- Independent: has its own message history, system prompt, model config
+
+Thread states are shown with visual indicators:
+
+| State | Visual | Meaning |
+|---|---|---|
+| Idle | `○` gray dot | Thread exists, no active stream |
+| Streaming | `◉` pulsing blue | Actively receiving tokens |
+| Thinking | `◎` spinning ring | Agent is processing (tool calls, etc.) |
+| Error | `●` red dot | Last response had an error |
+| Paused | `◌` half-dot | User paused the stream |
+| Complete | `✓` green dot | Response finished successfully |
+
+### Remux (Re-routing)
+
+Remux redirects a node's output to a different target without changing
+the node's internal state. Use cases:
+- Send chat output to a different provider
+- Route tool results to a file instead of chat
+- Redirect streaming data to a visualization node
+
+Remux is configured via the thread panel's "Remux" button or via
+the `/remap [from] [to]` slash command.
+
+### Agentic Workloads
+
+Agentic workloads are multi-step operations that the backend orchestrates.
+They appear on the canvas as special "agentic" nodes:
+
+```typescript
+interface AgenticWorkload {
+  id: string
+  name: string
+  steps: Array<{
+    nodeId: string
+    capabilityId: string
+    input: Record<string, unknown>
+    status: 'pending' | 'running' | 'complete' | 'error'
+    output?: unknown
+  }>
+  status: 'planning' | 'executing' | 'complete' | 'error'
+  progress: number  // 0-100
+  createdAt: number
+}
+```
+
+Visual design for agentic nodes:
+- Distinct border: gradient from blue (planning) → green (executing) → gold (complete)
+- Step indicator: horizontal progress bar with step markers
+- Each step shows: icon, name, status dot, duration
+- Collapsible: can minimize to just the progress bar
+- Logs: expandable panel showing each step's input/output
+
+## DATA LAYER: STORAGE, FILES, CONVERSATIONS
+
+The frontend maintains a local data layer that syncs with the backend
+and external sources.
+
+### Conversation Sync
+
+The frontend can sync conversations from external providers:
+- ChatGPT conversations (via the backend's ChatGPT provider)
+- Gemini conversations (via the backend's Gemini provider)
+- Claude conversations (via the backend's Claude provider)
+
+Each synced conversation becomes a "data card" on the canvas:
+- Shows: provider icon, conversation title, message count, last activity
+- Click to open in a dedicated thread
+- Drag to add as context bundle
+- Searchable via the command palette
+
+Sync is triggered by:
+- `GET /api/conversations?provider=chatgpt` — list synced conversations
+- `GET /api/conversations/:id/messages` — fetch full message history
+- WebSocket events: `conversation:synced`, `conversation:updated`
+
+### File Store
+
+Local file storage for:
+- Uploaded files (drag-and-drop onto canvas)
+- Exported conversations (markdown, JSON)
+- Canvas snapshots (for backup/restore)
+- Context bundles (saved combinations of files + conversations + memories)
+
+File store uses IndexedDB with the following schema:
+
+```typescript
+interface FileEntry {
+  id: string
+  name: string
+  mimeType: string
+  size: number
+  data: Blob
+  tags: string[]
+  source: 'upload' | 'export' | 'sync' | 'snapshot'
+  createdAt: number
+  updatedAt: number
+}
+```
+
+### Memory Layer
+
+The frontend maintains a local memory cache that syncs with the backend's
+memory engine (`POST /api/capabilities/cap:memory:memory/execute`).
+
+Memory entries appear as small "memory nodes" on the canvas:
+- Draggable into context bundles
+- Searchable via command palette
+- Visual: brain icon with confidence indicator
+- Types: episodic (conversations), semantic (facts), procedural (how-to)
+
+### Dynamic Context Bundles
+
+Context bundles are saved combinations of:
+- Files (from file store)
+- Conversations (synced or local)
+- Memory entries
+- Tool configurations
+- Provider-specific context
+
+Bundles are stored locally and can be:
+- Shared via URL (serialized to query params)
+- Exported as JSON
+- Imported from JSON
+- Applied to any vCard via drag-and-drop
+
+Bundle application shows a visual "loading" state on the target node:
+- Brief animation: bundle items fly from the bundle panel to the node
+- Node updates its context display
+- Backend is notified via `POST /api/capabilities/:id/execute` with
+  the bundle data as part of the input
+
+## THE 8 FILES TO GENERATE
+
+### FILE 1: src/App.tsx (~400 lines)
+Main application shell. Responsibilities:
+- Import and render CanvasSurface from file 3
+- Initialize React Query provider with baseUrl = 'http://localhost:9420'
+- Initialize WebSocket connection to ws://localhost:9420/ws
+- Initialize ThemeProvider (dark/light/auto from V5's theme.ts)
+- Initialize Command Palette (slash key triggers palette overlay)
+- Render Observability Panel (collapsible sidebar)
+- Render Data Layer sidebar (conversation sync, file store, memory)
+- Handle capability request dispatch:
+  `POST http://localhost:9420/api/capabilities/:id/execute`
+  with `input` from the node's config
+- Wire `useResolvedNodes` to fetch from backend instead of own `/api/canvas/resolve`
+- Export App as default, wire into Vite entry point
+- Use inline styles (V5 pattern) — no Tailwind dependency
+- Keep it under 400 lines — extract sub-components into src/components/
+
+### FILE 2: src/components/CommandPalette.tsx (~250 lines)
+The command palette overlay. Responsibilities:
+- Open on `/` key or `Ctrl+K`
+- Search input at top, results below
+- Fetch capabilities from backend:
+  `GET http://localhost:9420/api/capabilities?surface=ui`
+- Display results as rows: icon, name, provider, tier badge
+- On select: execute capability via
+  `POST http://localhost:9420/api/capabilities/:id/execute`
+- Also support: "create node" action, "navigate" action
+- Keyboard navigation: arrow up/down, enter to select, escape to close
+- Fuzzy search on name + provider
+- Show recent commands in empty state
+- Show context bundles section (from Data Layer)
+- Show synced conversations section
+
+### FILE 3: src/components/vCard/VCardMenu.tsx (~200 lines)
+The global + per-widget capability menu. Responsibilities:
+- Render global actions (collapse, pin, full screen, duplicate, etc.)
+- Render per-widget-type actions based on node's category
+- Position menu at cursor or node anchor point
+- Handle keyboard navigation within menu
+- Emit actions via callback to parent CanvasNode
+- Support menu sections with dividers
+- Show keyboard shortcuts next to actions
+
+### FILE 4: src/components/vCard/InputWidget.tsx (~300 lines)
+The command & control center. Responsibilities:
+- Provider selector dropdown (fetches from `GET /api/providers`)
+- Contenteditable composer with @mention and /command support
+- Action bar: attach, settings, thread, context, send
+- Settings drawer (toggle): temperature, max tokens, system prompt, tools
+- Thread panel (toggle): message history, new thread, merge, remux, export
+- Context bundle panel (toggle): active context items, add/remove
+- @mention autocomplete popover
+- /command autocomplete popover
+- Send message via `POST /api/conversations/:id/messages`
+- Stream responses via WebSocket
+
+### FILE 5: src/components/vCard/ConnectionLines.tsx (~200 lines)
+The visual I/O line system. Responsibilities:
+- Render bezier curves between connected nodes
+- Support 5 line types: data, reference, stream, control, feedback
+- Animate flow direction on stream/control lines
+- Hover to show line label and data type
+- Click to open line config popover
+- Viewport-cull lines (same as nodes)
+- Port position calculation from node layout
+- Drag from port to port to create new connection
+
+### FILE 6: src/components/vCard/ThreadPanel.tsx (~150 lines)
+The dedicated thread panel inside a vCard. Responsibilities:
+- Show message history (user/assistant messages)
+- Thread state indicator (idle/streaming/thinking/error/paused/complete)
+- New thread button
+- Branch (fork) thread
+- Merge threads
+- Remux: redirect output to different target
+- Export thread as markdown
+- Auto-scroll to latest message
+
+### FILE 7: src/components/data/DataLayerSidebar.tsx (~200 lines)
+The storage/files/conversations sidebar. Responsibilities:
+- Conversation sync section: list synced conversations from providers
+- File store section: list local files, upload, download
+- Memory layer section: list memory entries, search, drag to canvas
+- Context bundles section: saved bundles, create, apply, share
+- Each section collapsible
+- Drag items from sidebar to canvas to create nodes
+- Search across all data types
+
+### FILE 8: src/hooks/useCanvasBackend.ts (~200 lines)
+The data layer hook. Responsibilities:
+- `useResolvedNodes(req)` — fetches capabilities from backend:
+  `GET http://localhost:9420/api/capabilities?surface=ui`
+  then `POST http://localhost:9420/api/capabilities/:id/execute` for each
+- `useWebSocket(sessionId)` — connects to ws://localhost:9420/ws,
+  returns { status, events, send }
+- `useCapabilityExecute()` — mutation hook for
+  `POST /api/capabilities/:id/execute`
+- `useProviderHealth(providerId)` — polls
+  `GET /api/providers/:id/health`
+- `useConversations(provider?)` — list conversations, optionally filtered
+- `useConversationMessages(id)` — fetch message history
+- `useFileStore()` — IndexedDB CRUD for FileEntry
+- `useMemorySync()` — sync memory entries with backend
+- `useContextBundles()` — manage saved context bundles
+- All hooks use React Query with proper cache keys
+- All hooks use absolute URLs to localhost:9420
+
+### SUPPORTING FILES (also generate):
+
+- `package.json` — dependencies: react 19, @tanstack/react-query 5,
+  zod 3.23, typescript 5.6+, vite 5, idb (for IndexedDB),
+  yjs (optional, for CRDT)
+- `tsconfig.json` — strict: true, noImplicitAny: true, jsx: react-jsx,
+  moduleResolution: bundler, target: ES2022, module: ESNext
+- `vite.config.ts` — basic Vite config for React
+- `index.html` — Vite entry point
+- `src/main.tsx` — React root render
+- `src/types/vcard.ts` — vCard, ConnectionLine, Port, ThreadState types
+- `src/types/data-layer.ts` — FileEntry, ContextBundle, SyncedConversation types
+
+## ADAPTATION CHECKLIST
+
+For each V5 component in file 3, document what changes:
+
+| V5 Component | V6 Change | Why |
+|---|---|---|
+| `useResolvedNodes` | Replace `/api/canvas/resolve` POST with `GET /api/capabilities?surface=ui` | Backend owns resolution |
+| `CanvasSurface` | Keep viewport culling, layout, command stack | Pure frontend, no backend |
+| `CanvasNode` | Add vCard menu trigger (right-click/⋯), port system for connections | Extend for new features |
+| `SandboxedNode` | Keep iframe sandbox | Security invariant |
+| `CommandStack` | Keep undo/redo | Pure frontend |
+| `QuadTree` | Keep viewport culling | Pure frontend |
+| `useCanvasEvents` | Rewrite to use WS from `ws://localhost:9420/ws` | Real backend events |
+| `buildSandboxPolicy` | Keep as-is | Security invariant |
+| `primitiveToSlotId` | Keep as-is | Type mapping |
+| `DEFAULT_LAYOUTS` | Keep, extend with streaming node slots | UI positions |
+
+### New V6 Components (not in V5)
+
+| Component | Purpose | Dependencies |
+|---|---|---|
+| `VCardMenu` | Global + per-widget capability menu | CanvasNode, UnifiedCapability |
+| `InputWidget` | Command & control center | providers, conversations, WS |
+| `ConnectionLines` | Visual I/O line system between nodes | CanvasNode layouts, QuadTree |
+| `ThreadPanel` | Dedicated conversation thread per node | conversations, WS streaming |
+| `DataLayerSidebar` | Storage/files/conversations sidebar | conversations, fileStore, memory |
+| `useCanvasBackend` | All data hooks (8+ hooks) | React Query, backend API |
+
+## INTEGRATION POINTS
+
+All requests go through these backend endpoints (from file 1):
+
+### Read Operations
+- List capabilities: `GET /api/capabilities?surface=ui&category=chat`
+- List conversations: `GET /api/conversations`
+- List providers: `GET /api/providers`
+- Get workspace config: `GET /api/config`
+- Get provider health: `GET /api/providers/:id/health`
+
+### Write Operations
+- Execute capability: `POST /api/capabilities/:id/execute`
+- Create conversation: `POST /api/conversations`
+- Send message: `POST /api/conversations/:id/messages`
+- NLCL interpret: `POST /api/interpret`
+- Update config: `PUT /api/config`
+
+### Real-time
+- WebSocket: `ws://localhost:9420/ws`
+  - Subscribe: `{ type: 'subscribe', entityType: 'conversation', entityId }`
+  - Events: `conversation:*`, `capability:*`, `provider:*`, `engine:*`
+  - Streaming: capability execution responses arrive as chunked events
+
+## BUILD ORDER
+
+1. Generate `package.json` + `tsconfig.json` + `vite.config.ts` + `index.html`
+2. Generate `src/main.tsx` (minimal React root)
+3. Generate `src/types/vcard.ts` + `src/types/data-layer.ts` (type definitions)
+4. Generate `src/hooks/useCanvasBackend.ts` (data layer — all hooks)
+5. Generate `src/components/vCard/VCardMenu.tsx` (global + per-widget menu)
+6. Generate `src/components/vCard/ConnectionLines.tsx` (I/O line system)
+7. Generate `src/components/vCard/ThreadPanel.tsx` (dedicated threads)
+8. Generate `src/components/vCard/InputWidget.tsx` (command & control center)
+9. Generate `src/components/CommandPalette.tsx` (command palette overlay)
+10. Generate `src/components/data/DataLayerSidebar.tsx` (storage sidebar)
+11. Generate `src/App.tsx` (main shell, imports everything)
+12. Verify: `bun install && bun run dev` launches without errors
+13. Verify: Canvas renders, shows "Resolving canvas..." then connects to backend
+14. Verify: Command palette opens on `/`, shows capabilities from backend
+15. Verify: Right-click node shows vCard menu with global + per-type actions
+16. Verify: InputWidget renders with provider selector, composer, action bar
+17. Verify: Connection lines render between linked nodes
+18. Verify: Thread panel opens inside a node, shows message history
+19. Verify: Data Layer sidebar shows synced conversations, files, memory
+20. Verify: No TypeScript errors with strict mode
+21. Verify: `bun run build` succeeds (no `ignoreBuildErrors`)
+
+## QUALITY GATES
+
+Before claiming done:
+- [ ] `bun run typecheck` passes (strict mode, no implicit any)
+- [ ] `bun run build` succeeds (production build, no errors)
+- [ ] `bun run lint` passes (no warnings)
+- [ ] All fetch calls use `http://localhost:9420/api/...`
+- [ ] WebSocket connects to `ws://localhost:9420/ws`
+- [ ] No Prisma, no backend code, no engine code in V6
+- [ ] CanvasSurface renders with V5's viewport culling + layouts
+- [ ] Command palette opens and shows capability list
+- [ ] vCard menu shows global actions on all nodes
+- [ ] vCard menu shows per-type actions for chat/tool/memory/file/provider nodes
+- [ ] InputWidget has provider selector, composer, settings drawer, thread panel, context bundles
+- [ ] Connection lines render with correct bezier curves and animation
+- [ ] Thread panel shows message history with state indicators
+- [ ] Data Layer sidebar shows synced conversations from providers
+- [ ] Data Layer sidebar shows local files and memory entries
+- [ ] Context bundles can be created, saved, and applied to nodes
+- [ ] SandboxedNode renders iframe with CSP
+- [ ] All existing V5 comments preserved (never strip comments)

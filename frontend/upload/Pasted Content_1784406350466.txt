@@ -1,0 +1,585 @@
+# V8: Central UI Reprogrammability Engine
+
+## Goal
+Transform the V7 "Living Canvas" into a **fully reprogrammable UI system** where every component (side panels, widgets, overlays, drawers, menus, z-layers, connection lines) is hot-swappable and reconfigurable via unified CLI/SDK/API, with a composable design language for shared yet unique properties.
+
+## Vision
+> "One system to redesign them all" — The V8 Central UI Engine enables complete workspace metamorphosis via natural language or programmatic intent, while maintaining backend truth-sync and Constitution compliance.
+
+---
+
+## Priority Decisions
+
+### G1: Central Reprogrammability Engine (Core)
+- **What**: Single `UIEngine` registry governing ALL UI components
+- **CLI**: `/vivim ui list|get|create|update|delete|extend|apply`
+- **SDK**: `uiEngine.register()`, `uiEngine.get()`, `uiEngine.setProperty()`, `uiEngine.extendSpec()`
+- **Frontend**: `window.vivim.ui` exposed to sandboxed CanvasDefinitions
+- **Registration**: Every component (panel, widget, overlay, drawer, menu, z-layer, connection line) exports `ComponentSpec`
+
+### G2: UI Design Language (composable, modular, expandable)
+- **Schema**: `{ properties, features, actions, variants, defaultSlot, inheritanceChain }`
+- **Inheritance**: `component → categoryDefaults → tierDefaults → systemDefaults`
+- **Shared Traits**:
+  - `position`: slot, layout rect, z-index, anchor points
+  - `layout`: w, h, min/max constraints, resizable axes
+  - `visibility`: showWhen, hideWhen, animate transitions
+  - `interactivity`: focusable, draggable, contextMenu
+  - `styling`: theme tokens, css vars, dark/light mode variants
+  - `lifecycle`: onMount, onUpdate, onUnmount hooks (capability slugs)
+  - `permissions`: RBAC scope, confirmation gates
+  - `validation`: Zod schemas for inputs, deep merge rules
+
+### G3: All UI Fully Reprogrammable
+Components to make hot-swappable:
+- **Panels**: AuditDashboard, RbacManager, TemplatesGallery, DrawerSystem, NotificationsCenter, OnboardingTour, WorkspaceSwitcher, VCardMenu
+- **Widgets**: AgentCard, AutomationCard, DocCard, MediaCard, ShellCard
+- **Overlays**: CommandPalette, AgentOverlay, QuickActionsMenu
+- **Core**: LivingCanvas, CanvasNode, SandboxedNode, ConnectionLayer, ObservabilityHUD
+- **Design flow**: Export spec → modify JSON → POST `/api/ui/blueprint` → `ui:reprogrammed` WS → hot-swap
+
+### G4: Backend Truth-Sync
+- HTTP-backed impls of `storage/contracts/*.ts` when `VIVIM_BACKEND_URL` is set
+- Contracts unchanged; only swap `memory-*` for `http-*` variants
+- No second source of truth in prod
+
+### G5: Plugin Marketplace + Live Author
+- Plugin Gallery: browse/install/enable/disable/uninstall
+- Author Mode: live edit html/css/scriptUrl and hot-publish
+
+### G6: Agent Canvas Architect
+- Agent can redesign UI via `/api/interpret` with HITL confirmation
+- Mutations undoable via CommandStack, logged to AuditDashboard
+
+---
+
+## Key Contracts (from V7 + additions)
+
+```ts
+// Extend ComponentSpec for full reprogrammability
+interface UIComponentSpec extends ComponentSpec {
+  // Inheritance
+  extends?: string;           // base component id (if extending)
+  properties: UIProperties;   // theme, layout, visibility, etc.
+  features: string[];         // capability slugs this component supports
+  actions: UIAction[];        // per-component action definitions
+  variants: Record<string, UIVariant>; // named variants
+}
+
+// Property trait system
+interface UIProperties {
+  position?: { slot?: string; layout?: CanvasLayout; anchor?: 'left'|'right'|'top'|'bottom' };
+  layout?: { resizable?: boolean; minWidth?: number; maxWidth?: number };
+  visibility?: { showWhen?: string; hideWhen?: string; animation?: string };
+  interactivity?: { focusable?: boolean; draggable?: boolean; contextMenu?: boolean };
+  styling?: { themeToken?: string; cssVars?: Record<string, string> };
+  lifecycle?: { onMount?: string; onUpdate?: string; onUnmount?: string }; // capability slugs
+  permissions?: { rbacScope?: string[]; requiresConfirmation?: boolean };
+  validation?: { inputSchema?: Record<string, unknown>; outputSchema?: Record<string, unknown> };
+}
+
+// Reprogramming API (NEW endpoints)
+// GET  /api/ui/component/[id]/spec     — read current component spec
+// GET  /api/ui/blueprint               — read full UI layout/theme
+// POST /api/ui/blueprint               — apply reprogrammed spec (returns confirmation token if needed)
+```
+
+---
+
+## Validation Checkpoints
+- [ ] All UI components export ComponentSpec via WS registry
+- [ ] `/vivim ui list` shows all registered components
+- [ ] `/vivim ui extend <id> --json patch.json` returns new versioned spec
+- [ ] POST `/api/ui/blueprint` hot-swaps without page reload
+- [ ] Agent can "redesign workspace to dark theme" via NL
+- [ ] Cross-surface verification passes for all UI capabilities
+- [ ] WCAG 2.1 AA compliance on reprogrammed components
+- [ ] Zod ^3.23 pinned (fix V7's ^4.0.2 dependency)
+
+---
+
+## Risks & Mitigations
+| Risk | Mitigation |
+|------|------------|
+| State loss on reprogram | Versioned specs + backend persistence |
+| Security in sandboxed edits | P8 `allowInlineScript:false`, CSP, no inline scripts |
+| Performance with 1k+ components | QuadTree culling + React windowing |
+| Breaking existing V7 components | Preserve all comments; extend ComponentSpec gradually |
+
+---
+
+## Questions (if any unresolved)
+None at this time. Plan is actionable.
+
+## Next Steps (per Build Order)
+1. Pin zod ^3.23
+2. Create `shared/ui-language.ts` (property traits + inheritance)
+3. Build `src/engines/ui-engine.ts` (registry + CLI/SDK/API)
+4. Register all current UI components
+5. Add backend-sync mode
+6. Implement Plugin Gallery
+7. Wire Agent Architect
+8. Add `/api/ui/blueprint` endpoints
+9. Cross-surface verification
+10. Tests + A11Y
+
+---
+
+*Derived from V7 source: `src/shared/canvas-types.ts`, `src/sdk/canvas/`, `src/shared/universal-registry.ts`, `src/shared/vcard.ts`, `src/components/canvas/LivingCanvas.tsx`*
+
+///////  PHASE 2 PROMPT ////
+    ================================================================================
+    V8 MASTER PROMPT — "THE FULLY REPROGRAMMABLE CANVAS" (GLM-5.2 Z.AI AGENT)
+    ================================================================================
+    Generated: 2026-07-18
+    Source of truth: C:\0-BlackBoxProject-0\vivim-final\dev-poc\canvas\v7  (V7, the
+                full-stack Next.js "Living Canvas" built by the parallel GLM-5.2 agent)
+    Companion repo:  C:\0-BlackBoxProject-0\vivim-final                       (vivim-final)
+    
+    THIS FILE IS SELF-CONTAINED. Read it top-to-bottom before building V8. It
+    contains: (A) the V8 goal design, then (B) the concatenated supporting source
+    from vivim-final (V7 canvas app + the vivim-final backend/capability contracts)
+    that V8 must build on / plug into / not regress.
+    
+    CONSTITUTION (non-negotiable, from vivim-final .specify/memory/constitution.md):
+    I.   Governor Canon — only ChromeGovernor touches CDP. Hard gate.
+    II.  Store Contracts — engines depend on src/storage/contracts/*.ts, never impl.
+    III. One Entry Point — every op is a UnifiedCapability. CLI/UI are thin NL shells
+        that call POST /api/interpret -> POST /api/capabilities/:id/execute.
+    IV.  Research-First — no implementation without a research report + classification.
+    V.   Code Quality — TS strict, ESNext, .js ext imports, no any, Zod at boundaries,
+        ULID ids, Result<T,E>, custom errors (no raw new Error()).
+    VI.  Testing Gates — bun test, typecheck 0 errors, lint 0 warnings, invariants check,
+        audit-code, verify-cross-surface.
+    FRONTEND: primary surface is the unified infinite canvas, driven by DB-backed
+        provider-type conceptual model (ProviderType + UiComponent, 4-tier resolution).
+        Capability-driven: UI actions resolve through CapabilityResolutionEngine.
+    
+    ================================================================================
+    PART A — V8 DEVELOPMENT SESSION GOALS
+    ================================================================================
+    V7 shipped a full-stack Next.js "Living Canvas": streaming-native nodes, vCard
+    menus, visual I/O connections, semantic zoom, agent co-pilot overlay, plugin
+    SDK (defineComponent/publish/hotReload), UniversalComponentRegistry (hot-swap),
+    Z-layer engine, drawer engine, RBAC, audit, presence, notifications, onboarding,
+    templates, document editor, media bridge, adaptive workspace, route-sync to the
+    vivim-final backend (port 9420), plus a verify-cross-surface script and seed data.
+    
+    V8's THEME: take V7 from "a very capable canvas app" to "a fully reprogrammable,
+    agent-extensible, backend-synced living workspace" — i.e. close the gap between
+    the V7 local engines and the vivim-final backend so V8 is the canonical UI surface
+    for the whole vivim-final platform, not a parallel clone.
+    
+    --------------------------------------------------------------------------------
+    A.0  V8 SESSION GOALS (priority order)
+    --------------------------------------------------------------------------------
+    G1. BACKEND TRUTH-SYNC (highest priority)
+        - V7 talks to localhost:9420 via /api/canvas/* and /api/interpret, but runs
+        its OWN prisma + memory stores. V8 must make the canvas DEFINITIONS,
+        workspaces, z-layers, drawers, rbac, automations, documents, presence,
+        notifications resolvable from the vivim-final backend so state survives and
+        is shared. Add a `backendSync` mode: when VIVIM_BACKEND_URL is set, use the
+        real Prisma-backed stores via the existing route handlers; when unset, fall
+        back to in-memory (dev). No second source of truth in prod.
+        - Reuse the V7 storage/contracts layer as-is; only swap memory-* impls for
+        HTTP-backed impls that call the backend. Contracts MUST NOT change shape.
+    
+    G2. PLUGIN MARKETPLACE + LIVE AUTHORING
+        - V7 has `sdk/canvas` (defineComponent/publish/hotReload) and demo/sample
+        plugins. V8 adds an in-app Plugin Gallery (browse/install/enable/disable/
+        uninstall) wired to POST /api/plugins/install, plus a live "Author Mode":
+        edit html/css/scriptUrl of a CanvasDefinition and hot-publish without a
+        rebuild (already 80% there via hotReload + UniversalComponentRegistry).
+        - Sandbox integrity (P8): keep `allowInlineScript: false` literal; validate
+        inline <script> forbidden; CSP default deny. V8 must keep the plugin
+        security invariant under live editing.
+    
+    G3. AGENT-DRIVEN RECOMPOSITION (the "fully reprogrammable" core)
+        - V7 has AgentOverlay + agents-builder + AgentCanvasPlan types. V8 promotes
+        the agent from "ghost overlay" to a first-class "Canvas Architect": via
+        POST /api/interpret it can create/delete/connect/relayout nodes and install
+        plugins, with HITL confirmation gates (reuse requiresConfirmation + the
+        `confirmation` token flow from /api/interpret). Every agent mutation is
+        undoable via the CommandStack and logged to AuditDashboard.
+    
+    G4. CROSS-SURFACE PARITY (Constitution III)
+        - V8 must ensure every canvas capability is reachable from CLI/API/MCP/UI
+        (the vivim-final `verify-cross-surface` contract). Add a generator that
+        emits a capability row + NL pattern + apiEndpoint for each registered
+        canvas component, and wire `devops:verify-cross-surface` to assert it.
+    
+    G5. PERFORMANCE + A11Y HARDENING
+        - Enforce WCAG 2.1 AA on all vCards (V7 has partial aria). Add virtualization
+        for >500 nodes (QuadTree cull already exists; add React windowing for the
+        card list). Target 60fps pan/zoom with >1k nodes. Keep semantic zoom tiers.
+    
+    G6. TEST + INVARIANT COVERAGE
+        - V7 has route-sync + shell-command tests and verify-cross-surface.ts. V8 adds
+        unit tests for the backendSync impls, plugin SDK, and agent recomposition,
+        and asserts Constitution gates in CI. Lint 0 warnings, typecheck 0 errors.
+    
+    --------------------------------------------------------------------------------
+    A.1  V8 NON-NEGOTIABLE RULES (carry from V7 + Constitution)
+    --------------------------------------------------------------------------------
+    1. TS strict + noImplicitAny. No `any` — use `unknown` + narrowing.
+    2. Zod v3.23+ at all runtime boundaries (the V7 package.json currently depends on
+    zod ^4.0.2 — V8 MUST pin zod ^3.23 to match vivim-final; this is a known V7 bug).
+    3. `allowInlineScript` is a literal `false` (P8/S93). CSP default deny.
+    4. Keep all V7 component comments (do not strip). Preserve V5/V6 canvas roots
+    (LivingCanvas, CanvasSurface, SandboxedNode, CommandStack, QuadTree).
+    5. UI actions go through CapabilityResolutionEngine, not hand-written branches.
+    Prefer UiComponent tiers over `if (slug === 'x')`.
+    6. No CDP anywhere in the frontend. ChromeGovernor owns CDP in vivim-final.
+    7. All backend calls absolute (VIVIM_BACKEND_URL ?? http://localhost:9420).
+    8. bnscripts typecheck/lint/test/verify-cross-surface all green before "done".
+    
+    --------------------------------------------------------------------------------
+    A.2  V8 BUILD ORDER (suggested)
+    --------------------------------------------------------------------------------
+    1. Pin zod ^3.23; fix any v4-only calls in V7.
+    2. Add backendSync mode: HTTP-backed impls of storage/contracts (G1).
+    3. Plugin Gallery + Author Mode (G2).
+    4. Canvas Architect agent recomposition + HITL (G3).
+    5. Cross-surface capability generation + verify (G4).
+    6. A11Y + virtualization (G5).
+    7. Tests + CI gates (G6).
+    8. Verify: `bun install && bun run dev` (Next on :3000) + backend on :9420.
+        Verify canvas resolves from backend, plugin install works, agent can
+        create a node via /api/interpret, cross-surface script is green.
+    
+    --------------------------------------------------------------------------------
+    A.3  INTEGRATION ENDPOINTS V8 RELIES ON (vivim-final backend, port 9420)
+    --------------------------------------------------------------------------------
+    Read:   GET /api/canvas/definition, GET /api/canvas/definition/[id],
+            GET /api/canvas/resolve, GET /api/canvas/workspace, GET /api/plugins,
+            GET /api/capabilities?surface=ui, GET /api/providers
+    Write:  POST /api/canvas/resolve, POST /api/canvas/mutate,
+            POST /api/canvas/definition, POST /api/plugins/install,
+            POST /api/interpret, POST /api/capabilities/:id/execute
+    Realtime: ws://localhost:9420/ws  (subscribe entityType 'canvas'/'conversation')
+    Sources: files below (B.1–B.9) are the exact contracts V8 must satisfy.
+    
+    ================================================================================
+    PART B — SUPPORTING SOURCE FROM VIVIM-FINAL (concatenated, read-only reference)
+    ================================================================================
+    The sections below are extracted from the V7 canvas app (dev-poc/canvas/v7) and
+    the vivim-final backend contracts. They are the canonical types V8 builds on.
+    
+    --------------------------------------------------------------------------------
+    B.1  src/shared/canvas-types.ts  (V7 — Contract bridge: CanvasDefinition/Sandbox)
+    --------------------------------------------------------------------------------
+    */
+    export type PrimitiveKind =
+    | 'workspace' | 'projects' | 'knowledge' | 'agents' | 'providers' | 'conversations';
+    
+    export type LayerCategory =
+    | 'system' | 'chat' | 'automation' | 'agents' | 'projects'
+    | 'knowledge' | 'designer' | 'plugin';
+    
+    export type LayerAuthor = 'system' | 'user' | 'agent';
+    export type LayerStatus = 'draft' | 'published' | 'deprecated';
+    export type InstanceStatus = 'mounting' | 'live' | 'dismissed' | 'error';
+    
+    export interface SandboxPolicy {
+    csp: string;
+    allowNetwork: boolean;
+    allowCapabilities: string[];
+    budgetMs: number;
+    allowInlineScript: false; // P8: never overridable to true
+    }
+    
+    export interface CanvasLayout {
+    x: number; y: number; z: number; w: number; h: number;
+    minimized?: boolean; detailZoom?: number;
+    }
+    
+    export interface LayerBinding {
+    regionId: string; role: string; selector: string;
+    primitive?: PrimitiveKind; capabilitySlug?: string;
+    direction: 'read' | 'write' | 'bidirectional';
+    }
+    
+    export interface CanvasDefinition {
+    id: string; slug: string; name: string; description: string;
+    category: LayerCategory; version: number;
+    html: string; css: string; scriptUrl?: string;
+    bindings: LayerBinding[]; layout: CanvasLayout;
+    author: LayerAuthor; sandbox: SandboxPolicy;
+    status: LayerStatus; tags: string[];
+    createdAt: number; updatedAt: number;
+    }
+    
+    export interface LayerHost {
+    mount(instanceId: string, def: CanvasDefinition): Promise<{ hostNodeId: string }>;
+    unmount(instanceId: string): Promise<void>;
+    isMounted(instanceId: string): boolean;
+    }
+    
+    export const DEFAULT_SANDBOX_CSP =
+    "default-src 'none'; script-src 'self' blob:; style-src 'unsafe-inline' blob:; img-src 'self' data: blob:; connect-src 'none';";
+    
+    export function buildSandboxPolicy(input: {
+    allowCapabilities?: string[]; allowNetwork?: boolean; budgetMs?: number; csp?: string;
+    }): SandboxPolicy {
+    return {
+        csp: input.csp ?? DEFAULT_SANDBOX_CSP,
+        allowNetwork: input.allowNetwork ?? false,
+        allowCapabilities: input.allowCapabilities ?? [],
+        budgetMs: input.budgetMs ?? 5_000,
+        allowInlineScript: false, // S93 invariant
+    };
+    }
+    /*
+    --------------------------------------------------------------------------------
+    B.2  src/sdk/canvas/define-component.ts  (V7 — Zod builder + P8 guard)
+    --------------------------------------------------------------------------------
+    */
+    import { z } from 'zod';
+    import { buildSandboxPolicy, DEFAULT_SANDBOX_CSP } from '../../shared/canvas-types';
+    import { ulid } from '../../lib/ulid';
+    
+    const SANDBOX_POLICY_SCHEMA = z.object({
+    csp: z.string().default(DEFAULT_SANDBOX_CSP),
+    allowNetwork: z.boolean().default(false),
+    allowCapabilities: z.array(z.string()).default([]),
+    budgetMs: z.number().int().positive().default(5_000),
+    allowInlineScript: z.literal(false), // FORCED false — S93
+    });
+    
+    const LAYER_BINDING_SCHEMA = z.object({
+    regionId: z.string(), role: z.string(), selector: z.string(),
+    primitive: z.enum(['workspace','projects','knowledge','agents','providers','conversations']).optional(),
+    capabilitySlug: z.string().optional(),
+    direction: z.enum(['read','write','bidirectional']),
+    });
+    
+    const LAYOUT_SCHEMA = z.object({
+    x: z.number(), y: z.number(), z: z.number().default(0),
+    w: z.number().positive(), h: z.number().positive(),
+    minimized: z.boolean().optional(), detailZoom: z.number().optional(),
+    });
+    
+    export const CANVAS_DEFINITION_INPUT_SCHEMA = z.object({
+    slug: z.string().min(1).max(128),
+    name: z.string().min(1).max(256),
+    description: z.string().max(2_048).default(''),
+    category: z.enum(['system','chat','automation','agents','projects','knowledge','designer','plugin']).default('plugin'),
+    html: z.string(), css: z.string().default(''), scriptUrl: z.string().url().optional(),
+    bindings: z.array(LAYER_BINDING_SCHEMA).default([]),
+    layout: LAYOUT_SCHEMA.default({ x:0, y:0, z:0, w:320, h:240 }),
+    sandbox: SANDBOX_POLICY_SCHEMA.optional(),
+    author: z.enum(['system','user','agent']).default('user'),
+    status: z.enum(['draft','published','deprecated']).default('published'),
+    tags: z.array(z.string()).max(16).default([]),
+    });
+    
+    export type CanvasDefinitionInput = z.infer<typeof CANVAS_DEFINITION_INPUT_SCHEMA>;
+    
+    export function defineComponent(input: unknown): CanvasDefinition {
+    const parsed = CANVAS_DEFINITION_INPUT_SCHEMA.parse(input);
+    // P8: forbid inline <script> in html.
+    if (/<script\b[^>]*>[\s\S]*?<\/script>/i.test(parsed.html) || /<script\b[^>]*>/i.test(parsed.html)) {
+        throw new Error('P8 violation: inline <script> tags are forbidden in CanvasDefinition.html. Use scriptUrl.');
+    }
+    const now = Date.now();
+    const sandbox: SandboxPolicy = parsed.sandbox
+        ? { csp: parsed.sandbox.csp, allowNetwork: parsed.sandbox.allowNetwork,
+            allowCapabilities: parsed.sandbox.allowCapabilities, budgetMs: parsed.sandbox.budgetMs, allowInlineScript: false }
+        : buildSandboxPolicy({ allowCapabilities: [] });
+    return {
+        id: `cdef:${parsed.slug}:${now.toString(36)}`, slug: parsed.slug, name: parsed.name,
+        description: parsed.description, category: parsed.category as LayerCategory, version: 1,
+        html: parsed.html, css: parsed.css, scriptUrl: parsed.scriptUrl,
+        bindings: parsed.bindings as LayerBinding[], layout: parsed.layout as CanvasLayout,
+        author: parsed.author as LayerAuthor, sandbox, status: parsed.status as LayerStatus,
+        tags: parsed.tags, createdAt: now, updatedAt: now,
+    };
+    }
+    /*
+    --------------------------------------------------------------------------------
+    B.3  src/sdk/canvas/index.ts  (V7 — @vivim/canvas-sdk barrel)
+    --------------------------------------------------------------------------------
+    */
+    export { defineComponent, CANVAS_DEFINITION_INPUT_SCHEMA } from './define-component';
+    export type { CanvasDefinitionInput } from './define-component';
+    export { publish } from './publish';                 export type { PublishOptions } from './publish';
+    export { hotReload } from './hot-reload';            export type { HotReloadOptions, Disposer } from './hot-reload';
+    export { registerSlot, unregisterSlot, registerDefault, resolveSlot, listSlotOverrides, subscribe, getVersion } from './register-slot';
+    export { useCanvasComponent } from './use-canvas-component';
+    export { CapabilityBus, getBusFromWindow } from './capability-bus';
+    export type { CanvasDefinition, SandboxPolicy, CanvasLayout, LayerBinding, LayerAuthor, LayerStatus, LayerCategory } from '../../shared/canvas-types';
+    export { buildSandboxPolicy, DEFAULT_SANDBOX_CSP } from '../../shared/canvas-types';
+    export { createDocumentEditorClient } from './document-editor-client';
+    export { createZLayerClient } from './z-layer-client';
+    export { createDrawerClient } from './drawer-client';
+    export { createUnifiedIO } from './unified-io-client';
+    /*
+    --------------------------------------------------------------------------------
+    B.4  src/shared/universal-registry.ts  (V7 — single registry + hot-swap)
+    --------------------------------------------------------------------------------
+    */
+    export type ComponentKind = 'canvas' | 'card' | 'panel' | 'overlay' | 'control' | 'primitive' | 'hook';
+    
+    export type ComponentCategory =
+    | 'chat' | 'docs' | 'media' | 'automation' | 'agents' | 'shell' | 'audit' | 'rbac'
+    | 'templates' | 'zlayers' | 'editor' | 'theme' | 'workspace' | 'presence' | 'search'
+    | 'notifications' | 'onboarding' | 'agent-canvas' | 'connection' | 'observability'
+    | 'vcard' | 'io' | 'generic';
+    
+    export interface ComponentSpec {
+    id: string; label: string; kind: ComponentKind; category: ComponentCategory;
+    slot?: string;
+    Component: ComponentType<Record<string, unknown>> | null;
+    capabilities: string[]; version: number;
+    author: 'system' | 'user' | 'agent'; tags: string[];
+    enabled: boolean; isDefault?: boolean;
+    }
+    
+    export interface ResolveContext { slot?: string; category?: ComponentCategory; kind?: ComponentKind; capabilitySlug?: string; }
+    export interface ResolvedComponent { spec: ComponentSpec; source: 'explicit' | 'capability' | 'category' | 'default'; }
+    
+    // register(spec) hot-swaps by id; subscribe()/getVersion() drive useSyncExternalStore.
+    export function register(spec: Omit<ComponentSpec, 'version'> & { version?: number }): ComponentSpec { ... }
+    export function resolve(ctx: ResolveContext): ResolvedComponent | null { ... }
+    /*
+    --------------------------------------------------------------------------------
+    B.5  src/shared/vcard.ts  (V7 — hierarchical node capability menu)
+    --------------------------------------------------------------------------------
+    */
+    export type VCardActionId =
+    | 'collapse' | 'expand' | 'pin' | 'fullscreen' | 'duplicate' | 'detach' | 'settings'
+    | 'connections' | 'thread' | 'remux' | 'inspect' | 'remove' | 'export' | 'history' | 'lock'
+    | 'new_thread' | 'branch' | 'merge' | 'clear_context' | 'export_transcript' | 'model_select'
+    | 'system_prompt' | 'temperature' | 'configure' | 'test_run' | 'view_schema' | 'enable_disable'
+    | 'permissions' | 'recall' | 'forget' | 'consolidate' | 'memory_export' | 'memory_import'
+    | 'file_open' | 'download' | 'upload' | 'version_history' | 'diff'
+    | 'health' | 'rate_limits' | 'switch_model' | 'test_connection' | 'usage';
+    
+    export interface VCardAction { id: VCardActionId; label: string; icon: string; enabled: boolean; hasSubmenu?: boolean; shortcut?: string; }
+    export type VCardCategory = 'chat' | 'tool' | 'memory' | 'file' | 'provider' | 'automation' | 'agent' | 'media' | 'document' | 'shell' | 'generic';
+    
+    export interface VCardState {
+    nodeId: string; collapsed: boolean; pinned: boolean; fullscreen: boolean;
+    locked: boolean; connectionsVisible: boolean; detached: boolean; category: VCardCategory;
+    }
+    
+    export const GLOBAL_ACTIONS: VCardAction[] = [
+    { id:'collapse', label:'Collapse', icon:'▾', enabled:true },
+    { id:'expand', label:'Expand', icon:'▴', enabled:true },
+    { id:'pin', label:'Pin', icon:'📌', enabled:true },
+    { id:'fullscreen', label:'Full Screen', icon:'⛶', enabled:true },
+    { id:'duplicate', label:'Duplicate', icon:'⧉', enabled:true },
+    { id:'detach', label:'Detach', icon:'↗', enabled:true },
+    { id:'settings', label:'Settings', icon:'⚙', enabled:true },
+    { id:'connections', label:'Connections', icon:'⤴', enabled:true },
+    { id:'thread', label:'Thread', icon:'💬', enabled:true },
+    { id:'remux', label:'Remux', icon:'🔀', enabled:true },
+    { id:'inspect', label:'Inspect', icon:'🔍', enabled:true },
+    { id:'history', label:'History', icon:'↻', enabled:true },
+    { id:'lock', label:'Lock', icon:'🔒', enabled:true },
+    { id:'export', label:'Export', icon:'↓', enabled:true },
+    { id:'remove', label:'Remove', icon:'✕', enabled:true },
+    ];
+    // CATEGORY_ACTIONS: Record<VCardCategory, VCardAction[]> — chat/tool/memory/file/provider subsets (see file).
+    /*
+    --------------------------------------------------------------------------------
+    B.6  src/shared/route-context.ts  (V7 — resolved surface / tier resolution)
+    --------------------------------------------------------------------------------
+    */
+    export type PlanTier = 'anonymous' | 'free' | 'trial' | 'pro' | 'enterprise';
+    export const TIER_RANK: Record<PlanTier, number> = { anonymous:-1, free:0, trial:0, pro:1, enterprise:2 };
+    
+    export interface AccountContext { accountId: string; providerId: string; planTier: PlanTier; }
+    export interface RouteContext { traceId: string; workspaceId: string; userId: string; providerIds: string[]; accounts: AccountContext[]; slotIds: string[]; variant?: string; }
+    export interface ResolvedAction { capabilityId: string; label: string; enabled: boolean; tierOverride?: { maxFileSize?: number; maxOptions?: number; customConfig?: Record<string, unknown> }; }
+    export interface ResolvedSlot { providerId: string; slotId: string; primitive: Primitive; component: UiComponent | null; tier: ResolutionTier; fromSystemDefault: boolean; accountTier: PlanTier; actions: ResolvedAction[]; }
+    export interface ResolvedSurface { traceId: string; workspaceId: string; slots: ResolvedSlot[]; resolvedAt: number; durationMs: number; }
+    /*
+    --------------------------------------------------------------------------------
+    B.7  src/components/canvas/LivingCanvas.tsx  (V7 — primary canvas shell contract)
+    --------------------------------------------------------------------------------
+    'use client';
+    // Replaces CanvasSurface. Integrates: streaming-native nodes (useStreamSlot),
+    // agent co-pilot overlay + HITL, semantic zoom (micro<0.5 / mid 0.5-2 / macro>2),
+    // intent autolayout (force-directed via layout-intent), vCard context menu,
+    // visual I/O bezier connections, Observability HUD (cost/latency per node).
+    // The shell is dumb (P2): renders whatever routeSync resolves.
+    export interface LivingCanvasProps {
+    workspaceId: string; userId: string; providerIds: string[];
+    accounts: AccountContext[]; slotIds?: string[]; variant?: string;
+    }
+    // key state: viewport, layouts, history(CommandStack), layoutIntent,
+    // pinned/collapsed/fullscreen/locked node sets, connections[], agentPlan, dragRef.
+    // uses: useResolvedNodes, useCanvasEvents, VCardMenu, ConnectionLayer,
+    //       ObservabilityHUD, AgentOverlay, CommandStack, QuadTree, computeLayout.
+    /*
+    --------------------------------------------------------------------------------
+    B.8  vivim-final BACKEND CAPABILITY CONTRACT (from COMBINED-PROMPTS.txt FILE 1)
+    --------------------------------------------------------------------------------
+    POST /api/interpret                 -> InterpretResponse
+    body: { text: string, ctx?: { conversationId?, providerId?, slaveId?, userId?, metadata?, canvasState?, activeSessionId? } }
+    res : { ok, capabilityId?, output?, text?, error?, traceId, latencyMs,
+            requiresConfirmation?, confirmation?: { token, prompt },
+            clarification?: { prompt, missing?, ambiguous?, options? } }
+    POST /api/capabilities/:id/execute  -> { ok, capabilityId, output, traceId, latencyMs }
+    body: { input?: Record<string,unknown>, ctx?: Partial<CapabilityContext> }
+    GET  /api/capabilities?surface=ui&category=&tag=
+    GET  /api/capabilities/:id
+    GET  /api/providers / GET /api/providers/:id/health
+    GET  /api/conversations / POST /api/conversations / POST /api/conversations/:id/send
+    ws://localhost:9420/ws
+    C->S: { type:'hello', sessionId, role:'frontend' }
+            { type:'subscribe', entityType, entityId }
+            { type:'canvas:*' | 'bridge:*', ... }
+    S->C: conversation:complete | conversation:block | capability:progress
+            capability:executed | canvas:mutated | config:changed
+    
+    export interface UnifiedCapability {
+    id: string; slug: string; name: string; description: string; category: string;
+    surfaces: ('cli'|'ui'|'workflow'|'mcp'|'api')[];
+    inputSchema: Record<string,unknown>; outputSchema: Record<string,unknown>;
+    handler: (input, ctx) => Promise<unknown>;
+    cliCommand?: { name: string; aliases: string[]; examples: string[] };
+    ui?: { component: string; position: string; group?: string; order: number; icon?: string; shortcut?: string; requiresConfirmation?: boolean };
+    uiAction?: { component: string; position: string; order: number };
+    workflowNodeType?: string; mcpToolName?: string;
+    apiEndpoint?: { method: string; path: string };
+    isAsync: boolean; requiresConfirmation: boolean; tags: string[];
+    }
+    
+    // ContentPart streaming payload (what nodes render as they stream):
+    export type ContentPart =
+    | { type:'text'; text: RichText; state?:'streaming'|'done'; lang?:string }
+    | { type:'reasoning'; text: RichText; state?:'streaming'|'done'; signature?:string }
+    | { type:'code'; text: string; language?: string }
+    | { type:'file'; mediaType: string; url: string; filename?: string; data?: string }
+    | { type:'tool-call'; toolCallId: string; toolName: string; input: Record<string,unknown>; state?: ToolCallState; approvalId?: string }
+    | { type:'tool-result'; toolCallId: string; output?: unknown; isError?: boolean }
+    | { type:'source'; sourceId: string; url?: string; title?: string; mediaType?: string }
+    | { type:'custom'; kind: string; data: unknown; state?: 'streaming'|'done' }
+    | { type:'error'; message: string; code?: string }
+    | { type:'meta'; key: string; value: unknown }
+    | { type:'step-start' };
+    /*
+    --------------------------------------------------------------------------------
+    B.9  V7 STORAGE CONTRACT LAYER (the seam V8 swaps for backend sync)
+    --------------------------------------------------------------------------------
+    src/storage/contracts/*.ts  (interfaces engines depend on — DO NOT change shape):
+    account-store, agent-store, audit-store, automation-store, canvas-definition-store,
+    capability-tier-store, document-edit-store, document-store, drawer-store,
+    media-store, notification-store, onboarding-store, presence-store, primitive-store,
+    provider-store, provider-type-store, rbac-store, search-index, shell-command-store,
+    template-store, ui-component-store, user-layout-store, workspace-store, z-layer-store
+    src/storage/impl/memory-*.ts  (current in-memory impls — V8 adds http-*.ts variants
+    that call the vivim-final backend, selected by VIVIM_BACKEND_URL env).
+    src/engines/index.ts          (canvas-layer-mounter, canvas-registry, capability-resolution,
+    capability-event-bus, workspace-engine, z-layer-engine, drawer-engine, rbac-engine,
+    audit-engine, presence-engine, notification-engine, template-engine, automation-builder,
+    agents-builder, media-engine, document-engine, plugin-system, plugin-hot-reload,
+    route-sync, route-sync-workspace, search-engine, annotation-engine, conceptual-model-service,
+    shell-command-engine, structured-logger, adaptive-workspace, media-bridge,
+    document-editor-engine)
+    
+    ================================================================================
+    END OF V8 MASTER PROMPT
+    ================================================================================

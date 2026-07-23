@@ -1,0 +1,14 @@
+{
+  "families": [
+    { "id": "fam:ai-chat", "slug": "ai-chat", "displayName": "AI Chat", "basePrimitive": "conversations" },
+    { "id": "fam:email", "slug": "email", "displayName": "Email", "basePrimitive": "conversations" },
+    { "id": "fam:messenger", "slug": "messenger", "displayName": "Messenger", "basePrimitive": "conversations" },
+    { "id": "fam:social", "slug": "social", "displayName": "Social", "basePrimitive": "conversations" },
+    { "id": "fam:custom", "slug": "custom", "displayName": "Custom", "basePrimitive": "conversations" }
+  ],
+  "slots": [
+    "chat.entry", "chat.sidebar", "chat.thread", "chat.bubble", "chat.composer",
+    "chat.send", "chat.attach", "chat.streaming", "chat.result", "chat.confirm",
+    "chat.error", "chat.header", "chat.actionBar"
+  ]
+}

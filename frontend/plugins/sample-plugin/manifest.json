@@ -1,0 +1,11 @@
+{
+  "name": "sample-plugin",
+  "version": "0.1.0",
+  "description": "Sample Vivim canvas plugin — proves G1-G3 work end-to-end.",
+  "author": "system",
+  "components": [
+    { "kind": "canvas-definition", "slug": "sample-plugin.glow-send", "path": "components/glow-send.json" },
+    { "kind": "ui-component-registry", "slot": "chat.send", "slug": "sample-plugin", "path": "components/glow-send.tsx" }
+  ],
+  "sdkHook": "src/sdk-hook.ts"
+}

@@ -1,0 +1,51 @@
+{
+  "taxonomies": [
+    {
+      "id": "cap:canvas:send",
+      "slug": "cap:message:send",
+      "displayName": "Send Message",
+      "minPlanTier": "free",
+      "baseActions": [{ "capabilityId": "cap:message:send", "label": "Send", "enabled": true }]
+    },
+    {
+      "id": "cap:canvas:composer",
+      "slug": "cap:message:compose",
+      "displayName": "Compose",
+      "minPlanTier": "free",
+      "baseActions": [{ "capabilityId": "cap:message:compose", "label": "Compose", "enabled": true }]
+    },
+    {
+      "id": "cap:canvas:attach",
+      "slug": "cap:attach",
+      "displayName": "Attach",
+      "minPlanTier": "free",
+      "baseActions": [
+        { "capabilityId": "cap:attach", "label": "Attach", "enabled": true },
+        { "capabilityId": "cap:attach:large", "label": "Large Attach", "enabled": true }
+      ]
+    },
+    {
+      "id": "cap:canvas:streaming",
+      "slug": "cap:response:stream",
+      "displayName": "Streaming",
+      "minPlanTier": "free",
+      "baseActions": [
+        { "capabilityId": "cap:response:stream", "label": "Stream", "enabled": true },
+        { "capabilityId": "cap:export:response", "label": "Export", "enabled": true }
+      ]
+    },
+    {
+      "id": "cap:canvas:export",
+      "slug": "cap:export",
+      "displayName": "Export",
+      "minPlanTier": "pro",
+      "baseActions": [{ "capabilityId": "cap:export", "label": "Export", "enabled": true }]
+    }
+  ],
+  "tiers": [
+    { "capabilityId": "cap:canvas:attach", "planTier": "enterprise", "maxFileSize": 100000000 },
+    { "capabilityId": "cap:canvas:composer", "planTier": "free", "customConfig": { "charLimit": 280 } },
+    { "capabilityId": "cap:canvas:attach", "planTier": "trial", "maxOptions": 1 },
+    { "capabilityId": "cap:canvas:result", "planTier": "enterprise", "customConfig": { "saveToWorkspace": true } }
+  ]
+}

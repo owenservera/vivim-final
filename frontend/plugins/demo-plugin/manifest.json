@@ -1,0 +1,20 @@
+{
+  "name": "demo-plugin",
+  "version": "0.1.0",
+  "description": "Vivim canvas plugin: demo-plugin",
+  "author": "system",
+  "components": [
+    {
+      "kind": "canvas-definition",
+      "slug": "demo-plugin.sample-def",
+      "path": "components/sample-def.json"
+    },
+    {
+      "kind": "ui-component-registry",
+      "slot": "chat.composer",
+      "slug": "demo-plugin",
+      "path": "components/sample-slot.tsx"
+    }
+  ],
+  "sdkHook": "src/sdk-hook.ts"
+}

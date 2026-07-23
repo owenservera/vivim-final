@@ -1,0 +1,252 @@
+     1→
+     2→
+     3→# ═══════════════════════════════════════════════════════════════
+     4→# PART FILE: 11-combinatorial-scenarios.md
+     5→# ═══════════════════════════════════════════════════════════════
+     6→
+     7→# DOC 11 — COMBINATORIAL DESIGN: ONE UI, MANY APPS, ANY REMIX
+     8→
+     9→> Companion to DOC 1–10. This document (1) formalizes the conceptual vision the user described — UI components as *representations of provider capabilities*, (2) defines the **component→provider registry tree** + the **workspace remix model**, and (3) generates **100 combinatorial scenarios** that the resolution engine + routers must handle for *any* provider type × *any* component type × *any* account tier, shared and not-shared, across workspaces.
+    10→
+    11→---
+    12→
+    13→## PART A — THE CONCEPTUAL VISION (what we are really building)
+    14→
+    15→### A.1 UI components = capability representations
+    16→
+    17→Every visible thing on the canvas is not "a widget." It is a **rendering of a capability** that a provider exposes.
+    18→
+    19→- The **send button** is the rendering of `cap:message:send`.
+    20→- The **message box / composer** is the rendering of `cap:message:compose`.
+    21→- The **thread** is the rendering of `cap:conversation:list`.
+    22→- The **streaming result** is the rendering of `cap:response:stream`.
+    23→
+    24→These capabilities are **shared across providers**. `cap:message:send` exists for ChatGPT, Gmail, WhatsApp, and Twitter. That is why we can have **one UI, many apps**: a single `chat.send` component can render the send action for 50 different providers, because the *capability* is the same even when the *provider* differs.
+    25→
+    26→### A.2 The component → provider registry tree
+    27→
+    28→Resolution is a **tree walk** from the most specific binding to the most generic:
+    29→
+    30→```
+    31→LEVEL 0  system built-in default          (hardcoded fallback, last resort)
+    32→   │
+    33→LEVEL 1  cross-type  (ownerId='global')   ← SHARED across ALL providers/families
+    34→   │
+    35→LEVEL 2  family      (ownerId=familyId)    ← SHARED across one family (ai-chat, email, ...)
+    36→   │
+    37→LEVEL 3  family+variant (ownerId=familyId, variant)
+    38→   │
+    39→LEVEL 4  provider    (ownerId=providerId)  ← provider-specific override
+    40→   │
+    41→LEVEL 5  provider+variant (ownerId=providerId, variant)  ← most specific
+    42→```
+    43→
+    44→Each level is a `UiComponent` row keyed by `(primitiveId, scope, ownerId, variant)`. The resolver walks **5 → 4 → 3 → 2 → 1 → 0** and returns the first hit. This is the 4-tier model extended to 6 explicit levels (the POC's hardcoded tool set is replaced by this data-driven tree).
+    45→
+    46→**Key insight:** the tree is *sparse*. Most providers have NO provider-level override, so they inherit the cross-type or family component. That is the "one UI, many apps" effect — 90% of providers render from shared rows; only the different ones get an override leaf.
+    47→
+    48→### A.3 Account tier gates the capability (not just the component)
+    49→
+    50→A component can resolve, but the *capability it represents* may be **tier-gated**:
+    51→
+    52→- `ProviderAccount.planTier` ∈ {anonymous, free, trial, pro, enterprise}
+    53→- `CapabilityTaxonomy.minPlanTier` — minimum tier to even see the capability
+    54→- `CapabilityTier` — per-tier UI overrides (e.g., `pro` gets an "export all" button the `free` tier doesn't)
+    55→
+    56→So resolution is **two-phase**:
+    57→1. **Component resolution** (the tree walk above) → *which UiComponent renders*.
+    58→2. **Capability gating** (tier check) → *whether it's enabled / what sub-actions show*.
+    59→
+    60→A `free` account on ChatGPT resolves the same `chat.send` component as `enterprise`, but `enterprise` additionally sees the `cap:export:all` action because its `CapabilityTier` unlocks it.
+    61→
+    62→### A.4 The workspace = the remix container
+    63→
+    64→A **workspace** binds a named set of `(provider, account)` pairs and chooses a **global UI component set**. The same global component (`chat.composer`) can be used in:
+    65→
+    66→- **Workspace A**: {ChatGPT(free), Gmail(free)} → composer renders with free-tier actions only.
+    67→- **Workspace B**: {ChatGPT(pro), Slack(enterprise)} → same `chat.composer` component, but now pro/enterprise actions appear because the accounts behind it are higher tier.
+    68→
+    69→The component is **shared**; the *resolution context* (which providers/accounts are in the workspace) changes what it renders and what it enables. This is the user's core ask: **combine XYZ providers (same type and/or different types) under one global UI, with different combinations of providers and accounts per workspace.**
+    70→
+    71→### A.5 What the engine + router must GENERATE
+    72→
+    73→Given the above, the generated system must, for *any* triple (providerType × componentType × accountTier), produce:
+    74→- a resolved `UiComponent` (or explicit `fromSystemDefault` fallback),
+    75→- a tier-gated action set,
+    76→- a per-workspace layout,
+    77→- and the routers (`cap:canvas:*`, `cap:conceptual:*`, `cap:conversation:*`) that serve it.
+    78→
+    79→The 100 scenarios below are the **acceptance matrix** for that generator.
+    80→
+    81→---
+    82→
+    83→## PART B — THE DIMENSIONS
+    84→
+    85→| Dim | Values |
+    86→|---|---|
+    87→| **Provider family** | ai-chat, email, messenger, social, custom |
+    88→| **Provider examples** | ChatGPT, Claude, Gemini (ai-chat); Gmail, Outlook (email); WhatsApp, Slack, Telegram (messenger); Twitter/X, LinkedIn (social); Notion, Linear (custom) |
+    89→| **Component (slot)** | chat.entry, chat.sidebar, chat.thread, chat.bubble, chat.composer, chat.send, chat.attach, chat.streaming, chat.result, chat.confirm, chat.error, chat.header, chat.actionBar |
+    90→| **Account tier** | anonymous, free, trial, pro, enterprise |
+    91→| **Resolution level** | system, cross-type, family, family+variant, provider, provider+variant |
+    92→| **Sharing** | shared (cross-type/family) vs specific (provider/provider+variant) |
+    93→| **Workspace** | single-provider, multi-same-family, multi-mixed-family, multi-account-same-provider |
+    94→
+    95→---
+    96→
+    97→## PART C — THE 100 COMBINATORIAL SCENARIOS
+    98→
+    99→> Each scenario: **ID | Providers(+family/+tier) | Component | Workspace | Expectation (resolution + gating) | Engine/Router action to generate**.
+   100→> `R#` = resolution level, `T#` = tier gate. "SHARED" = inherits cross-type/family row.
+   101→
+   102→### Block 1 — Cross-type shared components (the "one UI, many apps" core) [S01–S10]
+   103→
+   104→- **S01** | ChatGPT(free), Gmail(free), WhatsApp(free), Twitter(free) | chat.send | WS "AllFree" | All 4 resolve to **cross-type** `chat.send` (SHARED). R=cross-type, T=free (send enabled, no export). | Engine: resolve once, render 4 instances from one row. Router: `GET /api/conceptual/surface` returns same componentKey for all.
+   105→- **S02** | Claude(pro), Outlook(free) | chat.composer | WS "MixedTier" | Both use **cross-type** `chat.composer` (SHARED). Claude sees pro actions (attach multiple), Outlook sees free. R=cross-type, T=per-account. | Engine: same component, tier-gated action set differs per account. Router: per-account capability gating in `registerUiComponent`.
+   106→- **S03** | Gemini(free), LinkedIn(free) | chat.thread | WS "CrossFamily" | Both use **cross-type** `chat.thread` (SHARED) despite different families (ai-chat vs social). R=cross-type. | Engine: family-agnostic thread component. Router: `cap:conversation:list` serves both.
+   107→- **S04** | Slack(enterprise), Telegram(free) | chat.attach | WS "EntFree" | Cross-type `chat.attach` SHARED. Slack(ent) sees `cap:attach:large` (tier override), Telegram(free) sees basic. R=cross-type, T=enterprise/free. | Engine: `CapabilityTier` uiComponentOverride for ent. Router: `cap:attach` gated by `minPlanTier`.
+   108→- **S05** | ChatGPT(trial), Claude(trial) | chat.streaming | WS "Trials" | Cross-type `chat.streaming` SHARED, trial tier shows watermark. R=cross-type, T=trial. | Engine: trial watermark via `CapabilityTier` customConfigJson. Router: stream handler injects watermark flag.
+   109→- **S06** | Gmail(free), Outlook(free), ProtonMail(free) | chat.header | WS "EmailFree" | All 3 email providers use **cross-type** `chat.header` (SHARED) — header is family-agnostic. R=cross-type. | Engine: header renders provider name from context, not hardcoded. Router: `uiSlots` claim carries providerSlug.
+   110→- **S07** | Twitter(free), LinkedIn(free), Mastodon(free) | chat.actionBar | WS "SocialFree" | Cross-type `chat.actionBar` SHARED across social family + others. R=cross-type. | Engine: actionBar pulls actions from resolved capabilities per provider. Router: `cap:canvas:mutate` updates bar.
+   111→- **S08** | Notion(free), Linear(free) | chat.entry | WS "CustomFree" | Cross-type `chat.entry` SHARED for custom family. R=cross-type. | Engine: entry host is provider-agnostic. Router: `cap:canvas:spawn` for entry node.
+   112→- **S09** | ChatGPT(free), ChatGPT(enterprise) [TWO ACCOUNTS] | chat.send | WS "MultiAcct" | Same provider, two tiers, **same cross-type** component. Free acct: send only. Ent acct: send + schedule + export. R=cross-type, T differs per account. | Engine: per-account tier resolve. Router: accountId in resolution ctx.
+   113→- **S10** | anonymous (no account) | chat.composer | WS "Anon" | Cross-type `chat.composer` SHARED but **disabled** (minPlanTier=free blocks compose). R=cross-type, T=anonymous → gated off. | Engine: capability hidden when account tier < minPlanTier. Router: `cap:message:compose` returns 403 for anonymous.
+   114→
+   115→### Block 2 — Family-level shared overrides [S11–S20]
+   116→
+   117→- **S11** | ChatGPT(free), Claude(free), Gemini(free) | chat.bubble | WS "AiChat" | **family** `ai-chat.chat.bubble` SHARED across all 3 (no provider override). R=family. | Engine: family row wins over cross-type. Router: `resolveSurface` returns family tier.
+   118→- **S12** | Gmail(free), Outlook(free) | chat.thread | WS "Email" | **family** `email.chat.thread` SHARED (email threads differ from chat threads). R=family. | Engine: family-specific thread layout. Router: family regionLayout applied.
+   119→- **S13** | WhatsApp(free), Slack(free), Telegram(free) | chat.sidebar | WS "Messenger" | **family** `messenger.chat.sidebar` SHARED. R=family. | Engine: messenger sidebar with contact list. Router: `uiSlots` family claim.
+   120→- **S14** | Twitter(free), LinkedIn(free) | chat.composer | WS "Social" | **family** `social.chat.composer` SHARED (social composer has @mention UI). R=family. | Engine: social composer variant. Router: family component registered.
+   121→- **S15** | ChatGPT(pro), Claude(pro), Gemini(pro) | chat.streaming | WS "AiChatPro" | **family** `ai-chat.chat.streaming` SHARED + pro tier actions. R=family, T=pro. | Engine: family streaming + pro export. Router: `cap:response:stream` pro path.
+   122→- **S16** | Gmail(enterprise), Outlook(enterprise) | chat.attach | WS "EmailEnt" | **family** `email.chat.attach` SHARED + ent tier (large attachments). R=family, T=enterprise. | Engine: family attach + ent `CapabilityTier`. Router: `cap:attach:large` enabled.
+   123→- **S17** | WhatsApp(trial), Telegram(trial) | chat.bubble | WS "MsgTrial" | **family** `messenger.chat.bubble` SHARED + trial watermark. R=family, T=trial. | Engine: trial badge. Router: trial flag in payload.
+   124→- **S18** | Notion(free), Linear(free), Airtable(free) | chat.sidebar | WS "Custom" | **family** `custom.chat.sidebar` SHARED (custom apps share a doc-tree sidebar). R=family. | Engine: custom sidebar. Router: family regionLayout.
+   125→- **S19** | ChatGPT(free), Gmail(free) [mixed family] | chat.header | WS "MixedHeader" | **cross-type** `chat.header` (header has no family override, even though providers differ in family). R=cross-type. | Engine: header is cross-type even in mixed WS. Router: `resolveSurface` returns cross-type.
+   126→- **S20** | Slack(enterprise), Discord(enterprise) | chat.actionBar | WS "MsgEnt" | **family** `messenger.chat.actionBar` SHARED + ent actions (admin, broadcast). R=family, T=enterprise. | Engine: family actionBar + ent overrides. Router: `cap:canvas:mutate` ent actions.
+   127→
+   128→### Block 3 — Provider-specific overrides (the "different ones get a leaf") [S21–S30]
+   129→
+   130→- **S21** | ChatGPT(free) [has provider override] | chat.composer | WS "CGPT" | **provider** `chatgpt.chat.composer` (ChatGPT's custom composer). R=provider. | Engine: provider leaf wins. Router: `resolveSurface` returns provider tier.
+   131→- **S22** | Gmail(free) [provider override] | chat.send | WS "Gmail" | **provider** `gmail.chat.send` (Gmail send w/ "To" field). R=provider. | Engine: provider send component. Router: `cap:message:send` Gmail path.
+   132→- **S23** | Slack(enterprise) [provider override] | chat.thread | WS "Slack" | **provider** `slack.chat.thread` (channel-based threads). R=provider. | Engine: Slack thread UI. Router: `cap:conversation:list` Slack.
+   133→- **S24** | Twitter(free) [provider override] | chat.composer | WS "Twitter" | **provider** `twitter.chat.composer` (280-char counter). R=provider. | Engine: Twitter composer w/ counter. Router: provider component registered.
+   134→- **S25** | ChatGPT(pro) [provider + pro tier] | chat.streaming | WS "CGPTPro" | **provider** `chatgpt.chat.streaming` + pro export. R=provider, T=pro. | Engine: provider streaming + pro `CapabilityTier`. Router: pro stream path.
+   135→- **S26** | Gmail(enterprise) [provider + ent tier] | chat.attach | WS "GmailEnt" | **provider** `gmail.chat.attach` + ent large files. R=provider, T=enterprise. | Engine: Gmail attach + ent override. Router: `cap:attach:large` Gmail.
+   136→- **S27** | WhatsApp(free) [provider override] | chat.bubble | WS "WA" | **provider** `whatsapp.chat.bubble` (green bubbles). R=provider. | Engine: WA bubble styling. Router: provider component CSS.
+   137→- **S28** | LinkedIn(free) [provider override] | chat.actionBar | WS "LI" | **provider** `linkedin.chat.actionBar` (Connect, Message). R=provider. | Engine: LinkedIn actions. Router: `cap:canvas:mutate` LinkedIn.
+   138→- **S29** | Notion(free) [provider override] | chat.entry | WS "Notion" | **provider** `notion.chat.entry` (block-based entry). R=provider. | Engine: Notion entry. Router: `cap:canvas:spawn` Notion.
+   139→- **S30** | ChatGPT(free) [provider override] but family also exists | chat.bubble | WS "CGPTBubble" | **provider** `chatgpt.chat.bubble` wins over `ai-chat.chat.bubble`. R=provider (not family). | Engine: provider leaf beats family. Router: resolver returns provider tier.
+   140→
+   141→### Block 4 — Variant overrides (provider+variant / family+variant) [S31–S40]
+   142→
+   143→- **S31** | ChatGPT(free, variant=gemini-model) | chat.composer | WS "CGPTGem" | **provider+variant** `chatgpt.gemini.chat.composer` (Gemini-flavored composer on ChatGPT). R=provider+variant. | Engine: variant leaf wins. Router: variant in resolution ctx.
+   144→- **S32** | Claude(pro, variant=opus) | chat.streaming | WS "ClaudeOpus" | **provider+variant** `claude.opus.chat.streaming` (Opus extended thinking UI). R=provider+variant, T=pro. | Engine: variant streaming. Router: variant capability path.
+   145→- **S33** | Gmail(free, variant=workspace) | chat.send | WS "GmailWS" | **provider+variant** `gmail.workspace.chat.send` (workspace send w/ delegated send). R=provider+variant. | Engine: variant send. Router: variant `cap:message:send`.
+   146→- **S34** | ai-chat family (variant=voice) | chat.composer | WS "Voice" | **family+variant** `ai-chat.voice.chat.composer` (voice input composer for whole family). R=family+variant. | Engine: family variant composer. Router: family variant registered.
+   147→- **S35** | email family (variant=encrypted) | chat.attach | WS "EncEmail" | **family+variant** `email.encrypted.chat.attach` (PGP attach UI). R=family+variant. | Engine: family variant attach. Router: variant `cap:attach`.
+   148→- **S36** | ChatGPT(free, variant=gemini) but no provider+variant row | chat.bubble | WS "FallThru" | Falls back to **provider** `chatgpt.chat.bubble` (variant missing → walk up). R=provider. | Engine: variant miss → provider. Router: resolver walks up tree.
+   149→- **S37** | Claude(pro, variant=opus) but no provider+variant, no provider | chat.thread | WS "FallThru2" | Falls to **family** `ai-chat.chat.thread`. R=family, T=pro. | Engine: variant+provider miss → family. Router: family tier.
+   150→- **S38** | Gmail(free, variant=workspace) but only cross-type exists | chat.header | WS "FallThru3" | Falls to **cross-type** `chat.header`. R=cross-type. | Engine: all specific missing → cross-type. Router: cross-type returned.
+   151→- **S39** | Custom provider w/ variant only, no base | chat.entry | WS "VarOnly" | **provider+variant** wins even if provider base absent (variant is more specific). R=provider+variant. | Engine: variant present → use it. Router: variant resolution.
+   152→- **S40** | All levels present for chat.send | chat.send | WS "Full" | Resolver picks **provider+variant** (deepest). R=provider+variant. | Engine: deepest wins. Router: `resolveSurface` deepest tier.
+   153→
+   154→### Block 5 — Multi-provider workspaces (the remix) [S41–S50]
+   155→
+   156→- **S41** | ChatGPT(free)+Gmail(free) | chat.send | WS "Chat+Mail" | Both use cross-type `chat.send` SHARED in one WS. R=cross-type x2. | Engine: 2 instances, 1 component. Router: `cap:canvas:spawn` x2.
+   157→- **S42** | ChatGPT(pro)+Claude(free) | chat.streaming | WS "Pro+Free" | Cross-type `chat.streaming` SHARED; ChatGPT shows pro export, Claude doesn't. R=cross-type, T differs. | Engine: shared component, per-account tier. Router: per-account gating.
+   158→- **S43** | Gmail(free)+Slack(enterprise) | chat.attach | WS "Mail+Msg" | Cross-type `chat.attach` SHARED; Slack(ent) large files, Gmail(free) basic. R=cross-type, T differs. | Engine: shared + tier. Router: tier gate per account.
+   159→- **S44** | Twitter(free)+LinkedIn(pro) | chat.composer | WS "SocialMix" | Twitter uses **provider** composer, LinkedIn uses **provider** composer (both overridden, different). R=provider x2 (different leaves). | Engine: two provider leaves in one WS. Router: two provider components.
+   160→- **S45** | ChatGPT(free)+Claude(free)+Gemini(free) | chat.bubble | WS "3Ai" | All use **family** `ai-chat.chat.bubble` SHARED. R=family x3. | Engine: family shared x3. Router: family tier x3.
+   161→- **S46** | Gmail(free)+Outlook(free)+ProtonMail(free) | chat.thread | WS "3Mail" | All use **family** `email.chat.thread` SHARED. R=family x3. | Engine: family shared. Router: family regionLayout x3.
+   162→- **S47** | WhatsApp(free)+Slack(ent)+Telegram(free) | chat.sidebar | WS "3Msg" | All use **family** `messenger.chat.sidebar` SHARED; Slack(ent) admin node. R=family, T differs. | Engine: family shared + ent node. Router: ent action gated.
+   163→- **S48** | ChatGPT(free)+Gmail(free)+Twitter(free) [3 families] | chat.header | WS "3Fam" | Cross-type `chat.header` SHARED across 3 families. R=cross-type x3. | Engine: cross-type in mixed WS. Router: cross-type x3.
+   164→- **S49** | Notion(free)+Linear(free)+ChatGPT(pro) | chat.entry | WS "Custom+Ai" | Notion/Linear use **provider** entry, ChatGPT uses **family** `ai-chat.chat.entry` + pro. R=mixed. | Engine: mixed resolution in one WS. Router: mixed tiers.
+   165→- **S50** | ChatGPT(free)+ChatGPT(enterprise) [same provider, 2 accts] | chat.send | WS "DupProvider" | Cross-type `chat.send` SHARED; free=send, ent=send+schedule. R=cross-type, T differs per account. | Engine: same provider 2 accounts. Router: accountId in ctx.
+   166→
+   167→### Block 6 — Tier-gating edge cases [S51–S60]
+   168→
+   169→- **S51** | ChatGPT(anonymous) | chat.streaming | WS "AnonStream" | Component resolves (cross-type) but `minPlanTier=free` blocks streaming → **component shown, streaming disabled**. R=cross-type, T=anonymous gated. | Engine: component renders, action disabled. Router: 403 on stream.
+   170→- **S52** | Claude(trial) | chat.export [pro-only cap] | WS "TrialExport" | Component resolves, but `cap:export` minPlanTier=pro → hidden for trial. R=cross-type, T=trial → cap hidden. | Engine: cap hidden. Router: cap not in action set.
+   171→- **S53** | Gmail(enterprise) | chat.attach | WS "EntLarge" | Component + `CapabilityTier` ent override raises maxFileSize → large attach enabled. R=cross-type/family, T=ent override. | Engine: ent `CapabilityTier` applied. Router: `cap:attach:large` enabled.
+   172→- **S54** | ChatGPT(free→pro upgrade live) | chat.streaming | WS "Upgrade" | Mid-session tier change: component stays cross-type, pro export appears after upgrade. R=cross-type, T transitions free→pro. | Engine: re-resolve on tier change. Router: WS push of new action set.
+   173→- **S55** | Slack(free) | chat.actionBar [ent-only admin action] | WS "FreeAdmin" | ActionBar renders, but "Admin" action minPlanTier=ent → hidden for free. R=family, T=free gated. | Engine: action gated. Router: action absent.
+   174→- **S56** | Twitter(free) | chat.composer [char limit 280] | WS "TwitterLimit" | Provider composer enforces 280 via `CapabilityTier` customConfigJson. R=provider, T=free config. | Engine: provider config limit. Router: config in payload.
+   175→- **S57** | ChatGPT(enterprise) | chat.result [ent-only "save to workspace"] | WS "EntSave" | Result component + ent action "save to workspace". R=cross-type, T=ent override. | Engine: ent action shown. Router: ent cap enabled.
+   176→- **S58** | LinkedIn(trial) | chat.attach [trial=1 file] | WS "Trial1File" | Trial tier customConfig maxOptions=1. R=provider, T=trial. | Engine: trial limit. Router: limit in payload.
+   177→- **S59** | anonymous | chat.confirm | WS "AnonConfirm" | Confirm component cross-type but all mutating caps gated → confirm shows but disabled. R=cross-type, T=anonymous. | Engine: confirm disabled. Router: 403 on confirm.
+   178→- **S60** | ChatGPT(pro) but capability `minPlanTier` row missing | chat.send | WS "NoMin" | No minPlanTier → defaults free → send enabled for pro. R=cross-type, T=pro (no gate). | Engine: missing tier → free default. Router: enabled.
+   179→
+   180→### Block 7 — Missing-component fallbacks (system default) [S61–S70]
+   181→
+   182→- **S61** | BrandNewProvider(free) [no rows at all] | chat.composer | WS "NewProv" | No provider/family/cross-type → **system built-in default** composer. R=system. | Engine: system fallback. Router: `fromSystemDefault=true`.
+   183→- **S62** | NewFamilyProvider(free) [family+cross-type missing] | chat.thread | WS "NewFam" | No family, no cross-type → system default thread. R=system. | Engine: system default. Router: system tier.
+   184→- **S63** | ChatGPT(free) [provider override deleted] | chat.composer | WS "DelOverride" | Provider row deleted → falls to family `ai-chat.chat.composer`. R=family. | Engine: deleted leaf → walk up. Router: family tier.
+   185→- **S64** | Gmail(free) [family+provider deleted] | chat.send | WS "DelBoth" | Both deleted → cross-type `chat.send`. R=cross-type. | Engine: walk to cross-type. Router: cross-type.
+   186→- **S65** | Twitter(free) [everything deleted] | chat.composer | WS "DelAll" | All deleted → system default. R=system. | Engine: system fallback. Router: system.
+   187→- **S66** | ChatGPT(free) [provider row deprecated status] | chat.bubble | WS "Deprecated" | Status='deprecated' → skip, use family. R=family (deprecated skipped). | Engine: skip deprecated. Router: family tier.
+   188→- **S67** | Claude(free) [provider draft only] | chat.streaming | WS "Draft" | Draft (not published) → skip → family. R=family (draft skipped). | Engine: skip draft. Router: family.
+   189→- **S68** | Gmail(enterprise) [provider published, family deprecated] | chat.attach | WS "MixedStatus" | Provider published → use it (family deprecated irrelevant). R=provider. | Engine: published leaf wins. Router: provider.
+   190→- **S69** | NewProvider(free) [cross-type missing, system exists] | chat.header | WS "SysOnly" | Cross-type missing → system default header. R=system. | Engine: system. Router: system.
+   191→- **S70** | ChatGPT(free) [provider returns null component] | chat.send | WS "NullComp" | Resolver returns null → system default. R=system. | Engine: null → system. Router: system fallback.
+   192→
+   193→### Block 8 — Workspace-specific remixes (same global UI, different combos) [S71–S80]
+   194→
+   195→- **S71** | WS-A: ChatGPT(free) | chat.composer | WS-A | Cross-type composer, free actions. | Engine: WS-A ctx. Router: WS-A layout.
+   196→- **S72** | WS-B: ChatGPT(pro)+Claude(ent) [same composer as WS-A] | chat.composer | WS-B | SAME cross-type `chat.composer` but pro+ent actions appear. R=cross-type, T differs. | Engine: shared component, WS-B tier ctx. Router: WS-B action set.
+   197→- **S73** | WS-C: Gmail(free)+Twitter(free) [reuse chat.send] | chat.send | WS-C | Same cross-type `chat.send` reused in WS-C with different providers. R=cross-type. | Engine: component reused across WS. Router: WS-C instances.
+   198→- **S74** | WS-D: Slack(ent)+Discord(ent)+Telegram(free) | chat.sidebar | WS-D | Family `messenger.chat.sidebar` reused; ent actions for Slack/Discord. R=family, T mixed. | Engine: family shared, WS-D tiers. Router: WS-D.
+   199→- **S75** | WS-E: Notion(free)+Linear(free) [custom family reuse] | chat.entry | WS-E | Provider entries Notion/Linear; same global entry host. R=mixed. | Engine: WS-E remix. Router: WS-E.
+   200→- **S76** | WS-F: ChatGPT(free)+ChatGPT(ent) [dup provider, 2 WS] | chat.streaming | WS-F | Same provider 2 tiers in WS-F; ent sees export. R=cross-type, T per acct. | Engine: WS-F multi-account. Router: WS-F.
+   201→- **S77** | WS-G: empty (no providers) | chat.composer | WS-G | No providers → system default composer, disabled (no account). R=system, T=none. | Engine: empty WS. Router: system, disabled.
+   202→- **S78** | WS-H: 10 providers mixed families all free | chat.header | WS-H | Cross-type header SHARED across 10. R=cross-type x10. | Engine: 10 instances 1 component. Router: x10 spawn.
+   203→- **S79** | WS-I: switch from WS-A to WS-B live | chat.composer | WS-A→WS-B | Live switch: same component, action set updates via WS. R=cross-type, T transitions. | Engine: WS switch re-resolve. Router: WS push new actions.
+   204→- **S80** | WS-J: ChatGPT(pro) in WS-J AND Gmail(pro) in WS-J | chat.attach | WS-J | Both pro → both see large attach (cross-type + pro tier). R=cross-type, T=pro x2. | Engine: WS-J shared tier. Router: WS-J.
+   205→
+   206→### Block 9 — Conflict & collision resolution [S81–S90]
+   207→
+   208→- **S81** | ChatGPT(free)+Claude(free) both claim chat.entry host | chat.entry | WS "Collide" | Both resolve family `ai-chat.chat.entry` → single host, two panes. R=family (no collision, shared host). | Engine: shared host, multi-pane. Router: `cap:canvas:spawn` panes.
+   209→- **S82** | Gmail(free)+Outlook(free) both provider-override chat.send | chat.send | WS "Collide2" | Two provider leaves → two send buttons (one per provider). R=provider x2. | Engine: two leaves coexist. Router: two components.
+   210→- **S83** | ChatGPT(free)+Gmail(free) both want chat.header slot | chat.header | WS "HeaderCollide" | Cross-type shared → one header, provider name switches by active provider. R=cross-type. | Engine: one header, context switch. Router: `uiSlots` context.
+   211→- **S84** | Slack(ent)+Discord(free) both family messenger actionBar | chat.actionBar | WS "BarCollide" | Family shared + ent action only for Slack. R=family, T mixed. | Engine: shared bar, ent action scoped to Slack. Router: per-account action.
+   212→- **S85** | Two providers same family, one has provider override, other doesn't | chat.bubble | WS "Asym" | One uses provider leaf, other uses family. R=mixed (provider + family). | Engine: asymmetric resolution. Router: mixed tiers.
+   213→- **S86** | ChatGPT(free)+ChatGPT(ent) same WS, both resolve chat.send | chat.send | WS "DupProv" | Two accounts same provider → two send instances, different tiers. R=cross-type, T per acct. | Engine: per-account instances. Router: accountId ctx.
+   214→- **S87** | Provider A override chat.composer + Provider B cross-type | chat.composer | WS "MixedOverride" | A=provider leaf, B=cross-type → different components in same WS. R=mixed. | Engine: mixed. Router: mixed.
+   215→- **S88** | 3 providers all provider-override same slot | chat.streaming | WS "3Override" | 3 provider leaves → 3 different streaming UIs. R=provider x3. | Engine: 3 leaves. Router: 3 components.
+   216→- **S89** | Provider override + variant override same slot | chat.composer | WS "VarConflict" | Variant (more specific) wins over provider base. R=provider+variant. | Engine: variant precedence. Router: variant.
+   217→- **S90** | All 5 families in one WS, chat.header | chat.header | WS "AllFam" | Cross-type shared across all 5 families → one header. R=cross-type. | Engine: cross-type universal. Router: cross-type.
+   218→
+   219→### Block 10 — Generator stress / adversarial [S91–S100]
+   220→
+   221→- **S91** | 50 providers all free, all cross-type | chat.send | WS "Stress50" | 50 instances, 1 component. R=cross-type x50. | Engine: must virtualize (W2 QuadTree). Router: x50 spawn batch.
+   222→- **S92** | Provider with INVALID scriptUrl (malicious) | chat.composer | WS "Malicious" | Sandbox rejects inline; scriptUrl CSP-blocks. R=provider but **sandbox denies**. | Engine: CSP blocks. Router: sandbox policy enforced.
+   223→- **S93** | Provider row with `allowInlineScript:true` attempted | chat.composer | WS "InlineAttempt" | P8 invariant: forced false. R=provider, sandbox override ignored. | Engine: invariant enforced. Router: `allowInlineScript:false` hardcoded.
+   224→- **S94** | Capability with no UiComponent anywhere + no system default | chat.unknown | WS "NoComp" | Resolver returns null → render nothing / placeholder. R=none. | Engine: graceful null. Router: 404 component.
+   225→- **S95** | Provider family mismatch (provider.familyId points to wrong family) | chat.thread | WS "Mismatch" | Resolver uses provider.familyId → resolves family component of linked family. R=family (linked). | Engine: resolve via FK. Router: FK-based resolution.
+   226→- **S96** | Two workspaces same provider different tiers simultaneously | chat.streaming | WS-A(free)+WS-B(ent) | Same provider, WS-A free, WS-B ent → different action sets per WS. R=cross-type, T per WS. | Engine: WS-scoped tier. Router: WS ctx.
+   227→- **S97** | Provider deleted mid-session | chat.composer | WS "DelMid" | Live: component removed → re-resolve to family/cross-type. R transitions provider→family. | Engine: live re-resolve. Router: WS push.
+   228→- **S98** | Variant string with special chars / unicode | chat.composer | WS "UniVar" | Variant `café-ñ` → resolver matches exactly (no normalization). R=provider+variant. | Engine: exact match. Router: exact variant key.
+   229→- **S99** | All 13 slots resolved for 5 providers mixed tiers | all 13 | WS "FullMatrix" | Each slot resolves per (provider, tier) → full matrix. R=mixed across 13×5. | Engine: full matrix resolve. Router: `resolveSurface` returns 13 slots × 5.
+   230→- **S100** | Empty DB (fresh migrate, no seed) | chat.composer | WS "EmptyDB" | No rows → all system defaults, all disabled (no accounts). R=system x13, T=none. | Engine: system-only boot. Router: system defaults, disabled.
+   231→
+   232→---
+   233→
+   234→## PART D — WHAT THE GENERATOR MUST EMIT
+   235→
+   236→For the engine + router to satisfy S01–S100, the generated artifacts are:
+   237→
+   238→1. **`ConceptualModelService.resolveSurface(providerIds[], familyIds[], accountTiers[], workspaceId)`** — multi-provider, multi-tier, workspace-scoped resolution returning `ResolvedSlot[]` per provider, each with `{ primitive, component, tier, fromSystemDefault, accountTier, actions }`.
+   239→2. **`UiComponentStore.resolve(ctx)`** — 6-level tree walk (system→cross-type→family→family+variant→provider→provider+variant) with status filtering (skip draft/deprecated) and exact variant match.
+   240→3. **`CapabilityGating.resolveActions(capabilityId, planTier)`** — applies `minPlanTier` + `CapabilityTier` overrides to produce the visible/enabled action set.
+   241→4. **`WorkspaceResolver.getLayout(workspaceId)`** — returns per-workspace `UserComponentLayout` + which global components are reused vs overridden.
+   242→5. **Routers**: `cap:conceptual:surface` (multi-provider), `cap:canvas:spawn` (batch instances), `cap:canvas:mutate` (per-account actions), `cap:conversation:stream_blocks` (tiered), `registerCanvasLayerForwarder` (live WS re-resolve on tier/account/provider change).
+   243→6. **Sandbox enforcement** (P8): `allowInlineScript:false` forced; CSP from `SandboxPolicy`; variant keys exact-match.
+   244→
+   245→The 100 scenarios are the **acceptance matrix** — every one must pass `bun run devops verify-cross-surface` and the resolution engine unit tests.
+   246→
+   247→
+   248→
+   249→# ═══════════════════════════════════════════════════════════════
+   250→# PART FILE: 12-routing-logging-algorithm.md
+
+[showing lines 1-250 of 503; use offset=251 with limit to continue reading]
