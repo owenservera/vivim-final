@@ -1,0 +1,20 @@
+{
+  "slug": "demo-plugin.sample-def",
+  "name": "demo-plugin Sample Component",
+  "description": "A sample CanvasDefinition published by the demo-plugin plugin.",
+  "category": "plugin",
+  "html": "<div class=\"demo-plugin-root\">\n  <h3>demo-plugin</h3>\n  <p>This component was scaffolded by <code>vivim canvas scaffold demo-plugin</code>.</p>\n  <button data-action=\"ping\">Ping</button>\n</div>",
+  "css": ".demo-plugin-root {\n  font-family: ui-sans-serif, system-ui, sans-serif;\n  padding: 16px;\n  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);\n  border-radius: 8px;\n  color: #1f2937;\n}\n.demo-plugin-root h3 { margin: 0 0 8px; font-size: 16px; }\n.demo-plugin-root p { margin: 0 0 12px; font-size: 13px; color: #4b5563; }\n.demo-plugin-root button {\n  padding: 4px 12px;\n  border: 1px solid #1f2937;\n  background: white;\n  border-radius: 4px;\n  cursor: pointer;\n  font-size: 13px;\n}",
+  "sandbox": {
+    "allowCapabilities": [
+      "cap:canvas:ping"
+    ],
+    "allowNetwork": false,
+    "budgetMs": 5000,
+    "allowInlineScript": false
+  },
+  "tags": [
+    "scaffold",
+    "demo-plugin"
+  ]
+}

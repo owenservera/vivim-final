@@ -1,0 +1,1121 @@
+     1→     1→
+     2→     2→
+     3→     3→# ═══════════════════════════════════════════════════════════════
+     4→     4→# PART FILE: 00-the-vision.md
+     5→     5→# ═══════════════════════════════════════════════════════════════
+     6→     6→
+     7→     7→# The Vivim Canvas: One Screen, Everything, Live
+     8→     8→
+     9→     9→## What We're Building
+    10→    10→
+    11→    11→Imagine opening a single browser tab — and that tab is not a webpage. It's a **space**.
+    12→    12→
+    13→    13→Not a dashboard. Not an app. A living workspace where every piece of the interface is a thing you can grab, move, resize, replace, or let an agent create for you on the fly. Chat. Email. Code. Dashboards. They're all just **nodes on a surface**, floating in a boundless infinite canvas.
+    14→    14→
+    15→    15→Right now, most software gives you a fixed grid. You get a sidebar here, a header there, a chat window somewhere else, and if you want to change that layout, you file a feature request and wait six months. The interface is **frozen** at compile time. The developers decided what you see, and that's what you get.
+    16→    16→
+    17→    17→We're building the opposite.
+    18→    18→
+    19→    19→---
+    20→    20→
+    21→    21→## The Core Idea: The Interface Is Data, Not Code
+    22→    22→
+    23→    23→In Vivim, the UI is stored in a database. Not a config file. Not a JSON blob. Real database rows — one per UI component — with the actual HTML, CSS, and (sandboxed) JavaScript that makes up each piece of the screen.
+    24→    24→
+    25→    25→Every component lives in a table. Each row says: "Here's the markup. Here's the styling. Here's what it does. Here's who it belongs to." When you open the app, the system looks at what you need — which provider, which family of tools, which variant — and **resolves** the right components for the right slots on the canvas.
+    26→    26→
+    27→    27→Change a row in the database, and the interface changes. No rebuild. No deploy. No restart. The canvas is **hot-swappable** by design.
+    28→    28→
+    29→    29→This means:
+    30→    30→
+    31→    31→- A new version of the chat composer? Write the HTML/CSS, update the row, and it's live for every user.
+    32→    32→- A custom sidebar for a specific provider? Add a provider-scoped component, and it overrides the default.
+    33→    33→- A family-wide theme for all email interfaces? Store it as a component row scoped to the `email` family, and every email provider inherits it.
+    34→    34→- An agent builds a new UI panel while you watch? It writes a component row, and the node appears on your canvas in real time.
+    35→    35→
+    36→    36→The shell doesn't know or care what's inside each node. It just resolves and renders. That's the power of making the UI **data**.
+    37→    37→
+    38→    38→---
+    39→    39→
+    40→    40→## The Canvas: An Infinite, Programmable Space
+    41→    41→
+    42→    42→The single screen is an infinite canvas powered by React Flow. Every UI region — the chat header, the message thread, the composer, the sidebar, the action bar, the streaming results — is a **node** on this canvas.
+    43→    43→
+    44→    44→You can drag them. Resize them. Minimize them. Zoom in and out. Layer them by depth. Snap them to a grid. Undo any change. The canvas remembers where everything is, per user, per workspace.
+    45→    45→
+    46→    46→But here's what makes it more than a drawing tool:
+    47→    47→
+    48→    48→**Every node is connected to the backend.** When you drag the composer, its new position is saved to the database. When you resize the thread panel, that's persisted. When an agent spawns a new node — say, a live results panel for a streaming response — it appears on the canvas via a WebSocket event, and it stays where you put it.
+    49→    49→
+    50→    50→The canvas is not a static layout. It's a **living surface** where the interface reorganizes itself based on what you're doing, who you're talking to, and what the system needs to show you right now.
+    51→    51→
+    52→    52→---
+    53→    53→
+    54→    54→## Hot-Swappable Components: The Slot System
+    55→    55→
+    56→    56→Think of the canvas as a collection of **slots**. Each slot has a name — `chat.header`, `chat.thread`, `chat.composer`, `chat.sidebar`, `chat.actionBar`, and so on. These are the capability globals: the slots that any UI surface can fill.
+    57→    57→
+    58→    58→When you connect to a provider — say ChatGPT, or Gmail, or a custom tool — the system asks: "What components should fill these slots for *this* provider?"
+    59→    59→
+    60→    60→The answer comes from a **4-tier resolution system**:
+    61→    61→
+    62→    62→1. **Provider + variant**: If ChatGPT has a Gemini variant, use that component.
+    63→    63→2. **Provider canonical**: If not, use ChatGPT's own override.
+    64→    64→3. **Family + variant**: If the provider doesn't override, use the `ai-chat` family's version.
+    65→    65→4. **Family canonical**: Or the family's default.
+    66→    66→5. **Cross-type**: Or the universal default that works everywhere.
+    67→    67→6. **System built-in**: Or the hardcoded fallback.
+    68→    68→
+    69→    69→This means you can customize at any level. Override one slot for one provider. Override all slots for a whole family. Or let the system defaults handle everything. The resolution is automatic, deterministic, and driven entirely by data.
+    70→    70→
+    71→    71→When a new component is published — say, someone writes a better chat composer — it can be hot-swapped into any slot without touching any other code. The shell doesn't recompile. The canvas doesn't blink. The old component is gone, the new one is there, and the user never noticed the transition.
+    72→    72→
+    73→    73→---
+    74→    74→
+    75→    75→## Composable On the Fly: Agents as UI Builders
+    76→    76→
+    77→    77→This is where it gets powerful.
+    78→    78→
+    79→    79→Because the UI is data, **agents can build it**. A Vivim agent doesn't just answer questions — it can create, modify, and arrange UI components on your canvas in real time.
+    80→    80→
+    81→    81→Need a live dashboard that tracks your API usage? An agent can create a `UiComponent` row with the right HTML/CSS, assign it to a slot, and spawn a node on your canvas. It appears instantly via the WebSocket.
+    82→    82→
+    83→    83→Want to customize how a particular provider renders its results? The agent can write a provider-scoped component, publish it, and the resolution system picks it up. No human intervention needed.
+    84→    84→
+    85→    85→The canvas becomes a **programmable surface** where the interface evolves as you work. You're not just using software — you're co-creating it with your agents. They build the UI. You arrange it. They extend it. You refine it. The boundary between "user" and "builder" dissolves.
+    86→    86→
+    87→    87→---
+    88→    88→
+    89→    89→## The Conceptual Model: Family-Driven Surfaces
+    90→    90→
+    91→    91→Not every provider needs a completely different UI. An email provider and a chat provider share a lot of structural DNA — they both have a composer, a message list, a sidebar, a header. The differences are in the details: what the send button does, how threads are structured, what metadata is shown.
+    92→    92→
+    93→    93→The **conceptual model** captures this. Each provider belongs to a **family** — `ai-chat`, `email`, `messenger`, `social`, `custom`. Each family defines a **vocabulary** of primitives: the slots that are relevant to it. The `ai-chat` family might have `prompt-box`, `response-stream`, `tool-output`, `model-selector`. The `email` family might have `inbox-list`, `compose-window`, `attachment-bar`, `signature-editor`.
+    94→    94→
+    95→    95→These primitives are the building blocks. Families compose them. Providers override them. The resolution system decides which version wins.
+    96→    96→
+    97→    97→This means adding a new provider doesn't mean building a new UI from scratch. You declare its family, and the family's slot catalog and interaction grammar give you a working surface immediately. You only override what's different.
+    98→    98→
+    99→    99→---
+   100→   100→
+   101→   101→## Sandboxed, Secure, Live
+   102→   102→
+   103→   103→Every component runs in a sandboxed iframe. No inline script. No access to the parent page. Communication happens through a MessageChannel with a strict Content Security Policy. The system controls what each sandboxed component can do — which capabilities it can call, how much CPU time it gets, what network requests it can make.
+   104→   104→
+   105→   105→This isn't a restriction — it's a guarantee. Because every component is sandboxed, you can run untrusted code on the canvas without worrying about it breaking the shell. An agent can drop in a component written by a stranger, and it's safe. A provider can ship its own UI, and it can't snoop on other providers.
+   106→   106→
+   107→   107→The sandbox is invisible to the user. Components render, interact, stream results, and feel native. But underneath, they're isolated and controlled.
+   108→   108→
+   109→   109→---
+   110→   110→
+   111→   111→## Progressive Results: Streaming Into the Canvas
+   112→   112→
+   113→   113→When you send a message to an AI provider, the response doesn't appear all at once. It streams in — text blocks, thinking blocks, code blocks, citations, tool outputs, images, artifacts. Each block arrives as a `StreamBlock` with a kind and an index.
+   114→   114→
+   115→   115→The canvas renders these progressively. A `StreamingSlot` shows the response building in real time. A `ResultSlot` organizes completed blocks. You see the AI thinking, writing code, fetching data, and assembling the answer — all as live nodes on the canvas, not a static text box.
+   116→   116→
+   117→   117→This is the "progressive results" model. The interface doesn't wait for the backend to finish. It renders what's available, when it's available, where it's available. The canvas is always live.
+   118→   118→
+   119→   119→---
+   120→   120→
+   121→   121→## What This Enables (The Vision)
+   122→   122→
+   123→   123→**One screen, everything.** Chat. Email. Code. Dashboards. Agents. Projects. Knowledge bases. All on one canvas. No tab switching. No context loss. You see everything at once, arranged the way you want.
+   124→   124→
+   125→   125→**The interface is yours.** Drag nodes. Resize panels. Minimize what you don't need. Zoom into what matters. Save layouts as presets. Share them with your team. The canvas adapts to how you work, not the other way around.
+   126→   126→
+   127→   127→**Agents build the UI.** Not just answer questions — *build the interface*. Create components. Arrange nodes. Customize surfaces. The canvas is a programmable space where agents and humans co-create the experience.
+   128→   128→
+   129→   129→**New providers, instant surfaces.** Add a provider, declare its family, and you get a working UI. Override what's different. The resolution system handles the rest. No migrations. No rebuilds. Just data.
+   130→   130→
+   131→   131→**Everything is live.** WebSocket events spawn and dismiss nodes in real time. Streaming responses render block by block. Changes propagate instantly. The canvas never feels stale.
+   132→   132→
+   133→   133→**Everything is safe.** Sandboxed iframes. CSP. MessageChannel bridges. No inline script. The shell is inviolable. You can run untrusted code on the canvas without risk.
+   134→   134→
+   135→   135→---
+   136→   136→
+   137→   137→## The Technical Truth
+   138→   138→
+   139→   139→Under the hood, this is:
+   140→   140→
+   141→   141→- **Backend**: Bun + TypeScript (strict) + Prisma v6.5 (SQLite). 13 engines. A `ConceptualModelService` that resolves which component wins for which slot. A `CanvasLayerMounter` that emits spawn/dismiss events.
+   142→   142→- **Frontend**: Vite + React + @xyflow/react (React Flow). A single `CanvasSurface` component. A `UIComponentRegistry` that maps slot IDs to components. Hooks that fetch, resolve, and render.
+   143→   143→- **Data**: 54 database tables. `ProviderType` (families). `Primitive` (vocabulary). `UiComponent` (the HTML/CSS/script per slot). `UserComponentLayout` (where nodes live on the canvas). `StreamBlock` (progressive results).
+   144→   144→- **Transport**: HTTP for CRUD. WebSocket for live events. Capability-backed routes — every operation is a `UnifiedCapability` that works across CLI, UI, API, and MCP.
+   145→   145→
+   146→   146→The frontend shell is deliberately thin. It doesn't know what's inside each node. It just resolves, renders, and arranges. The richness lives in the registry, the database, and the components themselves.
+   147→   147→
+   148→   148→That's the point. The shell is **dumb** by design. The data is **smart**. And the agents are **creative**.
+   149→   149→
+   150→   150→---
+   151→   151→
+   152→   152→## In One Sentence
+   153→   153→
+   154→   154→We're building a single infinite canvas where the entire UI is database-driven, hot-swappable, sandboxed, agent-buildable, and live — so that the interface isn't something you use, it's something you **compose**, and it composes itself.
+   155→   155→
+   156→   156→
+   157→   157→
+   158→   158→# ═══════════════════════════════════════════════════════════════
+   159→   159→# PART FILE: 01-overview-and-vision.md
+   160→   160→# ═══════════════════════════════════════════════════════════════
+   161→   161→
+   162→   162→# DOC 1 — PROJECT OVERVIEW & THE CANVAS VISION (vivim-final)
+   163→   163→
+   164→   164→> This is the single most important context file. Read it first. It explains what vivim-final is, what the unified canvas is, and the invariant rules you MUST NOT break when you build.
+   165→   165→
+   166→   166→## 1. What vivim-final is
+   167→   167→
+   168→   168→`vivim-final` is **cap-store v1 Knowledge Graph Rebuild** — a local-first AI conversation platform. It is NOT a generic web app; it is a capability-driven system where **every user operation is a `UnifiedCapability`** and the UI is generated from a database-backed model, not hardcoded React branches.
+   169→   169→
+   170→   170→- **Runtime:** Bun
+   171→   171→- **Language:** TypeScript (strict, ESNext, `.js` import extensions required)
+   172→   172→- **ORM:** Prisma v6.5 (SQLite)
+   173→   173→- **Frontend:** Vite + React + **@xyflow/react (React Flow)** for the canvas
+   174→   174→- **Linter:** Biome
+   175→   175→
+   176→   176→The PRIMARY frontend surface is the **unified infinite canvas** (`web/ui/src/features/canvas/CanvasSurface.tsx`). It renders every UI region as a swappable, data-driven node. A single React Flow instance IS the shell. There is no second registry — `UIComponentRegistry` IS the `nodeTypes` map.
+   177→   177→
+   178→   178→## 2. The Canvas Vision (PRD-VIVIM-CANVAS-UNIFIED-SURFACE)
+   179→   179→
+   180→   180→> "Redesign the primary user UI as an **infinite, programmable HTML canvas** where layers (chat, system, automation, agents, projects, knowledge, designer) are **swapped in on demand**. The shell is pure HTML — re-programmable by design — shipping with a robust closed set of core primitives. The canvas is an **oracle**: global access, global visibility, agentic-native, configurable by primitives."
+   181→   181→
+   182→   182→Concrete realization = the **modular UI system**:
+   183→   183→- A DB-backed **`ProviderType` (family)** conceptual model
+   184→   184→- A **`UiComponent`** node that stores hot-swappable UI code (html/css/js + sandbox), resolved through a 4-tier precedence and rendered as canvas nodes.
+   185→   185→
+   186→   186→## 3. THE INVARIANTS (never violate — these are enforced and will fail audits)
+   187→   187→
+   188→   188→1. **Frontend = Backend (5.1):** A capability/provider `slug` is the single link between backend and frontend. Render the contract + resolve slots. NEVER hardcode `if (slug === 'x')`. The POC (`html-shell-sdk-1`) violates this — it hardcodes tools/themes in React. Your build must not.
+   189→   189→2. **UI code is DATA, not code (P1):** `UiComponent` rows store html/css/sandboxJson. Surfaces are published from the DB, not compiled into the bundle.
+   190→   190→3. **Dumb shell (P2):** `CanvasSurface` is a thin React Flow host. Richness lives in `registry.resolve()`.
+   191→   191→4. **Governor Canon (P7/B1):** Only `ChromeGovernor` touches CDP. No engine imports CDP transport. The canvas layer mounter emits events only — it never touches the DOM.
+   192→   192→5. **Sandboxed (P8):** `SandboxedLayer` renders components in an iframe with a CSP. NO inline `<script>` at def-time or render-time.
+   193→   193→6. **One Entry Point (25.7):** Every operation is a `UnifiedCapability`. CLI/UI/API are thin shells over `POST /api/interpret` and `/api/capabilities/:id/execute`.
+   194→   194→7. **Store Contracts (B2):** Engines depend on `src/storage/contracts/*`, never `src/storage/impl/*`.
+   195→   195→8. **Type safety:** No `any`. Use `unknown` + narrowing. Zod at boundaries.
+   196→   196→9. **FRONTEND=BACKEND cross-surface:** A capability must resolve across CLI, API, MCP, and UI. Verify with `bun run devops verify-cross-surface`.
+   197→   197→
+   198→   198→## 4. The DB-Driven Protocol rule (P1)
+   199→   199→
+   200→   200→Provider-specific composer selectors, send methods, capture patterns, fetch URL patterns, and DOM selectors live in the DB (`ProviderEndpoint` rows, seeded from `seeds/providers/*.json`). NEVER hardcode these in TypeScript. New providers: write JSON → `bun run seed`.
+   201→   201→
+   202→   202→## 5. What the POC (`dev-poc/canvas/html-shell-sdk-1`) IS and IS NOT
+   203→   203→
+   204→   204→The POC is a **standalone Next.js 15 + React 19 + Tailwind/shadcn** playground that proves a *generic* drawing-canvas SDK: an EventBus, CommandStack (undo/redo), QuadTree (spatial index), Scene, CanvasEngine, 8 tools (select/pan/rectangle/ellipse/line/text/freehand/connection), 5 renderers, theme switcher, and a `.zip` SDK download. It is a **SOTA reference for low-level canvas rendering mechanics** (rAF loop, spatial indexing, command pattern, plugin API) — NOT a model for how vivim's UI surface works.
+   205→   205→
+   206→   206→**Gap (why we need you):** The POC knows nothing about vivim's conceptual model, capability system, DB, or React-Flow node graph. Its "canvas" is a freeform drawing board; vivim's "canvas" is a node-graph where each node is a *resolved capability/slot* rendered from `UiComponent` DB rows inside a sandboxed iframe. Your job is to bring the POC's rendering quality (smooth engine, spatial index, z-layers, tool system) INTO vivim's data-driven node canvas — without breaking the invariants above.
+   207→   207→
+   208→   208→## 6. How the stack boots (for context)
+   209→   209→
+   210→   210→- `bun run serve` starts engines only (no re-seeding, no migrate).
+   211→   211→- `bun run db:setup` = migrate + seed (first time only).
+   212→   212→- `bun run db:seed` = re-seed providers from JSON manifests.
+   213→   213→- Frontend dev server is Vite on `:5173`; backend on `:9420` (resolve via `.runtime/backend.port`).
+   214→   214→- Launch stack: `pwsh scripts/start-bg.ps1` (non-blocking). Tear down: `pwsh scripts/stop-all.ps1`.
+   215→   215→- NEVER use Playwright. Use the project's own CDP tools (`devops runtime-test engage/verify/debug`).
+   216→   216→
+   217→   217→## 7. Directory layout you must follow
+   218→   218→
+   219→   219→```
+   220→   220→src/
+   221→   221→  engines/        # One file per engine. CanvasLayerMounter, ConceptualModelService, etc.
+   222→   222→  storage/contracts/   # Store interfaces engines depend on
+   223→   223→  storage/impl/        # Implementations (never imported by engines directly)
+   224→   224→  schema/         # Zod schemas
+   225→   225→  server/         # HTTP routers (canvas-router.ts, conceptual-router.ts, conversation-router.ts, websocket.ts)
+   226→   226→  index.ts        # Public barrel
+   227→   227→shared/           # Types shared by backend (Bun) AND frontend (Vite): canvas-types.ts, stream-blocks.ts, conceptual-model.ts, ui-component.ts
+   228→   228→web/ui/src/
+   229→   229→  features/canvas/  # CanvasSurface.tsx + hooks (useConceptualModel, useCanvasEvents, useUiSlots, useStreamBlocks, useNodeTypes, ...)
+   230→   230→  ui/              # UIComponentRegistry (registry.ts), slots.ts (SLOT_IDS), defaults/, actions/registry.ts
+   231→   231→seeds/conceptual-model/seed.ts  # Idempotent boot seeder for ProviderType + Primitive + UiComponent
+   232→   232→prisma/schema.prisma            # All tables (54 tables; canvas model in L1b)
+   233→   233→```
+   234→   234→
+   235→   235→Frontend import rule: ALWAYS use `@/*` path alias → `./src/*`, `.js` extension in imports, `type` imports for types, no `any`.
+   236→   236→
+   237→   237→
+   238→   238→
+   239→   239→# ═══════════════════════════════════════════════════════════════
+   240→   240→# PART FILE: 02-data-model.md
+   241→   241→# ═══════════════════════════════════════════════════════════════
+   242→   242→
+   243→   243→# DOC 2 — DATA MODEL: PRISMA SCHEMA (canvas-relevant tables)
+   244→   244→
+   245→   245→> This is the source of truth for what data exists. The frontend MUST render from these rows. Mirrored types live in `shared/`.
+   246→   246→
+   247→   247→## 2.1 L1b: Provider-Type (family) + Primitive + UiComponent (the vivim-canvas conceptual model)
+   248→   248→
+   249→   249→```prisma
+   250→   250→model ProviderType {
+   251→   251→  id                     String  @id
+   252→   252→  slug                   String  @unique   // 'ai-chat' | 'email' | 'messenger' | 'social' | 'custom'
+   253→   253→  displayName            String  @map("display_name")
+   254→   254→  description            String?
+   255→   255→  slotCatalogJson        String  @default("[]") @map("slot_catalog_json")   // ordered primitive ids
+   256→   256→  regionLayoutJson       String  @default("{}") @map("region_layout_json")  // { primitiveId: RegionRect }
+   257→   257→  interactionGrammarJson String  @default("{}") @map("interaction_grammar_json")
+   258→   258→  basePrimitive          String  @default("conversations") @map("base_primitive")
+   259→   259→  version                Int     @default(1)
+   260→   260→  createdAt              BigInt  @map("created_at")
+   261→   261→  updatedAt              BigInt  @map("updated_at")
+   262→   262→  providers        ProviderDefinition[] @relation("ProviderTypeToDefinition")
+   263→   263→  familyPrimitives Primitive[]          @relation("PrimitiveFamily")
+   264→   264→  @@map("provider_type")
+   265→   265→}
+   266→   266→
+   267→   267→model Primitive {
+   268→   268→  id                String  @id
+   269→   269→  scope             String  @map("scope")   // 'cross-type' | 'family' | 'provider'
+   270→   270→  familyId          String? @map("family_id")
+   271→   271→  providerId        String? @map("provider_id")
+   272→   272→  label             String
+   273→   273→  description       String?
+   274→   274→  defaultRegionJson String  @default("{}") @map("default_region_json")  // RegionRect JSON
+   275→   275→  version           Int     @default(1)
+   276→   276→  createdAt         BigInt  @map("created_at")
+   277→   277→  updatedAt         BigInt  @map("updated_at")
+   278→   278→  family     ProviderType?       @relation("PrimitiveFamily", fields: [familyId], references: [id], onDelete: Cascade)
+   279→   279→  provider   ProviderDefinition? @relation("PrimitiveProvider", fields: [providerId], references: [id], onDelete: Cascade)
+   280→   280→  components UiComponent[]
+   281→   281→  @@index([scope, familyId], map: "idx_prim_scope_family")
+   282→   282→  @@index([scope, providerId], map: "idx_prim_scope_provider")
+   283→   283→  @@map("primitive")
+   284→   284→}
+   285→   285→
+   286→   286→model UiComponent {
+   287→   287→  id                String  @id
+   288→   288→  primitiveId       String  @map("primitive_id")
+   289→   289→  scope             String  @map("scope")   // 'cross-type' | 'family' | 'provider'
+   290→   290→  ownerId           String  @default("global") @map("owner_id")  // familyId | providerId | 'global'
+   291→   291→  variant           String? @map("variant")  // e.g. 'gemini', 'chatgpt'
+   292→   292→  componentKey      String  @map("component_key")  // e.g. 'ai-chat.gemini.composer'
+   293→   293→  displayName       String  @map("display_name")
+   294→   294→  html              String  @default("")
+   295→   295→  css               String  @default("")
+   296→   296→  scriptUrl         String? @map("script_url")
+   297→   297→  sandboxJson       String  @default("{}") @map("sandbox_json")   // SandboxPolicy JSON (P8)
+   298→   298→  constraintsJson   String  @default("{}") @map("constraints_json")  // ComponentConstraints
+   299→   299→  contractJson      String  @default("{}") @map("contract_json")    // ComponentContract
+   300→   300→  archetype         String? @map("archetype")  // 'list'|'form'|'display'|'overlay'|'card'|'grid'
+   301→   301→  version           Int     @default(1)
+   302→   302→  status            String  @default("published")  // 'draft'|'published'|'deprecated'
+   303→   303→  author            String  @default("system")     // 'system'|'user'|'agent'
+   304→   304→  tagsJson          String  @default("[]") @map("tags_json")
+   305→   305→  defaultRegionJson String  @default("") @map("default_region_json")
+   306→   306→  createdAt         BigInt  @map("created_at")
+   307→   307→  updatedAt         BigInt  @map("updated_at")
+   308→   308→  primitive Primitive @relation(fields: [primitiveId], references: [id], onDelete: Cascade)
+   309→   309→  @@unique([primitiveId, scope, ownerId, variant])   // ONE table encodes all 4 tiers
+   310→   310→  @@index([scope, ownerId], map: "idx_uc_scope_owner")
+   311→   311→  @@index([primitiveId], map: "idx_uc_prim")
+   312→   312→  @@map("ui_component")
+   313→   313→}
+   314→   314→```
+   315→   315→
+   316→   316→## 2.2 User layout + view presets (canvas node positions persist here)
+   317→   317→
+   318→   318→```prisma
+   319→   319→model UserComponentLayout {
+   320→   320→  id           String  @id
+   321→   321→  userId       String  @map("user_id")
+   322→   322→  componentKey String  @map("component_key")
+   323→   323→  instanceId   String  @map("instance_id")
+   324→   324→  workspaceId  String? @map("workspace_id")
+   325→   325→  x Float; y Float; z Float @default(0); w Float; h Float
+   326→   326→  minimized    Int    @default(0)
+   327→   327→  updatedAt    BigInt  @map("updated_at")
+   328→   328→  @@index([userId, workspaceId], map: "idx_ucl_user_workspace")
+   329→   329→  @@index([componentKey, instanceId], map: "idx_ucl_component_instance")
+   330→   330→  @@map("user_component_layout")
+   331→   331→}
+   332→   332→
+   333→   333→model ViewPreset {
+   334→   334→  id          String  @id
+   335→   335→  name        String
+   336→   336→  description String?
+   337→   337→  layoutJson  String  @map("layout_json")
+   338→   338→  workspaceId String? @map("workspace_id")
+   339→   339→  isPublic    Int     @default(0) @map("is_public")
+   340→   340→  createdBy   String  @default("system") @map("created_by")
+   341→   341→  createdAt   BigInt  @map("created_at")
+   342→   342→  updatedAt   BigInt  @map("updated_at")
+   343→   343→  @@index([workspaceId], map: "idx_vp_workspace")
+   344→   344→  @@index([isPublic], map: "idx_vp_public")
+   345→   345→  @@map("view_preset")
+   346→   346→}
+   347→   347→```
+   348→   348→
+   349→   349→## 2.3 Provider knowledge graph (L1) — what surfaces are built for
+   350→   350→
+   351→   351→```prisma
+   352→   352→model ProviderDefinition {
+   353→   353→  id               String  @id
+   354→   354→  slug             String  @unique
+   355→   355→  displayName      String  @map("display_name")
+   356→   356→  description      String?
+   357→   357→  category         String  @default("ai")
+   358→   358→  providerType     String  @default("llm") @map("provider_type")
+   359→   359→  // ... (capabilitiesJson/modelsJson DEPRECATED — use rows)
+   360→   360→  providerTypeId   String? @map("provider_type_id")   // FK → ProviderType (family link)
+   361→   361→  providerTypeRef  ProviderType? @relation("ProviderTypeToDefinition", fields: [providerTypeId], references: [id], onDelete: SetNull)
+   362→   362→  endpoints        ProviderEndpoint[]
+   363→   363→  capabilities     ProviderCapability[]
+   364→   364→  models           ProviderModel[]
+   365→   365→  accounts         ProviderAccount[]
+   366→   366→  providerSessions ProviderSession[]
+   367→   367→  conversations    Conversation[]
+   368→   368→  @@map("provider_definition")
+   369→   369→}
+   370→   370→
+   371→   371→model ProviderEndpoint {
+   372→   372→  id            String @id
+   373→   373→  providerId    String @map("provider_id")
+   374→   374→  url           String
+   375→   375→  label         String
+   376→   376→  endpointType  String @default("landing") @map("endpoint_type")
+   377→   377→  selectorsJson String @default("{}") @map("selectors_json")
+   378→   378→  composerType    String @default("textarea") @map("composer_type")  // 'textarea'|'contenteditable'|'prosemirror'|'quill'
+   379→   379→  sendMethod      String @default("both") @map("send_method")        // 'enter_key'|'button_click'|'both'
+   380→   380→  contentEditable Int    @default(0) @map("content_editable")
+   381→   381→  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+   382→   382→  @@map("provider_endpoint")
+   383→   383→}
+   384→   384→
+   385→   385→model ProviderCapability {
+   386→   386→  id                  String @id
+   387→   387→  providerId          String @map("provider_id")
+   388→   388→  globalCapabilityId  String @map("global_capability_id")
+   389→   389→  uiComponentOverride String? @map("ui_component_override")   // JSON map → uiSlots
+   390→   390→  // ... many ui*Override columns for data-driven UI
+   391→   391→  confidence  Float @default(1.0)
+   392→   392→  // @@unique([providerId, globalCapabilityId])
+   393→   393→  @@map("provider_capability")
+   394→   394→}
+   395→   395→```
+   396→   396→
+   397→   397→## 2.4 Conversations + streaming (L4)
+   398→   398→
+   399→   399→```prisma
+   400→   400→model Conversation {
+   401→   401→  id String @id
+   402→   402→  userId String; providerSessionId String; providerId String
+   403→   403→  title String?; state String @default("active")
+   404→   404→  messageCount Int @default(0)
+   405→   405→  contextJson String @default("{}")
+   406→   406→  // ... projectId, topicId, source, externalId, providerConversationUrl, importJobId
+   407→   407→  messages    ConversationMessage[]
+   408→   408→  streamBlocks StreamBlock[]
+   409→   409→  @@map("conversation")
+   410→   410→}
+   411→   411→
+   412→   412→model ConversationMessage {
+   413→   413→  id String @id
+   414→   414→  conversationId String
+   415→   415→  role String   // 'user' | 'assistant' | 'system'
+   416→   416→  content String?
+   417→   417→  blocksJson String @default("[]") @map("blocks_json")  // DEPRECATED — source of truth is StreamBlock
+   418→   418→  blockCount Int @default(0)
+   419→   419→  // ... parentMessageId, sequenceIndex, model, metadataJson
+   420→   420→  streamBlocks StreamBlock[]
+   421→   421→  @@map("conversation_message")
+   422→   422→}
+   423→   423→
+   424→   424→model StreamBlock {
+   425→   425→  id String @id
+   426→   426→  conversationId String
+   427→   427→  messageId String
+   428→   428→  blockIndex Int @map("block_index")
+   429→   429→  blockKind String @map("block_kind")   // text|thinking|code|artifact|image|citation|tool_use|error|meta
+   430→   430→  blockData String @map("block_data")
+   431→   431→  blockMeta String @default("{}") @map("block_meta")
+   432→   432→  @@unique([conversationId, messageId, blockIndex])
+   433→   433→  @@map("stream_block")
+   434→   434→}
+   435→   435→```
+   436→   436→
+   437→   437→## 2.5 Key point for the agent
+   438→   438→
+   439→   439→- The **canvas model tables already exist** (no new migrations needed — PRD risk note: "No new migrations"). You ADD rows (UiComponent seeds) and routes/engines, not tables.
+   440→   440→- 4 families seeded: `ai-chat`, `email`, `messenger`, `social`.
+   441→   441→- 53 `primitive` rows, 22 `ui_component` rows, 63 `provider_definition` rows, 4 `provider_type` rows, 48 `conversation` rows currently in DB.
+   442→   442→- Most `provider_capability`/`capability_taxonomy` tables are EMPTY (capability system is partially seeded). Conversations ARE populated (48 rows, 16 stream_blocks) — good test data.
+   443→   443→
+   444→   444→
+   445→   445→
+   446→   446→# ═══════════════════════════════════════════════════════════════
+   447→   447→# PART FILE: 03-shared-types.md
+   448→   448→# ═══════════════════════════════════════════════════════════════
+   449→   449→
+   450→   450→# DOC 3 — SHARED TYPES (the contract bridge between backend & frontend)
+   451→   451→
+   452→   452→> These files in `shared/` are imported by BOTH Bun backend and Vite frontend. They are the exact shapes your components and engines must speak. Keep them in sync.
+   453→   453→
+   454→   454→## 3.1 `shared/canvas-types.ts` — CanvasDefinition / LayerHost / SandboxPolicy
+   455→   455→
+   456→   456→```ts
+   457→   457→export type PrimitiveKind = 'workspace'|'projects'|'knowledge'|'agents'|'providers'|'conversations'
+   458→   458→export type LayerCategory = 'system'|'chat'|'automation'|'agents'|'projects'|'knowledge'|'designer'|'plugin'
+   459→   459→export type LayerAuthor = 'system'|'user'|'agent'
+   460→   460→export type LayerStatus = 'draft'|'published'|'deprecated'
+   461→   461→export type InstanceStatus = 'mounting'|'live'|'dismissed'|'error'
+   462→   462→
+   463→   463→export interface SandboxPolicy {
+   464→   464→  csp: string
+   465→   465→  allowNetwork: boolean
+   466→   466→  allowCapabilities: string[]   // which cap: slugs this sandboxed component may call
+   467→   467→  budgetMs: number
+   468→   468→  allowInlineScript: false       // ALWAYS false (P8)
+   469→   469→}
+   470→   470→
+   471→   471→export interface CanvasLayout { x:number; y:number; z:number; w:number; h:number; minimized?:boolean; detailZoom?:number }
+   472→   472→
+   473→   473→export interface LayerBinding {
+   474→   474→  regionId: string; role: string; selector: string
+   475→   475→  primitive?: PrimitiveKind; capabilitySlug?: string
+   476→   476→  direction: 'read'|'write'|'bidirectional'
+   477→   477→}
+   478→   478→
+   479→   479→export interface CanvasDefinition {
+   480→   480→  id:string; slug:string; name:string; description:string
+   481→   481→  category: LayerCategory; version:number
+   482→   482→  html:string; css:string; scriptUrl?:string
+   483→   483→  bindings: LayerBinding[]
+   484→   484→  layout: CanvasLayout
+   485→   485→  author: LayerAuthor
+   486→   486→  sandbox: SandboxPolicy
+   487→   487→  status: LayerStatus
+   488→   488→  tags: string[]
+   489→   489→  createdAt:number; updatedAt:number
+   490→   490→}
+   491→   491→
+   492→   492→export interface LayerHost {
+   493→   493→  mount(instanceId:string, def:CanvasDefinition): Promise<{ hostNodeId:string }>
+   494→   494→  unmount(instanceId:string): Promise<void>
+   495→   495→  isMounted(instanceId:string): boolean
+   496→   496→}
+   497→   497→```
+   498→   498→
+   499→   499→## 3.2 `shared/stream-blocks.ts` — progressive result blocks
+   500→   500→
+   501→   501→```ts
+   502→   502→export type ContentBlock =
+   503→   503→  | { kind:'text';      content:string; index:number }
+   504→   504→  | { kind:'thinking';  content:string; index:number }
+   505→   505→  | { kind:'code';      content:string; language?:string; index:number }
+   506→   506→  | { kind:'artifact';  content:string; artifactType?:string; index:number }
+   507→   507→  | { kind:'image';     url:string; alt?:string; index:number }
+   508→   508→  | { kind:'citation';  content:string; source?:string; index:number }
+   509→   509→  | { kind:'tool_use';  toolName:string; input:Record<string,unknown>; index:number }
+   510→   510→  | { kind:'error';     message:string; code?:string; index:number }
+   511→   511→  | { kind:'meta';      key:string; value:unknown; index:number }
+   512→   512→```
+   513→   513→
+   514→   514→## 3.3 `shared/conceptual-model.ts` — ProviderType / Primitive / RegionRect
+   515→   515→
+   516→   516→```ts
+   517→   517→export type ProviderTypeSlug = 'ai-chat'|'email'|'messenger'|'social'|'custom'
+   518→   518→export type PrimitiveScope = 'cross-type'|'family'|'provider'
+   519→   519→
+   520→   520→export interface RegionRect { x:number; y:number; z:number; w:number; h:number }
+   521→   521→
+   522→   522→export interface ComponentContract {
+   523→   523→  inputs: Record<string, { type:'string'|'number'|'boolean'|'object'|'array'; required:boolean; description?:string; default?:unknown }>
+   524→   524→  outputs: Array<{ event:string; payload?:Record<string,string>; description?:string }>
+   525→   525→  subscriptions: string[]
+   526→   526→}
+   527→   527→
+   528→   528→export interface SlotCatalogEntry { primitiveId:string; required:boolean; minInstances:number; maxInstances:number; accepts:string[]; contract?:ComponentContract }
+   529→   529→export interface GestureCatalog { send?:'click'|'enter'|'both'; navigate?:'click'|'tap'; contextMenu?:'right-click'|'long-press'; drag?:string[] }
+   530→   530→export interface LayoutRule { affinity?:'top'|'bottom'|'left'|'right'|'overlay'; anchorTo?:string }
+   531→   531→export interface InteractionGrammar { basePrimitive?:string; gesture?:GestureCatalog; layoutRules?:Record<string,LayoutRule>; scrollModel:'infinite'|'paginated'|'fixed' }
+   532→   532→
+   533→   533→export interface ProviderType {
+   534→   534→  id:string; slug:ProviderTypeSlug; displayName:string; description:string
+   535→   535→  slotCatalog: SlotCatalogEntry[]               // ordered vocabulary for this family
+   536→   536→  regionLayout: Record<string, RegionRect>      // canonical canvas placement
+   537→   537→  interactionGrammar: InteractionGrammar
+   538→   538→  basePrimitive: string; version:number
+   539→   539→}
+   540→   540→
+   541→   541→export interface Primitive {
+   542→   542→  id:string; scope:PrimitiveScope; familyId:string|null; providerId:string|null
+   543→   543→  label:string; description:string|null; defaultRegion:RegionRect; version:number
+   544→   544→}
+   545→   545→// + rowToProviderType / providerTypeToRow / rowToPrimitive / primitiveToRow helpers
+   546→   546→```
+   547→   547→
+   548→   548→## 3.4 `shared/ui-component.ts` — UiComponent (DB code node shape)
+   549→   549→
+   550→   550→```ts
+   551→   551→export type UiComponentStatus = 'draft'|'published'|'deprecated'
+   552→   552→export type UiComponentAuthor = 'system'|'user'|'agent'
+   553→   553→export type { PrimitiveScope as UiComponentScope }
+   554→   554→export type ComponentArchetype = 'list'|'form'|'display'|'overlay'|'card'|'grid'
+   555→   555→
+   556→   556→export interface ComponentConstraints { minWidth?:number; minHeight?:number; maxWidth?:number; maxHeight?:number; aspectRatio?:number; resizable:boolean; resizeAxes:'both'|'x'|'y'|'none' }
+   557→   557→export interface ComponentContractInput { type:'string'|'number'|'boolean'|'object'|'array'; required:boolean; description?:string; default?:unknown }
+   558→   558→export interface ComponentContractOutput { event:string; payload?:Record<string,string>; description?:string }
+   559→   559→export interface ComponentContract { inputs:Record<string,ComponentContractInput>; outputs:ComponentContractOutput[]; subscriptions:string[] }
+   560→   560→
+   561→   561→export interface UiComponent {
+   562→   562→  id:string; primitiveId:string; scope:PrimitiveScope; ownerId:string; variant:string|null
+   563→   563→  componentKey:string; displayName:string
+   564→   564→  html:string; css:string; scriptUrl:string|null
+   565→   565→  sandboxJson:string; constraintsJson:string; contractJson:string
+   566→   566→  archetype: ComponentArchetype|null
+   567→   567→  version:number; status:UiComponentStatus; author:UiComponentAuthor
+   568→   568→  defaultRegion: RegionRect|null; tags:string[]; createdAt:number; updatedAt:number
+   569→   569→}
+   570→   570→// + rowToUiComponent / uiComponentToRow
+   571→   571→```
+   572→   572→
+   573→   573→## 3.5 THE 4-TIER RESOLUTION PRECEDENCE (encode this EXACTLY)
+   574→   574→
+   575→   575→```
+   576→   576→provider + variant  (scope='provider',   ownerId=providerId, variant)
+   577→   577→provider canonical  (scope='provider',   ownerId=providerId, variant=null)
+   578→   578→family  + variant  (scope='family',      ownerId=familyId,   variant)
+   579→   579→family  canonical  (scope='family',      ownerId=familyId,   variant=null)
+   580→   580→cross-type          (scope='cross-type', ownerId='global')
+   581→   581→→ system built-in default
+   582→   582→```
+   583→   583→
+   584→   584→The resolver is `UiComponentStore.resolve(ctx)` and `ConceptualModelService.resolveSurface(providerId, familyId)` (see DOC 4). A resolved slot returns `{ primitive, component, tier, fromSystemDefault }`.
+   585→   585→
+   586→   586→
+   587→   587→
+   588→   588→# ═══════════════════════════════════════════════════════════════
+   589→   589→# PART FILE: 04-backend-engines.md
+   590→   590→# ═══════════════════════════════════════════════════════════════
+   591→   591→
+   592→   592→# DOC 4 — BACKEND ENGINES & ROUTERS (what exists, what to wire)
+   593→   593→
+   594→   594→> Backend = Bun + Prisma. Engines live in `src/engines/`. Routers in `src/server/`. Do NOT import CDP. Do NOT import `src/storage/impl/*` from engines — use contracts.
+   595→   595→
+   596→   596→## 4.1 `src/engines/conceptual-model-service.ts` (RESOLUTION BRAIN)
+   597→   597→
+   598→   598→```ts
+   599→   599→// Resolves which family a provider belongs to, the primitive (slot) catalog for
+   600→   600→// that family, and the winning UiComponent per slot via 4-tier precedence.
+   601→   601→export class ConceptualModelService {
+   602→   602→  constructor(providerTypes, primitives, components, providers?)
+   603→   603→  async resolveFamilyForProvider(providerId:string): Promise<ProviderType|null>
+   604→   604→  async resolveSurface(providerId:string, familyId:string): Promise<ResolvedSlot[]>
+   605→   605→  async resolveSlot(providerId, familyId, primitiveId): Promise<ResolvedSlot|null>
+   606→   606→  async listFamilies(): Promise<ProviderType[]>
+   607→   607→  async getFamilyBySlug(slug:string): Promise<ProviderType|null>
+   608→   608→  async resolveComponent(ctx:ResolveContext): Promise<UiComponent|null>
+   609→   609→}
+   610→   610→export interface ResolvedSlot { primitive:Primitive; component:UiComponent|null; tier:'provider'|'family'|'cross-type'|'system'; fromSystemDefault:boolean }
+   611→   611→```
+   612→   612→
+   613→   613→**Usage:** `resolveSurface` returns `ResolvedSlot[]`. Each `component` (when present) carries `html`/`css`/`sandboxJson` to render. The frontend hydrates nodes from this.
+   614→   614→
+   615→   615→## 4.2 `src/engines/canvas-layer-mounter.ts` (LIFECYCLE EMITTER)
+   616→   616→
+   617→   617→```ts
+   618→   618→// THIN emitter. No DOM, no CDP. Emits canvas:layer:spawned / canvas:layer:dismissed
+   619→   619→// on the CapabilityEventBus so the frontend useCanvasEvents can react live.
+   620→   620→export interface LayerDefinition { id:string; slug:string; category:string; layout:{x,y,z,w,h}; sandbox?:{allowCapabilities:string[]} }
+   621→   621→export interface MountedLayer { instanceId:string; definitionId:string; slug:string }
+   622→   622→export class CanvasLayerMounter {
+   623→   623→  constructor(private eventBus: CapabilityEventBus)
+   624→   624→  async spawn(def: LayerDefinition): Promise<MountedLayer>   // emits canvas:layer:spawned
+   625→   625→  async dismiss(instanceId:string): Promise<boolean>          // emits canvas:layer:dismissed
+   626→   626→  listMounted(): MountedLayer[]
+   627→   627→}
+   628→   628→```
+   629→   629→
+   630→   630→**KEY:** This is the bridge to the POC. The POC's CanvasEngine renders freeform draw nodes; vivim's `CanvasLayerMounter` spawns *conceptual* nodes. You may REPLACE the POC's internal Scene/Node model with a React-Flow node (CanvasDefinition) whose `html`/`css` come from a resolved `UiComponent`. The mounter's `spawn()` is what triggers the frontend node to appear over `WS /ws/canvas`.
+   631→   631→
+   632→   632→## 4.3 `src/server/conceptual-router.ts` — conceptual surface endpoints (BUILT)
+   633→   633→
+   634→   634→Endpoints already exist (PRD §7):
+   635→   635→| Endpoint | Method | Purpose |
+   636→   636→|---|---|---|
+   637→   637→| `/api/conceptual/families` | GET | All families |
+   638→   638→| `/api/conceptual/surface?providerId=` | GET | 4-tier resolved slots for a provider |
+   639→   639→| `/api/conceptual/provider-types/:slug` | GET | Family spec + UiComponents |
+   640→   640→| `/api/conceptual/resolve` | GET | Resolve single primitive |
+   641→   641→
+   642→   642→Response shape (`/api/conceptual/surface`):
+   643→   643→```json
+   644→   644→{ "ok":true, "providerId":"chatgpt", "family":"ai-chat",
+   645→   645→  "slots":[ { "primitive":{...}, "component":{ "id":"uc:...", "componentKey":"...", "html":"...", "css":"...", "scriptUrl":null }, "tier":"cross-type", "fromSystemDefault":false } ] }
+   646→   646→```
+   647→   647→
+   648→   648→## 4.4 `src/server/canvas-router.ts` — layer CRUD (BUILT, capability-backed)
+   649→   649→
+   650→   650→Every route = `registry.execute('cap:canvas:*', input)`. Routes:
+   651→   651→- `POST /api/canvas/layers` → `cap:canvas:add_layer`
+   652→   652→- `GET  /api/canvas/layers` → `cap:canvas:layer_list`
+   653→   653→- `PATCH /api/canvas/layers/:id` → `cap:canvas:set_layout` (validates `LayoutUpdateSchema` via Zod)
+   654→   654→- `DELETE /api/canvas/layers/:id` → `cap:canvas:remove_layer`
+   655→   655→- `GET /api/canvas/definitions` → `cap:canvas:list`
+   656→   656→- `POST /api/canvas/definitions` → `cap:canvas:define`
+   657→   657→- `POST /api/canvas/spawn` → `cap:canvas:spawn`
+   658→   658→- `GET /api/canvas/manifest` → `cap:canvas:observe {op:'manifest'}`
+   659→   659→- `POST .../import|export` → `cap:canvas:import|export`
+   660→   660→- `GET /api/canvas/observe?op=oracle|manifest` → `cap:canvas:observe`
+   661→   661→- `DELETE /api/canvas/instance/:id` → `cap:canvas:dismiss`
+   662→   662→- `POST /api/canvas/instance/:id/mutate` → `cap:canvas:mutate`
+   663→   663→
+   664→   664→**Wireability note:** The canvas tab already calls `GET/POST/PATCH /api/canvas/layers` and `/api/canvas/definitions`. Your engine work should extend these capabilities, not bypass them.
+   665→   665→
+   666→   666→## 4.5 `src/server/conversation-router.ts` — PENDING stream-blocks endpoint
+   667→   667→
+   668→   668→`GET /api/conversations/:id/stream-blocks` → `{ ok, conversationId, blocks: ContentBlock[], streaming: boolean }` is **NOT YET IMPLEMENTED** (PRD C6 pending). This is a build target. Blocks come from `StreamBlock` rows (keyed by `blockIndex`, `blockKind`). Wrap legacy `ConversationMessage.content` as one `text` block when no blocks exist.
+   669→   669→
+   670→   670→## 4.6 `src/server/websocket.ts` — PENDING `/ws/canvas` forwarder
+   671→   671→
+   672→   672→`registerCanvasLayerForwarder(eventBus)` must forward `canvas:layer:spawned` / `canvas:layer:dismissed` to subscribed browsers (mirror `registerCanvasMutationForwarder`). `useCanvasEvents` subscribes with `{ entityType:'canvas' }` on WS open. **PENDING (PRD C7).**
+   673→   673→
+   674→   674→## 4.7 Store Contracts you depend on (do NOT import impl)
+   675→   675→
+   676→   676→- `src/storage/contracts/primitive-store.ts` → `PrimitiveStore`
+   677→   677→- `src/storage/contracts/provider-type-store.ts` → `ProviderTypeStore`
+   678→   678→- `src/storage/contracts/ui-component-store.ts` → `UiComponentStore` (`resolve`, `resolveDomain`, `resolveContext`)
+   679→   679→- `src/storage/contracts/provider-store.ts` → `ProviderStore` (`getDefinition`)
+   680→   680→
+   681→   681→When you add canvas engine features, define the Store Contract FIRST, then implement in `src/storage/impl/`, then consume via contract in the engine.
+   682→   682→
+   683→   683→
+   684→   684→
+   685→   685→# ═══════════════════════════════════════════════════════════════
+   686→   686→# PART FILE: 05-frontend-canvas.md
+   687→   687→# ═══════════════════════════════════════════════════════════════
+   688→   688→
+   689→   689→# DOC 5 — FRONTEND CANVAS (web/ui/src/features/canvas)
+   690→   690→
+   691→   691→> The frontend is a Vite + React + **@xyflow/react (React Flow)** app. The canvas folder is the primary surface. Read this to know exactly what hooks/components exist and where to inject the POC's rendering power.
+   692→   692→
+   693→   693→## 5.1 `CanvasSurface.tsx` (the shell)
+   694→   694→
+   695→   695→- A single `ReactFlow` instance renders every UI region as a `CanvasNode`.
+   696→   696→- `nodeTypes = useNodeTypes()` — the registry IS the nodeTypes map.
+   697→   697→- `useConceptualModel(providerId)` fetches the resolved surface and builds nodes via `toNodes()`.
+   698→   698→- `useUiSlots()` applies backend `uiSlots` claims.
+   699→   699→- `useCanvasEvents(setNodes)` subscribes to live WS spawn/dismiss.
+   700→   700→- On mount, fetches `GET /api/canvas/layers` to restore persisted layout (drag/resize persisted via `PATCH /api/canvas/layers/:id`).
+   701→   701→- Depth-sorting by `data.z`; minimap (`MinimapNode`); undo/redo (`useCanvasHistory`); keyboard shortcuts; error boundary; loading/empty/welcome/first-run states; `CanvasDesigner` for authoring.
+   702→   702→- `SEED_NODES` (fallback when backend down): `chat.header/sidebar/entry/thread/composer/actionBar` with fixed positions.
+   703→   703→
+   704→   704→`CanvasNode.data` carries: `overrideSlug, providerSlug, sandbox[], definitionId, primitiveId, slotId, componentKey, fromSystemDefault, tier, z, layerId`.
+   705→   705→
+   706→   706→## 5.2 Hooks (what each does)
+   707→   707→
+   708→   708→| File | Role |
+   709→   709→|---|---|
+   710→   710→| `useConceptualModel.ts` | `GET /api/conceptual/surface?providerId=` → `{ family, slots }`. For each resolved `component`, calls `registerUiComponent(slotId, family, {componentKey, html, css, script:null})`. Exposes `toNodes()` → `CanvasNode[]`. `primitiveToSlotId()` maps `ai-chat.entry` → `chat.entry` (flat slot catalog). |
+   711→   711→| `useCanvasEvents.ts` | WS `/ws/canvas` subscribe → spawn/dismiss nodes live. |
+   712→   712→| `useUiSlots.ts` | Apply backend `uiSlots` claims to `UIComponentRegistry`. |
+   713→   713→| `useStreamBlocks.ts` | `GET /api/conversations/:id/stream-blocks` → `ContentBlock[]` (pending backend; hook exists). |
+   714→   714→| `useNodeTypes.tsx` | Builds `nodeTypes` registry (SLOT_IDS + `conceptual` type). |
+   715→   715→| `useManifest.ts` | Living manifest of mounted layers. |
+   716→   716→| `useZoomLevel.ts` | Contextual zoom (dot/card/full). |
+   717→   717→| `useCanvasHistory.ts` | Undo/redo command stack. |
+   718→   718→| `useKeyboardShortcuts.tsx` | Shortcut map. |
+   719→   719→| `useFirstRun.ts` | Onboarding state. |
+   720→   720→
+   721→   721→Components: `BrowserLayerHost.tsx`, `SandboxedLayer.tsx` (iframe + MessageChannel CSP bridge, P8), `ResultSlot.tsx`, `StreamingSlot.tsx`, `ZoomNode.tsx`, `CanvasDesigner.tsx`, `ThemeProvider.tsx`, `WelcomeOverlay.tsx`, `FirstRunWizard.tsx`, `FeatureTour.tsx`, `ErrorBoundary.tsx`, `LoadingSkeleton.tsx`, `MinimapNode.tsx`, `index.ts`.
+   722→   722→
+   723→   723→## 5.3 `web/ui/src/ui/` — the registry (slots are globals)
+   724→   724→
+   725→   725→- `registry.ts` — `UIComponentRegistry`: `register(slot, slug, component, {sandbox})`, `resolve(slot, {providerSlug, capabilitySlug})`, `listOverrides()`, `applyClaim(slot, slug, claim)`, `hotSwap()`. External store consumed by `useSlot` via `useSyncExternalStore`.
+   726→   726→- `slots.ts` — `SLOT_IDS` / `SlotMeta`. ALL namespaced `chat.*` (e.g. `chat.actionBar` NOT `actionBar`). The taxonomy pipeline's `CATEGORY_POSITIONS` MUST emit these exact values or `auto-populate` silently fails.
+   727→   727→- `defaults/` — one generic component per slot.
+   728→   728→- `defaults/index.tsx` — `registerDefaults()` (idempotent, called at boot).
+   729→   729→- `actions/registry.ts` — `ActionRegistry` / `ActionSpec`. Every interactive slot dispatches through it (Zod-validated params). **B8 invariant.**
+   730→   730→- `ui-component-renderer.ts` — `UiComponentPayload` type (`{ componentKey, html, css, script }`).
+   731→   731→- `registry/index.ts` — `CapabilityRegistry` ledger: `slug → bespoke capability renderer`.
+   732→   732→
+   733→   733→## 5.4 Slot catalog (capability globals) — current set
+   734→   734→
+   735→   735→`chat.entry` (host), `chat.sidebar`, `chat.thread`, `chat.bubble`, `chat.composer`, `chat.send`, `chat.attach`, `chat.streaming`, `chat.result`, `chat.confirm`, `chat.error`, `chat.header`, `chat.actionBar`.
+   736→   736→
+   737→   737→To add a new slot: add id to `SLOT_IDS` in `slots.ts`, give a generic default in `defaults/`, register in `registerDefaults()`. NEVER import a component directly into a surface — resolve through the registry.
+   738→   738→
+   739→   739→## 5.5 How `useConceptualModel` maps primitives → slots (CRITICAL for POC integration)
+   740→   740→
+   741→   741→`primitiveToSlotId('ai-chat.entry')` → splits on `.` → `chat.entry` → if `isSlotId`, returns it. So a `UiComponent` whose `primitiveId` is `prim:ai-chat:prompt-box` with `componentKey: 'prompt-box.ai-chat'` becomes the `chat.entry` node's rendered content. **This is how your POC-rendered component must plug in: as a `UiComponent` row whose resolved html/css renders inside the sandboxed node.**
+   742→   742→
+   743→   743→## 5.6 Frontend build/verify commands
+   744→   744→
+   745→   745→- `cd web/ui && bun run typecheck` (0 errors)
+   746→   746→- `cd web/ui && bun run build` (vite build, 0 errors)
+   747→   747→- `bun test tests/unit/ui/`
+   748→   748→- `bun run devops verify-cross-surface` (capability resolution across surfaces)
+   749→   749→
+   750→   750→
+   751→   751→
+   752→   752→# ═══════════════════════════════════════════════════════════════
+   753→   753→# PART FILE: 06-project-skeleton.md
+   754→   754→# ═══════════════════════════════════════════════════════════════
+   755→   755→
+   756→   756→# DOC 6 — PROJECT SKELETON & SCAFFOLD (what's where)
+   757→   757→
+   758→   758→> Directory map so the super-agent knows exactly where to write code. Relative to repo root `C:\0-BlackBoxProject-0\vivim-final`.
+   759→   759→
+   760→   760→## 6.1 Backend source (`src/`)
+   761→   761→```
+   762→   762→src/
+   763→   763→  cli/                  # CLI entry points (thin NL shells → POST /api/interpret)
+   764→   764→  config.ts             # Configuration
+   765→   765→  engines/
+   766→   766→    conceptual-model-service.ts   # ★ resolution brain
+   767→   767→    canvas-layer-mounter.ts       # ★ emits canvas:layer:spawned/dismissed
+   768→   768→    capability-engine.ts          # UnifiedCapability registry
+   769→   769→    conversation-manager.ts       # L4 session/state
+   770→   770→    stream-block-store.ts         # L4 progressive results
+   771→   771→    # ... 13 engines total (see AGENTS.md)
+   772→   772→  errors.ts             # custom error classes
+   773→   773→  ids.ts                # ULID
+   774→   774→  index.ts              # public barrel
+   775→   775→  schema/               # Zod schemas (boundary validation)
+   776→   776→  server/
+   777→   777→    canvas-router.ts        # ★ layer CRUD (cap:canvas:*)
+   778→   778→    conceptual-router.ts    # ★ surface/family/resolve endpoints
+   779→   779→    conversation-router.ts  # ★ PENDING stream-blocks endpoint
+   780→   780→    websocket.ts            # ★ PENDING /ws/canvas forwarder
+   781→   781→    index.ts                # router mount
+   782→   782→  storage/
+   783→   783→    contracts/   # ★ interfaces engines depend on (ProviderTypeStore, PrimitiveStore, UiComponentStore, ProviderStore)
+   784→   784→    impl/        # Prisma-backed implementations
+   785→   785→```
+   786→   786→
+   787→   787→## 6.2 Shared types (`shared/`) — imported by BOTH sides
+   788→   788→```
+   789→   789→shared/
+   790→   790→  canvas-types.ts       # CanvasDefinition, LayerHost, SandboxPolicy
+   791→   791→  conceptual-model.ts    # ProviderType, Primitive, RegionRect
+   792→   792→  ui-component.ts        # UiComponent (DB node)
+   793→   793→  stream-blocks.ts       # ContentBlock[]
+   794→   794→```
+   795→   795→
+   796→   796→## 6.3 Frontend (`web/ui/`)
+   797→   797→```
+   798→   798→web/ui/src/
+   799→   799→  features/canvas/      # ★ unified canvas surface
+   800→   800→    CanvasSurface.tsx   # the shell (React Flow)
+   801→   801→    components/         # BrowserLayerHost, SandboxedLayer, ResultSlot, StreamingSlot, CanvasDesigner, ZoomNode, ErrorBoundary, ...
+   802→   802→    hooks/              # useConceptualModel, useCanvasEvents, useStreamBlocks, useNodeTypes, useCanvasHistory, ...
+   803→   803→  ui/                   # capability globals (slots)
+   804→   804→    slots.ts            # SLOT_IDS (namespaced chat.*)
+   805→   805→    registry.ts         # UIComponentRegistry (the nodeTypes source)
+   806→   806→    defaults/           # generic component per slot
+   807→   807→    actions/registry.ts # ActionRegistry (B8)
+   808→   808→  index.ts
+   809→   809→```
+   810→   810→
+   811→   811→## 6.4 Database & seeds
+   812→   812→```
+   813→   813→prisma/schema.prisma    # 54 tables; canvas model in L1b
+   814→   814→seeds/
+   815→   815→  providers/*.json     # provider endpoints (selectors, send method, URL)
+   816→   816→  conceptual-model/seed.ts  # ★ idempotent family/primitive/component seeder (FAMILIES + CROSS_TYPE)
+   817→   817→```
+   818→   818→
+   819→   819→## 6.5 Devops scripts & docs
+   820→   820→```
+   821→   821→scripts/start-bg.ps1    # NON-BLOCKING stack launch (pwsh, never inline)
+   822→   822→scripts/start-all.ps1   # BLOCKING
+   823→   823→scripts/stop-all.ps1
+   824→   824→devops/                 # speckit-bridge, unified-gate, speckit-*
+   825→   825→docs/merged-design-v2/  # 00-08 engines/lifecycles, SOTA-00..09
+   826→   826→docs/roadmap/prds/PRD-VIVIM-CANVAS-UNIFIED-SURFACE.md  # ★ canvas PRD
+   827→   827→```
+   828→   828→
+   829→   829→## 6.6 POC reference (DO NOT wire as-is — violates invariants)
+   830→   830→```
+   831→   831→dev-poc/canvas/html-shell-sdk-1/   # Next.js 15 + React 19 standalone drawing SDK
+   832→   832→  src/lib/canvas-sdk/
+   833→   833→    index.ts        # CanvasEngine bootstrap
+   834→   834→    types.ts        # Node/Connection/ZLayer/ThemeTokens (world-space coords)
+   835→   835→    core/           # EventBus, CommandStack (undo/redo), QuadTree (hit-test), CanvasEngine
+   836→   836→    tools/          # 8 tools (select/move/resize/draw/erase/pan/zoom/comment)
+   837→   837→    renderers/      # 5 (canvas2d/webgl/svg/dom/wasm-canvas)
+   838→   838→```
+   839→   839→
+   840→   840→## 6.7 Scaffold recipes for new work
+   841→   841→
+   842→   842→**Add a UiComponent (the main way to add UI):**
+   843→   843→1. Add a row to `seeds/conceptual-model/seed.ts` (or DB-seed it via API).
+   844→   844→2. Run `bun run db:seed` (or insert into `ui_component` table).
+   845→   845→3. Frontend resolves it automatically via 4-tier precedence.
+   846→   846→
+   847→   847→**Add a canvas capability:**
+   848→   848→1. `src/engines/*caps.ts` → `makeCapability({ id:'cap:canvas:xxx', surfaces:['cli','ui','api'], ... })`.
+   849→   849→2. Bind NL pattern in `src/engines/nlcl/catalog.ts`.
+   850→   850→3. Register handler in `canvas-router.ts` that calls `registry.execute('cap:canvas:xxx', input)`.
+   851→   851→
+   852→   852→**Add a provider family UI:**
+   853→   853→1. Add `ProviderType` + `Primitive` rows (seed.ts).
+   854→   854→2. Add `UiComponent` rows for that family's slots.
+   855→   855→3. `useConceptualModel.primitiveToSlotId` maps primitive → `chat.*` slot.
+   856→   856→
+   857→   857→**NO new Prisma migrations** for canvas work (per PRD risk note). Add rows + routes/engines only.
+   858→   858→
+   859→   859→
+   860→   860→
+   861→   861→# ═══════════════════════════════════════════════════════════════
+   862→   862→# PART FILE: 07-poc-reference.md
+   863→   863→# ═══════════════════════════════════════════════════════════════
+   864→   864→
+   865→   865→# DOC 7 — POC REFERENCE: html-shell-sdk-1 (mechanics to harvest, gaps to close)
+   866→   866→
+   867→   867→> The POC (`dev-poc/canvas/html-shell-sdk-1`) is a standalone Next.js 15 + React 19 + Tailwind/shadcn drawing SDK. It proves generic canvas rendering mechanics. It VIOLATES vivim invariants (hardcodes tools/themes, no React Flow, no DB). Use it as a SOTA *rendering-engine* reference, then re-express the good parts inside vivim's node model.
+   868→   868→
+   869→   869→## 7.1 What the POC gives you (HARVEST these mechanics)
+   870→   870→
+   871→   871→- **EventBus** (`src/lib/canvas-sdk/core/event-bus.ts`) — pub/sub for canvas events. Map → vivim `CapabilityEventBus` + WS forwarder.
+   872→   872→- **CommandStack** (`core/command-stack.ts`) — undo/redo command pattern. Map → frontend `useCanvasHistory.ts` (already exists, may strengthen).
+   873→   873→- **QuadTree** (`core/quad-tree.ts`) — spatial index for hit-testing/frustum culling at 10k+ nodes. Harvest the algorithm for `CanvasSurface` virtualized rendering.
+   874→   874→- **CanvasEngine** (`core/canvas-engine.ts`) — single render orchestrator, world-space → screen-space transform, transform stack (pan/zoom/world-to-screen). This is the math you want behind `CanvasDefinition.layout` (x/y/z/w/h in world space).
+   875→   875→- **8 Tools** (cursor/select, move/translate, resize, draw, erase, pan, zoom, comment) — generic interaction set. Map select/move/resize → React Flow node drag/resize; draw/erase/comment → future annotation layer (wishlist item).
+   876→   876→- **5 Renderers** (canvas2d, webgl, svg, dom, wasm-canvas) — DOM renderer is the one compatible with vivim's sandboxed `UiComponent` (html/css). webgl/canvas2d render to `<canvas>` (use for the infinite-canvas background grid / minimap, not for UI nodes).
+   877→   877→- **Theme system** (`core/theme.ts`, `ThemeTokens`) — token-driven theming. Map → vivim `ThemeProvider.tsx`; themes MUST come from DB (`UiComponent.css`) not hardcoded (POC gap: themes hardcoded).
+   878→   878→- **Zip export/import** (`export/zip.ts`) — serialize scene → zip. Map → `cap:canvas:export/import` (canvas-router already has routes).
+   879→   879→
+   880→   880→## 7.2 POC → vivim gap map
+   881→   881→
+   882→   882→| POC does | vivim needs | Action |
+   883→   883→|---|---|---|
+   884→   884→| Hardcodes 8 tools, 5 renderers, themes | Tools/renderers/themes are DATA (UiComponent) | Move tool configs into `ui_component`/`provider_type` rows; renderer chosen by archetype |
+   885→   885→| Freeform Node/Connection graph (drawing) | Conceptual, family-driven node graph | Replace POC `Scene`/`Node` with `CanvasDefinition` from resolved `UiComponent` |
+   886→   886→| Next.js 15 standalone | Vite + React + @xyflow/react in `web/ui` | Do NOT import POC; reimplement engine math in `CanvasSurface` |
+   887→   887→| No persistence | `user_component_layout` / `view_preset` tables | Use existing tables for node positions; POC zip → cap export |
+   888→   888→| No CDP/provider link | Slug is the link (frontend=backend) | POC cannot drive providers; vivim canvas nodes carry `providerSlug` |
+   889→   889→| inline script in sandboxed nodes | NEVER inline (P8 CSP) | POC's script injection model is unsafe; use `scriptUrl` + MessageChannel |
+   890→   890→
+   891→   891→## 7.3 Decision: REPLACE, not import
+   892→   892→
+   893→   893→The POC's internal `Scene`/`Node`/`Renderer` classes are incompatible with React Flow's node model and the DB-driven `UiComponent` contract. **Do not** `import` POC code into `web/ui`. Instead:
+   894→   894→1. Harvest the **math** (world→screen transform, QuadTree culling) into `CanvasSurface` helpers.
+   895→   895→2. Harvest the **CommandStack** pattern to strengthen `useCanvasHistory`.
+   896→   896→3. Harvest the **tool vocabulary** (select/move/resize/draw/erase/comment) as an interaction *catalog* stored in `provider_type.interaction_grammar_json` (data-driven, per family).
+   897→   897→4. Harvest **zip export** logic for `cap:canvas:export`.
+   898→   898→5. Discard POC's hardcoded theme/renderer registries — those belong in the DB.
+   899→   899→
+   900→   900→## 7.4 Mechanics snippet (POC coordinate model to mirror)
+   901→   901→
+   902→   902→```ts
+   903→   903→// POC CanvasEngine world→screen (mirror in CanvasSurface transform helpers)
+   904→   904→interface Transform { panX:number; panY:number; zoom:number }
+   905→   905→function worldToScreen(wx:number, wy:number, t:Transform) {
+   906→   906→  return { x:(wx - t.panX) * t.zoom, y:(wy - t.panY) * t.zoom }
+   907→   907→}
+   908→   908→// vivim CanvasDefinition.layout is world-space {x,y,z,w,h}; z = depth (not zoom)
+   909→   909→// use React Flow's own transform; only borrow QuadTree for culling offscreen nodes
+   910→   910→```
+   911→   911→
+   912→   912→
+   913→   913→
+   914→   914→# ═══════════════════════════════════════════════════════════════
+   915→   915→# PART FILE: 08-wishlist.md
+   916→   916→# ═══════════════════════════════════════════════════════════════
+   917→   917→
+   918→   918→# DOC 8 — TOP-5 CANVAS WISHLIST (dev-poc vs vivim gap → build targets)
+   919→   919→
+   920→   920→> Derived from comparing `html-shell-sdk-1` (rendering SOTA, zero vivim-compliance) against the vivim canvas PRD + 13-engine invariants. Each item is a concrete, wireable build target.
+   921→   921→
+   922→   922→## W1 — Data-driven tool & interaction catalog (close POC's hardest gap)
+   923→   923→**Gap:** POC hardcodes 8 tools + 5 renderers + themes. vivim must drive ALL interaction from `provider_type.interaction_grammar_json` + `ui_component`.
+   924→   924→**Build:** Extend `InteractionGrammar` (DOC 3.3) with `tools: string[]` (select/move/resize/draw/erase/comment) and `renderer: 'dom'|'canvas2d'|'webgl'`. `ConceptualModelService` exposes per-family tool/renderer set. `CanvasSurface` reads it to enable only the family-allowed tools. `useCanvasHistory` adopts POC's `CommandStack` for undo/redo of tool ops.
+   925→   925→**Wireable:** rows in `provider_type`, no migration; frontend reads `resolveFamilyForProvider`.
+   926→   926→
+   927→   927→## W2 — Infinite canvas virtualization with QuadTree culling (borrow POC math)
+   928→   928→**Gap:** POC's `QuadTree` handles 10k+ nodes; vivim `CanvasSurface` re-renders all nodes (will choke on large layouts).
+   929→   929→**Build:** Port `QuadTree` (DOC 7.1) into `web/ui/src/features/canvas/lib/quad-tree.ts`. `CanvasSurface` computes viewport bounds → queries QuadTree → mounts only visible `CanvasNode`s (keep DOM node count bounded). Off-screen nodes stay as data.
+   930→   930→**Wireable:** pure frontend lib; no backend change; respects existing `CanvasDefinition.layout`.
+   931→   931→
+   932→   932→## W3 — Sandboxed drawing/annotation layer (POC's draw/erase/comment tools, vivim-safe)
+   933→   933→**Gap:** POC has draw/erase/comment but as unsafe inline-script nodes. vivim has NO annotation surface.
+   934→   934→**Build:** A new `UiComponent` archetype `'overlay'` (or `prim:cross-type:annotation`) rendering a `<canvas>` (DOM renderer) inside `SandboxedLayer` (POC-safe: `scriptUrl` + MessageChannel, `allowInlineScript:false`). Strokes stored as `StreamBlock` (kind `'artifact'`) or `view_preset.layout_json`. Draw/erase/comment tools enabled per W1 catalog.
+   935→   935→**Wireable:** new `ui_component` row + `cap:canvas:mutate` payload for strokes.
+   936→   936→
+   937→   937→## W4 — Live layer streaming over `/ws/canvas` (finish PRD C7)
+   938→   938→**Gap:** `CanvasLayerMounter.spawn()` emits `canvas:layer:spawned` on the event bus, but `registerCanvasLayerForwarder` + `useCanvasEvents` WS path is PENDING. POC has a working EventBus but no cross-tab sync.
+   939→   939→**Build:** Implement `registerCanvasLayerForwarder(eventBus)` in `websocket.ts` (mirror `registerCanvasMutationForwarder`). `useCanvasEvents` already subscribes — verify it mounts/dismisses nodes on WS message. This makes spawned layers appear in all open browsers instantly.
+   940→   940→**Wireable:** backend WS forwarder + existing frontend hook; no schema change.
+   941→   941→
+   942→   942→## W5 — Progressive result rendering from StreamBlock (finish PRD C6)
+   943→   943→**Gap:** `GET /api/conversations/:id/stream-blocks` is NOT implemented; `useStreamBlocks` hook has no backend. POC has no streaming at all.
+   944→   944→**Build:** `conversation-router.ts` → `cap:conversation:stream_blocks` returning `ContentBlock[]` from `StreamBlock` rows (keyed by `blockIndex`/`blockKind`), falling back to wrapping `ConversationMessage.content` as one `text` block. `useStreamBlocks` consumes it; `StreamingSlot`/`ResultSlot` render progressively (text/thinking/code/artifact/image/citation/tool_use).
+   945→   945→**Wireable:** new router route + capability + existing frontend hook/components.
+   946→   946→
+   947→   947→## Wishlist summary (priority order)
+   948→   948→1. W4 — WS live layers (highest value, finishes a PENDING PRD item, pure integration)
+   949→   949→2. W5 — Stream-blocks endpoint (finishes PENDING PRD C6, unblocks progressive UI)
+   950→   950→3. W2 — QuadTree virtualization (scalability, pure frontend)
+   951→   951→4. W1 — Data-driven tool catalog (closes POC's core gap, family-driven)
+   952→   952→5. W3 — Sandboxed annotation layer (new surface, uses W1+W2)
+   953→   953→
+   954→   954→
+   955→   955→
+   956→   956→# ═══════════════════════════════════════════════════════════════
+   957→   957→# PART FILE: 09-devops-boot.md
+   958→   958→# ═══════════════════════════════════════════════════════════════
+   959→   959→
+   960→   960→# DOC 9 — DEVOPS, BOOT, LAUNCH & VERIFY (operational playbook)
+   961→   961→
+   962→   962→> PowerShell-compatible commands ONLY. The default shell is PowerShell 7+. Never inline-pipe PS1 scripts (`$PSScriptRoot` collapses). Use `pwsh scripts/<name>.ps1` from repo root.
+   963→   963→
+   964→   964→## 9.1 One-time install
+   965→   965→```powershell
+   966→   966→Set-Location "C:\0-BlackBoxProject-0\vivim-final"
+   967→   967→bun run db:setup        # migrate + seed (first time only)
+   968→   968→```
+   969→   969→
+   970→   970→## 9.2 Launch the stack (non-blocking recommended)
+   971→   971→```powershell
+   972→   972→pwsh scripts/start-bg.ps1     # backend + frontend, returns immediately; poll health after
+   973→   973→# OR blocking:
+   974→   974→pwsh scripts/start-all.ps1
+   975→   975→# Stop everything (infallible):
+   976→   976→pwsh scripts/stop-all.ps1
+   977→   977→# Continuous health monitor:
+   978→   978→pwsh scripts/health-check.ps1
+   979→   979→```
+   980→   980→
+   981→   981→## 9.3 Backend-only / frontend-only
+   982→   982→```powershell
+   983→   983→pwsh scripts/start-backend.ps1
+   984→   984→pwsh scripts/start-frontend.ps1
+   985→   985→```
+   986→   986→
+   987→   987→## 9.4 Backend (engines) boot — NOT a seeder
+   988→   988→`bun run serve` starts engines only. Seeding/seed is `bun run db:setup` / `bun run db:seed` / `bun run db:migrate`. **Never** re-seed at boot (invariant).
+   989→   989→
+   990→   990→## 9.5 Verify after canvas changes
+   991→   991→```powershell
+   992→   992→bun run typecheck                                  # backend TS (0 errors)
+   993→   993→bun run lint                                       # Biome
+   994→   994→bun test tests/unit/engines/conceptual-model-service  # resolution engine
+   995→   995→bun test tests/unit/ui/                            # frontend canvas hooks
+   996→   996→cd web/ui && bun run typecheck && bun run build    # frontend (0 errors)
+   997→   997→bun run devops verify-cross-surface                # capability resolves CLI/API/MCP/UI
+   998→   998→```
+   999→   999→
+  1000→  1000→## 9.6 DB ops (all capability-backed)
+  1001→  1001→| Cmd | Purpose |
+  1002→  1002→|---|---|
+  1003→  1003→| `bun run db:setup` | Fresh: migrate + seed (first time only) |
+  1004→  1004→| `bun run db:seed` | Re-seed providers from JSON manifests |
+  1005→  1005→| `bun run db:migrate` | Apply pending migrations |
+  1006→  1006→| `bun run db:reset --force` | Wipe + migrate + seed |
+  1007→  1007→| `bun run db:status` | Row counts, file size, migration history |
+  1008→  1008→| `bun run db:backup` | VACUUM INTO ./backups/ |
+  1009→  1009→| `bun run db:check` | PRAGMA integrity_check |
+  1010→  1010→
+  1011→  1011→## 9.7 Adding a provider (canvas surface target)
+  1012→  1012→1. Edit `seeds/providers/<slug>.json` (url, selectors, send method, composer type, endpoint_type).
+  1013→  1013→2. `bun run db:seed`.
+  1014→  1014→3. Add `UiComponent` rows (or family override) so `resolveSurface` returns rendered slots.
+  1015→  1015→
+  1016→  1016→## 9.8 Runtime-test loop (devops-fullstack skill)
+  1017→  1017→```powershell
+  1018→  1018→bun run devops runtime-test loop --max-cycles=3 --mitm
+  1019→  1019→bun run devops runtime-test preflight
+  1020→  1020→bun run devops runtime-test discover-backend
+  1021→  1021→bun run devops runtime-test test --nl "list conversations"
+  1022→  1022→```
+  1023→  1023→**Agent-safety:** 15s bootstrap timeout, 5s/fetch, 2min cap.
+  1024→  1024→
+  1025→  1025→## 9.9 INVARIANTS (must never violate — enforced by `bun run devops invariants check`)
+  1026→  1026→1. **Governor Canon** — only `ChromeGovernor` touches CDP. No engine imports `BunCdpClient`.
+  1027→  1027→2. **Store Contracts** — engines depend on `src/storage/contracts/*`, never `src/storage/impl/*`.
+  1028→  1028→3. **Research-First** — no implementation without research report classification.
+  1029→  1029→4. **Phase Gates** — phase N needs N-1 complete.
+  1030→  1030→5. **One Entry Point** — every op is a `UnifiedCapability`; CLI/UI are thin NL shells → `POST /api/interpret` → `POST /api/capabilities/:id/execute`.
+  1031→  1031→6. **Frontend=Backend** — slug is the link; NO hardcoded `if (slug==='x')` in React. Add a `UiComponent` tier instead.
+  1032→  1032→7. **Sandboxed UI (P8)** — `allowInlineScript:false` always; sandbox via `scriptUrl` + MessageChannel + CSP.
+  1033→  1033→8. **Action Registry (B8)** — every interactive slot dispatches through `ActionRegistry` (Zod-validated).
+  1034→  1034→9. **No `any`** — use `unknown` + narrowing; `.js` import ext; ULID ids; Zod at boundaries.
+  1035→  1035→10. **No new canvas migrations** — PRD risk note: add rows + routes, not tables.
+  1036→  1036→
+  1037→  1037→## 9.10 Cross-surface verify gotchas (from AGENTS.md)
+  1038→  1038→- UI slot ids MUST be namespaced `chat.actionBar` (not `actionBar`). Taxonomy `CATEGORY_POSITIONS` must use exact values.
+  1039→  1039→- Capability nodes may lack `category`; derive from `slug.split('_')[0]`.
+  1040→  1040→- `Bun.spawn` `exitCode` is `null` until `await proc.exited`.
+  1041→  1041→- Single-segment slugs → `cap:help:help` (never `cap:undefined:help`).
+  1042→  1042→- Run `bun run devops verify-cross-surface` after ANY taxonomy/conceptual-model change.
+  1043→  1043→
+  1044→  1044→
+  1045→  1045→
+  1046→  1046→# ═══════════════════════════════════════════════════════════════
+  1047→  1047→# PART FILE: 10-starter-prompt.md
+  1048→  1048→# ═══════════════════════════════════════════════════════════════
+  1049→  1049→
+  1050→  1050→# DOC 10 — SUPER-AGENT STARTER PROMPT (build anything from downloaded source, wireable into vivim)
+  1051→  1051→
+  1052→  1052→> This is the prompt you hand to a downstream super-agent. It packages all 9 docs above as context and constrains output to be natively wireable into vivim-final. Paste after the brief files are assembled.
+  1053→  1053→
+  1054→  1054→---
+  1055→  1055→
+  1056→  1056→```
+  1057→  1057→You are a build agent for the vivim-final project (Bun + TypeScript strict + Prisma v6.5
+  1058→  1058→SQLite + Vite + React + @xyflow/react). Your job: take ANY downloaded provider/web-app
+  1059→  1059→source (HTML/CSS/JS/React) and turn it into a vivim canvas UI surface — a data-driven
+  1060→  1060→node on the unified infinite canvas — WITHOUT violating project invariants.
+  1061→  1061→
+  1062→  1062→## Context you have (read in order)
+  1063→  1063→1. agent-brief/canvas/01-overview-and-vision.md   — vision, invariants, POC gap, boot
+  1064→  1064→2. agent-brief/canvas/02-data-model.md            — Prisma canvas tables (no new migrations)
+  1065→  1065→3. agent-brief/canvas/03-shared-types.md          — shared contract types (backend↔frontend)
+  1066→  1066→4. agent-brief/canvas/04-backend-engines.md       — engines + routers to wire
+  1067→  1067→5. agent-brief/canvas/05-frontend-canvas.md       — hooks/components, slot registry
+  1068→  1068→6. agent-brief/canvas/06-project-skeleton.md      — where to write code
+  1069→  1069→7. agent-brief/canvas/07-poc-reference.md         — POC mechanics to harvest, gaps to close
+  1070→  1070→8. agent-brief/canvas/08-wishlist.md              — Top-5 build targets (W1–W5)
+  1071→  1071→9. agent-brief/canvas/09-devops-boot.md          — launch/verify/invariants playbook
+  1072→  1072→+ db-dump.txt (full DB sample, 15 tables) for realistic row shapes.
+  1073→  1073→
+  1074→  1074→## Hard invariants (NEVER break — `bun run devops invariants check` will fail the build)
+  1075→  1075→- FRONTEND=BACKEND: the provider slug is the ONLY link. NEVER `if (slug==='x')` in React.
+  1076→  1076→  Render from resolved `UiComponent` rows (4-tier precedence: provider+variant > provider >
+  1077→  1077→  family+variant > family > cross-type > system). Add a UiComponent tier, not a hardcoded branch.
+  1078→  1078→- UI code is DATA: store html/css/scriptUrl in `ui_component` rows. Script runs ONLY in a
+  1079→  1079→  sandboxed iframe (SandboxedLayer) with `allowInlineScript:false` + CSP + MessageChannel.
+  1080→  1080→- NO new Prisma migrations for canvas work — add rows + routes/engines only.
+  1081→  1081→- Engines depend on `src/storage/contracts/*`, never `src/storage/impl/*`.
+  1082→  1082→- No `any`; use `unknown` + narrowing; `.js` import ext; ULID ids; Zod at boundaries.
+  1083→  1083→- Every operation is a UnifiedCapability. CLI/UI are thin NL shells.
+  1084→  1084→- Only ChromeGovernor touches CDP. No engine imports BunCdpClient.
+  1085→  1085→
+  1086→  1086→## How to convert downloaded source into a vivim surface
+  1087→  1087→1. Identify the provider family (ai-chat/email/messenger/social/custom). If new, add a
+  1088→  1088→   ProviderType + Primitive rows in seeds/conceptual-model/seed.ts and a provider_definition.
+  1089→  1089→2. Decompose the downloaded UI into PRIMITIVES (slots): composer, thread, sidebar, header,
+  1090→  1090→   result, actionBar, etc. Map each to a `chat.*` SLOT_ID (web/ui/src/ui/slots.ts).
+  1091→  1091→3. For each slot, create a UiComponent row: html (markup) + css (scoped) + scriptUrl
+  1092→  1092→   (optional, sandboxed). Set componentKey like `chat.composer`, scope/ownerId per tier.
+  1093→  1093→4. If the source has drawing/canvas mechanics, harvest ONLY the math (world→screen transform,
+  1094→  1094→   QuadTree culling) into web/ui/src/features/canvas/lib/ — do NOT import the POC's Node/
+  1095→  1095→   Renderer classes. See DOC 7 decision: REPLACE not import.
+  1096→  1096→5. Wire any interactions through ActionRegistry (B8) + a cap:canvas:* capability if new.
+  1097→  1097→6. Persist node positions via PATCH /api/canvas/layers/:id (user_component_layout table).
+  1098→  1098→
+  1099→  1099→## Output contract (must be wireable as-is)
+  1100→  1100→- Code files ready to drop into the paths in DOC 6. No scaffolding scripts needed.
+  1101→  1101→- Every new UI surface = seed rows (UiComponent) + (if needed) a cap:canvas:* capability +
+  1102→  1102→  router handler calling registry.execute. NO React conditional branches on provider slug.
+  1103→  1103→- Typecheck clean: `bun run typecheck` + `cd web/ui && bun run typecheck && bun run build`.
+  1104→  1104→- Include a short verify section: which `bun test` / `bun run devops verify-cross-surface`
+  1105→  1105→  commands prove it works.
+  1106→  1106→- If you cannot satisfy an invariant for a requested feature, STOP and report the conflict
+  1107→  1107→  rather than silently bypassing it.
+  1108→  1108→
+  1109→  1109→## Build priority (from wishlist W1–W5, DOC 8)
+  1110→  1110→1. W4 live WS layers  2. W5 stream-blocks  3. W2 QuadTree virt  4. W1 tool catalog  5. W3 annotation
+  1111→  1111→Start with whichever the downloaded source best supports; extend, don't rewrite, the canvas.
+  1112→  1112→```
+  1113→  1113→
+  1114→  1114→
+  1115→  1115→
+  1116→  1116→# ═══════════════════════════════════════════════════════════════
+  1117→  1117→# PART FILE: 13-gap-assessment.md
+  1118→  1118→# ═══════════════════════════════════════════════════════════════
+  1119→  1119→
+  1120→  1120→
+  1121→  1121→

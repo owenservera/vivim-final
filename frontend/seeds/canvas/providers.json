@@ -1,0 +1,29 @@
+{
+  "providers": [
+    { "id": "chatgpt", "slug": "chatgpt", "displayName": "ChatGPT", "providerTypeId": "fam:ai-chat" },
+    { "id": "claude", "slug": "claude", "displayName": "Claude", "providerTypeId": "fam:ai-chat" },
+    { "id": "gemini", "slug": "gemini", "displayName": "Gemini", "providerTypeId": "fam:ai-chat" },
+    { "id": "gmail", "slug": "gmail", "displayName": "Gmail", "providerTypeId": "fam:email" },
+    { "id": "outlook", "slug": "outlook", "displayName": "Outlook", "providerTypeId": "fam:email" },
+    { "id": "protonmail", "slug": "protonmail", "displayName": "ProtonMail", "providerTypeId": "fam:email" },
+    { "id": "whatsapp", "slug": "whatsapp", "displayName": "WhatsApp", "providerTypeId": "fam:messenger" },
+    { "id": "slack", "slug": "slack", "displayName": "Slack", "providerTypeId": "fam:messenger" },
+    { "id": "telegram", "slug": "telegram", "displayName": "Telegram", "providerTypeId": "fam:messenger" },
+    { "id": "discord", "slug": "discord", "displayName": "Discord", "providerTypeId": "fam:messenger" },
+    { "id": "twitter", "slug": "twitter", "displayName": "Twitter", "providerTypeId": "fam:social" },
+    { "id": "linkedin", "slug": "linkedin", "displayName": "LinkedIn", "providerTypeId": "fam:social" },
+    { "id": "mastodon", "slug": "mastodon", "displayName": "Mastodon", "providerTypeId": "fam:social" },
+    { "id": "notion", "slug": "notion", "displayName": "Notion", "providerTypeId": "fam:custom" },
+    { "id": "linear", "slug": "linear", "displayName": "Linear", "providerTypeId": "fam:custom" },
+    { "id": "airtable", "slug": "airtable", "displayName": "Airtable", "providerTypeId": "fam:custom" }
+  ],
+  "accounts": [
+    { "id": "acct:chatgpt:free", "providerId": "chatgpt", "userId": "user:demo", "planTier": "free" },
+    { "id": "acct:chatgpt:pro", "providerId": "chatgpt", "userId": "user:demo", "planTier": "pro" },
+    { "id": "acct:claude:free", "providerId": "claude", "userId": "user:demo", "planTier": "free" },
+    { "id": "acct:gmail:free", "providerId": "gmail", "userId": "user:demo", "planTier": "free" },
+    { "id": "acct:slack:ent", "providerId": "slack", "userId": "user:demo", "planTier": "enterprise" },
+    { "id": "acct:twitter:free", "providerId": "twitter", "userId": "user:demo", "planTier": "free" },
+    { "id": "acct:notion:free", "providerId": "notion", "userId": "user:demo", "planTier": "free" }
+  ]
+}
