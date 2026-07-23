@@ -1,6 +1,8 @@
 // src/engines/workspace-presets.ts
 // Unit 4.2 — Workspace default layouts + presets
 
+import { CanvasSpawnError } from '../errors.js'
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type PresetId = 'chat' | 'dual' | 'dashboard' | 'agent-monitor' | 'memory-workbench'
@@ -113,7 +115,7 @@ export class WorkspacePresets {
 
   async apply(userId: string, preset: PresetId): Promise<WorkspaceLayoutRow> {
     const def = PRESETS[preset]
-    if (!def) throw new Error(`Unknown preset: ${preset}`)
+    if (!def) throw new CanvasSpawnError(`Unknown preset: ${preset}`)
 
     const spawn = async (definitionId: string) => {
       const inst = await this.spawner.spawn({ definitionId, spawnedBy: 'system' })

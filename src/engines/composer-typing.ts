@@ -4,6 +4,7 @@
 // element type so the provider's input handlers fire correctly.
 
 import type { CDPTransport } from './chrome-governor.js'
+import { humanizedClick } from './humanized-interaction.js'
 
 export type ComposerType = 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
 
@@ -104,9 +105,25 @@ export async function submitMessage(
 ): Promise<void> {
   if (sendSelector) {
     const safeSelector = JSON.stringify(sendSelector)
-    await transport.send(slaveId, 'Runtime.evaluate', {
-      expression: `document.querySelector(${safeSelector})?.click()`,
+    // Get element position for humanized click
+    const posResult = await transport.send(slaveId, 'Runtime.evaluate', {
+      expression: `(() => {
+        const el = document.querySelector(${safeSelector});
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+      })()`,
+      returnByValue: true,
     })
+    const pos = (posResult as { result?: { value?: { x: number; y: number } } })?.result?.value
+    if (pos) {
+      await humanizedClick(transport, slaveId, pos.x, pos.y)
+    } else {
+      // Fallback to direct click if position can't be determined
+      await transport.send(slaveId, 'Runtime.evaluate', {
+        expression: `document.querySelector(${safeSelector})?.click()`,
+      })
+    }
     return
   }
 

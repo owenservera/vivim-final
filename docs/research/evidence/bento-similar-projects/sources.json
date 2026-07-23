@@ -1,0 +1,146 @@
+{
+  "topic": "bento-similar-projects",
+  "collected": "2026-07-23",
+  "sources": [
+    {
+      "id": "bento-repo",
+      "title": "nyblnet/bento — Single-file office suite",
+      "url": "https://github.com/nyblnet/bento",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Single HTML file = document + viewer + editor + presenter. In-house CRDT, signed self-updates, AI round-trip format.",
+      "usedIn": ["report:bento-similar-projects", "brief:bento-similar-projects"]
+    },
+    {
+      "id": "bento-claude-md",
+      "title": "Bento CLAUDE.md — Deep architecture reference",
+      "url": "https://raw.githubusercontent.com/nyblnet/bento/main/CLAUDE.md",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Comprehensive architecture: self-save loop, CRDT design, signed writes, compressed shell, AI round-trip API.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "bento-architecture",
+      "title": "Bento Architecture — Runtime organization",
+      "url": "https://raw.githubusercontent.com/nyblnet/bento/main/docs/architecture.md",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "On-disk anatomy, document model, self-save loop, format invariants, collaboration protocol.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "cdp-browser-repo",
+      "title": "dao-ai/cdp-browser — Anti-detection CDP automation",
+      "url": "https://github.com/dao-ai/cdp-browser",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Pure CDP (no Playwright/Puppeteer). Anti-detection injection, humanized interaction, watchdog system, AI agent with loop detection.",
+      "usedIn": ["report:bento-similar-projects", "brief:bento-similar-projects"]
+    },
+    {
+      "id": "cdp-browser-readme",
+      "title": "CDP Browser README — Full API reference",
+      "url": "https://raw.githubusercontent.com/dao-ai/cdp-browser/main/README.md",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Complete API: connectBrowser, anti-detection injection, humanized interaction, watchdog system, agent loop, page pool, extractor registry.",
+      "usedIn": ["report:bento-similar-projects", "brief:bento-similar-projects"]
+    },
+    {
+      "id": "browser-use-repo",
+      "title": "browser-use/browser-use — LLM-driven browser agent",
+      "url": "https://github.com/browser-use/browser-use",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "77K+★ Python library. Event-driven browser control, DOM-to-semantic pipeline, context compaction, provider-agnostic LLM interface.",
+      "usedIn": ["report:bento-similar-projects", "brief:bento-similar-projects"]
+    },
+    {
+      "id": "browser-use-architecture",
+      "title": "browser-use System Architecture — DeepWiki",
+      "url": "https://deepwiki.com/browser-use/browser-use/1.1-system-architecture",
+      "type": "academic",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Event-driven BrowserSession with EventBus + Watchdogs. MessageManager for context compaction. DomService for DOM-to-LLM pipeline.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "noqta-comparison",
+      "title": "AI Browser Agents in 2026 — Browser Use, Stagehand, Skyvern",
+      "url": "https://noqta.tn/en/blog/ai-browser-agents-browser-use-stagehand-web-automation-2026",
+      "type": "news",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Performance benchmarks: Stagehand 1-3s/action, Browser Use 2-5s/action. Browser Use 89.1% on WebVoyager. Stagehand action caching in v3.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "skyvern-comparison",
+      "title": "Browser Use vs Stagehand — Skyvern",
+      "url": "https://www.skyvern.com/blog/browser-use-vs-stagehand-which-is-better/",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Browser Use = autonomous LLM-driven. Stagehand = hybrid Playwright + AI. Skyvern = vision-driven. Two distinct architectural models.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "framework-wars",
+      "title": "Browser Tools for AI Agents Part 2: The Framework Wars",
+      "url": "https://dev.to/stevengonsalvez/browser-tools-for-ai-agents-part-2-the-framework-wars-browser-use-stagehand-skyvern-4gn",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "DOM-first tools faster and cheaper. Skyvern vision approach more expensive but more resilient. Action caching reduces costs.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "cdp-method-article",
+      "title": "Browser Automation Without Puppeteer: The CDP Method",
+      "url": "https://michael.vu/post/2026-02-09-browser-automation-cdp-method.html",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "CDP offers lighter, more reliable alternative to Puppeteer/Playwright for AI agents. Direct WebSocket connection.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "tools-comparison-gist",
+      "title": "AI Browser Automation Tools for the LLM Agent Era (2026)",
+      "url": "https://gist.github.com/kevinmichaelchen/9d77b8a681238cc45297dff969686175",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Comprehensive tool matrix: Browser-Use 77K★, Stagehand (hybrid), Skyvern (vision). Top tier = production-ready AI-native.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "massive-comparison",
+      "title": "Browser-use vs Stagehand vs Skyvern: A Comparison",
+      "url": "https://www.joinmassive.com/blog/browser-use-vs-stagehand-vs-skyvern-choosing-an-agent-browser-framework",
+      "type": "blog",
+      "date": "2026",
+      "confidence": "medium",
+      "keyClaim": "Perception axis: DOM/accessibility-tree driving vs vision-driven. Browser-use = fast-start. Stagehand = debuggable. Skyvern = layout-independent.",
+      "usedIn": ["report:bento-similar-projects"]
+    },
+    {
+      "id": "cdp-browser-docs",
+      "title": "CDP Browser Documentation",
+      "url": "https://dao-ai.github.io/cdp-browser/en/",
+      "type": "official",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Anti-detection strategies per site. Humanized interaction details. Watchdog system. AI agent integration.",
+      "usedIn": ["report:bento-similar-projects"]
+    }
+  ]
+}

@@ -91,6 +91,6 @@ export const AGENT_ROLES: Record<string, AgentRole> = {
 
 export function getAgentRole(id: string): AgentRole {
   const role = AGENT_ROLES[id]
-  if (!role) throw new Error(`Unknown agent role: ${id}`)
+  if (!role) throw new EngineError(`Unknown agent role: ${id}`)
   return role
 }

@@ -5,6 +5,8 @@ import type { MirrorEngine } from './mirror-engine.js'
 import type { ObservationTap } from './observation-tap.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
+import { LoopDetector } from './loop-detector.js'
+
 export interface AgenticGoal {
   description: string
   maxIterations?: number
@@ -47,6 +49,7 @@ export class AgenticLoopEngine {
   private maxDurationMs = 120_000
   private llmBudget = 5
   private llmCalls = 0
+  private loopDetector = new LoopDetector({ maxRepeats: 3, windowSize: 10 })
 
   constructor(
     private mirror: MirrorEngine,
@@ -68,6 +71,12 @@ export class AgenticLoopEngine {
     try {
       for (let i = 0; i < iterations; i++) {
         if (Date.now() - start > maxDuration) break
+
+        // Check for agent loops before planning
+        if (this.loopDetector.isLooping()) {
+          console.warn(`[agentic] ${this.loopDetector.getSuggestion()}`)
+          break
+        }
 
         // SENSE — project current state
         const stateBefore = await this.mirror.projectState(slaveId)

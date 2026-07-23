@@ -10,10 +10,13 @@ import { errorResponse, json } from './response.js'
 // Provider login URLs (consumer-friendly names in UI) — loaded from DB via ProviderRegistry
 import { getProviderRegistry } from '../config/provider-registry.js'
 
-function getLoginUrl(providerId: string): string {
+function getLoginUrl(providerId: string, ctx?: ServerContext): string {
+  if (providerId === 'gemini') return 'https://gemini.google.com/app'
   try {
     return getProviderRegistry().getLoginUrl(providerId)
   } catch {
+    if (providerId === 'chatgpt') return 'https://chatgpt.com/auth/login'
+    if (providerId === 'claude') return 'https://claude.ai/login'
     return `https://${providerId}.com/login`
   }
 }

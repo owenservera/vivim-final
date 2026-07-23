@@ -1,115 +1,64 @@
-# VIVIM Constitution
+# Constitution — vivim-final
 
-## Core Principles
+**Purpose:** Non-negotiable architectural invariants that every feature plan must satisfy.
 
-### I. Governor Canon (NON-NEGOTIABLE)
-Only `ChromeGovernor` touches CDP (`BunCdpClient`). No engine imports `BunCdpClient` directly.
-This is enforced by `bun run devops invariants check --category B` and is a hard gate.
-Exempt entities must be documented in invariants.ts.
+---
 
-### II. Store Contracts (NON-NEGOTIABLE)
-Engines depend on `src/storage/contracts/*.ts` interfaces, never `src/storage/impl/*.ts`.
-Implementation details are hidden behind contracts. This enables testing with mock stores
-and prevents coupling to Prisma or storage internals.
+## A. Invariants (from `docs/roadmap/INVARIANTS.md`)
 
-### III. One Entry Point (NON-NEGOTIABLE)
-Every operation is a `UnifiedCapability`. CLI and frontend are thin NL shells that
-call `POST /api/interpret` → `POST /api/capabilities/:id/execute`.
-- New capability: register in `registerDefaultCapabilities` / a `*caps.ts` module.
-- New NL phrase: add a pattern to `catalog.ts` bound to a `capabilityId`.
-- Never: hand-write CLI commands, hand-write UI actions, or open a second transport.
+| ID | Category | Rule | Status |
+|----|----------|------|--------|
+| B1 | Boundary | **Governor Canon:** Only `ChromeGovernor` touches CDP. No engine imports `BunCdpClient`. | ACTIVE |
+| B2 | Boundary | **Store Contracts:** Engines depend on `src/storage/contracts/*.ts`, never `src/storage/impl/*.ts`. | ACTIVE |
+| B5 | Boundary | **Config Authority:** `ConfigManager` is the single source of truth for runtime configuration. | ACTIVE |
+| B6 | Boundary | **Server-Side Harness:** `HarnessRuntime` executes server-side only. No client-side harness execution. | ACTIVE |
+| B8 | Boundary | **Agent-Addressable UI Actions:** Every capability exposed via CLI must also be addressable via UI. | ACTIVE |
+| B10 | Boundary | **HITL Gate:** Human-in-the-loop confirmation required for destructive operations. | ACTIVE |
+| P1 | Vision | **Data is the API:** All layers are data, not code. HTML/CSS/scriptUrl stored in DB. | ACTIVE |
+| P2 | Vision | **Shell is Dumb:** The shell is pure HTML. No provider conditionals, no hardcoded tool registries. | ACTIVE |
+| P3 | Vision | **On-Demand Layers:** Canvas spawns layers when needed, not all at once. | ACTIVE |
+| P5 | Vision | **Single Capability Plane:** Every op is a UnifiedCapability (CLI + UI + MCP + API). | ACTIVE |
+| P8 | Vision | **Sandboxed Layers:** Iframe sandbox with CSP, watchdog, capability allow-list. | ACTIVE |
+| P9 | Vision | **Design from Within:** The canvas can modify itself via the designer layer. | ACTIVE |
 
-### IV. Research-First
-No implementation without research report classification. Phase N requires Phase N-1 complete.
-Evidence-before-action. Truth scans before roadmap modifications.
+## B. Code Conventions
 
-### V. Code Quality Standards
-- TypeScript strict mode, ESNext target, `.js` extension in imports (Bun ESM)
-- Prefer `type` imports: `import type { Foo } from './bar.js'`
-- No `any` — use `unknown` + type narrowing
-- Zod for runtime validation at boundaries
-- Custom error classes from `src/errors.ts` — never raw `new Error()`
-- ULID for IDs via `src/ids.ts`
-- Barrell exports from `src/index.ts`
-- `Result<T, E>` pattern where appropriate
+- **Runtime:** Bun
+- **Language:** TypeScript (strict mode, ESNext target)
+- **ORM:** Prisma v6.5
+- **Linter/Formatter:** Biome
+- **ID format:** ULID (from `src/ids.ts`)
+- **Path aliases:** `@/*` maps to `./src/*`
+- **Imports:** Use `.js` extension in ESM imports
+- **No `any`:** Use `unknown` + type narrowing
+- **Zod** for runtime validation at boundaries
 
-### VI. Testing Gates (NON-NEGOTIABLE)
-- `bun test` must pass before every commit
-- `bun run typecheck` — 0 errors
-- `bun run lint` — 0 warnings
-- `bun run devops invariants check --category B` — 0 block violations
-- `bun run devops audit-code standard` — 0 P0 findings
-- `bun run devops verify-cross-surface` — all capabilities resolve across CLI/API/MCP/UI
-- Unit tests for engine files, integration tests for engine interactions, E2E for full stack
+## C. Testing Requirements
 
-## Architecture Constraints
+- Unit tests: `tests/unit/` — test individual functions
+- Integration tests: `tests/integration/` — test engine interactions
+- E2E tests: `tests/e2e/` — full stack tests
+- Mock store contracts for isolation tests
+- Aim for 80%+ coverage on engines
 
-### Engine Layers
-- L0-L1: Provider Knowledge Graph (ProviderRegistrar, ProviderHealthKernel)
-- L2-L3: Capability System (CapabilityResolutionEngine, CapabilityEngine)
-- L4: Session & State (ConversationManager, StreamBlockStore)
-- Chrome Layer: ChromeGovernor (CDP proxy, lifecycle, trace, health)
-- Cross-cutting: CapabilityEventBus, ConfigManager, StreamParserEngine
-- Lifecycle: RegistrationAuditor, VersionManager, TelemetryAggregator
+## D. Git Conventions
 
-### Database
-- Prisma ORM only — never raw SQL unless performance-critical
-- Seed once via `bun run db:setup` (migrate + seed), NOT at boot
-- `bun run serve` starts engines only — no re-seeding, no migrate
-- Seed JSON manifests in `seeds/` are the authoritative data source
-- Transactions for multi-table writes
-
-### Frontend
-- Primary surface: unified infinite canvas (`web/ui/src/features/canvas/CanvasSurface.tsx`)
-- Driven by DB-backed provider-type conceptual model (`ProviderType` + `UiComponent`, 4-tier resolution)
-- Prefer adding `UiComponent` tiers over hardcoded `if (slug === 'x')` branches
-- `ChatPage` is a secondary tab; the canvas is the generative backbone
-- Capability-driven: UI actions resolve through `CapabilityResolutionEngine`
-
-### Shell Environment
-- All commands are PowerShell 7+ compatible
-- PS1 scripts use `$PSScriptRoot` — invoke ONLY via `pwsh scripts/<name>.ps1` from repo root
-- Never pipe scripts or use `pwsh -c`/`-Command` which breaks `$PSScriptRoot`
-
-### Capability Design
-- Every capability has: `id`, `slug`, `name`, `description`, `category`, `inputSchema`, `outputSchema`, `cliCommand`, `ui`, `mcpToolName`, `apiEndpoint`, `surfaces`
-- Taxonomy chain gotchas: UI slot IDs must be namespaced (e.g., `chat.actionBar`), capability nodes may lack `category` (derive from slug), verify after taxonomy changes
-
-## Development Workflow
-
-### Adding Features
-1. Research phase: evidence and brief before code
-2. Define spec: what and why, not how
-3. Create implementation plan: tech stack, architecture
-4. Break into tasks: independently testable units
-5. Implement: red-green-refactor per task
-6. Verify: typecheck + lint + test + invariants + audit + cross-surface
-
-### Adding Providers (PRD-12)
-1. **SpecKit first:** `/speckit.specify` defines provider contract → `/speckit.plan` → `/speckit.tasks`
-2. **DevOps onboard mode:** `bun run devops runtime-test onboard run --goal="onboard <url>"` executes static phase map:
-   ```
-   discover → infer → test-selectors → test-parse → test-cap → test-frontend → verify → converge
-   ```
-3. **Confidence gates halt on failure** (selector ≥0.8, parser ≥0.7); operator fixes then `--resume`
-4. **Every activity logged** to `.runtime/activity.log` for post-mortem analysis
-5. **Governor Canon applies:** selector-tester takes `BunCdpClient` + sessionId, never imports CDP directly
-
-### Git Conventions
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
 - One logical change per commit
-- Reference engine names in commits: `feat(CapabilityEngine): add selector resolution`
+- Reference engine names in commits
 
-### File Organization
-- `src/engines/` — one file per engine
-- `src/storage/contracts/` — engine-facing interfaces
-- `src/storage/impl/` — Prisma-backed implementations
-- `tests/unit/`, `tests/integration/`, `tests/e2e/`
-- `seeds/` — JSON manifests for DB seeding
+## E. Frontend Conventions
 
-## Governance
-This constitution supersedes all other practices. Amendments require documentation in ADRs.
-All PRs must pass the gate checklist. Complexity that violates principles must be justified.
-AGENTS.md and INVARIANTS.md are runtime companions to this constitution.
+- **Design system:** CSS variables (`var(--bg)`, `var(--text)`, `var(--border)`, `var(--accent)`)
+- **FRONTEND = BACKEND:** Capability `slug` is the single link
+- **No provider conditionals** in UI code
+- **Backend:** `http://localhost:9420`, WebSocket `ws://localhost:9420/ws`
 
-**Version**: 1.0.0 | **Ratified**: 2025-07-17 | **Last Amended**: 2025-07-17
+## F. Canvas-Specific Invariants
+
+- The shell is pure HTML (P2); layers are data, not code
+- Every canvas op is a UnifiedCapability (P5)
+- On-demand spawning (P3); no always-on requirement
+- Sandboxed iframes with CSP + watchdog (P8)
+- Oracle visibility (P4/P9) — the canvas can observe itself
+- Designer layer (P9) — the canvas can modify itself

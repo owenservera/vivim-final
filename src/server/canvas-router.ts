@@ -102,6 +102,17 @@ export function createCanvasRouter(ctx: ServerContext) {
       }
     }
 
+    // GET /api/canvas/manifest → canvas_observe { op: 'manifest' }
+    // Returns the current canvas layer manifest (layers, regions, status)
+    // for the frontend minimap, layer panel, and debug HUD.
+    if (url.pathname === '/api/canvas/manifest' && req.method === 'GET') {
+      try {
+        return json({ ok: true, result: await cap('cap:canvas:observe', { op: 'manifest' }) })
+      } catch (e) {
+        return errorResponse((e as Error).message, 'CanvasManifestFailed', 500)
+      }
+    }
+
     return errorResponse('Unknown canvas route', 'NotFound', 404)
   }
 }

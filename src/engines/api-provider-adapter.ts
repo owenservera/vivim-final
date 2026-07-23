@@ -7,7 +7,7 @@ import { EngineError } from '../errors.js'
 
 export interface ApiProviderConfig {
   baseUrl: string
-  keyRef: string
+  apiKey: string
   providerId: string
 }
 
@@ -17,9 +17,9 @@ export class ApiProviderAdapter {
   constructor(private cfg: ApiProviderConfig) {}
 
   async send(message: string, model: string, onToken: (t: string) => void): Promise<string> {
-    const key = process.env[this.cfg.keyRef]
+    const key = this.cfg.apiKey
     if (!key) {
-      throw new EngineError(`Missing API key for ${this.cfg.providerId} (${this.cfg.keyRef})`)
+      throw new EngineError(`Missing API key for ${this.cfg.providerId}`)
     }
 
     const res = await fetch(this.cfg.baseUrl, {

@@ -70,10 +70,16 @@ function loadPool(): TaxonomyPoolCapability[] {
 // Maps capability slug → handler function using backend services.
 // This is the ONLY place that connects generated specs to real code.
 
+const extraHandlers = new Map<string, UnifiedCapability['handler']>()
+
+export function extendHandlerMap(slug: string, handler: UnifiedCapability['handler']): void {
+  extraHandlers.set(slug, handler)
+}
+
 function createHandlerMap(
   services: BootstrapServices,
 ): Record<string, UnifiedCapability['handler']> {
-  return {
+  const base: Record<string, UnifiedCapability['handler']> = {
     // ── Conversation ──
     conversation_list: async (input) =>
       services.conversationStore.listConversations({
@@ -133,6 +139,10 @@ function createHandlerMap(
     health_check: async () => ({ ok: true, timestamp: Date.now() }),
     system_status: async () => ({ ok: true }),
   }
+  for (const [slug, handler] of extraHandlers) {
+    base[slug] = handler
+  }
+  return base
 }
 
 // ── Fallback handler ───────────────────────────────────────────────────────

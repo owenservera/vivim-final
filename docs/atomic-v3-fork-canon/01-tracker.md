@@ -13,7 +13,7 @@
 
 ---
 
-**Total units:** 132 | **Done:** 100 | **Blocked:** 0 | **Pending:** 32
+**Total units:** 132 | **Done:** 102 | **Blocked:** 0 | **Pending:** 30
 
 ## Phase 1: Stabilization & Cleanup (12 units — COMPLETE)
 

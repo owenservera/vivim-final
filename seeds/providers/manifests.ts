@@ -183,8 +183,8 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         url: 'https://claude.ai/chat',
         endpoint_type: 'chat',
         selector: {
-          composer: '[contenteditable]',
-          send_button: "[aria-label='Send Message']",
+          composer: 'div[contenteditable="true"].ProseMirror,div[contenteditable="true"][data-placeholder]',
+          send_button: "[aria-label='Send Message'],[aria-label='Send message']",
         },
         composer_type: 'prosemirror',
         send_method: 'both',
@@ -471,11 +471,11 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         url: 'https://gemini.google.com/app',
         endpoint_type: 'chat',
         selector: {
-          composer: '.ql-editor',
+          composer: '.ql-editor[contenteditable="true"]',
           send_button: "button[aria-label='Send message']",
         },
         composer_type: 'quill',
-        send_method: 'both',
+        send_method: 'click',
         content_editable: true,
       },
       {

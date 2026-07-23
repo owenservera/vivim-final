@@ -29,7 +29,9 @@ import { activity } from './automation-activity-log.js'
 import { confidenceGate, PARSER_MIN_CONFIDENCE, SELECTOR_MIN_CONFIDENCE } from './confidence-gate.js'
 import { runParserTest } from './parser-test-harness.js'
 import { StreamingResponseAnalyzer } from '../src/engines/streaming-response-analyzer.js'
-import { testSelectors, type SelectorConfidenceMap } from './selector-tester.js'
+import type { BunCdpClient } from '../src/executor/cdp.js'
+import type { CDPTransport } from '../src/engines/chrome-governor.js'
+import { testSelectors, type SelectorConfidenceMap, evalVisible } from './selector-tester.js'
 import { testFrontend } from './frontend-automation-tester.js'
 import { testCapability } from './runtime-test/test-cap.js'
 import { unifiedConverge } from './speckit-converge-bridge.js'
@@ -66,6 +68,18 @@ async function loadCaptureFixture(providerId: string): Promise<string> {
   } catch {
     return ''
   }
+}
+
+async function loadDiscoveredCapabilities(provider?: string): Promise<string[]> {
+  if (!provider) return ['send_message']
+  try {
+    const draft = JSON.parse(await readFile(join('.runtime', `discover-${provider}.json`), 'utf8'))
+    const draftObj = (draft as Record<string, unknown> | null) ?? {}
+    const manifestCaps = (draftObj.manifestDraft as Record<string, unknown> | null) ?? {}
+    const rawCaps = (manifestCaps.capabilities as string[] | undefined) ?? []
+    if (rawCaps.length > 0) return rawCaps
+  } catch { /* no draft */ }
+  return ['send_message']
 }
 
 export interface OnboardOptions {
@@ -119,6 +133,16 @@ export async function modeDiscover(opts: OnboardOptions): Promise<OnboardModeRes
   if (!opts.cdp || !opts.url) {
     return { phase: 'discover', ok: false, detail: 'discover requires --url and a live Chrome (cdp).' }
   }
+
+  if (!(await checkProviderAuthState(opts.provider))) {
+    return {
+      phase: 'discover',
+      ok: false,
+      detail: `Chrome profile for '${opts.provider ?? 'unknown'}' not authenticated. ` +
+        `Run: bun run devops runtime-test setup --provider=${opts.provider ?? '<slug>'} --account=<email>`,
+    }
+  }
+
   // Lazy import to avoid CDP module load when not needed.
   const { ProtocolDiscoveryEngine } = await import('../src/engines/protocol-discovery.js')
   const engine = new ProtocolDiscoveryEngine(opts.cdp.client as never, opts.cdp.sessionId)
@@ -135,7 +159,6 @@ export async function modeDiscover(opts: OnboardOptions): Promise<OnboardModeRes
 }
 
 export async function modeInfer(opts: OnboardOptions): Promise<OnboardModeResult> {
-  // Compose ManifestInferenceEngine (Phase 22.6) + StreamingResponseAnalyzer.
   const draftPath = join('.runtime', `discover-${opts.provider}.json`)
   let draft: unknown = null
   try {
@@ -155,11 +178,15 @@ export async function modeInfer(opts: OnboardOptions): Promise<OnboardModeResult
   const analyzer = new StreamingResponseAnalyzer(opts.minConfidence ?? PARSER_MIN_CONFIDENCE)
   const analysis = analyzer.analyze(captured)
 
+  const providerSlug = opts.provider ?? 'unknown'
+  const providerCapabilities = _deriveCapabilitiesFromDraft(draft, providerSlug)
+
   const skeleton = {
     provider: { slug: opts.provider, display_name: opts.provider, ...(draft as object | null) },
     parsers: analysis.logicCode
       ? [{ name: `${opts.provider}/inferred`, version: 1, is_active: true, logic_type: 'inline', logic_code: analysis.logicCode }]
       : 'TODO: capture stream traffic to infer parser',
+    capabilities: providerCapabilities,
     _inferred: {
       transport: analysis.transport,
       dataPath: analysis.dataPath,
@@ -173,8 +200,54 @@ export async function modeInfer(opts: OnboardOptions): Promise<OnboardModeResult
     transport: analysis.transport,
     dataPath: analysis.dataPath,
     parserConfidence: analysis.confidence,
+    capabilities: providerCapabilities.length,
   })
   return { phase: 'infer', ok: true, data: skeleton }
+}
+
+const KNOWN_GLOBAL_CAPABILITIES = new Set([
+  'send_message',
+  'select_model',
+  'edit_message',
+  'regenerate_response',
+  'create_new_chat',
+  'navigate_chat',
+  'delete_chat',
+  'rename_chat',
+  'upload_file',
+  'browse_with_bing',
+  'toggle_extended_thinking',
+  'deep_research',
+])
+
+function _deriveCapabilitiesFromDraft(draft: unknown, providerSlug: string): Array<Record<string, unknown>> {
+  const capabilities: Array<Record<string, unknown>> = []
+  const draftObj = (draft as Record<string, unknown> | null) ?? {}
+  const manifestCaps = (draftObj.manifestDraft as Record<string, unknown> | null) ?? {}
+  const rawCaps = (manifestCaps.capabilities as string[] | undefined) ?? []
+  for (const cap of rawCaps) {
+    if (!KNOWN_GLOBAL_CAPABILITIES.has(cap)) continue
+    const abbrev = cap.split('_').slice(0, 2).join('').slice(0, 4)
+    capabilities.push({
+      slug: `${providerSlug}_${cap}`,
+      global_capability_id: `cap:${cap.split('_')[0]}:${cap.split('_').slice(1).join('_')}`,
+      cliCommand: { name: cap.replace(/_/g, ' '), aliases: [abbrev], examples: [`${cap} ${providerSlug}`] },
+      ui: { component: 'action-button', position: 'composer', order: capabilities.length + 1 },
+      mcpToolName: `${providerSlug}_${cap}`,
+      provider_slug: providerSlug,
+    })
+  }
+  if (capabilities.length === 0) {
+    capabilities.push({
+      slug: `${providerSlug}_send_message`,
+      global_capability_id: `cap:send:message`,
+      cliCommand: { name: 'send message', aliases: ['send'], examples: [`send message ${providerSlug}`] },
+      ui: { component: 'action-button', position: 'composer', order: 1 },
+      mcpToolName: `${providerSlug}_send_message`,
+      provider_slug: providerSlug,
+    })
+  }
+  return capabilities
 }
 
 export async function modeTestSelectors(opts: OnboardOptions, selectors: Record<string, string>): Promise<OnboardModeResult> {
@@ -182,12 +255,14 @@ export async function modeTestSelectors(opts: OnboardOptions, selectors: Record<
   if (!opts.cdp) {
     return { phase: 'test-selectors', ok: false, detail: 'test-selectors requires a live Chrome (cdp).' }
   }
+  const client = opts.cdp.client as BunCdpClient
+  const sessionId = opts.cdp.sessionId
   const map: SelectorConfidenceMap = await testSelectors(
-    { client: opts.cdp.client as never, sessionId: opts.cdp.sessionId },
+    { client, sessionId },
     opts.provider ?? 'unknown',
     selectors,
   )
-  // Gate: every selector must meet threshold.
+
   let allPass = true
   const failures: string[] = []
   for (const [name, sc] of Object.entries(map)) {
@@ -197,33 +272,94 @@ export async function modeTestSelectors(opts: OnboardOptions, selectors: Record<
       failures.push(`${name} (${sc.selector}) score=${sc.confidence} < ${threshold}`)
     }
   }
-  activity('onboard.test-selectors', 'provider', { provider: opts.provider, allPass, failures }, allPass ? 'success' : 'failure')
+
+  if (!allPass) {
+    try {
+      const { SelectorHealer } = await import('../src/engines/selector-healer.js')
+      const { SemanticGroundingEngine } = await import('../src/engines/semantic-grounding.js')
+      const transport: CDPTransport = {
+        send: async (_slaveId: string, method: string, params?: Record<string, unknown>) =>
+          client.send(method, params, { sessionId }),
+        connect: async () => {},
+        isConnected: () => client.connected,
+        getPageState: async () => ({ url: '', title: '', readyState: '' }),
+        captureScreenshot: async () => '',
+        capture: async () => ({ body: '', url: '', headers: {}, status: 200, durationMs: 0, capturedAt: Date.now() }),
+      }
+      const grounding = new SemanticGroundingEngine(transport)
+      const healer = new SelectorHealer(grounding)
+      for (const [name, sc] of Object.entries(map)) {
+        if (sc.confidence >= threshold) continue
+        try {
+          const result = await healer.heal({
+            slaveId: 'onboard',
+            failedSelector: { type: 'css', selector: sc.selector },
+            capabilityId: name,
+            providerId: opts.provider ?? 'unknown',
+            context: 'Automated provider onboarding selector repair',
+          })
+          if (result?.healed.type === 'css') {
+            const ev = await evalVisible(client, sessionId, result.healed.selector)
+            let repairedConfidence = 0
+            if (ev.found && ev.visible) {
+              repairedConfidence = 0.85
+            } else if (ev.found) {
+              repairedConfidence = 0.5
+            }
+            map[name] = {
+              selector: result.healed.selector,
+              resolved: ev.found,
+              confidence: repairedConfidence,
+              evidence: [...sc.evidence, `healed via ${result.strategy}`],
+              error: sc.error,
+            }
+            activity('onboard.test-selectors.heal', 'selector', {
+              provider: opts.provider,
+              name,
+              original: sc.selector,
+              healed: result.healed.selector,
+              strategy: result.strategy,
+              confidence: repairedConfidence,
+              passed: repairedConfidence >= threshold,
+            }, repairedConfidence >= threshold ? 'success' : 'failure')
+          }
+        } catch {
+          // heal failed — leave original result
+        }
+      }
+    } catch {
+      // SelectorHealer unavailable — keep original failures
+    }
+  }
+
+  allPass = true
+  const updatedFailures: string[] = []
+  for (const [name, sc] of Object.entries(map)) {
+    const gate = confidenceGate(`${name}:${sc.selector}`, sc.confidence, threshold)
+    if (!gate.passed) {
+      allPass = false
+      updatedFailures.push(`${name} (${sc.selector}) score=${sc.confidence} < ${threshold}`)
+    }
+  }
+  activity('onboard.test-selectors', 'provider', { provider: opts.provider, allPass, failures: updatedFailures }, allPass ? 'success' : 'failure')
   return {
     phase: 'test-selectors',
     ok: allPass,
-    detail: allPass ? 'all selectors passed' : `gate failed: ${failures.join('; ')}`,
+    detail: allPass ? 'all selectors passed' : `gate failed: ${updatedFailures.join('; ')}`,
     data: map,
   }
 }
 
 export async function modeTestParse(opts: OnboardOptions, logicCode?: string, captured?: string): Promise<OnboardModeResult> {
   const threshold = opts.minConfidence ?? PARSER_MIN_CONFIDENCE
-  // Load the real provider parser logic_code from the DB when not explicitly
-  // supplied (the dispatcher passes empty strings). Falls back to the seed file
-  // so `test-parse` actually exercises the gemini batchexecute parser.
   let effectiveLogic = logicCode ?? ''
   if (!effectiveLogic) {
     effectiveLogic = await loadProviderParserLogic(opts.provider ?? 'unknown')
   }
-  // A captured stream fixture (captured via live Chrome) takes precedence;
-  // otherwise test against a synthetic batchexecute frame so the parser is
-  // exercised even without live traffic.
   let effectiveCaptured = captured ?? ''
   if (!effectiveCaptured) {
     effectiveCaptured = await loadCaptureFixture(opts.provider ?? 'unknown')
   }
-  // No live capture fixture: exercise the parser against a synthetic
-  // batchexecute frame so the gemini parse path is genuinely validated.
   if (!effectiveCaptured && effectiveLogic) {
     effectiveCaptured =
       ")]}'\\n" +
@@ -232,29 +368,68 @@ export async function modeTestParse(opts: OnboardOptions, logicCode?: string, ca
       ])
   }
   const parsed = runParserTest({ logicCode: effectiveLogic }, effectiveCaptured, { minBlocks: 1 })
-  const gate = confidenceGate('parser', parsed.passed ? 0.9 : 0, threshold)
+  let finalOk = parsed.passed
+  let detail = parsed.passed ? `parsed ${parsed.blocks} blocks` : parsed.reason
+  let repaired = false
+
+  if (!parsed.passed && effectiveLogic) {
+    try {
+      const { repairLowConfidenceParser, generateParserModuleCode } = await import('../src/engines/parser-repair.js')
+      const { getDb } = await import('../src/storage/db.js')
+      const { ParserStoreImpl } = await import('../src/storage/impl/parser-store-impl.js')
+      const store = new ParserStoreImpl(getDb())
+      const { StreamParserEngine } = await import('../src/engines/stream-parser.js')
+      const engine = new StreamParserEngine({} as never)
+      const generatedCode = generateParserModuleCode(opts.provider ?? 'unknown', effectiveCaptured)
+      const report = await repairLowConfidenceParser(
+        engine,
+        store,
+        opts.provider ?? 'unknown',
+        effectiveCaptured,
+        { minConfidence: threshold, generateCode: () => generatedCode },
+      )
+      repaired = report.repaired
+      if (report.repaired) {
+        const retry = runParserTest({ logicCode: generatedCode }, effectiveCaptured, { minBlocks: 1 })
+        finalOk = retry.passed
+        detail = retry.passed ? `repaired+parsed ${retry.blocks} blocks` : `repair failed: ${retry.reason}`
+        activity('onboard.test-parse.repair', 'parser', {
+          provider: opts.provider,
+          beforeConfidence: report.beforeConfidence,
+          afterConfidence: report.afterConfidence,
+          retryPassed: retry.passed,
+        })
+      }
+    } catch {
+      // repair failed — keep original failure result
+    }
+  }
+
   activity('onboard.test-parse', 'parser', {
     provider: opts.provider,
-    passed: parsed.passed,
+    passed: finalOk,
     blocks: parsed.blocks,
-    reason: parsed.reason,
-  }, parsed.passed ? 'success' : 'failure')
+    reason: detail,
+    repaired,
+  }, finalOk ? 'success' : 'failure')
   return {
     phase: 'test-parse',
-    ok: gate.passed && parsed.passed,
-    detail: parsed.passed ? `parsed ${parsed.blocks} blocks` : parsed.reason,
+    ok: finalOk,
+    detail,
     data: parsed,
   }
 }
 
 export async function modeTestCap(opts: OnboardOptions, capability: string, input?: unknown): Promise<OnboardModeResult> {
-  const res = await testCapability(capability, input ?? {})
-  activity('onboard.test-cap', 'capability', { provider: opts.provider, capability, ok: res.ok, error: res.error }, res.ok ? 'success' : 'failure')
+  const slug = capability.startsWith('prog-') ? capability : capability
+  const res = await testCapability(slug, input ?? {})
+  activity('onboard.test-cap', 'capability', { provider: opts.provider, capability: slug, ok: res.ok, error: res.error }, res.ok ? 'success' : 'failure')
   return { phase: 'test-cap', ok: res.ok, detail: res.error ?? 'capability executed', data: res.output }
 }
 
 export async function modeTestFrontend(opts: OnboardOptions, capability: string, input?: unknown): Promise<OnboardModeResult> {
-  const res = await testFrontend(opts.provider ?? 'unknown', capability, {
+  const slug = capability.startsWith('prog-') ? capability : capability
+  const res = await testFrontend(opts.provider ?? 'unknown', slug, {
     input,
     client: opts.cdp?.client as never,
     sessionId: opts.cdp?.sessionId,
@@ -354,26 +529,103 @@ export async function runOnboard(opts: OnboardOptions): Promise<OnboardRunReport
   return { ok: true, goal: opts.goal ?? provider, provider, completed, convergenceTasks }
 }
 
-/** Dispatch a single mode by name. Live modes degrade gracefully without CDP. */
+/**
+ * Auto-resolve CDP connection for live phases when not explicitly provided.
+ * Returns the resolved CDP or null if no Chrome is available for the provider.
+ * Logs a clear message so the agent knows what to do.
+ */
+async function autoResolveCdp(provider?: string, url?: string): Promise<{ client: unknown; sessionId: string } | null> {
+  try {
+    const { resolveCdpForProvider } = await import('./runtime-test/cdp-resolver.js')
+    const cdp = await resolveCdpForProvider({ provider, url, hint: provider })
+    if (cdp) {
+      return { client: cdp.client, sessionId: cdp.sessionId }
+    }
+  } catch {
+    // CDP resolution failed — live phases will be skipped
+  }
+  return null
+}
+
+async function checkProviderAuthState(providerSlug?: string): Promise<boolean> {
+  if (!providerSlug) return false
+  try {
+    const { ProfileAllocator } = await import('../src/executor/profile-allocator.js')
+    const { existsSync, readdirSync } = await import('node:fs')
+    const providerDir = join('chrome-profiles', providerSlug)
+    if (!existsSync(providerDir)) return false
+    for (const acct of readdirSync(providerDir, { withFileTypes: true })) {
+      if (!acct.isDirectory()) continue
+      const profileDir = join(providerDir, acct.name)
+      try {
+        if (await new ProfileAllocator().isAuthenticated(profileDir)) return true
+      } catch {
+        // skip account dirs that fail auth check
+      }
+    }
+    return false
+  } catch {
+    return false
+  }
+}
+
+/** Dispatch a single mode by name. Live modes auto-resolve CDP when not provided. */
 export async function dispatchMode(phase: OnboardPhase, opts: OnboardOptions): Promise<OnboardModeResult> {
+  // For live phases, auto-resolve CDP if not explicitly provided
+  const livePhases = ['discover', 'test-selectors', 'test-frontend'] as const
+  let effectiveOpts = opts
+  if (livePhases.includes(phase as typeof livePhases[number]) && !opts.cdp) {
+    const resolvedCdp = await autoResolveCdp(opts.provider, opts.url)
+    if (resolvedCdp) {
+      effectiveOpts = { ...opts, cdp: resolvedCdp }
+    } else {
+      // No Chrome available — provide clear guidance
+      return {
+        phase,
+        ok: false,
+        detail: `No live Chrome slave found for provider '${opts.provider ?? 'unknown'}'. ` +
+          `Run: bun run devops agentic adopt --provider=${opts.provider ?? '<slug>'} ` +
+          `(after bun run devops runtime-test setup --provider=${opts.provider ?? '<slug>'} --account=<email> for first-time login)`,
+      }
+    }
+  }
+
   switch (phase) {
     case 'discover':
-      return modeDiscover(opts)
+      return modeDiscover(effectiveOpts)
     case 'infer':
-      return modeInfer(opts)
+      return modeInfer(effectiveOpts)
     case 'test-selectors':
       // selectors come from a captured draft if present; otherwise no-op pass.
-      return modeTestSelectors(opts, {})
+      return modeTestSelectors(effectiveOpts, {})
     case 'test-parse':
-      return modeTestParse(opts, '', '')
-    case 'test-cap':
-      return modeTestCap(opts, 'send_message')
-    case 'test-frontend':
-      return modeTestFrontend(opts, 'send_message')
+      return modeTestParse(effectiveOpts, '', '')
+    case 'test-cap': {
+      const caps = await loadDiscoveredCapabilities(opts.provider)
+      const results = await Promise.all(caps.map((cap) => modeTestCap(effectiveOpts, cap)))
+      const allOk = results.every((r) => r.ok)
+      return {
+        phase: 'test-cap',
+        ok: allOk,
+        detail: results.map((r) => `${r.detail ?? r.phase}: ${r.ok ? 'ok' : 'FAIL'}`).join('; '),
+        data: results,
+      }
+    }
+    case 'test-frontend': {
+      const caps = await loadDiscoveredCapabilities(opts.provider)
+      const results = await Promise.all(caps.map((cap) => modeTestFrontend(effectiveOpts, cap)))
+      const allOk = results.every((r) => r.ok)
+      return {
+        phase: 'test-frontend',
+        ok: allOk,
+        detail: results.map((r) => `${r.detail ?? r.phase}: ${r.ok ? 'ok' : 'FAIL'}`).join('; '),
+        data: results,
+      }
+    }
     case 'verify':
-      return modeVerify(opts)
+      return modeVerify(effectiveOpts)
     case 'converge':
-      return modeConverge(opts)
+      return modeConverge(effectiveOpts)
     default:
       return { phase, ok: false, detail: `unknown phase: ${phase}` }
   }

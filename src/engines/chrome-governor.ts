@@ -12,8 +12,10 @@ import type {
   TraceEntryInput,
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
+import { injectAntiDetection } from './anti-detection.js'
 import type { BrowserHarnessActions } from './browser-automation/harness-actions.js'
 import type { CapabilitySnapshot, CapabilitySnapshotEntry } from './capability-snapshot.js'
+import { type CdpWatchdog, setupWatchdog } from './cdp-watchdog.js'
 import { submitMessage, typeMessage } from './composer-typing.js'
 import { configToProgram } from './harness/program-schema.js'
 
@@ -182,6 +184,9 @@ export interface CDPTransport {
 // ── CDP Proxy (3.3) ───────────────────────────────────────────────────────
 
 export class CDPProxy {
+  /** Watchdog instances per slave for dialog/crash recovery. */
+  private watchdogs = new Map<string, CdpWatchdog>()
+
   constructor(
     private slaves: Map<string, ChromeSlave>,
     private mutexes: Map<string, AsyncMutex>,
@@ -266,7 +271,7 @@ export class CDPProxy {
             const typeMs = Date.now() - typeStart
             console.log(`[governor] type_text ${slaveId}: ${typeMs}ms, success=${typeResult.success}, landed="${typeResult.text?.slice(0, 50)}", error=${typeResult.error ?? 'none'}`)
             if (!typeResult.success) {
-              throw new Error(`Type failed: ${typeResult.error ?? 'text did not land in composer'}`)
+              throw new ChromeGovernorError(`Type failed: ${typeResult.error ?? 'text did not land in composer'}`)
             }
             stepsCompleted++
             break
@@ -283,7 +288,7 @@ export class CDPProxy {
             const submitMs = Date.now() - submitStart
             console.log(`[governor] submit ${slaveId}: ${submitMs}ms, confirmed=${submitResult.confirmed}, method=${submitResult.method}, selector=${submitResult.selector ?? 'none'}`)
             if (!submitResult.confirmed) {
-              throw new Error(`Submit failed: no button clicked and Enter not confirmed`)
+              throw new ChromeGovernorError(`Submit failed: no button clicked and Enter not confirmed`)
             }
             stepsCompleted++
             break
@@ -305,11 +310,17 @@ export class CDPProxy {
           }
           case 'navigate': {
             const url = typeof params.url === 'string' ? params.url : ''
-            if (url)
+            if (url) {
+              // Inject anti-detection scripts before navigating to provider pages
+              const slave = this.slaves.get(slaveId)
+              if (this.transport && slave?.providerId) {
+                await injectAntiDetection(this.transport, slaveId, slave.providerId)
+              }
               await this.transport?.send(slaveId, 'Runtime.evaluate', {
                 expression: `window.location.href = ${JSON.stringify(url)}`,
                 returnByValue: true,
               })
+            }
             stepsCompleted++
             break
           }
@@ -477,6 +488,15 @@ export class CDPProxy {
       !this.transport.isConnected(slaveId)
     ) {
       await this.transport.connect(slaveId, slave.debugPort)
+      // Set up watchdog for this slave on first connection
+      if (!this.watchdogs.has(slaveId) && this.transport) {
+        const watchdog = setupWatchdog(
+          this.transport,
+          slaveId,
+          () => 'about:blank', // default URL for crash recovery
+        )
+        this.watchdogs.set(slaveId, watchdog)
+      }
     }
     return slave
   }
@@ -750,6 +770,8 @@ export class ChromeGovernor {
   private traceLog: TraceLog | null = null
   private healthMonitor: HealthMonitor | null = null
   private circuitBreakers = new Map<string, CircuitBreaker>()
+  /** Watchdog instances per slave for dialog/crash recovery. */
+  private watchdogs = new Map<string, CdpWatchdog>()
   /** Memoized provider-free generic browser slave (automation backbone). */
   private _genericSlaveId: string | null = null
   /** Extended browser-automation recipe actions (set by bootstrap). */

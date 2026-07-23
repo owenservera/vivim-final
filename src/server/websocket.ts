@@ -120,6 +120,32 @@ export function registerCanvasMutationForwarder(eventBus: CapabilityEventBus): v
   eventBus.on('canvas:mutated', forward)
 }
 
+/**
+ * Forward `canvas:node` events to WebSocket frontends (node-level SSE).
+ * Frontends subscribe with `subscribe` + `topic: canvas:node:<nodeId>` for
+ * a specific node, or `topic: canvas:node` for all node events.
+ * This enables per-node live updates (mutation, state change, error).
+ */
+export function registerNodeEventForwarder(eventBus: CapabilityEventBus): void {
+  const forward = (event: EngineEvent) => {
+    const e = event as { nodeId?: string; instanceId?: string }
+    for (const session of wsSessions.values()) {
+      if (
+        session.subscriptions.has('canvas:node') ||
+        (e.nodeId && session.subscriptions.has(`canvas:node:${e.nodeId}`)) ||
+        (e.instanceId && session.subscriptions.has(`canvas:${e.instanceId}`))
+      ) {
+        try {
+          session.ws.send(JSON.stringify(event))
+        } catch {
+          // Drop if a socket is mid-close
+        }
+      }
+    }
+  }
+  eventBus.on('canvas:node', forward)
+}
+
 export const handleWebSocket = {
   open(ws: WsLike) {
     // Register session placeholder - session id set on hello

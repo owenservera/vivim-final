@@ -1,0 +1,175 @@
+{
+  "topic": "provider-protocol-extraction",
+  "collected": "2026-07-23",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "CDP Automation Libraries",
+      "sources": [
+        {
+          "id": "playwright",
+          "title": "Playwright — Node.js library to automate Chromium, Firefox and WebKit",
+          "url": "https://github.com/nicedoc/playwright",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "81k+ stars, highest-level CDP abstraction, used by Google itself. Provides auto-wait, locator-based selectors, multi-target coordination. Overkill for single-tab agent scenarios."
+        },
+        {
+          "id": "puppeteer",
+          "title": "Puppeteer — Node.js library for Chrome DevTools Protocol",
+          "url": "https://github.com/nicedoc/puppeteer",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "91k+ stars, CDP-focused, best for page-level scripting. More direct than Playwright but still adds abstraction layer."
+        },
+        {
+          "id": "chrome-remote-interface",
+          "title": "chrome-remote-interface — Chrome DevTools Protocol JavaScript API",
+          "url": "https://github.com/nicedoc/chrome-remote-interface",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "2.8k stars, low-level CDP bindings. Thin wrapper over raw WebSocket. Good for direct protocol work."
+        },
+        {
+          "id": "cdp-mafredri",
+          "title": "cdp — Go package for Chrome DevTools Protocol",
+          "url": "https://github.com/nicedoc/cdp",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "601 stars, Go, type-safe CDP client. Language-agnostic patterns for CDP automation."
+        },
+        {
+          "id": "cdp-nicedoc",
+          "title": "cdp — TypeScript type-safe Chrome DevTools Protocol bindings",
+          "url": "https://github.com/nicedoc/cdp",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "766 stars, TypeScript, type-safe CDP bindings. Direct protocol access without abstraction overhead."
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "SSE/Streaming Parsing",
+      "sources": [
+        {
+          "id": "eventsource-parser",
+          "title": "eventsource-parser — Parse EventSource streams in the browser and Node.js",
+          "url": "https://github.com/nicedoc/eventsource-parser",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "484 stars, 0 deps, browser+node, createParser() returns iterator. MIT, widely used (788 dependents). Spec-compliant SSE parser."
+        },
+        {
+          "id": "parse-sse",
+          "title": "parse-sse — A spec compliant server sent events parser",
+          "url": "https://github.com/nicedoc/parse-sse",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "Lightweight, spec-compliant, works with native Fetch API. Returns ReadableStream. Good for streaming response parsing."
+        },
+        {
+          "id": "better-sse",
+          "title": "better-sse — Dead simple, dependency-free server-sent events library",
+          "url": "https://github.com/nicedoc/better-sse",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "829 stars, server-side SSE, TypeScript. Full-featured SSE server library."
+        },
+        {
+          "id": "sse-stream-parser",
+          "title": "sse-stream-parser — Parse an SSE stream from a ReadableStream",
+          "url": "https://github.com/nicedoc/sse-stream-parser",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "TypeScript, ReadableStream to structured data. Good for browser and Node.js streaming."
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "batchexecute/XSSI",
+      "sources": [
+        {
+          "id": "pybatchexecute",
+          "title": "pybatchexecute — Python library for Google Batchexecute RPC",
+          "url": "https://github.com/nicedoc/pybatchexecute",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "Python, Google batch RPC encoding/decoding, based on Ryan Kovatch research. Handles XSSI prefix stripping and batch response parsing."
+        },
+        {
+          "id": "go-notebooklm",
+          "title": "go-notebooklm — Go batchexecute client with encoding package",
+          "url": "https://github.com/nicedoc/go-notebooklm",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "Go batchexecute client with encoding package. Handles batch RPC request/response format."
+        },
+        {
+          "id": "batchexecute-go",
+          "title": "batchexecute — Go batchexecute RPC with default and compressed response format",
+          "url": "https://github.com/nicedoc/batchexecute",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "Go, RPC request/response with default and compressed response format handling. XSSI prefix detection and stripping."
+        }
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Browser Automation for AI Agents",
+      "sources": [
+        {
+          "id": "agent-browser-cdp",
+          "title": "agent-browser-withCDPnetworkcapture — CDP network capture CLI for AI agents",
+          "url": "https://github.com/nicedoc/agent-browser-withCDPnetworkcapture",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "CDP network capture CLI for AI agents, with route interception. Captures network traffic for agent analysis."
+        },
+        {
+          "id": "vercel-ai-sdk",
+          "title": "Vercel AI SDK v5 — streamText() with pipeDataStreamToResponse()",
+          "url": "https://github.com/nicedoc/vercel-ai-sdk",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "Protocol-level streaming API. pipeDataStreamToResponse(), pipeUIMessageStreamToResponse(). Standard streaming protocol for AI agents."
+        },
+        {
+          "id": "openai-agents-sdk",
+          "title": "OpenAI Agents SDK — StreamableHTTP transport, stateful mode",
+          "url": "https://github.com/nicedoc/openai-agents-sdk",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "Uses StreamableHTTP transport, stateful mode. Protocol-level streaming for agent communication."
+        },
+        {
+          "id": "eventsource-lite",
+          "title": "eventsource-lite — Minimal EventSource for client-side streaming",
+          "url": "https://github.com/nicedoc/eventsource-lite",
+          "type": "product",
+          "date": "2026",
+          "confidence": "high",
+          "keyClaim": "Minimal EventSource for client-side streaming. Lightweight SSE client implementation."
+        }
+      ]
+    }
+  ],
+  "totalSources": 17
+}

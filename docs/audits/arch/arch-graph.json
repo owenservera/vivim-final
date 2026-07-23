@@ -1716,6 +1716,10 @@
     },
     {
       "from": "engines/memory-engine",
+      "to": "errors"
+    },
+    {
+      "from": "engines/memory-engine",
       "to": "storage/contracts"
     },
     {
@@ -3380,6 +3384,10 @@
     },
     {
       "from": "server/index",
+      "to": "engines/harness"
+    },
+    {
+      "from": "server/index",
       "to": "engines/mcp-server-adapter"
     },
     {
@@ -3505,6 +3513,10 @@
     {
       "from": "server/plugin-router",
       "to": "ids"
+    },
+    {
+      "from": "server/plugin-router",
+      "to": "engines/safe-eval"
     },
     {
       "from": "server/plugin-router",
@@ -5722,9 +5734,9 @@
     },
     {
       "module": "engines/harness",
-      "fanIn": 5,
+      "fanIn": 6,
       "fanOut": 9,
-      "instability": 0.6428571428571429,
+      "instability": 0.6,
       "selfDeps": 1,
       "totalDeps": 9,
       "cohesion": 0.1111111111111111,
@@ -5973,10 +5985,10 @@
     {
       "module": "engines/memory-engine",
       "fanIn": 11,
-      "fanOut": 3,
-      "instability": 0.21428571428571427,
+      "fanOut": 4,
+      "instability": 0.26666666666666666,
       "selfDeps": 0,
-      "totalDeps": 3,
+      "totalDeps": 4,
       "cohesion": 0,
       "files": 1
     },
@@ -6262,9 +6274,9 @@
     },
     {
       "module": "engines/safe-eval",
-      "fanIn": 3,
+      "fanIn": 4,
       "fanOut": 1,
-      "instability": 0.25,
+      "instability": 0.2,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -6582,7 +6594,7 @@
     },
     {
       "module": "errors",
-      "fanIn": 73,
+      "fanIn": 74,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7313,10 +7325,10 @@
     {
       "module": "server/index",
       "fanIn": 12,
-      "fanOut": 66,
-      "instability": 0.8461538461538461,
+      "fanOut": 67,
+      "instability": 0.8481012658227848,
       "selfDeps": 0,
-      "totalDeps": 66,
+      "totalDeps": 67,
       "cohesion": 0,
       "files": 1
     },
@@ -7393,10 +7405,10 @@
     {
       "module": "server/plugin-router",
       "fanIn": 0,
-      "fanOut": 7,
+      "fanOut": 8,
       "instability": 1,
       "selfDeps": 0,
-      "totalDeps": 7,
+      "totalDeps": 8,
       "cohesion": 0,
       "files": 1
     },
@@ -7508,7 +7520,7 @@
       "selfDeps": 1,
       "totalDeps": 18,
       "cohesion": 0.05555555555555555,
-      "files": 60
+      "files": 61
     },
     {
       "module": "storage/prisma",

@@ -23,7 +23,7 @@ export interface SelectorTesterDeps {
   sessionId: string
 }
 
-async function evalVisible(client: BunCdpClient, sessionId: string, selector: string): Promise<{ found: boolean; visible: boolean }> {
+export async function evalVisible(client: BunCdpClient, sessionId: string, selector: string): Promise<{ found: boolean; visible: boolean }> {
   const expr = `(()=>{ const el = document.querySelector(${JSON.stringify(selector)}); if (!el) return {found:false,visible:false}; const r = el.getBoundingClientRect(); return {found:true, visible: r.width>0 && r.height>0 && r.bottom>0}; })()`
   const res = (await client.send('Runtime.evaluate', { expression: expr, returnByValue: true }, { sessionId })) as {
     result?: { value?: { found: boolean; visible: boolean } }

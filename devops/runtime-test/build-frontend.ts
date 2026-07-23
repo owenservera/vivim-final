@@ -3,7 +3,7 @@
 //
 // AGENT-SAFE: bounded, idempotent, no hanging I/O.
 //
-// Ensures the prod frontend (web/ui) ships the contract-interpreter backbone from
+// Ensures the prod frontend (frontend) ships the contract-interpreter backbone from
 // the `vivi-frontend` skill: the CapabilitySurface host + GenericCapabilityRenderer
 // + ResultRenderer + ConfirmGate. Copies them from the skill templates only when
 // absent, so re-running never clobbers bespoke work. Also appends the public
@@ -16,7 +16,7 @@ import { readFile, writeFile, mkdir, copyFile, access } from 'node:fs/promises'
 const HERE = dirname(fileURLToPath(import.meta.url))
 // devops/runtime-test → repo root → .opencode/skill/vivi-frontend/templates
 const SKILL_TEMPLATES = resolve(HERE, '../../.opencode/skill/vivi-frontend/templates')
-const UI_ROOT = 'web/ui'
+const UI_ROOT = 'frontend'
 const UI_SRC = resolve(UI_ROOT, 'src')
 
 /** A renderer to register into the CapabilityRegistry ledger (U5 auto-register). */
@@ -68,7 +68,7 @@ export async function emitCanvasLayerManifest(slugs: string[]): Promise<void> {
   )
 }
 
-// [template file, destination relative to web/ui/src, kind]
+// [template file, destination relative to frontend/src, kind]
 const CORE_FILES: Array<[string, string]> = [
   ['capability-surface.tsx', 'features/capability-surface.tsx'],
   ['generic-renderer.tsx', 'components/generic-capability-renderer.tsx'],

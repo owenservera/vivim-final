@@ -21,6 +21,197 @@ export interface AnalyzerOptions {
   minConfidence?: number
 }
 
+interface ProviderFormatClassification {
+  transport: StreamTransport
+  eventName?: string
+  provider?: string
+  confidence: number
+}
+
+function classifyAnthropicSse(body: string): ProviderFormatClassification | null {
+  const trimmed = body.trim()
+  if (!/^event:\s*(message_start|content_block_delta|message_delta|content_block_stop|message_stop)/m.test(trimmed)) return null
+  const hasContentBlock = trimmed.includes('content_block_delta') || trimmed.includes('content_block_start')
+  const hasMessageStop = trimmed.includes('message_stop') || trimmed.includes('message_delta')
+  const confidence = hasContentBlock ? 0.95 : hasMessageStop ? 0.7 : 0.4
+  if (confidence < 0.7) return null
+  return { transport: 'sse', eventName: 'anthropic_sse', provider: 'claude', confidence }
+}
+
+function classifyOpenAiSse(body: string): ProviderFormatClassification | null {
+  const trimmed = body.trim()
+  if (!trimmed.includes('choices') || !trimmed.includes('delta')) return null
+  const hasReasoning = trimmed.includes('reasoning_content')
+  const hasContent = trimmed.includes('"content"')
+  const hasDone = trimmed.includes('[DONE]')
+  const score = (hasDone ? 0.4 : 0) + (hasReasoning ? 0.3 : 0) + (hasContent ? 0.3 : 0)
+  const confidence = Math.min(1, 0.5 + score)
+  if (confidence < 0.7) return null
+  return { transport: 'sse', eventName: 'openai_sse', provider: 'chatgpt', confidence }
+}
+
+function classifyGeminiBatchExecute(body: string): ProviderFormatClassification | null {
+  const trimmed = body.trim()
+  if (!trimmed.startsWith(')]}\n')) return null
+  let depth = 0
+  let hasRpc = false
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i]
+    if (ch === '[') depth++
+    else if (ch === ']') depth--
+    if (depth === 1 && trimmed.slice(i, i + 5) === '$rpc') {
+      hasRpc = true
+      break
+    }
+  }
+  if (!hasRpc) return null
+  return { transport: 'sse', eventName: 'batchexecute', provider: 'gemini', confidence: 0.95 }
+}
+
+function classifyProviderFormat(body: string): ProviderFormatClassification | null {
+  if (!body || body.trim().length === 0) return null
+  return classifyAnthropicSse(body) ?? classifyOpenAiSse(body) ?? classifyGeminiBatchExecute(body)
+}
+
+function generateAnthropicSseLogicCode(name: string, providerId: string): string {
+  return `function parse(rawBody) {
+  var blocks = []; var index = 0; var lines = String(rawBody).split('\\n');
+  for (var i = 0; i < lines.length; i++) {
+    var trimmed = lines[i].trim();
+    if (!trimmed.startsWith('data:')) continue;
+    var payload = trimmed.slice(5).trim();
+    if (payload === '[DONE]') break;
+    try {
+      var json = JSON.parse(payload);
+      if (json.type === 'content_block_start' && json.content_block) {
+        var cb = json.content_block;
+        if (cb.type === 'thinking') blocks.push({ type: 'reasoning', text: '' });
+        else if (cb.type === 'text') blocks.push({ type: 'text', text: String(cb.text || '') });
+      }
+      if (json.type === 'content_block_delta' && json.delta) {
+        var delta = json.delta;
+        if (typeof delta.text === 'string') {
+          var last = blocks[blocks.length - 1];
+          if (last && last.type === 'text') last.text += delta.text;
+          else blocks.push({ type: 'text', text: delta.text });
+        }
+        if (typeof delta.thinking === 'string') {
+          var last2 = blocks[blocks.length - 1];
+          if (last2 && last2.type === 'reasoning') last2.text += delta.thinking;
+          else blocks.push({ type: 'reasoning', text: delta.thinking });
+        }
+      }
+      if (json.type === 'message_stop') {
+        var last3 = blocks[blocks.length - 1];
+        if (last3 && last3.type !== 'meta') blocks.push({ type: 'meta', key: 'stopped', value: 'message_stop' });
+      }
+    } catch (_e) {}
+  }
+  if (blocks.length === 0 && rawBody.length > 0) blocks.push({ type: 'text', text: rawBody });
+  return blocks;
+}
+function detectCompletion(rawBody) {
+  return String(rawBody).includes('message_stop') || String(rawBody).includes('message_delta') || String(rawBody).includes('[DONE]');
+}
+function getConfidence(rawBody) {
+  var b = String(rawBody);
+  if (!b.includes('data:')) return 0;
+  if (b.includes('content_block_delta') || b.includes('content_block_start')) return 1;
+  if (b.includes('message_stop')) return 0.7;
+  return 0.3;
+}
+exports.default = { name: '${name}', version: 1, providerId: '${providerId}', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };`
+}
+
+function generateOpenAiSseLogicCode(name: string, providerId: string): string {
+  return `function parse(rawBody) {
+  var blocks = []; var index = 0; var lines = String(rawBody).split('\\n');
+  for (var i = 0; i < lines.length; i++) {
+    var trimmed = lines[i].trim();
+    if (!trimmed.startsWith('data:')) continue;
+    var payload = trimmed.slice(5).trim();
+    if (payload === '[DONE]') break;
+    try {
+      var json = JSON.parse(payload);
+      var choices = json.choices || [];
+      if (choices[0] && choices[0].delta) {
+        var delta = choices[0].delta;
+        if (typeof delta.reasoning_content === 'string' && delta.reasoning_content.length > 0) {
+          var last = blocks[blocks.length - 1];
+          if (last && last.type === 'reasoning') last.text += delta.reasoning_content;
+          else blocks.push({ type: 'reasoning', text: delta.reasoning_content });
+        }
+        if (typeof delta.content === 'string' && delta.content.length > 0) {
+          var last2 = blocks[blocks.length - 1];
+          if (last2 && last2.type === 'text') last2.text += delta.content;
+          else blocks.push({ type: 'text', text: delta.content });
+        }
+      }
+      if (json.choices && json.choices[0] && json.choices[0].finish_reason) {
+        blocks.push({ type: 'meta', key: 'finish_reason', value: json.choices[0].finish_reason });
+      }
+    } catch (_e) {}
+  }
+  if (blocks.length === 0 && rawBody.length > 0) blocks.push({ type: 'text', text: rawBody });
+  return blocks;
+}
+function detectCompletion(rawBody) {
+  return String(rawBody).includes('[DONE]') || /"finish_reason"\s*:\s*"(stop|length)"/.test(rawBody);
+}
+function getConfidence(rawBody) {
+  var b = String(rawBody);
+  if (!b.includes('data:')) return 0;
+  if (b.includes('choices') && b.includes('delta')) return 1;
+  if (b.includes('[DONE]')) return 0.8;
+  return 0.4;
+}
+exports.default = { name: '${name}', version: 1, providerId: '${providerId}', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };`
+}
+
+function generateGeminiBatchExecuteLogicCode(name: string, providerId: string): string {
+  return `function decodeEnvelope(body) {
+  var cleaned = String(body).replace(/^\\]\\}'\\n?/, '');
+  try { return JSON.parse(cleaned); } catch (_e) { return null; }
+}
+function parse(rawBody) {
+  var blocks = []; var parsed = decodeEnvelope(rawBody);
+  if (!parsed || !Array.isArray(parsed)) {
+    if (rawBody.trim().length > 0) blocks.push({ type: 'text', text: rawBody });
+    return blocks;
+  }
+  for (var i = 0; i < parsed.length; i++) {
+    var rpc = parsed[i];
+    if (!Array.isArray(rpc) || rpc.length < 2) continue;
+    var result = rpc[1];
+    if (!result || !result.candidates || !result.candidates[0]) continue;
+    var candidate = result.candidates[0];
+    var parts = candidate.content && candidate.content.parts;
+    if (!parts || !Array.isArray(parts)) continue;
+    for (var j = 0; j < parts.length; j++) {
+      var part = parts[j];
+      if (typeof part.text === 'string' && part.text.length > 0) {
+        var last = blocks[blocks.length - 1];
+        if (last && last.type === 'text') last.text += part.text;
+        else blocks.push({ type: 'text', text: part.text });
+      }
+    }
+  }
+  if (blocks.length === 0 && rawBody.length > 0) blocks.push({ type: 'text', text: rawBody });
+  return blocks;
+}
+function detectCompletion(rawBody) {
+  var b = String(rawBody);
+  return b.includes(']]]}') || b.includes('[null, null]') || b.includes('"done": true');
+}
+function getConfidence(rawBody) {
+  var b = String(rawBody);
+  if (b.startsWith(')]}') || b.startsWith(']}}')) return 1;
+  if (b.includes('candidates') && b.includes('parts')) return 0.9;
+  return 0;
+}
+exports.default = { name: '${name}', version: 1, providerId: '${providerId}', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };`
+}
+
 function classifyTransport(body: string): { transport: StreamTransport; eventName?: string } {
   const trimmed = body.trim()
   if (!trimmed) return { transport: 'unknown' }
@@ -196,6 +387,27 @@ export class StreamingResponseAnalyzer {
 
   /** Run analysis over a captured raw body. */
   analyze(rawBody: string): StreamAnalysis {
+    const providerFormat = classifyProviderFormat(rawBody)
+    if (providerFormat) {
+      const name = `${providerFormat.provider}/${providerFormat.eventName ?? 'inferred'}`
+      const logicCode =
+        providerFormat.eventName === 'anthropic_sse'
+          ? generateAnthropicSseLogicCode(name, providerFormat.provider!)
+          : providerFormat.eventName === 'openai_sse'
+            ? generateOpenAiSseLogicCode(name, providerFormat.provider!)
+            : providerFormat.eventName === 'batchexecute'
+              ? generateGeminiBatchExecuteLogicCode(name, providerFormat.provider!)
+              : ''
+      return {
+        transport: providerFormat.transport,
+        eventName: providerFormat.eventName,
+        dataPath: providerFormat.eventName ?? 'inferred',
+        sampleDelta: rawBody.slice(0, 100),
+        confidence: providerFormat.confidence,
+        logicCode,
+      }
+    }
+
     const { transport, eventName } = classifyTransport(rawBody)
     if (transport === 'unknown') {
       return {

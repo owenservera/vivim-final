@@ -1,6 +1,6 @@
 # Research Library — FRESHNESS
 
-*Last updated: 2026-07-20*
+*Last updated: 2026-07-23*
 
 | Report/Brief | Generated | Last Verified | Status |
 |--------------|-----------|---------------|--------|
@@ -21,6 +21,9 @@
 | LiteRT.js (Google AI Edge) (report + brief + code-path) | 2026-07-20 | 2026-07-20 | ✅ Fresh |
 | LiteRT.js × vivim integration analysis | 2026-07-20 | 2026-07-20 | ✅ Fresh |
 | Local Source-Code Indexing (LLM/Vibe) (report + brief + code-path) | 2026-07-20 | 2026-07-20 | ✅ Fresh |
+| Kimi Moonshot / Baby MoonShot Windows — Gap Analysis (report + brief + code-path) | 2026-07-23 | 2026-07-23 | ✅ Fresh |
+| Croc File Transfer (report + brief + code-path + evidence) | 2026-07-23 | 2026-07-23 | ✅ Fresh |
+| Alpine.js + HTMX Canvas (report + brief + assessment + evidence) | 2026-07-23 | 2026-07-23 | ✅ Fresh |
 
 ## Rules
 

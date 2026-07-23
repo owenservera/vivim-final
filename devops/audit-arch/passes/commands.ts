@@ -10,7 +10,7 @@
 // This pass statically extracts:
 //   - capabilities   from src/engines/capability-bootstrap.ts (makeCapability)
 //   - NL patterns    from src/engines/nlcl/catalog.ts (pattern + capabilityId)
-//   - frontend acts  from web/ui/src/actions (ActionRegistry.register)
+//   - frontend acts  from frontend/src/actions (ActionRegistry.register)
 // and emits findings that surface POTENTIAL NEW COMMANDS and CENTRAL COMMANDS
 // needed, plus real inconsistencies (dangling / duplicate bindings).
 //
@@ -26,7 +26,7 @@ import type { Scope } from '../priority.ts'
 const ROOT = join(import.meta.dir, '..', '..', '..')
 const CAP_FILE = join(ROOT, 'src', 'engines', 'capability-bootstrap.ts')
 const CATALOG_FILE = join(ROOT, 'src', 'engines', 'nlcl', 'catalog.ts')
-const ACTIONS_DIR = join(ROOT, 'web', 'ui', 'src', 'actions')
+const ACTIONS_DIR = join(ROOT, 'frontend', 'src', 'actions')
 
 // Surfaces that have an explicit binding field on a capability.
 const BINDING_SURFACES = ['cli', 'ui', 'mcp', 'api'] as const

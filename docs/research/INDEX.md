@@ -1,6 +1,6 @@
 # Research Library — INDEX
 
-*Last updated: 2026-07-20*
+*Last updated: 2026-07-23*
 
 ## Reports
 
@@ -17,6 +17,11 @@
 | LiteRT.js (Google AI Edge) — Web on-device inference | [litert-js-sota-2026.md](reports/litert-js-sota-2026.md) | 2026-07-20 | 18 | High |
 | LiteRT.js × vivim-final — Deep Integration Analysis | [litert-js-integration-analysis-2026.md](reports/litert-js-integration-analysis-2026.md) | 2026-07-20 | 18 | High |
 | Local Source-Code Indexing for LLM / Vibe Coding | [local-code-indexing-llm-sota-2026.md](reports/local-code-indexing-llm-sota-2026.md) | 2026-07-20 | 22 | High |
+| Kimi Moonshot / Baby MoonShot Windows — Gap Analysis | [kimi-moonshot-windows-sota-2026.md](reports/kimi-moonshot-windows-sota-2026.md) | 2026-07-23 | 18 | High |
+| PocketBase (embedded SQLite backend) | [pocketbase-sota-2026.md](reports/pocketbase-sota-2026.md) | 2026-07-23 | 8 | High |
+| Croc File Transfer — Networked Workspace Sync | [croc-file-transfer-sota-2026.md](reports/croc-file-transfer-sota-2026.md) | 2026-07-23 | 10 | High |
+| Croc Integration — Full Recommendations | [croc-integration-recommendations-2026.md](reports/croc-integration-recommendations-2026.md) | 2026-07-23 | 13 | High |
+| Alpine.js + HTMX Canvas — Integration Assessment | [alpine-htmx-integration-assessment-2026.md](reports/alpine-htmx-integration-assessment-2026.md) | 2026-07-23 | 18 | High |
 
 ## Briefs
 
@@ -34,6 +39,11 @@
 | Chrome Fleet Management | [chrome-fleet-management-brief.md](briefs/chrome-fleet-management-brief.md) | 2026-07-19 | High | ChromeGovernor, FleetConfig, GovernorStore.ProviderFleetConfig |
 | LiteRT.js (Google AI Edge) | [litert-js-brief.md](briefs/litert-js-brief.md) | 2026-07-20 | High | Frontend ML capability slot, knowledge-graph embeddings, NL pre-router |
 | Local Source-Code Indexing for LLM / Vibe Coding | [local-code-indexing-llm-brief.md](briefs/local-code-indexing-llm-brief.md) | 2026-07-20 | High | devops/code-index.ts (CREATE unit), devops loop / sub-agents |
+| Kimi Moonshot Windows Gap Analysis | [kimi-moonshot-windows-brief.md](briefs/kimi-moonshot-windows-brief.md) | 2026-07-23 | High | Desktop shell, agent-skill system, MCP rewrite, CDP harness rewrite, agent swarm, Goal Mode |
+| PocketBase | [pocketbase-brief.md](briefs/pocketbase-brief.md) | 2026-07-23 | High | General research (not unit-linked) |
+| Croc File Transfer | [croc-file-transfer-brief.md](briefs/croc-file-transfer-brief.md) | 2026-07-23 | High | CrocTransferEngine, profile sync, networked workspace (future) |
+| Alpine.js + HTMX Canvas | [alpine-htmx-canvas-brief.md](briefs/alpine-htmx-canvas-brief.md) | 2026-07-23 | High | Admin island migration (4/64 HIGH compat), chat canvas blocked |
+| Provider Protocol Extraction & Parsing Pipeline | [provider-protocol-extraction-brief.md](briefs/provider-protocol-extraction-brief.md) | 2026-07-23 | High | StreamParserEngine, ChromeGovernor.CDPProxy, HarnessExecutor, ConversationManager |
 
 ## Evidence
 
@@ -53,6 +63,11 @@
 | Chrome Fleet Management | [evidence/chrome-fleet-management/](evidence/chrome-fleet-management/) | 14 |
 | LiteRT.js (Google AI Edge) | [evidence/litert-js/](evidence/litert-js/) | 18 |
 | Local Source-Code Indexing (LLM/Vibe) | [evidence/local-code-indexing-llm/](evidence/local-code-indexing-llm/) | 22 |
+| Kimi Moonshot Windows | [evidence/kimi-moonshot/](evidence/kimi-moonshot/) | 18 |
+| PocketBase | [evidence/pocketbase/](evidence/pocketbase/) | 8 |
+| Croc File Transfer | [evidence/croc-file-transfer/](evidence/croc-file-transfer/) | 10 |
+| Alpine.js + HTMX Canvas | [evidence/alpine-htmx-canvas/](evidence/alpine-htmx-canvas/) | 18 |
+| Provider Protocol Extraction & Parsing Pipeline | [evidence/provider-protocol-extraction/](evidence/provider-protocol-extraction/) | 17 |
 
 ## Code Paths
 
@@ -65,6 +80,8 @@
 | Chrome Fleet Management | [chrome-fleet-management-path.md](code-paths/chrome-fleet-management-path.md) | PROBABLE | 2026-07-19 |
 | LiteRT.js (Google AI Edge) | [litert-js-path.md](code-paths/litert-js-path.md) | CONFIRMED/PROBABLE | 2026-07-20 |
 | Local Source-Code Indexing (LLM/Vibe) | [local-code-indexing-llm-path.md](code-paths/local-code-indexing-llm-path.md) | CONFIRMED | 2026-07-20 |
+| Kimi Moonshot Windows Gap Analysis | [kimi-moonshot-gap-analysis.md](code-paths/kimi-moonshot-gap-analysis.md) | CONFIRMED | 2026-07-23 |
+| Croc File Transfer Integration | [croc-integration-path.md](code-paths/croc-integration-path.md) | DESIGN | 2026-07-23 |
 
 ## Existing Research (Pre-NLCL)
 

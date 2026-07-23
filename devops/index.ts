@@ -788,9 +788,19 @@ async function main() {
 
         case 'status':
           {
-            const status = await serverStatus()
-            console.log(JSON.stringify(status, null, 2))
-            process.exit(status.ok ? 0 : 1)
+            // Check if --provider is given → use provider-specific status
+            const providerFlag = rest.find((a) => a.startsWith('--provider='))
+            const providerSlug = providerFlag ? providerFlag.split('=')[1] : rest[rest.indexOf('--provider') + 1]
+            if (providerSlug) {
+              const { providerStatus } = await import('./runtime-test/provider-status.js')
+              const ps = await providerStatus(providerSlug)
+              console.log(JSON.stringify(ps, null, 2))
+              process.exit(ps.ok ? 0 : 1)
+            } else {
+              const status = await serverStatus()
+              console.log(JSON.stringify(status, null, 2))
+              process.exit(status.ok ? 0 : 1)
+            }
           }
           break
 

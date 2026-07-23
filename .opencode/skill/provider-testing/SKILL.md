@@ -5,6 +5,45 @@ description: Test providers in vivim-final. Covers the 8-phase onboarding pipeli
 
 # Provider Testing
 
+## CRITICAL: Provider Setup First
+
+**Before running ANY live phase** (discover, test-selectors, test-frontend, onboard run),
+you MUST ensure a Chrome slave is running with the target provider's profile. Without this,
+CDP-dependent phases fail with "No live Chrome slave found".
+
+### Setup Checklist (run in order)
+
+```bash
+# 1. Check current state
+bun run devops runtime-test status --provider=gemini
+
+# 2a. First-time: no profile exists → opens Chrome for manual login
+bun run devops runtime-test setup --provider=gemini --account=gemini_owservera@gmail.com
+
+# 2b. Subsequent: profile on disk → restores cookies + launches headless
+bun run devops agentic adopt --provider=gemini
+
+# 3. Verify readiness
+bun run devops runtime-test status --provider=gemini
+# Expected: verdict "already-registered", liveSlave true, hasCookies true
+```
+
+### Provider Account Convention
+
+| Provider | Account slug | Profile dir |
+|----------|-------------|-------------|
+| gemini | `gemini_owservera@gmail.com` | `chrome-profiles/gemini/owservera/` |
+| chatgpt | `chatgpt_owservera@gmail.com` | `chrome-profiles/chatgpt/owservera/` |
+| claude | `claude_owservera@gmail.com` | `chrome-profiles/claude/owservera/` |
+
+### What Happens Without Setup
+
+- `onboard discover` → fails: "No live Chrome slave found"
+- `onboard test-selectors` → fails: same
+- `onboard test-frontend` → fails: same
+- `engage --provider=gemini` → returns `ok: false, step: 'fleet_start'`
+- `discover-protocol <url>` → fails: "No live Chrome instance found"
+
 ## The 8-Phase Onboarding Pipeline
 
 Every provider goes through this pipeline. Each phase is a bounded, repeatable mode:
@@ -99,21 +138,27 @@ From `tests/e2e/provider-stream-validate.test.ts`:
 ## Quick Reference: Common Test Commands
 
 ```bash
-# Check if provider is ready
+# Check if provider is ready (MUST pass before any live phase)
 bun run devops runtime-test status --provider=gemini
 
-# Run all parser unit tests
+# Run all parser unit tests (no Chrome needed)
 bun test tests/unit/engines/harvested-parser.test.ts
 
-# Run all provider E2E stream validation
+# Run all provider E2E stream validation (no Chrome needed)
 bun test tests/e2e/provider-stream-validate.test.ts
 
-# Test NL resolution
+# Test NL resolution (no Chrome needed)
 bun run devops runtime-test test --nl="send message to gemini"
 
-# Test capability by slug
-bun run devops runtime-test test-cap --slug=conversation_send
+# Test capability by slug (no Chrome needed)
+bun run devops runtime-test test-cap --slug=gemini_send
 
-# Full onboarding cycle
+# Full onboarding cycle (auto-resolves CDP, but Chrome must be running)
 bun run devops runtime-test onboard run --provider=gemini
+
+# Individual onboard phases (auto-resolve CDP when possible)
+bun run devops runtime-test onboard discover --provider=gemini --url=https://gemini.google.com/app
+bun run devops runtime-test onboard test-selectors --provider=gemini
+bun run devops runtime-test onboard test-cap --provider=gemini
+bun run devops runtime-test onboard test-frontend --provider=gemini
 ```

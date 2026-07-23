@@ -2,7 +2,7 @@
 
 *Links between research artifacts and devops infrastructure (ADRs, units, goals).*
 
-*Last updated: 2026-07-20*
+*Last updated: 2026-07-23*
 
 ## Research → Unit Mapping
 
@@ -23,6 +23,9 @@
 | litert-js-brief | web/ui canvas (MLSurface slot), knowledge-graph embeddings, CommandPalette/CapabilityBar NL pre-router | Frontend-only ML capability via LiteRT.js; complements remote providers, privacy/latency/cost win |
 | litert-js-integration-analysis | SandboxedNode (host vs sandbox boundary), register-slot/UniversalComponentRegistry, Composer NL prerouter, backend-client knowledge API, MediaCard | Concrete seam map: embeddings + NL prerouter in HOST canvas; ML forbidden inside opaque-origin sandbox; expose via CapabilityBus |
 | local-code-indexing-llm-brief | devops/code-index.ts (new CREATE unit), devops loop / sub-agents | SOTA local code indexing (AST chunk + hybrid RRF + token-budgeted path:line + offline SQLite + MCP) built natively into the devops system for LLM/vibe coding |
+| kimi-moonshot-windows-brief | Desktop shell, agent-skill system, MCP rewrite, CDP harness rewrite, agent swarm, Goal Mode | Environment-based computing validated; Tauri desktop, SKILL.md skill system, 300-agent swarm, CDP browser harness, Goal Mode long-horizon execution |
+| croc-file-transfer-brief | CrocTransferEngine (future), profile sync, networked workspace | CLI wrapper integration for encrypted file transfer; self-hosted relay; chrome profile backup/restore; multi-device sync |
+| alpine-htmx-canvas-brief | Admin pages (4/64 HIGH compat), chat canvas (blocked) | Hybrid islands migration: ConversationList, HealthDashboard, ProviderManager, WorkspaceSettings → HTMX+Alpine; chat canvas remains React |
 
 ## Research → Goal Mapping
 

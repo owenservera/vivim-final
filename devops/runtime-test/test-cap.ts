@@ -13,6 +13,8 @@ const FETCH_TIMEOUT_MS = Number.parseInt(process.env.CAP_TEST_TIMEOUT_MS ?? '600
 
 export interface TestCapResult {
   ok: boolean
+  /** True if the capability exists in the registry (even if execution failed due to validation). */
+  registered?: boolean
   output?: unknown
   error?: string
 }
@@ -37,8 +39,18 @@ export async function testCapability(slug: string, input: unknown): Promise<Test
       },
     )
     const data = (await res.json()) as { ok?: boolean; output?: unknown; error?: string; text?: string }
-    return { ok: Boolean(data.ok), output: data.output ?? data.text, error: data.error }
+    // 404 → capability not found in registry
+    // 400 → capability found but input validation failed (still registered)
+    // 200 → capability executed successfully
+    const registered = res.status !== 404
+    return {
+      ok: Boolean(data.ok),
+      registered,
+      output: data.output ?? data.text,
+      error: data.error,
+    }
   } catch (err) {
-    return { ok: false, error: String(err) }
+    return { ok: false, registered: false, error: String(err) }
   }
 }
+

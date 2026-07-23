@@ -119,19 +119,42 @@ export class ConversationStoreImpl implements ConversationStore {
 
   async createConversation(input: ConversationInput): Promise<ConversationRow> {
     const now = Date.now()
-    const row = await this.db.prisma.conversation.create({
-      data: {
-        id: newId(),
-        providerSessionId: input.providerSessionId,
-        providerId: input.providerId,
-        title: input.title ?? null,
-        state: input.state ?? 'active',
-        contextJson: input.contextJson ?? '{}',
-        createdAt: now,
-        updatedAt: now,
-      },
-    })
-    return toConversationRow(row as unknown as PrismaConversation)
+    let sessionId = input.providerSessionId
+    if (!sessionId) {
+      const sess = await this.db.ensureProviderSession({ providerId: input.providerId })
+      sessionId = sess.id
+    }
+    try {
+      const row = await this.db.prisma.conversation.create({
+        data: {
+          id: input.id ?? newId(),
+          providerSessionId: sessionId,
+          providerId: input.providerId,
+          title: input.title ?? null,
+          state: input.state ?? 'active',
+          contextJson: input.contextJson ?? '{}',
+          createdAt: now,
+          updatedAt: now,
+        },
+      })
+      return toConversationRow(row as unknown as PrismaConversation)
+    } catch (err) {
+      // Fallback: if provided sessionId failed FK constraint, auto-provision and retry once
+      const sess = await this.db.ensureProviderSession({ providerId: input.providerId })
+      const row = await this.db.prisma.conversation.create({
+        data: {
+          id: input.id ?? newId(),
+          providerSessionId: sess.id,
+          providerId: input.providerId,
+          title: input.title ?? null,
+          state: input.state ?? 'active',
+          contextJson: input.contextJson ?? '{}',
+          createdAt: now,
+          updatedAt: now,
+        },
+      })
+      return toConversationRow(row as unknown as PrismaConversation)
+    }
   }
 
   async updateConversation(id: string, patch: Partial<ConversationRow>): Promise<void> {

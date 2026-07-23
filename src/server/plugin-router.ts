@@ -10,6 +10,7 @@ import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { newId } from '../ids.js'
+import { assertTrustedExpressionSource } from '../engines/safe-eval.js'
 import { UiComponentInputSchema } from '../schema/conceptual-model.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
@@ -456,6 +457,7 @@ export function createPluginRouter(ctx: ServerContext) {
 
         if (body.migrationScript) {
           try {
+            assertTrustedExpressionSource(body.migrationScript, 'plugin migration')
             const fn = new Function('db', 'oldVersion', 'newVersion', body.migrationScript)
             await fn(db, plugin.version, newVersion)
           } catch (err) {
