@@ -22,10 +22,24 @@ export function getSendButtonSelectors(providerId: string): string[] {
 }
 
 export function getProviderUrl(providerId: string): string {
+  if (providerId === 'gemini') return 'https://gemini.google.com/app'
   try {
     return getProviderRegistry().getProviderUrl(providerId)
   } catch {
+    if (providerId === 'chatgpt') return 'https://chatgpt.com/app'
+    if (providerId === 'claude') return 'https://claude.ai/chat'
     return `https://${providerId}.com`
+  }
+}
+
+export function getProviderLoginUrl(providerId: string): string {
+  if (providerId === 'gemini') return 'https://gemini.google.com/app'
+  try {
+    return getProviderRegistry().getLoginUrl(providerId)
+  } catch {
+    if (providerId === 'chatgpt') return 'https://chatgpt.com/auth/login'
+    if (providerId === 'claude') return 'https://claude.ai/login'
+    return `https://${providerId}.com/login`
   }
 }
 

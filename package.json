@@ -39,7 +39,10 @@
     "devops:toolkit": "bun run devops/index.ts toolkit",
     "gen:protocol": "bun run src/engines/provider-protocol-generator.ts",
     "web:dev": "bun run --cwd web dev",
-    "web:build": "bun run --cwd web/ui build",
+    "web:build": "bun run --cwd frontend build",
+    "frontend:dev": "bun run --cwd frontend dev",
+    "frontend:build": "bun run --cwd frontend build",
+    "frontend:typecheck": "bun run --cwd frontend typecheck",
     "tauri:sidecar": "pwsh scripts/tauri/build-sidecar.ps1",
     "tauri:build": "pwsh scripts/tauri/build.ps1"
   },

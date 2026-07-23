@@ -17,6 +17,8 @@ export interface CdpConnection {
       opts?: { timeoutMs?: number; sessionId?: string; retries?: number },
     ) => Promise<T>
     disconnect: () => Promise<void>
+    on: (event: string, handler: (params: unknown) => void) => void
+    off: (event: string, handler: (params: unknown) => void) => void
   }
   sessionId: string
   wsUrl: string

@@ -123,25 +123,25 @@ const CAPABILITY_TEMPLATES: Record<string, Partial<AgenticTask>> = {
   },
   frontend: {
     requiredFiles: [
-      'web/ui/src/features/chat/ChatPage.tsx',
-      'web/ui/src/features/chat/Composer.tsx',
-      'web/ui/src/features/chat/MessageBubble.tsx',
-      'web/ui/src/ui/registry.ts',
-      'web/ui/src/ui/slots.ts',
+      'frontend/src/features/chat/ChatPage.tsx',
+      'frontend/src/features/chat/Composer.tsx',
+      'frontend/src/features/chat/MessageBubble.tsx',
+      'frontend/src/ui/registry.ts',
+      'frontend/src/ui/slots.ts',
     ],
     producesFiles: [],
-    verification: 'cd web/ui && bun run typecheck',
+    verification: 'cd frontend && bun run typecheck',
     estimatedTokens: 15000,
   },
   canvas: {
     requiredFiles: [
-      'web/ui/src/features/canvas/CanvasSurface.tsx',
-      'web/ui/src/features/canvas/SandboxedLayer.tsx',
+      'frontend/src/features/canvas/CanvasSurface.tsx',
+      'frontend/src/features/canvas/SandboxedLayer.tsx',
       'src/engines/conceptual-model-service.ts',
       'shared/canvas-types.ts',
     ],
     producesFiles: [],
-    verification: 'cd web/ui && bun run typecheck',
+    verification: 'cd frontend && bun run typecheck',
     estimatedTokens: 18000,
   },
   test: {
@@ -153,14 +153,14 @@ const CAPABILITY_TEMPLATES: Record<string, Partial<AgenticTask>> = {
   // ── UI / Frontend (from vivi-frontend skill) ─────────────────────────
   'canvas-layer': {
     requiredFiles: [
-      'web/ui/src/features/canvas/CanvasSurface.tsx',
-      'web/ui/src/features/canvas/SandboxedLayer.tsx',
-      'web/ui/src/features/canvas/BrowserLayerHost.tsx',
+      'frontend/src/features/canvas/CanvasSurface.tsx',
+      'frontend/src/features/canvas/SandboxedLayer.tsx',
+      'frontend/src/features/canvas/BrowserLayerHost.tsx',
       'src/engines/canvas-layer-mounter.ts',
       'shared/canvas-types.ts',
     ],
-    producesFiles: ['web/ui/src/features/canvas/'],
-    verification: 'cd web/ui && bun run typecheck',
+    producesFiles: ['frontend/src/features/canvas/'],
+    verification: 'cd frontend && bun run typecheck',
     estimatedTokens: 18000,
   },
   'conceptual-component': {
@@ -172,27 +172,27 @@ const CAPABILITY_TEMPLATES: Record<string, Partial<AgenticTask>> = {
       'shared/conceptual-model.ts',
       'src/storage/impl/ui-component-store-impl.ts',
     ],
-    producesFiles: ['seeds/conceptual-model/seed.ts', 'web/ui/src/ui/defaults/'],
+    producesFiles: ['seeds/conceptual-model/seed.ts', 'frontend/src/ui/defaults/'],
     verification:
       'bunx tsc --noEmit 2>&1 | grep -q "conceptual-model|ui-component" && exit 1 || exit 0',
     estimatedTokens: 14000,
   },
   'slot-hotswap': {
     requiredFiles: [
-      'web/ui/src/ui/registry.ts',
-      'web/ui/src/ui/slots.ts',
-      'web/ui/src/ui/context.tsx',
-      'web/ui/src/ui/useSlot.ts',
-      'web/ui/src/ui/defaults/index.tsx',
+      'frontend/src/ui/registry.ts',
+      'frontend/src/ui/slots.ts',
+      'frontend/src/ui/context.tsx',
+      'frontend/src/ui/useSlot.ts',
+      'frontend/src/ui/defaults/index.tsx',
     ],
-    producesFiles: ['web/ui/src/ui/registry.ts', 'web/ui/src/ui/defaults/'],
-    verification: 'cd web/ui && bun run typecheck',
+    producesFiles: ['frontend/src/ui/registry.ts', 'frontend/src/ui/defaults/'],
+    verification: 'cd frontend && bun run typecheck',
     estimatedTokens: 10000,
   },
   'frontend-test': {
-    requiredFiles: ['web/ui/src/features/', 'tests/unit/ui/', 'web/ui/package.json'],
-    producesFiles: ['tests/unit/ui/', 'web/ui/src/features/'],
-    verification: 'cd web/ui && bun run typecheck && bun test tests/unit/ui/',
+    requiredFiles: ['frontend/src/features/', 'tests/unit/ui/', 'frontend/package.json'],
+    producesFiles: ['tests/unit/ui/', 'frontend/src/features/'],
+    verification: 'cd frontend && bun run typecheck && bun test tests/unit/ui/',
     estimatedTokens: 12000,
   },
   'canvas-conceptual-verify': {
@@ -306,7 +306,7 @@ export function decomposeObjective(objective: string): TaskDAG {
           requiredFiles: [
             'src/engines/',
             'src/server/',
-            'web/ui/src/features/',
+            'frontend/src/features/',
             'seeds/providers/manifests.ts',
           ],
           producesFiles: [],
@@ -465,11 +465,11 @@ export function decomposeObjective(objective: string): TaskDAG {
         ? `Verify chat UI components render correctly for ${provider}. Ensure MessageBubble, Composer, and ConversationSidebar handle ${provider} provider context. Update useSlot resolution if needed.`
         : `Audit frontend provider coverage. Ensure every active provider has UI components registered.`,
       requiredFiles: tmpl.requiredFiles ?? [],
-      producesFiles: ['web/ui/src/features/chat/', 'web/ui/src/ui/registry.ts'],
+      producesFiles: ['frontend/src/features/chat/', 'frontend/src/ui/registry.ts'],
       dependsOn: [
         `${tasks.length > 0 ? tasks.length - 1 : 0}.${tasks.length > 0 ? 'state' : 'state'}`,
       ],
-      verification: 'cd web/ui && bun run typecheck',
+      verification: 'cd frontend && bun run typecheck',
       estimatedTokens: tmpl.estimatedTokens ?? 0,
       parallelizable: false,
     })

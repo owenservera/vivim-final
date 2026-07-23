@@ -14,7 +14,7 @@ import { EngineError } from '../errors.js'
 import { launchChrome } from '../executor/launcher.js'
 import type { ProfileAllocator } from '../executor/profile-allocator.js'
 import type { CapStoreDb } from '../storage/db.js'
-import { PROVIDER_URLS, PROVIDER_URL_PATTERNS } from './provider-selectors.js'
+import { PROVIDER_URL_PATTERNS, getProviderLoginUrl } from './provider-selectors.js'
 
 const LOGIN_POLL_INTERVAL_MS = 2_000
 const LOGIN_TIMEOUT_MS = 300_000 // 5 minutes to complete login
@@ -57,7 +57,7 @@ export class ChromeSetupWizard {
    * Get the login URL for a provider (uses slug, not DB id).
    */
   getLoginUrl(providerSlug: string): string {
-    return PROVIDER_URLS[providerSlug] ?? `https://${providerSlug}.com`
+    return getProviderLoginUrl(providerSlug)
   }
 
   /**
@@ -317,8 +317,10 @@ export class ChromeSetupWizard {
         const resp = await fetch(`http://127.0.0.1:${port}/json/version`, {
           signal: AbortSignal.timeout(500),
         })
-        if (!resp.ok) return port
+        // Server responded → port is in use → skip
+        void resp
       } catch {
+        // No response → port is free → use it
         return port
       }
     }

@@ -75,6 +75,12 @@ function validateCapability(cap: UnifiedCapability): void {
 export class UnifiedCapabilityRegistry {
   private capabilities = new Map<string, UnifiedCapability>()
   private slugIndex = new Map<string, UnifiedCapability>()
+  private progResolver?: (slug: string) => Promise<UnifiedCapability | null>
+
+  /** Set a resolver for harness-program capabilities (prog-* slugs). */
+  setProgramResolver(fn: (slug: string) => Promise<UnifiedCapability | null>): void {
+    this.progResolver = fn
+  }
 
   register(capability: UnifiedCapability): void {
     validateCapability(capability)
@@ -103,6 +109,10 @@ export class UnifiedCapabilityRegistry {
     return this.slugIndex.get(slug) ?? null
   }
 
+  async getBySlugAsync(slug: string): Promise<UnifiedCapability | null> {
+    return (await this.progResolver?.(slug)) ?? this.getBySlug(slug)
+  }
+
   list(filter?: {
     surface?: CapabilitySurface
     category?: string
@@ -110,13 +120,13 @@ export class UnifiedCapabilityRegistry {
   }): UnifiedCapability[] {
     let result = Array.from(this.capabilities.values())
     if (filter?.surface) {
-      result = result.filter((c) => c.surfaces.includes(filter.surface))
+      result = result.filter((c) => c.surfaces.includes(filter.surface as CapabilitySurface))
     }
     if (filter?.category) {
-      result = result.filter((c) => c.category === filter.category)
+      result = result.filter((c) => c.category === (filter.category ?? ''))
     }
     if (filter?.tag) {
-      result = result.filter((c) => c.tags.includes(filter.tag))
+      result = result.filter((c) => c.tags.includes(filter.tag as string))
     }
     return result
   }
@@ -185,4 +195,19 @@ export class UnifiedCapabilityRegistry {
       requiresConfirmation: cap.requiresConfirmation,
     }))
   }
+}
+
+/**
+ * Parse a `prog-<capabilitySlug>-<providerId>` slug back to its parts.
+ * Returns null if the slug does not match the harness-program pattern.
+ */
+export function parseProgSlug(slug: string): { capabilitySlug: string; providerId: string } | null {
+  if (!slug.startsWith('prog-')) return null
+  const body = slug.slice(5)
+  const lastDash = body.lastIndexOf('-')
+  if (lastDash <= 0) return null
+  const capabilitySlug = body.slice(0, lastDash)
+  const providerId = body.slice(lastDash + 1)
+  if (!capabilitySlug || !providerId) return null
+  return { capabilitySlug, providerId }
 }

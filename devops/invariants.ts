@@ -307,19 +307,19 @@ async function checkB8_AgentAddressableUIActions(): Promise<Violation[]> {
       id: 'B8',
       category: 'B',
       severity: 'block',
-      message: '`web/ui/src/actions/registry.ts` not found. ActionRegistry required for agent-addressable UI.',
+      message: '`frontend/src/actions/registry.ts` not found. ActionRegistry required for agent-addressable UI.',
       file: registryPath,
     })
   }
 
   // Check agent-bridge.ts exists
-  const bridgePath = join(PROJECT_ROOT, 'web', 'ui', 'src', 'actions', 'agent-bridge.ts')
+  const bridgePath = join(PROJECT_ROOT, 'frontend', 'src', 'actions', 'agent-bridge.ts')
   if (!(await fileExists(bridgePath))) {
     violations.push({
       id: 'B8',
       category: 'B',
       severity: 'block',
-      message: '`web/ui/src/actions/agent-bridge.ts` not found. AgentBridge required for agent command transport.',
+      message: '`frontend/src/actions/agent-bridge.ts` not found. AgentBridge required for agent command transport.',
       file: bridgePath,
     })
   }

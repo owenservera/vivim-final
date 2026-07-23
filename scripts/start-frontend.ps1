@@ -10,7 +10,7 @@ param(
 $ErrorActionPreference = "Continue"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 if (-not $projectRoot) { $projectRoot = $PWD.Path }
-$frontendDir = Join-Path $projectRoot "web\ui"
+$frontendDir = Join-Path $projectRoot "frontend"
 $runtimeDir = Join-Path $projectRoot ".runtime"
 
 New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null

@@ -5,6 +5,11 @@
 // Chrome (the "one we had" model) rather than launching a duplicate that dies
 // on the profile SingletonLock. Then (optionally) navigate via the adopted
 // slave's public CDP HTTP endpoint to prove the browser is controllable.
+//
+// PROVIDER SETUP FIRST: Before engaging, the agent must ensure a Chrome profile
+// exists for the target provider. Use `bun run devops agentic preflight` to check
+// readiness, then `bun run devops agentic adopt --provider=<slug>` to restore/
+// launch if needed. Without this, engage will fail with "no live Chrome".
 
 import { backendBaseUrl } from './port.js'
 
@@ -19,9 +24,24 @@ export interface EngageResult {
 }
 
 /**
+ * Resolve the default account email for a provider slug.
+ * Convention: <provider>_owservera@gmail.com
+ */
+function defaultAccount(providerId: string): string {
+  return `${providerId}_owservera@gmail.com`
+}
+
+/**
  * Engage the live browser for an account.
- * @param opts.providerId default 'claude'
- * @param opts.accountId  default 'claude_owservera@gmail.com'
+ *
+ * If no providerId is given, the backend's first registered provider is used.
+ * If no accountId is given, the convention <provider>_owservera@gmail.com is used.
+ *
+ * IMPORTANT: A live Chrome slave for this provider MUST already be running.
+ * Use `bun run devops agentic adopt --provider=<slug>` to restore/launch first.
+ *
+ * @param opts.providerId provider slug (e.g. 'gemini', 'chatgpt', 'claude')
+ * @param opts.accountId  account email (defaults to <provider>_owservera@gmail.com)
  * @param opts.url        navigate target (default http://127.0.0.1:5173)
  * @param opts.navigate   navigate after attach (default true)
  */
@@ -31,8 +51,22 @@ export async function engageBrowser(opts?: {
   url?: string
   navigate?: boolean
 }): Promise<EngageResult> {
-  const providerId = opts?.providerId ?? 'claude'
-  const accountId = opts?.accountId ?? 'claude_owservera@gmail.com'
+  // Auto-resolve provider from the backend if not specified
+  let providerId = opts?.providerId
+  if (!providerId) {
+    try {
+      const provRes = await fetch(`${backendBaseUrl()}/api/providers`, {
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      })
+      if (provRes.ok) {
+        const data = (await provRes.json()) as { providers?: Array<{ slug: string }> }
+        providerId = data.providers?.[0]?.slug ?? 'claude'
+      }
+    } catch {
+      providerId = 'claude'
+    }
+  }
+  const accountId = opts?.accountId ?? defaultAccount(providerId)
   const url = opts?.url ?? 'http://127.0.0.1:5173'
   const navigate = opts?.navigate ?? true
 

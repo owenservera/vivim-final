@@ -118,6 +118,11 @@ export async function launchProfile(profile: ChromeInstanceProfile): Promise<Lau
 
 /** Legacy entry point — wraps options into a profile and delegates. */
 export async function launchChrome(opts?: ChromeLaunchOptions): Promise<LaunchResult> {
+  const extraArgs = [...(opts?.extraArgs ?? [])]
+  if (opts?.url) {
+    // Pass URL as last positional arg so Chrome navigates to it on launch.
+    extraArgs.push(opts.url)
+  }
   const profile = makeProfile({
     userDataDir:
       opts?.userDataDir ??
@@ -130,7 +135,7 @@ export async function launchChrome(opts?: ChromeLaunchOptions): Promise<LaunchRe
     debugPort: opts?.debugPort,
     windowSize: opts?.windowSize,
     disableGpu: opts?.disableGpu,
-    extraArgs: opts?.extraArgs ?? [],
+    extraArgs,
     launchTimeoutMs: 15_000,
   })
   return launchProfile(profile)

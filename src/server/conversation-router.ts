@@ -167,6 +167,20 @@ export function createConversationRouter(ctx: ServerContext) {
         return json([])
       }
 
+      // DELETE /api/fleet/:id — kill a Chrome slave
+      const fleetDelMatch = pathname.match(/^\/api\/fleet\/([^/]+)$/)
+      if (fleetDelMatch && method === 'DELETE') {
+        const slaveId = fleetDelMatch[1]
+        if (!slaveId) return errorResponse('Invalid fleet id', 'ValidationError', 400)
+        if (!ctx.governor) return json({ ok: true })
+        try {
+          await ctx.governor.kill(slaveId)
+        } catch {
+          // best-effort kill; return success
+        }
+        return json({ ok: true })
+      }
+
       // POST /api/fleet/start — delegate to ChromeGovernor.spawn()
       if (pathname === '/api/fleet/start' && method === 'POST') {
         if (!ctx.governor) return errorResponse('Engine not wired', 'InternalError', 500)
@@ -253,9 +267,26 @@ export function createConversationRouter(ctx: ServerContext) {
         return json({ status: 'ok' })
       }
 
-      // GET /api/session — session stub (no auth in local-first mode)
-      if (pathname === '/api/session' && method === 'GET') {
-        return json({ authenticated: false, userId: null, email: null })
+      // Session — local-first stub (no real auth; returns success for login)
+      if (pathname === '/api/session') {
+        if (method === 'GET') {
+          return json({ authenticated: false, userId: null, email: null })
+        }
+        if (method === 'POST') {
+          const body = (await req.json().catch(() => ({}))) as {
+            email?: string
+            action?: string
+          }
+          if (body.action === 'logout') {
+            return json({ authenticated: false })
+          }
+          // Local-first: login always succeeds
+          return json({
+            authenticated: true,
+            userId: body.email ?? 'user:local',
+            email: body.email ?? null,
+          })
+        }
       }
 
       // Admin

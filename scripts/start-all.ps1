@@ -107,7 +107,7 @@ if (-not $FrontendOnly) {
 if (-not $BackendOnly) {
     Stop-ByPidFile $runtimeDir "frontend"
 
-    $frontendDir = Join-Path $projectRoot "web\ui"
+    $frontendDir = Join-Path $projectRoot "frontend"
     if (-not (Test-Path $frontendDir)) {
         LogWarn "Frontend dir missing: $frontendDir"
     } else {
@@ -187,7 +187,7 @@ Write-Host "========================================" -ForegroundColor White
 Write-Host ""
 Write-Host "Stop: pwsh scripts/stop-all.ps1" -ForegroundColor Yellow
 
-if ((-not $FrontendOnly -and -not $backendOk) -or (-not $BackendOnly -and -not $frontendOk -and (Test-Path (Join-Path $projectRoot "web\ui")))) {
+if ((-not $FrontendOnly -and -not $backendOk) -or (-not $BackendOnly -and -not $frontendOk -and (Test-Path (Join-Path $projectRoot "frontend")))) {
     exit 1
 }
 exit 0

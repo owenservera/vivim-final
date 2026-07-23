@@ -16,6 +16,8 @@ export interface CdpSender {
     params?: Record<string, unknown>,
     session?: { sessionId: string },
   ): Promise<unknown>
+  on(event: string, handler: (params: unknown) => void): void
+  off(event: string, handler: (params: unknown) => void): void
 }
 
 export interface DiscoveredComposer {
@@ -128,6 +130,127 @@ function _classifyFormat(body: string): DiscoveredNetworkPattern['format'] {
   return 'text'
 }
 
+const STREAMING_PATH_PATTERNS = [
+  /backend-api\/conversation/i,
+  /batchexecute/i,
+  /api\/chat\/completions/i,
+  /messages/i,
+  /v1\/chat/i,
+  /conversation/i,
+  /stream/i,
+]
+
+const STREAMING_PREVIEW_PREFIXES = ['data:', ')]}\n', '[', '{"choices"']
+
+function _isStreamingEndpoint(url: string, bodyPreview: string): boolean {
+  if (!url) return false
+  const pathMatch = STREAMING_PATH_PATTERNS.some((p) => p.test(url))
+  if (!pathMatch) return false
+  const previewMatch = STREAMING_PREVIEW_PREFIXES.some((p) => bodyPreview.startsWith(p))
+  return previewMatch || bodyPreview.length > 0
+}
+
+function _inferFormat(url: string, bodyPreview: string): DiscoveredNetworkPattern['format'] {
+  if (bodyPreview.startsWith('data: ') || bodyPreview.includes('\ndata:')) return 'sse'
+  if (bodyPreview.startsWith(')]}\n')) return 'json_stream'
+  if (bodyPreview.startsWith('{') || bodyPreview.startsWith('[')) return 'json'
+  return 'text'
+}
+
+function _makeCapturePattern(url: string): string | null {
+  try {
+    const escaped = url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\/$/, '')
+    return `${escaped}($|\\/|\\?)`
+  } catch {
+    return null
+  }
+}
+
+function _summariseBody(body: string): string {
+  return body.slice(0, 200).replace(/\n/g, '\\n')
+}
+
+async function _collectNetworkPatterns(
+  client: CdpSender,
+  sessionId: string,
+): Promise<DiscoveredNetworkPattern[]> {
+  const patterns: Map<string, DiscoveredNetworkPattern> = new Map()
+  const requestBodies = new Map<string, string>()
+
+  const onRequest = (params: unknown) => {
+    const p = params as Record<string, unknown>
+    const request = p.request as Record<string, unknown> | undefined
+    if (!request) return
+    const url = String(request.url ?? '')
+    const key = url
+    patterns.set(key, {
+      url,
+      method: String(request.method ?? 'GET'),
+      resourceType: String(request.resourceType ?? 'other'),
+      pathPattern: new URL(url).pathname,
+      isStreamingEndpoint: false,
+      responseBodyPreview: null,
+      format: 'unknown',
+      confidence: 0,
+    })
+  }
+
+  const onResponse = (params: unknown) => {
+    const p = params as Record<string, unknown>
+    const request = p.request as Record<string, unknown> | undefined
+    const response = p.response as Record<string, unknown> | undefined
+    if (!request || !response) return
+    const url = String(request.url ?? '')
+    const existing = patterns.get(url)
+    if (!existing) return
+    const mimeType = String(response.mimeType ?? '')
+    const isFetchOrXhr = mimeType === '' || mimeType === 'text/plain' || mimeType === 'application/json'
+    if (!isFetchOrXhr) return
+    existing.resourceType = String(request.resourceType ?? existing.resourceType)
+    existing.confidence = Math.min(1, existing.confidence + 0.2)
+  }
+
+  const onResponseBody = (params: unknown) => {
+    const p = params as Record<string, unknown>
+    const request = p.request as Record<string, unknown> | undefined
+    const body = p.body as string | undefined
+    if (!request || body === undefined) return
+    const url = String(request.url ?? '')
+    const existing = patterns.get(url)
+    if (!existing) return
+    const preview = _summariseBody(body)
+    existing.responseBodyPreview = preview
+    existing.format = _inferFormat(url, preview)
+    existing.isStreamingEndpoint = _isStreamingEndpoint(url, preview)
+    if (existing.isStreamingEndpoint) {
+      existing.confidence = Math.min(1, existing.confidence + 0.5)
+    } else {
+      existing.confidence = Math.min(1, existing.confidence + 0.1)
+    }
+    requestBodies.set(url, preview)
+  }
+
+  client.on('Network.requestWillBeSent', onRequest)
+  client.on('Network.responseReceived', onResponse)
+  client.on('Network.responseReceivedExtraInfo', onResponseBody)
+
+  await client.send('Network.enable', {}, { sessionId })
+
+  const results = Array.from(patterns.values()).filter((p) => p.confidence > 0)
+
+  client.off('Network.requestWillBeSent', onRequest)
+  client.off('Network.responseReceived', onResponse)
+  client.off('Network.responseReceivedExtraInfo', onResponseBody)
+
+  try {
+    await client.send('Network.disable', {}, { sessionId })
+  } catch {
+    // best-effort disable
+  }
+
+  return results
+}
+
 export class ProtocolDiscoveryEngine {
   constructor(
     private client: CdpSender,
@@ -167,6 +290,8 @@ export class ProtocolDiscoveryEngine {
 
     await this.client.send('Page.navigate', { url }, { sessionId: this.sessionId }).catch(() => {})
     await new Promise((r) => setTimeout(r, 5000))
+
+    const networkPatterns = await _collectNetworkPatterns(this.client, this.sessionId)
 
     const pageTitle = ((await this.evaluateInPage('document.title')) as string) ?? hint
 
@@ -271,6 +396,9 @@ export class ProtocolDiscoveryEngine {
 
     const primaryComposer = composers[0] ?? null
     const primarySendButton = sendButtons[0] ?? null
+    const sortedNetworks = networkPatterns.sort((a, b) => b.confidence - a.confidence)
+    const primaryStream = sortedNetworks.find((n) => n.isStreamingEndpoint) ?? null
+    const primaryCapturePattern = primaryStream ? _makeCapturePattern(primaryStream.url) : null
 
     return {
       url,
@@ -280,8 +408,8 @@ export class ProtocolDiscoveryEngine {
       sendButtons,
       primaryComposer,
       primarySendButton,
-      networkPatterns: [],
-      primaryCapturePattern: null,
+      networkPatterns: sortedNetworks,
+      primaryCapturePattern,
       domResponses,
       detectedFramework: framework,
       manifestDraft: {

@@ -12,7 +12,7 @@ import type { ContentPart } from '../schema/streaming.js'
 import type { ParserExecutionLogStore } from '../storage/contracts/parser-execution-log-store.js'
 import type { ParserStore, ProviderParserRow } from '../storage/contracts/parser-store.js'
 import { assertTrustedExpressionSource } from './safe-eval.js'
-import type { SandboxRunner } from './sandbox-runner.js'
+import { SandboxRunner } from './sandbox-runner.js'
 import type { SandboxPermissions } from './sandbox-runner.js'
 
 export type ContentBlock = ContentPart
@@ -481,28 +481,17 @@ export class StreamParserEngine {
     const mod = { exports: {} as Record<string, unknown> }
 
     if (!this.sandbox) {
-      // Legacy fallback: raw host evaluation. Inline parser code is admin-defined
-      // (DB-backed); prefer the SandboxRunner path above whenever available.
-      try {
-        // eslint-disable-next-line no-new-func
-        // Trusted: inline parser code is admin-defined and DB-backed. The
-        // SandboxRunner path above is preferred; this is a legacy host fallback.
-        assertTrustedExpressionSource(code, 'inline parser')
-        const factory = new Function('module', 'exports', code)
-        factory(mod, mod.exports)
-      } catch (error) {
-        throw new EngineError(`Failed to compile inline parser: ${error}`)
-      }
-    } else {
-      const res = await this.sandbox.run(code, {}, StreamParserEngine.SANDBOX_PERMISSIONS, {
-        handlerSlug: `parser:${hash}`,
-        globals: { module: mod, exports: mod.exports },
-      })
-      if (!res.ok) {
-        throw new EngineError(
-          `Failed to compile inline parser: ${res.error ?? 'unknown sandbox error'}`,
-        )
-      }
+      this.sandbox = new SandboxRunner()
+    }
+
+    const res = await this.sandbox.run(code, {}, StreamParserEngine.SANDBOX_PERMISSIONS, {
+      handlerSlug: `parser:${hash}`,
+      globals: { module: mod, exports: mod.exports },
+    })
+    if (!res.ok) {
+      throw new EngineError(
+        `Failed to compile inline parser in sandbox: ${res.error ?? 'unknown sandbox error'}`,
+      )
     }
 
     const candidate = (mod.exports.default ?? mod.exports) as Partial<ParserModule>

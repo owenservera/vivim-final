@@ -38,7 +38,7 @@ const FIX_HINTS: Record<string, { summary: string; steps: string[] }> = {
   },
   B8: {
     summary: 'Expose agent-addressable UI wiring.',
-    steps: ['Register the action in web/ui/src/actions/registry.ts.', 'Wire agent-bridge.ts and agent:command/agent:discover in websocket.ts.'],
+    steps: ['Register the action in frontend/src/actions/registry.ts.', 'Wire agent-bridge.ts and agent:command/agent:discover in websocket.ts.'],
   },
 }
 

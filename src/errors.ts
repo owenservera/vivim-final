@@ -98,6 +98,12 @@ export class CdpConnectionError extends CapStoreError {
   }
 }
 
+export class ChromeGovernorError extends CapStoreError {
+  constructor(message: string, details?: unknown) {
+    super('ChromeGovernorError', message, details)
+  }
+}
+
 export class ChromeNotFoundError extends CapStoreError {
   constructor() {
     super('ChromeNotFoundError', 'Chrome binary not found')

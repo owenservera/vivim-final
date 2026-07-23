@@ -182,7 +182,7 @@ export class Supervisor {
     return new Promise<void>((resolve) => {
       const proc = spawn(
         this.bunPath,
-        ['run', '--cwd', 'web/ui', 'vite', 'dev', '--port', String(FRONTEND_PORT), '--strictPort'],
+        ['run', '--cwd', 'frontend', 'vite', 'dev', '--port', String(FRONTEND_PORT), '--strictPort'],
         {
           detached: true,
           stdio: ['ignore', 'pipe', 'pipe'],

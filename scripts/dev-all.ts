@@ -11,7 +11,7 @@ import { fileURLToPath } from "url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, "..")
-const CANVAS_V9 = join(ROOT, "dev-poc", "canvas", "v9")
+const CANVAS_V9 = join(ROOT, "web", "ui")
 
 const BLUE = "\x1b[34m"
 const GREEN = "\x1b[32m"

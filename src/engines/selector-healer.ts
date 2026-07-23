@@ -3,6 +3,7 @@
 
 import type { AccessibilityNode, ScreenshotRegion, SemanticSelector } from './semantic-grounding.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
+import { SelectorCache } from './selector-cache.js'
 import type { McpClientAdapter } from './workflow-engine.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ const DEFAULT_CONFIG: SelectorHealerConfig = {
 
 export class SelectorHealer {
   private history = new Map<string, HealResult[]>()
+  private cache = new SelectorCache()
 
   constructor(
     private readonly grounding: SemanticGroundingEngine,
@@ -52,6 +54,17 @@ export class SelectorHealer {
     const { slaveId, failedSelector, capabilityId, providerId, context } = params
     const historyKey = `${providerId}:${capabilityId}`
 
+    // Check cache first
+    const cached = this.cache.get(providerId, capabilityId)
+    if (cached) {
+      return {
+        healed: cached.selector as unknown as SemanticSelector,
+        strategy: 'aria_relaxed',
+        confidence: 0.9,
+        originalSelector: failedSelector,
+      }
+    }
+
     const result =
       (await this.tryAriaRelaxed(slaveId, failedSelector)) ??
       (await this.tryTextMatch(slaveId, failedSelector)) ??
@@ -63,6 +76,8 @@ export class SelectorHealer {
       const prev = this.history.get(historyKey) ?? []
       prev.push(result)
       this.history.set(historyKey, prev.slice(-100))
+      // Cache successful heal
+      this.cache.record(providerId, capabilityId, JSON.stringify(result.healed))
     }
 
     return result

@@ -1,7 +1,0 @@
-export { ActionRegistry } from './actions/registry.js'
-export type { ActionSpec } from './actions/registry.js'
-export { autoPopulateActions } from './actions/auto-populate.js'
-export { AgentBridge } from './actions/agent-bridge.js'
-export { ProviderSetupWizard } from './features/provider-setup-wizard.js'
-export { CapabilityRegistry } from './registry/index.js'
-export type { CapabilityRenderer, CapabilityRenderProps } from './registry/index.js'

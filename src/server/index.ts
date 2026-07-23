@@ -5,6 +5,8 @@
 // and WebSocket bridge. Engine wiring is deferred to the full bootstrap
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { connectCapabilityRegistry } from '../cli/index.js'
 import { registerGeneratedCapabilities } from '../engines/capability-bootstrap-generated.js'
 import { registerDefaultCapabilities } from '../engines/capability-bootstrap.js'
@@ -47,7 +49,7 @@ import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
 import { errorResponse, json } from './response.js'
 import { createSetupRouter } from './setup-router.js'
-import { handleWebSocket, registerConversationForwarder, setCanvasWsHandler } from './websocket.js'
+import { handleWebSocket, registerConversationForwarder, registerCanvasMutationForwarder, registerNodeEventForwarder, setCanvasWsHandler } from './websocket.js'
 
 export interface ServerContext {
   port: number
@@ -104,6 +106,40 @@ async function gracefulShutdown(signal: string): Promise<void> {
   process.exit(0)
 }
 
+/**
+ * Try to bind Bun.serve on `port`. If EADDRINUSE, walk up to the next free
+ * port (up to +200). Writes the actual port to `.runtime/backend.port` so
+ * downstream clients (PS1 scripts, frontend, CLI) discover it.
+ */
+function startOnFreePort(
+  opts: Parameters<typeof Bun.serve>[0],
+  preferredPort: number,
+): { server: ReturnType<typeof Bun.serve>; boundPort: number } {
+  const maxScan = preferredPort + 200
+  let port = preferredPort
+  while (port < maxScan) {
+    try {
+      const server = Bun.serve({ ...opts, port })
+      // Write actual port so PS1 scripts + frontend can discover it
+      try {
+        const runtimeDir = join(process.cwd(), '.runtime')
+        mkdirSync(runtimeDir, { recursive: true })
+        writeFileSync(join(runtimeDir, 'backend.port'), String(port), 'utf-8')
+      } catch { /* best-effort */ }
+      return { server, boundPort: port }
+    } catch (err: unknown) {
+      const code = (err as NodeJS.ErrnoException).code
+      if (code === 'EADDRINUSE') {
+        console.warn(`[boot] Port ${port} in use, trying ${port + 1}...`)
+        port++
+        continue
+      }
+      throw err
+    }
+  }
+  throw new Error(`No free port found in range ${preferredPort}–${maxScan - 1}`)
+}
+
 export async function createServer(port = 9420): Promise<ServerContext> {
   const db = getDb()
   const eventBus = CapabilityEventBus.getInstance()
@@ -123,85 +159,89 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   // Track readiness — becomes true after server boots
   let ready = false
 
-  Bun.serve({
-    port,
-    fetch(req, server) {
-      const url = new URL(req.url)
+  const { boundPort } = startOnFreePort(
+    {
+      fetch(req, server) {
+        const url = new URL(req.url)
 
-      // CORS preflight — allow all origins, methods, headers
-      if (req.method === 'OPTIONS') {
-        return new Response(null, {
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
-            'Access-Control-Allow-Headers':
-              'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
-            'Access-Control-Max-Age': '86400',
-          },
-        })
-      }
-
-      if (url.pathname === '/health') {
-        return json({ status: 'ok', version: '1.0.0' })
-      }
-
-      // Readiness — 200 only when server is ready to accept traffic (no auth)
-      if (url.pathname === '/readyz') {
-        if (!ready) {
-          return json({ status: 'not_ready', reason: 'server still starting' }, 503)
+        // CORS preflight — allow all origins, methods, headers
+        if (req.method === 'OPTIONS') {
+          return new Response(null, {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
+              'Access-Control-Allow-Headers':
+                'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
+              'Access-Control-Max-Age': '86400',
+            },
+          })
         }
-        return json({ status: 'ready', uptime: process.uptime() })
-      }
 
-      // Setup routes — no auth (workspace/profile setup is first-run experience)
-      if (url.pathname.startsWith('/api/setup/')) {
-        return setupRouter(req)
-      }
+        if (url.pathname === '/health') {
+          return json({ status: 'ok', version: '1.0.0' })
+        }
 
-      // WebSocket upgrade
-      if (url.pathname === '/ws') {
-        const ok = server.upgrade(req)
-        return ok ? undefined : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
-      }
+        // Readiness — 200 only when server is ready to accept traffic (no auth)
+        if (url.pathname === '/readyz') {
+          if (!ready) {
+            return json({ status: 'not_ready', reason: 'server still starting' }, 503)
+          }
+          return json({ status: 'ready', uptime: process.uptime() })
+        }
 
-      // Reject requests during shutdown
-      if (isShuttingDown) {
-        return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
-      }
+        // Setup routes — no auth (workspace/profile setup is first-run experience)
+        if (url.pathname.startsWith('/api/setup/')) {
+          return setupRouter(req)
+        }
 
-      // Auth gate
-      const authResult = auth(req)
-      if (authResult) return authResult
+        // WebSocket upgrade
+        if (url.pathname === '/ws') {
+          const ok = server.upgrade(req)
+          return ok ? undefined : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+        }
 
-      // Mux routes
-      if (url.pathname.startsWith('/api/route/')) {
-        return muxRouter(req)
-      }
+        // Reject requests during shutdown
+        if (isShuttingDown) {
+          return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
+        }
 
-      // NLCL — Natural Language Command Layer routes (available in minimal mode)
-      if (url.pathname.startsWith('/api/nlcl/')) {
-        return nlclRouter(req)
-      }
+        // Auth gate
+        const authResult = auth(req)
+        if (authResult) return authResult
 
-      // Knowledge routes
-      if (url.pathname.startsWith('/api/knowledge/')) {
-        return knowledgeRouter(req)
-      }
+        // Mux routes
+        if (url.pathname.startsWith('/api/route/')) {
+          return muxRouter(req)
+        }
 
-      return conversationRouter(req)
+        // NLCL — Natural Language Command Layer routes (available in minimal mode)
+        if (url.pathname.startsWith('/api/nlcl/')) {
+          return nlclRouter(req)
+        }
+
+        // Knowledge routes
+        if (url.pathname.startsWith('/api/knowledge/')) {
+          return knowledgeRouter(req)
+        }
+
+        return conversationRouter(req)
+      },
+      websocket: {
+        open(ws) {
+          handleWebSocket.open(ws)
+        },
+        message(ws, message) {
+          handleWebSocket.message(ws, message, eventBus)
+        },
+        close(ws) {
+          handleWebSocket.close(ws, eventBus)
+        },
+      },
     },
-    websocket: {
-      open(ws) {
-        handleWebSocket.open(ws)
-      },
-      message(ws, message) {
-        handleWebSocket.message(ws, message, eventBus)
-      },
-      close(ws) {
-        handleWebSocket.close(ws, eventBus)
-      },
-    },
-  })
+    port,
+  )
+
+  ctx.port = boundPort
 
   // Mark server as ready after Bun.serve succeeds
   ready = true
@@ -676,6 +716,45 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       localAgentExecutor,
     })
 
+    // ── Phase 2.3 harness program resolver ──────────────────────────────────
+    // Allow harness DB programs (prog-* capabilities) to be executed through
+    // the One Entry Point without pre-registration. Lazy-resolved on first
+    // request and cached in the registry for subsequent calls.
+    {
+      const { ProgramStoreImpl } = await import('../storage/impl/program-store-impl.js')
+      const { composeHarness } = await import('../engines/harness/index.js')
+      const { configToProgram } = await import('../engines/harness/program-schema.js')
+      const { programToCapability } = await import('../engines/cdp-capability-registrar.js')
+      const { createGovernorSlaveResolver } = await import('../engines/harness/fleet-lifecycle-adapter.js')
+
+      const programStore = new ProgramStoreImpl(db)
+      const slaveResolver = createGovernorSlaveResolver(governor)
+      const harness = composeHarness({
+        governor,
+        programStore,
+        capabilityStore,
+        blockStore: streamBlocks,
+        eventBus,
+        parser: parserEngine,
+        registry,
+        defaultTimeoutMs: 30_000,
+      })
+
+      registry.setProgramResolver(async (slug) => {
+        const body = slug.startsWith('prog-') ? slug.slice(5) : slug
+        const lastDash = body.lastIndexOf('-')
+        if (lastDash <= 0) return null
+        const capabilitySlug = body.slice(0, lastDash)
+        const providerId = body.slice(lastDash + 1)
+        const program = await programStore.getBestProgramByCapability(capabilitySlug, providerId)
+        if (!program) return null
+        const recipe = configToProgram(program.configJson).recipe
+        const cap = programToCapability(program, { executor: harness.executor })
+        ;(registry as UnifiedCapabilityRegistry).register(cap)
+        return cap
+      })
+    }
+
     // ── Spec 032: LLM-as-Human testing as a single UnifiedCapability ──────
     // Collapses `llm-test` into the One Entry Point — no parallel CLI command
     // tree, the orchestrator runs through the registry handler.
@@ -1080,6 +1159,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
   // Unit 2.7 — forward conversation events to subscribed WebSocket frontends
   registerConversationForwarder(eventBus)
+  // Canvas mutation + node-level event forwarders (v8 canvas UI)
+  registerCanvasMutationForwarder(eventBus)
+  registerNodeEventForwarder(eventBus)
 
   let ready = false
 
@@ -1153,125 +1235,128 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     return json({ error: 'Not found', code: 'NotFound' }, 404)
   }
 
-  Bun.serve({
+  const { boundPort } = startOnFreePort(
+    {
+      async fetch(req, server) {
+        const url = new URL(req.url)
+
+        // CORS preflight — allow all origins, methods, headers
+        if (req.method === 'OPTIONS') {
+          return new Response(null, {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
+              'Access-Control-Allow-Headers':
+                'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
+              'Access-Control-Max-Age': '86400',
+            },
+          })
+        }
+
+        if (url.pathname === '/health') {
+          return json({ status: 'ok', version: '1.0.0' })
+        }
+
+        if (url.pathname === '/readyz') {
+          if (!ready) {
+            return json({ status: 'not_ready', reason: 'server still starting' }, 503)
+          }
+          return json({ status: 'ready', uptime: process.uptime() })
+        }
+
+        if (url.pathname.startsWith('/api/setup/')) {
+          return setupRouter(req)
+        }
+
+        if (url.pathname === '/ws') {
+          const ok = server.upgrade(req)
+          return ok ? undefined : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+        }
+
+        if (isShuttingDown) {
+          return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
+        }
+
+        const authResult = auth(req)
+        if (authResult) return authResult
+
+        // Mux routes
+        if (url.pathname.startsWith('/api/route/')) {
+          return muxRouter(req)
+        }
+
+        // Autonomous execution routes
+        if (url.pathname.startsWith('/api/autonomous/') && autonomousRouter) {
+          return autonomousRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // NLCL — Natural Language Command Layer routes
+        if (url.pathname.startsWith('/api/nlcl/')) {
+          return nlclRouter(req)
+        }
+
+        // OpenCode `serve` capability routes (feature 029)
+        if (url.pathname.startsWith('/api/opencode/')) {
+          const serve = (globalThis as Record<string, unknown>).__opencodeServe as
+            | {
+                client: import('../engines/opencode/opencode-client.js').OpenCodeClient
+                ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+              }
+            | undefined
+          if (!serve) {
+            return json({ error: 'OpenCode serve not enabled', code: 'OPENCODE_DISABLED' }, 503)
+          }
+          return handleOpenCodeRoutes(req, url, serve)
+        }
+
+        // Automation — governor-mediated browser automation (B9 / L7)
+        if (url.pathname.startsWith('/api/automate/')) {
+          return automationRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        if (url.pathname.startsWith('/api/knowledge/')) {
+          return knowledgeRouter(req)
+        }
+
+        if (url.pathname.startsWith('/api/memory/') && memoryRouter) {
+          const bodyText = req.method === 'GET' ? undefined : await req.text()
+          return memoryRouter({ url: req.url, method: req.method, body: bodyText }).then(
+            (r) =>
+              new Response(JSON.stringify(r.body), {
+                status: r.status,
+                headers: { 'Content-Type': 'application/json' },
+              }),
+          )
+        }
+
+        // vivim-canvas routes (v7.12) — capability plane over HTTP
+        if (url.pathname.startsWith('/api/canvas/') && canvasRouter) {
+          return canvasRouter(req, url)
+        }
+
+        // 24.1/24.2 — universal capability transport (execute + introspection)
+        if (url.pathname.startsWith('/api/capabilities') && capabilityRouter) {
+          return capabilityRouter(req, url)
+        }
+
+        return conversationRouter(req)
+      },
+      websocket: {
+        open(ws) {
+          handleWebSocket.open(ws)
+        },
+        message(ws, message) {
+          handleWebSocket.message(ws, message, eventBus)
+        },
+        close(ws) {
+          handleWebSocket.close(ws, eventBus)
+        },
+      },
+    },
     port,
-    async fetch(req, server) {
-      const url = new URL(req.url)
+  )
 
-      // CORS preflight — allow all origins, methods, headers
-      if (req.method === 'OPTIONS') {
-        return new Response(null, {
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
-            'Access-Control-Allow-Headers':
-              'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
-            'Access-Control-Max-Age': '86400',
-          },
-        })
-      }
-
-      if (url.pathname === '/health') {
-        return json({ status: 'ok', version: '1.0.0' })
-      }
-
-      if (url.pathname === '/readyz') {
-        if (!ready) {
-          return json({ status: 'not_ready', reason: 'server still starting' }, 503)
-        }
-        return json({ status: 'ready', uptime: process.uptime() })
-      }
-
-      if (url.pathname.startsWith('/api/setup/')) {
-        return setupRouter(req)
-      }
-
-      if (url.pathname === '/ws') {
-        const ok = server.upgrade(req)
-        return ok ? undefined : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
-      }
-
-      if (isShuttingDown) {
-        return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
-      }
-
-      const authResult = auth(req)
-      if (authResult) return authResult
-
-      // Mux routes
-      if (url.pathname.startsWith('/api/route/')) {
-        return muxRouter(req)
-      }
-
-      // Autonomous execution routes
-      if (url.pathname.startsWith('/api/autonomous/') && autonomousRouter) {
-        return autonomousRouter(req, url).then((r) => r ?? conversationRouter(req))
-      }
-
-      // NLCL — Natural Language Command Layer routes
-      if (url.pathname.startsWith('/api/nlcl/')) {
-        return nlclRouter(req)
-      }
-
-      // OpenCode `serve` capability routes (feature 029)
-      if (url.pathname.startsWith('/api/opencode/')) {
-        const serve = (globalThis as Record<string, unknown>).__opencodeServe as
-          | {
-              client: import('../engines/opencode/opencode-client.js').OpenCodeClient
-              ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
-            }
-          | undefined
-        if (!serve) {
-          return json({ error: 'OpenCode serve not enabled', code: 'OPENCODE_DISABLED' }, 503)
-        }
-        return handleOpenCodeRoutes(req, url, serve)
-      }
-
-      // Automation — governor-mediated browser automation (B9 / L7)
-      if (url.pathname.startsWith('/api/automate/')) {
-        return automationRouter(req, url).then((r) => r ?? conversationRouter(req))
-      }
-
-      if (url.pathname.startsWith('/api/knowledge/')) {
-        return knowledgeRouter(req)
-      }
-
-      if (url.pathname.startsWith('/api/memory/') && memoryRouter) {
-        const bodyText = req.method === 'GET' ? undefined : await req.text()
-        return memoryRouter({ url: req.url, method: req.method, body: bodyText }).then(
-          (r) =>
-            new Response(JSON.stringify(r.body), {
-              status: r.status,
-              headers: { 'Content-Type': 'application/json' },
-            }),
-        )
-      }
-
-      // vivim-canvas routes (v7.12) — capability plane over HTTP
-      if (url.pathname.startsWith('/api/canvas/') && canvasRouter) {
-        return canvasRouter(req, url)
-      }
-
-      // 24.1/24.2 — universal capability transport (execute + introspection)
-      if (url.pathname.startsWith('/api/capabilities') && capabilityRouter) {
-        return capabilityRouter(req, url)
-      }
-
-      return conversationRouter(req)
-    },
-    websocket: {
-      open(ws) {
-        handleWebSocket.open(ws)
-      },
-      message(ws, message) {
-        handleWebSocket.message(ws, message, eventBus)
-      },
-      close(ws) {
-        handleWebSocket.close(ws, eventBus)
-      },
-    },
-  })
-
+  ctx.port = boundPort
   ready = true
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
   process.on('SIGINT', () => gracefulShutdown('SIGINT'))
@@ -1280,7 +1365,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 }
 
 if (import.meta.main) {
-  const port = Number(process.env.PORT ?? 9420)
+  const port = Number(process.env.PORT ?? process.env.CAP_STORE_PORT ?? 9420)
   const ctx = await createServerWithEngines(port)
   console.log(`vivim server listening on :${ctx.port}`)
 }

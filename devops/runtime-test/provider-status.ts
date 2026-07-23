@@ -73,8 +73,12 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
       const accounts = readdirSync(profileDir, { withFileTypes: true }).filter((e) => e.isDirectory())
       profileOnDisk = accounts.length > 0
       for (const acct of accounts) {
-        const cookiesPath = j(profileDir, acct.name, 'Cookies')
-        if (existsSync(cookiesPath) && statSync(cookiesPath).size > 0) {
+        const cookiesPath = j(profileDir, acct.name, 'Default', 'Network', 'Cookies')
+        const legacyCookiesPath = j(profileDir, acct.name, 'Cookies')
+        if (
+          (existsSync(cookiesPath) && statSync(cookiesPath).size > 0) ||
+          (existsSync(legacyCookiesPath) && statSync(legacyCookiesPath).size > 0)
+        ) {
           hasCookies = true
           break
         }
@@ -111,15 +115,16 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
   let capabilityStatus: string | undefined
   try {
     const { testCapability } = await import('./test-cap.js')
-    // Try the canonical slug pattern: <provider>_send
-    const slug = `${provider}_send`
-    const result = await testCapability(slug, '{}')
-    capabilityRegistered = result.ok
-    if (result.ok) {
-      capabilitySlug = slug
-      capabilityStatus = 'registered'
-    } else {
-      capabilityStatus = result.error ?? 'not found'
+    const slugsToTry = ['conversation_send', 'send_message', `cap:conversation:send`, `${provider}_send`]
+    for (const slug of slugsToTry) {
+      const result = await testCapability(slug, { providerId: provider })
+      if (result.registered) {
+        capabilityRegistered = true
+        capabilitySlug = slug
+        capabilityStatus = result.ok ? 'registered+executed' : `registered (${result.error ?? 'validation error'})`
+        break
+      }
+      capabilityStatus = `Capability ${slug} not found`
     }
   } catch {
     /* ignore */

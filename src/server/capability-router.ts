@@ -46,14 +46,14 @@ export function createCapabilityRouter(ctx: ServerContext) {
       const category = url.searchParams.get('category') ?? undefined
       const tag = url.searchParams.get('tag') ?? undefined
       const caps = registry.list({ surface, category, tag })
-      return json(caps.map(toDetail))
+      return json({ capabilities: caps.map(toDetail), total: caps.length })
     }
 
     // 24.1 — POST /api/capabilities/:id/execute (slug alias resolves same handler)
     const execMatch = url.pathname.match(/^\/api\/capabilities\/([^/]+)\/execute$/)
     if (req.method === 'POST' && execMatch) {
       const id = decodeURIComponent(execMatch[1] ?? '')
-      const cap = registry.get(id) ?? registry.getBySlug(id)
+      const cap = (await registry.getBySlugAsync(id)) ?? registry.get(id)
       if (!cap) {
         return errorResponse(`Capability ${id} not found`, 'NotFound', 404)
       }
@@ -69,7 +69,7 @@ export function createCapabilityRouter(ctx: ServerContext) {
       }
       const input = (body.input ?? {}) as Record<string, unknown>
 
-      const required = (cap.inputSchema.required as string[] | undefined) ?? []
+      const required = (cap.inputSchema?.required as string[] | undefined) ?? []
       for (const key of required) {
         if (!(key in input)) {
           return errorResponse(`Missing required input: ${key}`, 'ValidationError', 400)
@@ -111,7 +111,7 @@ export function createCapabilityRouter(ctx: ServerContext) {
     const detailMatch = url.pathname.match(/^\/api\/capabilities\/([^/]+)$/)
     if (req.method === 'GET' && detailMatch) {
       const id = decodeURIComponent(detailMatch[1] ?? '')
-      const cap = registry.get(id) ?? registry.getBySlug(id)
+      const cap = (await registry.getBySlugAsync(id)) ?? registry.get(id)
       if (!cap) {
         return errorResponse(`Capability ${id} not found`, 'NotFound', 404)
       }

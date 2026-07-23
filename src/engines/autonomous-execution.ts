@@ -54,10 +54,20 @@ export interface AutonomousGoal {
   requireApprovalAbove: ActionClassification
   allowBrowser: boolean
   costBudgetCents: number
+  // Unit 8.6: per-task budgets — exceeding any transitions task to paused
+  tokenBudget: number
+  iterationBudget: number
   // Unit 36.2: explicit LLM provider for planning. 'local' (or unset) →
   // LocalModelAdapter (offline). Any other value is an outbound/cloud model
   // and is only honored when the user has consented (see resolvePlanner).
   llmProvider?: string
+}
+
+// Unit 8.6: tracks per-task consumption across cost/tokens/iterations
+export interface BudgetUsage {
+  costCents: number
+  tokens: number
+  iterations: number
 }
 
 export interface AutonomousStep {
