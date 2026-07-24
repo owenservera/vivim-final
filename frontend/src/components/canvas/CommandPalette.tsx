@@ -115,6 +115,7 @@ export function CommandPalette({ open, onClose, onAction, workspaceId }: Command
 
   return (
     <div
+      data-command-palette="true"
       onClick={onClose}
       style={{
         position: 'fixed',

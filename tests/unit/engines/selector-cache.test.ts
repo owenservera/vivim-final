@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { SelectorCache } from '../../../src/engines/selector-cache.js'
 
 describe('selector-cache', () => {
@@ -16,17 +16,17 @@ describe('selector-cache', () => {
     cache.record('chatgpt', 'send', 'button.submit')
     const entry = cache.get('chatgpt', 'send')
     expect(entry).not.toBeNull()
-    expect(entry!.selector).toBe('button.submit')
-    expect(entry!.providerId).toBe('chatgpt')
-    expect(entry!.capabilityId).toBe('send')
-    expect(entry!.successCount).toBe(1)
+    expect(entry?.selector).toBe('button.submit')
+    expect(entry?.providerId).toBe('chatgpt')
+    expect(entry?.capabilityId).toBe('send')
+    expect(entry?.successCount).toBe(1)
   })
 
   it('increments successCount on repeated record', () => {
     cache.record('chatgpt', 'send', 'button.submit')
     cache.record('chatgpt', 'send', 'button.submit')
     const entry = cache.get('chatgpt', 'send')
-    expect(entry!.successCount).toBe(2)
+    expect(entry?.successCount).toBe(2)
   })
 
   it('evicts oldest entry when maxEntries exceeded', () => {

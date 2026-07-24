@@ -9,7 +9,7 @@
  * prompt). Per spec FR-001/FR-002 and AC 1-4.
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { checkHealth, getSession } from '@/sdk/backend-client';
 
 interface SessionUser {
@@ -20,19 +20,29 @@ export function HealthIndicator({ pollMs = 15000 }: { pollMs?: number }) {
   const [healthy, setHealthy] = useState<boolean | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [checkedAt, setCheckedAt] = useState<number>(0);
+  const mountedRef = useRef(true);
 
   const refresh = useCallback(async () => {
+    if (!mountedRef.current) return;
     const health = await checkHealth().catch(() => null);
     setHealthy(!!health?.ok);
     const sess = await getSession().catch(() => null);
-    setUser(sess?.ok && sess.data?.authenticated ? { email: sess.data.email } : null);
-    setCheckedAt(Date.now());
+    if (mountedRef.current) {
+      setUser(sess?.ok && sess.data?.authenticated ? { email: sess.data.email } : null);
+      setCheckedAt(Date.now());
+    }
   }, []);
 
   useEffect(() => {
-    refresh();
+    mountedRef.current = true;
+    // Defer initial refresh to avoid synchronous setState in effect
+    const timeoutId = setTimeout(refresh, 0);
     const t = setInterval(refresh, pollMs);
-    return () => clearInterval(t);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(t);
+      clearTimeout(timeoutId);
+    };
   }, [refresh, pollMs]);
 
   const dot = healthy === null ? '#9ca3af' : healthy ? '#22c55e' : '#ef4444';

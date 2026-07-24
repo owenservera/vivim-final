@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { getApiUrl } from '@/shared/api-config'
 
 // ── Inline types ──────────────────────────────────────────────────────────────
 
@@ -28,7 +27,7 @@ interface RestoreResponse {
 // ── API helpers ───────────────────────────────────────────────────────────────
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = getApiUrl(path)
+  const url = path.startsWith('/') ? path : `/${path}`
   const resp = await fetch(url, {
     ...init,
     headers: { 'Content-Type': 'application/json', 'X-Source': 'frontend', ...init?.headers },

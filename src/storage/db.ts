@@ -255,17 +255,19 @@ export class CapStoreDb {
     })
     if (existing) return { id: existing.id }
 
-    await this.prisma.providerDefinition.upsert({
-      where: { id: providerId },
-      create: {
-        id: providerId,
-        slug: providerId,
-        displayName: providerId,
-        createdAt: now,
-        updatedAt: now,
-      },
-      update: { updatedAt: now },
-    }).catch(() => {})
+    await this.prisma.providerDefinition
+      .upsert({
+        where: { id: providerId },
+        create: {
+          id: providerId,
+          slug: providerId,
+          displayName: providerId,
+          createdAt: now,
+          updatedAt: now,
+        },
+        update: { updatedAt: now },
+      })
+      .catch(() => {})
 
     const vivimSession = await this.prisma.vivimSession.create({
       data: { id: newId(), state: 'idle', contextJson: '{}', createdAt: now, updatedAt: now },

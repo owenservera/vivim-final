@@ -1,8 +1,8 @@
 // src/engines/memory-engine.ts
 // MemoryEngine — episodic, semantic, and procedural memory with learning
 
-import { newId } from '../ids.js'
 import { NotFoundError } from '../errors.js'
+import { newId } from '../ids.js'
 import type { NodeStoreContract } from '../storage/contracts/node-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
@@ -134,7 +134,10 @@ export interface SemanticMemoryStore {
   delete(id: string): Promise<void>
   findAll(): Promise<SemanticMemory[]>
   updateConfidence(id: string, confidence: number): Promise<void>
-  update(id: string, patch: Partial<Pick<SemanticMemory, 'subject' | 'predicate' | 'object' | 'confidence'>>): Promise<void>
+  update(
+    id: string,
+    patch: Partial<Pick<SemanticMemory, 'subject' | 'predicate' | 'object' | 'confidence'>>,
+  ): Promise<void>
   findById(id: string): Promise<SemanticMemory | null>
 }
 
@@ -207,10 +210,17 @@ export class MemoryEngine {
     if (!fact) throw new NotFoundError(`Fact ${id} not found`)
     const newConfidence = Math.min(1, fact.confidence + 0.15)
     await this.semantic.updateConfidence(id, newConfidence)
-    this.eventBus.emit({ type: 'memory:curated', data: { id, action: 'verify', by, confidence: newConfidence } })
+    this.eventBus.emit({
+      type: 'memory:curated',
+      data: { id, action: 'verify', by, confidence: newConfidence },
+    })
   }
 
-  async editFact(id: string, patch: { object?: unknown; predicate?: string }, by: string): Promise<void> {
+  async editFact(
+    id: string,
+    patch: { object?: unknown; predicate?: string },
+    by: string,
+  ): Promise<void> {
     const fact = await this.semantic.findById(id)
     if (!fact) throw new NotFoundError(`Fact ${id} not found`)
     await this.semantic.update(id, patch)
@@ -478,7 +488,7 @@ export class MemoryEngine {
       if (group.length <= 1) continue
       // Sort by confidence descending, keep the best
       group.sort((a, b) => b.confidence - a.confidence)
-      const survivor = group[0]
+      const _survivor = group[0]
       // Delete duplicates
       for (let i = 1; i < group.length; i++) {
         const dupe = group[i]
@@ -504,14 +514,18 @@ export class MemoryEngine {
     }
 
     // 3. Promote — frequent high-confidence pairs become ProceduralRules
-    const pairCounts = new Map<string, { count: number; avgConfidence: number; subject: string; predicate: string }>()
+    const pairCounts = new Map<
+      string,
+      { count: number; avgConfidence: number; subject: string; predicate: string }
+    >()
     const finalFacts = await this.semantic.findAll()
     for (const fact of finalFacts) {
       const pairKey = `${fact.subject}::${fact.predicate}`
       const existing = pairCounts.get(pairKey)
       if (existing) {
         existing.count++
-        existing.avgConfidence = (existing.avgConfidence * (existing.count - 1) + fact.confidence) / existing.count
+        existing.avgConfidence =
+          (existing.avgConfidence * (existing.count - 1) + fact.confidence) / existing.count
       } else {
         pairCounts.set(pairKey, {
           count: 1,

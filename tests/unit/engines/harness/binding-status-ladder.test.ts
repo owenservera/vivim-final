@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import { nextStatus, promoteProgram, isActive } from '../../../../src/engines/harness/binding-status-ladder.js'
+import {
+  isActive,
+  nextStatus,
+  promoteProgram,
+} from '../../../../src/engines/harness/binding-status-ladder.js'
 
 describe('binding-status-ladder', () => {
   describe('nextStatus', () => {

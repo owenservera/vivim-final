@@ -14,6 +14,7 @@
  */
 
 import { register } from '../../shared/universal-registry';
+import { registerCatalogComponent } from '../../hooks/useSlotOverrides';
 import type { ComponentType } from 'react';
 
 // Lazy imports — these are client components, so we import the module
@@ -446,4 +447,32 @@ export function registerAllComponents(): void {
     enabled: true,
     isDefault: true,
   });
+
+  // ── Populate COMPONENT_CATALOG for canvas-level hot-swap overrides ──
+  // Chat-level catalog is populated by ml-boot.ts. This covers canvas-level
+  // components so useSlotOverrides can resolve them for canvas slots.
+  registerCatalogComponent('LivingCanvas', C.LivingCanvas ?? null as unknown as any);
+  registerCatalogComponent('DocEditor', C.DocEditor ?? null as unknown as any);
+  registerCatalogComponent('MediaCard', C.MediaCard ?? null as unknown as any);
+  registerCatalogComponent('AgentCard', C.AgentCard ?? null as unknown as any);
+  registerCatalogComponent('AgentOverlay', C.AgentOverlay ?? null as unknown as any);
+  registerCatalogComponent('AuditDashboard', C.AuditDashboard ?? null as unknown as any);
+  registerCatalogComponent('TemplatesGallery', C.TemplatesGallery ?? null as unknown as any);
+  registerCatalogComponent('HealthDashboard', null as unknown as any);
+  registerCatalogComponent('CapabilityCatalog', null as unknown as any);
+  registerCatalogComponent('NotificationsCenter', C.NotificationsCenter ?? null as unknown as any);
+  registerCatalogComponent('PresenceIndicator', C.PresenceIndicator ?? null as unknown as any);
+  registerCatalogComponent('ZLayerPanel', C.ZLayerPanel ?? null as unknown as any);
+  registerCatalogComponent('WorkspaceSwitcher', C.WorkspaceSwitcher ?? null as unknown as any);
+  registerCatalogComponent('OnboardingTour', C.OnboardingTour ?? null as unknown as any);
+  registerCatalogComponent('CommandPalette', C.CommandPalette ?? null as unknown as any);
+  registerCatalogComponent('DrawerSystem', C.DrawerSystem ?? null as unknown as any);
+  registerCatalogComponent('ShellCard', C.ShellCard ?? null as unknown as any);
+  registerCatalogComponent('AutomationCard', C.AutomationCard ?? null as unknown as any);
+  registerCatalogComponent('RbacManager', C.RbacManager ?? null as unknown as any);
+  registerCatalogComponent('SearchPanel', null as unknown as any);
+  registerCatalogComponent('QuickActionsMenu', C.QuickActionsMenu ?? null as unknown as any);
+  registerCatalogComponent('ThemeProvider', C.ThemeProvider ?? null as unknown as any);
+  registerCatalogComponent('ThemeSettings', C.ThemeSettings ?? null as unknown as any);
+  registerCatalogComponent('VCardMenu', C.VCardMenu ?? null as unknown as any);
 }

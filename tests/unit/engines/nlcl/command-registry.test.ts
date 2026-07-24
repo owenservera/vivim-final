@@ -1,7 +1,7 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { CommandPatternRegistry } from '../../../../src/engines/nlcl/command-registry.js'
-import { EngineError } from '../../../../src/errors.js'
 import type { CommandPattern } from '../../../../src/engines/nlcl/types.js'
+import { EngineError } from '../../../../src/errors.js'
 
 function makePattern(overrides: Partial<CommandPattern> = {}): CommandPattern {
   return {
@@ -147,8 +147,8 @@ describe('command-registry', () => {
       registry.register(makePattern({ id: 'c', intent: 'ic', category: 'cat1' }))
       const grouped = registry.listByCategory()
       expect(Object.keys(grouped)).toHaveLength(2)
-      expect(grouped['cat1']).toHaveLength(2)
-      expect(grouped['cat2']).toHaveLength(1)
+      expect(grouped.cat1).toHaveLength(2)
+      expect(grouped.cat2).toHaveLength(1)
     })
   })
 

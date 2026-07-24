@@ -1,10 +1,10 @@
 // tests/unit/engines/user-identity.test.ts
 // UserIdentityEngine — profile CRUD, role management, active user tracking.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { UserIdentityEngine, type UserRole } from '../../../src/engines/user-identity.js'
-import type { UserIdentityStore, UserRow } from '../../../src/storage/contracts/user-identity-store.js'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import type { CapabilityEventBus, EngineEvent } from '../../../src/engines/capability-event-bus.js'
+import { UserIdentityEngine, type UserRole } from '../../../src/engines/user-identity.js'
 import { EngineError } from '../../../src/errors.js'
+import type { UserRow } from '../../../src/storage/contracts/user-identity-store.js'
 
 function makeUser(overrides?: Partial<UserRow>): UserRow {
   return {
@@ -26,7 +26,9 @@ function makeStore() {
     count: mock(() => Promise.resolve(1)),
     getDefault: mock(() => Promise.resolve(makeUser())),
     getById: mock(() => Promise.resolve(makeUser())),
-    create: mock(() => Promise.resolve(makeUser({ id: 'u2', displayName: 'New User', isDefault: 0 }))),
+    create: mock(() =>
+      Promise.resolve(makeUser({ id: 'u2', displayName: 'New User', isDefault: 0 })),
+    ),
     update: mock(() => Promise.resolve()),
     softDelete: mock(() => Promise.resolve()),
     list: mock(() => Promise.resolve([makeUser()])),
@@ -37,7 +39,9 @@ function makeEventBus() {
   const events: EngineEvent[] = []
   return {
     events,
-    emit: mock((e: EngineEvent) => { events.push(e) }),
+    emit: mock((e: EngineEvent) => {
+      events.push(e)
+    }),
     on: mock(() => () => {}),
     off: mock(() => {}),
     subscribe: mock(() => {}),

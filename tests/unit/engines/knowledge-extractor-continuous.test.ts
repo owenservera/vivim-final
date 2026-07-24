@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
-import type { KnowledgeExtractor } from '../../../src/engines/knowledge-extractor.js'
 import { KnowledgeExtractorContinuous } from '../../../src/engines/knowledge-extractor-continuous.js'
+import type { KnowledgeExtractor } from '../../../src/engines/knowledge-extractor.js'
 import type { MemoryEngine, SemanticMemoryInput } from '../../../src/engines/memory-engine.js'
 
 function mockExtractor(): KnowledgeExtractor {
@@ -58,9 +58,7 @@ describe('KnowledgeExtractorContinuous', () => {
       type: 'conversation:complete',
       data: {
         conversationId: 'conv1',
-        assistantMessages: [
-          { id: 'msg1', content: 'We use TypeScript for the project.' },
-        ],
+        assistantMessages: [{ id: 'msg1', content: 'We use TypeScript for the project.' }],
         turnSuccess: true,
       },
     })
@@ -81,9 +79,7 @@ describe('KnowledgeExtractorContinuous', () => {
       type: 'conversation:complete',
       data: {
         conversationId: 'conv1',
-        assistantMessages: [
-          { id: 'msg1', content: 'We use TypeScript for the project.' },
-        ],
+        assistantMessages: [{ id: 'msg1', content: 'We use TypeScript for the project.' }],
         turnSuccess: true,
       },
     })
@@ -102,9 +98,7 @@ describe('KnowledgeExtractorContinuous', () => {
       type: 'conversation:complete',
       data: {
         conversationId: 'conv1',
-        assistantMessages: [
-          { id: 'msg1', content: 'We use TypeScript for the project.' },
-        ],
+        assistantMessages: [{ id: 'msg1', content: 'We use TypeScript for the project.' }],
         turnSuccess: false,
       },
     })
@@ -142,16 +136,18 @@ describe('KnowledgeExtractorContinuous', () => {
       extractFromMessage: async (_convId: string, msgId: string) => {
         callCount++
         if (msgId === 'msg1') throw new Error('Extraction failed')
-        return [{
-          type: 'fact' as const,
-          subject: 'project',
-          predicate: 'uses',
-          object: 'TypeScript',
-          confidence: 0.8,
-          sourceConversationId: _convId,
-          sourceMessageId: msgId,
-          context: '',
-        }]
+        return [
+          {
+            type: 'fact' as const,
+            subject: 'project',
+            predicate: 'uses',
+            object: 'TypeScript',
+            confidence: 0.8,
+            sourceConversationId: _convId,
+            sourceMessageId: msgId,
+            context: '',
+          },
+        ]
       },
     } as KnowledgeExtractor
 

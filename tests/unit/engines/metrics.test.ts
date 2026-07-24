@@ -1,14 +1,22 @@
 // tests/unit/engines/metrics.test.ts
 // MetricsRegistry — counters, gauges, histograms, flush, exporters.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { MetricsRegistry, DEFAULT_POLICY, type MetricsExporter } from '../../../src/engines/metrics.js'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import {
+  DEFAULT_POLICY,
+  type MetricsExporter,
+  MetricsRegistry,
+} from '../../../src/engines/metrics.js'
 
 function makeExporter(): MetricsExporter & { snapshots: Parameters<MetricsExporter['export']>[0] } {
   let snapshots: any[] = []
   return {
     name: 'test-exporter',
-    get snapshots() { return snapshots },
-    export: mock(async (s: any[]) => { snapshots = s }),
+    get snapshots() {
+      return snapshots
+    },
+    export: mock(async (s: any[]) => {
+      snapshots = s
+    }),
   }
 }
 
@@ -47,14 +55,18 @@ describe('MetricsRegistry', () => {
     registry.histogram('latency', 200)
     registry.histogram('latency', 2000)
     const snapshots = registry.collect()
-    const bucket50 = snapshots.find((s) => s.name === 'vivim_latency_bucket' && s.labels.le === '50')
-    expect(bucket50!.value).toBe(1)
-    const bucket250 = snapshots.find((s) => s.name === 'vivim_latency_bucket' && s.labels.le === '250')
-    expect(bucket250!.value).toBe(2)
+    const bucket50 = snapshots.find(
+      (s) => s.name === 'vivim_latency_bucket' && s.labels.le === '50',
+    )
+    expect(bucket50?.value).toBe(1)
+    const bucket250 = snapshots.find(
+      (s) => s.name === 'vivim_latency_bucket' && s.labels.le === '250',
+    )
+    expect(bucket250?.value).toBe(2)
     const sum = snapshots.find((s) => s.name === 'vivim_latency_sum')
-    expect(sum!.value).toBe(2250)
+    expect(sum?.value).toBe(2250)
     const count = snapshots.find((s) => s.name === 'vivim_latency_count')
-    expect(count!.value).toBe(3)
+    expect(count?.value).toBe(3)
   })
 
   it('flush calls exporters', async () => {
@@ -74,20 +86,20 @@ describe('MetricsRegistry', () => {
   it('collect prefixes metric names', () => {
     registry.increment('my_counter')
     const snapshots = registry.collect()
-    expect(snapshots[0]!.name).toBe('vivim_my_counter')
+    expect(snapshots[0]?.name).toBe('vivim_my_counter')
   })
 
   it('custom prefix overrides default', () => {
     const custom = new MetricsRegistry({ prefix: 'app_' })
     custom.increment('req')
     const snapshots = custom.collect()
-    expect(snapshots[0]!.name).toBe('app_req')
+    expect(snapshots[0]?.name).toBe('app_req')
   })
 
   it('labels are included in snapshots', () => {
     registry.increment('hits', 1, { path: '/api' })
     const snapshots = registry.collect()
-    expect(snapshots[0]!.labels).toEqual({ path: '/api' })
+    expect(snapshots[0]?.labels).toEqual({ path: '/api' })
   })
 
   it('DEFAULT_POLICY has correct shape', () => {

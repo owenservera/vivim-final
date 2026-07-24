@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getApiUrl } from '@/shared/api-config';
+import { getWsUrl } from '@/sdk/backend-client';
 
 type Tab = 'events' | 'inject' | 'latency';
 
@@ -35,8 +35,7 @@ interface DevConsoleProps {
 }
 
 function wsUrl(): string {
-  const port = window.location.port || 9420;
-  return `ws://${window.location.hostname}:${port}/ws`;
+  return getWsUrl();
 }
 
 function eventColor(type: string): string {
@@ -118,7 +117,7 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
     setInjectBusy(true);
     setInjectResult('');
     try {
-      const resp = await fetch(getApiUrl('/api/interpret'), {
+      const resp = await fetch('/api/interpret', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),

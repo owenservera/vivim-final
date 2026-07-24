@@ -4,10 +4,10 @@
 import { describe, expect, it, mock } from 'bun:test'
 import { injectAntiDetection } from '../../../src/engines/anti-detection.js'
 import { CdpWatchdog, setupWatchdog } from '../../../src/engines/cdp-watchdog.js'
+import type { CDPTransport } from '../../../src/engines/chrome-governor.js'
 import { humanizedClick } from '../../../src/engines/humanized-interaction.js'
 import { LoopDetector } from '../../../src/engines/loop-detector.js'
 import { SelectorCache } from '../../../src/engines/selector-cache.js'
-import type { CDPTransport } from '../../../src/engines/chrome-governor.js'
 
 function mockTransport(): CDPTransport {
   return {
@@ -64,7 +64,7 @@ describe('harvest integration', () => {
     // Second visit: cache hit, no healing needed
     const cached = cache.get('chatgpt', 'send_message')
     expect(cached).not.toBeNull()
-    expect(cached!.selector).toBe('#send-btn')
+    expect(cached?.selector).toBe('#send-btn')
 
     // Loop detector should not flag this as a loop
     expect(healer.isLooping()).toBe(false)

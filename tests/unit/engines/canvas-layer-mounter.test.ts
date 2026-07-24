@@ -1,14 +1,19 @@
 // tests/unit/engines/canvas-layer-mounter.test.ts
 // CanvasLayerMounter — canvas layer lifecycle events.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { CanvasLayerMounter, type LayerDefinition } from '../../../src/engines/canvas-layer-mounter.js'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import {
+  CanvasLayerMounter,
+  type LayerDefinition,
+} from '../../../src/engines/canvas-layer-mounter.js'
 import type { CapabilityEventBus, EngineEvent } from '../../../src/engines/capability-event-bus.js'
 
 function makeEventBus() {
   const events: EngineEvent[] = []
   return {
     events,
-    emit: mock((e: EngineEvent) => { events.push(e) }),
+    emit: mock((e: EngineEvent) => {
+      events.push(e)
+    }),
     on: mock(() => () => {}),
     off: mock(() => {}),
     subscribe: mock(() => {}),
@@ -41,9 +46,7 @@ describe('CanvasLayerMounter', () => {
     expect(layer.instanceId).toContain('test-layer')
     expect(layer.definitionId).toBe('layer-1')
     expect(layer.slug).toBe('test-layer')
-    expect(bus.emit).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'canvas:layer:spawned' }),
-    )
+    expect(bus.emit).toHaveBeenCalledWith(expect.objectContaining({ type: 'canvas:layer:spawned' }))
   })
 
   it('spawn generates unique instanceIds', async () => {

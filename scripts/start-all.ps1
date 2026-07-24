@@ -1,5 +1,5 @@
 # scripts/start-all.ps1
-# Start both backend (:9420) and frontend (:5173).
+# Start both backend (:9420) and frontend (:3000).
 # FULLY DETACHED — exits immediately. No hangs, no waits.
 # Usage: pwsh scripts/start-all.ps1 [-BackendOnly] [-FrontendOnly]
 

@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it } from 'bun:test'
 import { IndexingPipeline } from '../../../src/engines/indexing-pipeline.js'
 import type { SemanticSearchEngine } from '../../../src/engines/semantic-search.js'
 
-function mockSemantic(): { engine: SemanticSearchEngine; indexed: Array<{ text: string; entityType: string; entityId: string }> } {
+function mockSemantic(): {
+  engine: SemanticSearchEngine
+  indexed: Array<{ text: string; entityType: string; entityId: string }>
+} {
   const indexed: Array<{ text: string; entityType: string; entityId: string }> = []
   return {
     engine: {

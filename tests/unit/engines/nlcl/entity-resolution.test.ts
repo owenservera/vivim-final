@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import {
+  listIntents,
+  normalizeBoolean,
+  normalizeNumberWords,
   normalizeRelativeDate,
   normalizeRelativeTime,
-  normalizeNumberWords,
-  normalizeBoolean,
-  resolveEntityValues,
   registerIntent,
-  listIntents,
+  resolveEntityValues,
   resolveIntentFromRegistry,
 } from '../../../../src/engines/nlcl/entity-resolution.js'
 
@@ -149,18 +149,18 @@ describe('entity-resolution', () => {
     it('registerIntent + listIntents', () => {
       registerIntent('test_reg_1', ['alpha_beta_77'], { confidence: 0.9 })
       const intents = listIntents()
-      const found = intents.find(i => i.slug === 'test_reg_1')
+      const found = intents.find((i) => i.slug === 'test_reg_1')
       expect(found).toBeDefined()
-      expect(found!.patterns).toEqual(['alpha_beta_77'])
-      expect(found!.confidence).toBe(0.9)
+      expect(found?.patterns).toEqual(['alpha_beta_77'])
+      expect(found?.confidence).toBe(0.9)
     })
 
     it('resolveIntentFromRegistry matches patterns', () => {
       registerIntent('test_reg_2', ['gamma_delta_88'], { confidence: 0.85 })
       const result = resolveIntentFromRegistry('please gamma_delta_88 for foo')
       expect(result).not.toBeNull()
-      expect(result!.slug).toBe('test_reg_2')
-      expect(result!.confidence).toBe(0.85)
+      expect(result?.slug).toBe('test_reg_2')
+      expect(result?.confidence).toBe(0.85)
     })
 
     it('resolveIntentFromRegistry returns null for no match', () => {

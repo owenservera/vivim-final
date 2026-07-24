@@ -52,14 +52,22 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
         return { status: 400, body: { error: 'focal entity required' } }
       }
       const allFacts = await memory.getAllFacts()
-      const nodes = new Map<string, { id: string; label: string; type: 'entity' | 'fact'; confidence: number }>()
+      const nodes = new Map<
+        string,
+        { id: string; label: string; type: 'entity' | 'fact'; confidence: number }
+      >()
       const edges: Array<{ source: string; target: string; label: string; weight: number }> = []
 
       const visited = new Set<string>()
-      const queue: Array<{ entity: string; currentDepth: number }> = [{ entity: focal, currentDepth: 0 }]
+      const queue: Array<{ entity: string; currentDepth: number }> = [
+        { entity: focal, currentDepth: 0 },
+      ]
 
       while (queue.length > 0) {
-        const { entity, currentDepth: d } = queue.shift()!
+        const { entity, currentDepth: d } = queue.shift() as {
+          entity: string
+          currentDepth: number
+        }
         if (visited.has(entity) || d > depth) continue
         visited.add(entity)
 
@@ -69,8 +77,18 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
           if (f.subject === entity || f.object === entity) {
             const other = f.subject === entity ? f.object : f.subject
             if (typeof other === 'string') {
-              nodes.set(other, { id: other, label: other, type: 'entity', confidence: f.confidence })
-              edges.push({ source: f.subject, target: String(f.object), label: f.predicate, weight: f.confidence })
+              nodes.set(other, {
+                id: other,
+                label: other,
+                type: 'entity',
+                confidence: f.confidence,
+              })
+              edges.push({
+                source: f.subject,
+                target: String(f.object),
+                label: f.predicate,
+                weight: f.confidence,
+              })
               if (d < depth) queue.push({ entity: other, currentDepth: d + 1 })
             }
           }
@@ -91,11 +109,19 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
         return { status: 400, body: { error: 'entity required' } }
       }
       const facts = await memory.recallFacts(entity)
-      const neighbors = new Map<string, { id: string; label: string; confidence: number; predicate: string }>()
+      const neighbors = new Map<
+        string,
+        { id: string; label: string; confidence: number; predicate: string }
+      >()
       for (const f of facts.slice(0, k)) {
         const other = f.subject === entity ? String(f.object) : f.subject
         if (!neighbors.has(other)) {
-          neighbors.set(other, { id: other, label: other, confidence: f.confidence, predicate: f.predicate })
+          neighbors.set(other, {
+            id: other,
+            label: other,
+            confidence: f.confidence,
+            predicate: f.predicate,
+          })
         }
       }
       return {
@@ -111,8 +137,8 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       for (const f of allFacts) {
         if (!adj.has(f.subject)) adj.set(f.subject, new Set())
         if (!adj.has(String(f.object))) adj.set(String(f.object), new Set())
-        adj.get(f.subject)!.add(String(f.object))
-        adj.get(String(f.object))!.add(f.subject)
+        adj.get(f.subject)?.add(String(f.object))
+        adj.get(String(f.object))?.add(f.subject)
       }
       // Simple label-propagation community detection
       const labels = new Map<string, string>()
@@ -128,16 +154,22 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
           let bestLabel = labels.get(node) ?? node
           let bestCount = 0
           for (const [l, c] of neighborLabels) {
-            if (c > bestCount) { bestCount = c; bestLabel = l }
+            if (c > bestCount) {
+              bestCount = c
+              bestLabel = l
+            }
           }
-          if (labels.get(node) !== bestLabel) { labels.set(node, bestLabel); changed = true }
+          if (labels.get(node) !== bestLabel) {
+            labels.set(node, bestLabel)
+            changed = true
+          }
         }
         if (!changed) break
       }
       const groups = new Map<string, string[]>()
       for (const [node, label] of labels) {
         if (!groups.has(label)) groups.set(label, [])
-        groups.get(label)!.push(node)
+        groups.get(label)?.push(node)
       }
       return {
         status: 200,
@@ -313,8 +345,11 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
           await memory.editFact(id, { object: body.object, predicate: body.predicate }, by)
           return { status: 200, body: { ok: true, action: 'edit', id } }
         }
-        return { status: 400, body: { error: 'no valid patch fields (verified, object, predicate)' } }
-      } catch (err) {
+        return {
+          status: 400,
+          body: { error: 'no valid patch fields (verified, object, predicate)' },
+        }
+      } catch (_err) {
         return { status: 404, body: { error: `fact not found: ${id}` } }
       }
     }
@@ -335,7 +370,7 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       try {
         await memory.rejectFact(id, by)
         return { status: 200, body: { ok: true, action: 'reject', id } }
-      } catch (err) {
+      } catch (_err) {
         return { status: 404, body: { error: `fact not found: ${id}` } }
       }
     }

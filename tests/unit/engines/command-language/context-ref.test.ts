@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { resolveContextRef, isContextRef } from '../../../../src/engines/command-language/context-ref.js'
+import {
+  isContextRef,
+  resolveContextRef,
+} from '../../../../src/engines/command-language/context-ref.js'
 import { ContextNotFoundError } from '../../../../src/errors.js'
 
 describe('context-ref', () => {

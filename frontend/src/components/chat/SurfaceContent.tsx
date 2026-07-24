@@ -25,7 +25,6 @@ import {
 import { CapabilityCatalog } from '@/components/chat/CapabilityCatalog';
 import { HealthDashboard } from '@/components/chat/HealthDashboard';
 import { MemoryBrowser } from '@/components/memory/MemoryBrowser';
-import { getApiUrl } from '@/shared/api-config';
 import type { DocumentCard as DocumentCardRow } from '@/shared/document';
 import type { MediaCard as MediaCardRow } from '@/shared/media';
 import type { AutomationDefinition } from '@/shared/automation';
@@ -131,7 +130,7 @@ export function SurfaceContent({
   useEffect(() => {
     if (activeSurface !== 'docs' && activeSurface !== 'editor') return;
     let cancelled = false;
-    fetch(getApiUrl('/api/documents'))
+    fetch('/api/documents')
       .then((r) => r.json())
       .then((data: { ok: boolean; documents: DocumentCardRow[] }) => {
         if (!cancelled && data.ok) setDocs(data.documents);
@@ -144,7 +143,7 @@ export function SurfaceContent({
   useEffect(() => {
     if (activeSurface !== 'media') return;
     let cancelled = false;
-    fetch(getApiUrl('/api/media'))
+    fetch('/api/media')
       .then((r) => r.json())
       .then((data: { ok: boolean; media: MediaCardRow[] }) => {
         if (!cancelled && data.ok) setMedias(data.media);
@@ -157,7 +156,7 @@ export function SurfaceContent({
   useEffect(() => {
     if (activeSurface !== 'automation') return;
     let cancelled = false;
-    fetch(getApiUrl('/api/automation/list'))
+    fetch('/api/automation/list')
       .then((r) => r.json())
       .then((data: { ok: boolean; automations: AutomationDefinition[] }) => {
         if (!cancelled && data.ok) setAutomations(data.automations);
@@ -170,7 +169,7 @@ export function SurfaceContent({
   useEffect(() => {
     if (activeSurface !== 'agents') return;
     let cancelled = false;
-    fetch(getApiUrl('/api/agents'))
+    fetch('/api/agent/list')
       .then((r) => r.json())
       .then((data: { ok: boolean; agents: AgentDefinition[] }) => {
         if (!cancelled && data.ok) setAgents(data.agents);
@@ -212,7 +211,7 @@ export function SurfaceContent({
                 <AutomationCard
                   automation={a}
                   onExecute={async (id) => {
-                    await fetch(getApiUrl('/api/automation/execute'), {
+                    await fetch('/api/automation/execute', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ automationId: id }),
@@ -231,7 +230,7 @@ export function SurfaceContent({
                 <AgentCard
                   agent={a}
                   onInvoke={async (id) => {
-                    await fetch(getApiUrl('/api/agent/invoke'), {
+                    await fetch('/api/agent/invoke', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ agentId: id }),

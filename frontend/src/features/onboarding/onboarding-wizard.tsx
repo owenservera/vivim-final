@@ -25,21 +25,47 @@ const DEFAULT_STATE: OnboardingState = {
 export function OnboardingWizard({ onComplete }: { onComplete?: () => void }) {
   const [state, setState] = useState<OnboardingState>(DEFAULT_STATE)
   const [open, setOpen] = useState(false)
+  const initializedRef = useRef(false)
 
   useEffect(() => {
+    if (initializedRef.current) return
+    initializedRef.current = true
+
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as OnboardingState
         if (parsed.completed) {
-          setOpen(false)
           return
         }
       }
     } catch {
       // ignore
     }
-    setOpen(true)
+    setTimeout(() => { setOpen(true) }, 0)
+    return () => {}
+  }, [])
+
+  // Initialize open state from localStorage on mount
+  useEffect(() => {
+    const initializeOpen = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (raw) {
+          const parsed = JSON.parse(raw) as OnboardingState
+          if (parsed.completed) {
+            setOpen(false)
+          } else {
+            setOpen(true)
+          }
+        } else {
+          setOpen(true)
+        }
+      } catch {
+        setOpen(true)
+      }
+    }
+    setTimeout(initializeOpen, 0)
   }, [])
 
   const advance = (patch: Partial<OnboardingState>) => {

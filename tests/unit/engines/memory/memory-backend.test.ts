@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { normalizeToolSchema, RESERVED_TOOL_NAMES } from '../../../../src/engines/memory/memory-backend.js'
+import {
+  RESERVED_TOOL_NAMES,
+  normalizeToolSchema,
+} from '../../../../src/engines/memory/memory-backend.js'
 
 describe('memory-backend', () => {
   describe('RESERVED_TOOL_NAMES', () => {
@@ -35,24 +38,35 @@ describe('memory-backend', () => {
     })
 
     it('normalizes a simple schema', () => {
-      const result = normalizeToolSchema({ name: 'search', description: 'Search files', parameters: { q: 'string' } })
-      expect(result).toEqual({ name: 'search', description: 'Search files', parameters: { q: 'string' } })
+      const result = normalizeToolSchema({
+        name: 'search',
+        description: 'Search files',
+        parameters: { q: 'string' },
+      })
+      expect(result).toEqual({
+        name: 'search',
+        description: 'Search files',
+        parameters: { q: 'string' },
+      })
     })
 
     it('unwraps function-wrapped schema', () => {
-      const wrapped = { type: 'function', function: { name: 'tool', description: 'A tool', parameters: {} } }
+      const wrapped = {
+        type: 'function',
+        function: { name: 'tool', description: 'A tool', parameters: {} },
+      }
       const result = normalizeToolSchema(wrapped)
       expect(result).toEqual({ name: 'tool', description: 'A tool', parameters: {} })
     })
 
     it('defaults description to empty string', () => {
       const result = normalizeToolSchema({ name: 'tool' })
-      expect(result!.description).toBe('')
+      expect(result?.description).toBe('')
     })
 
     it('defaults parameters to empty object', () => {
       const result = normalizeToolSchema({ name: 'tool', description: 'desc' })
-      expect(result!.parameters).toEqual({})
+      expect(result?.parameters).toEqual({})
     })
   })
 })

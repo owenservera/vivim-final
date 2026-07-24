@@ -11,7 +11,6 @@ import { ContentPartSchema, isLegacyBlock, migrateLegacyParts } from '../schema/
 import type { ContentPart } from '../schema/streaming.js'
 import type { ParserExecutionLogStore } from '../storage/contracts/parser-execution-log-store.js'
 import type { ParserStore, ProviderParserRow } from '../storage/contracts/parser-store.js'
-import { assertTrustedExpressionSource } from './safe-eval.js'
 import { SandboxRunner } from './sandbox-runner.js'
 import type { SandboxPermissions } from './sandbox-runner.js'
 

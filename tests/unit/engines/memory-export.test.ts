@@ -18,31 +18,39 @@ function mockStores() {
 
   return {
     episodic: {
-      save: async (episode: EpisodicMemory) => { episodicMemories.push(episode) },
+      save: async (episode: EpisodicMemory) => {
+        episodicMemories.push(episode)
+      },
       query: async () => [],
       count: async () => episodicMemories.length,
       findAll: async () => [...episodicMemories],
     } as EpisodicMemoryStore,
     semantic: {
-      save: async (fact: SemanticMemory) => { semanticFacts.push(fact) },
+      save: async (fact: SemanticMemory) => {
+        semanticFacts.push(fact)
+      },
       findBySubject: async (subject: string, predicate?: string) =>
-        semanticFacts.filter(f => f.subject === subject && (!predicate || f.predicate === predicate)),
+        semanticFacts.filter(
+          (f) => f.subject === subject && (!predicate || f.predicate === predicate),
+        ),
       delete: async (id: string) => {
-        const idx = semanticFacts.findIndex(f => f.id === id)
+        const idx = semanticFacts.findIndex((f) => f.id === id)
         if (idx >= 0) semanticFacts.splice(idx, 1)
       },
       findAll: async () => [...semanticFacts],
       updateConfidence: async (id: string, confidence: number) => {
-        const fact = semanticFacts.find(f => f.id === id)
+        const fact = semanticFacts.find((f) => f.id === id)
         if (fact) fact.confidence = confidence
       },
     } as SemanticMemoryStore,
     procedural: {
-      save: async (rule: ProceduralRule) => { proceduralRules.push(rule) },
+      save: async (rule: ProceduralRule) => {
+        proceduralRules.push(rule)
+      },
       findByContext: async () => [],
       findAll: async () => [...proceduralRules],
       delete: async (id: string) => {
-        const idx = proceduralRules.findIndex(r => r.id === id)
+        const idx = proceduralRules.findIndex((r) => r.id === id)
         if (idx >= 0) proceduralRules.splice(idx, 1)
       },
     } as ProceduralMemoryStore,
@@ -64,12 +72,24 @@ describe('MemoryExportEngine', () => {
   it('export json returns valid MemoryExport structure', async () => {
     // Add some data
     await stores.semantic.save({
-      id: 'f1', subject: 'user', predicate: 'prefers', object: 'dark mode',
-      confidence: 0.9, source: 'test', timestamp: Date.now(),
+      id: 'f1',
+      subject: 'user',
+      predicate: 'prefers',
+      object: 'dark mode',
+      confidence: 0.9,
+      source: 'test',
+      timestamp: Date.now(),
     })
     await stores.episodic.save({
-      id: 'e1', providerId: 'chatgpt', action: 'send', input: {}, output: {},
-      success: true, durationMs: 100, timestamp: Date.now(), tags: [],
+      id: 'e1',
+      providerId: 'chatgpt',
+      action: 'send',
+      input: {},
+      output: {},
+      success: true,
+      durationMs: 100,
+      timestamp: Date.now(),
+      tags: [],
     })
 
     const json = await exportEngine.export('json')
@@ -87,8 +107,13 @@ describe('MemoryExportEngine', () => {
 
   it('export markdown returns human-readable text', async () => {
     await stores.semantic.save({
-      id: 'f1', subject: 'api', predicate: 'uses', object: 'REST',
-      confidence: 0.8, source: 'test', timestamp: Date.now(),
+      id: 'f1',
+      subject: 'api',
+      predicate: 'uses',
+      object: 'REST',
+      confidence: 0.8,
+      source: 'test',
+      timestamp: Date.now(),
     })
 
     const md = await exportEngine.export('markdown')
@@ -101,8 +126,13 @@ describe('MemoryExportEngine', () => {
   it('import merges facts and skips higher-confidence existing', async () => {
     // Pre-populate with a high-confidence fact
     await stores.semantic.save({
-      id: 'existing', subject: 'user', predicate: 'prefers', object: 'light mode',
-      confidence: 0.95, source: 'original', timestamp: Date.now(),
+      id: 'existing',
+      subject: 'user',
+      predicate: 'prefers',
+      object: 'light mode',
+      confidence: 0.95,
+      source: 'original',
+      timestamp: Date.now(),
     })
 
     const exportData = {
@@ -110,8 +140,24 @@ describe('MemoryExportEngine', () => {
       encrypted: false,
       exportedAt: Date.now(),
       facts: [
-        { id: 'imp1', subject: 'user', predicate: 'prefers', object: 'light mode', confidence: 0.7, source: 'import', timestamp: Date.now() },
-        { id: 'imp2', subject: 'user', predicate: 'prefers', object: 'dark mode', confidence: 0.8, source: 'import', timestamp: Date.now() },
+        {
+          id: 'imp1',
+          subject: 'user',
+          predicate: 'prefers',
+          object: 'light mode',
+          confidence: 0.7,
+          source: 'import',
+          timestamp: Date.now(),
+        },
+        {
+          id: 'imp2',
+          subject: 'user',
+          predicate: 'prefers',
+          object: 'dark mode',
+          confidence: 0.8,
+          source: 'import',
+          timestamp: Date.now(),
+        },
       ],
       episodes: [],
       rules: [],
@@ -127,8 +173,13 @@ describe('MemoryExportEngine', () => {
   it('round-trip export then import preserves data', async () => {
     // Add data
     await stores.semantic.save({
-      id: 'f1', subject: 'test', predicate: 'has', object: { value: 42 },
-      confidence: 0.8, source: 'test', timestamp: Date.now(),
+      id: 'f1',
+      subject: 'test',
+      predicate: 'has',
+      object: { value: 42 },
+      confidence: 0.8,
+      source: 'test',
+      timestamp: Date.now(),
     })
 
     // Export

@@ -10,7 +10,7 @@ import { errorResponse, json } from './response.js'
 // Provider login URLs (consumer-friendly names in UI) — loaded from DB via ProviderRegistry
 import { getProviderRegistry } from '../config/provider-registry.js'
 
-function getLoginUrl(providerId: string, ctx?: ServerContext): string {
+function getLoginUrl(providerId: string, _ctx?: ServerContext): string {
   if (providerId === 'gemini') return 'https://gemini.google.com/app'
   try {
     return getProviderRegistry().getLoginUrl(providerId)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { assertRecipe, RECIPE_META } from '../../../../src/engines/harness/recipe-types.js'
+import { RECIPE_META, assertRecipe } from '../../../../src/engines/harness/recipe-types.js'
 import { EngineError } from '../../../../src/errors.js'
 
 describe('recipe-types', () => {

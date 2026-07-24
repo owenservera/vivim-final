@@ -2,11 +2,11 @@
 // Unit 22.2 - Prisma-backed ProgramStore implementation.
 // Wraps CapabilityProgram / CapabilityBinding rows via the ProgramStore contract.
 
-import type { CapStoreDb } from '../db.js'
 import type { CapabilityProgramRow } from '../contracts/capability-store.js'
 import type { ProgramStore, ProgramUpsert } from '../contracts/program-store.js'
+import type { CapStoreDb } from '../db.js'
 
-const PROGRAM_STATUS = ['draft', 'candidate', 'promoted', 'failed'] as const
+const _PROGRAM_STATUS = ['draft', 'candidate', 'promoted', 'failed'] as const
 
 export class ProgramStoreImpl implements ProgramStore {
   constructor(private readonly db: CapStoreDb) {}
@@ -34,7 +34,9 @@ export class ProgramStoreImpl implements ProgramStore {
   }
 
   async upsertProgram(input: ProgramUpsert): Promise<CapabilityProgramRow> {
-    const id = input.bindingId ? `prog:${input.bindingId}:${input.version}` : `prog:${Date.now()}:${input.version}`
+    const id = input.bindingId
+      ? `prog:${input.bindingId}:${input.version}`
+      : `prog:${Date.now()}:${input.version}`
     const now = BigInt(Date.now())
     const row = await this.db.prisma.capabilityProgram.upsert({
       where: { id },

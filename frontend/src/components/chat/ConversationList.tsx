@@ -49,20 +49,29 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const mountedRef = useRef(true);
 
   const load = useCallback(async () => {
+    if (!mountedRef.current) return;
     setLoading(true);
     setError(null);
-    const res = await listConversations().catch((e) => {
-      setError(String(e));
-      return null;
-    });
-    if (res?.ok) setConversations(res.data?.conversations ?? []);
-    setLoading(false);
+    try {
+      const res = await listConversations();
+      if (!mountedRef.current) return;
+      if (res?.ok) {
+        setConversations(res.data?.conversations ?? []);
+      }
+    } catch (e) {
+      if (mountedRef.current) setError(String(e));
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     load();
+    return () => { mountedRef.current = false; };
   }, [load]);
 
   const filtered = useMemo(() => {

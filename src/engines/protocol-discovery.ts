@@ -150,7 +150,7 @@ function _isStreamingEndpoint(url: string, bodyPreview: string): boolean {
   return previewMatch || bodyPreview.length > 0
 }
 
-function _inferFormat(url: string, bodyPreview: string): DiscoveredNetworkPattern['format'] {
+function _inferFormat(_url: string, bodyPreview: string): DiscoveredNetworkPattern['format'] {
   if (bodyPreview.startsWith('data: ') || bodyPreview.includes('\ndata:')) return 'sse'
   if (bodyPreview.startsWith(')]}\n')) return 'json_stream'
   if (bodyPreview.startsWith('{') || bodyPreview.startsWith('[')) return 'json'
@@ -204,7 +204,8 @@ async function _collectNetworkPatterns(
     const existing = patterns.get(url)
     if (!existing) return
     const mimeType = String(response.mimeType ?? '')
-    const isFetchOrXhr = mimeType === '' || mimeType === 'text/plain' || mimeType === 'application/json'
+    const isFetchOrXhr =
+      mimeType === '' || mimeType === 'text/plain' || mimeType === 'application/json'
     if (!isFetchOrXhr) return
     existing.resourceType = String(request.resourceType ?? existing.resourceType)
     existing.confidence = Math.min(1, existing.confidence + 0.2)

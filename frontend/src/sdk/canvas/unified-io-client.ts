@@ -21,10 +21,11 @@ import type {
 } from '../../shared/unified-io';
 import { IOError } from '../../shared/unified-io';
 
-export function createUnifiedIO(opts: { fetchImpl?: typeof fetch; ulidImpl?: () => string } = {}): UnifiedIO {
+export function createUnifiedIO(opts: { fetchImpl?: typeof fetch; ulidImpl?: () => string; apiBase?: string } = {}): UnifiedIO {
   const f = opts.fetchImpl ?? (typeof fetch !== 'undefined' ? fetch : undefined);
   if (!f) throw new Error('No fetch implementation available');
   const ulid = opts.ulidImpl ?? (() => `trace-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`);
+  const apiBase = opts.apiBase ?? '';
   const listeners = new Set<IOEventListener>();
   const inFlight = new Map<string, Promise<IOResponse<unknown>>>();
 
@@ -39,12 +40,13 @@ export function createUnifiedIO(opts: { fetchImpl?: typeof fetch; ulidImpl?: () 
   };
 
   const buildUrl = (url: string, query?: Record<string, string | number | boolean | undefined>) => {
-    if (!query) return url;
+    const base = url.startsWith('http') ? url : `${apiBase}${url}`;
+    if (!query) return base;
     const params = new URLSearchParams();
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined) params.set(k, String(v));
     }
-    return `${url}${url.includes('?') ? '&' : '?'}${params.toString()}`;
+    return `${base}${base.includes('?') ? '&' : '?'}${params.toString()}`;
   };
 
   return {

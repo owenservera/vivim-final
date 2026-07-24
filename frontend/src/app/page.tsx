@@ -238,7 +238,10 @@ function CanvasApp() {
 
 function DevConsole({ workspaceId, onClose }: { workspaceId: string; onClose: () => void }) {
   return (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: '40vh', maxHeight: '60vh', minHeight: 300, background: 'var(--card)', borderTop: '1px solid var(--border)', boxShadow: '0 -4px 24px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 1000, fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+    <div
+      data-dev-console="true"
+      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: '40vh', maxHeight: '60vh', minHeight: 300, background: 'var(--card)', borderTop: '1px solid var(--border)', boxShadow: '0 -4px 24px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', zIndex: 1000, fontFamily: 'var(--font-mono)', fontSize: 11 }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--border)', background: 'var(--secondary)', flexShrink: 0 }}>
         <Icon name="terminal" size={12} className="text-ring" />
         <strong style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dev Console</strong>

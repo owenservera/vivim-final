@@ -9,8 +9,8 @@
 // Uses the shared api/client.ts which sets X-Source: frontend on every request.
 
 import { z } from 'zod'
-import { ActionRegistry } from './registry.js'
-import { capabilityApi } from '../api/client.js'
+import { ActionRegistry } from './registry'
+import { capabilityApi } from '../api/client'
 
 interface UiCapability {
   id: string

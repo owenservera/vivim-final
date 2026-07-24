@@ -40,8 +40,10 @@ class BrowserUnifiedIO implements UnifiedIO {
   private inFlight = new Map<string, Promise<IOResponse<unknown>>>();
   private sandboxPorts = new Map<string, MessagePort>();
   private authToken: string | null = null;
+  private apiBase: string;
 
-  constructor() {
+  constructor(apiBase?: string) {
+    this.apiBase = apiBase ?? '';
     // Hydrate auth token from localStorage on construction
     try {
       this.authToken = localStorage.getItem('vivim:auth:token');
@@ -72,13 +74,14 @@ class BrowserUnifiedIO implements UnifiedIO {
   }
 
   private buildUrl(url: string, query?: Record<string, string | number | boolean | undefined>): string {
-    if (!query) return url;
+    const base = url.startsWith('http') ? url : `${this.apiBase}${url}`;
+    if (!query) return base;
     const params = new URLSearchParams();
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined) params.set(k, String(v));
     }
-    const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}${params.toString()}`;
+    const sep = base.includes('?') ? '&' : '?';
+    return `${base}${sep}${params.toString()}`;
   }
 
   async request<T>(url: string, init?: IORequestInit): Promise<IOResponse<T>> {
@@ -279,7 +282,9 @@ const IOContext = createContext<UnifiedIO | null>(null);
 
 export function UnifiedIOProvider({ children }: { children: ReactNode }) {
   // Create the IO instance once (lazy singleton per provider).
-  const [io] = useState(() => new BrowserUnifiedIO());
+  const [io] = useState(() => new BrowserUnifiedIO(
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? '',
+  ));
   return <IOContext.Provider value={io}>{children}</IOContext.Provider>;
 }
 
@@ -287,7 +292,7 @@ export function useIO(): UnifiedIO {
   const io = useContext(IOContext);
   if (!io) {
     // Fallback: create a temporary instance (for SSR or outside provider).
-    return new BrowserUnifiedIO();
+    return new BrowserUnifiedIO(process.env.NEXT_PUBLIC_API_BASE_URL ?? '');
   }
   return io;
 }

@@ -103,36 +103,40 @@ export class MemoryExportEngine {
 function toMarkdown(data: MemoryExport): string {
   const lines: string[] = []
 
-  lines.push(`# Memory Export`)
-  lines.push(``)
+  lines.push('# Memory Export')
+  lines.push('')
   lines.push(`Exported at: ${new Date(data.exportedAt).toISOString()}`)
   lines.push(`Encrypted: ${data.encrypted}`)
-  lines.push(``)
+  lines.push('')
 
   // Facts
   lines.push(`## Facts (${data.facts.length})`)
-  lines.push(``)
+  lines.push('')
   for (const f of data.facts) {
-    lines.push(`- **${f.subject}** ${f.predicate} \`${JSON.stringify(f.object)}\` (confidence: ${f.confidence.toFixed(2)})`)
+    lines.push(
+      `- **${f.subject}** ${f.predicate} \`${JSON.stringify(f.object)}\` (confidence: ${f.confidence.toFixed(2)})`,
+    )
   }
-  lines.push(``)
+  lines.push('')
 
   // Episodes
   lines.push(`## Episodes (${data.episodes.length})`)
-  lines.push(``)
+  lines.push('')
   for (const e of data.episodes) {
     const status = e.success ? '✓' : '✗'
     lines.push(`- ${status} ${e.action} (${e.providerId}) — ${new Date(e.timestamp).toISOString()}`)
   }
-  lines.push(``)
+  lines.push('')
 
   // Rules
   lines.push(`## Rules (${data.rules.length})`)
-  lines.push(``)
+  lines.push('')
   for (const r of data.rules) {
-    lines.push(`- **${r.name}**: IF ${r.condition} THEN ${r.action} (confidence: ${r.confidence.toFixed(2)})`)
+    lines.push(
+      `- **${r.name}**: IF ${r.condition} THEN ${r.action} (confidence: ${r.confidence.toFixed(2)})`,
+    )
   }
-  lines.push(``)
+  lines.push('')
 
   return lines.join('\n')
 }

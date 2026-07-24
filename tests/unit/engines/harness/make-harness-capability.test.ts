@@ -63,7 +63,7 @@ describe('make-harness-capability', () => {
       providerId: 'chatgpt',
     })
     expect(cap.cliCommand).toBeDefined()
-    expect(cap.cliCommand!.name).toBe('prog_send')
+    expect(cap.cliCommand?.name).toBe('prog_send')
   })
 
   it('sets mcpToolName when mcp surface included', () => {
@@ -92,8 +92,8 @@ describe('make-harness-capability', () => {
       providerId: 'chatgpt',
     })
     expect(cap.apiEndpoint).toBeDefined()
-    expect(cap.apiEndpoint!.method).toBe('POST')
-    expect(cap.apiEndpoint!.path).toBe('/api/capabilities/prog-1/execute')
+    expect(cap.apiEndpoint?.method).toBe('POST')
+    expect(cap.apiEndpoint?.path).toBe('/api/capabilities/prog-1/execute')
   })
 
   it('sets ui when ui surface included', () => {
@@ -108,7 +108,7 @@ describe('make-harness-capability', () => {
       providerId: 'chatgpt',
     })
     expect(cap.ui).toBeDefined()
-    expect(cap.ui!.component).toBe('action-button')
+    expect(cap.ui?.component).toBe('action-button')
   })
 
   it('handler delegates to executor.execute', async () => {
@@ -124,7 +124,7 @@ describe('make-harness-capability', () => {
       programId: 'program-42',
     })
     const ctx = { providerId: 'chatgpt', conversationId: 'conv-1' }
-    await cap.handler!({ input: { text: 'hi' } }, ctx as any)
+    await cap.handler?.({ input: { text: 'hi' } }, ctx as any)
     expect(mockExecutor.execute).toHaveBeenCalledWith({
       capabilitySlug: 'send_message',
       providerId: 'chatgpt',
@@ -147,9 +147,9 @@ describe('make-harness-capability', () => {
       providerId: 'fallback-provider',
     })
     const ctx = { conversationId: 'c1' }
-    await cap.handler!({}, ctx as any)
+    await cap.handler?.({}, ctx as any)
     expect(mockExecutor.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ providerId: 'fallback-provider' })
+      expect.objectContaining({ providerId: 'fallback-provider' }),
     )
   })
 })

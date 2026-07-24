@@ -30,8 +30,14 @@ interface ProviderFormatClassification {
 
 function classifyAnthropicSse(body: string): ProviderFormatClassification | null {
   const trimmed = body.trim()
-  if (!/^event:\s*(message_start|content_block_delta|message_delta|content_block_stop|message_stop)/m.test(trimmed)) return null
-  const hasContentBlock = trimmed.includes('content_block_delta') || trimmed.includes('content_block_start')
+  if (
+    !/^event:\s*(message_start|content_block_delta|message_delta|content_block_stop|message_stop)/m.test(
+      trimmed,
+    )
+  )
+    return null
+  const hasContentBlock =
+    trimmed.includes('content_block_delta') || trimmed.includes('content_block_start')
   const hasMessageStop = trimmed.includes('message_stop') || trimmed.includes('message_delta')
   const confidence = hasContentBlock ? 0.95 : hasMessageStop ? 0.7 : 0.4
   if (confidence < 0.7) return null
@@ -392,11 +398,11 @@ export class StreamingResponseAnalyzer {
       const name = `${providerFormat.provider}/${providerFormat.eventName ?? 'inferred'}`
       const logicCode =
         providerFormat.eventName === 'anthropic_sse'
-          ? generateAnthropicSseLogicCode(name, providerFormat.provider!)
+          ? generateAnthropicSseLogicCode(name, providerFormat.provider as string)
           : providerFormat.eventName === 'openai_sse'
-            ? generateOpenAiSseLogicCode(name, providerFormat.provider!)
+            ? generateOpenAiSseLogicCode(name, providerFormat.provider as string)
             : providerFormat.eventName === 'batchexecute'
-              ? generateGeminiBatchExecuteLogicCode(name, providerFormat.provider!)
+              ? generateGeminiBatchExecuteLogicCode(name, providerFormat.provider as string)
               : ''
       return {
         transport: providerFormat.transport,

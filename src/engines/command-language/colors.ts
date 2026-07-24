@@ -127,7 +127,7 @@ export function getBlendedColor(
   }
 
   if (categories.length === 1) {
-    const first = categories[0]!
+    const first = categories[0] as string
     return getShade(first, shade)
   }
 
@@ -179,9 +179,9 @@ function getRelativeLuminance(color: HslColor): number {
     const s = c / 255
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
   })
-  const r = mapped[0]!
-  const g = mapped[1]!
-  const b = mapped[2]!
+  const r = mapped[0] as number
+  const g = mapped[1] as number
+  const b = mapped[2] as number
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
@@ -238,9 +238,9 @@ export function hexToHsl(hex: string): HslColor {
     throw new Error(`Invalid hex color: ${hex}`)
   }
 
-  const r = Number.parseInt(result[1]!, 16) / 255
-  const g = Number.parseInt(result[2]!, 16) / 255
-  const b = Number.parseInt(result[3]!, 16) / 255
+  const r = Number.parseInt(result[1] as string, 16) / 255
+  const g = Number.parseInt(result[2] as string, 16) / 255
+  const b = Number.parseInt(result[3] as string, 16) / 255
 
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)

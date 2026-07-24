@@ -27,7 +27,6 @@ beforeEach(() => {
 
   mock.module('../../../src/engines/protocol-discovery.js', () => ({
     ProtocolDiscoveryEngine: class {
-      constructor(_client: unknown, _sessionId: string) {}
       async discover(_url: string) {
         return {
           detectedFramework: 'mock',
@@ -46,7 +45,8 @@ beforeEach(() => {
           transport: 'mock-sse',
           dataPath: 'choices[].delta.content',
           confidence: 0.85,
-          logicCode: 'function(module, exports) { exports.default = { name: "mock", version: 1, providerId: "mock", parse() { return [{type:"text",text:"ok"}] }, detectCompletion() { return true }, getConfidence() { return 0.85 } } }',
+          logicCode:
+            'function(module, exports) { exports.default = { name: "mock", version: 1, providerId: "mock", parse() { return [{type:"text",text:"ok"}] }, detectCompletion() { return true }, getConfidence() { return 0.85 } } }',
         }
       }
     },
@@ -66,9 +66,7 @@ beforeEach(() => {
   }))
 
   mock.module('../../../src/engines/semantic-grounding.js', () => ({
-    SemanticGroundingEngine: class {
-      constructor(_transport: any) {}
-    },
+    SemanticGroundingEngine: class {},
   }))
 
   mock.module('../../../src/storage/db.js', () => ({
@@ -101,7 +99,11 @@ module.exports.default = { name: "mock", version: 1, providerId: "mock", parse: 
   }))
 
   mock.module('../../../src/engines/parser-repair.js', () => ({
-    repairLowConfidenceParser: async () => ({ repaired: false, beforeConfidence: 0, afterConfidence: 0 }),
+    repairLowConfidenceParser: async () => ({
+      repaired: false,
+      beforeConfidence: 0,
+      afterConfidence: 0,
+    }),
     generateParserModuleCode: (_provider: string, _captured: string) => 'mock-code',
   }))
 

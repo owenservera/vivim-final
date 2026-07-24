@@ -1,12 +1,12 @@
 // tests/unit/engines/harness-executor-engine.test.ts
 // HarnessExecutorEngine — program resolution → recipe compilation → circuit gate → execution → outcome recording.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { HarnessExecutorEngine } from '../../../src/engines/harness/harness-executor-engine.js'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import type {
   HarnessExecutionRequest,
   HarnessExecutorDeps,
   HarnessSink,
 } from '../../../src/engines/harness/harness-contract.js'
+import { HarnessExecutorEngine } from '../../../src/engines/harness/harness-executor-engine.js'
 import type { CapabilityProgramRow } from '../../../src/storage/contracts/capability-store.js'
 import type { ProgramStore } from '../../../src/storage/contracts/program-store.js'
 
@@ -91,7 +91,10 @@ describe('HarnessExecutorEngine', () => {
   it('resolves best program by capability+provider when no programId given', async () => {
     const result = await engine.execute(makeReq())
     expect(result.ok).toBe(true)
-    expect(deps.programStore.getBestProgramByCapability).toHaveBeenCalledWith('send_message', 'chatgpt')
+    expect(deps.programStore.getBestProgramByCapability).toHaveBeenCalledWith(
+      'send_message',
+      'chatgpt',
+    )
     expect(deps.programStore.getProgramById).not.toHaveBeenCalled()
   })
 
@@ -116,9 +119,7 @@ describe('HarnessExecutorEngine', () => {
   })
 
   it('returns error when circuit is open', async () => {
-    deps.governor.getHealth = mock(() =>
-      Promise.resolve({ circuitState: 'open' }),
-    ) as never
+    deps.governor.getHealth = mock(() => Promise.resolve({ circuitState: 'open' })) as never
     const result = await engine.execute(makeReq())
     expect(result.ok).toBe(false)
     expect(result.error).toContain('Circuit open')
