@@ -1,6 +1,6 @@
 // tests/unit/engines/belief-store.test.ts
 // BeliefStore — putBelief, updateBelief, retract, getBeliefs, getLiveBeliefs.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { BeliefStore } from '../../../src/engines/belief-store.js'
 
 function makeStore() {

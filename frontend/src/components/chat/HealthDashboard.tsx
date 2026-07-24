@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getApiUrl } from '@/shared/api-config';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 
 interface ProviderHealth {
   status: string;
@@ -29,6 +29,7 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
 };
 
 export function HealthDashboard() {
+  const io = useIO();
   const [health, setHealth] = useState<Record<string, ProviderHealth>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,18 +37,17 @@ export function HealthDashboard() {
   const loadHealth = useCallback(async () => {
     try {
       setError(null);
-      const resp = await fetch(getApiUrl('/api/health/providers'));
+      const resp = await io.get<Record<string, ProviderHealth>>('/api/health/providers');
       if (!resp.ok) { setError(`HTTP ${resp.status}`); return; }
-      const data = await resp.json();
-      if (typeof data === 'object' && data !== null) {
-        setHealth(data);
+      if (typeof resp.data === 'object' && resp.data !== null) {
+        setHealth(resp.data);
       }
     } catch (e) {
       setError(String(e));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [io]);
 
   useEffect(() => {
     loadHealth();

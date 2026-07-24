@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  levenshtein,
-  levenshteinSimilarity,
-  jaroWinkler,
   diceCoefficient,
   fuzzySimilarity,
+  jaroWinkler,
+  levenshtein,
+  levenshteinSimilarity,
 } from '../../../../src/engines/nlcl/fuzzy-matcher.js'
 
 describe('fuzzy-matcher', () => {

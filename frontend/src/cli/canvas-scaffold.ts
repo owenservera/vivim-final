@@ -155,7 +155,7 @@ ${name}/
 \`\`\`bash
 # Tar it up and POST to /api/plugins/install
 tar czf ${name}.vivim-plugin ${name}/
-curl -X POST -F 'tarball=@${name}.vivim-plugin' http://localhost:3000/api/plugins/install
+curl -X POST -F 'tarball=@${name}.vivim-plugin' /api/plugins/install
 \`\`\`
 
 The backend will:

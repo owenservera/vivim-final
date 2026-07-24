@@ -183,7 +183,8 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         url: 'https://claude.ai/chat',
         endpoint_type: 'chat',
         selector: {
-          composer: 'div[contenteditable="true"].ProseMirror,div[contenteditable="true"][data-placeholder]',
+          composer:
+            'div[contenteditable="true"].ProseMirror,div[contenteditable="true"][data-placeholder]',
           send_button: "[aria-label='Send Message'],[aria-label='Send message']",
         },
         composer_type: 'prosemirror',

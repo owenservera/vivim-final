@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { resolvePronouns, bindContext } from '../../../../src/engines/nlcl/context-binder.js'
+import { bindContext, resolvePronouns } from '../../../../src/engines/nlcl/context-binder.js'
 
 describe('context-binder', () => {
   describe('resolvePronouns', () => {
@@ -59,21 +59,17 @@ describe('context-binder', () => {
       const convStore = {
         getConversation: async () => ({ providerId: 'gemini' }),
       }
-      const ctx = await bindContext(
-        { conversationId: 'conv-1' },
-        { conversationStore: convStore },
-      )
+      const ctx = await bindContext({ conversationId: 'conv-1' }, { conversationStore: convStore })
       expect(ctx.providerId).toBe('gemini')
     })
 
     it('gracefully handles conversation store errors', async () => {
       const convStore = {
-        getConversation: async () => { throw new Error('db error') },
+        getConversation: async () => {
+          throw new Error('db error')
+        },
       }
-      const ctx = await bindContext(
-        { conversationId: 'conv-1' },
-        { conversationStore: convStore },
-      )
+      const ctx = await bindContext({ conversationId: 'conv-1' }, { conversationStore: convStore })
       expect(ctx.providerId).toBeUndefined()
     })
   })

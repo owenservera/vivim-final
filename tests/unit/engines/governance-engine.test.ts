@@ -1,15 +1,17 @@
 // tests/unit/engines/governance-engine.test.ts
 // GovernanceEngine — allocation, end-strategy, budget assertions.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { GovernanceEngine } from '../../../src/engines/governance-engine.js'
 import { BudgetExceededError } from '../../../src/errors.js'
 
 function makeStore() {
   return {
-    evaluateAllocation: mock(() => Promise.resolve([
-      { roleId: 'analyst', agentId: 'a1', model: 'gpt-4', weight: 1 },
-      { roleId: 'analyst', agentId: 'a2', model: 'claude', weight: 0.5 },
-    ])),
+    evaluateAllocation: mock(() =>
+      Promise.resolve([
+        { roleId: 'analyst', agentId: 'a1', model: 'gpt-4', weight: 1 },
+        { roleId: 'analyst', agentId: 'a2', model: 'claude', weight: 0.5 },
+      ]),
+    ),
   }
 }
 
@@ -25,7 +27,7 @@ describe('GovernanceEngine', () => {
   it('evaluateAllocation returns all bindings', async () => {
     const result = await engine.evaluateAllocation('policy-1')
     expect(result).toHaveLength(2)
-    expect(result[0]!.agentId).toBe('a1')
+    expect(result[0]?.agentId).toBe('a1')
   })
 
   it('evaluateAllocation filters by reputationFloor', async () => {
@@ -34,7 +36,7 @@ describe('GovernanceEngine', () => {
       agentReputation: { a1: { score: 0.9, avgCostCents: 1 }, a2: { score: 0.5, avgCostCents: 1 } },
     })
     expect(result).toHaveLength(1)
-    expect(result[0]!.agentId).toBe('a1')
+    expect(result[0]?.agentId).toBe('a1')
   })
 
   it('evaluateAllocation filters by costBudgetCents', async () => {
@@ -43,7 +45,7 @@ describe('GovernanceEngine', () => {
       agentReputation: { a1: { score: 1, avgCostCents: 1 }, a2: { score: 1, avgCostCents: 5 } },
     })
     expect(result).toHaveLength(1)
-    expect(result[0]!.agentId).toBe('a1')
+    expect(result[0]?.agentId).toBe('a1')
   })
 
   it('applyEndStrategy early stops at first success', () => {

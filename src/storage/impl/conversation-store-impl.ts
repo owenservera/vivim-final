@@ -138,7 +138,7 @@ export class ConversationStoreImpl implements ConversationStore {
         },
       })
       return toConversationRow(row as unknown as PrismaConversation)
-    } catch (err) {
+    } catch (_err) {
       // Fallback: if provided sessionId failed FK constraint, auto-provision and retry once
       const sess = await this.db.ensureProviderSession({ providerId: input.providerId })
       const row = await this.db.prisma.conversation.create({

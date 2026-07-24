@@ -94,8 +94,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     wsRef.current = ws
   }, [onMessage, updateStatus, scheduleReconnect])
 
-  // Store connect in ref for scheduleReconnect to call
-  connectRef.current = connect
+  // Store connect in ref for scheduleReconnect to call (via effect to avoid render-time assignment)
+  useEffect(() => {
+    connectRef.current = connect
+  }, [connect])
 
   const disconnect = useCallback(() => {
     if (reconnectTimer.current) {
@@ -128,10 +130,20 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
   }, [])
 
+  const autoConnectRef = useRef(autoConnect)
   useEffect(() => {
-    if (autoConnect) connect()
-    return () => disconnect()
-  }, [autoConnect, connect, disconnect])
+    autoConnectRef.current = autoConnect
+  }, [autoConnect])
+
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    mountedRef.current = true
+    if (autoConnectRef.current) connect()
+    return () => {
+      mountedRef.current = false
+      disconnect()
+    }
+  }, [connect, disconnect])
 
   return { status, connect, disconnect, send, subscribe, unsubscribe }
 }

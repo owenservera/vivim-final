@@ -1,10 +1,10 @@
 // tests/unit/engines/memory-fabric.test.ts
 // MemoryFabric — federated per-agent memory provisioning, backend guards, idempotency.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import type { MemoryBackend } from '../../../src/engines/memory/memory-backend.js'
 import { MemoryFabric } from '../../../src/engines/memory/memory-fabric.js'
 import type { MemoryFabricDeps } from '../../../src/engines/memory/memory-fabric.js'
-import type { MemoryBackend } from '../../../src/engines/memory/memory-backend.js'
-import { MemoryError, MemoryBackendLimitError } from '../../../src/errors.js'
+import { MemoryBackendLimitError, MemoryError } from '../../../src/errors.js'
 
 function makeDeps(overrides?: Partial<MemoryFabricDeps>): MemoryFabricDeps {
   return {
@@ -123,8 +123,8 @@ describe('MemoryFabric', () => {
       const sub2 = fabric.getSubsystem('agent-2')
       expect(sub1).toBeDefined()
       expect(sub2).toBeDefined()
-      expect(sub1!.agentId).toBe('agent-1')
-      expect(sub2!.agentId).toBe('agent-2')
+      expect(sub1?.agentId).toBe('agent-1')
+      expect(sub2?.agentId).toBe('agent-2')
     })
   })
 })

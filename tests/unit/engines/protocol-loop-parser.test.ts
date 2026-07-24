@@ -1,4 +1,4 @@
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { ProtocolLoopParser } from '../../../src/engines/protocol-loop-parser.js'
 
 function makeEventBus() {
@@ -29,7 +29,7 @@ describe('protocol-loop-parser', () => {
   it('processes multiple frames', async () => {
     const f1 = JSON.stringify({ id: 'f1', type: 'a', payload: {}, timestamp: 1 })
     const f2 = JSON.stringify({ id: 'f2', type: 'b', payload: {}, timestamp: 2 })
-    await parser.processStream(f1 + '\n' + f2)
+    await parser.processStream(`${f1}\n${f2}`)
     expect(bus.emit).toHaveBeenCalledTimes(2)
   })
 

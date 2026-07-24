@@ -363,7 +363,7 @@ export async function registerDefaultCapabilities(
         const id = await services.memoryEngine.recordMemory({
           content: String(input.content),
           memoryType: 'episodic',
-          category: input.topic as string ?? 'general',
+          category: (input.topic as string) ?? 'general',
           tags: input.topic ? [String(input.topic)] : [],
         })
         return { ok: true, id }

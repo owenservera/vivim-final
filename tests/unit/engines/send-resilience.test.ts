@@ -1,8 +1,7 @@
 // tests/unit/engines/send-resilience.test.ts
 // SendResilienceEngine — preflight gate, auto-reconnect, error classification.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { SendResilienceEngine } from '../../../src/engines/send-resilience.js'
-import { EngineError } from '../../../src/errors.js'
 
 function makeDeps() {
   const healthMap = new Map([['s1', { status: 'running' as const }]])

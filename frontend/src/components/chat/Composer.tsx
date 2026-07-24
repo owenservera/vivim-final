@@ -53,11 +53,14 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
   const [streamingTiming, setStreamingTiming] = useState<TimingInfo | null>(null);
   const [lastEvent, setLastEvent] = useState<string | undefined>();
   const [localSuggestion, setLocalSuggestion] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const pendingBlocksRef = useRef<PendingBlock[]>([]);
   const pendingTimingRef = useRef<TimingInfo | null>(null);
   const rafRef = useRef<number | null>(null);
+
   const conversationIdRef = useRef(conversationId);
   conversationIdRef.current = conversationId;
 
@@ -143,16 +146,11 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
       setLastEvent(`error: ${payload.error ?? 'unknown'}`);
     }
     // scheduleFlush is intentionally excluded to avoid re-running on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wsMessage]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, streamingBlocks]);
-
-  const [lastError, setLastError] = useState<string | null>(null);
-  const [retrying, setRetrying] = useState(false);
 
   const retryLast = useCallback(async () => {
     const lastUser = [...messages].reverse().find((m) => m.role === 'user');

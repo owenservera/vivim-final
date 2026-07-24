@@ -26,12 +26,14 @@ import { StreamingNodeWrapper } from './StreamingNodeWrapper';
 import { Icon, type IconName, SURFACE_ICONS, LAYOUT_ICONS } from './Icon';
 import { CommandStack } from './command-stack';
 import { QuadTree } from './quad-tree';
+import { getCanvasEventBus, CanvasEventType, type AgentCreateNodePayload, type AgentDeleteNodePayload, type AgentMoveNodePayload, type AgentConnectNodesPayload, type AgentDisconnectNodesPayload, type AgentRunLayoutPayload, type AgentStartStreamPayload, type AgentStopStreamPayload, type AgentSetViewportPayload, type AgentFocusNodePayload, type AgentConfirmationResponsePayload } from './event-bus';
 import { computeLayout, type LayoutIntent, type LayoutNode, type LayoutEdge, LAYOUT_INTENT_LABELS } from '../../shared/layout-intent';
 import type { VCardState, VCardCategory } from '../../shared/vcard';
 import type { ConnectionLine } from '../../shared/connection-line';
-import type { AgentCanvasPlan } from '../../shared/agent-canvas';
 import type { ResolvedSlot } from '../../shared/route-context';
 import type { CanvasLayout } from '../../shared/canvas-types';
+import type { AgentCanvasPlan } from '@/shared/agent-canvas';
+import type { AgentCanvasCommand, AgentCanvasResponse, AgentCanvasPolicy, CanvasState, DEFAULT_POLICY } from '@/shared/agent-canvas';
 
 export interface LivingCanvasProps {
   workspaceId: string;
@@ -101,6 +103,14 @@ export function LivingCanvas(props: LivingCanvasProps) {
   // Real component resolution via slot registry
   const { getComponent } = useNodeTypes(providerIds, variant);
 
+  // ── Agent Command Handler (defined before useEffect that uses it) ──────────────
+  async function handleAgentCommand(payload: { command: unknown; respond: (response: unknown) => void }) {
+    const { command, respond } = payload;
+    // The executor is server-side via API, but we can handle local canvas ops here
+    // For now, just acknowledge
+    respond({ type: 'canvas.ack', payload: { received: true } });
+  }
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -108,6 +118,19 @@ export function LivingCanvas(props: LivingCanvasProps) {
     ro.observe(el);
     setContainerSize({ w: el.clientWidth, h: el.clientHeight });
     return () => ro.disconnect();
+  }, []);
+
+  // ── Agent Command Handler ──────────────────────────────────────────────────
+  useEffect(() => {
+    const bus = getCanvasEventBus();
+    const handler = (event: unknown) => {
+      const e = event as { type: string; payload: unknown };
+      if (e.type === CanvasEventType.AGENT_COMMAND) {
+        handleAgentCommand(e.payload as { command: unknown; respond: (response: unknown) => void });
+      }
+    };
+    bus.on(CanvasEventType.AGENT_COMMAND, handler);
+    return () => bus.off(CanvasEventType.AGENT_COMMAND, handler);
   }, []);
 
   const effectiveLayouts = useMemo(() => {
@@ -402,15 +425,15 @@ export function LivingCanvas(props: LivingCanvasProps) {
         );
       })}
 
-      {/* Agent overlay */}
+{/* Agent overlay */}
       <AgentOverlay
         plan={agentPlan}
         viewport={viewport}
         width={containerSize.w}
         height={containerSize.h}
-        onAccept={(opId) => setAgentPlan((p) => p ? { ...p, ops: p.ops.map((o) => o.id === opId ? { ...o, status: 'applied' } : o) } : null)}
-        onReject={(opId) => setAgentPlan((p) => p ? { ...p, ops: p.ops.map((o) => o.id === opId ? { ...o, status: 'rejected' } : o) } : null)}
-        onAcceptAll={() => setAgentPlan((p) => p ? { ...p, ops: p.ops.map((o) => ({ ...o, status: 'applied' as const })), status: 'applied' } : null)}
+        onAccept={(opId) => setAgentPlan((p) => p ? { ...p, ops: p.ops.map((o) => o.id === opId ? { ...o, status: 'accepted' as const } : o) } : null)}
+        onReject={(opId) => setAgentPlan((p) => p ? { ...p, ops: p.ops.map((o) => o.id === opId ? { ...o, status: 'rejected' as const } : o) } : null)}
+        onAcceptAll={() => setAgentPlan((p) => p ? { ...p, ops: p.ops.map((o) => ({ ...o, status: 'accepted' as const })), status: 'accepted' } : null)}
         onRejectAll={() => setAgentPlan(null)}
       />
 

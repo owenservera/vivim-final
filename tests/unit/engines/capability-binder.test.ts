@@ -1,6 +1,6 @@
 // tests/unit/engines/capability-binder.test.ts
 // CapabilityBinder — capability binding and topological ordering.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { CapabilityBinder } from '../../../src/engines/capability-binder.js'
 
 function makeStore() {
@@ -51,8 +51,12 @@ describe('CapabilityBinder', () => {
         { type: 'uses', targetId: 'cap-b', properties: { ordering: 1 } },
       ]),
     }
-    const capA = { dataJson: JSON.stringify({ name: 'Alpha', provenanceJson: { capabilityKind: 'tool' } }) }
-    const capB = { dataJson: JSON.stringify({ name: 'Beta', provenanceJson: { capabilityKind: 'builtin' } }) }
+    const capA = {
+      dataJson: JSON.stringify({ name: 'Alpha', provenanceJson: { capabilityKind: 'tool' } }),
+    }
+    const capB = {
+      dataJson: JSON.stringify({ name: 'Beta', provenanceJson: { capabilityKind: 'builtin' } }),
+    }
 
     store.nodes.getNode
       .mockResolvedValueOnce(runNode as never)
@@ -61,10 +65,10 @@ describe('CapabilityBinder', () => {
 
     const result = await binder.resolveOrder('run-1')
     expect(result).toHaveLength(2)
-    expect(result[0]!.capId).toBe('cap-b')
-    expect(result[0]!.ordering).toBe(1)
-    expect(result[1]!.capId).toBe('cap-a')
-    expect(result[1]!.ordering).toBe(2)
+    expect(result[0]?.capId).toBe('cap-b')
+    expect(result[0]?.ordering).toBe(1)
+    expect(result[1]?.capId).toBe('cap-a')
+    expect(result[1]?.ordering).toBe(2)
   })
 
   it('resolveOrder handles missing edgesJson gracefully', async () => {

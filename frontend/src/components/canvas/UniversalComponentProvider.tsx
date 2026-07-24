@@ -18,11 +18,16 @@
 import { useEffect, type ReactNode } from 'react';
 import { registerAllComponents } from './register-all';
 import { generateCliCommands, size } from '../../shared/universal-registry';
+import { autoPopulateActions } from '../../actions/auto-populate';
 
 export function UniversalComponentProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Register all components (idempotent — re-registration hot-swaps).
     registerAllComponents();
+    // Auto-populate the frontend ActionRegistry from backend capabilities.
+    autoPopulateActions().catch((e) =>
+      console.warn('[UniversalComponentProvider] autoPopulateActions failed:', e),
+    );
     // Log the registry size for verification.
     console.log(`[UniversalComponentProvider] ${size()} components registered`);
   }, []);

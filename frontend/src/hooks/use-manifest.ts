@@ -6,7 +6,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getApiUrl } from '@/shared/api-config'
+import { useIO } from '@/components/canvas/UnifiedIOProvider'
 
 export interface CanvasLayer {
   id: string
@@ -38,6 +38,7 @@ interface UseManifestResult {
 
 export function useManifest(opts: UseManifestOptions = {}): UseManifestResult {
   const { pollInterval = 15_000, paused = false } = opts
+  const io = useIO()
   const [manifest, setManifest] = useState<CanvasManifest | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -45,11 +46,10 @@ export function useManifest(opts: UseManifestOptions = {}): UseManifestResult {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch(getApiUrl('/api/canvas/manifest'))
+      const res = await io.get<{ manifest?: CanvasManifest; result?: CanvasManifest }>('/api/canvas/manifest')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
       if (mountedRef.current) {
-        setManifest(data.manifest ?? data.result ?? data)
+        setManifest(res.data?.manifest ?? res.data?.result ?? null)
         setError(null)
         setLoading(false)
       }
@@ -59,7 +59,7 @@ export function useManifest(opts: UseManifestOptions = {}): UseManifestResult {
         setLoading(false)
       }
     }
-  }, [])
+  }, [io])
 
   useEffect(() => {
     mountedRef.current = true

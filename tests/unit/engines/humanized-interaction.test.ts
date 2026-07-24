@@ -2,12 +2,12 @@
 // Humanized mouse/keyboard interaction to reduce bot detection.
 
 import { describe, expect, it, mock } from 'bun:test'
+import type { CDPTransport } from '../../../src/engines/chrome-governor.js'
 import {
   humanizedClick,
   humanizedMouseMove,
   jitterViewport,
 } from '../../../src/engines/humanized-interaction.js'
-import type { CDPTransport } from '../../../src/engines/chrome-governor.js'
 
 function mockTransport(): CDPTransport {
   return {
@@ -73,7 +73,7 @@ describe('humanized-interaction', () => {
       const calls = (transport.send as ReturnType<typeof mock>).mock.calls
       const pressed = calls.find((c) => (c[2] as { type: string }).type === 'mousePressed')
       expect(pressed).toBeDefined()
-      expect((pressed![2] as { button: string }).button).toBe('left')
+      expect((pressed?.[2] as { button: string }).button).toBe('left')
     })
 
     it('mousePressed and mouseReleased use same coordinates', async () => {
@@ -86,10 +86,10 @@ describe('humanized-interaction', () => {
 
       expect(pressed).toBeDefined()
       expect(released).toBeDefined()
-      expect((pressed![2] as { x: number }).x).toBe(250)
-      expect((pressed![2] as { y: number }).y).toBe(350)
-      expect((released![2] as { x: number }).x).toBe(250)
-      expect((released![2] as { y: number }).y).toBe(350)
+      expect((pressed?.[2] as { x: number }).x).toBe(250)
+      expect((pressed?.[2] as { y: number }).y).toBe(350)
+      expect((released?.[2] as { x: number }).x).toBe(250)
+      expect((released?.[2] as { y: number }).y).toBe(350)
     })
   })
 
@@ -99,11 +99,9 @@ describe('humanized-interaction', () => {
       await jitterViewport(transport, 's1')
 
       const calls = (transport.send as ReturnType<typeof mock>).mock.calls
-      const setMetrics = calls.find(
-        (c) => c[1] === 'Emulation.setDeviceMetricsOverride',
-      )
+      const setMetrics = calls.find((c) => c[1] === 'Emulation.setDeviceMetricsOverride')
       expect(setMetrics).toBeDefined()
-      const params = setMetrics![2] as { width: number; height: number; mobile: boolean }
+      const params = setMetrics?.[2] as { width: number; height: number; mobile: boolean }
       // Width should be around 1280 ± 15
       expect(params.width).toBeGreaterThanOrEqual(1265)
       expect(params.width).toBeLessThanOrEqual(1295)

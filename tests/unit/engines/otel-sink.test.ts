@@ -1,6 +1,6 @@
 // tests/unit/engines/otel-sink.test.ts
 // OtelSink — OTLP/HTTP log exporter with batching, flush, connect, and traceCapability.
-import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { OtelSink } from '../../../src/engines/otel-sink.js'
 
 describe('OtelSink', () => {
@@ -99,8 +99,8 @@ describe('OtelSink', () => {
     sink.emit('custom_level', 'custom msg')
     await sink.flush()
 
-    const record = JSON.parse(fetchMock.mock.calls[0][1].body)
-      .resourceLogs[0].scopeLogs[0].logRecords[0]
+    const record = JSON.parse(fetchMock.mock.calls[0][1].body).resourceLogs[0].scopeLogs[0]
+      .logRecords[0]
     expect(record.severityNumber).toBe(9)
   })
 
@@ -136,8 +136,8 @@ describe('OtelSink', () => {
     })
     await sink.flush()
 
-    const record = JSON.parse(fetchMock.mock.calls[0][1].body)
-      .resourceLogs[0].scopeLogs[0].logRecords[0]
+    const record = JSON.parse(fetchMock.mock.calls[0][1].body).resourceLogs[0].scopeLogs[0]
+      .logRecords[0]
     expect(record.body.stringValue).toContain('gen_ai')
     expect(record.body.stringValue).toContain('cap:send_message')
     expect(record.severityText).toBe('INFO')
@@ -153,8 +153,8 @@ describe('OtelSink', () => {
     })
     await sink.flush()
 
-    const record = JSON.parse(fetchMock.mock.calls[0][1].body)
-      .resourceLogs[0].scopeLogs[0].logRecords[0]
+    const record = JSON.parse(fetchMock.mock.calls[0][1].body).resourceLogs[0].scopeLogs[0]
+      .logRecords[0]
     expect(record.severityText).toBe('ERROR')
   })
 
@@ -163,7 +163,9 @@ describe('OtelSink', () => {
     const bus = {
       on: mock((type: string, handler: (e: Record<string, unknown>) => void) => {
         handlers[type] = handler
-        return () => { delete handlers[type] }
+        return () => {
+          delete handlers[type]
+        }
       }),
     }
 

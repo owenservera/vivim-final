@@ -82,7 +82,7 @@ describe('MESSAGING_ARCHETYPES', () => {
   })
 
   it('each archetype has required fields', () => {
-    for (const [name, arch] of Object.entries(MESSAGING_ARCHETYPES)) {
+    for (const [_name, arch] of Object.entries(MESSAGING_ARCHETYPES)) {
       expect(arch.providerId).toBeTruthy()
       expect(typeof arch.normalize).toBe('function')
       expect(['webhook', 'polling', 'cdp-scrape']).toContain(arch.pollStrategy)

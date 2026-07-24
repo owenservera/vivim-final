@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import { updateHealthScore, shouldPromote, shouldDemote } from '../../../../src/engines/harness/confidence-promotion.js'
+import {
+  shouldDemote,
+  shouldPromote,
+  updateHealthScore,
+} from '../../../../src/engines/harness/confidence-promotion.js'
 
 describe('confidence-promotion', () => {
   describe('updateHealthScore', () => {

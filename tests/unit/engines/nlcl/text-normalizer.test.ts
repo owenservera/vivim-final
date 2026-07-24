@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import { TextNormalizer, normalizeText, tokenizeText } from '../../../../src/engines/nlcl/text-normalizer.js'
+import {
+  TextNormalizer,
+  normalizeText,
+  tokenizeText,
+} from '../../../../src/engines/nlcl/text-normalizer.js'
 
 describe('text-normalizer', () => {
   const normalizer = new TextNormalizer()

@@ -1,7 +1,11 @@
 // tests/unit/engines/budget-engine.test.ts
 // BudgetEngine — cost/usage budget enforcement tests.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { BudgetEngine, type RunUsage, type UsageLimits } from '../../../src/engines/budget-engine.js'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import {
+  BudgetEngine,
+  type RunUsage,
+  type UsageLimits,
+} from '../../../src/engines/budget-engine.js'
 import { BudgetExceededError } from '../../../src/errors.js'
 
 function makeUsage(overrides?: Partial<RunUsage>): RunUsage {

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import { recipeToConfig, configToProgram, PROGRAM_STATUS } from '../../../../src/engines/harness/program-schema.js'
+import {
+  PROGRAM_STATUS,
+  configToProgram,
+  recipeToConfig,
+} from '../../../../src/engines/harness/program-schema.js'
 import { ValidationError } from '../../../../src/errors.js'
 
 describe('program-schema', () => {

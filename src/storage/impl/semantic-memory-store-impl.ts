@@ -84,7 +84,10 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
     })
   }
 
-  async update(id: string, patch: Partial<Pick<SemanticMemory, 'subject' | 'predicate' | 'object' | 'confidence'>>): Promise<void> {
+  async update(
+    id: string,
+    patch: Partial<Pick<SemanticMemory, 'subject' | 'predicate' | 'object' | 'confidence'>>,
+  ): Promise<void> {
     const data: PrismaLoose = {}
     if (patch.subject !== undefined) data.subject = patch.subject
     if (patch.predicate !== undefined) data.predicate = patch.predicate

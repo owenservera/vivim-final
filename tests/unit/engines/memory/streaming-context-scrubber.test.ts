@@ -1,5 +1,8 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
-import { StreamingContextScrubber, sanitizeContext } from '../../../../src/engines/memory/streaming-context-scrubber.js'
+import { beforeEach, describe, expect, it } from 'bun:test'
+import {
+  StreamingContextScrubber,
+  sanitizeContext,
+} from '../../../../src/engines/memory/streaming-context-scrubber.js'
 
 describe('streaming-context-scrubber', () => {
   let scrubber: StreamingContextScrubber
@@ -18,7 +21,9 @@ describe('streaming-context-scrubber', () => {
   })
 
   it('scrubs multiple spans', () => {
-    const result = scrubber.feed('a <memory-context>x</memory-context> b <memory-context>y</memory-context> c')
+    const result = scrubber.feed(
+      'a <memory-context>x</memory-context> b <memory-context>y</memory-context> c',
+    )
     expect(result).toBe('a  b  c')
   })
 

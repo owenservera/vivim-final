@@ -1,6 +1,6 @@
 // tests/unit/engines/objective-engine.test.ts
 // ObjectiveEngine — putObjective, advance, sleep, wake, pursue.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { ObjectiveEngine } from '../../../src/engines/objective-engine.js'
 
 function makeStore() {

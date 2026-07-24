@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { readCircuitGate, canExecute } from '../../../../src/engines/harness/circuit-breaker-adapter.js'
+import {
+  canExecute,
+  readCircuitGate,
+} from '../../../../src/engines/harness/circuit-breaker-adapter.js'
 
 function makeGovernor(circuitState: string | undefined) {
   return {

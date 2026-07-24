@@ -1,9 +1,9 @@
 // src/engines/selector-healer.ts
 // SelectorHealer — LLM-powered selector repair when a selector misses
 
+import { SelectorCache } from './selector-cache.js'
 import type { AccessibilityNode, ScreenshotRegion, SemanticSelector } from './semantic-grounding.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
-import { SelectorCache } from './selector-cache.js'
 import type { McpClientAdapter } from './workflow-engine.js'
 
 // ── Types ───────────────────────────────────────────────────────────────

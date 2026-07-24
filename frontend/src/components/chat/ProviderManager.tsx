@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { getApiUrl } from '@/shared/api-config';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 
 interface Profile {
   providerId: string;
@@ -28,26 +28,32 @@ interface ProviderManagerProps {
 }
 
 export function ProviderManager({ onClose }: ProviderManagerProps) {
+  const io = useIO();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [showAddWizard, setShowAddWizard] = useState(false);
+  const mountedRef = useRef(true);
 
   const loadProfiles = useCallback(async () => {
+    if (!mountedRef.current) return;
     try {
-      const resp = await fetch(getApiUrl('/api/setup/profiles'));
-      const data = await resp.json();
-      setProfiles(data.profiles ?? []);
+      const resp = await io.get<{ profiles?: Profile[] }>('/api/setup/profiles');
+      if (!mountedRef.current) return;
+      setProfiles(resp.data?.profiles ?? []);
     } catch {
       // ignore
     }
-  }, []);
+  }, [io]);
 
   useEffect(() => {
-    loadProfiles();
+    mountedRef.current = true;
+    // Schedule initial load to avoid setState in effect
+    setTimeout(() => { loadProfiles(); }, 0);
+    return () => { mountedRef.current = false; };
   }, [loadProfiles]);
 
   const handleRemove = async (providerId: string, accountSlug: string) => {
     try {
-      await fetch(getApiUrl(`/api/setup/profiles/${providerId}/${accountSlug}`), {
+      await io.request(`/api/setup/profiles/${providerId}/${accountSlug}`, {
         method: 'DELETE',
       });
     } catch {

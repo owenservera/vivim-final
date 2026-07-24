@@ -476,7 +476,7 @@ export function registerDefaultCommands(store: ShellCommandStore): void {
       const id = args[0];
       if (!id) return ok(ctx, 'Usage: ui get <id>');
       try {
-        const res = await fetch(`http://localhost:3000/api/ui/component/${encodeURIComponent(id)}/spec`);
+        const res = await fetch(`/api/ui/component/${encodeURIComponent(id)}/spec`);
         const data = (await res.json()) as { ok: boolean; spec?: unknown; resolvedProperties?: unknown; error?: string };
         if (!data.ok) return ok(ctx, `Component not found: ${id}`);
         const spec = data.spec as Record<string, unknown>;
@@ -515,7 +515,7 @@ export function registerDefaultCommands(store: ShellCommandStore): void {
       if (!id || !path) return ok(ctx, 'Usage: ui set <id> <path> <value>');
       const value = rest.join(' ');
       try {
-        const res = await fetch('http://localhost:3000/api/ui/set_property', {
+        const res = await fetch('/api/ui/set_property', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id, path, value: isNaN(Number(value)) ? value : Number(value) }),
@@ -538,7 +538,7 @@ export function registerDefaultCommands(store: ShellCommandStore): void {
       const [baseId, newId] = args;
       if (!baseId || !newId) return ok(ctx, 'Usage: ui extend <baseId> <newId>');
       try {
-        const res = await fetch('http://localhost:3000/api/ui/extend', {
+        const res = await fetch('/api/ui/extend', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ baseId, id: newId }),
@@ -560,7 +560,7 @@ export function registerDefaultCommands(store: ShellCommandStore): void {
     handler: async (args, ctx) => {
       try {
         const ws = args[0] ?? 'ws:global';
-        const res = await fetch(`http://localhost:3000/api/ui/blueprint?workspaceId=${encodeURIComponent(ws)}`);
+        const res = await fetch(`/api/ui/blueprint?workspaceId=${encodeURIComponent(ws)}`);
         const data = (await res.json()) as { ok: boolean; blueprint?: { version: number; components: Record<string, unknown>; themeMode: string; accentColor: string } };
         if (!data.ok) return ok(ctx, 'Error reading blueprint');
         const bp = data.blueprint!;
@@ -594,7 +594,7 @@ export function registerDefaultCommands(store: ShellCommandStore): void {
         if (kind === 'theme') patch.themeMode = value;
         else if (kind === 'accent') patch.accentColor = value;
         else return ok(ctx, `Unknown patch kind: ${kind}. Use: theme | accent`);
-        const res = await fetch('http://localhost:3000/api/ui/blueprint', {
+        const res = await fetch('/api/ui/blueprint', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ workspaceId: 'ws:global', ...patch }),

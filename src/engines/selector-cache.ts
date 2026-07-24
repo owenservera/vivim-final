@@ -68,8 +68,7 @@ export class SelectorCache {
 
     // Evict oldest if over limit
     if (this.cache.size > this.config.maxEntries) {
-      const oldest = [...this.cache.values()]
-        .sort((a, b) => a.lastSuccess - b.lastSuccess)[0]
+      const oldest = [...this.cache.values()].sort((a, b) => a.lastSuccess - b.lastSuccess)[0]
       if (oldest) {
         this.cache.delete(this.key(oldest.providerId, oldest.capabilityId))
       }

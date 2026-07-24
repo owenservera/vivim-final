@@ -1,4 +1,4 @@
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { PluginHotReload } from '../../../src/engines/plugin-hot-reload.js'
 
 describe('plugin-hot-reload', () => {

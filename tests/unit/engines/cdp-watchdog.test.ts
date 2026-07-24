@@ -83,7 +83,7 @@ describe('setupCrashWatchdog', () => {
   it('re-navigates to last URL on crash', async () => {
     const transport = mockTransport()
     const watchdog = new CdpWatchdog()
-    let lastUrl = 'https://chatgpt.com'
+    const lastUrl = 'https://chatgpt.com'
     setupCrashWatchdog(transport, 's1', watchdog, () => lastUrl)
 
     await watchdog.emit('crash', { reason: 'oom' })

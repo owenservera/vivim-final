@@ -1,11 +1,11 @@
 // tests/unit/engines/logger.test.ts
 // StructuredLogger — level filtering, redaction, child loggers, transports.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import {
-  StructuredLogger,
   DEFAULT_LOGGING_POLICY,
   type LogTransport,
   type StructuredLog,
+  StructuredLogger,
 } from '../../../src/engines/logger.js'
 
 function makeTransport(): LogTransport & { entries: StructuredLog[] } {
@@ -13,7 +13,9 @@ function makeTransport(): LogTransport & { entries: StructuredLog[] } {
   return {
     name: 'test',
     entries,
-    write: mock(async (e: StructuredLog) => { entries.push(e) }),
+    write: mock(async (e: StructuredLog) => {
+      entries.push(e)
+    }),
     flush: mock(async () => {}),
   }
 }
@@ -31,8 +33,8 @@ describe('StructuredLogger', () => {
   it('writes entries to transport', () => {
     logger.info('hello')
     expect(transport.entries).toHaveLength(1)
-    expect(transport.entries[0]!.msg).toBe('hello')
-    expect(transport.entries[0]!.level).toBe('info')
+    expect(transport.entries[0]?.msg).toBe('hello')
+    expect(transport.entries[0]?.level).toBe('info')
   })
 
   it('filters by minLevel', () => {
@@ -42,7 +44,7 @@ describe('StructuredLogger', () => {
     filtered.warn('visible')
     filtered.error('visible')
     expect(transport.entries).toHaveLength(2)
-    expect(transport.entries[0]!.msg).toBe('visible')
+    expect(transport.entries[0]?.msg).toBe('visible')
   })
 
   it('redacts sensitive data paths', () => {
@@ -53,27 +55,27 @@ describe('StructuredLogger', () => {
     })
     redacting.addTransport(transport)
     redacting.info('test', { user: { password: 'secret123', name: 'alice' } })
-    expect(transport.entries[0]!.data).toEqual({ user: { password: '[REDACTED]', name: 'alice' } })
+    expect(transport.entries[0]?.data).toEqual({ user: { password: '[REDACTED]', name: 'alice' } })
   })
 
   it('child logger inherits transports and bindings', () => {
     const child = logger.child({ engine: 'test-engine' })
     child.info('from child')
     expect(transport.entries).toHaveLength(1)
-    expect(transport.entries[0]!.engine).toBe('test-engine')
+    expect(transport.entries[0]?.engine).toBe('test-engine')
   })
 
   it('includes timestamp', () => {
     const before = Date.now()
     logger.info('ts check')
     const after = Date.now()
-    expect(transport.entries[0]!.ts).toBeGreaterThanOrEqual(before)
-    expect(transport.entries[0]!.ts).toBeLessThanOrEqual(after)
+    expect(transport.entries[0]?.ts).toBeGreaterThanOrEqual(before)
+    expect(transport.entries[0]?.ts).toBeLessThanOrEqual(after)
   })
 
   it('DEFAULT_LOGGING_POLICY has correct shape', () => {
     expect(DEFAULT_LOGGING_POLICY.minLevel).toBe('info')
     expect(DEFAULT_LOGGING_POLICY.transports).toHaveLength(1)
-    expect(DEFAULT_LOGGING_POLICY.transports[0]!.name).toBe('console')
+    expect(DEFAULT_LOGGING_POLICY.transports[0]?.name).toBe('console')
   })
 })

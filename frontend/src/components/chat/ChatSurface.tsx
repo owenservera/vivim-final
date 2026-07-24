@@ -38,14 +38,6 @@ export function ChatSurface({ defaultProviderId }: { defaultProviderId?: string 
 
   const { status, subscribe } = useWebSocket({ autoConnect: true, onMessage: handleWs });
 
-  if (!defaultProviderId) {
-    return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-        No provider selected. Choose one from the provider list to start.
-      </div>
-    );
-  }
-
   const providerSlug = defaultProviderId;
   useSlotOverrides(providerSlug);
 

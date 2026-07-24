@@ -1,7 +1,13 @@
 // tests/unit/devops/onboard-controller.test.ts
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { automationLog } from '../../../devops/automation-activity-log.js'
-import { decomposeGoal, dispatchMode, modeTestSelectors, runOnboard, modeDiscover } from '../../../devops/onboard-controller.js'
+import {
+  decomposeGoal,
+  dispatchMode,
+  modeDiscover,
+  modeTestSelectors,
+  runOnboard,
+} from '../../../devops/onboard-controller.js'
 import type { SelectorConfidenceMap } from '../../../devops/selector-tester.js'
 
 beforeEach(() => {
@@ -65,14 +71,12 @@ describe('modeTestSelectors selector repair (Phase 3.1)', () => {
 
     const { SelectorHealer } = await import('../../../src/engines/selector-healer.js')
     const originalHeal = SelectorHealer.prototype.heal
-    ;(SelectorHealer.prototype as any).heal = async function () {
-      return {
-        healed: { type: 'css', selector: healedSelector },
-        strategy: 'text_match',
-        confidence: 0.8,
-        originalSelector: { type: 'css', selector: 'div#composer' } as any,
-      }
-    }
+    ;(SelectorHealer.prototype as any).heal = async () => ({
+      healed: { type: 'css', selector: healedSelector },
+      strategy: 'text_match',
+      confidence: 0.8,
+      originalSelector: { type: 'css', selector: 'div#composer' } as any,
+    })
 
     const mockClient = {
       connected: true,
@@ -96,7 +100,6 @@ describe('modeTestSelectors selector repair (Phase 3.1)', () => {
       },
       { composer: 'div#composer' },
     )
-
     ;(SelectorHealer.prototype as any).heal = originalHeal
     expect(result.ok).toBe(true)
     const data = result.data as SelectorConfidenceMap

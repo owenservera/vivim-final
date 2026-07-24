@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { getApiUrl } from '@/shared/api-config';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 
 interface WorkspaceSettingsData {
   workspacePath: string;
@@ -41,6 +41,7 @@ interface WorkspaceSettingsProps {
 }
 
 export function WorkspaceSettings({ onClose }: WorkspaceSettingsProps) {
+  const io = useIO();
   const [settings, setSettings] = useState<WorkspaceSettingsData>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -48,20 +49,20 @@ export function WorkspaceSettings({ onClose }: WorkspaceSettingsProps) {
   const load = useCallback(async () => {
     try {
       const [workspace, config] = await Promise.all([
-        fetch(getApiUrl('/api/setup/workspace')).then((r) => r.json()),
-        fetch(getApiUrl('/api/config/governor')).then((r) => r.json()),
+        io.get<{ workspacePath?: string }>('/api/setup/workspace'),
+        io.get<{ fleetConfig?: Partial<WorkspaceSettingsData['fleetConfig']>; chromeConfig?: Partial<WorkspaceSettingsData['chromeConfig']> }>('/api/config/governor'),
       ]);
       setSettings({
-        workspacePath: workspace.workspacePath ?? DEFAULTS.workspacePath,
-        fleetConfig: { ...DEFAULTS.fleetConfig, ...(config.fleetConfig ?? {}) },
-        chromeConfig: { ...DEFAULTS.chromeConfig, ...(config.chromeConfig ?? {}) },
+        workspacePath: workspace.data?.workspacePath ?? DEFAULTS.workspacePath,
+        fleetConfig: { ...DEFAULTS.fleetConfig, ...(config.data?.fleetConfig ?? {}) },
+        chromeConfig: { ...DEFAULTS.chromeConfig, ...(config.data?.chromeConfig ?? {}) },
       });
     } catch {
       // use defaults on error
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [io]);
 
   useEffect(() => {
     load();
@@ -70,18 +71,16 @@ export function WorkspaceSettings({ onClose }: WorkspaceSettingsProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch(getApiUrl('/api/setup/workspace'), {
+      await io.request('/api/setup/workspace', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: settings.workspacePath }),
+        body: { path: settings.workspacePath },
       });
-      await fetch(getApiUrl('/api/config/governor'), {
+      await io.request('/api/config/governor', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           fleetConfig: settings.fleetConfig,
           chromeConfig: settings.chromeConfig,
-        }),
+        },
       });
       onClose?.();
     } catch {

@@ -1,8 +1,7 @@
 // tests/unit/engines/adaptive-workspace.test.ts
 // AdaptiveWorkspaceEngine — mode switching, panel config, promotion checks.
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { AdaptiveWorkspaceEngine, type WorkspaceMode } from '../../../src/engines/adaptive-workspace.js'
-import type { WorkspaceStore } from '../../../src/storage/contracts/workspace-store.js'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { AdaptiveWorkspaceEngine } from '../../../src/engines/adaptive-workspace.js'
 
 function makeStore() {
   return {

@@ -10,7 +10,7 @@ describe('timeout-guard', () => {
 
   it('returns timedOut=true when fn exceeds timeout', async () => {
     const result = await withTimeout(async () => {
-      await new Promise(r => setTimeout(r, 200))
+      await new Promise((r) => setTimeout(r, 200))
       return 'done'
     }, 50)
     expect(result.result).toBeUndefined()
@@ -19,7 +19,7 @@ describe('timeout-guard', () => {
 
   it('passes AbortSignal to fn', async () => {
     let signalReceived = false
-    await withTimeout(async (signal) => {
+    await withTimeout(async (_signal) => {
       signalReceived = true
       return 'ok'
     }, 1000)

@@ -42,14 +42,20 @@ import { createAutomationRouter } from './automation-router.js'
 import { createAutonomousRouter } from './autonomous-router.js'
 import { createCapabilityRouter } from './capability-router.js'
 import { createConversationRouter } from './conversation-router.js'
+import { createInterpretRouter } from './interpret-router.js'
 import { createKnowledgeRouter } from './knowledge-router.js'
-import { createMemoryRouter } from './memory-router.js'
 import { createMemoryVizRouter } from './memory-viz-router.js'
 import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
 import { errorResponse, json } from './response.js'
 import { createSetupRouter } from './setup-router.js'
-import { handleWebSocket, registerConversationForwarder, registerCanvasMutationForwarder, registerNodeEventForwarder, setCanvasWsHandler } from './websocket.js'
+import {
+  handleWebSocket,
+  registerCanvasMutationForwarder,
+  registerConversationForwarder,
+  registerNodeEventForwarder,
+  setCanvasWsHandler,
+} from './websocket.js'
 
 export interface ServerContext {
   port: number
@@ -125,7 +131,9 @@ function startOnFreePort(
         const runtimeDir = join(process.cwd(), '.runtime')
         mkdirSync(runtimeDir, { recursive: true })
         writeFileSync(join(runtimeDir, 'backend.port'), String(port), 'utf-8')
-      } catch { /* best-effort */ }
+      } catch {
+        /* best-effort */
+      }
       return { server, boundPort: port }
     } catch (err: unknown) {
       const code = (err as NodeJS.ErrnoException).code
@@ -725,10 +733,12 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       const { composeHarness } = await import('../engines/harness/index.js')
       const { configToProgram } = await import('../engines/harness/program-schema.js')
       const { programToCapability } = await import('../engines/cdp-capability-registrar.js')
-      const { createGovernorSlaveResolver } = await import('../engines/harness/fleet-lifecycle-adapter.js')
+      const { createGovernorSlaveResolver } = await import(
+        '../engines/harness/fleet-lifecycle-adapter.js'
+      )
 
       const programStore = new ProgramStoreImpl(db)
-      const slaveResolver = createGovernorSlaveResolver(governor)
+      const _slaveResolver = createGovernorSlaveResolver(governor)
       const harness = composeHarness({
         governor,
         programStore,
@@ -748,7 +758,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         const providerId = body.slice(lastDash + 1)
         const program = await programStore.getBestProgramByCapability(capabilitySlug, providerId)
         if (!program) return null
-        const recipe = configToProgram(program.configJson).recipe
+        const _recipe = configToProgram(program.configJson).recipe
         const cap = programToCapability(program, { executor: harness.executor })
         ;(registry as UnifiedCapabilityRegistry).register(cap)
         return cap
@@ -1058,6 +1068,17 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     console.warn('[boot] vivim-canvas not available:', err)
   }
 
+  // ── agent-canvas (P4) — agent ↔ canvas command bridge ─────────────────
+  let agentCanvasRouter: ((req: Request, url: URL) => Promise<Response>) | null = null
+  try {
+    const { createAgentCanvasRouter } = await import('./agent-canvas-router.js')
+    console.log('[boot] agent-canvas-router module loaded, creating router...')
+    agentCanvasRouter = createAgentCanvasRouter({ registry, db } as unknown as ServerContext)
+    console.log('[boot] agent-canvas router wired')
+  } catch (err) {
+    console.warn('[boot] agent-canvas router not available:', err)
+  }
+
   // ── Kernel bootstrap ──────────────────────────────────────────────────
   // Per 0.6a spec: create kernel AFTER all engines exist, register them,
   // then start kernel + topology snapshots + shutdown hooks.
@@ -1153,6 +1174,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       ? createAutonomousRouter({ autonomousEngine, policyEngine })
       : null
   const nlclRouter = createNLCLRouter(nlclEngine)
+  const interpretRouter = createInterpretRouter(nlclEngine)
   const capabilityRouter = ctx.registry ? createCapabilityRouter(ctx) : null
   const automationRouter = createAutomationRouter({ orchestrator: automationOrchestrator })
   const memoryRouter = ctx.memoryEngine ? createMemoryVizRouter(ctx.memoryEngine) : null
@@ -1295,6 +1317,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
           return nlclRouter(req)
         }
 
+        // Interpret — NLCL interpret + execute (frontend DevConsole)
+        if (url.pathname === '/api/interpret' && req.method === 'POST') {
+          return interpretRouter(req)
+        }
+
         // OpenCode `serve` capability routes (feature 029)
         if (url.pathname.startsWith('/api/opencode/')) {
           const serve = (globalThis as Record<string, unknown>).__opencodeServe as
@@ -1332,6 +1359,14 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         // vivim-canvas routes (v7.12) — capability plane over HTTP
         if (url.pathname.startsWith('/api/canvas/') && canvasRouter) {
           return canvasRouter(req, url)
+        }
+
+        // agent-canvas routes (P4) — agent ↔ canvas command bridge
+        if (url.pathname.startsWith('/api/agent/canvas/') && agentCanvasRouter) {
+          console.log('[server] routing to agentCanvasRouter:', url.pathname)
+          const result = await agentCanvasRouter(req, url)
+          console.log('[server] agentCanvasRouter result:', result ? 'Response' : 'null')
+          if (result) return result
         }
 
         // 24.1/24.2 — universal capability transport (execute + introspection)
