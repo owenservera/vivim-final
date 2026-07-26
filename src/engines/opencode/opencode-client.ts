@@ -85,10 +85,10 @@ export class OpenCodeClient {
       body: JSON.stringify({ parts: [{ type: 'text', text }] }),
     })
     // The /message endpoint returns ContentBlock[] directly (not wrapped).
-    const data = await res.json()
+    const data: unknown = await res.json()
     const blocks: ContentBlock[] = Array.isArray(data)
       ? data
-      : (data?.blocks ?? data?.content ?? [])
+      : ((data as Record<string, unknown>)?.blocks ?? (data as Record<string, unknown>)?.content ?? []) as ContentBlock[]
     return { blocks }
   }
 

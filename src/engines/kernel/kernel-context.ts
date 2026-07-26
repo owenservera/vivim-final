@@ -2,6 +2,7 @@
 // KernelContext — unified context object passed to every engine constructor.
 // Provides access to kernel subsystems through a single object.
 
+import { config } from '../../config.js'
 import { getLogger } from '../../lib/logger.js'
 import type { KernelStore } from '../../storage/contracts/kernel-store.js'
 import type { CapabilityEventBus } from '../capability-event-bus.js'
@@ -47,7 +48,7 @@ export class ConsoleKernelLogger implements KernelLogger {
   }
 
   debug(msg: string, data?: Record<string, unknown>): void {
-    if (process.env.DEBUG) {
+    if (config.debug) {
       this.log.debug({ ...this.fields, ...data }, msg)
     }
   }

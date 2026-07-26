@@ -37,6 +37,7 @@
     "engines/agent-builder",
     "engines/agentic-loop",
     "engines/airgap",
+    "engines/anti-detection",
     "engines/api-provider-adapter",
     "engines/audit-trail",
     "engines/automation",
@@ -62,6 +63,7 @@
     "engines/capability",
     "engines/cdp-capability-registrar",
     "engines/cdp-discovery",
+    "engines/cdp-watchdog",
     "engines/chrome-governor",
     "engines/chrome-setup-wizard",
     "engines/command-language",
@@ -97,6 +99,7 @@
     "engines/harness-repair-engine",
     "engines/harness-runtime",
     "engines/health-digest",
+    "engines/humanized-interaction",
     "engines/idempotency-guard",
     "engines/image-gen-bridge",
     "engines/indexing-pipeline",
@@ -110,6 +113,7 @@
     "engines/local-model-adapter",
     "engines/lock-manager",
     "engines/logger",
+    "engines/loop-detector",
     "engines/manifest-inference",
     "engines/mcp-client-adapter",
     "engines/mcp-server-adapter",
@@ -145,6 +149,7 @@
     "engines/retry-engine",
     "engines/safe-eval",
     "engines/sandbox-runner",
+    "engines/selector-cache",
     "engines/selector-healer",
     "engines/semantic-grounding",
     "engines/semantic-search",
@@ -206,6 +211,7 @@
     "router/index",
     "router/router",
     "schema/agentic",
+    "schema/api-types",
     "schema/automation",
     "schema/chrome",
     "schema/command-description",
@@ -240,6 +246,7 @@
     "schema/types",
     "schema/validators",
     "schema/versioning",
+    "server/agent-canvas-router",
     "server/auth-gate",
     "server/automation-router",
     "server/autonomous-router",
@@ -263,6 +270,7 @@
     "server/source-middleware",
     "server/webhook-router",
     "server/websocket",
+    "shared/agent-canvas",
     "shared/stream-blocks",
     "storage/contracts",
     "storage/cozo",
@@ -648,6 +656,10 @@
     },
     {
       "from": "cli/index",
+      "to": "config"
+    },
+    {
+      "from": "cli/index",
       "to": "cli/command-registry"
     },
     {
@@ -688,6 +700,10 @@
     },
     {
       "from": "config/provider-registry",
+      "to": "config"
+    },
+    {
+      "from": "config/provider-registry",
       "to": "storage/db"
     },
     {
@@ -723,6 +739,18 @@
       "to": "engines/unified-registry"
     },
     {
+      "from": "engines/agentic-loop",
+      "to": "lib/logger"
+    },
+    {
+      "from": "engines/agentic-loop",
+      "to": "engines/loop-detector"
+    },
+    {
+      "from": "engines/anti-detection",
+      "to": "engines/chrome-governor"
+    },
+    {
       "from": "engines/api-provider-adapter",
       "to": "errors"
     },
@@ -736,11 +764,11 @@
     },
     {
       "from": "engines/automation",
-      "to": "engines/automation"
+      "to": "errors"
     },
     {
       "from": "engines/automation",
-      "to": "errors"
+      "to": "engines/automation"
     },
     {
       "from": "engines/automation",
@@ -877,6 +905,10 @@
     {
       "from": "engines/capability-bootstrap-generated",
       "to": "errors"
+    },
+    {
+      "from": "engines/capability-bootstrap-generated",
+      "to": "lib/logger"
     },
     {
       "from": "engines/capability-bootstrap-generated",
@@ -1055,6 +1087,14 @@
       "to": "errors"
     },
     {
+      "from": "engines/cdp-watchdog",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/cdp-watchdog",
+      "to": "lib/logger"
+    },
+    {
       "from": "engines/chrome-governor",
       "to": "errors"
     },
@@ -1072,11 +1112,23 @@
     },
     {
       "from": "engines/chrome-governor",
+      "to": "lib/logger"
+    },
+    {
+      "from": "engines/chrome-governor",
+      "to": "engines/anti-detection"
+    },
+    {
+      "from": "engines/chrome-governor",
       "to": "engines/browser-automation"
     },
     {
       "from": "engines/chrome-governor",
       "to": "engines/capability-snapshot"
+    },
+    {
+      "from": "engines/chrome-governor",
+      "to": "engines/cdp-watchdog"
     },
     {
       "from": "engines/chrome-governor",
@@ -1133,6 +1185,10 @@
     {
       "from": "engines/composer-typing",
       "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/composer-typing",
+      "to": "engines/humanized-interaction"
     },
     {
       "from": "engines/conceptual-model-service",
@@ -1479,6 +1535,10 @@
       "to": "storage/contracts"
     },
     {
+      "from": "engines/humanized-interaction",
+      "to": "engines/chrome-governor"
+    },
+    {
       "from": "engines/idempotency-guard",
       "to": "engines/conversation-manager"
     },
@@ -1549,6 +1609,10 @@
     {
       "from": "engines/kernel",
       "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/kernel",
+      "to": "config"
     },
     {
       "from": "engines/kernel",
@@ -1712,11 +1776,11 @@
     },
     {
       "from": "engines/memory-engine",
-      "to": "ids"
+      "to": "errors"
     },
     {
       "from": "engines/memory-engine",
-      "to": "errors"
+      "to": "ids"
     },
     {
       "from": "engines/memory-engine",
@@ -1781,6 +1845,10 @@
     {
       "from": "engines/nlcl",
       "to": "ids"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "lib/logger"
     },
     {
       "from": "engines/nlcl",
@@ -1873,6 +1941,10 @@
     {
       "from": "engines/opencode",
       "to": "engines/event-record-store"
+    },
+    {
+      "from": "engines/opencode",
+      "to": "config"
     },
     {
       "from": "engines/otel-sink",
@@ -1996,6 +2068,10 @@
     },
     {
       "from": "engines/provider-protocol-generator",
+      "to": "lib/logger"
+    },
+    {
+      "from": "engines/provider-protocol-generator",
       "to": "storage/db"
     },
     {
@@ -2101,6 +2177,10 @@
     {
       "from": "engines/sandbox-runner",
       "to": "storage/contracts"
+    },
+    {
+      "from": "engines/selector-healer",
+      "to": "engines/selector-cache"
     },
     {
       "from": "engines/selector-healer",
@@ -2232,15 +2312,15 @@
     },
     {
       "from": "engines/stream-parser",
+      "to": "lib/logger"
+    },
+    {
+      "from": "engines/stream-parser",
       "to": "schema/streaming"
     },
     {
       "from": "engines/stream-parser",
       "to": "storage/contracts"
-    },
-    {
-      "from": "engines/stream-parser",
-      "to": "engines/safe-eval"
     },
     {
       "from": "engines/stream-parser",
@@ -2293,6 +2373,10 @@
     {
       "from": "engines/telemetry-aggregator",
       "to": "engines/config-manager"
+    },
+    {
+      "from": "engines/telemetry-audit",
+      "to": "errors"
     },
     {
       "from": "engines/tool-use-protocol",
@@ -2385,6 +2469,10 @@
     {
       "from": "engines/workflow-templates",
       "to": "ids"
+    },
+    {
+      "from": "engines/workspace-presets",
+      "to": "errors"
     },
     {
       "from": "executor/cdp-transport",
@@ -3043,6 +3131,26 @@
       "to": "schema/rich-text"
     },
     {
+      "from": "server/agent-canvas-router",
+      "to": "shared/agent-canvas"
+    },
+    {
+      "from": "server/agent-canvas-router",
+      "to": "lib/logger"
+    },
+    {
+      "from": "server/agent-canvas-router",
+      "to": "server/index"
+    },
+    {
+      "from": "server/agent-canvas-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/auth-gate",
+      "to": "config"
+    },
+    {
       "from": "server/automation-router",
       "to": "engines/automation"
     },
@@ -3112,6 +3220,10 @@
     },
     {
       "from": "server/capability-router",
+      "to": "schema/api-types"
+    },
+    {
+      "from": "server/capability-router",
       "to": "server/index"
     },
     {
@@ -3136,6 +3248,10 @@
     },
     {
       "from": "server/conversation-router",
+      "to": "config"
+    },
+    {
+      "from": "server/conversation-router",
       "to": "server/index"
     },
     {
@@ -3149,6 +3265,10 @@
     {
       "from": "server/conversation-router",
       "to": "engines/mirror-engine"
+    },
+    {
+      "from": "server/index",
+      "to": "config"
     },
     {
       "from": "server/index",
@@ -3220,6 +3340,10 @@
     },
     {
       "from": "server/index",
+      "to": "lib/logger"
+    },
+    {
+      "from": "server/index",
       "to": "engines/nlcl"
     },
     {
@@ -3272,11 +3396,11 @@
     },
     {
       "from": "server/index",
-      "to": "server/knowledge-router"
+      "to": "server/interpret-router"
     },
     {
       "from": "server/index",
-      "to": "server/memory-router"
+      "to": "server/knowledge-router"
     },
     {
       "from": "server/index",
@@ -3419,8 +3543,16 @@
       "to": "server/canvas-ws"
     },
     {
+      "from": "server/index",
+      "to": "server/agent-canvas-router"
+    },
+    {
       "from": "server/interpret-router",
       "to": "engines/nlcl"
+    },
+    {
+      "from": "server/interpret-router",
+      "to": "schema/api-types"
     },
     {
       "from": "server/interpret-router",
@@ -3512,11 +3644,11 @@
     },
     {
       "from": "server/plugin-router",
-      "to": "ids"
+      "to": "engines/safe-eval"
     },
     {
       "from": "server/plugin-router",
-      "to": "engines/safe-eval"
+      "to": "ids"
     },
     {
       "from": "server/plugin-router",
@@ -3651,8 +3783,16 @@
       "to": "engines/sandbox-runner"
     },
     {
+      "from": "storage/cozo",
+      "to": "lib/logger"
+    },
+    {
       "from": "storage/db",
       "to": "ids"
+    },
+    {
+      "from": "storage/db",
+      "to": "lib/logger"
     },
     {
       "from": "storage/db",
@@ -3733,6 +3873,10 @@
     {
       "from": "storage/impl",
       "to": "engines/sync"
+    },
+    {
+      "from": "storage/prisma",
+      "to": "lib/logger"
     },
     {
       "from": "storage/prisma",
@@ -3901,6 +4045,10 @@
       "layer": 5
     },
     {
+      "module": "engines/anti-detection",
+      "layer": 3
+    },
+    {
       "module": "engines/api-provider-adapter",
       "layer": 3
     },
@@ -3999,6 +4147,10 @@
     {
       "module": "engines/cdp-discovery",
       "layer": 2
+    },
+    {
+      "module": "engines/cdp-watchdog",
+      "layer": 3
     },
     {
       "module": "engines/chrome-governor",
@@ -4141,6 +4293,10 @@
       "layer": 3
     },
     {
+      "module": "engines/humanized-interaction",
+      "layer": 3
+    },
+    {
       "module": "engines/idempotency-guard",
       "layer": 3
     },
@@ -4190,6 +4346,10 @@
     },
     {
       "module": "engines/logger",
+      "layer": 3
+    },
+    {
+      "module": "engines/loop-detector",
       "layer": 3
     },
     {
@@ -4330,6 +4490,10 @@
     },
     {
       "module": "engines/sandbox-runner",
+      "layer": 3
+    },
+    {
+      "module": "engines/selector-cache",
       "layer": 3
     },
     {
@@ -4577,6 +4741,10 @@
       "layer": 0
     },
     {
+      "module": "schema/api-types",
+      "layer": 0
+    },
+    {
       "module": "schema/automation",
       "layer": 0
     },
@@ -4713,6 +4881,10 @@
       "layer": 0
     },
     {
+      "module": "server/agent-canvas-router",
+      "layer": 5
+    },
+    {
       "module": "server/auth-gate",
       "layer": 5
     },
@@ -4803,6 +4975,10 @@
     {
       "module": "server/websocket",
       "layer": 5
+    },
+    {
+      "module": "shared/agent-canvas",
+      "layer": 3
     },
     {
       "module": "shared/stream-blocks",
@@ -5085,10 +5261,10 @@
     {
       "module": "cli/index",
       "fanIn": 1,
-      "fanOut": 5,
-      "instability": 0.8333333333333334,
+      "fanOut": 6,
+      "instability": 0.8571428571428571,
       "selfDeps": 0,
-      "totalDeps": 5,
+      "totalDeps": 6,
       "cohesion": 0,
       "files": 1
     },
@@ -5145,16 +5321,16 @@
     {
       "module": "config/provider-registry",
       "fanIn": 4,
-      "fanOut": 2,
-      "instability": 0.3333333333333333,
+      "fanOut": 3,
+      "instability": 0.42857142857142855,
       "selfDeps": 0,
-      "totalDeps": 2,
+      "totalDeps": 3,
       "cohesion": 0,
       "files": 1
     },
     {
       "module": "config",
-      "fanIn": 3,
+      "fanIn": 10,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -5195,10 +5371,10 @@
     {
       "module": "engines/agentic-loop",
       "fanIn": 1,
-      "fanOut": 3,
-      "instability": 0.75,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
       "selfDeps": 0,
-      "totalDeps": 3,
+      "totalDeps": 5,
       "cohesion": 0,
       "files": 1
     },
@@ -5210,6 +5386,16 @@
       "selfDeps": 0,
       "totalDeps": 0,
       "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/anti-detection",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
       "files": 1
     },
     {
@@ -5325,10 +5511,10 @@
     {
       "module": "engines/capability-bootstrap-generated",
       "fanIn": 1,
-      "fanOut": 3,
-      "instability": 0.75,
+      "fanOut": 4,
+      "instability": 0.8,
       "selfDeps": 0,
-      "totalDeps": 3,
+      "totalDeps": 4,
       "cohesion": 0,
       "files": 1
     },
@@ -5463,12 +5649,22 @@
       "files": 1
     },
     {
-      "module": "engines/chrome-governor",
-      "fanIn": 26,
-      "fanOut": 8,
-      "instability": 0.23529411764705882,
+      "module": "engines/cdp-watchdog",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
       "selfDeps": 0,
-      "totalDeps": 8,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/chrome-governor",
+      "fanIn": 29,
+      "fanOut": 11,
+      "instability": 0.275,
+      "selfDeps": 0,
+      "totalDeps": 11,
       "cohesion": 0,
       "files": 1
     },
@@ -5505,10 +5701,10 @@
     {
       "module": "engines/composer-typing",
       "fanIn": 3,
-      "fanOut": 1,
-      "instability": 0.25,
+      "fanOut": 2,
+      "instability": 0.4,
       "selfDeps": 0,
-      "totalDeps": 1,
+      "totalDeps": 2,
       "cohesion": 0,
       "files": 1
     },
@@ -5813,6 +6009,16 @@
       "files": 1
     },
     {
+      "module": "engines/humanized-interaction",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/idempotency-guard",
       "fanIn": 1,
       "fanOut": 1,
@@ -5855,11 +6061,11 @@
     {
       "module": "engines/kernel",
       "fanIn": 4,
-      "fanOut": 12,
-      "instability": 0.75,
+      "fanOut": 13,
+      "instability": 0.7647058823529411,
       "selfDeps": 1,
-      "totalDeps": 12,
-      "cohesion": 0.08333333333333333,
+      "totalDeps": 13,
+      "cohesion": 0.07692307692307693,
       "files": 10
     },
     {
@@ -5935,6 +6141,16 @@
     {
       "module": "engines/logger",
       "fanIn": 6,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "engines/loop-detector",
+      "fanIn": 1,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6045,11 +6261,11 @@
     {
       "module": "engines/nlcl",
       "fanIn": 10,
-      "fanOut": 11,
-      "instability": 0.5238095238095238,
+      "fanOut": 12,
+      "instability": 0.5454545454545454,
       "selfDeps": 1,
-      "totalDeps": 11,
-      "cohesion": 0.09090909090909091,
+      "totalDeps": 12,
+      "cohesion": 0.08333333333333333,
       "files": 32
     },
     {
@@ -6085,11 +6301,11 @@
     {
       "module": "engines/opencode",
       "fanIn": 4,
-      "fanOut": 8,
-      "instability": 0.6666666666666666,
+      "fanOut": 9,
+      "instability": 0.6923076923076923,
       "selfDeps": 1,
-      "totalDeps": 8,
-      "cohesion": 0.125,
+      "totalDeps": 9,
+      "cohesion": 0.1111111111111111,
       "files": 5
     },
     {
@@ -6195,11 +6411,11 @@
     {
       "module": "engines/provider-protocol-generator",
       "fanIn": 4,
-      "fanOut": 3,
-      "instability": 0.42857142857142855,
+      "fanOut": 4,
+      "instability": 0.5,
       "selfDeps": 1,
-      "totalDeps": 3,
-      "cohesion": 0.3333333333333333,
+      "totalDeps": 4,
+      "cohesion": 0.25,
       "files": 1
     },
     {
@@ -6274,9 +6490,9 @@
     },
     {
       "module": "engines/safe-eval",
-      "fanIn": 4,
+      "fanIn": 3,
       "fanOut": 1,
-      "instability": 0.2,
+      "instability": 0.25,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -6293,12 +6509,22 @@
       "files": 1
     },
     {
+      "module": "engines/selector-cache",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
       "module": "engines/selector-healer",
       "fanIn": 1,
-      "fanOut": 2,
-      "instability": 0.6666666666666666,
+      "fanOut": 3,
+      "instability": 0.75,
       "selfDeps": 0,
-      "totalDeps": 2,
+      "totalDeps": 3,
       "cohesion": 0,
       "files": 1
     },
@@ -6485,11 +6711,11 @@
     {
       "module": "engines/telemetry-audit",
       "fanIn": 2,
-      "fanOut": 0,
-      "instability": 0,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
       "selfDeps": 0,
-      "totalDeps": 0,
-      "cohesion": 1,
+      "totalDeps": 1,
+      "cohesion": 0,
       "files": 1
     },
     {
@@ -6585,16 +6811,16 @@
     {
       "module": "engines/workspace-presets",
       "fanIn": 1,
-      "fanOut": 0,
-      "instability": 0,
+      "fanOut": 1,
+      "instability": 0.5,
       "selfDeps": 0,
-      "totalDeps": 0,
-      "cohesion": 1,
+      "totalDeps": 1,
+      "cohesion": 0,
       "files": 1
     },
     {
       "module": "errors",
-      "fanIn": 74,
+      "fanIn": 76,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6814,7 +7040,7 @@
     },
     {
       "module": "lib/logger",
-      "fanIn": 4,
+      "fanIn": 16,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6895,6 +7121,16 @@
     {
       "module": "schema/agentic",
       "fanIn": 7,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "schema/api-types",
+      "fanIn": 2,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7243,13 +7479,23 @@
       "files": 1
     },
     {
+      "module": "server/agent-canvas-router",
+      "fanIn": 1,
+      "fanOut": 4,
+      "instability": 0.8,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "server/auth-gate",
       "fanIn": 1,
-      "fanOut": 0,
-      "instability": 0,
+      "fanOut": 1,
+      "instability": 0.5,
       "selfDeps": 0,
-      "totalDeps": 0,
-      "cohesion": 1,
+      "totalDeps": 1,
+      "cohesion": 0,
       "files": 1
     },
     {
@@ -7295,10 +7541,10 @@
     {
       "module": "server/capability-router",
       "fanIn": 1,
-      "fanOut": 4,
-      "instability": 0.8,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
       "selfDeps": 0,
-      "totalDeps": 4,
+      "totalDeps": 5,
       "cohesion": 0,
       "files": 1
     },
@@ -7315,30 +7561,30 @@
     {
       "module": "server/conversation-router",
       "fanIn": 1,
-      "fanOut": 5,
-      "instability": 0.8333333333333334,
+      "fanOut": 6,
+      "instability": 0.8571428571428571,
       "selfDeps": 0,
-      "totalDeps": 5,
+      "totalDeps": 6,
       "cohesion": 0,
       "files": 1
     },
     {
       "module": "server/index",
-      "fanIn": 12,
-      "fanOut": 67,
-      "instability": 0.8481012658227848,
+      "fanIn": 13,
+      "fanOut": 70,
+      "instability": 0.8433734939759037,
       "selfDeps": 0,
-      "totalDeps": 67,
+      "totalDeps": 70,
       "cohesion": 0,
       "files": 1
     },
     {
       "module": "server/interpret-router",
-      "fanIn": 0,
-      "fanOut": 3,
-      "instability": 1,
+      "fanIn": 1,
+      "fanOut": 4,
+      "instability": 0.8,
       "selfDeps": 0,
-      "totalDeps": 3,
+      "totalDeps": 4,
       "cohesion": 0,
       "files": 1
     },
@@ -7364,9 +7610,9 @@
     },
     {
       "module": "server/memory-router",
-      "fanIn": 1,
+      "fanIn": 0,
       "fanOut": 4,
-      "instability": 0.8,
+      "instability": 1,
       "selfDeps": 0,
       "totalDeps": 4,
       "cohesion": 0,
@@ -7414,7 +7660,7 @@
     },
     {
       "module": "server/response",
-      "fanIn": 15,
+      "fanIn": 16,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7473,6 +7719,16 @@
       "files": 1
     },
     {
+      "module": "shared/agent-canvas",
+      "fanIn": 1,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
       "module": "shared/stream-blocks",
       "fanIn": 0,
       "fanOut": 2,
@@ -7495,20 +7751,20 @@
     {
       "module": "storage/cozo",
       "fanIn": 1,
-      "fanOut": 0,
-      "instability": 0,
+      "fanOut": 1,
+      "instability": 0.5,
       "selfDeps": 0,
-      "totalDeps": 0,
-      "cohesion": 1,
+      "totalDeps": 1,
+      "cohesion": 0,
       "files": 1
     },
     {
       "module": "storage/db",
       "fanIn": 16,
-      "fanOut": 3,
-      "instability": 0.15789473684210525,
+      "fanOut": 4,
+      "instability": 0.2,
       "selfDeps": 0,
-      "totalDeps": 3,
+      "totalDeps": 4,
       "cohesion": 0,
       "files": 1
     },
@@ -7525,10 +7781,10 @@
     {
       "module": "storage/prisma",
       "fanIn": 3,
-      "fanOut": 1,
-      "instability": 0.25,
+      "fanOut": 2,
+      "instability": 0.4,
       "selfDeps": 0,
-      "totalDeps": 1,
+      "totalDeps": 2,
       "cohesion": 0,
       "files": 1
     },

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/Providers";
 import { ThemeProvider } from "@/components/canvas/ThemeProvider";
@@ -34,14 +35,35 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <style>{`
+          @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+              scroll-behavior: auto !important;
+            }
+          }
+        `}</style>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
         style={{ background: 'var(--bg, #fafafa)', color: 'var(--text, #1f2937)' }}
       >
+        {/* Skip navigation link for keyboard users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-[var(--primary)] focus:text-[var(--primary-foreground)] focus:rounded-[var(--radius)]"
+        >
+          Skip to main content
+        </a>
         <ThemeProvider>
           <UnifiedIOProvider>
             <UniversalComponentProvider>
-              <Providers>{children}</Providers>
+              <ErrorBoundary name="app">
+                <Providers>{children}</Providers>
+              </ErrorBoundary>
             </UniversalComponentProvider>
           </UnifiedIOProvider>
         </ThemeProvider>

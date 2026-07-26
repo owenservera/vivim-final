@@ -64,7 +64,7 @@ Default tier: **standard**.
   operation is a `UnifiedCapability`). Statically cross-checks the capability
   definitions in `src/engines/capability-bootstrap.ts` against the NL catalog
   (`src/engines/nlcl/catalog.ts` `capabilityId` bindings) and frontend actions
-  (`web/ui/src/actions` `ActionRegistry.register`). Surfaces **potential new
+  (`frontend/src/actions` `ActionRegistry.register`). Surfaces **potential new
   commands** (capabilities with no NL catalog entry) and **central command
   candidates** (same `cliCommand` declared by multiple capabilities), plus real
   inconsistencies: dangling catalog bindings → P1, duplicate capability ids →

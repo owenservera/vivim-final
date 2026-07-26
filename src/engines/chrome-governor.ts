@@ -3,7 +3,7 @@
 // Manages ChromeSlave lifecycle, CDP proxy, trace logging, and health monitoring.
 
 import { join } from 'node:path'
-import { EngineError } from '../errors.js'
+import { ChromeGovernorError, EngineError } from '../errors.js'
 import { FleetSupervisor } from '../executor/fleet-supervisor.js'
 import type { FleetSuperState, SlaveLifecycle } from '../executor/slave-states.js'
 import type { FleetSupervisor as FleetSupervisorContract } from '../storage/contracts/fleet-supervisor.js'
@@ -12,6 +12,7 @@ import type {
   TraceEntryInput,
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
+import { getLogger } from '../lib/logger.js'
 import { injectAntiDetection } from './anti-detection.js'
 import type { BrowserHarnessActions } from './browser-automation/harness-actions.js'
 import type { CapabilitySnapshot, CapabilitySnapshotEntry } from './capability-snapshot.js'
@@ -267,20 +268,27 @@ export class CDPProxy {
               typeof params.composerType === 'string' ? params.composerType : 'textarea'
             ) as 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
             const typeStart = Date.now()
-            const typeResult = await typeMessage(
-              this.transport,
-              slaveId,
-              selector,
-              text,
-              composerType,
-            )
+            let typeSuccess = true
+            let typeError: string | undefined
+            try {
+              await typeMessage(
+                this.transport,
+                slaveId,
+                selector,
+                text,
+                composerType,
+              )
+            } catch (err) {
+              typeSuccess = false
+              typeError = err instanceof Error ? err.message : String(err)
+            }
             const typeMs = Date.now() - typeStart
-            console.log(
-              `[governor] type_text ${slaveId}: ${typeMs}ms, success=${typeResult.success}, landed="${typeResult.text?.slice(0, 50)}", error=${typeResult.error ?? 'none'}`,
+            log.info(
+              `[governor] type_text ${slaveId}: ${typeMs}ms, success=${typeSuccess}, error=${typeError ?? 'none'}`,
             )
-            if (!typeResult.success) {
+            if (!typeSuccess) {
               throw new ChromeGovernorError(
-                `Type failed: ${typeResult.error ?? 'text did not land in composer'}`,
+                `Type failed: ${typeError ?? 'text did not land in composer'}`,
               )
             }
             stepsCompleted++
@@ -290,24 +298,27 @@ export class CDPProxy {
             const sendSelector =
               typeof params.sendSelector === 'string' ? params.sendSelector : undefined
             const key = typeof params.key === 'string' ? params.key : 'Enter'
-            const sendSelectorCandidates = Array.isArray(params.sendSelectorCandidates)
-              ? (params.sendSelectorCandidates.filter((s) => typeof s === 'string') as string[])
-              : []
             const submitStart = Date.now()
-            const submitResult = await submitMessage(
-              this.transport,
-              slaveId,
-              sendSelector,
-              key,
-              sendSelectorCandidates,
-            )
+            let submitSuccess = true
+            let submitError: string | undefined
+            try {
+              await submitMessage(
+                this.transport,
+                slaveId,
+                sendSelector,
+                key,
+              )
+            } catch (err) {
+              submitSuccess = false
+              submitError = err instanceof Error ? err.message : String(err)
+            }
             const submitMs = Date.now() - submitStart
-            console.log(
-              `[governor] submit ${slaveId}: ${submitMs}ms, confirmed=${submitResult.confirmed}, method=${submitResult.method}, selector=${submitResult.selector ?? 'none'}`,
+            log.info(
+              `[governor] submit ${slaveId}: ${submitMs}ms, confirmed=${submitSuccess}, error=${submitError ?? 'none'}`,
             )
-            if (!submitResult.confirmed) {
+            if (!submitSuccess) {
               throw new ChromeGovernorError(
-                'Submit failed: no button clicked and Enter not confirmed',
+                `Submit failed: ${submitError ?? 'no button clicked and Enter not confirmed'}`,
               )
             }
             stepsCompleted++
@@ -350,8 +361,8 @@ export class CDPProxy {
             const captureStart = Date.now()
             const cap = await this.capture(slaveId, pattern ?? /.*/s, timeoutMs)
             const captureMs = Date.now() - captureStart
-            console.log(
-              `[governor] capture ${slaveId}: ${captureMs}ms, bodyLen=${cap?.body?.length ?? 0}, chunks=${cap?.chunks?.length ?? 0}`,
+            log.info(
+              `[governor] capture ${slaveId}: ${captureMs}ms, bodyLen=${cap?.body?.length ?? 0}`,
             )
             if (cap?.body) capturedBody = cap.body
             stepsCompleted++
@@ -783,6 +794,8 @@ export class HealthMonitor {
 }
 
 // ── ChromeGovernor ─────────────────────────────────────────────────────────
+
+const log = getLogger('chrome-governor')
 
 export class ChromeGovernor {
   private fleetSupervisor: FleetSupervisorContract

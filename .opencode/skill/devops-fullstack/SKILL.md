@@ -381,13 +381,13 @@ Goal: "fix the broken send button".
 
 ### Recipe E — Canvas layer / conceptual-model surface (the primary frontend surface)
 
-The primary frontend surface is now the **unified infinite canvas** (`web/ui/src/components/canvas/CanvasSurface.tsx`),
+The primary frontend surface is now the **unified infinite canvas** (`frontend/src/components/canvas/CanvasSurface.tsx`),
 not just the per-provider `ChatPage`. Surfaces are generated from a **DB-backed provider-type conceptual
 model** — not from in-repo provider docs. When a frontend change is "add a surface / region / UI for a
 provider family", prefer the canvas + conceptual-model path over a new `ChatPage` slot.
 
 **Canvas Component Architecture:**
-The canvas uses a **UniversalComponentRegistry** (`web/ui/src/shared/universal-registry.ts`) — a single
+The canvas uses a **UniversalComponentRegistry** (`frontend/src/shared/universal-registry.ts`) — a single
 registry for ALL UI components. Every visible UI element registers here with:
 - `id` (unique, e.g. `canvas.living`, `card.doc`, `panel.audit`)
 - `kind` (canvas/card/panel/overlay/control/primitive/hook)
@@ -399,7 +399,7 @@ registry for ALL UI components. Every visible UI element registers here with:
 **Resolution:** `registry.resolve(slot, ctx)` returns the component. Precedence: capabilitySlug > category > default.
 **Hot-swap:** `registry.register(spec)` live-updates via `useSyncExternalStore`.
 
-**Key Canvas Components (38 total in `web/ui/src/components/canvas/`):**
+**Key Canvas Components (38 total in `frontend/src/components/canvas/`):**
 
 | Component | Kind | Category | Purpose |
 |-----------|------|----------|---------|
@@ -435,7 +435,7 @@ registry for ALL UI components. Every visible UI element registers here with:
 **Boot sequence:** `UniversalComponentProvider` → `registerAllComponents()` → all ~30 components
 registered at app start. CLI `list components` shows every registered component.
 
-**Frontend Entry (`web/ui/src/app/page.tsx`):**
+**Frontend Entry (`frontend/src/app/page.tsx`):**
 The unified canvas surface. 14 surfaces: chat, docs, editor, media, automation, agents, shell,
 audit, rbac, templates, zlayers, health, capabilities, memory. Phase 3 adds: ⌘K Command Palette,
 Universal Search, Smart Notifications, Theme System, Onboarding Tour, Quick Actions Radial Menu,
@@ -468,9 +468,9 @@ Live Presence, Audit Trail, RBAC, Templates Gallery.
 ### Recipe F — Add a new UI component to the UniversalComponentRegistry
 
 Goal: "add a new card component for X".
-1. Create the component in `web/ui/src/components/canvas/` (or appropriate subdirectory).
-2. Export it from `web/ui/src/components/canvas/index.ts`.
-3. Register it in `web/ui/src/components/canvas/register-all.ts` with:
+1. Create the component in `frontend/src/components/canvas/` (or appropriate subdirectory).
+2. Export it from `frontend/src/components/canvas/index.ts`.
+3. Register it in `frontend/src/components/canvas/register-all.ts` with:
    ```ts
    register({
      id: 'card.x',
@@ -528,7 +528,7 @@ Goal: "add 10x more platforms", "expand taxonomy", "add capabilities for X".
 - **No Runaway Creation:** FleetSupervisor limits (maxConcurrent, queue, timeout) + ProfileAllocator singleton + spawn guard prevent duplicate Chrome instances.
 - **Triple-Layer State:** Profile + DB + runtime must stay consistent. Profile dir is canonical, DB and runtime are derived from profile state.
 - **Relogin Ready:** Agent detects session expiry via `isAuthenticated()`, suggests relogin to user, user confirms, system executes relogin flow.
-- **UniversalComponentRegistry:** All UI components register in `web/ui/src/shared/universal-registry.ts` via `register-all.ts`. Never create ad-hoc component registries.
+- **UniversalComponentRegistry:** All UI components register in `frontend/src/shared/universal-registry.ts` via `register-all.ts`. Never create ad-hoc component registries.
 - **Generated Capabilities:** `capability-bootstrap-generated.ts` is auto-generated from `seeds/taxonomy/pool.taxonomy.json`. Do not edit manually — run `bun run taxonomy-gen` to regenerate.
 
 ## Chrome Slave Lifecycle (Strategic Design)
@@ -733,7 +733,7 @@ client.on('Network.requestWillBeSent', (params) => {
 - Don't assume `pages[0]` is the auth tab — iterate all page targets.
 - Don't create ad-hoc component registries — use the `UniversalComponentRegistry`.
 - Don't edit `capability-bootstrap-generated.ts` manually — run `bun run taxonomy-gen`.
-- Don't create components outside `web/ui/src/components/` — keep the component tree organized.
+- Don't create components outside `frontend/src/components/` — keep the component tree organized.
 
 ---
 

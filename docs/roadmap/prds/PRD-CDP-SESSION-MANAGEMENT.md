@@ -193,7 +193,7 @@ Also add a `pre-flight` check in `start-all.ps1` that kills any existing backend
 4. Disable send button while request is in flight
 5. Auto-refresh conversation list when new conversation created
 
-**Files:** `web/ui/src/api/client.ts`, `web/ui/src/features/chat/ChatPage.tsx`
+**Files:** `frontend/src/api/client.ts`, `frontend/src/features/chat/ChatPage.tsx`
 
 ### Module 8: Send Observability
 

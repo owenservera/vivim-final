@@ -37,7 +37,7 @@ contract + the slot registry resolve. If a feature needs UI, it is expressed as:
   `if (slug === 'x')` branches in a component.
 
 The canonical slot taxonomy is the single source of truth for "what UI exists":
-`web/ui/src/ui/slots.ts` (`SLOT_IDS` / `SlotMeta`). Every surface resolves its regions through these
+`frontend/src/ui/slots.ts` (`SLOT_IDS` / `SlotMeta`). Every surface resolves its regions through these
 slots — there is no component imported directly into a surface.
 
 ---
@@ -52,22 +52,22 @@ slots — there is no component imported directly into a surface.
 - Wiring a UI action (must go through `ActionRegistry` — invariant **B8**).
 - Building or repairing the slot-resolved surface host (`features/chat/ChatPage.tsx` is the
   reference implementation).
-- Any `devops loop --goal=...` step that touches `web/ui`.
+- Any `devops loop --goal=...` step that touches `frontend`.
 
 ---
 
 ## 2. Architecture: Capability Globals + UIComponentRegistry
 
 ```
-UIComponentRegistry (web/ui/src/ui/registry.ts)   ← external store (live hot-swap)
+UIComponentRegistry (frontend/src/ui/registry.ts)   ← external store (live hot-swap)
   ├─ defaults: Record<SlotId, Component>           ← generic, shared by all providers
   ├─ bespoke:  Record<SlotId, Map<slug, {component, sandbox}>>
   └─ resolve(slot, {providerSlug, capabilitySlug}) → capabilitySlug > providerSlug > default
 
-SlotProvider (web/ui/src/ui/context.tsx)          ← provides {providerSlug, capabilitySlug}
+SlotProvider (frontend/src/ui/context.tsx)          ← provides {providerSlug, capabilitySlug}
   └─ useSlot(slot)                                 ← useSyncExternalStore; re-renders on hot-swap
 
-defaults/* (web/ui/src/ui/defaults/)               ← one generic component per slot
+defaults/* (frontend/src/ui/defaults/)               ← one generic component per slot
 registerDefaults()                                 ← idempotent registration at app boot
 ```
 
@@ -106,19 +106,19 @@ others.
 `CATEGORY_POSITIONS` must emit these exact values (e.g. `chat.actionBar`, not `actionBar`).
 A mismatch means `auto-populate.ts` cannot resolve the slot and `ui_position` silently fails.
 
-To add a new capability global: add its id to `SLOT_IDS` in `web/ui/src/ui/slots.ts`, give it a
-generic default in `web/ui/src/ui/defaults/`, and register it in `registerDefaults()`.
+To add a new capability global: add its id to `SLOT_IDS` in `frontend/src/ui/slots.ts`, give it a
+generic default in `frontend/src/ui/defaults/`, and register it in `registerDefaults()`.
 
 ### Reusable primitives to reuse FIRST (do not reinvent)
 | Primitive | Path | Use |
 |-----------|------|-----|
-| `UIComponentRegistry` | `web/ui/src/ui/registry.ts` | Global slot registry: `register`/`unregister`/`resolve`/`listOverrides`/`applyClaim`/`hotSwap` |
-| `SlotProvider` / `useSlot` / `useResolvedSlot` | `web/ui/src/ui/context.tsx`, `useSlot.ts` | Resolve a slot under the current provider/capability context |
-| `slots` catalog | `web/ui/src/ui/slots.ts` | `SLOT_IDS`, `SlotMeta`, `SlotOverrideClaim` |
-| `registerDefaults` | `web/ui/src/ui/defaults/index.tsx` | Register generic defaults + catalog entries (call at boot) |
-| `ActionRegistry` / `ActionSpec` | `web/ui/src/actions/registry.ts` | Dispatch + Zod-validated params (B8) |
-| `ActionTrigger` | `web/ui/src/components/action-trigger.tsx` | Click → action dispatch |
-| `CapabilityRegistry` | `web/ui/src/registry/index.ts` | Complementary ledger: `slug` → bespoke **capability** renderer (generic fallback) |
+| `UIComponentRegistry` | `frontend/src/ui/registry.ts` | Global slot registry: `register`/`unregister`/`resolve`/`listOverrides`/`applyClaim`/`hotSwap` |
+| `SlotProvider` / `useSlot` / `useResolvedSlot` | `frontend/src/ui/context.tsx`, `useSlot.ts` | Resolve a slot under the current provider/capability context |
+| `slots` catalog | `frontend/src/ui/slots.ts` | `SLOT_IDS`, `SlotMeta`, `SlotOverrideClaim` |
+| `registerDefaults` | `frontend/src/ui/defaults/index.tsx` | Register generic defaults + catalog entries (call at boot) |
+| `ActionRegistry` / `ActionSpec` | `frontend/src/actions/registry.ts` | Dispatch + Zod-validated params (B8) |
+| `ActionTrigger` | `frontend/src/components/action-trigger.tsx` | Click → action dispatch |
+| `CapabilityRegistry` | `frontend/src/registry/index.ts` | Complementary ledger: `slug` → bespoke **capability** renderer (generic fallback) |
 
 > The older `CapabilityRegistry` (slug→bespoke capability renderer) still exists and is used for
 > capability-specific renderers. The slot-based `UIComponentRegistry` is the primary surface
@@ -194,12 +194,12 @@ result. The slot-resolved `ChatPage` is the reference surface; new surfaces foll
 `SlotProvider` + `useSlot` pattern.
 
 ### U4 — the frontend renderer is also a canvas layer
-The primary surface is now the **unified infinite canvas** (`web/ui/src/features/canvas/CanvasSurface.tsx`).
+The primary surface is now the **unified infinite canvas** (`frontend/src/features/canvas/CanvasSurface.tsx`).
 A capability surfaced by this skill is rendered on the canvas as a node. The canvas runtime is:
 - `src/engines/canvas-layer-mounter.ts` — `CanvasLayerMounter` thin emitter; `spawn()` publishes a
   `CanvasDefinition` and the live event `canvas:layer:spawned` is forwarded to the browser over
   `/ws/canvas` via `registerCanvasLayerForwarder` (`src/server/websocket.ts`).
-- `web/ui/src/features/canvas/*` — `BrowserLayerHost.tsx`, `SandboxedLayer.tsx`, `useManifest.ts`,
+- `frontend/src/features/canvas/*` — `BrowserLayerHost.tsx`, `SandboxedLayer.tsx`, `useManifest.ts`,
   `useNodeTypes.tsx`, `useStreamBlocks.ts`, `useConceptualModel.ts`, `useCanvasEvents.ts`.
 - `shared/canvas-types.ts` — `CanvasDefinition`, `LayerHost`, `SandboxPolicy`, `LayerCategory`.
 
@@ -210,8 +210,8 @@ one atomic unit — Frontend=Backend (5.1) at the unit level.
 
 ### U5 — auto-register + manifest
 `scaffoldFrontend({ renderers, slugs })` (devops/runtime-test/build-frontend.ts) appends each
-renderer to the `CapabilityRegistry` ledger (`web/ui/src/registry/auto-generated.ts`) and emits
-`web/ui/canvas-layer-manifest.json` so the runtime loop can spawn the matching canvas layers
+renderer to the `CapabilityRegistry` ledger (`frontend/src/registry/auto-generated.ts`) and emits
+`frontend/canvas-layer-manifest.json` so the runtime loop can spawn the matching canvas layers
 without a live DB at build time. Slot-level bespoke renderers are additionally `register`ed with the
 `UIComponentRegistry` so they hot-swap the corresponding surface slot.
 
@@ -221,7 +221,7 @@ without a live DB at build time. Slot-level bespoke renderers are additionally `
 
 - **FRONTEND = BACKEND (5.1):** slug links backend/frontend; render the contract + resolve slots,
   never hardcode `if (slug)`.
-- **Slots are globals:** new UI regions are slots in `web/ui/src/ui/slots.ts`, resolved through the
+- **Slots are globals:** new UI regions are slots in `frontend/src/ui/slots.ts`, resolved through the
   registry — not ad-hoc components imported into a surface.
 - **Hot-swap live:** `register(slot, slug, component)` updates the mounted UI with no rebuild.
 - **ActionRegistry (B8):** every UI action dispatches through `ActionRegistry`, Zod-validated.
@@ -238,7 +238,7 @@ without a live DB at build time. Slot-level bespoke renderers are additionally `
 ## 8. Verification Checklist
 
 - [ ] `bun run typecheck` (backend) — 0 errors
-- [ ] `bun run build` (web/ui, `vite build`) — 0 errors
+- [ ] `bun run build` (frontend, `next build`) — 0 errors
 - [ ] New capability/slot renders via the generic default with **no** new component code
 - [ ] Promoted slot: `UIComponentRegistry.listOverrides()` includes the slug
 - [ ] `devops discover` reports frontend `:5173` up
@@ -287,7 +287,7 @@ model, not a hardcoded `ChatPage` branch.
   `seeds/conceptual-model/seed.ts` (idempotent seed, runs at boot).
 - Shared: `shared/canvas-types.ts` (`CanvasDefinition`, `LayerHost`, `SandboxPolicy`,
   `LayerCategory`), `shared/stream-blocks.ts` (`ContentBlock` union).
-- Frontend: `web/ui/src/features/canvas/CanvasSurface.tsx` (tab in `App.tsx`),
+- Frontend: `frontend/src/features/canvas/CanvasSurface.tsx` (tab in `App.tsx`),
   `BrowserLayerHost.tsx`, `SandboxedLayer.tsx`, `ResultSlot.tsx`, `StreamingSlot.tsx`,
   `ZoomNode.tsx`, `useManifest.ts`, `useNodeTypes.tsx`, `useStreamBlocks.ts`,
   `useConceptualModel.ts`, `useCanvasEvents.ts`, `useUiSlots.ts`, `useZoomLevel.ts`, `index.ts`.
@@ -321,10 +321,10 @@ UI-specific task templates are injected from this skill's catalog.
 
 | Template | Objective | Files Scoped | Verification |
 |----------|-----------|-------------|-------------|
-| `canvas-layer` | Spawn/mount a canvas layer with correct z-axis + region | `CanvasSurface.tsx`, `SandboxedLayer.tsx`, `BrowserLayerHost.tsx`, `canvas-layer-mounter.ts`, `canvas-types.ts` | `cd web/ui && bun run typecheck` + canvas tab screenshot |
+| `canvas-layer` | Spawn/mount a canvas layer with correct z-axis + region | `CanvasSurface.tsx`, `SandboxedLayer.tsx`, `BrowserLayerHost.tsx`, `canvas-layer-mounter.ts`, `canvas-types.ts` | `cd frontend && bun run typecheck` + canvas tab screenshot |
 | `conceptual-component` | Seed/register a `UiComponent` row (4-tier resolution) conforming to Zod schema | `seeds/conceptual-model/seed.ts`, `src/schema/conceptual-model.ts`, `src/engines/conceptual-model-service.ts`, `shared/ui-component.ts` | `bun test tests/unit/storage/ui-component-store-impl.test.ts` |
-| `slot-hotswap` | Register a bespoke component override at runtime via `UIComponentRegistry.hotSwap()` | `web/ui/src/ui/registry.ts`, `web/ui/src/ui/slots.ts`, `web/ui/src/ui/defaults/` | `bun test tests/unit/ui/` + devtools hot-swap test |
-| `frontend-test` | Add typecheck + component render tests for a UI surface | `web/ui/src/features/**`, `tests/unit/ui/`, `web/ui/package.json` | `cd web/ui && bun run typecheck && bun test` |
+| `slot-hotswap` | Register a bespoke component override at runtime via `UIComponentRegistry.hotSwap()` | `frontend/src/ui/registry.ts`, `frontend/src/ui/slots.ts`, `frontend/src/ui/defaults/` | `bun test tests/unit/ui/` + devtools hot-swap test |
+| `frontend-test` | Add typecheck + component render tests for a UI surface | `frontend/src/features/**`, `tests/unit/ui/`, `frontend/package.json` | `cd frontend && bun run typecheck && bun test` |
 | `canvas-conceptual-verify` | Verify all families resolve through 4-tier precedence with correct `UiComponent` rows | `src/engines/conceptual-model-service.ts`, `shared/conceptual-model.ts`, `seeds/conceptual-model/seed.ts` | `bun run devops agentic probe` → check `components.byScope` |
 | `onboard-frontend-verify` | E2E provider frontend verification: canvas mount → capability invoke → DOM assert | `devops/frontend-automation-tester.ts`, `devops/onboard-controller.ts` | `bun run devops runtime-test onboard test-frontend --provider=<slug>` |
 
@@ -353,7 +353,7 @@ Frontend-specific commands are NOT standalone devops commands. Use these existin
 - `bun run devops runtime-test status --provider=<slug>` — per-provider capability status including UI test registry data
 
 ### UI Validation
-- `cd web/ui && bun run typecheck` + `cd web/ui && bun run build` (standard build commands)
+- `cd frontend && bun run typecheck` + `cd frontend && bun run build` (standard build commands)
 - `bun test tests/unit/ui/` (component tests)
 - `bun run devops verify-cross-surface` — verifies every capability resolves across CLI/API/MCP/UI surfaces
 
@@ -375,8 +375,8 @@ Lefthook hooks that fire on git operations to enforce UI invariants before commi
 ```yaml
 pre-commit:
   ui-validate:
-    glob: "web/ui/src/**/*.{ts,tsx}"
-    run: cd web/ui && bun run typecheck
+    glob: "frontend/src/**/*.{ts,tsx}"
+    run: cd frontend && bun run typecheck
   ui-zod-check:
     glob: "seeds/conceptual-model/seed.ts"
     run: bunx tsc --noEmit 2>&1 | grep -q "conceptual-model" && exit 1 || exit 0
@@ -386,7 +386,7 @@ pre-commit:
 ```yaml
 pre-push:
   ui-tests:
-    glob: "web/ui/src/**/*.{ts,tsx}"
+    glob: "frontend/src/**/*.{ts,tsx}"
     run: bun test tests/unit/ui/
   ui-probe:
     run: bun run devops agentic preflight 2>&1 | findstr /i "gaps"
@@ -396,7 +396,7 @@ pre-push:
 
 ## 14. Sandbox Harvest (completed)
 
-All sandbox behavioral concepts have been collapsed into the main UI (`web/ui/`).
+All sandbox behavioral concepts have been collapsed into the main UI (`frontend/`).
 The empty `web/sandbox/` dir remains (stale file lock, harmless).
 
 ### What was harvested (10 components)

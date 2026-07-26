@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design 1: Headless Hook — 5 Composer Variations</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .animate-slide-in { animation: slideIn 0.2s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-pop-in { animation: popIn 0.15s ease-out; }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .animate-fade-in { animation: fadeIn 0.15s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    .dark .scrollbar-thin::-webkit-scrollbar-thumb { background: #4b5563; }
+    .glow-pulse { animation: glowPulse 2s ease-in-out infinite; }
+    @keyframes glowPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.3); } 50% { box-shadow: 0 0 12px 4px rgba(124, 58, 237, 0.15); } }
+    .typing-cursor { display: inline-block; width: 2px; height: 1em; background: #7c3aed; animation: blink 1s step-end infinite; vertical-align: text-bottom; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 min-h-screen p-8">
+  <div class="max-w-5xl mx-auto space-y-10">
+    
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Design 1: Headless Hook — 5 Composer Variations</h1>
+      <p class="text-gray-600 dark:text-gray-400">Same <code class="text-sm bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">useInputCard()</code> hook. Five radically different render implementations.</p>
+    </div>
+
+    <!-- Theme Toggle -->
+    <div class="flex justify-center gap-3">
+      <button id="themeToggle" class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+        <span id="themeIcon">🌙</span> Toggle Theme
+      </button>
+      <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+        5 variations — same hook, same state, different UI
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VARIATION 1: Floating Pill (Linear/Arc style) -->
+    <!-- ============================================ -->
+    <section class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span class="w-2 h-2 bg-violet-500 rounded-full"></span>
+            1. Floating Pill (Linear / Arc Style)
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Minimal chrome, floating action bar, glass morphism. Command palette-first.</p>
+        </div>
+        <span class="px-2 py-1 text-xs bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 rounded-md font-medium">⌘K centric</span>
+      </div>
+      <div class="flex items-end justify-center py-8">
+        <div id="v1" class="w-full max-w-2xl">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- VARIATION 2: Full-Bleed Toolbar (VS Code / Cursor style) -->
+    <!-- ============================================ -->
+    <section class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+            2. Full-Bleed Toolbar (Cursor / Copilot Style)
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Dense capability toolbar, model selector, inline toggle chips. Power-user mode.</p>
+        </div>
+        <span class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md font-medium">Power mode</span>
+      </div>
+      <div id="v2" class="w-full">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- VARIATION 3: Card Composer (Notion / Craft style) -->
+    <!-- ============================================ -->
+    <section class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+            3. Card Composer (Notion / Craft Style)
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Document-first, expandable card, block-based. Content creator workflow.</p>
+        </div>
+        <span class="px-2 py-1 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-md font-medium">Document-first</span>
+      </div>
+      <div id="v3" class="w-full">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- VARIATION 4: Chat Thread Composer (iMessage / WhatsApp style) -->
+    <!-- ============================================ -->
+    <section class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span class="w-2 h-2 bg-rose-500 rounded-full"></span>
+            4. Thread Composer (iMessage / Telegram Style)
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Inline thread attachment, pill-shaped messages, swipe-up interactions.</p>
+        </div>
+        <span class="px-2 py-1 text-xs bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 rounded-md font-medium">Threaded</span>
+      </div>
+      <div id="v4" class="w-full">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- VARIATION 5: Agent Console (Terminal / Hack style) -->
+    <!-- ============================================ -->
+    <section class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+            5. Agent Console (Terminal / Hack Style)
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Monospace, command prompt aesthetic, pipe operators, log streaming.</p>
+        </div>
+        <span class="px-2 py-1 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md font-medium">Terminal</span>
+      </div>
+      <div id="v5" class="w-full">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- HOOK STATE INSPECTOR -->
+    <!-- ============================================ -->
+    <section class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+        Shared Hook State (all 5 use this)
+      </h2>
+      <pre id="stateInspector" class="bg-gray-950 dark:bg-gray-900 rounded-xl p-4 text-xs text-gray-300 overflow-x-auto max-h-64 scrollbar-thin font-mono"></pre>
+    </section>
+
+  </div>
+
+  <script>
+    // ============================================
+    // CAPABILITIES (what the system offers)
+    // ============================================
+    const caps = {
+      slashCommands: [
+        { id: 'search', label: 'Search', description: 'Search the web', icon: '🔍', category: 'command' },
+        { id: 'analyze', label: 'Analyze', description: 'Analyze code/files', icon: '🔬', category: 'skill' },
+        { id: 'summarize', label: 'Summarize', description: 'Summarize content', icon: '📝', category: 'skill' },
+        { id: 'loop', label: 'Loop', description: 'Schedule recurring task', icon: '🔄', category: 'loop' },
+        { id: 'memory', label: 'Memory', description: 'Recall past context', icon: '🧠', category: 'skill' },
+        { id: 'diagnose', label: 'Diagnose', description: 'Debug & fix issues', icon: '🩺', category: 'skill' },
+        { id: 'clear', label: 'Clear', description: 'Clear conversation', icon: '🗑️', category: 'system' },
+        { id: 'export', label: 'Export', description: 'Export conversation', icon: '📤', category: 'system' },
+      ],
+      mentionTargets: [
+        { id: 'agent-research', label: 'Research Agent', description: 'Deep research & web search', avatar: '🔬', status: 'online' },
+        { id: 'agent-code', label: 'Code Agent', description: 'Code analysis & generation', avatar: '💻', status: 'online' },
+        { id: 'agent-data', label: 'Data Agent', description: 'Data analysis & visualization', avatar: '📊', status: 'busy' },
+        { id: 'tool-browser', label: 'Browser', description: 'Automate browser actions', avatar: '🌐', status: 'online' },
+        { id: 'tool-memory', label: 'Memory', description: 'Persistent context store', avatar: '🧠', status: 'online' },
+      ],
+      models: [
+        { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google', icon: '◆', color: 'blue', context: 1000, badge: 'Default' },
+        { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', icon: '◈', color: 'orange', context: 200 },
+        { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', icon: '◉', color: 'green', context: 128 },
+        { id: 'deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek', icon: '◆', color: 'purple', context: 64 },
+      ],
+      voice: true,
+    };
+
+    const context = {
+      workspaceId: 'ws:main',
+      traceId: '01KYDV48JGAQX3PZ...',
+      providerId: 'gemini',
+      viewMode: 'simple',
+    };
+
+    // ============================================
+    // SHARED HOOK (simulated useInputCard)
+    // ============================================
+    function createHookState(overrides = {}) {
+      return {
+        value: '',
+        setValue: () => {},
+        attachments: [],
+        addAttachments: () => {},
+        removeAttachment: () => {},
+        activeTrigger: null,
+        triggerQuery: '',
+        setTriggerQuery: () => {},
+        triggerItems: [],
+        selectTriggerItem: () => {},
+        closeTrigger: () => {},
+        isStreaming: false,
+        isUploading: false,
+        availableModels: caps.models,
+        selectedModel: 'gemini-2.5-pro',
+        setModel: () => {},
+        webSearchEnabled: false,
+        toggleWebSearch: () => {},
+        viewMode: 'simple',
+        setViewMode: () => {},
+        quotedMessage: null,
+        setQuotedMessage: () => {},
+        submit: () => {},
+        stop: () => {},
+        focus: () => {},
+        clear: () => {},
+        insertText: () => {},
+        cursorPosition: 0,
+        ...overrides,
+      };
+    }
+
+    // ============================================
+    // UTILITY
+    // ============================================
+    function formatBytes(b) {
+      if (b < 1024) return b + 'B';
+      if (b < 1048576) return (b/1024).toFixed(1) + 'K';
+      return (b/1048576).toFixed(1) + 'M';
+    }
+
+    const providerColor = (p) => {
+      const map = { Google: 'bg-blue-500', Anthropic: 'bg-orange-500', OpenAI: 'bg-green-500', DeepSeek: 'bg-purple-500' };
+      return map[p] || 'bg-gray-500';
+    };
+
+    const statusColor = (s) => ({ online: 'bg-green-500', busy: 'bg-yellow-500', offline: 'bg-gray-400' }[s] || 'bg-gray-400');
+
+    // ============================================
+    // VARIATION 1: Floating Pill
+    // ============================================
+    function renderV1(state) {
+      const pillContent = `
+        <div class="flex items-center gap-3 px-4 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-lg shadow-gray-900/5 dark:shadow-black/20 transition-all duration-200 hover:shadow-xl hover:border-gray-300/80 dark:hover:border-gray-600/80" style="max-width:640px; margin:0 auto;">
+          ${state.quotedMessage ? `
+            <div class="flex items-center gap-2 px-3 py-1.5 -mx-1 mb-1 bg-blue-50/80 dark:bg-blue-900/20 rounded-xl border border-blue-200/50 dark:border-blue-800/50 animate-slide-in">
+              <svg class="w-3.5 h-3.5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+              <span class="text-xs text-blue-700 dark:text-blue-300 truncate flex-1">${state.quotedMessage.content}</span>
+              <button class="text-blue-400 hover:text-blue-600 dark:hover:text-blue-200"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+          ` : ''}
+          
+          ${state.attachments.length > 0 ? `
+            <div class="flex gap-2 -mx-1 mb-1 flex-wrap animate-slide-in">
+              ${state.attachments.map(a => `
+                <div class="flex items-center gap-1.5 px-2 py-1 bg-gray-100/80 dark:bg-gray-800/80 rounded-lg backdrop-blur-sm">
+                  <div class="w-8 h-8 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium">${a.icon}</div>
+                  <div class="min-w-0">
+                    <div class="text-xs font-medium text-gray-900 dark:text-white truncate max-w-[100px]">${a.name}</div>
+                    <div class="text-[10px] text-gray-500">${formatBytes(a.size)}</div>
+                  </div>
+                  <button class="text-gray-400 hover:text-red-500 ml-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          
+          <div class="flex-1 flex items-center gap-2 min-w-0">
+            <button class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0" title="Attach">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            </button>
+            <textarea class="flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 min-h-[24px] max-h-[160px] py-0.5" placeholder="Message..." rows="1" style="height:auto;">${state.value}</textarea>
+            ${state.isStreaming ? `
+              <button class="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex-shrink-0" title="Stop">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+              </button>
+            ` : `
+              <button class="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400 transition-colors flex-shrink-0" disabled title="Send">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              </button>
+            `}
+          </div>
+        </div>
+        
+        <!-- Quick actions below pill -->
+        <div class="flex items-center justify-center gap-3 mt-3">
+          <button class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-[10px] font-bold text-white">G</span>
+            ${state.selectedModel.split('-').slice(0,2).join(' ')}
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <button class="px-3 py-1.5 text-xs rounded-full ${state.webSearchEnabled ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'} hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Web
+          </button>
+          <button class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+            Voice
+          </button>
+        </div>
+      `;
+      return pillContent;
+    }
+
+    // ============================================
+    // VARIATION 2: Full-Bleed Toolbar
+    // ============================================
+    function renderV2(state) {
+      const filterSlash = (q) => caps.slashCommands.filter(c => c.label.toLowerCase().includes(q.toLowerCase()));
+      const filtered = state.activeTrigger === '/' ? filterSlash(state.triggerQuery) : [];
+
+      return `
+        <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden shadow-sm max-w-3xl mx-auto">
+          <!-- Model Bar -->
+          <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
+            <div class="flex items-center gap-1">
+              ${caps.models.map(m => `
+                <button class="px-2.5 py-1 text-xs rounded-md flex items-center gap-1.5 transition-colors ${state.selectedModel === m.id ? `bg-${m.color}-100 dark:bg-${m.color}-900/30 text-${m.color}-700 dark:text-${m.color}-400 font-medium` : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'}">
+                  <span class="w-2 h-2 rounded-full ${providerColor(m.provider)}"></span>
+                  ${m.name.split(' ').slice(0,2).join(' ')}
+                </button>
+              `).join('')}
+            </div>
+            <div class="flex-1"></div>
+            <div class="flex items-center gap-1">
+              <button class="p-1.5 rounded-md ${state.webSearchEnabled ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'} transition-colors" title="Web Search">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </button>
+              <button class="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Thinking">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              </button>
+              <button class="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Attachments">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+              </button>
+              <button class="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Voice">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quote -->
+          ${state.quotedMessage ? `
+            <div class="px-4 py-2 bg-blue-50/50 dark:bg-blue-900/10 border-b border-blue-100 dark:border-blue-900/50 flex items-center gap-2 animate-slide-in">
+              <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+              <span class="text-xs text-blue-700 dark:text-blue-300 truncate flex-1">${state.quotedMessage.content}</span>
+              <button class="text-blue-400 hover:text-blue-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+          ` : ''}
+
+          <!-- Attachments -->
+          ${state.attachments.length > 0 ? `
+            <div class="px-4 py-2 flex gap-2 flex-wrap border-b border-gray-100 dark:border-gray-800 animate-slide-in">
+              ${state.attachments.map(a => `
+                <div class="flex items-center gap-2 px-2.5 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div class="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px]">${a.icon}</div>
+                  <span class="text-xs text-gray-700 dark:text-gray-300">${a.name}</span>
+                  <span class="text-[10px] text-gray-400">${formatBytes(a.size)}</span>
+                  <button class="text-gray-400 hover:text-red-500"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <!-- Trigger Popover -->
+          ${state.activeTrigger === '/' ? `
+            <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-800 animate-slide-in">
+              <div class="flex items-center gap-1.5 mb-2 px-2">
+                <span class="text-xs font-mono text-gray-400">${state.activeTrigger}</span>
+                <input class="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white placeholder:text-gray-400" placeholder="Search commands..." value="${state.triggerQuery}" />
+                <kbd class="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 rounded">ESC</kbd>
+              </div>
+              <div class="max-h-48 overflow-y-auto scrollbar-thin space-y-0.5">
+                ${filtered.map((item, i) => `
+                  <button class="w-full px-3 py-2 text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-3 ${i===0 ? 'bg-gray-50 dark:bg-gray-800/50' : ''}">
+                    <span class="text-lg">${item.icon}</span>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm font-medium text-gray-900 dark:text-white">${item.label}</div>
+                      <div class="text-xs text-gray-500 truncate">${item.description}</div>
+                    </div>
+                    <span class="px-1.5 py-0.5 text-[10px] rounded bg-gray-100 dark:bg-gray-800 text-gray-500">${item.category}</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Input Area -->
+          <div class="flex items-end gap-2 px-4 py-3">
+            <textarea class="flex-1 resize-none bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 min-h-[20px] max-h-[200px] leading-relaxed py-1" placeholder="Message... (try / for commands, @ for mentions)" rows="1" style="height:auto;">${state.value}</textarea>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${state.isStreaming ? `
+                <button class="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors glow-pulse" title="Stop generating">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                </button>
+              ` : `
+                <button class="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors" title="Send (Enter)">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                </button>
+              `}
+            </div>
+          </div>
+
+          <!-- Keyboard hints -->
+          <div class="px-4 pb-2 flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-500">
+            <span><kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">⌘K</kbd> Commands</span>
+            <span><kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">⌘@</kbd> Mentions</span>
+            <span><kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">⌘/</kbd> Slash</span>
+            <span><kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">Enter</kbd> Send</span>
+            <span class="ml-auto flex items-center gap-1"><span class="w-2 h-2 rounded-full ${state.isStreaming ? 'bg-red-500 animate-pulse' : 'bg-green-500'}"></span>${state.isStreaming ? 'Generating' : 'Ready'}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // VARIATION 3: Card Composer
+    // ============================================
+    function renderV3(state) {
+      return `
+        <div class="max-w-2xl mx-auto">
+          <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+            <!-- Document-style header bar -->
+            <div class="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-800">
+              <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-full bg-red-400"></span>
+                <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+                <span class="w-3 h-3 rounded-full bg-green-400"></span>
+              </div>
+              <div class="flex-1"></div>
+              <button class="px-2 py-0.5 text-[10px] rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">${state.viewMode === 'simple' ? 'Simple' : 'Advanced'}</button>
+              <button class="px-2 py-0.5 text-[10px] rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">${state.selectedModel.split('-').slice(0,2).join(' ')}</button>
+            </div>
+
+            <!-- Quote -->
+            ${state.quotedMessage ? `
+              <div class="mx-4 mt-3 p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-200/50 dark:border-blue-800/50 animate-slide-in">
+                <div class="flex items-center gap-2 mb-1">
+                  <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                  <span class="text-[10px] font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Quoting</span>
+                </div>
+                <p class="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">${state.quotedMessage.content}</p>
+              </div>
+            ` : ''}
+
+            <!-- Attachments -->
+            ${state.attachments.length > 0 ? `
+              <div class="px-4 pt-3 flex gap-2 flex-wrap animate-slide-in">
+                ${state.attachments.map(a => `
+                  <div class="group relative flex items-center gap-2 p-2 pr-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br ${a.type === 'image' ? 'from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30' : a.type === 'pdf' ? 'from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30' : 'from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700'} flex items-center justify-center">
+                      <span class="text-sm">${a.icon}</span>
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-medium text-gray-900 dark:text-white truncate max-w-[120px]">${a.name}</div>
+                      <div class="text-[10px] text-gray-500">${formatBytes(a.size)}</div>
+                    </div>
+                    <button class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-red-500 hover:border-red-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <!-- Main textarea (expandable card) -->
+            <div class="px-4 py-4">
+              <textarea class="w-full min-h-[60px] max-h-[400px] resize-none bg-transparent border-none outline-none text-base text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 leading-relaxed" placeholder="Write your message..." rows="3" style="height:auto;">${state.value}</textarea>
+            </div>
+
+            <!-- Bottom toolbar -->
+            <div class="flex items-center gap-2 px-4 pb-3 pt-1 border-t border-gray-100 dark:border-gray-800">
+              <button class="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Attach files">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+              </button>
+              <button class="p-2 rounded-lg ${state.webSearchEnabled ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'} transition-colors" title="Web search">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </button>
+              <button class="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Voice">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+              </button>
+              <div class="flex-1"></div>
+              ${state.isStreaming ? `
+                <button class="px-4 py-2 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  Stop
+                </button>
+              ` : `
+                <button class="px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                  Send
+                </button>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // VARIATION 4: Thread Composer
+    // ============================================
+    function renderV4(state) {
+      const threadReplies = [
+        { agent: 'Research Agent', avatar: '🔬', text: 'I found 3 relevant papers on transformer efficiency...', time: '2m ago' },
+        { agent: 'Code Agent', avatar: '💻', text: 'Here\'s the optimized implementation...', time: '1m ago' },
+      ];
+
+      return `
+        <div class="max-w-2xl mx-auto space-y-3">
+          <!-- Thread context cards -->
+          <div class="space-y-2">
+            ${threadReplies.map(r => `
+              <div class="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm flex-shrink-0">${r.avatar}</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-xs font-medium text-gray-900 dark:text-white">${r.agent}</span>
+                    <span class="text-[10px] text-gray-400">${r.time}</span>
+                  </div>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">${r.text}</p>
+                </div>
+                <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Composer Card -->
+          <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
+            <!-- Quoted message -->
+            ${state.quotedMessage ? `
+              <div class="px-4 pt-3 flex items-center gap-2 animate-slide-in">
+                <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                </div>
+                <span class="text-xs text-gray-500 flex-1 truncate">Replying to ${state.quotedMessage.content.slice(0, 50)}...</span>
+                <button class="text-gray-400 hover:text-gray-600"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+              </div>
+            ` : ''}
+
+            <!-- Attachments -->
+            ${state.attachments.length > 0 ? `
+              <div class="px-4 pt-3 flex gap-2 overflow-x-auto scrollbar-thin animate-slide-in">
+                ${state.attachments.map(a => `
+                  <div class="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div class="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm">${a.icon}</div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-medium truncate max-w-[80px]">${a.name}</div>
+                      <div class="text-[10px] text-gray-400">${formatBytes(a.size)}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <!-- Input row -->
+            <div class="flex items-end gap-3 p-4">
+              <div class="flex-1 min-w-0">
+                <textarea class="w-full min-h-[24px] max-h-[200px] resize-none bg-transparent border-none outline-none text-sm text-gray-900 dark:text-white placeholder:text-gray-400 leading-relaxed py-1" placeholder="Reply..." rows="1" style="height:auto;">${state.value}</textarea>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 pb-0.5">
+                <button class="p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Attach">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                </button>
+                <button class="p-2 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Voice">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                </button>
+                ${state.isStreaming ? `
+                  <button class="p-2.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors glow-pulse">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                  </button>
+                ` : `
+                  <button class="p-2.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                  </button>
+                `}
+              </div>
+            </div>
+
+            <!-- Model indicator -->
+            <div class="px-4 pb-2 flex items-center gap-2 text-[10px] text-gray-400">
+              <span class="w-2 h-2 rounded-full ${providerColor(caps.models.find(m => m.id === state.selectedModel)?.provider || 'Google')}"></span>
+              ${caps.models.find(m => m.id === state.selectedModel)?.name || 'Gemini 2.5 Pro'}
+              ${state.webSearchEnabled ? '<span class="ml-1 px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded">Web</span>' : ''}
+              ${state.isStreaming ? '<span class="ml-1 px-1.5 py-0.5 bg-red-50 dark:bg-red-900/20 text-red-500 rounded animate-pulse">Streaming</span>' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // VARIATION 5: Agent Console
+    // ============================================
+    function renderV5(state) {
+      const logEntries = [
+        { type: 'system', text: '[system] Gemini 2.5 Pro connected. Trace: 01KYDV48JG...', time: '14:32:01' },
+        { type: 'user', text: '> Analyze the performance of the StreamParserEngine fallback chain', time: '14:32:15' },
+        { type: 'agent', text: '[agent:research] Searching codebase for StreamParserEngine references...', time: '14:32:16' },
+        { type: 'agent', text: '[agent:research] Found 23 references across 8 files. Confidence: 0.92', time: '14:32:18' },
+        { type: 'agent', text: '[agent:code] Fallback chain: provider/001 → generic/001 → system/001. 3 hops.', time: '14:32:19' },
+        { type: 'result', text: 'Analysis complete. The fallback chain has 3 tiers with graceful degradation.', time: '14:32:21' },
+      ];
+
+      const filterSlash = (q) => caps.slashCommands.filter(c => c.label.toLowerCase().includes(q.toLowerCase()));
+      const filtered = state.activeTrigger === '/' ? filterSlash(state.triggerQuery) : [];
+
+      return `
+        <div class="max-w-3xl mx-auto rounded-xl border border-gray-800 dark:border-gray-700 bg-gray-950 dark:bg-black overflow-hidden shadow-2xl">
+          <!-- Console header -->
+          <div class="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-900 border-b border-gray-800">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+            </div>
+            <span class="text-xs text-gray-500 font-mono ml-2">agent-console</span>
+            <div class="flex-1"></div>
+            <div class="flex items-center gap-3 text-[10px] text-gray-600 font-mono">
+              <span>trace: <span class="text-gray-400">${context.traceId}</span></span>
+              <span>provider: <span class="text-gray-400">${state.selectedModel.split('-').slice(0,2).join(' ')}</span></span>
+              <span>workspace: <span class="text-gray-400">${context.workspaceId}</span></span>
+            </div>
+          </div>
+
+          <!-- Log stream -->
+          <div class="p-4 max-h-[300px] overflow-y-auto scrollbar-thin font-mono text-sm space-y-1">
+            ${logEntries.map(e => `
+              <div class="flex gap-3 items-start ${e.type === 'result' ? 'mt-2 pt-2 border-t border-gray-800' : ''}">
+                <span class="text-gray-600 w-16 flex-shrink-0 text-right">${e.time}</span>
+                <span class="flex-1 leading-relaxed ${
+                  e.type === 'system' ? 'text-gray-500' :
+                  e.type === 'user' ? 'text-green-400' :
+                  e.type === 'agent' ? 'text-blue-400' :
+                  'text-amber-400 font-medium'
+                }">${e.text}</span>
+              </div>
+            `).join('')}
+            
+            ${state.isStreaming ? `
+              <div class="flex gap-3 items-center">
+                <span class="text-gray-600 w-16 flex-shrink-0 text-right">now</span>
+                <span class="text-blue-400">[stream] <span class="typing-cursor"></span></span>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Trigger popover (inside terminal) -->
+          ${state.activeTrigger === '/' ? `
+            <div class="mx-4 mb-2 border border-gray-700 rounded-lg bg-gray-900/90 overflow-hidden animate-slide-in">
+              <div class="flex items-center gap-2 px-3 py-1.5 border-b border-gray-800">
+                <span class="text-amber-400 font-mono text-sm">$</span>
+                <span class="text-gray-300 font-mono text-sm">${state.activeTrigger}${state.triggerQuery}</span>
+                <span class="text-gray-600 font-mono text-sm">_</span>
+              </div>
+              <div class="max-h-36 overflow-y-auto scrollbar-thin p-2 space-y-0.5">
+                ${filtered.map((item, i) => `
+                  <div class="px-2 py-1 rounded text-sm font-mono flex items-center gap-3 ${i === 0 ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800/50'}">
+                    <span class="text-gray-600 w-5">${item.icon}</span>
+                    <span class="text-green-400">${item.label}</span>
+                    <span class="text-gray-600 flex-1 text-right text-xs">${item.description}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- Input area -->
+          <div class="border-t border-gray-800 p-3">
+            <div class="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2 border border-gray-800 focus-within:border-gray-600 transition-colors">
+              <span class="text-green-500 font-mono text-sm">$</span>
+              <textarea class="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 font-mono placeholder:text-gray-600 min-h-[20px] max-h-[120px] resize-none leading-relaxed py-0" placeholder="Enter command..." rows="1" style="height:auto;">${state.value}</textarea>
+              ${state.isStreaming ? `
+                <button class="text-red-400 hover:text-red-300 font-mono text-xs px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/30 transition-colors">
+                  [STOP]
+                </button>
+              ` : `
+                <button class="text-gray-600 font-mono text-xs px-2 py-1 rounded hover:bg-gray-800 transition-colors">
+                  [ENTER]
+                </button>
+              `}
+            </div>
+            <div class="flex items-center gap-4 mt-2 text-[10px] text-gray-600 font-mono">
+              <span>⌘K commands</span>
+              <span>/ slash</span>
+              <span>@ agents</span>
+              <span>⬆⬇ history</span>
+              <span class="ml-auto flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full ${state.isStreaming ? 'bg-red-500 animate-pulse' : 'bg-green-500'}"></span>
+                ${state.isStreaming ? 'generating' : 'ready'}
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    const renderers = { v1: renderV1, v2: renderV2, v3: renderV3, v4: renderV4, v5: renderV5 };
+
+    // ============================================
+    // STATE VARIANTS (each example shows different state)
+    // ============================================
+    const stateVariants = {
+      v1: createHookState({ value: '', selectedModel: 'gemini-2.5-pro' }),
+      v2: createHookState({ value: '', selectedModel: 'claude-3.5-sonnet', webSearchEnabled: true, viewMode: 'advanced' }),
+      v3: createHookState({ value: '', selectedModel: 'gpt-4o', attachments: [{ id: 'a1', name: 'design-spec.pdf', size: 2450000, type: 'pdf', icon: '📄' }, { id: 'a2', name: 'mockup.png', size: 890000, type: 'image', icon: '🖼️' }, { id: 'a3', name: 'notes.txt', size: 12000, type: 'text', icon: '📝' }] }),
+      v4: createHookState({ value: '', selectedModel: 'gemini-2.5-pro', quotedMessage: { id: 'm1', content: 'Can you analyze the performance of the fallback chain in StreamParserEngine?', role: 'user' }, attachments: [{ id: 'a1', name: 'trace.log', size: 45000, type: 'text', icon: '📋' }] }),
+      v5: createHookState({ value: '', selectedModel: 'gemini-2.5-pro' }),
+    };
+
+    // ============================================
+    // INITIALIZE
+    // ============================================
+    function init() {
+      Object.keys(renderers).forEach(key => {
+        const el = document.getElementById(key);
+        el.innerHTML = renderers[key](stateVariants[key]);
+      });
+      updateStateInspector();
+      setupThemeToggle();
+    }
+
+    function updateStateInspector() {
+      const state = {
+        value: '(empty)',
+        attachments: 0,
+        isStreaming: false,
+        activeTrigger: null,
+        selectedModel: 'gemini-2.5-pro',
+        webSearchEnabled: false,
+        viewMode: 'simple',
+        quotedMessage: null,
+        capabilities: {
+          slashCommands: caps.slashCommands.length,
+          mentionTargets: caps.mentionTargets.length,
+          models: caps.models.length,
+          voice: true,
+        },
+        context: {
+          workspaceId: context.workspaceId,
+          traceId: context.traceId,
+          providerId: context.providerId,
+        }
+      };
+      document.getElementById('stateInspector').textContent = JSON.stringify(state, null, 2);
+    }
+
+    function setupThemeToggle() {
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        document.getElementById('themeIcon').textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

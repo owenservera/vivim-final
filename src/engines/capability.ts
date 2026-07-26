@@ -127,19 +127,19 @@ export class CapabilityEngine {
       capabilityId: cap.id,
       bindingId: binding.id,
       providerId,
-      accountId,
-      ok,
-      latencyMs,
+      ok: ok ? 1 : 0,
+      durationMs: latencyMs,
       error: ok ? null : 'all recovery strategies exhausted',
-      outputJson: JSON.stringify(output ?? {}),
-      traceId,
+      confidence: null,
+      selectorUsed: null,
+      selectorHit: null,
+      ts: Date.now(),
     })
     await this.store.updateSelectorHealth(primary.id, ok)
 
     if (ok) {
       await this.store.updateBindingHealth(binding.id, {
         status: 'healthy',
-        lastSuccessAt: Date.now(),
       })
       this.eventBus?.emit({
         type: 'capability:executed',
@@ -153,7 +153,6 @@ export class CapabilityEngine {
     } else {
       await this.store.updateBindingHealth(binding.id, {
         status: 'broken',
-        lastFailureAt: Date.now(),
       })
       this.eventBus?.emit({
         type: 'capability:failed',

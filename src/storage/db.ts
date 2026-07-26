@@ -4,7 +4,10 @@
 // using Prisma ORM with the same public API shape.
 
 import { newId } from '../ids.js'
+import { getLogger } from '../lib/logger.js'
 import { type PrismaClient, closePrisma, getPrisma } from './prisma.js'
+
+const log = getLogger('db')
 
 export class CapStoreDb {
   public readonly prisma: PrismaClient
@@ -533,7 +536,7 @@ export async function configurePrisma(
 
   const journalMode =
     await db.prisma.$queryRawUnsafe<{ journal_mode: string }[]>('PRAGMA journal_mode')
-  console.log(`[db] pragmas configured — journal_mode=${journalMode[0]?.journal_mode}`)
+  log.info(`[db] pragmas configured — journal_mode=${journalMode[0]?.journal_mode}`)
 }
 
 export async function closeDb(): Promise<void> {

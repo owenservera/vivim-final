@@ -87,9 +87,10 @@ export const HealthResponseSchema = z.object({
 
 export const ConversationSchema = z.object({
   id: z.string(),
-  title: z.string().optional(),
+  title: z.string().nullish(),
+  providerId: z.string().nullish(),
   createdAt: z.string(),
-  updatedAt: z.string().optional(),
+  updatedAt: z.string().nullish(),
 })
 
   export const MessageSchema = z.object({
@@ -197,7 +198,14 @@ export async function executeCapability(capabilityId: string, input?: Record<str
 
 /** List conversations — GET /api/conversations */
 export async function listConversations() {
-  return request("/api/conversations", z.object({ conversations: z.array(ConversationSchema) }))
+  const res = await request("/api/conversations", z.union([
+    z.object({ conversations: z.array(ConversationSchema) }),
+    z.array(ConversationSchema),
+  ]))
+  if (!res.ok) return res as BackendResponse<{ conversations: z.infer<typeof ConversationSchema>[] }>
+  const raw = res.data!
+  const conversations = Array.isArray(raw) ? raw : raw.conversations
+  return { ok: true, data: { conversations }, status: res.status }
 }
 
 /** Get messages — GET /api/conversations/:id/messages */
@@ -261,15 +269,25 @@ export async function deleteConversation(conversationId: string) {
 
 export const ProviderSchema = z.object({
   id: z.string(),
-  name: z.string(),
   slug: z.string(),
-  status: z.string().optional(),
-  capabilities: z.array(z.string()).optional(),
+  displayName: z.string().nullish(),
+  description: z.string().nullish(),
+  category: z.string().nullish(),
+  providerType: z.string().nullish(),
+  isActive: z.number().nullish(),
+  protocolStatus: z.string().nullish(),
 })
 
 /** List providers — GET /api/providers */
 export async function listProviders() {
-  return request("/api/providers", z.object({ providers: z.array(ProviderSchema) }))
+  const res = await request("/api/providers", z.union([
+    z.object({ providers: z.array(ProviderSchema) }),
+    z.array(ProviderSchema),
+  ]))
+  if (!res.ok) return res as BackendResponse<{ providers: z.infer<typeof ProviderSchema>[] }>
+  const raw = res.data!
+  const providers = Array.isArray(raw) ? raw : raw.providers
+  return { ok: true, data: { providers }, status: res.status }
 }
 
 /** Get provider capabilities — GET /api/providers/:id/capabilities */

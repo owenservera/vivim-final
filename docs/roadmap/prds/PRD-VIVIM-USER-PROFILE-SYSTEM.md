@@ -1329,21 +1329,21 @@ MODIFY  src/server/index.ts                     (+devRouter mount, +devTools wir
 # Phase 9
 CREATE  seeds/conceptual-model/user-profile-seed.ts
 MODIFY  seeds/conceptual-model/seed.ts          (+call user-profile-seed)
-CREATE  web/ui/src/features/canvas/layers/UserProfileBar.tsx
-CREATE  web/ui/src/features/canvas/layers/UserProfileSettings.tsx
-CREATE  web/ui/src/features/canvas/layers/UserProfileSwitcher.tsx
-CREATE  web/ui/src/features/canvas/layers/UserFleetPanel.tsx
-CREATE  web/ui/src/features/canvas/layers/UserDebugPanel.tsx
-CREATE  web/ui/src/features/canvas/layers/UserDashboard.tsx
-CREATE  web/ui/src/features/canvas/layers/AdminDashboard.tsx
-CREATE  web/ui/src/features/canvas/layers/AdminAllFleet.tsx
-CREATE  web/ui/src/features/canvas/layers/AdminAllEvents.tsx
-CREATE  web/ui/src/features/canvas/layers/DevKernelPanel.tsx
-CREATE  web/ui/src/features/canvas/layers/DevRawQuery.tsx
-CREATE  web/ui/src/features/canvas/layers/DevDebugToggles.tsx
-CREATE  web/ui/src/features/canvas/layers/UserOnboardingWizard.tsx
-MODIFY  web/ui/src/features/canvas/useNodeTypes.tsx
-CREATE  web/ui/src/features/canvas/hooks/useUserProfile.ts
+CREATE  frontend/src/features/canvas/layers/UserProfileBar.tsx
+CREATE  frontend/src/features/canvas/layers/UserProfileSettings.tsx
+CREATE  frontend/src/features/canvas/layers/UserProfileSwitcher.tsx
+CREATE  frontend/src/features/canvas/layers/UserFleetPanel.tsx
+CREATE  frontend/src/features/canvas/layers/UserDebugPanel.tsx
+CREATE  frontend/src/features/canvas/layers/UserDashboard.tsx
+CREATE  frontend/src/features/canvas/layers/AdminDashboard.tsx
+CREATE  frontend/src/features/canvas/layers/AdminAllFleet.tsx
+CREATE  frontend/src/features/canvas/layers/AdminAllEvents.tsx
+CREATE  frontend/src/features/canvas/layers/DevKernelPanel.tsx
+CREATE  frontend/src/features/canvas/layers/DevRawQuery.tsx
+CREATE  frontend/src/features/canvas/layers/DevDebugToggles.tsx
+CREATE  frontend/src/features/canvas/layers/UserOnboardingWizard.tsx
+MODIFY  frontend/src/features/canvas/useNodeTypes.tsx
+CREATE  frontend/src/features/canvas/hooks/useUserProfile.ts
 MODIFY  src/engines/nlcl/catalog.ts             (+user/admin/dev intents)
 CREATE  tests/e2e/user-profile-flow.e2e.ts
 

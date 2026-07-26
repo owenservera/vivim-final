@@ -6,6 +6,7 @@ import type {
   ResolvedCapabilities,
   ResolvedCapability,
 } from '../engines/capability-resolution.js'
+import { config } from '../config.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
 
@@ -345,7 +346,7 @@ export function createConversationRouter(ctx: ServerContext) {
             circuitBreakerResetMs: govConfig.circuitBreakerResetMs ?? 60_000,
           },
           chromeConfig: {
-            path: process.env.CHROME_PATH ?? null,
+            path: config.chromePath,
             extraArgs: [],
             disableGpu: false,
           },

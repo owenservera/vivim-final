@@ -3,23 +3,54 @@
 
 export interface CapabilityTaxonomyRow {
   id: string
-  slug: string
   name: string
+  slug: string
+  category: string
   description: string | null
-  kind: string
+  inputType: string
+  uiComponent: string
+  uiLabel: string | null
+  uiIcon: string | null
+  uiPosition: string
+  uiOrder: number
+  uiLayerDepth: number
+  parentCapabilityId: string | null
+  uiGroup: string
+  uiPriority: string
+  interactionMode: string
+  uiStatesJson: string
+  uiVisibilityRule: string | null
+  existentialRule: string | null
+  uiInputSchema: string
+  mutationEffectsJson: string
+  recoveryBehavior: string
+  statePersistence: string
+  dataFlow: string
+  minPlanTier: string
+  dependsOnJson: string
+  concurrencySafe: number
+  opClassification: string | null
+  requiresUserConfirmation: number
+  maxResultSize: number
+  resultComponent: string
+  resultLayout: string
+  searchHintsJson: string
+  aliasesJson: string
+  availabilityJson: string
+  prefetch: number
   createdAt: number
   updatedAt: number
 }
 
 export interface CapabilityBindingRow {
   id: string
-  capabilityId: string
+  globalId: string
   providerId: string
-  selectorStrategyId: string | null
   status: string
-  healthScore: number
-  lastSuccessAt: number | null
-  lastFailureAt: number | null
+  bestProgramId: string | null
+  currentProgramId: string | null
+  promotionHistoryJson: string
+  confidence: number
   createdAt: number
   updatedAt: number
 }
@@ -28,6 +59,9 @@ export interface CapabilityProgramRow {
   id: string
   bindingId: string
   version: number
+  name: string | null
+  supersededById: string | null
+  isActive: number
   status: string
   configJson: string
   createdAt: number
@@ -39,10 +73,10 @@ export interface SelectorStrategyRow {
   name: string
   capabilityId: string
   providerId: string
-  strategyType: 'css' | 'xpath' | 'text' | 'aria' | 'data' | 'regex' | 'composite'
+  strategyType: string
   selectorValue: string
   priority: number
-  isActive: boolean
+  isActive: number
   hitCount: number
   missCount: number
   lastUsedAt: number | null
@@ -55,25 +89,30 @@ export interface OutcomeRow {
   capabilityId: string
   bindingId: string | null
   providerId: string
-  accountId: string
-  ok: boolean
-  latencyMs: number
+  programId: string | null
+  selectorStrategyId: string | null
+  ok: number
   error: string | null
-  outputJson: string
-  traceId: string
-  createdAt: number
+  durationMs: number | null
+  confidence: number | null
+  selectorUsed: string | null
+  selectorHit: number | null
+  ts: number
 }
 
 export interface OutcomeInput {
   capabilityId: string
   bindingId: string | null
   providerId: string
-  accountId: string
-  ok: boolean
-  latencyMs: number
+  programId?: string | null
+  selectorStrategyId?: string | null
+  ok: number
   error?: string | null
-  outputJson?: string
-  traceId: string
+  durationMs?: number | null
+  confidence?: number | null
+  selectorUsed?: string | null
+  selectorHit?: number | null
+  ts: number
 }
 
 /** Bulk snapshot row for the boot loader (binding → taxonomy → best program). */
@@ -97,6 +136,8 @@ export interface CapabilityBindingMatrixRow {
   providerId: string
   status: string
   confidence: number
+  capabilitySlug: string
+  selector: string
 }
 
 export interface DriftEventInput {

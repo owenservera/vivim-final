@@ -1,5 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+//
+// IMPORTANT: This is a SEPARATE schema for next-auth only.
+// The canonical application schema is at ../prisma/schema.prisma (root).
+// Do NOT add application models here — they belong in the root schema.
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init

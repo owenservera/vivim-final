@@ -14,8 +14,6 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useResolvedNodes } from './use-resolved-nodes';
-import { useCanvasEvents } from './use-canvas-events';
 import { useNodeTypes } from './use-node-types';
 import { useStreamSlot } from './use-stream-slot';
 import { VCardMenu } from './VCardMenu';
@@ -26,8 +24,9 @@ import { StreamingNodeWrapper } from './StreamingNodeWrapper';
 import { Icon, type IconName, SURFACE_ICONS, LAYOUT_ICONS } from './Icon';
 import { CommandStack } from './command-stack';
 import { QuadTree } from './quad-tree';
-import { getCanvasEventBus, CanvasEventType, type AgentCreateNodePayload, type AgentDeleteNodePayload, type AgentMoveNodePayload, type AgentConnectNodesPayload, type AgentDisconnectNodesPayload, type AgentRunLayoutPayload, type AgentStartStreamPayload, type AgentStopStreamPayload, type AgentSetViewportPayload, type AgentFocusNodePayload, type AgentConfirmationResponsePayload } from './event-bus';
+import { getCanvasEventBus, CanvasEventType } from './event-bus';
 import { computeLayout, type LayoutIntent, type LayoutNode, type LayoutEdge, LAYOUT_INTENT_LABELS } from '../../shared/layout-intent';
+import { useLiveConfig } from './LiveConfigProvider';
 import type { VCardState, VCardCategory } from '../../shared/vcard';
 import type { ConnectionLine } from '../../shared/connection-line';
 import type { ResolvedSlot } from '../../shared/route-context';
@@ -37,9 +36,7 @@ import type { AgentCanvasCommand, AgentCanvasResponse, AgentCanvasPolicy, Canvas
 
 export interface LivingCanvasProps {
   workspaceId: string;
-  userId: string;
   providerIds: string[];
-  accounts: import('../../shared/route-context').AccountContext[];
   slotIds?: string[];
   variant?: string;
 }
@@ -78,7 +75,7 @@ const TIER_BADGE: Record<string, { label: string; className: string }> = {
 };
 
 export function LivingCanvas(props: LivingCanvasProps) {
-  const { workspaceId, userId, providerIds, accounts, slotIds, variant } = props;
+  const { workspaceId, providerIds, variant, slotIds } = props;
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
   const [layouts, setLayouts] = useState<Record<string, CanvasLayout>>({});
   const [history] = useState(() => new CommandStack(200));
@@ -95,10 +92,7 @@ export function LivingCanvas(props: LivingCanvasProps) {
   const dragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
 
   const slotsToResolve = slotIds ?? Object.keys(DEFAULT_LAYOUTS);
-  const { data: surface, isLoading, error } = useResolvedNodes({
-    workspaceId, userId, providerIds, accounts, slotIds: slotsToResolve, variant,
-  });
-  useCanvasEvents(workspaceId);
+  const { surface, isLoading, error } = useLiveConfig();
 
   // Real component resolution via slot registry
   const { getComponent } = useNodeTypes(providerIds, variant);

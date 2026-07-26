@@ -20,10 +20,41 @@ type PrismaLoose = Record<string, unknown>
 
 interface PrismaTaxonomy {
   id: string
-  slug: string
   name: string
+  slug: string
+  category: string
   description: string | null
-  kind: string
+  inputType: string
+  uiComponent: string
+  uiLabel: string | null
+  uiIcon: string | null
+  uiPosition: string
+  uiOrder: number
+  uiLayerDepth: number
+  parentCapabilityId: string | null
+  uiGroup: string
+  uiPriority: string
+  interactionMode: string
+  uiStatesJson: string
+  uiVisibilityRule: string | null
+  existentialRule: string | null
+  uiInputSchema: string
+  mutationEffectsJson: string
+  recoveryBehavior: string
+  statePersistence: string
+  dataFlow: string
+  minPlanTier: string
+  dependsOnJson: string
+  concurrencySafe: number
+  opClassification: string | null
+  requiresUserConfirmation: number
+  maxResultSize: number
+  resultComponent: string
+  resultLayout: string
+  searchHintsJson: string
+  aliasesJson: string
+  availabilityJson: string
+  prefetch: number
   createdAt: number
   updatedAt: number
 }
@@ -32,11 +63,11 @@ interface PrismaBinding {
   id: string
   globalId: string
   providerId: string
-  selectorStrategyId: string | null
   status: string
-  healthScore: number
-  lastSuccessAt: number | null
-  lastFailureAt: number | null
+  bestProgramId: string | null
+  currentProgramId: string | null
+  promotionHistoryJson: string
+  confidence: number
   createdAt: number
   updatedAt: number
 }
@@ -45,7 +76,9 @@ interface PrismaProgram {
   id: string
   bindingId: string
   version: number
-  status: string
+  name: string | null
+  supersededById: string | null
+  isActive: number
   configJson: string
   createdAt: number
   updatedAt: number
@@ -70,10 +103,41 @@ interface PrismaSelector {
 function toTaxonomyRow(r: PrismaTaxonomy): CapabilityTaxonomyRow {
   return {
     id: r.id,
-    slug: r.slug,
     name: r.name,
+    slug: r.slug,
+    category: r.category,
     description: r.description,
-    kind: r.kind,
+    inputType: r.inputType,
+    uiComponent: r.uiComponent,
+    uiLabel: r.uiLabel,
+    uiIcon: r.uiIcon,
+    uiPosition: r.uiPosition,
+    uiOrder: r.uiOrder,
+    uiLayerDepth: r.uiLayerDepth,
+    parentCapabilityId: r.parentCapabilityId,
+    uiGroup: r.uiGroup,
+    uiPriority: r.uiPriority,
+    interactionMode: r.interactionMode,
+    uiStatesJson: r.uiStatesJson,
+    uiVisibilityRule: r.uiVisibilityRule,
+    existentialRule: r.existentialRule,
+    uiInputSchema: r.uiInputSchema,
+    mutationEffectsJson: r.mutationEffectsJson,
+    recoveryBehavior: r.recoveryBehavior,
+    statePersistence: r.statePersistence,
+    dataFlow: r.dataFlow,
+    minPlanTier: r.minPlanTier,
+    dependsOnJson: r.dependsOnJson,
+    concurrencySafe: r.concurrencySafe,
+    opClassification: r.opClassification,
+    requiresUserConfirmation: r.requiresUserConfirmation,
+    maxResultSize: r.maxResultSize,
+    resultComponent: r.resultComponent,
+    resultLayout: r.resultLayout,
+    searchHintsJson: r.searchHintsJson,
+    aliasesJson: r.aliasesJson,
+    availabilityJson: r.availabilityJson,
+    prefetch: r.prefetch,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   }
@@ -82,13 +146,13 @@ function toTaxonomyRow(r: PrismaTaxonomy): CapabilityTaxonomyRow {
 function toBindingRow(r: PrismaBinding): CapabilityBindingRow {
   return {
     id: r.id,
-    capabilityId: r.globalId,
+    globalId: r.globalId,
     providerId: r.providerId,
-    selectorStrategyId: r.selectorStrategyId,
     status: r.status,
-    healthScore: r.healthScore,
-    lastSuccessAt: r.lastSuccessAt,
-    lastFailureAt: r.lastFailureAt,
+    bestProgramId: r.bestProgramId,
+    currentProgramId: r.currentProgramId,
+    promotionHistoryJson: r.promotionHistoryJson,
+    confidence: r.confidence,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   }
@@ -99,7 +163,10 @@ function toProgramRow(r: PrismaProgram): CapabilityProgramRow {
     id: r.id,
     bindingId: r.bindingId,
     version: r.version,
-    status: r.status,
+    name: r.name,
+    supersededById: r.supersededById,
+    isActive: r.isActive,
+    status: r.isActive === 1 ? 'promoted' : 'candidate',
     configJson: r.configJson,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
@@ -114,8 +181,8 @@ function toSelectorRow(r: PrismaSelector): SelectorStrategyRow {
     providerId: r.providerId,
     selectorValue: r.selector,
     priority: r.priority,
-    strategyType: r.strategyType as SelectorStrategyRow['strategyType'],
-    isActive: Boolean(r.isActive),
+    strategyType: r.strategyType,
+    isActive: r.isActive,
     hitCount: r.hitCount,
     missCount: r.missCount,
     lastUsedAt: (r.lastUsedAt as number | null) ?? null,
@@ -200,13 +267,16 @@ export class CapabilityStoreImpl implements CapabilityStore {
       data: {
         id,
         capabilityId: outcome.capabilityId,
+        bindingId: outcome.bindingId ?? null,
         providerId: outcome.providerId,
-        ok: outcome.ok ? 1 : 0,
-        durationMs: outcome.latencyMs,
+        programId: outcome.programId ?? null,
+        selectorStrategyId: outcome.selectorStrategyId ?? null,
+        ok: outcome.ok,
         error: outcome.error ?? null,
-        selectorStrategyId: null,
-        selectorUsed: null,
-        selectorHit: null,
+        durationMs: outcome.durationMs ?? null,
+        confidence: outcome.confidence ?? null,
+        selectorUsed: outcome.selectorUsed ?? null,
+        selectorHit: outcome.selectorHit ?? null,
         ts: now,
       },
     })
@@ -215,13 +285,15 @@ export class CapabilityStoreImpl implements CapabilityStore {
       capabilityId: outcome.capabilityId,
       bindingId: outcome.bindingId ?? null,
       providerId: outcome.providerId,
-      accountId: outcome.accountId,
+      programId: outcome.programId ?? null,
+      selectorStrategyId: outcome.selectorStrategyId ?? null,
       ok: outcome.ok,
-      latencyMs: outcome.latencyMs,
       error: outcome.error ?? null,
-      outputJson: outcome.outputJson ?? '',
-      traceId: outcome.traceId,
-      createdAt: now,
+      durationMs: outcome.durationMs ?? null,
+      confidence: outcome.confidence ?? null,
+      selectorUsed: outcome.selectorUsed ?? null,
+      selectorHit: outcome.selectorHit ?? null,
+      ts: now,
     }
   }
 
@@ -234,9 +306,9 @@ export class CapabilityStoreImpl implements CapabilityStore {
       where: { id: bindingId },
       data: {
         ...(patch.status !== undefined ? { status: patch.status } : {}),
-        ...(patch.healthScore !== undefined ? { healthScore: patch.healthScore } : {}),
-        ...(patch.lastSuccessAt !== undefined ? { lastSuccessAt: patch.lastSuccessAt } : {}),
-        ...(patch.lastFailureAt !== undefined ? { lastFailureAt: patch.lastFailureAt } : {}),
+        ...(patch.bestProgramId !== undefined ? { bestProgramId: patch.bestProgramId } : {}),
+        ...(patch.currentProgramId !== undefined ? { currentProgramId: patch.currentProgramId } : {}),
+        ...(patch.confidence !== undefined ? { confidence: patch.confidence } : {}),
         updatedAt: now,
       },
     })
@@ -303,7 +375,7 @@ export class CapabilityStoreImpl implements CapabilityStore {
 
   async listBindings(providers?: string[]): Promise<CapabilityBindingMatrixRow[]> {
     const where: PrismaLoose = providers?.length ? { providerId: { in: providers } } : {}
-    const rows = (await this.p.capabilityBinding.findMany({
+    const rows = await this.p.capabilityBinding.findMany({
       where,
       select: {
         id: true,
@@ -311,20 +383,22 @@ export class CapabilityStoreImpl implements CapabilityStore {
         providerId: true,
         status: true,
         confidence: true,
+        capability: { select: { slug: true } },
+        selectorHealthHistories: {
+          select: { selector: { select: { selectorValue: true } } },
+          take: 1,
+          orderBy: { snapshotTs: 'desc' },
+        },
       },
-    })) as Array<{
-      id: string
-      globalId: string
-      providerId: string
-      status: string
-      confidence: number
-    }>
-    return rows.map((r) => ({
+    })
+    return rows.map((r: { id: string; globalId: string; providerId: string; status: string; confidence: number; capability: { slug: string }; selectorHealthHistories: { selector: { selectorValue: string } }[] }) => ({
       id: r.id,
       globalId: r.globalId,
       providerId: r.providerId,
       status: r.status,
       confidence: r.confidence,
+      capabilitySlug: r.capability.slug,
+      selector: r.selectorHealthHistories[0]?.selector.selectorValue ?? '',
     }))
   }
 

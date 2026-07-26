@@ -113,7 +113,7 @@ non-binding guidance.
      user bubble but mark assistant as error (current code appends a stray error bubble —
      fix to set error state, not a fake message).
   3. Surface `providerConversationUrl` (read-only) in the sidebar tooltip (optional).
-  4. `bun run build` (web/ui vite) + `typecheck` + `lint`.
+  4. `bun run build` (frontend vite) + `typecheck` + `lint`.
 - **Verify:** `bun run devops runtime-test verify` screenshot shows 2+ turns in one thread.
 
 ### M5 — End-to-end multi-turn regression (the gate)

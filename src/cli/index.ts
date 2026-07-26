@@ -5,6 +5,7 @@
 //   2. Thin-client — fetches capabilities from a running server via HTTP
 
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import { config } from '../config.js'
 import { CommandRegistry } from './command-registry.js'
 import { registerBuiltinCommands } from './commands/builtins.js'
 import { syncCliFromUnified } from './commands/registry-bridge.js'
@@ -43,7 +44,7 @@ function parseArgs(argv: string[]): {
 }
 
 function serverUrl(): string {
-  const port = process.env.PORT ?? process.env.CAP_STORE_PORT ?? String(DEFAULT_PORT)
+  const port = String(config.port)
   return `http://localhost:${port}`
 }
 
@@ -107,7 +108,7 @@ async function main(): Promise<void> {
 
   if (tokens[0] === 'serve') {
     const { createServerWithEngines } = await import('../server/index.js')
-    const port = Number(process.env.PORT ?? process.env.CAP_STORE_PORT ?? DEFAULT_PORT)
+    const port = config.port
     const ctx = await createServerWithEngines(port)
     console.log(`vivim server listening on :${ctx.port}`)
     return

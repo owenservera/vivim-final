@@ -22,7 +22,7 @@ export type IconName =
   | 'document' | 'media' | 'bolt' | 'robot' | 'terminal' | 'chart'
   | 'shield' | 'template' | 'users' | 'sparkle' | 'arrow-right' | 'arrow-down'
   | 'arrow-up' | 'filter' | 'sort' | 'more' | 'command' | 'sidebar'
-  | 'panel-right' | 'panel-left' | 'panel-bottom' | 'grip' | 'dot'
+  | 'panel-right' | 'panel-left' | 'panel-bottom' | 'panel-top' | 'grip' | 'dot'
   | 'circle' | 'circle-filled' | 'circle-half' | 'circle-ring'
   | 'alert' | 'info' | 'success' | 'warning' | 'cube' | 'link'
   | 'unlink' | 'eye' | 'eye-off' | 'copy' | 'clipboard' | 'download'
@@ -32,7 +32,8 @@ export type IconName =
   | 'bookmark' | 'star' | 'heart' | 'tag' | 'folder' | 'file'
   | 'image' | 'video' | 'audio' | 'table' | 'function' | 'variable'
   | 'brackets' | 'terminal-square' | 'activity' | 'pulse' | 'zap'
-  | 'fire' | 'snowflake' | 'sun' | 'moon' | 'monitor' | 'contrast';
+  | 'fire' | 'snowflake' | 'sun' | 'moon' | 'monitor' | 'contrast'
+  | 'menu' | 'message-square' | 'move' | 'trash-2' | 'x';
 
 const ICON_PATHS: Record<IconName, string> = {
   search: 'M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z',
@@ -107,6 +108,7 @@ const ICON_PATHS: Record<IconName, string> = {
   'panel-right': 'M3 3h18v18H3zM15 3v18',
   'panel-left': 'M3 3h18v18H3zM9 3v18',
   'panel-bottom': 'M3 3h18v18H3zM3 15h18',
+  'panel-top': 'M3 3h18v18H3zM3 9h18',
   grip: 'M9 5m-1 0a1 1 0 102 0 1 1 0 10-2 0zM9 12m-1 0a1 1 0 102 0 1 1 0 10-2 0zM9 19m-1 0a1 1 0 102 0 1 1 0 10-2 0zM15 5m-1 0a1 1 0 102 0 1 1 0 10-2 0zM15 12m-1 0a1 1 0 102 0 1 1 0 10-2 0zM15 19m-1 0a1 1 0 102 0 1 1 0 10-2 0z',
   dot: 'M12 13a1 1 0 100-2 1 1 0 000 2z',
   circle: 'M12 12m-10 0a10 10 0 1020 0 10 10 0 10-20 0z',
@@ -166,6 +168,11 @@ const ICON_PATHS: Record<IconName, string> = {
   moon: 'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z',
   monitor: 'M2 3h20v14H2zM8 21h8M12 17v4',
   contrast: 'M12 22a10 10 0 100-20 10 10 0 000 20zM12 2v20',
+  menu: 'M3 12h18M3 6h18M3 18h18',
+  'message-square': 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z',
+  move: 'M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3-3-3-3M2 12h20M12 2v20',
+  'trash-2': 'M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6',
+  x: 'M18 6L6 18M6 6l12 12',
 };
 
 export interface IconProps extends SVGProps<SVGSVGElement> {

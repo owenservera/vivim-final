@@ -109,6 +109,28 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
       return json({ taskId: task.id, trace })
     }
 
+    // GET /api/autonomous/search?q=<text>&status=<s>&from=<ts>&to=<ts>
+    if (path === '/api/autonomous/search' && req.method === 'GET') {
+      const q = url.searchParams.get('q') ?? ''
+      const status = url.searchParams.get('status') as import('../engines/task-history.js').TaskStatus | undefined
+      const from = url.searchParams.get('from') ? Number.parseInt(url.searchParams.get('from')!, 10) : undefined
+      const to = url.searchParams.get('to') ? Number.parseInt(url.searchParams.get('to')!, 10) : undefined
+      const { TaskHistoryService } = await import('../engines/task-history.js')
+      const historyService = new TaskHistoryService(autonomousEngine.getStore())
+      const results = await historyService.search(q, { status, from, to })
+      return json({ tasks: results })
+    }
+
+    // GET /api/autonomous/:id/timeline
+    const timelineMatch = path.match(/^\/api\/autonomous\/([^/]+)\/timeline$/)
+    if (timelineMatch && req.method === 'GET') {
+      const taskId = timelineMatch[1] ?? ''
+      const { TaskHistoryService } = await import('../engines/task-history.js')
+      const historyService = new TaskHistoryService(autonomousEngine.getStore())
+      const timeline = await historyService.timeline(taskId)
+      return json({ timeline })
+    }
+
     // Not matched
     return null
   }

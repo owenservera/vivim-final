@@ -72,6 +72,7 @@ tests/fixtures/node-store-test.db
 chatgpt/
 claude/
 gemini/
+chrome-profiles/
 uploads/
 .playwright-mcp/
 .archive/

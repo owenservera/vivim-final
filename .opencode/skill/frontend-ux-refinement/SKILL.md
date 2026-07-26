@@ -76,9 +76,9 @@ Complete ALL code edits before running verification. Do NOT run typecheck increm
 4. API route if not covered by `/api/nlcl/interpret` or `/api/capabilities/:id/execute`
 
 **Frontend path (use `vivi-frontend` skill patterns):**
-1. Add slot taxonomy entry in `web/ui/src/ui/slots.ts`
-2. Provide generic default in `web/ui/src/ui/defaults/`
-3. Register defaults in `web/ui/src/ui/defaults/index.ts`
+1. Add slot taxonomy entry in `frontend/src/ui/slots.ts`
+2. Provide generic default in `frontend/src/ui/defaults/`
+3. Register defaults in `frontend/src/ui/defaults/index.ts`
 4. Confirm capability contract includes `ui_slots` in DB
 
 **Database path:**
@@ -95,8 +95,8 @@ This is the primary testing layer. Fast, deterministic, agent-runnable.
 
 ```bash
 bun run typecheck          # backend
-cd web/ui && bun run typecheck  # frontend
-cd web/ui && bun run build      # vite build
+cd frontend && bun run typecheck  # frontend
+cd frontend && bun run build      # vite build
 ```
 
 #### 4b. Unit Tests
@@ -338,8 +338,8 @@ See `VERIFY-CHECKLIST.md` for the complete gate-by-gate checklist.
 
 ### Pre-Commit Gate
 - [ ] `bun run typecheck` (backend) — 0 errors
-- [ ] `cd web/ui && bun run typecheck` — 0 errors
-- [ ] `cd web/ui && bun run build` — 0 errors
+- [ ] `cd frontend && bun run typecheck` — 0 errors
+- [ ] `cd frontend && bun run build` — 0 errors
 - [ ] `bun test` — all pass
 - [ ] `bun run lint` — 0 errors
 
@@ -394,13 +394,13 @@ resolve(slot, ctx) ->
 
 | File | Purpose |
 |------|---------|
-| `web/ui/src/ui/registry.ts` | UIComponentRegistry (external store) |
-| `web/ui/src/ui/context.tsx` | SlotProvider / useSlot hooks |
-| `web/ui/src/ui/slots.ts` | SLOT_IDS / SlotMeta catalog |
-| `web/ui/src/ui/defaults/` | Generic default components |
-| `web/ui/src/actions/registry.ts` | ActionRegistry (Zod-validated dispatch) |
-| `web/ui/src/features/chat/ChatPage.tsx` | Reference slot-resolved surface |
-| `web/ui/src/features/canvas/CanvasSurface.tsx` | Primary canvas surface |
+| `frontend/src/ui/registry.ts` | UIComponentRegistry (external store) |
+| `frontend/src/ui/context.tsx` | SlotProvider / useSlot hooks |
+| `frontend/src/ui/slots.ts` | SLOT_IDS / SlotMeta catalog |
+| `frontend/src/ui/defaults/` | Generic default components |
+| `frontend/src/actions/registry.ts` | ActionRegistry (Zod-validated dispatch) |
+| `frontend/src/features/chat/ChatPage.tsx` | Reference slot-resolved surface |
+| `frontend/src/features/canvas/CanvasSurface.tsx` | Primary canvas surface |
 
 ---
 
@@ -420,8 +420,8 @@ resolve(slot, ctx) ->
 | `bun run devops ui-test status --provider=...` | UI test history |
 | `bun run devops ui-test record --provider=... --cap=... --result=pass` | Record UI test |
 | `bun run typecheck` | Backend typecheck |
-| `cd web/ui && bun run typecheck` | Frontend typecheck |
-| `cd web/ui && bun run build` | Vite build |
+| `cd frontend && bun run typecheck` | Frontend typecheck |
+| `cd frontend && bun run build` | Vite build |
 
 ### Browser-Path Commands (visual proof)
 
@@ -452,7 +452,7 @@ resolve(slot, ctx) ->
 ## 7. Invariants (Never Violate)
 
 1. **FRONTEND = BACKEND (5.1):** slug links backend/frontend; render contract + resolve slots, never hardcode `if (slug)`.
-2. **Slots are globals:** new UI regions are slots in `web/ui/src/ui/slots.ts`, resolved through the registry.
+2. **Slots are globals:** new UI regions are slots in `frontend/src/ui/slots.ts`, resolved through the registry.
 3. **Hot-swap live:** `register(slot, slug, component)` updates mounted UI with no rebuild.
 4. **ActionRegistry (B8):** every UI action dispatches through `ActionRegistry`, Zod-validated.
 5. **Generic-first:** new capabilities render with zero new components; promote only on merit.

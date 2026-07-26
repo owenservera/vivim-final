@@ -1,8 +1,10 @@
 // src/server/auth-gate.ts
 // Bearer token validation middleware
 
+import { config } from '../config.js'
+
 export function createAuthMiddleware(): (req: Request) => Response | null {
-  const token = process.env.AUTH_TOKEN
+  const token = config.authToken
 
   return (req: Request): Response | null => {
     // No AUTH_TOKEN set → dev mode, allow all

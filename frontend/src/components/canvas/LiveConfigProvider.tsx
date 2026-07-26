@@ -11,11 +11,10 @@
  * re-resolves and the frontend re-renders only the diff (bundle 02 §D).
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import type { ResolvedSurface, RouteContext, AccountContext } from '../../shared/route-context';
 import { useResolvedNodes } from './use-resolved-nodes';
 import { useCanvasEvents } from './use-canvas-events';
-import { getCanvasEventBus } from './use-canvas-events';
 
 export interface LiveConfigContextValue {
   surface: ResolvedSurface | undefined;
@@ -56,29 +55,16 @@ export function LiveConfigProvider(props: LiveConfigProviderProps) {
     'chat.attach', 'chat.streaming', 'chat.result', 'chat.actionBar',
   ];
 
-  const { data, isLoading, error, refetch } = useResolvedNodes({
-    workspaceId,
-    userId,
-    providerIds,
-    accounts,
-    slotIds,
-    variant,
-  });
+  // Memoize the resolve request so inline-created objects with the same
+  // values don't trigger needless re-fetches from TanStack Query.
+  const resolveReq = useMemo(
+    () => ({ workspaceId, userId, providerIds, accounts, slotIds, variant }),
+    [workspaceId, userId, providerIds, accounts, slotIds, variant],
+  );
+
+  const { data, isLoading, error } = useResolvedNodes(resolveReq);
 
   useCanvasEvents(workspaceId);
-
-  // Live re-render: when a canvas:def:updated or workspace:reresolved
-  // event arrives, refetch the resolve query. The TanStack Query cache
-  // invalidates and React re-renders only the changed nodes.
-  const bus = getCanvasEventBus();
-  useEffect(() => {
-    const unsub1 = bus.on('canvas:def:updated', () => refetch());
-    const unsub2 = bus.on('workspace:reresolved', () => refetch());
-    return () => {
-      unsub1();
-      unsub2();
-    };
-  }, [bus, refetch]);
 
   const patchDefinition = useCallback(
     async (id: string, patch: Record<string, unknown>) => {
@@ -88,10 +74,9 @@ export function LiveConfigProvider(props: LiveConfigProviderProps) {
         body: JSON.stringify(patch),
       });
       // The backend emits canvas:def:updated; the SSE subscription
-      // triggers refetch. We also refetch optimistically here.
-      await refetch();
+      // in useCanvasEvents invalidates the query automatically.
     },
-    [refetch],
+    [], // no deps — fetch-and-forget; SSE handles invalidation
   );
 
   const value = useMemo<LiveConfigContextValue>(

@@ -19,6 +19,8 @@
 import { useEffect, useState } from 'react';
 import type { WorkspaceDrawerConfig, DrawerConfig, DrawerEdge, DrawerPanel } from '../../shared/drawer';
 import { useIO } from './UnifiedIOProvider';
+import { useConversation } from '@/sdk/web/use-conversation';
+
 
 export function DrawerSystem({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {
   const io = useIO();
@@ -281,11 +283,16 @@ function PanelBody({ panel, workspaceId }: { panel: DrawerPanel; workspaceId: st
 // ── Panel implementations ──────────────────────────────────────────────
 
 function ConversationsPanel({ workspaceId }: { workspaceId: string }) {
+  const { conversations, loading, error, refresh } = useConversation();
+  useEffect(() => { refresh(); }, [workspaceId]);
   return (
     <div style={{ padding: 8 }}>
-      {['conv:01HX…  chatgpt   4 msgs', 'conv:01HY…  claude    2 msgs', 'conv:01HZ…  gemini    8 msgs'].map((c, i) => (
-        <div key={i} style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer', color: 'var(--text)' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--accent-subtle)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-          {c}
+      {loading && <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: 8 }}>Loading…</div>}
+      {error && <div style={{ fontSize: 11, color: 'var(--destructive)', padding: 8 }}>{error}</div>}
+      {!loading && !error && conversations.length === 0 && <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: 8 }}>No conversations yet.</div>}
+      {conversations.map((c) => (
+        <div key={c.id} style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer', color: 'var(--text)' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--accent-subtle)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+          {c.title ?? c.id.slice(0, 16)}{c.updatedAt ? ` — ${new Date(c.updatedAt).toLocaleDateString()}` : ''}
         </div>
       ))}
       <div style={{ fontSize: 9, color: 'var(--text-subtle)', marginTop: 8, padding: '0 8px' }}>workspace: {workspaceId.slice(0, 24)}</div>

@@ -293,3 +293,32 @@
 .badge-success { background: color-mix(in oklch, oklch(0.65 0.15 160) 15%, transparent); color: oklch(0.5 0.15 160); }
 .badge-warning { background: color-mix(in oklch, oklch(0.7 0.18 85) 15%, transparent); color: oklch(0.55 0.18 85); }
 .badge-destructive { background: color-mix(in oklch, var(--destructive) 15%, transparent); color: var(--destructive); }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  /* Hide text labels on mobile, show only icons */
+  .command-bar-text { display: none !important; }
+  .command-bar-kbd { display: none !important; }
+  
+  /* Stack panels full-width on mobile */
+  .panel-floating {
+    width: 100% !important;
+    height: 60vh !important;
+    bottom: 0 !important;
+    top: auto !important;
+    border-radius: var(--radius) var(--radius) 0 0 !important;
+  }
+  
+  /* DevConsole full height on mobile */
+  .dev-console {
+    height: 50vh !important;
+    max-height: 50vh !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Tablet: slightly smaller panels */
+  .panel-floating {
+    max-width: 90vw !important;
+  }
+}

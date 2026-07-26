@@ -11,7 +11,7 @@ frontend shell with a working multi-turn send path, then retiring `ChatPage`.
 
 | Fact | Evidence |
 |------|----------|
-| `App.tsx` routes the live `chat` tab to `ChatPage`; `CanvasSurface` is **not imported/routed** | `web/ui/src/App.tsx:97` |
+| `App.tsx` routes the live `chat` tab to `ChatPage`; `CanvasSurface` is **not imported/routed** | `frontend/src/App.tsx:97` |
 | Canvas has **no send/conversation state** — `chat.composer/thread/sidebar` nodes render slot components with **no props** (dead send) | `CanvasSurface.tsx:32-39`, `useNodeTypes.tsx:78` (`<Component slotId={slotId} />` only) |
 | Slot components (`Thread`, `Composer`, `Sidebar`, `Header`, `ErrorBar`) are **prop-driven pure renderers** | `messages.tsx:67`, `composer.tsx:70`, `defaults/index.tsx` |
 | `SlotProvider` exists (`ui/context.tsx`) but is **used nowhere** | grep: 0 usages |
@@ -48,7 +48,7 @@ wires C6 (stream-blocks) and optionally C7 (live layer WS). M0–M3 backend is u
 ## 2. Deliverables / steps
 
 ### Phase 1 — Chat state controller (frontend)
-1. **`web/ui/src/features/canvas/useChatState.tsx`** (new): `ChatStateProvider` + `useChatState()`.
+1. **`frontend/src/features/canvas/useChatState.tsx`** (new): `ChatStateProvider` + `useChatState()`.
    Move the controller logic out of `ChatPage.tsx` (`openProvider`, `selectProvider`,
    `selectConversation`, `newChat`, `doSend`, `doAttach`) verbatim, exposing:
    `{ providerId, account, conversations, activeId, messages, sending, busy, error,
@@ -59,7 +59,7 @@ wires C6 (stream-blocks) and optionally C7 (live layer WS). M0–M3 backend is u
 2. Wrap `CanvasSurface` tree in `<ChatStateProvider>` (in `App.tsx` or inside `CanvasSurface`).
 
 ### Phase 2 — Feed slot components via context (no edits to shared defaults)
-3. **`web/ui/src/features/canvas/nodes/ChatNodes.tsx`** (new): thin adapters — `ThreadNode`,
+3. **`frontend/src/features/canvas/nodes/ChatNodes.tsx`** (new): thin adapters — `ThreadNode`,
    `ComposerNode`, `SidebarNode`, `HeaderNode`, `ErrorNode` — each calls `useChatState()` and
    renders the existing slot component with the right props
    (e.g. `ComposerNode` → `<Composer adapter onSend={doSend} onAttach={doAttach} disabled={sending} />`).
@@ -110,20 +110,20 @@ wires C6 (stream-blocks) and optionally C7 (live layer WS). M0–M3 backend is u
 ## 4. Files touched
 
 **New**
-- `web/ui/src/features/canvas/useChatState.tsx`
-- `web/ui/src/features/canvas/nodes/ChatNodes.tsx`
+- `frontend/src/features/canvas/useChatState.tsx`
+- `frontend/src/features/canvas/nodes/ChatNodes.tsx`
 - `tests/unit/web/chat-state.test.tsx`
 - `tests/unit/web/canvas-multiturn.test.tsx`
 - `tests/unit/server/stream-blocks.test.ts`
 
 **Edit**
-- `web/ui/src/App.tsx` (route to `CanvasSurface`)
-- `web/ui/src/features/canvas/CanvasSurface.tsx` (wrap in `ChatStateProvider`; seed nodes → adapters)
-- `web/ui/src/features/canvas/useNodeTypes.tsx` (map chat.* slots to adapters)
+- `frontend/src/App.tsx` (route to `CanvasSurface`)
+- `frontend/src/features/canvas/CanvasSurface.tsx` (wrap in `ChatStateProvider`; seed nodes → adapters)
+- `frontend/src/features/canvas/useNodeTypes.tsx` (map chat.* slots to adapters)
 - `src/server/conversation-router.ts` (stream-blocks endpoint)
 
 **Delete**
-- `web/ui/src/features/chat/ChatPage.tsx` (+ verify `api.ts`/`types.ts` still used)
+- `frontend/src/features/chat/ChatPage.tsx` (+ verify `api.ts`/`types.ts` still used)
 
 **Untouched**
 - M0–M3 backend (`conversation-manager.ts` URL capture/navigate/patterns) — fully reused.

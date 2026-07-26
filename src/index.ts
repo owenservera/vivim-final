@@ -319,7 +319,7 @@ export type { CapabilityTaxonomyEntry } from './engines/capability-taxonomy.js'
 
 // Phase 6.10: Provider Test Harness
 export { ProviderTestHarness } from './engines/provider-test-harness.js'
-export type { HarnessOutcome, ProviderCapabilityRow } from './engines/provider-test-harness.js'
+export type { HarnessOutcome } from './engines/provider-test-harness.js'
 
 // Phase 27: Streaming Channels
 export { registerStreamingChannelCaps } from './engines/streaming-channel-caps.js'

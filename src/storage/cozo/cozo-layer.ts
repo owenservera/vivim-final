@@ -10,6 +10,9 @@
 // Engine: "sqlite" for file-backed persistence, "mem" for tests.
 
 import type { CozoDb as CozoDbInstance } from 'cozo-node'
+import { getLogger } from '../../lib/logger.js'
+
+const log = getLogger('cozo-layer')
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -137,7 +140,7 @@ export class CozoLayer {
         await db.run(stmt)
       } catch (err) {
         // Fail-open: log but don't throw. Relation may already exist.
-        console.warn(`[cozo] initSchema warn (ignored): ${(err as Error).message}`)
+        log.warn(`[cozo] initSchema warn (ignored): ${(err as Error).message}`)
       }
     }
     this.initialized = true
@@ -161,7 +164,7 @@ export class CozoLayer {
         rows: result.rows ?? [],
       }
     } catch (err) {
-      console.error(`[cozo] runScript error (fail-open): ${(err as Error).message}`)
+      log.error(`[cozo] runScript error (fail-open): ${(err as Error).message}`)
       return null
     }
   }
@@ -180,7 +183,7 @@ export class CozoLayer {
    */
   async project(relation: string, columns: string[], values: unknown[]): Promise<void> {
     if (columns.length !== values.length) {
-      console.error('[cozo] project: columns/values length mismatch')
+      log.error('[cozo] project: columns/values length mismatch')
       return
     }
 
@@ -250,7 +253,7 @@ export class CozoLayer {
       const result = await db.exportRelations(relations)
       return result as Record<string, CozoQueryResult>
     } catch (err) {
-      console.error(`[cozo] exportRelations error (fail-open): ${(err as Error).message}`)
+      log.error(`[cozo] exportRelations error (fail-open): ${(err as Error).message}`)
       return null
     }
   }
@@ -265,7 +268,7 @@ export class CozoLayer {
     try {
       await db.importRelations(data)
     } catch (err) {
-      console.error(`[cozo] importRelations error (fail-open): ${(err as Error).message}`)
+      log.error(`[cozo] importRelations error (fail-open): ${(err as Error).message}`)
     }
   }
 

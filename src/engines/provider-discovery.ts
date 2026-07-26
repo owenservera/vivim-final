@@ -703,6 +703,7 @@ export class ProviderDiscoveryEngine {
 
   async interactiveDiscover(url: string) {
     const base = await this.discover(url)
+    if (!base) throw new EngineError('Discovery failed: no result returned')
     return {
       ...base,
       pendingApprovals: base.interactiveElements.map((el) => ({

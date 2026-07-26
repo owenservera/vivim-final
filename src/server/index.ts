@@ -5,6 +5,7 @@
 // and WebSocket bridge. Engine wiring is deferred to the full bootstrap
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
+import { config } from '../config.js'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { connectCapabilityRegistry } from '../cli/index.js'
@@ -29,11 +30,12 @@ import { bootstrapKernel } from '../engines/kernel/kernel-bootstrap.js'
 import type { Kernel } from '../engines/kernel/kernel-context.js'
 import type { KnowledgeIngestionEngine } from '../engines/knowledge-ingestion.js'
 import type { LockManager } from '../engines/lock-manager.js'
+import { getLogger } from '../lib/logger.js'
 import { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { ProviderHealthKernel } from '../engines/provider-health.js'
 import type { ProviderMuxEngine } from '../engines/provider-mux.js'
 import type { RetryEngine } from '../engines/retry-engine.js'
-import type { EmbeddingProvider, SemanticSearchEngine } from '../engines/semantic-search.js'
+import { type EmbeddingProvider, SemanticSearchEngine } from '../engines/semantic-search.js'
 import { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import type { UserIdentityEngine } from '../engines/user-identity.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
@@ -87,6 +89,8 @@ export interface ServerContext {
   memoryEngine?: import('../engines/memory-engine.js').MemoryEngine
 }
 
+const log = getLogger('server')
+
 /** Shutdown hooks registered during server lifetime */
 const shutdownHooks: Array<() => Promise<void>> = []
 let isShuttingDown = false
@@ -98,17 +102,17 @@ export function onShutdown(hook: () => Promise<void>): void {
 async function gracefulShutdown(signal: string): Promise<void> {
   if (isShuttingDown) return
   isShuttingDown = true
-  console.log(`\n${signal} received — shutting down gracefully...`)
+  log.info({ signal }, 'Shutting down gracefully...')
 
   for (const hook of shutdownHooks) {
     try {
       await hook()
     } catch (err) {
-      console.error('Shutdown hook error:', err)
+      log.error({ err }, 'Shutdown hook error')
     }
   }
 
-  console.log('Shutdown complete.')
+  log.info('Shutdown complete.')
   process.exit(0)
 }
 
@@ -125,7 +129,7 @@ function startOnFreePort(
   let port = preferredPort
   while (port < maxScan) {
     try {
-      const server = Bun.serve({ ...opts, port })
+      const server = Bun.serve({ ...opts, port } as Parameters<typeof Bun.serve>[0])
       // Write actual port so PS1 scripts + frontend can discover it
       try {
         const runtimeDir = join(process.cwd(), '.runtime')
@@ -138,7 +142,7 @@ function startOnFreePort(
     } catch (err: unknown) {
       const code = (err as NodeJS.ErrnoException).code
       if (code === 'EADDRINUSE') {
-        console.warn(`[boot] Port ${port} in use, trying ${port + 1}...`)
+        log.warn({ port, nextPort: port + 1 }, 'Port in use, trying next port')
         port++
         continue
       }
@@ -204,8 +208,8 @@ export async function createServer(port = 9420): Promise<ServerContext> {
 
         // WebSocket upgrade
         if (url.pathname === '/ws') {
-          const ok = server.upgrade(req)
-          return ok ? undefined : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+          const ok = server.upgrade(req, { data: {} })
+          return ok ? new Response(null, { status: 101 }) : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
         }
 
         // Reject requests during shutdown
@@ -304,11 +308,12 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const providerStore = new ProviderStoreImpl(db)
   const registrar = new ProviderRegistrar(providerStore, undefined, eventBus)
   const seedResult = await registrar.seedAll()
-  console.log(
-    `[boot] Seeded ${seedResult.seeded.length} providers, ${seedResult.errors.length} errors`,
+  log.info(
+    { seeded: seedResult.seeded.length, errors: seedResult.errors.length },
+    'Seeded providers',
   )
   if (seedResult.errors.length > 0) {
-    console.warn('[boot] Seed errors:', seedResult.errors)
+    log.warn({ errors: seedResult.errors }, 'Provider seed errors')
   }
 
   // Harvest parser variants into DB inline rows (idempotent upsert). This is
@@ -317,26 +322,27 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   try {
     const { seedHarvestedParsers } = await import('../../seeds/parsers/harvest.seed.js')
     const harvested = await seedHarvestedParsers(providerStore)
-    console.log(`[boot] Harvested ${harvested} parser variants into DB`)
+    log.info({ count: harvested }, 'Harvested parser variants into DB')
   } catch (err) {
-    console.warn('[boot] harvest parser seed skipped:', err)
+    log.warn({ err }, 'Harvest parser seed skipped')
   }
 
   // Initialize provider registry cache (loads all provider data from DB)
   const { createProviderRegistry } = await import('../config/provider-registry.js')
   const providerRegistry = createProviderRegistry(db)
   await providerRegistry.initialize()
-  console.log(
-    `[boot] Provider registry initialized: ${providerRegistry.getProviderList().length} providers cached`,
+  log.info(
+    { count: providerRegistry.getProviderList().length },
+    'Provider registry initialized',
   )
 
   // Seed browser-automation substrate (idempotent: agent-loop role anchors)
   try {
     const { seedAutomation } = await import('../../seeds/automation/automation.seed.js')
     const autoCount = await seedAutomation(db)
-    console.log(`[boot] Seeded ${autoCount} browser-automation records`)
+    log.info({ count: autoCount }, 'Seeded browser-automation records')
   } catch (err) {
-    console.warn('[boot] automation seed skipped:', err)
+    log.warn({ err }, 'Automation seed skipped')
   }
 
   // Seed capability taxonomy into DB (idempotent: only when table is empty, so
@@ -345,19 +351,19 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     const { ensureTaxonomySeeded } = await import('../../seeds/taxonomy/taxonomy-seed.js')
     const tax = await ensureTaxonomySeeded(db.prisma)
     if (tax.upserted > 0) {
-      console.log(`[boot] Seeded ${tax.upserted} capability-taxonomy rows`)
+      log.info({ count: tax.upserted }, 'Seeded capability-taxonomy rows')
     }
   } catch (err) {
-    console.warn('[boot] taxonomy seed skipped:', err)
+    log.warn({ err }, 'Taxonomy seed skipped')
   }
 
   // Seed harness command registry (idempotent upsert; mirrors providers/parsers).
   try {
     const { seedHarnessCommands } = await import('../../seeds/harness/commands.seed.js')
     const harnessCount = await seedHarnessCommands(db)
-    console.log(`[boot] Seeded ${harnessCount} harness commands`)
+    log.info({ count: harnessCount }, 'Seeded harness commands')
   } catch (err) {
-    console.warn('[boot] harness command seed skipped:', err)
+    log.warn({ err }, 'Harness command seed skipped')
   }
 
   // Store instances
@@ -389,12 +395,12 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     const { loadProviderProtocol, normalizeProtocolSource } = await import(
       '../engines/provider-protocol-loader.js'
     )
-    const source = normalizeProtocolSource(process.env.PROVIDER_PROTOCOL_SOURCE)
+    const source = normalizeProtocolSource(config.providerProtocolSource)
     const { protocol } = await loadProviderProtocol(source)
     await parserEngine.primeFromProtocol(protocol)
-    console.log(`[boot] Stream parser cache primed from ${source} protocol`)
+    log.info({ source }, 'Stream parser cache primed from protocol')
   } catch (err) {
-    console.warn('[boot] protocol parser priming skipped:', err)
+    log.warn({ err }, 'Protocol parser priming skipped')
   }
   const memoizer = new ExecutionMemoizer({
     emit: (event: string, data: unknown) => {
@@ -806,15 +812,16 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     // this the mcp surface silently yields 0 tests and parity is meaningless.
     try {
       const { McpServerAdapter } = await import('../engines/mcp-server-adapter.js')
-      const mcpPort = Number(process.env.MCP_PORT ?? 0) || port + 1
+      const mcpPort = config.mcpPort ?? port + 1
       const mcpServer = new McpServerAdapter(governor, registry)
       await mcpServer.start({ port: mcpPort, hostname: '127.0.0.1' })
       ;(globalThis as Record<string, unknown>).__mcpServer = mcpServer
-      console.log(
-        `[boot] MCP server listening on 127.0.0.1:${mcpPort} (${mcpServer.getTools().length} tools)`,
+      log.info(
+        { port: mcpPort, tools: mcpServer.getTools().length },
+        'MCP server listening',
       )
     } catch (err) {
-      console.warn('[boot] MCP server skipped:', err)
+      log.warn({ err }, 'MCP server skipped')
     }
 
     // ── Federated per-agent memory (spec 024) ───────────────────────────────
@@ -860,28 +867,28 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       // spawned agents are provisioned on spawn (FR-001/FR-002).
       await memoryFabric
         .provisionAgentMemory('system', 'system-run')
-        .catch((e) => console.warn('[boot] system memory subsystem provision skipped:', e))
-      console.log('[boot] MemoryFabric + AgentBuilderEngine wired (per-agent memory enabled)')
+        .catch((e) => log.warn({ err: e }, 'System memory subsystem provision skipped'))
+      log.info('MemoryFabric + AgentBuilderEngine wired (per-agent memory enabled)')
 
       // ── OpenCode `serve` supervisor (feature 027, ADDITIVE, OFF by default) ──
       // Peer provider 'opencode'. Supervises a local `opencode serve` subprocess and
       // ingests its sessions into AgentSession/EventRecord. Local-first: only starts
       // when OPENCODE_SERVE_ENABLED=1. Never blocks other providers' boot.
       // Nested inside memory-fabric block — requires agenticStoreImpl in scope.
-      if (process.env.OPENCODE_SERVE_ENABLED === '1') {
+      if (config.opencodeServeEnabled) {
         try {
           const { OpenCodeSupervisor } = await import('../engines/opencode/opencode-supervisor.js')
           const { OpenCodeClient } = await import('../engines/opencode/opencode-client.js')
           const { OpenCodeIngest } = await import('../engines/opencode/opencode-ingest.js')
           const supervisor = new OpenCodeSupervisor({
-            port: Number(process.env.OPENCODE_SERVE_PORT ?? 0) || undefined,
-            password: process.env.OPENCODE_SERVER_PASSWORD,
+            port: config.opencodeServePort,
+            password: config.opencodeServerPassword,
           })
           const { port } = await supervisor.start()
           const client = new OpenCodeClient({
             port,
-            password: process.env.OPENCODE_SERVER_PASSWORD ?? '',
-            username: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
+            password: config.opencodeServerPassword,
+            username: config.opencodeServerUsername,
           })
           const ingest = new OpenCodeIngest({
             client,
@@ -889,13 +896,13 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
             eventRecordStore: eventStore,
           })
           ;(globalThis as Record<string, unknown>).__opencodeServe = { supervisor, client, ingest }
-          console.log(`[boot] OpenCode serve supervisor started on 127.0.0.1:${port}`)
+          log.info({ port }, 'OpenCode serve supervisor started')
         } catch (err) {
-          console.warn('[boot] OpenCode serve supervisor skipped:', err)
+          log.warn({ err }, 'OpenCode serve supervisor skipped')
         }
       }
     } catch (err) {
-      console.warn('[boot] memory fabric wiring skipped:', err)
+      log.warn({ err }, 'Memory fabric wiring skipped')
     }
 
     // ── G1/G2: Register discovered CDP methods as live capabilities ──────────
@@ -963,7 +970,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       bindingStore: cdpBindingStore,
       // Boot registration is unverified → prospect (D2 light gate pending).
     })
-    console.log(
+    log.info(
       `[boot] CDP capabilities: registered=${cdpResult.registered.length} bound=${cdpResult.bound.length} skipped=${cdpResult.skipped.length}`,
     )
 
@@ -976,7 +983,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     const capabilitySnapshot = new CapabilitySnapshot(capabilityStore)
     const snapshotCount = await capabilitySnapshot.load(registeredProviders)
     governor.setCapabilitySnapshot(capabilitySnapshot)
-    console.log(
+    log.info(
       `[boot] Capability snapshot: loaded=${snapshotCount} for ${registeredProviders.length} providers`,
     )
 
@@ -1023,7 +1030,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         ).ingest
       : undefined,
   })
-  console.log(
+  log.info(
     `[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`,
   )
 
@@ -1062,21 +1069,21 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       engine.registerCapabilities(registry)
       canvasRouter = createCanvasRouter({ registry } as unknown as ServerContext)
       setCanvasWsHandler(attachCanvasWs(engine))
-      console.log('[boot] vivim-canvas engine wired (store: in-memory, local-first)')
+      log.info('[boot] vivim-canvas engine wired (store: in-memory, local-first)')
     }
   } catch (err) {
-    console.warn('[boot] vivim-canvas not available:', err)
+    log.warn({ err }, '[boot] vivim-canvas not available')
   }
 
   // ── agent-canvas (P4) — agent ↔ canvas command bridge ─────────────────
-  let agentCanvasRouter: ((req: Request, url: URL) => Promise<Response>) | null = null
+  let agentCanvasRouter: ((req: Request, url: URL) => Promise<Response | null>) | null = null
   try {
     const { createAgentCanvasRouter } = await import('./agent-canvas-router.js')
-    console.log('[boot] agent-canvas-router module loaded, creating router...')
+    log.info('[boot] agent-canvas-router module loaded, creating router...')
     agentCanvasRouter = createAgentCanvasRouter({ registry, db } as unknown as ServerContext)
-    console.log('[boot] agent-canvas router wired')
+    log.info('[boot] agent-canvas router wired')
   } catch (err) {
-    console.warn('[boot] agent-canvas router not available:', err)
+    log.warn({ err }, '[boot] agent-canvas router not available')
   }
 
   // ── Kernel bootstrap ──────────────────────────────────────────────────
@@ -1291,8 +1298,8 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         }
 
         if (url.pathname === '/ws') {
-          const ok = server.upgrade(req)
-          return ok ? undefined : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+          const ok = server.upgrade(req, { data: {} })
+          return ok ? new Response(null, { status: 101 }) : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
         }
 
         if (isShuttingDown) {
@@ -1363,9 +1370,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
         // agent-canvas routes (P4) — agent ↔ canvas command bridge
         if (url.pathname.startsWith('/api/agent/canvas/') && agentCanvasRouter) {
-          console.log('[server] routing to agentCanvasRouter:', url.pathname)
+          log.debug({ pathname: url.pathname }, '[server] routing to agentCanvasRouter')
           const result = await agentCanvasRouter(req, url)
-          console.log('[server] agentCanvasRouter result:', result ? 'Response' : 'null')
+          log.debug({ result: result ? 'Response' : 'null' }, '[server] agentCanvasRouter result')
           if (result) return result
         }
 
@@ -1400,7 +1407,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 }
 
 if (import.meta.main) {
-  const port = Number(process.env.PORT ?? process.env.CAP_STORE_PORT ?? 9420)
+  const port = config.port
   const ctx = await createServerWithEngines(port)
   console.log(`vivim server listening on :${ctx.port}`)
 }

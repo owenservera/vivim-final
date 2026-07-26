@@ -220,7 +220,7 @@ cross-type          (scope='cross-type', ownerId='global')
 
 ## 11. Verification Plan
 
-1. `cd web/ui && bun run typecheck` — 0 new errors.
+1. `cd frontend && bun run typecheck` — 0 new errors.
 2. `bun run typecheck` (root) — backend compiles.
 3. `bun test` (root) — new + existing pass.
 4. `pwsh scripts/start-bg.ps1` → browser:

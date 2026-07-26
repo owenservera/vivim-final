@@ -3,6 +3,12 @@
 
 import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
+interface Resolution {
+  width: number
+  height: number
+  devicePixelRatio: number
+}
+
 const COMMON_FONTS = [
   'Arial',
   'Arial Black',
@@ -46,7 +52,7 @@ export class FontScreenModule implements StealthModule {
 
     const resolutions = COMMON_RESOLUTIONS
     let resolution: Resolution =
-      resolutions[Math.floor(Math.random() * resolutions.length)] ?? resolutions[0]
+      resolutions[Math.floor(Math.random() * resolutions.length)] ?? resolutions[0]!
     if (screenConfig?.width && screenConfig?.height) {
       resolution = {
         width: screenConfig.width,

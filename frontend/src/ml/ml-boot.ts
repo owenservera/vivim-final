@@ -12,6 +12,7 @@ import { SLOT_IDS } from '@/ui/slots';
 import { registerCatalogComponent } from '@/hooks/useSlotOverrides';
 import { RelatedNodes } from '@/components/canvas/RelatedNodes';
 import { Composer } from '@/components/chat/Composer';
+import { ComposerShell } from '@/components/chat/ComposerShell';
 import { HealthIndicator } from '@/components/chat/HealthIndicator';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
@@ -87,6 +88,7 @@ export function bootMlSlots(): void {
   // Backend uiSlots reference these keys; registerCatalogComponent maps
   // them to real components so useSlotOverrides can resolve them.
   registerCatalogComponent('Composer', Composer as unknown as AnyComponent);
+  registerCatalogComponent('ComposerShell', ComposerShell as unknown as AnyComponent);
   registerCatalogComponent('ChatHeader', ChatHeader as unknown as AnyComponent);
   registerCatalogComponent('ChatSidebar', ChatSidebar as unknown as AnyComponent);
   registerCatalogComponent('MessageBlock', MessageBlock as unknown as AnyComponent);

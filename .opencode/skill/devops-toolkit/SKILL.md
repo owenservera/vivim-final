@@ -71,7 +71,7 @@ single-source projection that the SDK client generator and UI slot mapper consum
 Loads the pool, runs `parityReport()` (CLI/API/SDK/UI + derived MCP/workflow), and
 prints per-surface coverage. Exit code `1` if any capability is out of parity.
 This is the toolkit-native gate; pair it with the static `scripts/verify-cross-surface.ts`
-(which additionally enforces `SLOT_IDS` from `web/ui/src/ui/slots.ts`).
+(which additionally enforces `SLOT_IDS` from `frontend/src/ui/slots.ts`).
 
 ### `config`
 - `list` — effective value per tunable (`*` = override, blank = default).

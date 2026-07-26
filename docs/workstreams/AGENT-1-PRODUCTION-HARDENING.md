@@ -131,7 +131,7 @@ Your mission: fix all P0 violations, build the actual sovereign trust engines fo
    - Missing `cliCommand.name` → add it to the capability definition
    - Missing `mcpToolName` → add it
    - Missing `apiEndpoint.path` → add it
-   - UI slot ID mismatch → check `SLOT_IDS` in `web/ui/src/ui/slots.ts`
+   - UI slot ID mismatch → check `SLOT_IDS` in `frontend/src/ui/slots.ts`
 4. Re-run until all 50 resolve
 
 **Gate:** `bun run devops verify-cross-surface` → exit code 0.

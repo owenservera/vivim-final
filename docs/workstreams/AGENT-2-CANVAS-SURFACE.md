@@ -8,7 +8,7 @@
 
 ## Context
 
-The canvas is **80% done**. You have 14 existing React components at `web/ui/src/features/canvas/`:
+The canvas is **80% done**. You have 14 existing React components at `frontend/src/features/canvas/`:
 - `CanvasSurface.tsx` (410 lines) — React Flow shell with seed nodes, depth sorting, drag/resize, undo/redo, keyboard shortcuts, theme, minimap, zoom nodes
 - `BrowserLayerHost.tsx` — LayerHost implementation
 - `SandboxedLayer.tsx` — sandboxed iframe for layer scripts (P8 security)
@@ -27,7 +27,7 @@ Your mission: close the remaining 5 gaps in Phase 101, then polish with 5 advanc
 
 ### 101.1 — SandboxBridge: Capability Request → Execute → Response
 
-**Files:** `src/canvas/capability-bridge.ts`, `web/ui/src/features/canvas/SandboxedLayer.tsx`
+**Files:** `src/canvas/capability-bridge.ts`, `frontend/src/features/canvas/SandboxedLayer.tsx`
 **Depends:** — **Produces:** 101.1
 
 **Problem:** `SandboxBridge` exists in backend but the postMessage roundtrip isn't wired end-to-end. A sandboxed iframe can't call capabilities yet.
@@ -53,7 +53,7 @@ Your mission: close the remaining 5 gaps in Phase 101, then polish with 5 advanc
 
 ### 101.2 — Canvas Mutations Forwarder
 
-**Files:** `src/server/websocket.ts`, `web/ui/src/features/canvas/useCanvasEvents.ts`
+**Files:** `src/server/websocket.ts`, `frontend/src/features/canvas/useCanvasEvents.ts`
 **Depends:** — **Produces:** 101.2
 
 **Problem:** `registerCanvasLayerForwarder` exists in `websocket.ts` but only forwards `canvas:layer:spawned` and `canvas:layer:dismissed`. The `canvas:mutated` event (layer moved, resized, property changed) doesn't reach the frontend.
@@ -79,7 +79,7 @@ Your mission: close the remaining 5 gaps in Phase 101, then polish with 5 advanc
 
 ### 101.3 — Canvas Layer Spawn/Dismiss → API → Render
 
-**Files:** `web/ui/src/features/canvas/useCanvasEvents.ts`, `web/ui/src/features/canvas/CanvasSurface.tsx`
+**Files:** `frontend/src/features/canvas/useCanvasEvents.ts`, `frontend/src/features/canvas/CanvasSurface.tsx`
 **Depends:** 101.2 → **Produces:** 101.3
 
 **Problem:** The `POST /api/canvas/layers` and `DELETE /api/canvas/layers/:id` endpoints exist, and `canvas:layer:spawned`/`dismissed` events are forwarded, but the frontend doesn't react to spawn/dismiss events to add/remove React Flow nodes.
@@ -105,7 +105,7 @@ Your mission: close the remaining 5 gaps in Phase 101, then polish with 5 advanc
 
 ### 101.4 — Canvas Definition CRUD via Designer Tool
 
-**Files:** `src/canvas/designer.ts` (backend exists), `web/ui/src/features/canvas/CanvasDesigner.tsx` (NEW frontend)
+**Files:** `src/canvas/designer.ts` (backend exists), `frontend/src/features/canvas/CanvasDesigner.tsx` (NEW frontend)
 **Depends:** 101.2 → **Produces:** 101.4
 
 **Problem:** Backend `CanvasDesigner` class has `define()`, `update()`, `publish()` methods. No frontend surface exists to use them.
@@ -164,7 +164,7 @@ Your mission: close the remaining 5 gaps in Phase 101, then polish with 5 advanc
 
 ### 104.1 — Canvas Mirror Persistence
 
-**Files:** `src/canvas/canvas-mirror.ts`, `web/ui/src/features/canvas/useCanvasEvents.ts`
+**Files:** `src/canvas/canvas-mirror.ts`, `frontend/src/features/canvas/useCanvasEvents.ts`
 **Depends:** Phase 101 (any) → **Produces:** 104.1
 
 **Problem:** `CanvasMirror` exists for state synchronization but doesn't persist layer positions across page reloads. After refresh, canvas returns to seed layout.
@@ -199,7 +199,7 @@ Your mission: close the remaining 5 gaps in Phase 101, then polish with 5 advanc
 
 ### 104.3 — Canvas Layer Drag Persistence
 
-**Files:** `web/ui/src/features/canvas/CanvasSurface.tsx`
+**Files:** `frontend/src/features/canvas/CanvasSurface.tsx`
 **Depends:** 101.3, 104.1 → **Produces:** 104.3
 
 **Problem:** Node drags should auto-save to the backend. Currently drag only updates local React state.
@@ -219,7 +219,7 @@ Your mission: close the remaining 5 gaps in Phase 101, then polish with 5 advanc
 
 ### 104.4 — Canvas Semantic Zoom Polish
 
-**Files:** `web/ui/src/features/canvas/ZoomNode.tsx`, `web/ui/src/features/canvas/CanvasSurface.tsx`
+**Files:** `frontend/src/features/canvas/ZoomNode.tsx`, `frontend/src/features/canvas/CanvasSurface.tsx`
 **Depends:** — **Produces:** 104.4
 
 **Problem:** `ZoomNode.tsx` exists but semantic zoom thresholds aren't tuned. Below a certain zoom level, nodes should render as colored dots with labels.
@@ -242,7 +242,7 @@ Your mission: close the remaining 5 gaps in Phase 101, then polish with 5 advanc
 
 ### 104.5 — Canvas Definition Export/Import
 
-**Files:** `src/canvas/canvas-registry.ts`, `web/ui/src/features/canvas/CanvasDesigner.tsx`
+**Files:** `src/canvas/canvas-registry.ts`, `frontend/src/features/canvas/CanvasDesigner.tsx`
 **Depends:** 101.4 → **Produces:** 104.5
 
 **Problem:** No way to share canvas definitions between instances or backup custom layers.
@@ -276,6 +276,6 @@ bun run devops verify-cross-surface  # canvas caps resolve
 
 ## File Conflict Notes
 
-**No shared files with other agents.** Canvas files (`web/ui/src/features/canvas/`, `src/canvas/`, `src/server/canvas-router.ts`, `src/server/websocket.ts`) are exclusive to Agent 2.
+**No shared files with other agents.** Canvas files (`frontend/src/features/canvas/`, `src/canvas/`, `src/server/canvas-router.ts`, `src/server/websocket.ts`) are exclusive to Agent 2.
 
 _Other agents do not touch the canvas._

@@ -46,9 +46,18 @@ interface PrismaMessage {
 interface PrismaAccount {
   id: string
   providerId: string
-  planTier: string
   email: string
+  planTier: string
+  isDefault: number
+  isKind: number
+  loginState: string
+  loginAttempts: number
+  lastLoginAt: number | null
   providerStateJson: string
+  debugPort: number | null
+  profileDir: string | null
+  chromeSlaveId: string | null
+  userId: string
   createdAt: number
   updatedAt: number
 }
@@ -92,9 +101,18 @@ function toAccountRow(r: PrismaAccount): ProviderAccountRow {
   return {
     id: r.id,
     providerId: r.providerId,
+    email: r.email,
     planTier: r.planTier,
-    displayName: r.email,
-    configJson: r.providerStateJson,
+    isDefault: r.isDefault,
+    isKind: r.isKind,
+    loginState: r.loginState,
+    loginAttempts: r.loginAttempts,
+    lastLoginAt: r.lastLoginAt,
+    providerStateJson: r.providerStateJson,
+    debugPort: r.debugPort,
+    profileDir: r.profileDir,
+    chromeSlaveId: r.chromeSlaveId,
+    userId: r.userId,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   }
@@ -127,7 +145,7 @@ export class ConversationStoreImpl implements ConversationStore {
     try {
       const row = await this.db.prisma.conversation.create({
         data: {
-          id: input.id ?? newId(),
+          id: newId(),
           providerSessionId: sessionId,
           providerId: input.providerId,
           title: input.title ?? null,
@@ -143,7 +161,7 @@ export class ConversationStoreImpl implements ConversationStore {
       const sess = await this.db.ensureProviderSession({ providerId: input.providerId })
       const row = await this.db.prisma.conversation.create({
         data: {
-          id: input.id ?? newId(),
+          id: newId(),
           providerSessionId: sess.id,
           providerId: input.providerId,
           title: input.title ?? null,

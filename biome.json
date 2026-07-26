@@ -15,7 +15,8 @@
         "noExplicitAny": "off"
       },
       "style": {
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "warn",
+        "useConst": "warn"
       }
     }
   },

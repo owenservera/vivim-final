@@ -4,8 +4,11 @@
 import type { MirrorEngine } from './mirror-engine.js'
 import type { ObservationTap } from './observation-tap.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
+import { getLogger } from '../lib/logger.js'
 
 import { LoopDetector } from './loop-detector.js'
+
+const log = getLogger('agentic-loop')
 
 export interface AgenticGoal {
   description: string
@@ -74,7 +77,7 @@ export class AgenticLoopEngine {
 
         // Check for agent loops before planning
         if (this.loopDetector.isLooping()) {
-          console.warn(`[agentic] ${this.loopDetector.getSuggestion()}`)
+          log.warn(`[agentic] ${this.loopDetector.getSuggestion()}`)
           break
         }
 

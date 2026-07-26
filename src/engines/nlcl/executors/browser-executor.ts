@@ -3,9 +3,12 @@
 // navigate, search, extract content, screenshot, type, click.
 
 import { newId } from '../../../ids.js'
+import { getLogger } from '../../../lib/logger.js'
 import type { ChromeGovernor } from '../../chrome-governor.js'
 import type { ConversationManager } from '../../conversation-manager.js'
 import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
+
+const log = getLogger('browser-executor')
 
 export class BrowserExecutor implements CommandExecutor {
   readonly id = 'browser' as const
@@ -238,7 +241,7 @@ export class BrowserExecutor implements CommandExecutor {
     const { exec } = await import('node:child_process')
     const fullCmd = os === 'win32' ? `${cmd} "" "${url}"` : `${cmd} "${url}"`
     exec(fullCmd, (err) => {
-      if (err) console.error(`[BrowserExecutor] Failed to open ${url}:`, err.message)
+      if (err) log.error({ err }, `[BrowserExecutor] Failed to open ${url}`)
     })
   }
 

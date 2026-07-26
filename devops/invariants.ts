@@ -300,8 +300,8 @@ async function checkB8_AgentAddressableUIActions(): Promise<Violation[]> {
   const violations: Violation[] = []
   const wsPath = join(PROJECT_ROOT, 'src', 'server', 'websocket.ts')
 
-  // Check registry.ts exists
-  const registryPath = join(PROJECT_ROOT, 'web', 'ui', 'src', 'actions', 'registry.ts')
+  // Check registry.ts exists (frontend/ is the canonical location, not web/ui/)
+  const registryPath = join(PROJECT_ROOT, 'frontend', 'src', 'actions', 'registry.ts')
   if (!(await fileExists(registryPath))) {
     violations.push({
       id: 'B8',

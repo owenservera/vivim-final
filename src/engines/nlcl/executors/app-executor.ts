@@ -3,7 +3,10 @@
 
 import { platform } from 'node:os'
 import { newId } from '../../../ids.js'
+import { getLogger } from '../../../lib/logger.js'
 import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
+
+const log = getLogger('app-executor')
 
 const APP_MAP: Record<string, Record<string, string[]>> = {
   win32: {
@@ -91,7 +94,7 @@ export class AppExecutor implements CommandExecutor {
       const args = cmdParts.slice(1)
 
       exec(`${exe} ${args.join(' ')}`, (err: Error | null) => {
-        if (err) console.error(`[AppExecutor] Failed to launch ${appName}:`, err.message)
+        if (err) log.error({ err }, `[AppExecutor] Failed to launch ${appName}`)
       })
 
       return {

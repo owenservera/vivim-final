@@ -173,7 +173,7 @@ never silently swallow — preserves Governor-Canon / no-silent-failure invarian
 ## 5. Cross-surface parity (AGENTS.md One-Entry-Point)
 
 The `ContentPart`/`MessageEnvelope` model is the single contract shared by
-CLI / UI / API / MCP. Frontend (`web/ui`) renders via **Streamdown** (GFM +
+CLI / UI / API / MCP. Frontend (`frontend`) renders via **Streamdown** (GFM +
 KaTeX + Mermaid + Shiki) reading `ContentPart[]` from `shared/stream-blocks.js`
 (re-exported from canon). This aligns with the assistant-ui rendering stack the
 project already targets (`docs` reference `MarkdownTextPrimitive` + Mermaid).

@@ -7,16 +7,21 @@
 // Every request is tagged with its source via X-Source header for audit logging.
 
 import type { CapabilityContext, UnifiedCapability } from '../engines/unified-registry.js'
+import type {
+  CapabilityDetail,
+  CapabilityExecuteResponse,
+  CapabilityListResponse,
+} from '../schema/api-types.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
-function toDetail(cap: UnifiedCapability): Record<string, unknown> {
+function toDetail(cap: UnifiedCapability): CapabilityDetail {
   return {
     id: cap.id,
     slug: cap.slug,
     name: cap.name,
-    description: cap.description,
+    description: cap.description ?? null,
     category: cap.category,
     surfaces: cap.surfaces,
     inputSchema: cap.inputSchema,
@@ -27,7 +32,7 @@ function toDetail(cap: UnifiedCapability): Record<string, unknown> {
     apiEndpoint: cap.apiEndpoint,
     workflowNodeType: cap.workflowNodeType,
     mcpToolName: cap.mcpToolName,
-    requiresConfirmation: cap.requiresConfirmation,
+    requiresConfirmation: cap.requiresConfirmation ?? false,
     tags: cap.tags,
   }
 }
@@ -46,7 +51,11 @@ export function createCapabilityRouter(ctx: ServerContext) {
       const category = url.searchParams.get('category') ?? undefined
       const tag = url.searchParams.get('tag') ?? undefined
       const caps = registry.list({ surface, category, tag })
-      return json({ capabilities: caps.map(toDetail), total: caps.length })
+      const response: CapabilityListResponse = {
+        capabilities: caps.map(toDetail),
+        total: caps.length,
+      }
+      return json(response)
     }
 
     // 24.1 — POST /api/capabilities/:id/execute (slug alias resolves same handler)
@@ -93,13 +102,14 @@ export function createCapabilityRouter(ctx: ServerContext) {
           capabilityId: cap.id,
           latencyMs,
         } as any)
-        return json({
+        const response: CapabilityExecuteResponse = {
           ok: true,
           capabilityId: cap.id,
           output,
           traceId: globalThis.crypto?.randomUUID?.() ?? 'n/a',
           latencyMs,
-        })
+        }
+        return json(response)
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
         const isValidation = message.startsWith('Missing required input')

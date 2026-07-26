@@ -6,7 +6,10 @@ import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { platform } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import { newId } from '../../../ids.js'
+import { getLogger } from '../../../lib/logger.js'
 import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
+
+const log = getLogger('file-executor')
 
 const _isWindows = platform() === 'win32'
 
@@ -337,7 +340,7 @@ export class FileExecutor implements CommandExecutor {
     const cmd = FILE_OPEN_COMMANDS[platform()] ?? 'xdg-open'
     const { exec } = await import('node:child_process')
     exec(`${cmd} "${filePath}"`, (err) => {
-      if (err) console.error(`[FileExecutor] Failed to launch ${filePath}:`, err.message)
+      if (err) log.error({ err }, `[FileExecutor] Failed to launch ${filePath}`)
     })
   }
 

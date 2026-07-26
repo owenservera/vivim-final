@@ -11,7 +11,10 @@ export interface MailAdapter {
 }
 
 import { newId } from '../../../ids.js'
+import { getLogger } from '../../../lib/logger.js'
 import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
+
+const log = getLogger('email-executor')
 
 export class EmailExecutor implements CommandExecutor {
   readonly id = 'email' as const
@@ -113,7 +116,7 @@ export class EmailExecutor implements CommandExecutor {
     const { exec } = await import('node:child_process')
     const fullCmd = os === 'win32' ? `${cmd} "" "${url}"` : `${cmd} "${url}"`
     exec(fullCmd, (err) => {
-      if (err) console.error(`[EmailExecutor] Failed to open ${url}:`, err.message)
+      if (err) log.error({ err }, `[EmailExecutor] Failed to open ${url}`)
     })
   }
 

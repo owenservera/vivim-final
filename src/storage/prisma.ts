@@ -6,6 +6,9 @@
 import { join, resolve } from 'node:path'
 import { env } from 'node:process'
 import { PrismaClient } from '@prisma/client'
+import { getLogger } from '../lib/logger.js'
+
+const log = getLogger('prisma')
 
 // Singleton pattern — one PrismaClient instance for the entire app
 let client: PrismaClient | null = null
@@ -28,7 +31,7 @@ export async function initPrismaWal(prisma?: PrismaClient): Promise<void> {
     await configurePrisma({ prisma: p } as unknown as import('./db.js').CapStoreDb)
   } catch (err) {
     // Non-fatal: the explicit configurePrisma() call during server bootstrap still applies pragmas.
-    console.warn('[db] initPrismaWal delegation skipped:', err)
+    log.warn({ err }, '[db] initPrismaWal delegation skipped')
   }
 }
 

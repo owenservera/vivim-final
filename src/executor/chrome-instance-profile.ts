@@ -173,10 +173,16 @@ export function buildChromeArgs(profile: ChromeInstanceProfile): string[] {
     args.push('--no-startup-window')
   }
   args.push('--disable-session-crashed-bubble')
+  args.push('--disable-restore-last-session')
+  if (profile.mode !== 'headed') {
+    args.push('--no-startup-window')
+  }
   args.push('--disable-blink-features=AutomationControlled')
+  // Quote the user-agent to prevent shell splitting on spaces (Windows Bun.spawn
+  // passes args through cmd.exe which tokenizes unquoted spaces).
   args.push(
-    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
-      '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+    '--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+      '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"',
   )
 
   if (profile.extraArgs?.length) args.push(...profile.extraArgs)

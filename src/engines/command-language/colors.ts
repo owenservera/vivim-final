@@ -127,8 +127,7 @@ export function getBlendedColor(
   }
 
   if (categories.length === 1) {
-    const first = categories[0] as string
-    return getShade(first, shade)
+    return getShade(categories[0]!, shade)
   }
 
   // Circular mean for hue

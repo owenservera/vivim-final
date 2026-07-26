@@ -3,6 +3,9 @@
 // Adapted from dao-ai/cdp-browser + browser-use for vivim-final.
 
 import type { CDPTransport } from './chrome-governor.js'
+import { getLogger } from '../lib/logger.js'
+
+const log = getLogger('cdp-watchdog')
 
 export type WatchdogEvent = 'dialog' | 'crash' | 'navigate' | 'timeout' | 'error'
 
@@ -26,7 +29,7 @@ export class CdpWatchdog {
       try {
         await handler(event, data)
       } catch (err) {
-        console.error(`[watchdog] handler error for ${event}:`, err)
+        log.error({ err }, `[watchdog] handler error for ${event}`)
       }
     }
   }
@@ -52,7 +55,7 @@ export function setupDialogWatchdog(
   watchdog.on('dialog', async (_event, data) => {
     const type = data.type as string
     const sessionId = data.sessionId as string
-    console.log(`[watchdog] auto-dismissing ${type} dialog on ${sessionId}`)
+    log.info(`[watchdog] auto-dismissing ${type} dialog on ${sessionId}`)
     // Dialog dismissal handled at transport level via Page.handleJavaScriptDialog
   })
 }
@@ -72,7 +75,7 @@ export function setupCrashWatchdog(
   getLastUrl: () => string,
 ): void {
   watchdog.on('crash', async (_event, data) => {
-    console.error('[watchdog] page crash detected:', data)
+    log.error({ err: data }, '[watchdog] page crash detected')
     const lastUrl = getLastUrl()
     if (lastUrl) {
       try {
@@ -80,7 +83,7 @@ export function setupCrashWatchdog(
           expression: `window.location.href = ${JSON.stringify(lastUrl)}`,
         })
       } catch (err) {
-        console.error('[watchdog] crash recovery failed:', err)
+        log.error({ err }, '[watchdog] crash recovery failed')
       }
     }
   })

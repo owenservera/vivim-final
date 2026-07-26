@@ -3,7 +3,7 @@
 // SingletonLock cleanup. Config-driven via ChromeInstanceProfile.
 // Matches the proven pattern from vivim-app-og cap-store.
 
-import { rmSync } from 'node:fs'
+import { rmSync, existsSync } from 'node:fs'
 import {
   type ChromeChannel,
   type ChromeInstanceProfile,
@@ -52,6 +52,38 @@ export function clearSingletonLock(userDataDir: string): void {
   }
 }
 
+/**
+ * Remove session/tab restore files so Chrome starts with a clean slate
+ * instead of restoring dozens of stale tabs from the previous session.
+ */
+export function clearSessionRestore(userDataDir: string): void {
+  if (!userDataDir) return
+  const defaultDir = `${userDataDir}/Default`
+  const files = [
+    'Preferences',
+    'Secure Preferences',
+    'Current Session',
+    'Current Tabs',
+    'Last Session',
+    'Last Tabs',
+    'History',
+    'History-journal',
+  ]
+  for (const name of files) {
+    try {
+      rmSync(`${defaultDir}/${name}`, { force: true })
+    } catch {
+      /* best-effort */
+    }
+  }
+  // Also clear the Sessions directory
+  try {
+    rmSync(`${defaultDir}/Sessions`, { recursive: true, force: true })
+  } catch {
+    /* best-effort */
+  }
+}
+
 async function isPortInUse(port: number): Promise<boolean> {
   try {
     const resp = await fetch(`http://127.0.0.1:${port}/json/version`, {
@@ -85,6 +117,9 @@ export async function launchProfile(profile: ChromeInstanceProfile): Promise<Lau
 
   // FR-11 — clear stale singleton lock before spawning
   clearSingletonLock(profile.userDataDir)
+
+  // Clear session restore files so Chrome doesn't open dozens of stale tabs
+  clearSessionRestore(profile.userDataDir)
 
   const args = buildChromeArgs({ ...profile, debugPort })
 

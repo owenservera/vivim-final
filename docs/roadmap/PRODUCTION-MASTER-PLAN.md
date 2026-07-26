@@ -241,18 +241,18 @@ Organized by production domain. Each moment = one testable user action.
 
 | Unit | Name | File | Depends |
 |------|------|------|---------|
-| 101.1 | Canvas tab renders with React-Flow viewport | `web/ui/src/features/canvas/CanvasSurface.tsx` | — |
-| 101.2 | Canvas nodes render from resolved UiComponent rows (P1 data-driven) | `web/ui/src/features/canvas/CanvasSurface.tsx` | 101.1 |
-| 101.3 | Drag-to-move canvas nodes (React-Flow interaction) | `web/ui/src/features/canvas/CanvasSurface.tsx` | 101.2 |
-| 101.4 | Resize canvas nodes (React-Flow resize handles) | `web/ui/src/features/canvas/CanvasSurface.tsx` | 101.3 |
-| 101.5 | Minimize/maximize canvas nodes | `web/ui/src/features/canvas/CanvasSurface.tsx` | 101.4 |
-| 101.6 | Canvas WebSocket forwarder receives events on frontend | `web/ui/src/features/canvas/useCanvasEvents.ts` | 101.5 |
-| 101.7 | Frontend spawns new layer via `POST /api/canvas/spawn` → WS event → renders | `web/ui/src/features/canvas/CanvasSurface.tsx` | 101.6 |
-| 101.8 | Frontend dismisses layer → `POST /api/canvas/dismiss` → WS event → node removed | `web/ui/src/features/canvas/CanvasSurface.tsx` | 101.7 |
-| 101.9 | Canvas node renders HTML + CSS from CanvasDefinition (P1 data) | `web/ui/src/features/canvas/SandboxedLayer.tsx` | 101.2 |
-| 101.10 | Sandboxed iframe loads scriptUrl with CSP enforcement (P8) | `web/ui/src/features/canvas/SandboxedLayer.tsx` | 101.9 |
-| 101.11 | Semantic zoom: below threshold → map dot, above → detail render | `web/ui/src/features/canvas/CanvasSurface.tsx` | 101.3 |
-| 101.12 | Oracle home canvas (system-wide visibility panel) | `web/ui/src/features/canvas/OracleHomePanel.tsx` | 101.2 |
+| 101.1 | Canvas tab renders with React-Flow viewport | `frontend/src/features/canvas/CanvasSurface.tsx` | — |
+| 101.2 | Canvas nodes render from resolved UiComponent rows (P1 data-driven) | `frontend/src/features/canvas/CanvasSurface.tsx` | 101.1 |
+| 101.3 | Drag-to-move canvas nodes (React-Flow interaction) | `frontend/src/features/canvas/CanvasSurface.tsx` | 101.2 |
+| 101.4 | Resize canvas nodes (React-Flow resize handles) | `frontend/src/features/canvas/CanvasSurface.tsx` | 101.3 |
+| 101.5 | Minimize/maximize canvas nodes | `frontend/src/features/canvas/CanvasSurface.tsx` | 101.4 |
+| 101.6 | Canvas WebSocket forwarder receives events on frontend | `frontend/src/features/canvas/useCanvasEvents.ts` | 101.5 |
+| 101.7 | Frontend spawns new layer via `POST /api/canvas/spawn` → WS event → renders | `frontend/src/features/canvas/CanvasSurface.tsx` | 101.6 |
+| 101.8 | Frontend dismisses layer → `POST /api/canvas/dismiss` → WS event → node removed | `frontend/src/features/canvas/CanvasSurface.tsx` | 101.7 |
+| 101.9 | Canvas node renders HTML + CSS from CanvasDefinition (P1 data) | `frontend/src/features/canvas/SandboxedLayer.tsx` | 101.2 |
+| 101.10 | Sandboxed iframe loads scriptUrl with CSP enforcement (P8) | `frontend/src/features/canvas/SandboxedLayer.tsx` | 101.9 |
+| 101.11 | Semantic zoom: below threshold → map dot, above → detail render | `frontend/src/features/canvas/CanvasSurface.tsx` | 101.3 |
+| 101.12 | Oracle home canvas (system-wide visibility panel) | `frontend/src/features/canvas/OracleHomePanel.tsx` | 101.2 |
 | 101.13 | Canvas manifest API (`GET /api/canvas/manifest`) | `src/canvas/oracle-reader.ts` | 101.2 |
 | 101.14 | Canvas definition CRUD via designer tool (create/edit/publish) | `src/canvas/designer.ts` | 101.2 |
 | 101.15 | Canvas node bindings connect regions to capabilities (P5/P6) | `src/canvas/layer-mounter.ts` | 101.2 |
@@ -295,14 +295,14 @@ Organized by production domain. Each moment = one testable user action.
 | Unit | Name | File | Depends |
 |------|------|------|---------|
 | 104.1 | SandboxBridge receives `bridge:capability:request` → executes → returns response | `src/canvas/capability-bridge.ts` | Phase 101 |
-| 104.2 | Canvas layer sends capability request from sandboxed iframe | `web/ui/src/features/canvas/SandboxedLayer.tsx` | 104.1 |
-| 104.3 | Canvas layer receives capability response and updates DOM | `web/ui/src/features/canvas/SandboxedLayer.tsx` | 104.2 |
+| 104.2 | Canvas layer sends capability request from sandboxed iframe | `frontend/src/features/canvas/SandboxedLayer.tsx` | 104.1 |
+| 104.3 | Canvas layer receives capability response and updates DOM | `frontend/src/features/canvas/SandboxedLayer.tsx` | 104.2 |
 | 104.4 | Canvas mirror persists layer states across page reloads | `src/canvas/canvas-mirror.ts` | 101.2 |
-| 104.5 | Canvas design mode — drag regions, assign primitives (WYSIWYG editor) | `web/ui/src/features/canvas/CanvasDesigner.tsx` | 101.2 |
-| 104.6 | Design mode publishes definition to DB → canvas refreshes | `web/ui/src/features/canvas/CanvasDesigner.tsx` | 104.5 |
+| 104.5 | Canvas design mode — drag regions, assign primitives (WYSIWYG editor) | `frontend/src/features/canvas/CanvasDesigner.tsx` | 101.2 |
+| 104.6 | Design mode publishes definition to DB → canvas refreshes | `frontend/src/features/canvas/CanvasDesigner.tsx` | 104.5 |
 | 104.7 | Mutation events (`canvas:mutated`) forwarded to all canvas WebSocket clients | `src/server/websocket.ts` | 101.7 |
 | 104.8 | Canvas agent tools register as MCP tools for agentic workflows | `src/canvas/canvas-agent-tools.ts` | 101.2 |
-| 104.9 | Canvas live preview — changes render instantly in adjacent viewport | `web/ui/src/features/canvas/CanvasDesigner.tsx` | 104.5 |
+| 104.9 | Canvas live preview — changes render instantly in adjacent viewport | `frontend/src/features/canvas/CanvasDesigner.tsx` | 104.5 |
 | 104.10 | Canvas definition export/import (shareable layer templates) | `src/canvas/canvas-registry.ts` | 101.2 |
 
 ### Phase 105: Memory & Knowledge (Moments B14-B15, C7-C11) — 6 units
@@ -411,7 +411,7 @@ Phase 106: 106.1 → 106.2 → 106.3 → 106.4 → 106.5
 Phase 101: 101.1 → 101.2 → 101.3 → 101.4 → 101.5 → 101.6 → (101.7, 101.8, 101.9) parallel → (101.10, 101.11, 101.12) parallel → 101.13 → 101.14 → 101.15
 Phase 104: 104.1 → 104.2 → 104.3 → (104.4, 104.5, 104.7) parallel → 104.6 → 104.8 → 104.9 → 104.10
 ```
-**Shared files:** `web/ui/src/features/canvas/` (exclusive — no other agent touches canvas)
+**Shared files:** `frontend/src/features/canvas/` (exclusive — no other agent touches canvas)
 **Conflicts:** None.
 
 ### Agent 3 — Chat + Memory (23 units)

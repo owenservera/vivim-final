@@ -326,8 +326,8 @@ export class ProfileAllocator {
 
       groups.push({
         groupKey,
-        providerSlug,
-        accountId,
+        providerSlug: providerSlug!,
+        accountId: accountId!,
         records: recs,
         authenticated,
         keepCandidate,

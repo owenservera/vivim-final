@@ -36,9 +36,18 @@ export interface ConversationMessageRow {
 export interface ProviderAccountRow {
   id: string
   providerId: string
+  email: string
   planTier: string
-  displayName: string | null
-  configJson: string
+  isDefault: number
+  isKind: number
+  loginState: string
+  loginAttempts: number
+  lastLoginAt: number | null
+  providerStateJson: string
+  debugPort: number | null
+  profileDir: string | null
+  chromeSlaveId: string | null
+  userId: string
   createdAt: number
   updatedAt: number
 }

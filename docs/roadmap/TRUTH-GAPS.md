@@ -40,7 +40,7 @@ Reclassification:
 - Schema drift: 162 declared tables == 162 live tables (in sync).
 - Parser boundary validated against `ContentPartSchema` at runtime.
 - OTEL config centralized via `config.ts` (no scattered `process.env`).
-- UI action registry restored (`web/ui/src/actions/{registry,agent-bridge,auto-populate}.ts`).
+- UI action registry restored (`frontend/src/actions/{registry,agent-bridge,auto-populate}.ts`).
 
 Remaining genuine work (outside this report's original scope): wire parsers for
 deepseek/qwen/grok (currently fall back to generic/system), and expand capability

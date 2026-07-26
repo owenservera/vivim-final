@@ -6,6 +6,7 @@
 // --mdns / --cors * (those flip hostname to 0.0.0.0).
 // Local-first: OFF by default (OPENCODE_SERVE_ENABLED=1 to start).
 
+import { config } from '../../config.js'
 import { OpenCodeServeError } from '../../errors.js'
 
 const HOSTNAME = '127.0.0.1'
@@ -55,10 +56,10 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
     this.opts = {
       binary: opts.binary ?? 'opencode',
       username: opts.username ?? 'opencode',
-      password: opts.password ?? process.env.OPENCODE_SERVER_PASSWORD ?? '',
+      password: opts.password ?? config.opencodeServerPassword,
       cwd: opts.cwd ?? process.cwd(),
-      enabled: opts.enabled ?? process.env.OPENCODE_SERVE_ENABLED === '1',
-      port: opts.port && opts.port > 0 ? opts.port : Number(process.env.OPENCODE_SERVE_PORT ?? 0),
+      enabled: opts.enabled ?? config.opencodeServeEnabled,
+      port: opts.port && opts.port > 0 ? opts.port : config.opencodeServePort ?? 0,
       healthUrl: opts.healthUrl,
     }
   }

@@ -109,7 +109,7 @@ export class CommandPatternRegistry {
       result = result.filter((p) => p.executor === filter.executor)
     }
     if (filter?.tag) {
-      result = result.filter((p) => p.tags.includes(filter.tag))
+      result = result.filter((p) => p.tags.includes(filter.tag!))
     }
     return result
   }

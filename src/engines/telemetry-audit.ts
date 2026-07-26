@@ -4,6 +4,8 @@
 
 // ── Types ───────────────────────────────────────────────────────────────
 
+import { EngineError } from '../errors.js'
+
 export interface NetworkCallRecord {
   id: string
   timestamp: number
@@ -73,7 +75,7 @@ export class TelemetryAudit {
     return res
   }
 
-  recordCall(record: Omit<NetworkCallRecord, 'id'>): void {
+  recordCall(record: Omit<NetworkCallRecord, 'id' | 'isToAiProvider'>): void {
     const id = `call_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     const hostname = this.extractHostname(record.url)
     const isToAiProvider = this.providerDomains.some((d) => hostname.includes(d))

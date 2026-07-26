@@ -26,6 +26,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import type { DocumentCard, DocumentEditSession, EditorCapabilities } from '../../../shared/document';
 import { editorCapabilitiesFor, detectFiletype } from '../../../shared/document';
 import type { DocumentFiletypeSpec } from '../../../shared/document-types';
@@ -355,7 +356,7 @@ function PreviewForFiletype({
       );
     case 'html':
       return (
-        <div style={{ fontSize: 12 }} dangerouslySetInnerHTML={{ __html: content }} />
+        <div style={{ fontSize: 12 }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
       );
     case 'json':
       return <JsonPreview content={content} />;
@@ -390,7 +391,7 @@ function PreviewForFiletype({
 /** Markdown preview (very lightweight — production swaps in react-markdown). */
 function MarkdownPreview({ content }: { content: string }) {
   const html = simpleMarkdownToHtml(content);
-  return <div style={{ fontSize: 13, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div style={{ fontSize: 13, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />;
 }
 
 /** Tiny markdown-to-HTML (headings, bold, italic, code, links, lists). */

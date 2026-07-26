@@ -1,0 +1,23 @@
+{
+  "skill_name": "llm-provider-frontend-testing",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just deployed the frontend and want to make sure Gemini actually works in the UI. Open it up and have a conversation with it — see if you can create a chat, send a message, and get a response that streams in properly. Follow your curiosity and tell me what you find.",
+      "expected_output": "A narrative exploration of the Gemini frontend experience: first impressions, ability to create/send/receive messages, streaming behavior, any issues found. Screenshots at key moments. Findings logged to session-log.jsonl.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Someone told me the UI looks different depending on which provider you use. Can you open the app and compare how Gemini, ChatGPT, and Claude feel in the frontend? Are the composers the same? Do messages render the same way? Does streaming work on all three? Interview each one.",
+      "expected_output": "Cross-provider comparison narrative: how each provider's UI differs (composer type, streaming, message rendering). Screenshots of each provider side by side. Parity findings. Session log with per-provider discoveries.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "The frontend feels off after the last update. I can't pinpoint it — just something feels wrong. Can you open the app and explore it like a new user would? Click around, try things, and tell me if anything feels broken, confusing, or just weird. Don't follow a script — just use the app naturally and report what happens.",
+      "expected_output": "Open-ended exploration report: what feels right, what feels wrong, specific UX issues discovered through natural interaction. Not a pass/fail checklist but a story of the exploration. Screenshots of confusing/broken moments. Console errors noted.",
+      "files": []
+    }
+  ]
+}

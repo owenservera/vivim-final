@@ -1,6 +1,6 @@
 # PRD — M4: Frontend Multi-Turn Robustness (ChatPage)
 
-> Part of the Multi-Turn Conversations roadmap. Scope: `web/ui/src/features/chat/`.
+> Part of the Multi-Turn Conversations roadmap. Scope: `frontend/src/features/chat/`.
 > Built with the `vivi-frontend` skill (slot-resolved, FRONTEND=BACKEND). Grounded in:
 > `ChatPage.tsx` `doSend` (`:275-318`) appends a **fake assistant error bubble** on failure
 > (`{id:'err_…', role:'assistant', content:'(error) …'}`) instead of using the `chat.error` slot;

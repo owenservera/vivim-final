@@ -17,9 +17,10 @@ export function useConversation() {
     setLoading(true);
     setError(null);
     try {
-      const res = await io.get<{ conversations: Conversation[] }>('/api/conversations');
+      const res = await io.get<Conversation[]>('/api/conversations');
       if (!mountedRef.current) return;
-      setConversations(res.data.conversations ?? []);
+      const raw = res.data;
+      setConversations(Array.isArray(raw) ? raw : (raw as { conversations?: Conversation[] }).conversations ?? []);
     } catch (e) {
       if (!mountedRef.current) return;
       setError(e instanceof Error ? e.message : 'Failed to load conversations');

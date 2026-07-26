@@ -1122,7 +1122,7 @@ async function main() {
           const urlFlag = rest.find((a) => a.startsWith('--url='))
           const url = urlFlag ? urlFlag.split('=')[1] : rest[rest.indexOf('--url') + 1]
           const goalFlag = rest.find((a) => a.startsWith('--goal='))
-          const goal = goalFlag ? goalFlag.split('=')[1] : rest[rest.indexOf('--goal') + 1]
+          const goal = goalFlag ? goalFlag.split('=')[1] : undefined
           const fromFlag = rest.find((a) => a.startsWith('--from='))
           const from = fromFlag ? (fromFlag.split('=')[1] as never) : undefined
           const resume = rest.includes('--resume')
@@ -1529,6 +1529,16 @@ async function main() {
       process.exit(result.ok ? 0 : 1)
       break
     }
+    case 'llm-testing-log': {
+      // Sequential findings logger for LLM-as-Human testing sessions.
+      // Append-only JSONL log that survives context compaction.
+      //   bun run devops llm-testing-log <finding|phase|decision|capability|chrome|summary|read|markdown> [options]
+      const { mainCli: llmLogCli } = await import('./llm-testing/session-logger.ts')
+      // Slice past 'bun' 'devops/index.ts' 'llm-testing-log' so session-logger
+      // sees: ['finding', '--provider=gemini', ...] and parses correctly.
+      await llmLogCli(['node', 'llm-testing-log', ...args])
+      break
+    }
     case 'code-index': {
       // Local-first, offline source-code indexer for LLM / vibe coding.
       //   bun run devops code-index <index|search|stats|watch|mcp|clear> [path] [--db=...] [--k=N] [--token-budget=N] [--json]
@@ -1538,7 +1548,7 @@ async function main() {
     }
     default: {
       console.error(
-        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|llm-test|stress-test|features|code-index> [--tracker <path>]',
+        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|llm-test|llm-testing-log|stress-test|features|code-index> [--tracker <path>]',
       )
       process.exit(1)
     }

@@ -151,11 +151,11 @@ Must return zero matches
 
 ### B8: Agent-Addressable UI Actions
 
-**Rule:** Every frontend UI action MUST be registered in the shared `ActionRegistry` (`web/ui`) and executed ONLY through `dispatch(actionId, params)`. No interactive affordance may perform side-effecting work via a handler that bypasses the registry. An `AgentBridge` MUST expose the registry to AI agents over the backend WS command channel (`agent:command` / `agent:result`), with Zod-validated params and an introspectable catalog (`agent:discover`). Human UI and agent MUST share the identical dispatch path. Driving the frontend via CDP/Playwright selectors is forbidden as a primary mechanism (allowed only for visual E2E validation).
+**Rule:** Every frontend UI action MUST be registered in the shared `ActionRegistry` (`frontend`) and executed ONLY through `dispatch(actionId, params)`. No interactive affordance may perform side-effecting work via a handler that bypasses the registry. An `AgentBridge` MUST expose the registry to AI agents over the backend WS command channel (`agent:command` / `agent:result`), with Zod-validated params and an introspectable catalog (`agent:discover`). Human UI and agent MUST share the identical dispatch path. Driving the frontend via CDP/Playwright selectors is forbidden as a primary mechanism (allowed only for visual E2E validation).
 
 **Enforcement:** `devops/invariants.ts` checks:
-- `web/ui/src/actions/registry.ts` exists and exports `ActionRegistry` with `registerAction`, `dispatch`, `listActions`.
-- `web/ui/src/actions/agent-bridge.ts` exists and exports `AgentBridge`.
+- `frontend/src/actions/registry.ts` exists and exports `ActionRegistry` with `registerAction`, `dispatch`, `listActions`.
+- `frontend/src/actions/agent-bridge.ts` exists and exports `AgentBridge`.
 - `web/sandbox` and `web/app` import `@ui/actions`.
 - `src/server/websocket.ts` handles `agent:command` and `agent:discover` message types.
 

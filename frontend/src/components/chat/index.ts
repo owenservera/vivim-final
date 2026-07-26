@@ -13,7 +13,6 @@ export { DevConsole } from './DevConsole';
 export { HealthDashboard } from './HealthDashboard';
 export { HealthIndicator } from './HealthIndicator';
 export { LatencyBreakdown } from './LatencyBreakdown';
-export { ProviderManager } from './ProviderManager';
 export { WorkspaceSettings } from './WorkspaceSettings';
 export { ChatSlotSurface } from './ChatSlotSurface';
 export { ChatSurface } from './ChatSurface';

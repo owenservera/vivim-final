@@ -8,6 +8,7 @@ import type { AgentLoopStore } from '../../storage/contracts/agent-loop-store.js
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
 import type {
+  AccessibilityNode,
   AgentLoopResult,
   AgentStep,
   AgenticGoal,

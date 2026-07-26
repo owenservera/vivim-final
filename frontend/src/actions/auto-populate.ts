@@ -16,8 +16,8 @@ interface UiCapability {
   id: string
   slug: string
   name: string
-  description: string
-  inputSchema: {
+  description?: string
+  inputSchema?: {
     type: string
     properties?: Record<string, { type: string }>
     required?: string[]
@@ -26,8 +26,9 @@ interface UiCapability {
 
 /** Self-contained JSON Schema → Zod (mirrors src/cli/json-schema.ts). */
 function jsonSchemaToZod(schema: UiCapability['inputSchema']): z.ZodSchema {
-  const properties = schema.properties ?? {}
-  const required = schema.required ?? []
+  const resolved = schema ?? { type: 'object' as const }
+  const properties = resolved.properties ?? {}
+  const required = resolved.required ?? []
   const shape: Record<string, z.ZodSchema> = {}
   for (const [key, prop] of Object.entries(properties)) {
     const isRequired = required.includes(key)
@@ -54,7 +55,8 @@ function jsonSchemaToZod(schema: UiCapability['inputSchema']): z.ZodSchema {
 }
 
 export async function autoPopulateActions(_apiBase = '/api'): Promise<void> {
-  const caps = await capabilityApi.listBySurface('ui')
+  const raw = await capabilityApi.listBySurface('ui')
+  const caps: UiCapability[] = Array.isArray(raw) ? raw : (raw as { capabilities: UiCapability[] }).capabilities ?? []
   for (const cap of caps) {
     // Idempotent: re-registration upserts (registry.register relaxes dupes).
     ActionRegistry.register(cap.slug, {

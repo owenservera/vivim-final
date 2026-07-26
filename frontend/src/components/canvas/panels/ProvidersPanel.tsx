@@ -1,0 +1,193 @@
+'use client';
+
+/**
+ * components/canvas/panels/ProvidersPanel.tsx
+ * --------------------------------------------------------------------
+ * Providers panel - manage AI provider connections.
+ * Toggle providers, cycle tiers, view health status.
+ */
+
+import { useCallback, useEffect, useState } from 'react';
+import { Icon } from '../Icon';
+import { useProvider } from '@/sdk/web/use-provider';
+import { useHealth } from '@/sdk/web/use-health';
+
+const PROVIDER_ICONS: Record<string, string> = {
+  chatgpt: '🤖',
+  claude: '🧠',
+  gemini: '✨',
+  deepseek: '🔍',
+  grok: '⚡',
+  qwen: '🌐',
+};
+
+const PROVIDER_COLORS: Record<string, { bg: string; fg: string }> = {
+  chatgpt: { bg: 'rgba(34,197,94,0.12)', fg: 'rgb(34,197,94)' },
+  claude: { bg: 'rgba(249,115,22,0.12)', fg: 'rgb(249,115,22)' },
+  gemini: { bg: 'rgba(59,130,246,0.12)', fg: 'rgb(59,130,246)' },
+  deepseek: { bg: 'rgba(139,92,246,0.12)', fg: 'rgb(139,92,246)' },
+  qwen: { bg: 'rgba(236,72,153,0.12)', fg: 'rgb(236,72,153)' },
+  grok: { bg: 'rgba(107,114,128,0.12)', fg: 'rgb(107,114,128)' },
+};
+
+const TIER_OPTIONS = ['free', 'trial', 'pro', 'enterprise'] as const;
+
+interface ProvidersPanelProps {
+  providerIds: string[];
+  accounts: Array<{ accountId: string; providerId: string; planTier: string }>;
+  onToggleProvider: (id: string) => void;
+  onCycleTier: (providerId: string) => void;
+}
+
+export function ProvidersPanel({
+  providerIds,
+  accounts,
+  onToggleProvider,
+  onCycleTier,
+}: ProvidersPanelProps) {
+  const { providers, loading: provLoading, refresh: refreshProviders } = useProvider();
+  const { health, loading: healthLoading, check: checkHealth } = useHealth();
+
+  useEffect(() => {
+    refreshProviders();
+    checkHealth();
+    const interval = setInterval(checkHealth, 15000);
+    return () => clearInterval(interval);
+  }, [checkHealth, refreshProviders]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Health status */}
+      <div style={{ padding: 8, borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+          <div style={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: health?.status === 'ok' ? 'rgb(34,197,94)' : healthLoading ? 'rgb(234,179,8)' : 'rgb(239,68,68)',
+          }} />
+          <span style={{ color: 'var(--muted-foreground)' }}>
+            Backend: {health?.status ?? 'checking'}{health?.version ? ` v${health.version}` : ''}
+          </span>
+        </div>
+      </div>
+
+      {/* Provider list */}
+      <div style={{ flex: 1, overflow: 'auto', padding: 8 }} className="scrollbar-thin">
+        {provLoading && (
+          <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 11 }}>
+            Loading providers...
+          </div>
+        )}
+        {!provLoading && providers.length === 0 && (
+          <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 11 }}>
+            No providers configured
+          </div>
+        )}
+        {providers.map((provider) => {
+          const isEnabled = providerIds.includes(provider.id);
+          const account = accounts.find((a) => a.providerId === provider.id);
+          const colors = PROVIDER_COLORS[provider.id] ?? { bg: 'var(--muted)', fg: 'var(--muted-foreground)' };
+
+          return (
+            <div
+              key={provider.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '10px 12px',
+                marginBottom: 4,
+                borderRadius: 'var(--radius)',
+                background: isEnabled ? colors.bg : 'transparent',
+                border: `1px solid ${isEnabled ? colors.fg : 'var(--border)'}`,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onClick={() => onToggleProvider(provider.id)}
+              onMouseEnter={(e) => {
+                if (!isEnabled) e.currentTarget.style.background = 'var(--muted)';
+              }}
+              onMouseLeave={(e) => {
+                if (!isEnabled) e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              {/* Icon */}
+              <div style={{
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 18,
+                background: isEnabled ? 'rgba(255,255,255,0.1)' : 'var(--muted)',
+                borderRadius: 'calc(var(--radius) - 4px)',
+              }}>
+                {PROVIDER_ICONS[provider.id] ?? '?'}
+              </div>
+
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: isEnabled ? colors.fg : 'var(--foreground)',
+                }}>
+                  {provider.name}
+                </div>
+                <div style={{
+                  fontSize: 10,
+                  color: 'var(--muted-foreground)',
+                  marginTop: 2,
+                }}>
+                  {isEnabled ? 'Connected' : 'Click to enable'}
+                </div>
+              </div>
+
+              {/* Tier badge */}
+              {isEnabled && account && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onCycleTier(provider.id); }}
+                  style={{
+                    padding: '2px 6px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'calc(var(--radius) - 4px)',
+                    background: 'var(--card)',
+                    fontSize: 9,
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--muted-foreground)',
+                    cursor: 'pointer',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {account.planTier}
+                </button>
+              )}
+
+              {/* Toggle indicator */}
+              <div style={{
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                border: `2px solid ${isEnabled ? colors.fg : 'var(--border)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                {isEnabled && (
+                  <div style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: colors.fg,
+                  }} />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

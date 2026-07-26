@@ -11,6 +11,7 @@
  * provider conditionals (Frontend=Backend, invariant 3).
  */
 
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ResolvedSurface, RouteContext } from '../../shared/route-context';
 
@@ -24,8 +25,15 @@ export interface ResolveRequest {
 }
 
 export function useResolvedNodes(req: ResolveRequest) {
+  // Stabilize query key via JSON stringify so inline-created objects
+  // with the same values don't trigger needless re-fetches.
+  const stableKey = useMemo(
+    () => ['canvas:resolve', JSON.stringify(req)],
+    [JSON.stringify(req)],
+  );
+
   return useQuery<ResolvedSurface>({
-    queryKey: ['canvas:resolve', req],
+    queryKey: stableKey,
     queryFn: async () => {
       const res = await fetch('/api/canvas/resolve', {
         method: 'POST',
@@ -35,7 +43,8 @@ export function useResolvedNodes(req: ResolveRequest) {
       if (!res.ok) throw new Error(`resolve failed: ${res.status}`);
       return (await res.json()) as ResolvedSurface;
     },
-    staleTime: 5_000,
+    staleTime: 10_000,
+    retry: 1,
     refetchOnWindowFocus: false,
   });
 }

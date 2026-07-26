@@ -15,7 +15,9 @@ export class OllamaEmbeddingProvider implements EmbeddingProvider {
   }
 
   async embed(text: string): Promise<number[]> {
-    return (await this.embedBatch([text]))[0]
+    const result = (await this.embedBatch([text]))[0]
+    if (!result) throw new EngineError('Ollama embed returned empty result')
+    return result
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
