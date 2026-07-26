@@ -1,30 +1,56 @@
 'use client'
 
-import { Component, type ReactNode } from 'react'
+import { Component, type ReactNode, type ErrorInfo } from 'react'
 
 interface Props {
   children: ReactNode
   fallback?: ReactNode
   name?: string
+  /** Callback when an error is caught. */
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
+  /** If true, automatically retry rendering after a delay. */
+  autoRetry?: boolean
+  /** Delay in ms before auto-retry (default 3000). */
+  retryDelay?: number
 }
 
 interface State {
   hasError: boolean
   error: Error | null
+  retryCount: number
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = { hasError: false, error: null, retryCount: 0 }
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error, retryCount: 0 }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    this.props.onError?.(error, errorInfo)
     console.error(`[ErrorBoundary:${this.props.name ?? 'unknown'}]`, error, errorInfo)
+  }
+
+  componentDidUpdate(_prev: Props, prevState: State): void {
+    if (
+      this.props.autoRetry &&
+      this.state.hasError &&
+      !prevState.hasError &&
+      this.state.retryCount < 3
+    ) {
+      const delay = this.props.retryDelay ?? 3000
+      setTimeout(() => {
+        this.setState((s) => ({
+          hasError: false,
+          error: null,
+          retryCount: s.retryCount + 1,
+        }))
+      }, delay)
+    }
   }
 
   render() {

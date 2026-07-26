@@ -1156,9 +1156,85 @@ async function main() {
           process.exit(result.ok ? 0 : 1)
           break
         }
+        case 'onboard-provider': {
+          // Agent entry point for autonomous provider onboarding.
+          //   devops runtime-test onboard-provider --provider=<slug> [--url=<url>] [--account=<email>]
+          const providerFlag = rest.find((a) => a.startsWith('--provider='))
+          const provider = providerFlag
+            ? providerFlag.split('=')[1]
+            : rest[rest.indexOf('--provider') + 1]
+          const urlFlag = rest.find((a) => a.startsWith('--url='))
+          const url = urlFlag ? urlFlag.split('=')[1] : rest[rest.indexOf('--url') + 1]
+          const accountFlag = rest.find((a) => a.startsWith('--account='))
+          const account = accountFlag
+            ? accountFlag.split('=')[1]
+            : rest[rest.indexOf('--account') + 1] ?? 'owservera'
+          if (!provider) {
+            console.error(
+              'usage: bun run devops runtime-test onboard-provider --provider=<slug> [--url=<url>] [--account=<email>]',
+            )
+            process.exit(1)
+          }
+          const { onboardProvider } = await import('./onboard-provider.ts')
+          const { ChromeSetupWizard } = await import('../src/engines/chrome-setup-wizard.js')
+          const { ProfileAllocator } = await import('../src/executor/profile-allocator.js')
+          const { CapStoreDb } = await import('../src/storage/db.js')
+          const db = new CapStoreDb()
+          const allocator = new ProfileAllocator()
+          const wizard = new ChromeSetupWizard(db, allocator)
+          const result = await onboardProvider(
+            { provider, url, account },
+            { db, allocator, wizard },
+          )
+          console.log(JSON.stringify(result, null, 2))
+          process.exit(result.ok ? 0 : 1)
+          break
+        }
+        case 'onboard-verify': {
+          // Verify all DB rows exist for an onboarded provider.
+          //   devops runtime-test onboard-verify --provider=<slug>
+          const providerFlag = rest.find((a) => a.startsWith('--provider='))
+          const provider = providerFlag
+            ? providerFlag.split('=')[1]
+            : rest[rest.indexOf('--provider') + 1]
+          if (!provider) {
+            console.error(
+              'usage: bun run devops runtime-test onboard-verify --provider=<slug>',
+            )
+            process.exit(1)
+          }
+          const { verifyProvider } = await import('./onboard-verify.ts')
+          const { CapStoreDb } = await import('../src/storage/db.js')
+          const db = new CapStoreDb()
+          const result = await verifyProvider(provider, db)
+          console.log(JSON.stringify(result, null, 2))
+          process.exit(result.ok ? 0 : 1)
+          break
+        }
+        case 'diagnose': {
+          // Diagnostic tool for provider onboarding failures.
+          //   devops runtime-test diagnose --provider=<slug> [--phase=<name>]
+          const providerFlag = rest.find((a) => a.startsWith('--provider='))
+          const provider = providerFlag
+            ? providerFlag.split('=')[1]
+            : rest[rest.indexOf('--provider') + 1]
+          const phaseFlag = rest.find((a) => a.startsWith('--phase='))
+          const phase = phaseFlag ? phaseFlag.split('=')[1] : 'unknown'
+          if (!provider) {
+            console.error(
+              'usage: bun run devops runtime-test diagnose --provider=<slug> [--phase=<name>]',
+            )
+            process.exit(1)
+          }
+          const { diagnoseProvider } = await import('./recover-provider.ts')
+          const result = await diagnoseProvider(provider, phase)
+          console.log(JSON.stringify(result, null, 2))
+          process.exit(result.recoverable ? 0 : 1)
+          break
+        }
         default: {
           console.error(
-            'usage: bun run devops runtime-test <bootstrap|preflight|engage|discover|discover-backend|discover-frontend|discover-cdp|health|selectors|verify|verify-pipeline|test|test-cap|debug|build|loop|setup|status|stop|report|catalog-gen|migrate|ensure-browser|watchdog|guard|onboard> [--max-cycles=N] [--mitm] [--offline] [--goal="user goal"] [--force] [--provider=<slug> --account=<email>] [--slug=<cap> --input=JSON] [--port=9222] [--cap=<slug>] [--name=<mig> --timeout=ms] [--pid=<n>] [--url=...] [--from=<phase>] [--resume]',
+            'usage: bun run devops runtime-test <bootstrap|preflight|engage|discover|discover-backend|discover-frontend|discover-cdp|health|selectors|verify|verify-pipeline|test|test-cap|debug|build|loop|setup|status|stop|report|catalog-gen|migrate|ensure-browser|watchdog|guard|onboard|onboard-provider|onboard-verify|diagnose> [--max-cycles=N] [--mitm] [--offline] [--goal="user goal"] [--force] [--provider=<slug> --account=<email>] [--slug=<cap> --input=JSON] [--port=9222] [--cap=<slug>] [--name=<mig> --timeout=ms] [--pid=<n>] [--url=...] [--from=<phase>] [--resume]',
           )
           process.exit(1)
         }

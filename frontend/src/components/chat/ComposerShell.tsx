@@ -10,7 +10,7 @@ import type {
   QuotedMessage,
   ComposerUserConfig,
 } from '@/types/api';
-import { sendMessage, getProviderCapabilities, listProviders } from '@/sdk/backend-client';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 import { classify } from '@/ml/prerouter';
 import { useMlStore } from '@/ml/ml-store';
 import { BUILTIN_ADDONS } from '@/features/composer-addons';
@@ -69,13 +69,17 @@ async function dispatchBehavior(
   behavior: ComposerInstanceScope['behavior'],
   text: string,
   conversationId: string | null,
+  io: ReturnType<typeof useIO>,
 ): Promise<BehaviorResult> {
   switch (behavior) {
     case 'chat': {
       if (!conversationId) return { ok: false, error: 'No active conversation' };
-      const res = await sendMessage(conversationId, text).catch(() => null);
-      if (!res) return { ok: false, error: 'Send failed (network error)' };
-      return { ok: res.ok, error: res.error };
+      try {
+        const res = await io.post<{ ok?: boolean; error?: string }>(`/api/conversations/${encodeURIComponent(conversationId)}/send`, { content: text });
+        return { ok: res.data?.ok ?? true, error: res.data?.error };
+      } catch {
+        return { ok: false, error: 'Send failed (network error)' };
+      }
     }
     default: {
       console.log(`[ComposerShell] behavior=${behavior} text="${text}" (stub)`);
@@ -104,6 +108,7 @@ export function ComposerShell({
   onSendResult,
   onStreamingChange,
 }: ComposerShellProps) {
+  const io = useIO();
   const [draft, setDraft] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [config, setConfig] = useState<ComposerUserConfig>(() => loadConfig(scope.instanceId));
@@ -125,9 +130,9 @@ export function ComposerShell({
     if (!providerId) return;
     let cancelled = false;
     (async () => {
-      const res = await listProviders().catch(() => null);
-      if (!res?.ok || cancelled) return;
-      const provider = (res.data?.providers ?? []).find((p: { id: string }) => p.id === providerId);
+      const res = await io.get<{ providers?: Array<{ id: string; modelsJson?: string }> }>('/api/providers').catch(() => null);
+      if (!res?.data || cancelled) return;
+      const provider = (res.data.providers ?? []).find((p) => p.id === providerId);
       if (provider) {
         const rawModels = (provider as Record<string, unknown>).modelsJson;
         const parsed: ModelOption[] = typeof rawModels === 'string'
@@ -147,9 +152,9 @@ export function ComposerShell({
     if (!providerId) return;
     let cancelled = false;
     (async () => {
-      const res = await getProviderCapabilities(providerId, 'free').catch(() => null);
-      if (!res?.ok || cancelled) return;
-      const caps = (res.data?.capabilities ?? []).map((c: { slug: string; name?: string }) => ({
+      const res = await io.get<{ capabilities?: Array<{ slug: string; name?: string }> }>(`/api/providers/${encodeURIComponent(providerId)}/capabilities?tier=free`).catch(() => null);
+      if (!res?.data || cancelled) return;
+      const caps = (res.data.capabilities ?? []).map((c) => ({
         slug: c.slug,
         name: c.name ?? c.slug,
         enabled: false,
@@ -195,7 +200,7 @@ export function ComposerShell({
       useMlStore.getState().recordLocalAction();
     }
 
-    const result = await dispatchBehavior(scope.behavior, text, conversationId);
+    const result = await dispatchBehavior(scope.behavior, text, conversationId, io);
     setIsStreaming(false);
     onStreamingChange?.(false);
     onSendResult?.(result.ok, result.error);

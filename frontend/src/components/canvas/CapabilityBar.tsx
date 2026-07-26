@@ -1,15 +1,10 @@
-/**
- * CapabilityBar.tsx — Capability-driven action buttons.
- * Fetches available capabilities from the backend and renders them as
- * interactive buttons. Each button executes the capability via the API.
- */
 "use client"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useCapabilities, useExecuteCapability } from "@/hooks/useCapabilities"
+import { useCapability } from "@/sdk/web"
 import { Loader2, Zap, Search } from "lucide-react"
 
 interface CapabilityBarProps {
@@ -18,11 +13,11 @@ interface CapabilityBarProps {
 }
 
 export function CapabilityBar({ surface = "ui", onExecute }: CapabilityBarProps) {
-  const { data: capabilities, isLoading, error } = useCapabilities(surface)
-  const executeMutation = useExecuteCapability()
+  const { capabilities, loading, error, execute } = useCapability(surface)
   const [filter, setFilter] = useState("")
+  const [executing, setExecuting] = useState<string | null>(null)
 
-  const filtered = capabilities?.filter(
+  const filtered = capabilities.filter(
     (c) =>
       !filter ||
       c.name.toLowerCase().includes(filter.toLowerCase()) ||
@@ -30,15 +25,18 @@ export function CapabilityBar({ surface = "ui", onExecute }: CapabilityBarProps)
   )
 
   const handleExecute = async (capabilityId: string) => {
+    setExecuting(capabilityId)
     try {
-      const result = await executeMutation.mutateAsync({ capabilityId })
+      const result = await execute(capabilityId)
       onExecute?.(capabilityId, result)
     } catch (err) {
       console.error("Capability execution failed:", err)
+    } finally {
+      setExecuting(null)
     }
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -71,12 +69,12 @@ export function CapabilityBar({ surface = "ui", onExecute }: CapabilityBarProps)
             />
           </div>
           <Badge variant="outline" className="text-xs">
-            {filtered?.length ?? 0} capabilities
+            {filtered.length} capabilities
           </Badge>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {filtered?.map((cap) => (
+          {filtered.map((cap) => (
             <Tooltip key={cap.id}>
               <TooltipTrigger asChild>
                 <Button
@@ -84,9 +82,9 @@ export function CapabilityBar({ surface = "ui", onExecute }: CapabilityBarProps)
                   size="sm"
                   className="h-7 text-xs gap-1"
                   onClick={() => handleExecute(cap.id)}
-                  disabled={executeMutation.isPending}
+                  disabled={executing === cap.id}
                 >
-                  {executeMutation.isPending ? (
+                  {executing === cap.id ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
                     <Zap className="h-3 w-3" />

@@ -3,6 +3,7 @@ import type { ZLayerId } from '@/shared/z-layer';
 export interface Conversation {
   id: string;
   title?: string;
+  providerId?: string;
   createdAt: string;
   updatedAt?: string;
 }

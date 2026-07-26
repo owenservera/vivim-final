@@ -160,6 +160,7 @@ export class ProviderRegistrar {
         parser_hash: StreamAlignmentEngine.computeParserHash(
           parser.logic_code ?? parser.file ?? `${parser.name}:${parser.version}`,
         ),
+        sample_body: parser.sample_body ?? null,
         is_active: parser.is_active ? 1 : 0,
         fallback_parser_id: null,
         created_at: now,

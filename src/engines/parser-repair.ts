@@ -115,6 +115,7 @@ export async function repairLowConfidenceParser(
     filePath: null,
     logicCode: code,
     hash,
+    sampleBody: null,
     isActive: 1,
     fallbackParserId: null,
     createdAt: now,

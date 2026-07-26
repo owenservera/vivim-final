@@ -45,6 +45,15 @@ export class CapabilitySnapshot {
     return this.bySlugProvider.size
   }
 
+  /**
+   * Hot-reload: re-reads from DB and replaces the in-memory map. Call after
+   * seeding a new provider so ChromeGovernor picks it up without restart.
+   * Same semantics as `load()` — clearer intent at call sites.
+   */
+  async refresh(registeredProviderIds: string[]): Promise<number> {
+    return this.load(registeredProviderIds)
+  }
+
   /** Resolve by slug for a provider; falls back to provider-agnostic entry. */
   getBySlug(slug: string, providerId?: string): CapabilitySnapshotEntry | null {
     if (providerId) {

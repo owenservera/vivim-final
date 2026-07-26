@@ -13,8 +13,9 @@
  * Resolution precedence: capabilitySlug > providerSlug > default.
  */
 
-import { useMemo, Component, type ReactNode, type ErrorInfo } from 'react';
+import { useMemo } from 'react';
 import { resolveSlot, type AnyComponent } from '@/sdk/canvas/register-slot';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { SlotId } from '@/ui/slots';
 
 // ── Slot context ────────────────────────────────────────────────────────────
@@ -69,55 +70,6 @@ const SLOT_POSITIONS: Array<{
   { slot: 'chat.error', area: 'error' },
 ];
 
-// ── Error boundary for slot rendering ────────────────────────────────────────
-
-interface ErrorBoundaryProps {
-  slot: string;
-  children: ReactNode;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-}
-
-class SlotErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error(`[ChatSlotSurface] Slot "${this.props.slot}" crashed:`, error, info.componentStack);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div
-          style={{
-            padding: 8,
-            margin: 4,
-            borderRadius: 6,
-            border: '1px solid #ef4444',
-            background: 'rgba(239,68,68,0.06)',
-            color: '#ef4444',
-            fontSize: 11,
-            fontFamily: 'ui-monospace, monospace',
-          }}
-        >
-          Slot "{this.props.slot}" failed: {this.state.error?.message ?? 'unknown error'}
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
 // ── Render a resolved slot ──────────────────────────────────────────────────
 
 function ResolvedSlot({
@@ -135,7 +87,7 @@ function ResolvedSlot({
 
   return (
     <div
-      data-slot={slot}
+      data-name={slot}
       data-slot-source={source}
       style={{ minWidth: 0, minHeight: 0, height: '100%' }}
     >
@@ -228,14 +180,14 @@ export function ChatSlotSurface({
       {/* Header slot */}
       <div style={{ gridArea: 'header', borderBottom: '1px solid var(--border)' }}>
         {resolved['chat.header'] && (
-          <SlotErrorBoundary slot="chat.header">
+          <ErrorBoundary name="chat.header">
             <ResolvedSlot
               slot="chat.header"
               component={resolved['chat.header']!.component}
               source={resolved['chat.header']!.source}
               props={slotProps['chat.header']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
       </div>
 
@@ -249,82 +201,82 @@ export function ChatSlotSurface({
         }}
       >
         {resolved['chat.sidebar'] && (
-          <SlotErrorBoundary slot="chat.sidebar">
+          <ErrorBoundary name="chat.sidebar">
             <ResolvedSlot
               slot="chat.sidebar"
               component={resolved['chat.sidebar']!.component}
               source={resolved['chat.sidebar']!.source}
               props={slotProps['chat.sidebar']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
       </div>
 
       {/* Thread slot — includes streaming + bubble inner slots */}
       <div style={{ gridArea: 'thread', minHeight: 0, overflowY: 'auto', position: 'relative' }}>
         {resolved['chat.streaming'] && (
-          <SlotErrorBoundary slot="chat.streaming">
+          <ErrorBoundary name="chat.streaming">
             <ResolvedSlot
               slot="chat.streaming"
               component={resolved['chat.streaming']!.component}
               source={resolved['chat.streaming']!.source}
               props={slotProps['chat.streaming']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
         {resolved['chat.result'] && (
-          <SlotErrorBoundary slot="chat.result">
+          <ErrorBoundary name="chat.result">
             <ResolvedSlot
               slot="chat.result"
               component={resolved['chat.result']!.component}
               source={resolved['chat.result']!.source}
               props={slotProps['chat.result']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
         {resolved['chat.thread'] && (
-          <SlotErrorBoundary slot="chat.thread">
+          <ErrorBoundary name="chat.thread">
             <ResolvedSlot
               slot="chat.thread"
               component={resolved['chat.thread']!.component}
               source={resolved['chat.thread']!.source}
               props={slotProps['chat.thread']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
       </div>
 
       {/* Composer slot — includes send + attach inner slots */}
       <div style={{ gridArea: 'composer', minHeight: 0, display: 'flex' }}>
         {resolved['chat.attach'] && (
-          <SlotErrorBoundary slot="chat.attach">
+          <ErrorBoundary name="chat.attach">
             <ResolvedSlot
               slot="chat.attach"
               component={resolved['chat.attach']!.component}
               source={resolved['chat.attach']!.source}
               props={slotProps['chat.attach']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
         {resolved['chat.composer'] && (
-          <SlotErrorBoundary slot="chat.composer">
+          <ErrorBoundary name="chat.composer">
             <ResolvedSlot
               slot="chat.composer"
               component={resolved['chat.composer']!.component}
               source={resolved['chat.composer']!.source}
               props={slotProps['chat.composer']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
         {resolved['chat.send'] && (
-          <SlotErrorBoundary slot="chat.send">
+          <ErrorBoundary name="chat.send">
             <ResolvedSlot
               slot="chat.send"
               component={resolved['chat.send']!.component}
               source={resolved['chat.send']!.source}
               props={slotProps['chat.send']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
       </div>
 
@@ -337,49 +289,49 @@ export function ChatSlotSurface({
         }}
       >
         {resolved['chat.actionBar'] && (
-          <SlotErrorBoundary slot="chat.actionBar">
+          <ErrorBoundary name="chat.actionBar">
             <ResolvedSlot
               slot="chat.actionBar"
               component={resolved['chat.actionBar']!.component}
               source={resolved['chat.actionBar']!.source}
               props={slotProps['chat.actionBar']}
             />
-          </SlotErrorBoundary>
+          </ErrorBoundary>
         )}
       </div>
 
       {/* Overlay slots — confirm + error render as overlays */}
       {resolved['chat.confirm'] && (
-        <SlotErrorBoundary slot="chat.confirm">
+        <ErrorBoundary name="chat.confirm">
           <ResolvedSlot
             slot="chat.confirm"
             component={resolved['chat.confirm']!.component}
             source={resolved['chat.confirm']!.source}
             props={slotProps['chat.confirm']}
           />
-        </SlotErrorBoundary>
+        </ErrorBoundary>
       )}
       {resolved['chat.error'] && (
-        <SlotErrorBoundary slot="chat.error">
+        <ErrorBoundary name="chat.error">
           <ResolvedSlot
             slot="chat.error"
             component={resolved['chat.error']!.component}
             source={resolved['chat.error']!.source}
             props={slotProps['chat.error']}
           />
-        </SlotErrorBoundary>
+        </ErrorBoundary>
       )}
 
       {/* chat.entry — hidden, used as registration target */}
       {resolved['chat.entry'] && (
-        <SlotErrorBoundary slot="chat.entry">
+        <ErrorBoundary name="chat.entry">
           <ResolvedSlot
             slot="chat.entry"
             component={resolved['chat.entry']!.component}
             source={resolved['chat.entry']!.source}
             props={slotProps['chat.entry']}
           />
-        </SlotErrorBoundary>
+        </ErrorBoundary>
       )}
     </div>
   );

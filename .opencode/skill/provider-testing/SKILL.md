@@ -5,6 +5,15 @@ description: Test providers in vivim-final. Covers the 8-phase onboarding pipeli
 
 # Provider Testing
 
+## Two Onboarding Flows
+
+| Flow | Skill | When to Use |
+|------|-------|-------------|
+| **Agent-as-Explorer (APOP-AX)** | `provider-onboard-explorer` | Onboarding NEW providers (DeepSeek, Grok, Mistral). Agent autonomously discovers UI, captures streaming, generates parsers. |
+| **8-Phase Pipeline** | This skill (`provider-testing`) | Testing EXISTING providers. Validates selectors, parsers, capabilities against live Chrome. |
+
+**For new provider onboarding, use `provider-onboard-explorer` first.** This skill is for validation and diagnostics after onboarding.
+
 ## CRITICAL: Provider Setup First
 
 **Before running ANY live phase** (discover, test-selectors, test-frontend, onboard run),
@@ -216,6 +225,16 @@ bun run devops verify-cross-surface
 
 # Kill stale Chrome processes (if tabs pile up)
 Get-Process chrome | Where-Object {$_.Id -ne $mainPid} | Stop-Process -Force
+
+# ── APOP-AX (agent-as-explorer) commands ──
+# Onboard a new provider (agent autonomously discovers everything)
+bun run devops runtime-test onboard-provider --provider=grok --url=https://x.com/i/grok
+
+# Verify onboarding succeeded (7 DB checks)
+bun run devops runtime-test onboard-verify --provider=grok
+
+# Diagnose failures (Chrome, profile, DB checks + fix suggestions)
+bun run devops runtime-test diagnose --provider=grok --phase=capture
 ```
 
 ## Session Findings Logger

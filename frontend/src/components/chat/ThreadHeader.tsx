@@ -8,6 +8,7 @@
  */
 
 import { Icon } from '@/components/canvas/Icon';
+import { getProviderTheme } from '@/lib/provider-theme';
 import type { SlotContext } from './ChatSlotSurface';
 
 interface ThreadHeaderProps {
@@ -21,17 +22,8 @@ interface ThreadHeaderProps {
   ctx?: SlotContext;
 }
 
-const PROVIDER_BADGES: Record<string, { label: string; color: string }> = {
-  chatgpt: { label: 'ChatGPT', color: 'rgba(34,197,94,0.15)' },
-  claude: { label: 'Claude', color: 'rgba(249,115,22,0.15)' },
-  gemini: { label: 'Gemini', color: 'rgba(59,130,246,0.15)' },
-  deepseek: { label: 'DeepSeek', color: 'rgba(139,92,246,0.15)' },
-  qwen: { label: 'Qwen', color: 'rgba(236,72,153,0.15)' },
-  grok: { label: 'Grok', color: 'rgba(107,114,128,0.15)' },
-};
-
 export function ThreadHeader({ providerSlug, title, conversationId }: ThreadHeaderProps) {
-  const badge = providerSlug ? PROVIDER_BADGES[providerSlug] : undefined;
+  const pTheme = providerSlug ? getProviderTheme(providerSlug) : undefined;
 
   return (
     <div
@@ -48,18 +40,18 @@ export function ThreadHeader({ providerSlug, title, conversationId }: ThreadHead
         flexShrink: 0,
       }}
     >
-      {badge && (
+      {pTheme && (
         <span
           style={{
             fontSize: 10,
             padding: '2px 6px',
             borderRadius: 4,
-            background: badge.color,
+            background: pTheme.bg,
             fontWeight: 600,
             flexShrink: 0,
           }}
         >
-          {badge.label}
+          {pTheme.label}
         </span>
       )}
       <span

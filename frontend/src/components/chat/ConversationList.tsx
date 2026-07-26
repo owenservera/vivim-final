@@ -1,11 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  listConversations,
-  createConversation,
-  deleteConversation,
-} from '@/sdk/backend-client';
+import { useMemo, useState } from 'react';
+import { useConversation } from '@/sdk/web/use-conversation';
+import { getProviderTheme } from '@/lib/provider-theme';
 
 interface Conversation {
   id: string;
@@ -21,58 +18,9 @@ interface ConversationListProps {
   defaultProviderId?: string;
 }
 
-const PROVIDER_LABELS: Record<string, string> = {
-  chatgpt: 'ChatGPT',
-  claude: 'Claude',
-  gemini: 'Gemini',
-  deepseek: 'DeepSeek',
-  qwen: 'Qwen',
-  grok: 'Grok',
-};
-
-const PROVIDER_COLORS: Record<string, { bg: string; fg: string }> = {
-  chatgpt: { bg: 'rgba(34,197,94,0.15)', fg: 'rgb(34,197,94)' },
-  claude: { bg: 'rgba(249,115,22,0.15)', fg: 'rgb(249,115,22)' },
-  gemini: { bg: 'rgba(59,130,246,0.15)', fg: 'rgb(59,130,246)' },
-  deepseek: { bg: 'rgba(139,92,246,0.15)', fg: 'rgb(139,92,246)' },
-  qwen: { bg: 'rgba(236,72,153,0.15)', fg: 'rgb(236,72,153)' },
-  grok: { bg: 'rgba(107,114,128,0.15)', fg: 'rgb(107,114,128)' },
-};
-
-function getProviderStyle(providerId?: string | null) {
-  const c = providerId ? PROVIDER_COLORS[providerId] : undefined;
-  return c ?? { bg: 'var(--bg-subtle)', fg: 'var(--text-muted)' };
-}
-
 export function ConversationList({ activeId, onSelect, defaultProviderId }: ConversationListProps) {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { conversations, loading, error, refresh, create, remove } = useConversation();
   const [search, setSearch] = useState('');
-  const mountedRef = useRef(true);
-
-  const load = useCallback(async () => {
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await listConversations();
-      if (!mountedRef.current) return;
-      if (res?.ok) {
-        setConversations(res.data?.conversations ?? []);
-      }
-    } catch (e) {
-      if (mountedRef.current) setError(String(e));
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    load();
-    return () => { mountedRef.current = false; };
-  }, [load]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return conversations;
@@ -81,20 +29,14 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
   }, [conversations, search]);
 
   const handleCreate = async () => {
-    const res = await createConversation(defaultProviderId).catch(() => null);
-    if (res?.ok && res.data) {
-      setConversations((prev) => [res.data as Conversation, ...prev]);
-      onSelect((res.data as Conversation).id);
-    }
+    const conv = await create(defaultProviderId);
+    if (conv) onSelect(conv.id);
   };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    const res = await deleteConversation(id).catch(() => null);
-    if (res?.ok) {
-      setConversations((prev) => prev.filter((c) => c.id !== id));
-      if (activeId === id) onSelect('');
-    }
+    const ok = await remove(id);
+    if (ok && activeId === id) onSelect('');
   };
 
   return (
@@ -112,78 +54,63 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '8px 10px',
+          gap: 6,
+          padding: '6px 8px',
           borderBottom: '1px solid var(--border)',
         }}
       >
-        <strong style={{ fontSize: 12 }}>Conversations</strong>
-        <button
-          type="button"
-          onClick={handleCreate}
-          title="New conversation"
-          style={{
-            padding: '2px 8px',
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            background: 'var(--accent)',
-            color: 'var(--accent-foreground, #fff)',
-            cursor: 'pointer',
-            fontSize: 12,
-            fontFamily: 'inherit',
-          }}
-        >
-          + New
-        </button>
-      </div>
-      <div style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>
         <input
           type="text"
+          placeholder="Search conversations..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Filter conversations…"
           style={{
-            width: '100%',
+            flex: 1,
             padding: '4px 8px',
             border: '1px solid var(--border)',
             borderRadius: 4,
             background: 'var(--bg)',
             color: 'var(--text)',
-            fontSize: 11,
-            fontFamily: 'inherit',
+            fontSize: 12,
+            outline: 'none',
           }}
         />
+        <button
+          onClick={handleCreate}
+          style={{
+            padding: '4px 8px',
+            border: '1px solid var(--border)',
+            borderRadius: 4,
+            background: 'var(--bg)',
+            color: 'var(--text)',
+            fontSize: 12,
+            cursor: 'pointer',
+          }}
+        >
+          + New
+        </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: 6 }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: 4 }} className="scrollbar-thin">
         {loading && (
-          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} style={{ height: 36, borderRadius: 6, background: 'var(--bg-subtle)', animation: 'skeleton-pulse 1.5s infinite' }} />
-            ))}
+          <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)', fontSize: 11 }}>
+            Loading conversations...
           </div>
         )}
         {error && (
-          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ color: '#ef4444', fontSize: 12 }}>{error}</div>
-            <button
-              type="button"
-              onClick={load}
-              style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-            >
-              Retry
-            </button>
+          <div style={{ padding: 16, textAlign: 'center', color: '#ef4444', fontSize: 11 }}>
+            {error}
           </div>
         )}
         {!loading && conversations.length === 0 && (
-          <div style={{ padding: 16, color: 'var(--text-subtle)', fontSize: 12 }}>No conversations yet.</div>
+          <div style={{ padding: 16, color: 'var(--text-muted)', fontSize: 12 }}>No conversations yet.</div>
         )}
         {!loading && conversations.length > 0 && filtered.length === 0 && (
-          <div style={{ padding: 16, color: 'var(--text-subtle)', fontSize: 12 }}>No conversations match your filter.</div>
+          <div style={{ padding: 16, color: 'var(--text-muted)', fontSize: 12 }}>No conversations match your filter.</div>
         )}
         {filtered.map((c) => {
           const active = c.id === activeId;
-          const pStyle = getProviderStyle(c.providerId);
+          const pTheme = getProviderTheme(c.providerId);
           return (
             <div
               key={c.id}
@@ -207,13 +134,13 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
                     fontSize: 10,
                     padding: '1px 5px',
                     borderRadius: 3,
-                    background: pStyle.bg,
-                    color: pStyle.fg,
+                    background: pTheme.bg,
+                    color: pTheme.fg,
                     fontWeight: 600,
                     flexShrink: 0,
                   }}
                 >
-                  {PROVIDER_LABELS[c.providerId ?? ''] ?? c.providerId}
+                  {pTheme.label}
                 </span>
               )}
               <span
@@ -224,23 +151,23 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
                   flex: 1,
                 }}
               >
-                {c.title ?? 'Untitled conversation'}
+                {c.title || 'New conversation'}
               </span>
               <button
-                type="button"
                 onClick={(e) => handleDelete(e, c.id)}
-                title="Delete"
                 style={{
+                  padding: '2px 4px',
                   border: 'none',
+                  borderRadius: 3,
                   background: 'transparent',
-                  color: 'var(--text-subtle)',
+                  color: 'var(--text-muted)',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  fontFamily: 'inherit',
+                  fontSize: 10,
                   flexShrink: 0,
                 }}
+                title="Delete"
               >
-                ✕
+                ×
               </button>
             </div>
           );

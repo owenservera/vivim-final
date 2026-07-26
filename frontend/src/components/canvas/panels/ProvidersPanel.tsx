@@ -11,24 +11,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Icon } from '../Icon';
 import { useProvider } from '@/sdk/web/use-provider';
 import { useHealth } from '@/sdk/web/use-health';
-
-const PROVIDER_ICONS: Record<string, string> = {
-  chatgpt: '🤖',
-  claude: '🧠',
-  gemini: '✨',
-  deepseek: '🔍',
-  grok: '⚡',
-  qwen: '🌐',
-};
-
-const PROVIDER_COLORS: Record<string, { bg: string; fg: string }> = {
-  chatgpt: { bg: 'rgba(34,197,94,0.12)', fg: 'rgb(34,197,94)' },
-  claude: { bg: 'rgba(249,115,22,0.12)', fg: 'rgb(249,115,22)' },
-  gemini: { bg: 'rgba(59,130,246,0.12)', fg: 'rgb(59,130,246)' },
-  deepseek: { bg: 'rgba(139,92,246,0.12)', fg: 'rgb(139,92,246)' },
-  qwen: { bg: 'rgba(236,72,153,0.12)', fg: 'rgb(236,72,153)' },
-  grok: { bg: 'rgba(107,114,128,0.12)', fg: 'rgb(107,114,128)' },
-};
+import { PROVIDER_THEME, getProviderTheme } from '@/lib/provider-theme';
 
 const TIER_OPTIONS = ['free', 'trial', 'pro', 'enterprise'] as const;
 
@@ -87,7 +70,7 @@ export function ProvidersPanel({
         {providers.map((provider) => {
           const isEnabled = providerIds.includes(provider.id);
           const account = accounts.find((a) => a.providerId === provider.id);
-          const colors = PROVIDER_COLORS[provider.id] ?? { bg: 'var(--muted)', fg: 'var(--muted-foreground)' };
+          const pTheme = getProviderTheme(provider.id);
 
           return (
             <div
@@ -99,8 +82,8 @@ export function ProvidersPanel({
                 padding: '10px 12px',
                 marginBottom: 4,
                 borderRadius: 'var(--radius)',
-                background: isEnabled ? colors.bg : 'transparent',
-                border: `1px solid ${isEnabled ? colors.fg : 'var(--border)'}`,
+                background: isEnabled ? pTheme.bg : 'transparent',
+                border: `1px solid ${isEnabled ? pTheme.fg : 'var(--border)'}`,
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
@@ -123,7 +106,7 @@ export function ProvidersPanel({
                 background: isEnabled ? 'rgba(255,255,255,0.1)' : 'var(--muted)',
                 borderRadius: 'calc(var(--radius) - 4px)',
               }}>
-                {PROVIDER_ICONS[provider.id] ?? '?'}
+                {pTheme.icon}
               </div>
 
               {/* Info */}
@@ -131,7 +114,7 @@ export function ProvidersPanel({
                 <div style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: isEnabled ? colors.fg : 'var(--foreground)',
+                  color: isEnabled ? pTheme.fg : 'var(--foreground)',
                 }}>
                   {provider.name}
                 </div>
@@ -169,7 +152,7 @@ export function ProvidersPanel({
                 width: 16,
                 height: 16,
                 borderRadius: '50%',
-                border: `2px solid ${isEnabled ? colors.fg : 'var(--border)'}`,
+                border: `2px solid ${isEnabled ? pTheme.fg : 'var(--border)'}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -180,7 +163,7 @@ export function ProvidersPanel({
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
-                    background: colors.fg,
+                    background: pTheme.fg,
                   }} />
                 )}
               </div>

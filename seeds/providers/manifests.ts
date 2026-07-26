@@ -1039,4 +1039,171 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       },
     ],
   },
+  // ── Grok (xAI) ────────────────────────────────────────────────────────────
+  // Selectors are placeholders — the agent discovers these during exploration.
+  {
+    provider: {
+      slug: 'grok',
+      display_name: 'Grok',
+      description: "xAI's Grok AI assistant",
+      category: 'ai',
+      provider_type: 'llm',
+      website_url: 'https://x.com/i/grok',
+      auth_type: 'browser',
+      has_multi_account: false,
+      profile_strategy: 'per_account',
+      fleet_config: {
+        port_range: [9412, 9440],
+      },
+      capabilities: [
+        'send_message',
+        'create_new_chat',
+        'navigate_chat',
+        'delete_chat',
+      ],
+    },
+    endpoints: [
+      {
+        label: 'Landing',
+        url: 'https://x.com/i/grok',
+        endpoint_type: 'landing',
+        is_default: true,
+      },
+      {
+        label: 'Chat',
+        url: 'https://x.com/i/grok',
+        endpoint_type: 'chat',
+        selector: {
+          composer: '',
+          send_button: '',
+        },
+        composer_type: 'textarea',
+        send_method: 'both',
+        content_editable: false,
+      },
+      {
+        label: 'Login',
+        url: 'https://x.com/i/flow/login',
+        endpoint_type: 'login',
+      },
+    ],
+    models: [
+      {
+        slug: 'grok-3',
+        display_name: 'Grok 3',
+        is_default: true,
+        context_window: 131072,
+        max_output_tokens: 8192,
+        supports_streaming: true,
+        supports_tools: true,
+      },
+      {
+        slug: 'grok-3-mini',
+        display_name: 'Grok 3 Mini',
+        context_window: 131072,
+        max_output_tokens: 8192,
+        supports_streaming: true,
+      },
+    ],
+    capabilities_config: [
+      {
+        global_capability_id: 'send_message',
+        recovery_strategies: [{ type: 'retry_selector' }, { type: 'navigate_home' }],
+        ui_component_override: 'text_input',
+        ui_label_override: 'Send to Grok',
+        ui_icon_override: 'arrow-up-circle',
+        ui_position_override: 'composer',
+        ui_priority_override: 'primary',
+      },
+    ],
+    config: [
+      { key: 'base_url', value: 'https://x.com' },
+      { key: 'auth_type', value: 'x.com' },
+    ],
+  },
+  // ── Mistral (Le Chat) ─────────────────────────────────────────────────────
+  // Selectors are placeholders — the agent discovers these during exploration.
+  {
+    provider: {
+      slug: 'mistral',
+      display_name: 'Mistral',
+      description: "Mistral AI's Le Chat assistant",
+      category: 'ai',
+      provider_type: 'llm',
+      website_url: 'https://chat.mistral.ai',
+      auth_type: 'browser',
+      has_multi_account: false,
+      profile_strategy: 'per_account',
+      fleet_config: {
+        port_range: [9442, 9470],
+      },
+      capabilities: [
+        'send_message',
+        'select_model',
+        'create_new_chat',
+        'navigate_chat',
+        'delete_chat',
+      ],
+    },
+    endpoints: [
+      {
+        label: 'Landing',
+        url: 'https://chat.mistral.ai',
+        endpoint_type: 'landing',
+        is_default: true,
+      },
+      {
+        label: 'Chat',
+        url: 'https://chat.mistral.ai/chat',
+        endpoint_type: 'chat',
+        selector: {
+          composer: '',
+          send_button: '',
+        },
+        composer_type: 'textarea',
+        send_method: 'both',
+        content_editable: false,
+      },
+    ],
+    models: [
+      {
+        slug: 'mistral-large',
+        display_name: 'Mistral Large',
+        is_default: true,
+        context_window: 131072,
+        max_output_tokens: 32768,
+        supports_streaming: true,
+        supports_tools: true,
+      },
+      {
+        slug: 'mistral-medium',
+        display_name: 'Mistral Medium',
+        context_window: 32768,
+        max_output_tokens: 8192,
+        supports_streaming: true,
+      },
+      {
+        slug: 'codestral',
+        display_name: 'Codestral',
+        context_window: 32768,
+        max_output_tokens: 8192,
+        supports_streaming: true,
+      },
+    ],
+    capabilities_config: [
+      {
+        global_capability_id: 'send_message',
+        recovery_strategies: [{ type: 'retry_selector' }, { type: 'navigate_home' }],
+        ui_component_override: 'text_input',
+        ui_label_override: 'Send to Mistral',
+        ui_icon_override: 'arrow-up-circle',
+        ui_position_override: 'composer',
+        ui_priority_override: 'primary',
+      },
+    ],
+    config: [
+      { key: 'base_url', value: 'https://chat.mistral.ai' },
+      { key: 'auth_type', value: 'email' },
+    ],
+  },
 ]

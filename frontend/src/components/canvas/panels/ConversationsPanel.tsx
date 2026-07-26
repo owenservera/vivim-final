@@ -7,57 +7,15 @@
  * Replaces the old sidebar conversation list.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Icon } from '../Icon';
-import { listConversations, createConversation, deleteConversation } from '@/sdk/backend-client';
-
-interface Conversation {
-  id: string;
-  title?: string | null;
-  providerId?: string | null;
-  createdAt: string;
-  updatedAt?: string | null;
-}
-
-const PROVIDER_COLORS: Record<string, string> = {
-  chatgpt: 'rgb(34,197,94)',
-  claude: 'rgb(249,115,22)',
-  gemini: 'rgb(59,130,246)',
-  deepseek: 'rgb(139,92,246)',
-  qwen: 'rgb(236,72,153)',
-  grok: 'rgb(107,114,128)',
-};
+import { useConversation } from '@/sdk/web/use-conversation';
+import { getProviderTheme } from '@/lib/provider-theme';
 
 export function ConversationsPanel({ onSelect }: { onSelect?: (id: string) => void }) {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { conversations, loading, error, refresh, create, remove } = useConversation();
   const [search, setSearch] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const mountedRef = useRef(true);
-
-  const load = useCallback(async () => {
-    if (!mountedRef.current) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await listConversations();
-      if (!mountedRef.current) return;
-      if (res?.ok) {
-        setConversations(res.data?.conversations ?? []);
-      }
-    } catch (e) {
-      if (mountedRef.current) setError(String(e));
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    load();
-    return () => { mountedRef.current = false; };
-  }, [load]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return conversations;
@@ -66,31 +24,17 @@ export function ConversationsPanel({ onSelect }: { onSelect?: (id: string) => vo
   }, [conversations, search]);
 
   const handleCreate = useCallback(async (providerId?: string) => {
-    try {
-      const res = await createConversation(providerId);
-      if (res?.ok && res.data) {
-        setConversations((prev) => [res.data!, ...prev]);
-        setActiveId(res.data.id);
-        onSelect?.(res.data.id);
-      }
-    } catch (e) {
-      setError(String(e));
+    const conv = await create(providerId);
+    if (conv) {
+      setActiveId(conv.id);
+      onSelect?.(conv.id);
     }
-  }, [onSelect]);
+  }, [create, onSelect]);
 
   const handleDelete = useCallback(async (id: string) => {
-    try {
-      const res = await deleteConversation(id);
-      if (res?.ok) {
-        setConversations((prev) => prev.filter((c) => c.id !== id));
-        if (activeId === id) {
-          setActiveId(null);
-        }
-      }
-    } catch (e) {
-      setError(String(e));
-    }
-  }, [activeId]);
+    const ok = await remove(id);
+    if (ok && activeId === id) setActiveId(null);
+  }, [remove, activeId]);
 
   const handleSelect = useCallback((id: string) => {
     setActiveId(id);
@@ -106,16 +50,15 @@ export function ConversationsPanel({ onSelect }: { onSelect?: (id: string) => vo
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search conversations..."
+            placeholder="Search..."
             style={{
               width: '100%',
-              padding: '6px 8px 6px 26px',
+              padding: '4px 8px 4px 24px',
               border: '1px solid var(--border)',
-              borderRadius: 'calc(var(--radius) - 4px)',
+              borderRadius: 'var(--radius)',
               background: 'var(--background)',
               color: 'var(--foreground)',
               fontSize: 11,
-              fontFamily: 'inherit',
               outline: 'none',
             }}
           />
@@ -123,23 +66,24 @@ export function ConversationsPanel({ onSelect }: { onSelect?: (id: string) => vo
         <button
           onClick={() => handleCreate()}
           style={{
+            padding: '4px 8px',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            background: 'var(--background)',
+            color: 'var(--foreground)',
+            fontSize: 11,
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            width: 28,
-            height: 28,
-            border: '1px solid var(--border)',
-            borderRadius: 'calc(var(--radius) - 4px)',
-            background: 'var(--background)',
-            cursor: 'pointer',
-            color: 'var(--foreground)',
+            gap: 4,
           }}
         >
-          <Icon name="plus" size={12} />
+          <Icon name="plus" size={11} />
+          New
         </button>
       </div>
 
-      {/* List */}
+      {/* Conversation list */}
       <div style={{ flex: 1, overflow: 'auto', padding: 4 }} className="scrollbar-thin">
         {loading && (
           <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 11 }}>
@@ -147,86 +91,90 @@ export function ConversationsPanel({ onSelect }: { onSelect?: (id: string) => vo
           </div>
         )}
         {error && (
-          <div style={{ padding: 16, textAlign: 'center', color: 'var(--destructive)', fontSize: 11 }}>
+          <div style={{ padding: 16, textAlign: 'center', color: '#ef4444', fontSize: 11 }}>
             {error}
           </div>
         )}
-        {!loading && !error && filtered.length === 0 && (
+        {!loading && conversations.length === 0 && (
           <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 11 }}>
             No conversations yet
           </div>
         )}
-        {filtered.map((conv) => (
-          <div
-            key={conv.id}
-            onClick={() => handleSelect(conv.id)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 10px',
-              borderRadius: 'calc(var(--radius) - 4px)',
-              cursor: 'pointer',
-              background: activeId === conv.id ? 'color-mix(in oklch, var(--ring) 10%, transparent)' : 'transparent',
-              border: activeId === conv.id ? '1px solid color-mix(in oklch, var(--ring) 20%, transparent)' : '1px solid transparent',
-              transition: 'background 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              if (activeId !== conv.id) e.currentTarget.style.background = 'var(--muted)';
-            }}
-            onMouseLeave={(e) => {
-              if (activeId !== conv.id) e.currentTarget.style.background = 'transparent';
-            }}
-          >
-            {/* Provider dot */}
-            <div style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: conv.providerId ? PROVIDER_COLORS[conv.providerId] ?? 'var(--muted-foreground)' : 'var(--muted-foreground)',
-              flexShrink: 0,
-            }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                fontSize: 12,
-                fontWeight: 500,
-                color: 'var(--foreground)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}>
-                {conv.title || 'New conversation'}
-              </div>
-              <div style={{
-                fontSize: 10,
-                color: 'var(--muted-foreground)',
-                marginTop: 2,
-              }}>
-                {conv.providerId ?? 'unknown'}
-              </div>
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); handleDelete(conv.id); }}
+        {filtered.map((conv) => {
+          const active = conv.id === activeId;
+          const pTheme = getProviderTheme(conv.providerId);
+          return (
+            <div
+              key={conv.id}
+              onClick={() => handleSelect(conv.id)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                width: 20,
-                height: 20,
-                border: 'none',
-                background: 'transparent',
-                color: 'var(--muted-foreground)',
-                borderRadius: 3,
+                gap: 8,
+                padding: '6px 8px',
+                marginBottom: 2,
+                borderRadius: 'var(--radius)',
                 cursor: 'pointer',
-                opacity: 0.6,
+                background: active ? 'var(--accent)' : 'transparent',
+                color: active ? 'var(--accent-foreground)' : 'var(--foreground)',
+                transition: 'background 0.1s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--destructive)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--muted-foreground)'; }}
+              onMouseEnter={(e) => {
+                if (activeId !== conv.id) e.currentTarget.style.background = 'transparent';
+              }}
+              onMouseLeave={(e) => {
+                if (activeId !== conv.id) e.currentTarget.style.background = 'transparent';
+              }}
             >
-              <Icon name="trash-2" size={11} />
-            </button>
-          </div>
-        ))}
+              {/* Provider dot */}
+              <div style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: conv.providerId ? getProviderTheme(conv.providerId).color : 'var(--muted-foreground)',
+                flexShrink: 0,
+              }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: 'var(--foreground)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {conv.title || 'New conversation'}
+                </div>
+                <div style={{
+                  fontSize: 10,
+                  color: 'var(--muted-foreground)',
+                  marginTop: 2,
+                }}>
+                  {conv.providerId ?? 'unknown'}
+                </div>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDelete(conv.id); }}
+                style={{
+                  padding: 2,
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--muted-foreground)',
+                  cursor: 'pointer',
+                  borderRadius: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0.5,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; }}
+              >
+                <Icon name="trash" size={12} />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
