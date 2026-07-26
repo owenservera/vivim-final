@@ -6,7 +6,7 @@
 "use client"
 
 import { useEffect, useRef, useCallback, useState } from "react"
-import { getWsUrl } from "@/sdk/backend-client"
+import { getWsUrl } from "@/lib/ws-url"
 
 export type WsStatus = "connecting" | "connected" | "disconnected" | "error"
 

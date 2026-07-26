@@ -1376,6 +1376,40 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
           if (result) return result
         }
 
+        // ── System admin routes (provider snapshot refresh) ────────────────
+        if (url.pathname === '/api/system/refresh-provider-snapshot' && req.method === 'POST') {
+          try {
+            const { ProviderStoreImpl } = await import('../storage/impl/provider-store-impl.js')
+            const { CapabilitySnapshot: CapSnapshot } = await import('../engines/capability-snapshot.js')
+            const pStore = new ProviderStoreImpl(db)
+            const registeredProviders = (await pStore.listDefinitions({ isActive: true })).map(
+              (d) => d.id,
+            )
+            const newSnapshot = new CapSnapshot(
+              await import('../storage/impl/capability-store-impl.js').then(
+                (m) => new m.CapabilityStoreImpl(db),
+              ),
+            )
+            const count = await newSnapshot.load(registeredProviders)
+            if (governor) {
+              governor.setCapabilitySnapshot(newSnapshot)
+            }
+            log.info(
+              { providers: registeredProviders.length, entries: count },
+              '[system] Provider snapshot refreshed',
+            )
+            return json({
+              ok: true,
+              providers: registeredProviders.length,
+              entries: count,
+              providerIds: registeredProviders,
+            })
+          } catch (err) {
+            log.error({ err }, '[system] Failed to refresh provider snapshot')
+            return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+          }
+        }
+
         // 24.1/24.2 — universal capability transport (execute + introspection)
         if (url.pathname.startsWith('/api/capabilities') && capabilityRouter) {
           return capabilityRouter(req, url)

@@ -27,6 +27,8 @@ export class AutonomousStoreImpl implements AutonomousExecutionStore {
     if (patch.resultJson !== undefined) data.resultJson = patch.resultJson
     if (patch.error !== undefined) data.error = patch.error
     if (patch.completedAt !== undefined) data.completedAt = patch.completedAt
+    if (patch.pausedStateJson !== undefined) data.pausedStateJson = patch.pausedStateJson
+    if (patch.pauseReason !== undefined) data.pauseReason = patch.pauseReason
     await prisma.autonomousTask.update({ where: { id }, data })
   }
 

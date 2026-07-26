@@ -76,7 +76,6 @@ export type { IconProps, IconName } from './Icon';
 // V9 — additional canvas components
 // CapabilityBar, RelatedNodes, StreamingIndicator deferred to Phase 2
 // (depend on hooks/SDK not yet ported)
-export { ErrorBoundary } from './ErrorBoundary';
 export { MinimapNode } from './MinimapNode';
 export type { MinimapNodeProps } from './MinimapNode';
 export { ChatSurface } from '../chat/ChatSurface';

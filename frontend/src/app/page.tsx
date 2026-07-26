@@ -28,7 +28,6 @@ import {
   MainMenu,
   CommandPalette,
   OnboardingTour,
-  ErrorBoundary,
   DrawerSystem,
   ConversationsPanel,
   ProvidersPanel,
@@ -36,6 +35,7 @@ import {
   ThemeSettings,
   type PanelConfig,
 } from '@/components/canvas';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useConversation } from '@/sdk/web/use-conversation';
 import { useCapability } from '@/sdk/web/use-capability';
 import { useProvider } from '@/sdk/web/use-provider';
@@ -80,6 +80,7 @@ function CanvasApp() {
   const [themeOpen, setThemeOpen] = useState(false);
   const [devConsoleOpen, setDevConsoleOpen] = useState(false);
   const [openPanels, setOpenPanels] = useState<Set<string>>(new Set());
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
   // Check if onboarding needed
@@ -192,6 +193,7 @@ function CanvasApp() {
               workspaceId={workspaceId}
               providerIds={providerIds}
               variant={variant}
+              conversationId={activeConversationId}
             />
           </DrawerSystem>
         </ErrorBoundary>
@@ -213,7 +215,7 @@ function CanvasApp() {
           onClose={() => togglePanel(panelConfig.id)}
         >
           {panelConfig.id === 'conversations' && (
-            <ConversationsPanel />
+            <ConversationsPanel onSelect={setActiveConversationId} />
           )}
           {panelConfig.id === 'providers' && (
             <ProvidersPanel

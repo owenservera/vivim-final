@@ -9,42 +9,26 @@
  * prompt). Per spec FR-001/FR-002 and AC 1-4.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { checkHealth, getSession } from '@/sdk/backend-client';
-
-interface SessionUser {
-  email?: string | null;
-}
+import { useEffect, useState } from 'react';
+import { useHealth } from '@/sdk/web/use-health';
+import { useSession } from '@/sdk/web/use-session';
 
 export function HealthIndicator({ pollMs = 15000 }: { pollMs?: number }) {
-  const [healthy, setHealthy] = useState<boolean | null>(null);
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const { health, check: checkHealth } = useHealth();
+  const { session, getSession } = useSession();
   const [checkedAt, setCheckedAt] = useState<number>(0);
-  const mountedRef = useRef(true);
-
-  const refresh = useCallback(async () => {
-    if (!mountedRef.current) return;
-    const health = await checkHealth().catch(() => null);
-    setHealthy(!!health?.ok);
-    const sess = await getSession().catch(() => null);
-    if (mountedRef.current) {
-      setUser(sess?.ok && sess.data?.authenticated ? { email: sess.data.email } : null);
-      setCheckedAt(Date.now());
-    }
-  }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
-    // Defer initial refresh to avoid synchronous setState in effect
-    const timeoutId = setTimeout(refresh, 0);
-    const t = setInterval(refresh, pollMs);
-    return () => {
-      mountedRef.current = false;
-      clearInterval(t);
-      clearTimeout(timeoutId);
+    const refresh = async () => {
+      await Promise.all([checkHealth(), getSession()]);
+      setCheckedAt(Date.now());
     };
-  }, [refresh, pollMs]);
+    refresh();
+    const t = setInterval(refresh, pollMs);
+    return () => clearInterval(t);
+  }, [checkHealth, getSession, pollMs]);
 
+  const healthy = health ? (health.status === 'ok' || health.status === 'healthy') : null;
   const dot = healthy === null ? '#9ca3af' : healthy ? '#22c55e' : '#ef4444';
   const label = healthy === null ? 'Checking…' : healthy ? 'Connected' : 'Disconnected';
 
@@ -69,9 +53,9 @@ export function HealthIndicator({ pollMs = 15000 }: { pollMs?: number }) {
         style={{ width: 8, height: 8, borderRadius: '50%', background: dot, flexShrink: 0 }}
       />
       <span style={{ fontWeight: 600 }}>{label}</span>
-      {user ? (
+      {session.authenticated ? (
         <span style={{ color: 'var(--text-muted)' }}>
-          {user.email ?? 'signed in'}
+          {session.email ?? 'signed in'}
         </span>
       ) : (
         <span style={{ color: 'var(--text-muted)' }}>not signed in</span>
@@ -79,7 +63,7 @@ export function HealthIndicator({ pollMs = 15000 }: { pollMs?: number }) {
       {healthy === false && (
         <button
           type="button"
-          onClick={refresh}
+          onClick={() => { checkHealth(); getSession(); }}
           style={{
             marginLeft: 4,
             padding: '2px 8px',

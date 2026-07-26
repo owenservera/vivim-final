@@ -39,6 +39,7 @@ export interface LivingCanvasProps {
   providerIds: string[];
   slotIds?: string[];
   variant?: string;
+  conversationId?: string | null;
 }
 
 type ZoomTier = 'micro' | 'mid' | 'macro';
@@ -75,7 +76,7 @@ const TIER_BADGE: Record<string, { label: string; className: string }> = {
 };
 
 export function LivingCanvas(props: LivingCanvasProps) {
-  const { workspaceId, providerIds, variant, slotIds } = props;
+  const { workspaceId, providerIds, variant, slotIds, conversationId } = props;
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
   const [layouts, setLayouts] = useState<Record<string, CanvasLayout>>({});
   const [history] = useState(() => new CommandStack(200));
@@ -389,7 +390,8 @@ export function LivingCanvas(props: LivingCanvasProps) {
                         {(() => {
                           const Resolved = getComponent(slot.slotId, slot.providerId);
                           if (!Resolved) return <div style={{ padding: 10, fontSize: 11, color: 'var(--muted-foreground)' }}>No component</div>;
-                          return <Resolved />;
+                          const slotContext = { conversationId, activeId: conversationId, workspaceId };
+                          return <Resolved {...slotContext} />;
                         })()}
                       </div>
                       {/* Real streaming integration for nodes with streaming capability */}
@@ -408,8 +410,9 @@ export function LivingCanvas(props: LivingCanvasProps) {
                       {(() => {
                         const Resolved = getComponent(slot.slotId, slot.providerId);
                         if (!Resolved) return <div style={{ padding: 8, fontSize: 11, color: 'var(--muted-foreground)' }}>No component</div>;
-                        return <Resolved />;
-                      })()}
+                        const slotContext = { conversationId, activeId: conversationId, workspaceId };
+                          return <Resolved {...slotContext} />;
+                        })()}
                     </div>
                   )}
                 </div>

@@ -4,7 +4,7 @@
 **Priority:** P1 — Provider Expansion Pipeline
 **Epic:** CAP-003 (Provider Onboarding Automation)
 **Date:** 2026-07-26
-**Extends:** `04-merged-engines.md` (ProtocolDiscoveryEngine, StreamingResponseAnalyzer, ProviderRegistrar), `06-merged-seeds.md` (Provider Manifests + Parser Seeds), `sota-02-shape-agnostic-registration.md` (ProviderDiscoveryEngine, ManifestInferenceEngine)
+**Extends:** `04-merged-engines.md` (ProtocolDiscoveryEngine, StreamingResponseAnalyzer, ProviderRegistrar), `06-merged-seeds.md` (Provider Manifests + Parser Seeds), `sota-02-shape-agnostic-registration.md` (ProviderDiscoveryEngine, ManifestInferenceEngine), `chrome-setup-wizard.ts` (account registration — used directly)
 
 ---
 
@@ -86,7 +86,7 @@ User: "Onboard Grok"
   ┌────────────────────────────────────────────────────────────────────────┐
   │ AGENT AUTONOMOUSLY:                                                     │
   │                                                                          │
-  │  1. Account Registration                                                 │
+  │  1. Account Registration (using existing ChromeSetupWizard)             │
   │     ├─ Check if ProviderDefinition exists in DB — seed from template     │
   │     ├─ Allocate profile dir under chrome-profiles/grok/owservera/        │
   │     ├─ Launch Chrome, navigate to x.com/i/grok                           │
@@ -160,9 +160,9 @@ User: "Onboard Grok"
 │  │  Toolbox (all existing + proposed utilities):                        │ │
 │  │                                                                      │ │
 │  │  ┌────────────────────┐  ┌────────────────────┐                     │ │
-│  │  │ AccountRegistrar   │  │ ProtocolDiscovery  │                     │ │
-│  │  │ (wraps ChromeSetup │  │ Engine (CDP DOM    │                     │ │
-│  │  │  Wizard)           │  │  probes)            │                     │ │
+│  │  │ ChromeSetupWizard  │  │ ProtocolDiscovery  │                     │ │
+│  │  │ (account reg —     │  │ Engine (CDP DOM    │                     │ │
+│  │  │  used directly)    │  │  probes)            │                     │ │
 │  │  └────────────────────┘  └────────────────────┘                     │ │
 │  │                                                                      │ │
 │  │  ┌────────────────────┐  ┌────────────────────┐                     │ │
@@ -271,7 +271,7 @@ START: "Onboard {provider} at {url}"
 
 | Component | Location | Status | What It Does |
 |-----------|----------|--------|-------------|
-| `ChromeSetupWizard` | `src/engines/chrome-setup-wizard.ts` | ✅ Existing | Allocate profile, launch Chrome, poll for login, save `ProviderAccount` |
+| `ChromeSetupWizard` | `src/engines/chrome-setup-wizard.ts` | ✅ Existing | **Account registration** — allocate profile, launch Chrome, poll for login, save `ProviderAccount`. Used directly by agent (no wrapper needed). |
 | `ProfileAllocator` | `src/executor/profile-allocator.ts` | ✅ Existing | Profile dir management (`chrome-profiles/<slug>/<account>/`), `isAuthenticated()` cookie check |
 | `Launcher` | `src/executor/launcher.ts` | ✅ Existing | `launchChrome()` / `launchProfile()` — spawn Chrome with args, wait for debug port |
 | `ProtocolDiscoveryEngine` | `src/engines/protocol-discovery.ts` | ✅ Existing | DOM probes (composers, buttons, response containers), network pattern collection via CDP, manifest draft generation |
@@ -301,12 +301,29 @@ START: "Onboard {provider} at {url}"
 
 | Component | Location | Status | What It Does |
 |-----------|----------|--------|-------------|
-| `AccountRegistrationEngine` | `src/engines/account-registration.ts` | 🆕 CREATE | Wrap `ChromeSetupWizard` + `ProfileAllocator` + `ProviderStore` into one atomic tool: seed provider def, allocate profile, launch Chrome, wait for login, save `ProviderAccount` |
+| ~~`AccountRegistrationEngine`~~ | ~~`src/engines/account-registration.ts`~~ | ⚠️ **REDUNDANT** | ~~Wrap `ChromeSetupWizard` + `ProfileAllocator` + `ProviderStore` into one atomic tool~~ — **Already exists:** `ChromeSetupWizard.runSetup()` handles profile allocation, Chrome launch, login polling, and DB save. Agent calls it directly with a provider seeding step first. |
 | `LiveCaptureEngine` | `src/engines/live-capture-engine.ts` | 🆕 CREATE | CDP Network domain capture: type into composer, click send, accumulate body chunks via `Network.dataReceived` |
 | `FormatClassifier` | `src/engines/format-classifier.ts` | 🆕 CREATE | LLM-driven fallback for unknown wire formats |
 | `SelectorRefiner` | `src/engines/selector-refiner.ts` | 🆕 CREATE | LLM-driven selector healing when probes yield low confidence |
-| `onboard-provider.ts` | `devops/onboard-provider.ts` | 🆕 CREATE | Entry point for the agent: calls `AccountRegistrationEngine`, prints instructions for the agent, provides the toolkit |
+| `onboard-provider.ts` | `devops/onboard-provider.ts` | 🆕 CREATE | Entry point for the agent: seed provider def (if missing), call `ChromeSetupWizard.runSetup()`, print agent instructions + return toolkit context |
 | Provider manifests (Grok + Mistral) | `seeds/providers/manifests.ts` | 🆕 MODIFY | Add manifests for new providers |
+
+**Why `AccountRegistrationEngine` is redundant:**
+
+The existing `ChromeSetupWizard` already does everything:
+1. `allocate(providerSlug, accountId)` — creates profile dir via `ProfileAllocator`
+2. `launchChrome()` — spawns Chrome with debug port
+3. `pollForLogin()` — polls URL via CDP until login detected
+4. `saveAccount()` — upserts `ProviderAccount` row to DB
+
+The only missing piece is "seed provider definition if not in DB" — but this is a one-line check before calling `runSetup()`, not a new engine. The agent can do:
+```typescript
+// Before calling ChromeSetupWizard:
+const def = await db.providerDefinition.findFirst({ where: { slug } })
+if (!def) await db.providerDefinition.create({ data: { slug, displayName, websiteUrl } })
+// Then call existing wizard:
+const result = await wizard.runSetup(def.id, slug, accountId, { visible: true })
+```
 
 ---
 
@@ -314,69 +331,38 @@ START: "Onboard {provider} at {url}"
 
 Each tool is a standalone function the agent can call. Tools are independent — the agent calls them in any order, with any parameters, retrying as needed.
 
-### 6.1 AccountRegistrationEngine
+### 6.1 Account Registration (existing `ChromeSetupWizard`)
 
-Wraps `ChromeSetupWizard` + `ProfileAllocator` + `ProviderStore` into one atomic tool call.
+**No new engine needed.** The existing `ChromeSetupWizard` handles everything. The agent calls it directly after seeding the provider definition.
 
-**File:** `src/engines/account-registration.ts`
+**File:** `src/engines/chrome-setup-wizard.ts` (existing, 329 lines)
 
-**Interface:**
+**What it already does:**
+1. `allocate(providerSlug, accountId)` — creates profile dir via `ProfileAllocator`
+2. `launchChrome()` — spawns Chrome with debug port
+3. `pollForLogin()` — polls URL via CDP until login detected
+4. `saveAccount()` — upserts `ProviderAccount` row to DB
 
+**Agent flow (before calling wizard):**
 ```typescript
-export interface AccountRegistrationOptions {
-  providerSlug: string
-  url: string
-  accountId?: string               // default: 'owservera'
-  loginTimeoutMs?: number          // default: 300_000 (5 min)
-  launchTimeoutMs?: number         // default: 15_000
+// 1. Seed provider definition if missing
+const def = await db.providerDefinition.findFirst({ where: { slug } })
+if (!def) {
+  await db.providerDefinition.create({
+    data: { slug, displayName: 'Grok', websiteUrl: 'https://x.com/i/grok' }
+  })
 }
 
-export interface AccountRegistrationResult {
-  ok: boolean
-  providerSlug: string
-  accountId: string
-  profileDir: string
-  debugPort: number
-  loginState: 'logged_in' | 'pending' | 'failed'
-  error?: string
+// 2. Check if already authenticated (fast no-op)
+const profileDir = await allocator.allocate(slug, accountId)
+if (await allocator.isAuthenticated(profileDir)) {
+  // Already logged in — skip Chrome launch
+  return { ok: true, debugPort: existingPort, profileDir }
 }
 
-export class AccountRegistrationEngine {
-  constructor(
-    private db: CapStoreDb,
-    private allocator: ProfileAllocator,
-    private wizard: ChromeSetupWizard,
-  ) {}
-
-  async register(opts: AccountRegistrationOptions): Promise<AccountRegistrationResult>
-}
-```
-
-**Registration Flow:**
-
-```
-1. Check provider definition exists
-   → db.prisma.providerDefinition.findFirst({ where: { slug } })
-   → If null: auto-seed a minimal definition (slug, display_name, website_url)
-   → If no template available: return { ok: false, error: "no provider template" }
-
-2. Allocate profile directory
-   → allocator.allocate(providerSlug, accountId)
-   → Returns chrome-profiles/<slug>/<account>/
-
-3. Check if already authenticated
-   → allocator.isAuthenticated(profileDir)
-   → If true: return immediately (reuse existing profile)
-
-4. Launch Chrome and wait for login
-   → wizard.runSetup(providerDbId, providerSlug, accountId, { visible: true })
-   → Chrome opens at the provider's login URL
-   → User logs in manually (credentials, OAuth, SMS 2FA)
-   → Wizard polls URL + cookies at 2s intervals
-   → On success: saves ProviderAccount row
-   → On timeout: return { ok: false, loginState: 'pending' }
-
-5. Return result with debugPort so the agent can attach CDP
+// 3. Launch Chrome + wait for login
+const result = await wizard.runSetup(def.id, slug, accountId, { visible: true })
+// result: { ok: true, debugPort, profileDir }
 ```
 
 **Idempotent:** If `ProviderAccount` + cookies already exist, this is a fast no-op. Only launches Chrome if the profile dir lacks valid cookies.
@@ -580,17 +566,15 @@ The agent builds the manifest from what it discovered during UI exploration plus
 
 ---
 
-### 6.7 AccountRegistrationEngine (detailed flow)
+### 6.7 Account Registration (detailed flow)
 
 The agent calls this FIRST. It ensures ChromeGovernor can later use this provider.
 
-```
-Agent calls: AccountRegistrationEngine.register({
-  providerSlug: 'grok',
-  url: 'https://x.com/i/grok',
-})
+**No new engine needed** — use existing `ChromeSetupWizard` directly.
 
-Engine:
+```
+Agent flow:
+
   1. Check if ProviderDefinition('grok') exists in DB
      → If not: seed minimal definition { slug: 'grok', display_name: 'Grok', website_url: 'https://x.com/i/grok', provider_type: 'llm', auth_type: 'browser' }
      → The full manifest (endpoints, models, capabilities) will be seeded later by ProviderRegistrar
@@ -613,8 +597,7 @@ Engine:
      → Saves ProviderAccount to DB with loginState='logged_in', profileDir, debugPort
      → Returns SetupResult { ok: true, debugPort, profileDir }
 
-  5. Returns AccountRegistrationResult { ok: true, debugPort, profileDir }
-     → Agent now has the debug port to attach CdpSender and begin exploration
+  5. Agent now has debugPort to attach CdpSender and begin exploration
 ```
 
 **What the agent has after Step 0:**
@@ -635,7 +618,9 @@ As the agent, you have:
 
 | Tool | Purpose | Signature |
 |------|---------|-----------|
-| `AccountRegistrationEngine.register()` | Set up profile + login | `(providerSlug, url, accountId?) → { debugPort, profileDir }` |
+| `ChromeSetupWizard.runSetup()` | Set up profile + login | `(providerDbId, providerSlug, accountId, opts?) → SetupResult { debugPort, profileDir }` |
+| `ProfileAllocator.allocate()` | Create profile dir | `(providerSlug, accountId) → profileDir` |
+| `ProfileAllocator.isAuthenticated()` | Check if profile has cookies | `(profileDir) → boolean` |
 | `ProtocolDiscoveryEngine.discover()` | Probe DOM for composers, buttons, network patterns | `(url, CdpSender, sessionId) → DiscoveredProtocol` |
 | `LiveCaptureEngine.captureResponse()` | Send message + capture streaming response | `(composerSelector, sendButtonSelector?) → { rawBody }` |
 | `StreamingResponseAnalyzer.analyze()` | Classify format + generate parser code | `(rawBody) → StreamAnalysis { logicCode }` |
@@ -833,15 +818,15 @@ The DB upserts are idempotent. Re-running the agent overwrites existing rows usi
 
 ## 10. Implementation Plan
 
-### Phase A: Core Tools (5 files, ~600 loc)
+### Phase A: Core Tools (4 files, ~500 loc)
 
 | # | File | Action | Purpose |
 |---|------|--------|---------|
-| A0 | `src/engines/account-registration.ts` | CREATE | Wrap ChromeSetupWizard + ProfileAllocator into a single tool: seed provider def, allocate profile, launch Chrome, wait for login, save ProviderAccount |
+| ~~A0~~ | ~~`src/engines/account-registration.ts`~~ | ⚠️ SKIP | **Redundant** — `ChromeSetupWizard.runSetup()` already handles profile allocation, Chrome launch, login polling, DB save. Agent calls it directly after seeding provider definition. |
 | A1 | `src/engines/live-capture-engine.ts` | CREATE | CDP Network domain: type into composer, click send, accumulate body chunks, detect completion |
 | A2 | `src/engines/format-classifier.ts` | CREATE | LLM-driven format classification + parser generation (fallback when analyzer confidence < 0.7) |
 | A3 | `src/engines/selector-refiner.ts` | CREATE | LLM-driven selector healing when probes yield low confidence |
-| A4 | `devops/onboard-provider.ts` | CREATE | Entry point: calls `AccountRegistrationEngine`, prints agent instructions + returns toolkit context |
+| A4 | `devops/onboard-provider.ts` | CREATE | Entry point: seed provider def (if missing), call `ChromeSetupWizard.runSetup()`, print agent instructions + return toolkit context |
 
 ### Phase B: Provider Manifests (1 file, ~200 loc)
 
@@ -853,7 +838,7 @@ The DB upserts are idempotent. Re-running the agent overwrites existing rows usi
 
 | # | File | Action | Purpose |
 |---|------|--------|---------|
-| C1 | `devops/index.ts` | MODIFY | Add `onboard-provider` subcommand that calls `AccountRegistrationEngine` then returns agent instructions |
+| C1 | `devops/index.ts` | MODIFY | Add `onboard-provider` subcommand: seed provider def, call `ChromeSetupWizard.runSetup()`, return agent instructions |
 
 ### Phase D: Verification Script (1 file, ~50 loc)
 
@@ -971,7 +956,7 @@ This section is written **for the agent** — it tells you what to do when thing
 | New Term | Definition |
 |----------|-----------|
 | **APOP-AX** | Autonomous Provider Onboarding Pipeline — Agent-as-Explorer. The agent autonomously drives provider onboarding using a toolkit of capabilities. |
-| **Account Registration (Step 0)** | The first action: seed provider def, allocate profile, launch Chrome, wait for login, save `ProviderAccount` row. |
+| **Account Registration (Step 0)** | The first action: seed provider def (if missing), allocate profile, launch Chrome, wait for login, save `ProviderAccount` row. Uses existing `ChromeSetupWizard.runSetup()`. |
 | **Agent-as-Runtime** | The agent IS the runtime of its own dev loop — decides what to do, calls tools, interprets results, adapts. No fixed pipeline. |
 | **LiveCaptureEngine** | Tool that types a test message into a composer, clicks send, and captures the streaming response body via CDP Network domain. |
 | **FormatClassifier** | LLM-driven fallback for classifying unknown wire formats and generating parsers. |
@@ -987,7 +972,7 @@ This section is written **for the agent** — it tells you what to do when thing
 - `devops/onboard-controller.ts` — Existing 8-phase pipeline (individual modes reusable)
 - `src/engines/protocol-discovery.ts` — Current discovery engine (reused as tool)
 - `src/engines/streaming-response-analyzer.ts` — Current analyzer (reused as tool)
-- `src/engines/chrome-setup-wizard.ts` — Current setup wizard (wrapped by AccountRegistrationEngine)
+- `src/engines/chrome-setup-wizard.ts` — Account registration (used directly by agent, no wrapper needed)
 - `src/executor/profile-allocator.ts` — Profile directory management
 - `sota-02-shape-agnostic-registration.md` — ProviderDiscoveryEngine, ManifestInferenceEngine
 - `sota-09-harness-protocol-engine.md` — ResponseExtractor (parser repair techniques)

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getWsUrl } from '@/sdk/backend-client';
+import { getWsUrl } from '@/lib/ws-url';
 
 type Tab = 'events' | 'inject' | 'latency';
 

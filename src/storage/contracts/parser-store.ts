@@ -11,6 +11,7 @@ export interface ProviderParserRow {
   filePath: string | null
   logicCode: string | null // Inline TypeScript/JavaScript for DB-driven loading
   hash: string
+  sampleBody: string | null // Representative wire-format sample for testing
   isActive: number
   fallbackParserId: string | null
   createdAt: number

@@ -482,11 +482,39 @@ export class AutonomousExecutionEngine {
     return task
   }
 
+  // ── Pause / Resume (HITL v2) ──────────────────────────────────────────
+
+  // Snapshot the current cursor + plan + provenance root into paused_state_json
+  private cursorOf(task: AutonomousTask): number {
+    return task.steps.findIndex((s) => s.status === 'pending' || s.status === 'running')
+  }
+
+  private provRoot(task: AutonomousTask): string | null {
+    return task.steps[0]?.id ?? null
+  }
+
+  private cursorMatches(task: AutonomousTask, savedCursor: number): boolean {
+    return this.cursorOf(task) === savedCursor
+  }
+
+  private provChainIntact(task: AutonomousTask, savedRoot: string | null): boolean {
+    return this.provRoot(task) === savedRoot
+  }
+
   async pause(taskId: string): Promise<void> {
     const task = this.activeTasks.get(taskId) ?? (await this.getStatus(taskId))
     if (!task) return
     task.status = 'paused'
-    await this.store.updateTask(taskId, { status: 'paused' })
+    // Build snapshot from in-memory task (more accurate than store during mid-execution)
+    const snapshot = {
+      cursor: this.cursorOf(task),
+      plan: task.steps.map((s) => ({ id: s.id, stepIndex: s.stepIndex, status: s.status })),
+      provenanceRoot: this.provRoot(task),
+    }
+    await this.store.updateTask(taskId, {
+      status: 'paused',
+      pausedStateJson: JSON.stringify(snapshot),
+    })
     this.eventBus.emit({ type: 'autonomous:paused', taskId })
   }
 
@@ -494,8 +522,66 @@ export class AutonomousExecutionEngine {
     const task = this.activeTasks.get(taskId) ?? (await this.getStatus(taskId))
     if (!task) return null
     if ((task.status as string) !== 'paused') return task
+
+    // Validate world state against snapshot
+    const pausedRow = await this.store.getTask(taskId)
+    const pausedStateJson = pausedRow?.pausedStateJson as string | null
+    let worldMatches = true
+    if (pausedStateJson) {
+      const snapshot = JSON.parse(pausedStateJson) as {
+        cursor: number
+        plan: Array<{ id: string; stepIndex: number; status: string }>
+        provenanceRoot: string | null
+      }
+      worldMatches =
+        this.cursorMatches(task, snapshot.cursor) && this.provChainIntact(task, snapshot.provenanceRoot)
+    }
+
     this.activeTasks.set(taskId, task)
+    this.eventBus.emit({ type: 'autonomous:resumed', taskId, replanned: !worldMatches })
+
+    if (!worldMatches) {
+      // World changed — replan remaining steps instead of blindly continuing
+      void this.replanRemainingSteps(task)
+      return task
+    }
+
     return this.runTask(task)
+  }
+
+  // Replan remaining steps when world state doesn't match snapshot.
+  // Marks incomplete steps as 'skipped' and creates new steps from the goal.
+  private async replanRemainingSteps(task: AutonomousTask): Promise<void> {
+    // Mark all pending/running steps as skipped
+    for (const step of task.steps) {
+      if (step.status === 'pending' || step.status === 'running') {
+        step.status = 'skipped'
+        await this.store.updateStep(step.id, { status: 'skipped' })
+      }
+    }
+
+    // Create new steps from the goal
+    const newSteps = await this.planGoal(task.goal)
+    task.steps = [...task.steps.filter((s) => s.status === 'complete'), ...newSteps]
+
+    for (const step of newSteps) {
+      await this.store.createStep({
+        id: step.id,
+        taskId: task.id,
+        stepIndex: step.stepIndex,
+        description: step.description,
+        action: step.action,
+        actionInputJson: JSON.stringify(step.actionInput),
+        classification: step.classification,
+        status: 'pending',
+        requiresHumanApproval: step.requiresHumanApproval ? 1 : 0,
+      })
+    }
+
+    // Continue execution with new plan
+    task.status = 'executing'
+    await this.store.updateTask(task.id, { status: 'executing' })
+    void this.runTask(task)
   }
 
   async cancel(taskId: string): Promise<void> {

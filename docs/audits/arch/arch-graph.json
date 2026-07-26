@@ -90,6 +90,7 @@
     "engines/execution-memoizer",
     "engines/execution-policy",
     "engines/export",
+    "engines/format-classifier",
     "engines/governance-engine",
     "engines/harness",
     "engines/harness-checkpoint",
@@ -109,6 +110,7 @@
     "engines/knowledge-extractor",
     "engines/knowledge-ingestion",
     "engines/live-capability-registry",
+    "engines/live-capture-engine",
     "engines/local-agent",
     "engines/local-model-adapter",
     "engines/lock-manager",
@@ -151,6 +153,7 @@
     "engines/sandbox-runner",
     "engines/selector-cache",
     "engines/selector-healer",
+    "engines/selector-refiner",
     "engines/semantic-grounding",
     "engines/semantic-search",
     "engines/send-capability",
@@ -168,6 +171,7 @@
     "engines/streaming-protocol",
     "engines/streaming-response-analyzer",
     "engines/sync",
+    "engines/task-history",
     "engines/telemetry-aggregator",
     "engines/telemetry-audit",
     "engines/tool-use-protocol",
@@ -804,6 +808,10 @@
     },
     {
       "from": "engines/autonomous-execution",
+      "to": "engines/capability-composer"
+    },
+    {
+      "from": "engines/autonomous-execution",
       "to": "engines/capability-event-bus"
     },
     {
@@ -1435,6 +1443,14 @@
       "to": "engines/encryption"
     },
     {
+      "from": "engines/format-classifier",
+      "to": "errors"
+    },
+    {
+      "from": "engines/format-classifier",
+      "to": "engines/streaming-response-analyzer"
+    },
+    {
       "from": "engines/governance-engine",
       "to": "errors"
     },
@@ -1693,6 +1709,18 @@
     {
       "from": "engines/live-capability-registry",
       "to": "engines/unified-registry"
+    },
+    {
+      "from": "engines/live-capture-engine",
+      "to": "errors"
+    },
+    {
+      "from": "engines/live-capture-engine",
+      "to": "engines/protocol-discovery"
+    },
+    {
+      "from": "engines/live-capture-engine",
+      "to": "engines/streaming-response-analyzer"
     },
     {
       "from": "engines/local-agent",
@@ -2191,6 +2219,14 @@
       "to": "engines/workflow-engine"
     },
     {
+      "from": "engines/selector-refiner",
+      "to": "errors"
+    },
+    {
+      "from": "engines/selector-refiner",
+      "to": "engines/format-classifier"
+    },
+    {
       "from": "engines/semantic-grounding",
       "to": "engines/chrome-governor"
     },
@@ -2361,6 +2397,10 @@
     {
       "from": "engines/sync",
       "to": "engines/encryption"
+    },
+    {
+      "from": "engines/task-history",
+      "to": "storage/contracts"
     },
     {
       "from": "engines/telemetry-aggregator",
@@ -3169,6 +3209,10 @@
     {
       "from": "server/autonomous-router",
       "to": "engines/execution-policy"
+    },
+    {
+      "from": "server/autonomous-router",
+      "to": "engines/task-history"
     },
     {
       "from": "server/canvas-router",
@@ -4257,6 +4301,10 @@
       "layer": 3
     },
     {
+      "module": "engines/format-classifier",
+      "layer": 3
+    },
+    {
       "module": "engines/governance-engine",
       "layer": 3
     },
@@ -4330,6 +4378,10 @@
     },
     {
       "module": "engines/live-capability-registry",
+      "layer": 3
+    },
+    {
+      "module": "engines/live-capture-engine",
       "layer": 3
     },
     {
@@ -4501,6 +4553,10 @@
       "layer": 3
     },
     {
+      "module": "engines/selector-refiner",
+      "layer": 3
+    },
+    {
       "module": "engines/semantic-grounding",
       "layer": 3
     },
@@ -4566,6 +4622,10 @@
     },
     {
       "module": "engines/sync",
+      "layer": 3
+    },
+    {
+      "module": "engines/task-history",
       "layer": 3
     },
     {
@@ -5431,10 +5491,10 @@
     {
       "module": "engines/autonomous-execution",
       "fanIn": 5,
-      "fanOut": 11,
-      "instability": 0.6875,
+      "fanOut": 12,
+      "instability": 0.7058823529411765,
       "selfDeps": 0,
-      "totalDeps": 11,
+      "totalDeps": 12,
       "cohesion": 0,
       "files": 1
     },
@@ -5530,9 +5590,9 @@
     },
     {
       "module": "engines/capability-composer",
-      "fanIn": 1,
+      "fanIn": 2,
       "fanOut": 3,
-      "instability": 0.75,
+      "instability": 0.6,
       "selfDeps": 0,
       "totalDeps": 3,
       "cohesion": 0,
@@ -5919,6 +5979,16 @@
       "files": 1
     },
     {
+      "module": "engines/format-classifier",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/governance-engine",
       "fanIn": 1,
       "fanOut": 2,
@@ -6105,6 +6175,16 @@
       "instability": 1,
       "selfDeps": 0,
       "totalDeps": 8,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/live-capture-engine",
+      "fanIn": 0,
+      "fanOut": 3,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 3,
       "cohesion": 0,
       "files": 1
     },
@@ -6360,9 +6440,9 @@
     },
     {
       "module": "engines/protocol-discovery",
-      "fanIn": 0,
+      "fanIn": 1,
       "fanOut": 1,
-      "instability": 1,
+      "instability": 0.5,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -6529,6 +6609,16 @@
       "files": 1
     },
     {
+      "module": "engines/selector-refiner",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/semantic-grounding",
       "fanIn": 2,
       "fanOut": 1,
@@ -6680,7 +6770,7 @@
     },
     {
       "module": "engines/streaming-response-analyzer",
-      "fanIn": 0,
+      "fanIn": 2,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6695,6 +6785,16 @@
       "instability": 0.5,
       "selfDeps": 0,
       "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/task-history",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
       "cohesion": 0,
       "files": 1
     },
@@ -6820,7 +6920,7 @@
     },
     {
       "module": "errors",
-      "fanIn": 76,
+      "fanIn": 79,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7511,10 +7611,10 @@
     {
       "module": "server/autonomous-router",
       "fanIn": 1,
-      "fanOut": 2,
-      "instability": 0.6666666666666666,
+      "fanOut": 3,
+      "instability": 0.75,
       "selfDeps": 0,
-      "totalDeps": 2,
+      "totalDeps": 3,
       "cohesion": 0,
       "files": 1
     },
@@ -7740,9 +7840,9 @@
     },
     {
       "module": "storage/contracts",
-      "fanIn": 72,
+      "fanIn": 73,
       "fanOut": 13,
-      "instability": 0.15294117647058825,
+      "instability": 0.1511627906976744,
       "selfDeps": 1,
       "totalDeps": 13,
       "cohesion": 0.07692307692307693,

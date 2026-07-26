@@ -30,8 +30,6 @@ export { ConceptualModelService, buildRouteSyncDeps } from './conceptual-model-s
 export { CanvasLayerMounter } from './canvas-layer-mounter';
 export type { LayerDefinition, MountedLayer } from './canvas-layer-mounter';
 
-export { CapabilityResolutionEngine } from './capability-resolution';
-
 export { CanvasRegistry } from './canvas-registry';
 
 export { PluginManager } from './plugin-system';

@@ -26,6 +26,7 @@ const ParserSchema = z.object({
   fallback: z.string().optional(),
   logic_type: z.enum(['file', 'inline', 'composed']).optional().default('inline'),
   logic_code: z.string().optional(), // Inline TypeScript/JavaScript for DB-driven loading
+  sample_body: z.string().optional(), // Representative wire-format sample for testing
 })
 
 const ModelSchema = z.object({

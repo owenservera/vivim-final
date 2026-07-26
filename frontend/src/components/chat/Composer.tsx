@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getMessages } from '@/sdk/backend-client';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 import { useWebSocket, type WsMessage } from '@/hooks/useWebSocket';
 import { StreamingIndicator } from '@/components/canvas/StreamingIndicator';
 import { EmptyState } from './EmptyState';
@@ -45,6 +45,7 @@ function normalizeKind(raw: string | undefined): string {
 }
 
 export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps) {
+  const io = useIO();
   const [messages, setMessages] = useState<Message[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
@@ -84,9 +85,13 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
   }, []);
 
   const loadHistory = useCallback(async (id: string) => {
-    const res = await getMessages(id).catch(() => null);
-    if (res?.ok) setMessages((res.data?.messages ?? []) as Message[]);
-  }, []);
+    try {
+      const res = await io.get<{ messages?: Message[] }>(`/api/conversations/${encodeURIComponent(id)}/messages`);
+      if (res.data?.messages) setMessages(res.data.messages);
+    } catch {
+      // network error — keep current state
+    }
+  }, [io]);
 
   useEffect(() => {
     setMessages([]);

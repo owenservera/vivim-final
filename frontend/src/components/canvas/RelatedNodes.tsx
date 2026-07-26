@@ -9,7 +9,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { searchKnowledge } from '@/sdk/backend-client';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 import { useMlStore } from '@/ml/ml-store';
 import { cosine } from '@/ml/embed-runtime';
 
@@ -28,6 +28,7 @@ interface RankedRelated {
 }
 
 export function RelatedNodes({ query }: { query?: string }) {
+  const io = useIO();
   const [items, setItems] = useState<RankedRelated[]>([]);
   const [loading, setLoading] = useState(false);
   const status = useMlStore((s) => s.status);
@@ -38,8 +39,8 @@ export function RelatedNodes({ query }: { query?: string }) {
     setLoading(true);
 
     (async () => {
-      const serverRes = await searchKnowledge(q).catch(() => null);
-      const results: KnowledgeResult[] = serverRes?.data?.results ?? [];
+      const res = await io.get<{ results?: KnowledgeResult[] }>(`/api/knowledge/search?q=${encodeURIComponent(q)}`).catch(() => null);
+      const results: KnowledgeResult[] = res?.data?.results ?? [];
       if (cancelled) return;
 
       // Attempt local re-rank.
