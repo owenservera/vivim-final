@@ -11,7 +11,10 @@ import type {
   AgentCanvasPolicy,
 } from '../shared/agent-canvas.js'
 import { DEFAULT_POLICY } from '../shared/agent-canvas.js'
+import { getLogger } from '../lib/logger.js'
 import type { ServerContext } from './index.js'
+
+const log = getLogger('agent-canvas-router')
 import { errorResponse, json } from './response.js'
 
 // In-memory policy store (replace with DB in production)
@@ -52,7 +55,7 @@ export function createAgentCanvasRouter(_ctx: ServerContext) {
         // which forwards to this endpoint, and the canvas executor runs on the client.
         return json({ type: 'canvas.error', payload: { code: 'SERVER_EXECUTOR_UNAVAILABLE', message: 'Canvas commands must be executed via the frontend canvas executor. The server does not have access to the browser EventBus.' } }, 501)
       } catch (err) {
-        console.error('[AgentCanvasRouter] Error executing command:', err)
+        log.error({ err }, '[AgentCanvasRouter] Error executing command')
         return errorResponse('Internal server error', 'INTERNAL_ERROR', 500)
       }
     }
@@ -91,7 +94,7 @@ export function createAgentCanvasRouter(_ctx: ServerContext) {
 
         return json(updated)
       } catch (err) {
-        console.error('[AgentCanvasRouter] Error updating policy:', err)
+        log.error({ err }, '[AgentCanvasRouter] Error updating policy')
         return errorResponse('Internal server error', 'INTERNAL_ERROR', 500)
       }
     }
@@ -99,7 +102,7 @@ export function createAgentCanvasRouter(_ctx: ServerContext) {
     // POST /api/agent/canvas/plan — natural language → canvas plan
     if (url.pathname === '/api/agent/canvas/plan' && req.method === 'POST') {
       try {
-        const body = await req.json()
+        const body = (await req.json()) as Record<string, unknown>
         const prompt = (body.prompt ?? '').toString().trim()
 
         if (!prompt) {
@@ -198,7 +201,7 @@ export function createAgentCanvasRouter(_ctx: ServerContext) {
 
         return json({ ok: true, plan })
       } catch (err) {
-        console.error('[AgentCanvasRouter] Error creating plan:', err)
+        log.error({ err }, '[AgentCanvasRouter] Error creating plan')
         return errorResponse('Internal server error', 'INTERNAL_ERROR', 500)
       }
     }

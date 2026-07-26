@@ -1,14 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { sendMessage, getMessages } from '@/sdk/backend-client';
+import { getMessages } from '@/sdk/backend-client';
 import { useWebSocket, type WsMessage } from '@/hooks/useWebSocket';
 import { StreamingIndicator } from '@/components/canvas/StreamingIndicator';
 import { EmptyState } from './EmptyState';
-import { classify } from '@/ml/prerouter';
-import { useMlStore } from '@/ml/ml-store';
 import { RenderBlocks, type ContentBlock } from './MessageBlock';
 import { LatencyBreakdown, type TimingInfo } from './LatencyBreakdown';
+import { ComposerShell, defaultChatScope } from './ComposerShell';
 
 interface Message {
   id: string;
@@ -47,14 +46,11 @@ function normalizeKind(raw: string | undefined): string {
 
 export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
   const [streamingTiming, setStreamingTiming] = useState<TimingInfo | null>(null);
   const [lastEvent, setLastEvent] = useState<string | undefined>();
-  const [localSuggestion, setLocalSuggestion] = useState<string | null>(null);
-  const [lastError, setLastError] = useState<string | null>(null);
-  const [retrying, setRetrying] = useState(false);
+  const [optimisticText, setOptimisticText] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const pendingBlocksRef = useRef<PendingBlock[]>([]);
@@ -97,10 +93,8 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
     setStreamingBlocks([]);
     setStreamingTiming(null);
     setStreaming(false);
-    setLastError(null);
     setLastEvent(undefined);
-    setRetrying(false);
-    setLocalSuggestion(null);
+    setOptimisticText(null);
     pendingBlocksRef.current.splice(0);
     pendingTimingRef.current = null;
     if (conversationId) loadHistory(conversationId);
@@ -152,55 +146,20 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, streamingBlocks]);
 
-  const retryLast = useCallback(async () => {
-    const lastUser = [...messages].reverse().find((m) => m.role === 'user');
-    if (!lastUser || !conversationId) return;
-    setRetrying(true);
-    setLastError(null);
-    setStreaming(true);
-    setStreamingBlocks([]);
-    setStreamingTiming(null);
-    const res = await sendMessage(conversationId, lastUser.content).catch(() => null);
-    if (!res?.ok) {
-      setStreaming(false);
-      setLastError(res?.error ?? 'Retry failed');
+  // Called when ComposerShell completes a send
+  const handleShellResult = useCallback((ok: boolean, error?: string) => {
+    if (!ok) {
+      setLastEvent(`send failed: ${error ?? 'unknown'}`);
     }
-    setRetrying(false);
-  }, [conversationId, messages]);
+  }, []);
 
-  const send = async () => {
-    if (!conversationId || !draft.trim()) return;
-    const text = draft.trim();
-    setLastError(null);
-
-    const route = classify(text);
-    if (route.route === 'local' && route.action) {
-      useMlStore.getState().recordLocalAction();
-      setLocalSuggestion(`Local action detected: ${route.action} (remote fallback used)`);
-    } else {
-      setLocalSuggestion(null);
+  // Called when ComposerShell streaming state changes
+  const handleStreamingChange = useCallback((val: boolean) => {
+    setStreaming(val);
+    if (val) {
+      setOptimisticText(null);
     }
-
-    const optimistic: Message = {
-      id: `local-${Date.now()}`,
-      role: 'user',
-      content: text,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimistic]);
-    setDraft('');
-    setStreamingBlocks([]);
-    setStreamingTiming(null);
-    setStreaming(true);
-    const res = await sendMessage(conversationId, text).catch(() => null);
-    if (res?.ok) {
-      if (res.data?.error) setLastEvent(`send note: ${res.data.error}`);
-    } else if (!res?.ok) {
-      setStreaming(false);
-      setLastEvent(`send failed: ${res?.error ?? 'unknown'}`);
-      setLastError(res?.error ?? 'Send failed');
-    }
-  };
+  }, []);
 
   if (!conversationId) {
     return <EmptyState />;
@@ -290,108 +249,13 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
         lastEvent={lastEvent}
       />
 
-      {localSuggestion && (
-        <div
-          style={{
-            margin: '0 10px',
-            padding: '6px 10px',
-            borderRadius: 6,
-            border: '1px solid var(--border)',
-            background: 'var(--bg-elevated)',
-            fontSize: 12,
-            opacity: 0.85,
-          }}
-        >
-          {localSuggestion}
-        </div>
-      )}
-
-      {lastError && (
-        <div
-          style={{
-            margin: '0 10px',
-            padding: '8px 10px',
-            borderRadius: 6,
-            border: '1px solid #ef4444',
-            background: 'rgba(239,68,68,0.08)',
-            color: '#ef4444',
-            fontSize: 12,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          <span style={{ flex: 1 }}>{lastError}</span>
-          <button
-            type="button"
-            onClick={retryLast}
-            disabled={retrying}
-            style={{
-              fontSize: 11,
-              padding: '2px 8px',
-              borderRadius: 4,
-              border: '1px solid #ef4444',
-              background: retrying ? 'transparent' : '#ef4444',
-              color: retrying ? '#ef4444' : '#fff',
-              cursor: retrying ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {retrying ? 'Retrying…' : 'Retry'}
-          </button>
-        </div>
-      )}
-
-      <div
-        style={{
-          display: 'flex',
-          gap: 8,
-          padding: 10,
-          borderTop: '1px solid var(--border)',
-        }}
-      >
-        <textarea
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
-          placeholder="Type a message… (Enter to send)"
-          rows={2}
-          style={{
-            flex: 1,
-            resize: 'none',
-            padding: '8px 10px',
-            border: '1px solid var(--border)',
-            borderRadius: 8,
-            background: 'var(--bg)',
-            color: 'var(--text)',
-            fontSize: 13,
-            fontFamily: 'inherit',
-          }}
-        />
-        <button
-          type="button"
-          onClick={send}
-          disabled={!draft.trim()}
-          style={{
-            padding: '8px 16px',
-            border: '1px solid var(--border)',
-            borderRadius: 8,
-            background: draft.trim() ? 'var(--accent)' : 'var(--bg-subtle)',
-            color: draft.trim()
-              ? 'var(--accent-foreground, #fff)'
-              : 'var(--text-muted)',
-            cursor: draft.trim() ? 'pointer' : 'not-allowed',
-            fontSize: 13,
-            fontFamily: 'inherit',
-          }}
-        >
-          Send
-        </button>
-      </div>
+      <ComposerShell
+        scope={defaultChatScope()}
+        conversationId={conversationId}
+        providerId={null}
+        onSendResult={handleShellResult}
+        onStreamingChange={handleStreamingChange}
+      />
     </div>
   );
 }

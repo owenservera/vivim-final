@@ -81,6 +81,16 @@ export { MinimapNode } from './MinimapNode';
 export type { MinimapNodeProps } from './MinimapNode';
 export { ChatSurface } from '../chat/ChatSurface';
 
+// New minimal chrome system
+export { CommandBar } from './CommandBar';
+export type { CommandBarProps } from './CommandBar';
+export { Panel } from './Panel';
+export type { PanelConfig, PanelDock, PanelSize, PanelProps } from './Panel';
+export { MainMenu } from './MainMenu';
+export { ConversationsPanel } from './panels/ConversationsPanel';
+export { ProvidersPanel } from './panels/ProvidersPanel';
+export { SettingsPanel } from './panels/SettingsPanel';
+
 // Universal registry — single registry for ALL UI components
 export { UniversalComponentProvider } from './UniversalComponentProvider';
 export { registerAllComponents } from './register-all';

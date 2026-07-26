@@ -184,10 +184,18 @@ export async function registerDefaultCapabilities(
         apiEndpoint: { method: 'DELETE', path: '/api/conversations/{id}' },
       },
       async (input) => {
-        await services.db.prisma.conversation.delete({
-          where: { id: String(input.conversationId ?? '') },
-        })
-        return { ok: true }
+        const id = String(input.conversationId ?? '')
+        if (!id) return { ok: false, error: 'conversationId is required' }
+        try {
+          await services.db.prisma.conversation.delete({ where: { id } })
+          return { ok: true }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          if (msg.includes('No record was found') || msg.includes('Record to delete does not exist')) {
+            return { ok: false, error: 'Conversation not found' }
+          }
+          throw err
+        }
       },
     ),
     makeCapability(

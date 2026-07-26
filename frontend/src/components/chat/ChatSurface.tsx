@@ -95,7 +95,7 @@ export function ChatSurface({ defaultProviderId }: { defaultProviderId?: string 
 
   return (
     <ChatSlotSurface
-      providerSlug={providerSlug}
+      providerSlug={providerSlug ?? ''}
       capabilitySlug={undefined}
       slotProps={slotProps}
     />

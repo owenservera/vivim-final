@@ -193,6 +193,29 @@ tests/
 seeds/          # Database seed files
 ```
 
+### File Organization (Frontend)
+```
+frontend/
+  src/
+    app/          # Next.js App Router (layout, page, api/)
+    canvas/       # Canvas live-config
+    cli/          # Frontend CLI tools (canvas-scaffold)
+    components/   # React components (canvas/, chat/, memory/, ui/)
+    engines/      # Frontend engines (canvas, workspace, plugin, rbac, presence, etc.)
+    features/     # Feature modules (onboarding, provider-setup-wizard)
+    hooks/        # React hooks
+    registry/     # CapabilityRegistry
+    sdk/          # Frontend SDK
+    storage/      # Storage contracts + memory impls
+    ui/           # Slot system (slots.ts, registry.ts, context.tsx, defaults/)
+    actions/      # ActionRegistry + auto-populate
+    api/          # API client
+    types/        # TypeScript types
+  plugins/        # Plugin system (sample-plugin, demo-plugin)
+  tests/          # Frontend tests (unit, integration, e2e)
+  prisma/         # Frontend Prisma schema
+```
+
 ## When Implementing Engines
 
 1. Read the engine spec from `docs/merged-design-v2/04-merged-engines.md` or `05-merged-lifecycles.md`
@@ -352,7 +375,7 @@ scripts that bypass the registry.
 
 Lessons from building the taxonomy generation pipeline and cross-surface verification.
 
-1. **UI slot IDs must be namespaced** — The frontend `SLOT_IDS` in `web/ui/src/ui/slots.ts` use `chat.actionBar`, `chat.composer`, `chat.sidebar` (not short names). The taxonomy pipeline's `CATEGORY_POSITIONS` table must use these exact values or `ui_position` silently fails.
+1. **UI slot IDs must be namespaced** — The frontend `SLOT_IDS` in `frontend/src/ui/slots.ts` use `chat.actionBar`, `chat.composer`, `chat.sidebar` (not short names). The taxonomy pipeline's `CATEGORY_POSITIONS` table must use these exact values or `ui_position` silently fails.
 
 2. **Capability nodes may lack `category`** — Shared capability nodes often have no `category` field. When generating `apiEndpoint.path`, derive category from `slug.split('_')[0]` — not `node.category`.
 
@@ -607,7 +630,7 @@ instead of forcing full-file reads (cuts the ~60–70% exploration tax). Native
 (`docs/research/briefs/local-code-indexing-llm-brief.md`).
 
 ```bash
-bun run devops code-index build            # index code-only roots (src, devops, web, scripts, seeds, prisma); watch by default
+bun run devops code-index build            # index code-only roots (src, devops, frontend, scripts, seeds, prisma); watch by default
 bun run devops code-index build --all      # index the whole repo
 bun run devops code-index build --no-watch # one-shot, no file watcher
 bun run devops code-index search "StreamParserEngine fallback"
@@ -626,9 +649,23 @@ bun run devops code-index mcp              # stdio MCP: code_index_search + code
 - **Surfaces:** CLI for sub-agents (they can't call MCP directly) + stdio MCP for the
   top-level agent. This is the recommended replacement for `grep`/`Read` during exploration.
 
+## Frontend
+
+**Location:** `frontend/` (NOT `web/ui/` — that dir is empty)
+- **Framework:** Next.js 16 + React 19 + Tailwind 4
+- **Package:** `vivim-frontend` v0.2.0
+- **Entry:** `frontend/src/app/` (Next.js App Router)
+- **Engines:** `frontend/src/engines/` (canvas, workspace, plugin, rbac, presence, etc.)
+- **UI slots:** `frontend/src/ui/slots.ts`, `frontend/src/ui/registry.ts`, `frontend/src/ui/defaults/`
+- **Canvas:** `frontend/src/canvas/`, `frontend/src/features/`
+- **Storage contracts:** `frontend/src/storage/contracts/` (memory impls in `storage/impl/`)
+- **CLI:** `frontend/src/cli/` (canvas-scaffold, etc.)
+- **Plugins:** `frontend/plugins/` (sample-plugin, demo-plugin)
+- **Commands:** `cd frontend && bun run dev` (port 3000), `bun run build`, `bun run typecheck`, `bun run test`
+
 ## Frontend Convergence (Sandbox Harvest — completed)
 
-All sandbox behavioral concepts have been collapsed into the main UI (`web/ui/`).
+All sandbox behavioral concepts have been collapsed into the main UI (`frontend/`).
 The empty `web/sandbox/` dir remains (stale file lock from bun watcher, harmless).
 
 ### Architecture Rules

@@ -1,5 +1,5 @@
 // src/storage/contracts/autonomous-store.ts
-// AutonomousExecutionStore — persistence contract for autonomous tasks, steps, gates
+// AutonomousExecutionStore — persistence contract for autonomous tasks, steps, gates, templates
 
 export interface AutonomousExecutionStore {
   createTask(task: Record<string, unknown>): Promise<void>
@@ -14,4 +14,9 @@ export interface AutonomousExecutionStore {
   updateHitlGate(id: string, patch: Record<string, unknown>): Promise<void>
   getPendingGates(taskId?: string): Promise<Array<Record<string, unknown>>>
   getGate(id: string): Promise<Record<string, unknown> | null>
+  // Unit 8.10: task templates
+  getTaskTemplate(id: string): Promise<Record<string, unknown> | null>
+  insertTaskTemplate(template: Record<string, unknown>): Promise<string>
+  updateTaskTemplate(id: string, patch: Record<string, unknown>): Promise<void>
+  listTaskTemplates(opts?: { isShared?: boolean }): Promise<Array<Record<string, unknown>>>
 }

@@ -170,12 +170,10 @@ export class HarnessExecutorEngine implements HarnessExecutor {
       capabilityId: `cap:${req.capabilitySlug}`,
       bindingId: req.bindingId ?? program.bindingId,
       providerId: req.providerId,
-      accountId: req.accountId,
-      ok,
-      latencyMs: Date.now() - start,
+      ok: ok ? 1 : 0,
+      durationMs: Date.now() - start,
       error: error ?? null,
-      outputJson: JSON.stringify({ programId: program.id }),
-      traceId,
+      ts: Date.now(),
     })
   }
 

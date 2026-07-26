@@ -1,11 +1,12 @@
 // src/engines/autonomous-execution.ts
 // AutonomousExecutionEngine — multi-step autonomous task executor with HITL gates
 
-import { ConsentViolationError, EngineError } from '../errors.js'
+import { BudgetExceededError, ConsentViolationError, EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
 import { ReplayController } from './autonomous-replay.js'
 import type { ReplayResult } from './autonomous-replay.js'
+import type { CapabilityComposer } from './capability-composer.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { ExecutionPolicyEngine, PolicyDecision } from './execution-policy.js'
@@ -84,6 +85,9 @@ export interface AutonomousStep {
   startedAt: number | null
   completedAt: number | null
   requiresHumanApproval: boolean
+  // Unit 8.9: composite step support
+  parentStepId: string | null
+  isCompositeRoot: boolean
 }
 
 export interface HitlGate {
@@ -111,6 +115,18 @@ export interface AutonomousTask {
   completedAt: number | null
   result: unknown
   error: string | null
+}
+
+// Unit 8.10: task templates
+export interface TaskTemplate {
+  id: string
+  name: string
+  params: string[]
+  planJson: string
+  version: number
+  isShared: boolean
+  createdAt: number
+  updatedAt: number
 }
 
 // ── Classification priority (lower = more restrictive) ──────────────────
@@ -145,6 +161,10 @@ export class AutonomousExecutionEngine {
     string,
     { resolve: (gate: HitlGate) => void; timer: ReturnType<typeof setTimeout> }
   >()
+  // Unit 8.6: per-task budget tracking
+  private usage = new Map<string, BudgetUsage>()
+  // Unit 8.12: canvas instance tracking per task
+  private canvasByTask = new Map<string, string>()
 
   constructor(
     private readonly store: AutonomousExecutionStore,
@@ -158,7 +178,93 @@ export class AutonomousExecutionEngine {
     // unless an explicit, consented cloud provider override is given.
     private readonly airgap: boolean = true,
     private readonly consentCheck: () => boolean | Promise<boolean> = () => false,
+    // Unit 8.9: optional composer for composite step resolution
+    private readonly composer?: CapabilityComposer,
   ) {}
+
+  // Unit 8.6: per-task budget enforcement — checks cost/tokens/iterations
+  // against the goal's budgets. Throws BudgetExceededError and pauses the task
+  // if any budget is exceeded.
+  private assertBudget(task: AutonomousTask, stepCost: { cents: number; tokens: number }): void {
+    const u = this.usage.get(task.id) ?? { costCents: 0, tokens: 0, iterations: 0 }
+    u.costCents += stepCost.cents
+    u.tokens += stepCost.tokens
+    u.iterations += 1
+    const g = task.goal
+    const over =
+      u.costCents >= g.costBudgetCents || u.tokens >= g.tokenBudget || u.iterations >= g.iterationBudget
+    if (over) {
+      task.status = 'paused'
+      this.store.updateTask(task.id, { status: 'paused', pauseReason: 'budget_exceeded' })
+      this.usage.set(task.id, u)
+      throw new BudgetExceededError('budget', JSON.stringify(u), JSON.stringify({
+        costBudgetCents: g.costBudgetCents,
+        tokenBudget: g.tokenBudget,
+        iterationBudget: g.iterationBudget,
+      }))
+    }
+    this.usage.set(task.id, u)
+  }
+
+  // Expose budget usage for UI burn-down (4.x)
+  getBudgetUsage(taskId: string): BudgetUsage | undefined {
+    return this.usage.get(taskId)
+  }
+
+  // Unit 8.6: simulate token/cost consumption for testing budget enforcement
+  recordUsage(taskId: string, delta: Partial<BudgetUsage>): void {
+    const u = this.usage.get(taskId) ?? { costCents: 0, tokens: 0, iterations: 0 }
+    if (delta.costCents !== undefined) u.costCents += delta.costCents
+    if (delta.tokens !== undefined) u.tokens += delta.tokens
+    if (delta.iterations !== undefined) u.iterations += delta.iterations
+    this.usage.set(taskId, u)
+  }
+
+  // Unit 8.10: task templates
+  async saveTemplate(
+    name: string,
+    planJson: string,
+    params: string[],
+    isShared = false,
+  ): Promise<string> {
+    const id = newId()
+    await this.store.insertTaskTemplate({
+      id,
+      name,
+      paramsJson: JSON.stringify(params),
+      planJson,
+      version: 1,
+      isShared: isShared ? 1 : 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    })
+    return id
+  }
+
+  async spawnFromTemplate(
+    templateId: string,
+    bindings: Record<string, string>,
+  ): Promise<AutonomousTask> {
+    const row = await this.store.getTaskTemplate(templateId)
+    if (!row) throw new EngineError(`Template not found: ${templateId}`)
+    const params: string[] = JSON.parse(row.paramsJson as string)
+    const description = this.bindParams(row.planJson as string, params, bindings)
+    const goal: AutonomousGoal = {
+      description,
+      maxSteps: 20,
+      maxDurationMs: 10 * 60_000,
+      requireApprovalAbove: 'write',
+      allowBrowser: true,
+      costBudgetCents: 100,
+      tokenBudget: 50_000,
+      iterationBudget: 30,
+    }
+    return this.execute(goal)
+  }
+
+  private bindParams(plan: string, params: string[], bindings: Record<string, string>): string {
+    return params.reduce((acc, p) => acc.replaceAll(`{${p}}`, bindings[p] ?? ''), plan)
+  }
 
   async execute(goal: AutonomousGoal): Promise<AutonomousTask> {
     const taskId = newId()
@@ -230,6 +336,9 @@ export class AutonomousExecutionEngine {
     }
 
     try {
+      // Unit 8.6: pre-loop budget gate — catches token/cost violations even with zero/one steps
+      this.assertBudget(task, { cents: 0, tokens: 0 })
+
       for (const step of task.steps) {
         if ((task.status as string) === 'cancelled') break
         if ((task.status as string) === 'paused') break
@@ -275,12 +384,15 @@ export class AutonomousExecutionEngine {
           continue
         }
 
+        // Unit 8.6: check budgets before executing step
+        this.assertBudget(task, { cents: 0, tokens: 0 })
+
         step.status = 'running'
         step.startedAt = Date.now()
         await this.store.updateStep(step.id, { status: 'running', startedAt: step.startedAt })
 
         try {
-          const result = await this.executeStepWithFailover(step, task)
+          const result = await this.executeStepWithComposite(step, task)
           step.result = result
           step.status = 'complete'
           step.completedAt = Date.now()
@@ -313,7 +425,11 @@ export class AutonomousExecutionEngine {
             error: step.error,
           })
 
-          if (step.classification === 'destructive' || step.classification === 'financial') {
+          if (
+            step.classification === 'destructive' ||
+            step.classification === 'financial' ||
+            step.isCompositeRoot
+          ) {
             task.status = 'failed'
             task.error = `Critical step failed: ${step.error}`
             break
@@ -348,11 +464,14 @@ export class AutonomousExecutionEngine {
         })
       }
     } catch (err) {
-      task.status = 'failed'
+      // Unit 8.6: BudgetExceededError already sets task.status = 'paused'; preserve it
+      if (!(err instanceof BudgetExceededError)) {
+        task.status = 'failed'
+      }
       task.error = err instanceof Error ? err.message : String(err)
       task.completedAt = Date.now()
       await this.store.updateTask(taskId, {
-        status: 'failed',
+        status: task.status as string,
         error: task.error,
         completedAt: task.completedAt,
       })
@@ -420,6 +539,11 @@ export class AutonomousExecutionEngine {
       result: row.resultJson ? JSON.parse(row.resultJson as string) : null,
       error: row.error as string | null,
     }
+  }
+
+  // Unit 8.11: expose store for TaskHistoryService
+  getStore(): AutonomousExecutionStore {
+    return this.store
   }
 
   async listTasks(opts?: { status?: string; limit?: number }): Promise<AutonomousTask[]> {
@@ -684,6 +808,82 @@ export class AutonomousExecutionEngine {
     }
   }
 
+  // Unit 8.9: composite step execution. When a step's action starts with
+  // 'composite:', resolve the composite via CapabilityComposer and execute
+  // each inner node as a sub-step with parentStepId set.
+  private async executeStepWithComposite(
+    step: AutonomousStep,
+    task: AutonomousTask,
+  ): Promise<unknown> {
+    if (!step.action.startsWith('composite:') || !this.composer) {
+      return this.executeStepWithFailover(step, task)
+    }
+
+    const compositeSlug = step.action.slice('composite:'.length)
+    step.isCompositeRoot = true
+    const composite = await this.composer.get(compositeSlug)
+    if (!composite) {
+      throw new EngineError(`Composite not found: ${compositeSlug}`)
+    }
+
+    const subSteps: AutonomousStep[] = []
+
+    for (const node of composite.nodes) {
+      const subStep: AutonomousStep = {
+        id: newId(),
+        taskId: task.id,
+        stepIndex: task.steps.length,
+        description: `Sub-step: ${node.capabilitySlug}`,
+        action: 'capability_call',
+        actionInput: {
+          ...node.inputMapping,
+          capabilitySlug: node.capabilitySlug,
+          classification: 'read',
+        },
+        classification: 'read',
+        status: 'pending',
+        result: null,
+        error: null,
+        startedAt: null,
+        completedAt: null,
+        requiresHumanApproval: false,
+        parentStepId: step.id,
+        isCompositeRoot: false,
+      }
+      subSteps.push(subStep)
+      task.steps.push(subStep)
+
+      subStep.status = 'running'
+      subStep.startedAt = Date.now()
+      await this.store.createStep(subStep)
+      await this.store.updateStep(subStep.id, { status: 'running', startedAt: subStep.startedAt })
+
+      try {
+        const result = await this.executeStepWithFailover(subStep, task)
+        subStep.result = result
+        subStep.status = 'complete'
+        subStep.completedAt = Date.now()
+        await this.store.updateStep(subStep.id, {
+          status: 'complete',
+          resultJson: JSON.stringify(result),
+          completedAt: subStep.completedAt,
+        })
+      } catch (err) {
+        subStep.status = 'failed'
+        subStep.error = err instanceof Error ? err.message : String(err)
+        subStep.completedAt = Date.now()
+        await this.store.updateStep(subStep.id, {
+          status: 'failed',
+          error: subStep.error,
+          completedAt: subStep.completedAt,
+        })
+        throw err
+      }
+    }
+
+    return subSteps.map((s) => ({ step: s.description, result: s.result }))
+  }
+
   // Unit 34.5: provider failover. Attempts the step (with selector healing);
   // on failure, consults the failover router for fallback providers, opens an
   // `option` clarification gate, and on approval re-executes against the chosen
@@ -766,6 +966,38 @@ export class AutonomousExecutionEngine {
         const slave = await this.governor.ensureRunning('default')
         const screenshot = await this.governor.cdp.captureScreenshot(slave.slaveId)
         return { screenshot }
+      }
+
+      // Unit 8.12: canvas spawn — delegates to canvas_spawn capability via registry
+      case 'canvas_spawn': {
+        const result = await this.registry.execute(
+          'canvas_spawn',
+          { definitionId: step.actionInput.definitionId ?? step.actionInput.title ?? 'default' },
+          { metadata: { taskId: task.id } },
+        )
+        const instanceId = (result as Record<string, unknown>)?.instanceId as string
+        if (instanceId) {
+          this.canvasByTask.set(task.id, instanceId)
+        }
+        return result
+      }
+
+      // Unit 8.12: canvas mutate — delegates to canvas_mutate capability via registry
+      case 'canvas_mutate': {
+        const canvasId = this.canvasByTask.get(task.id)
+        if (!canvasId) {
+          throw new EngineError('canvas_mutate called with no spawned canvas for this task')
+        }
+        const result = await this.registry.execute(
+          'canvas_mutate',
+          {
+            instanceId: canvasId,
+            regionId: step.actionInput.regionId ?? 'body',
+            state: step.actionInput.state ?? step.actionInput.js,
+          },
+          { metadata: { taskId: task.id } },
+        )
+        return result
       }
 
       case 'capability_call': {
@@ -896,7 +1128,7 @@ export class AutonomousExecutionEngine {
             expiresAt: gate.expiresAt as number | null,
           })
         }
-      })
+      }).catch(() => { /* poll failure — timer fallback handles it */ })
     })
   }
 }
@@ -926,6 +1158,8 @@ function assembleStep(
     startedAt: null,
     completedAt: null,
     requiresHumanApproval: classificationAtLeast(classification, goal.requireApprovalAbove),
+    parentStepId: null,
+    isCompositeRoot: false,
   }
 }
 
@@ -992,6 +1226,13 @@ export function planStepsLocally(goal: AutonomousGoal): AutonomousStep[] {
     steps.push(
       assembleStep(steps.length, goal, goal.description, action, { ...extra, classification }),
     )
+  }
+
+  // Unit 8.9: composite actions — if description starts with 'composite:', emit a single composite step
+  const compositeMatch = goal.description.match(/^composite:(.+)$/i)
+  if (compositeMatch) {
+    add(`composite:${compositeMatch[1]}`, 'read')
+    return steps
   }
 
   const urlMatch = goal.description.match(/https?:\/\/[^\s]+|(?:\b[a-z0-9-]+\.)+[a-z]{2,}\b/i)

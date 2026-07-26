@@ -106,6 +106,25 @@ export const config = {
     endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? null,
     serviceName: process.env.OTEL_SERVICE_NAME ?? 'vivim-final',
   },
+
+  // Protocol source (dev/ prod)
+  providerProtocolSource: process.env.PROVIDER_PROTOCOL_SOURCE ?? 'prod',
+
+  // OpenCode server
+  opencodeServeEnabled: process.env.OPENCODE_SERVE_ENABLED === '1',
+  opencodeServePort: Number.parseInt(process.env.OPENCODE_SERVE_PORT ?? '0', 10) || undefined,
+  opencodeServerPassword: process.env.OPENCODE_SERVER_PASSWORD ?? '',
+  opencodeServerUsername: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
+
+  // MCP
+  mcpPort: Number.parseInt(process.env.MCP_PORT ?? '0', 10) || undefined,
+
+  // CLI / moments
+  vivimApiUrl: process.env.VIVIM_API_URL ?? null,
+  vivimWorkspace: process.env.VIVIM_WORKSPACE ?? null,
+
+  // Debug
+  debug: process.env.DEBUG === 'true',
 } as const
 
 /**

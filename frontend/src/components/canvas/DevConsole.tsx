@@ -87,7 +87,9 @@ export function DevConsole({ isOpen, onClose }: DevConsoleProps) {
         <Icon name="terminal" size={12} className="text-ring" />
         <strong style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dev Console</strong>
         <span style={{ fontSize: 10, color: 'var(--muted-foreground)', marginLeft: 'auto' }}>{filteredEvents.length} / {events.length} events</span>
+        <label htmlFor="dev-console-filter" className="sr-only">Filter events</label>
         <input
+          id="dev-console-filter"
           type="text"
           placeholder="Filter events..."
           value={filter}

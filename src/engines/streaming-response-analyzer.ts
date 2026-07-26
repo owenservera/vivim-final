@@ -111,7 +111,7 @@ function generateAnthropicSseLogicCode(name: string, providerId: string): string
         var last3 = blocks[blocks.length - 1];
         if (last3 && last3.type !== 'meta') blocks.push({ type: 'meta', key: 'stopped', value: 'message_stop' });
       }
-    } catch (_e) {}
+    } catch (_e) { /* Intentional: malformed SSE lines are skipped; fallback at line 116 handles empty blocks */ }
   }
   if (blocks.length === 0 && rawBody.length > 0) blocks.push({ type: 'text', text: rawBody });
   return blocks;
@@ -156,7 +156,7 @@ function generateOpenAiSseLogicCode(name: string, providerId: string): string {
       if (json.choices && json.choices[0] && json.choices[0].finish_reason) {
         blocks.push({ type: 'meta', key: 'finish_reason', value: json.choices[0].finish_reason });
       }
-    } catch (_e) {}
+    } catch (_e) { /* Intentional: malformed JSON lines are skipped; fallback at line 161 handles empty blocks */ }
   }
   if (blocks.length === 0 && rawBody.length > 0) blocks.push({ type: 'text', text: rawBody });
   return blocks;

@@ -37,9 +37,9 @@ Step-by-step workflows for common frontend refinement tasks.
 5. **Wire frontend**
    - Check if generic default already renders it
    - If yes → done (generic-first principle)
-   - If no → add slot taxonomy entry in `web/ui/src/ui/slots.ts`
-   - Provide default in `web/ui/src/ui/defaults/`
-   - Register in `web/ui/src/ui/defaults/index.ts`
+   - If no → add slot taxonomy entry in `frontend/src/ui/slots.ts`
+   - Provide default in `frontend/src/ui/defaults/`
+   - Register in `frontend/src/ui/defaults/index.ts`
 
 6. **Verify slot resolution** (code-first)
    ```bash
@@ -64,11 +64,11 @@ Step-by-step workflows for common frontend refinement tasks.
 ### Steps
 
 1. **Identify the slot and provider**
-   - Slot: `chat.bubble` (from `web/ui/src/ui/slots.ts`)
+   - Slot: `chat.bubble` (from `frontend/src/ui/slots.ts`)
    - Provider: `claude`
 
 2. **Build the custom component**
-   - Create `web/ui/src/ui/defaults/claude-bubble.tsx`
+   - Create `frontend/src/ui/defaults/claude-bubble.tsx`
    - Follow existing patterns (no comments unless asked)
    - Use `.js` imports, no `any`, Zod at boundaries
 
@@ -163,7 +163,7 @@ Step-by-step workflows for common frontend refinement tasks.
 
 ### Steps
 
-1. **Define the slot** in `web/ui/src/ui/slots.ts`
+1. **Define the slot** in `frontend/src/ui/slots.ts`
    ```typescript
    export const SLOT_IDS = {
      // ... existing slots
@@ -171,12 +171,12 @@ Step-by-step workflows for common frontend refinement tasks.
    } as const
    ```
 
-2. **Create default component** in `web/ui/src/ui/defaults/chat.memory.tsx`
+2. **Create default component** in `frontend/src/ui/defaults/chat.memory.tsx`
    - Follow existing patterns
    - Use `useSlot` for resolution
    - Dispatch actions via `ActionRegistry`
 
-3. **Register defaults** in `web/ui/src/ui/defaults/index.ts`
+3. **Register defaults** in `frontend/src/ui/defaults/index.ts`
    ```typescript
    import { ChatMemory } from './chat.memory.js'
    registerDefaults({ 'chat.memory': ChatMemory })
@@ -268,7 +268,7 @@ Step-by-step workflows for common frontend refinement tasks.
 
 2. **Identify the slot**
    - Which slot renders the broken element?
-   - Check `web/ui/src/ui/slots.ts` for slot ID
+   - Check `frontend/src/ui/slots.ts` for slot ID
 
 3. **Check slot resolution**
    ```

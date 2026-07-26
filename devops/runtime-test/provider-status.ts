@@ -11,6 +11,37 @@ import { backendBaseUrl } from './port.js'
 
 const FETCH_TIMEOUT_MS = 5_000
 
+/** Check if the backend is healthy. Returns true if /health responds OK. */
+async function isBackendHealthy(): Promise<boolean> {
+  try {
+    const r = await fetch(`${backendBaseUrl()}/health`, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    })
+    return r.ok
+  } catch {
+    return false
+  }
+}
+
+/** Auto-launch the backend via start-backend.ps1 and wait for it to bind. */
+async function launchBackend(): Promise<boolean> {
+  try {
+    const { execSync } = await import('node:child_process')
+    const { join } = await import('node:path')
+    const script = join(process.cwd(), 'scripts', 'start-backend.ps1')
+    execSync(`pwsh "${script}"`, { timeout: 45_000, stdio: 'pipe' })
+    // Wait up to 15s for the port to become available
+    const deadline = Date.now() + 15_000
+    while (Date.now() < deadline) {
+      if (await isBackendHealthy()) return true
+      await new Promise((r) => setTimeout(r, 500))
+    }
+    return false
+  } catch {
+    return false
+  }
+}
+
 export interface ProviderStatusResult {
   ok: boolean
   provider: string
@@ -57,6 +88,35 @@ async function getJson(path: string): Promise<Record<string, unknown> | null> {
 }
 
 export async function providerStatus(provider: string): Promise<ProviderStatusResult> {
+  // 0. Ensure backend is running — auto-launch if not
+  if (!(await isBackendHealthy())) {
+    console.log('[status] Backend not running, launching...')
+    const launched = await launchBackend()
+    if (!launched) {
+      return {
+        ok: false,
+        provider,
+        seeded: false,
+        seedDetail: 'Backend could not be started',
+        profileOnDisk: false,
+        hasCookies: false,
+        liveSlave: false,
+        capabilityRegistered: false,
+        uiTestStatus: {
+          testedCount: 0,
+          lastTested: null,
+          allPassed: false,
+          untestedCapabilities: [],
+          lastFailedCapabilities: [],
+          summary: 'Backend unreachable',
+        },
+        verdict: 'absent',
+        recommendedAction: 'Backend could not be started. Run pwsh scripts/start-backend.ps1 manually.',
+      }
+    }
+    console.log('[status] Backend launched successfully')
+  }
+
   // 1. Seed presence — check providerDefinition table
   const seedInfo = await getJson(`/api/providers/${encodeURIComponent(provider)}`)
   const seeded = seedInfo?.ok === true || seedInfo?.id !== undefined

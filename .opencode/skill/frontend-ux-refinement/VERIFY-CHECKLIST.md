@@ -26,8 +26,8 @@ If any check fails, fix the launch before proceeding. Read `.runtime/backend-out
 
 ```bash
 bun run typecheck                    # backend: 0 errors
-cd web/ui && bun run typecheck       # frontend: 0 errors
-cd web/ui && bun run build           # vite: 0 errors
+cd frontend && bun run typecheck       # frontend: 0 errors
+cd frontend && bun run build           # vite: 0 errors
 bun run lint                         # biome: 0 errors
 ```
 
@@ -109,7 +109,7 @@ bun run .runtime/check-slots.ts
 ```
 
 - [ ] `ui_slots` is present and well-formed
-- [ ] Slot IDs match `SLOT_IDS` in `web/ui/src/ui/slots.ts`
+- [ ] Slot IDs match `SLOT_IDS` in `frontend/src/ui/slots.ts`
 - [ ] Component references exist in the component catalog
 
 ---
@@ -302,7 +302,7 @@ For rapid iteration, run this after each code edit:
 
 ```bash
 # One-shot verification
-bun run typecheck && cd web/ui && bun run typecheck && bun run build && bun test && bun run devops verify-cross-surface && echo "ALL GATES PASS"
+bun run typecheck && cd frontend && bun run typecheck && bun run build && bun test && bun run devops verify-cross-surface && echo "ALL GATES PASS"
 ```
 
 For visual verification (after code gates pass):

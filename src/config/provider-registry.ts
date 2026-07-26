@@ -10,6 +10,7 @@ import {
   loadProviderProtocol,
   normalizeProtocolSource,
 } from '../engines/provider-protocol-loader.js'
+import { config } from '../config.js'
 import type { CapStoreDb } from '../storage/db.js'
 
 export interface ProviderEndpointInfo {
@@ -74,7 +75,7 @@ export class ProviderRegistry {
    * PROVIDER_PROTOCOL_SOURCE. Kept async for boot-call compatibility.
    */
   async initialize(): Promise<void> {
-    const source = normalizeProtocolSource(process.env.PROVIDER_PROTOCOL_SOURCE)
+    const source = normalizeProtocolSource(config.providerProtocolSource)
     const { protocol } = await loadProviderProtocol(source)
     this.protocolSource = source
 

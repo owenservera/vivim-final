@@ -7,7 +7,10 @@
 // Legacy {kind,content,index} blocks from seed parsers are auto-migrated at the boundary.
 
 import { EngineError } from '../errors.js'
+import { getLogger } from '../lib/logger.js'
 import { ContentPartSchema, isLegacyBlock, migrateLegacyParts } from '../schema/streaming.js'
+
+const log = getLogger('stream-parser')
 import type { ContentPart } from '../schema/streaming.js'
 import type { ParserExecutionLogStore } from '../storage/contracts/parser-execution-log-store.js'
 import type { ParserStore, ProviderParserRow } from '../storage/contracts/parser-store.js'
@@ -183,7 +186,7 @@ function validateBlocks(blocks: ContentBlock[]): ContentBlock[] {
     }
   }
   if (rejected > 0) {
-    console.warn(`[stream-parser] rejected ${rejected} schema-invalid block(s) at boundary`)
+    log.warn(`[stream-parser] rejected ${rejected} schema-invalid block(s) at boundary`)
   }
   return valid
 }
@@ -480,7 +483,10 @@ export class StreamParserEngine {
     const mod = { exports: {} as Record<string, unknown> }
 
     if (!this.sandbox) {
-      this.sandbox = new SandboxRunner()
+      this.sandbox = new SandboxRunner({
+        create: async () => {},
+        list: async () => [],
+      })
     }
 
     const res = await this.sandbox.run(code, {}, StreamParserEngine.SANDBOX_PERMISSIONS, {

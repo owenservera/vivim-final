@@ -10,7 +10,10 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CapabilityNotFoundError } from '../errors.js'
+import { getLogger } from '../lib/logger.js'
 import type { BootstrapServices } from './capability-bootstrap.js'
+
+const log = getLogger('capability-bootstrap-generated')
 import { makeCapability } from './capability-bootstrap.js'
 import type { UnifiedCapability, UnifiedCapabilityRegistry } from './unified-registry.js'
 
@@ -105,10 +108,18 @@ function createHandlerMap(
     },
 
     conversation_delete: async (input) => {
-      await services.db.prisma.conversation.delete({
-        where: { id: String(input.conversationId ?? '') },
-      })
-      return { ok: true }
+      const id = String(input.conversationId ?? '')
+      if (!id) return { ok: false, error: 'conversationId is required' }
+      try {
+        await services.db.prisma.conversation.delete({ where: { id } })
+        return { ok: true }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        if (msg.includes('No record was found') || msg.includes('Record to delete does not exist')) {
+          return { ok: false, error: 'Conversation not found' }
+        }
+        throw err
+      }
     },
 
     // ── Knowledge ──
@@ -211,7 +222,7 @@ export function registerGeneratedCapabilities(
     }
   }
 
-  console.log(
+  log.info(
     `[bootstrap-generated] Registered ${registered} capabilities from taxonomy pool${skipped > 0 ? ` (${skipped} skipped)` : ''}`,
   )
 }

@@ -93,7 +93,7 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
           />
         )}
         {media.kind === 'audio' && (
-          <div style={{ padding: 16, background: '#f3f4f6', borderRadius: 4 }}>
+          <div style={{ padding: 16, background: 'var(--muted)', borderRadius: 4 }}>
             <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 8 }}></div>
             <audio
               ref={mediaRef as React.RefObject<HTMLAudioElement>}

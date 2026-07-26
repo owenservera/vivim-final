@@ -646,6 +646,7 @@ model ConversationMessage {
   messageEntities MessageEntity[]
 
   @@index([conversationId, sequenceIndex], map: "idx_cm_conv")
+  @@index([role], map: "idx_cm_role")
   @@map("conversation_message")
 }
 
@@ -825,6 +826,7 @@ model Node {
   @@index([searchText], map: "idx_node_search")
   @@index([contentHash], map: "idx_node_content_hash")
   @@index([state], map: "idx_node_state")
+  @@index([acuType], map: "idx_node_acu_type")
   @@map("node")
 }
 
@@ -1356,6 +1358,7 @@ model DriftEvent {
   provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([providerId, detectedAt], map: "idx_de_provider")
+  @@index([status], map: "idx_de_status")
   @@map("drift_event")
 }
 
@@ -2398,6 +2401,21 @@ model HitlGate {
   @@index([taskId, status], map: "idx_hg_task_status")
   @@index([status], map: "idx_hg_status")
   @@map("hitl_gate")
+}
+
+// ── Phase 8.10: Task Templates ──────────────────────────────────────────
+
+model TaskTemplate {
+  id        String  @id
+  name      String  @unique
+  paramsJson String @default("[]") @map("params_json")
+  planJson  String  @map("plan_json")
+  version   Int     @default(1)
+  isShared  Int     @default(0) @map("is_shared")
+  createdAt BigInt  @map("created_at")
+  updatedAt BigInt  @map("updated_at")
+
+  @@map("task_template")
 }
 
 // ── Phase 20: Sovereign Data ─────────────────────────────────────────────

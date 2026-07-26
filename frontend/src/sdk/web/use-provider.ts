@@ -22,7 +22,7 @@ export function useProvider() {
       // Backend returns either a raw array or { providers: [...] }
       const raw = res.data;
       const all: Provider[] = (Array.isArray(raw) ? raw : (raw as { providers?: Provider[] })?.providers ?? [])
-        .filter((p: Provider) => !p.id.startsWith('agent:provider:') && p.id !== 'generic')
+        .filter((p: Provider) => p.id !== 'generic')
         .map((p: Provider) => ({
           id: p.id,
           name: (p as unknown as { displayName?: string }).displayName ?? p.name ?? p.id,

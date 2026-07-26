@@ -6,10 +6,11 @@
 
 import type { Source } from '../../../shared/api-types.js'
 import { createSetupClient } from '../../api/setup-client.js'
+import { config } from '../../config.js'
 
 const client = createSetupClient({
   source: 'cli' as Source,
-  baseUrl: process.env.VIVIM_API_URL,
+  baseUrl: config.vivimApiUrl ?? undefined,
 })
 
 const SUBCOMMANDS = {
@@ -25,7 +26,7 @@ const SUBCOMMANDS = {
   },
 
   async launch(providerId: string, accountSlug: string) {
-    const workspace = process.env.VIVIM_WORKSPACE ?? 'C:\\.config\\vivim'
+    const workspace = config.vivimWorkspace ?? 'C:\\.config\\vivim'
     console.log(`\nLaunching Chrome for ${providerId}...`)
     const result = await client.launchVisible({
       providerId,
@@ -50,7 +51,7 @@ const SUBCOMMANDS = {
   },
 
   async complete(providerId: string, accountSlug: string, profileDir: string, debugPort: number) {
-    const workspace = process.env.VIVIM_WORKSPACE ?? 'C:\\.config\\vivim'
+    const workspace = config.vivimWorkspace ?? 'C:\\.config\\vivim'
     console.log(`\nCompleting setup for ${providerId}/${accountSlug}...`)
     const result = await client.complete({
       providerId,
@@ -72,7 +73,7 @@ const SUBCOMMANDS = {
     // Full setup flow: launch → wait → verify → complete
     console.log(`\n=== Setting up ${providerId}/${accountSlug} ===\n`)
 
-    const workspace = process.env.VIVIM_WORKSPACE ?? 'C:\\.config\\vivim'
+    const workspace = config.vivimWorkspace ?? 'C:\\.config\\vivim'
 
     // 1. Launch
     console.log('[1/3] Launching Chrome...')

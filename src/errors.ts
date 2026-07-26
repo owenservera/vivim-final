@@ -117,8 +117,8 @@ export class PortOccupiedError extends CapStoreError {
 }
 
 export class EngineError extends CapStoreError {
-  constructor(message: string) {
-    super('EngineError', message)
+  constructor(message: string, details?: unknown) {
+    super('EngineError', message, details)
   }
 }
 

@@ -4,6 +4,7 @@
 // recipes: trust policy, fan-out, loops, output shape. The "brain" lives in the
 // user's NL request; the system only provides a configurable backbone.
 
+import { EngineError } from '../../errors.js'
 import type { AgentRole, TrustPolicy } from './types.js'
 
 export const RESEARCH_TRUST: TrustPolicy = {

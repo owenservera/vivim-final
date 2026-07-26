@@ -4,7 +4,7 @@
 // against the live site or an API mock.
 
 import { newId } from '../ids.js'
-import type { CapabilityStore } from '../storage/contracts/capability-store.js'
+import type { CapabilityBindingMatrixRow, CapabilityStore } from '../storage/contracts/capability-store.js'
 import { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 
@@ -14,12 +14,6 @@ export interface HarnessOutcome {
   ok: boolean
   error?: string
   drift: boolean
-}
-
-export interface ProviderCapabilityRow {
-  providerId: string
-  capabilitySlug: string
-  selector: string
 }
 
 export class ProviderTestHarness {
@@ -43,16 +37,13 @@ export class ProviderTestHarness {
           selector: b.selector,
           status: 'open',
         })
-        this.bus.emit('provider:drift_detected', {
-          providerId: b.providerId,
-          capabilitySlug: b.capabilitySlug,
-        })
+        this.bus.emit({ type: 'provider:drift_detected', providerId: b.providerId, capabilitySlug: b.capabilitySlug })
       }
     }
     return outcomes
   }
 
-  private async runOne(b: ProviderCapabilityRow): Promise<HarnessOutcome> {
+  private async runOne(b: CapabilityBindingMatrixRow): Promise<HarnessOutcome> {
     try {
       const slave = await this.governor.spawn(b.providerId, 'test', { visible: false })
       const res = await this.governor.cdp.send(slave.slaveId, 'Runtime.evaluate', {

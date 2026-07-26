@@ -5,7 +5,10 @@
 import { existsSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { getLogger } from '../lib/logger.js'
 import type { CapStoreDb } from '../storage/db.js'
+
+const log = getLogger('provider-protocol-generator')
 
 // ── Generated Protocol Types ─────────────────────────────────────────
 
@@ -541,17 +544,17 @@ if (import.meta.main) {
 
   try {
     const result = await generator.generate({ overwriteDev })
-    console.log(
+    log.info(
       `Generated ${result.providerCount} providers at ${result.outputPath} (${result.fileSize} bytes)`,
     )
-    console.log(
+    log.info(
       overwriteDev
         ? `Dev copy reset at ${result.devOutputPath}`
         : `Dev copy preserved at ${result.devOutputPath}`,
     )
     process.exit(0)
   } catch (err) {
-    console.error('Protocol generation failed:', err)
+    log.error({ err }, 'Protocol generation failed')
     process.exit(1)
   }
 }

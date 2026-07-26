@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   listConversations,
   createConversation,
@@ -9,10 +9,10 @@ import {
 
 interface Conversation {
   id: string;
-  title?: string;
-  providerId?: string;
+  title?: string | null;
+  providerId?: string | null;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt?: string | null;
 }
 
 interface ConversationListProps {
@@ -39,7 +39,7 @@ const PROVIDER_COLORS: Record<string, { bg: string; fg: string }> = {
   grok: { bg: 'rgba(107,114,128,0.15)', fg: 'rgb(107,114,128)' },
 };
 
-function getProviderStyle(providerId?: string) {
+function getProviderStyle(providerId?: string | null) {
   const c = providerId ? PROVIDER_COLORS[providerId] : undefined;
   return c ?? { bg: 'var(--bg-subtle)', fg: 'var(--text-muted)' };
 }
@@ -213,7 +213,7 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
                     flexShrink: 0,
                   }}
                 >
-                  {PROVIDER_LABELS[c.providerId] ?? c.providerId}
+                  {PROVIDER_LABELS[c.providerId ?? ''] ?? c.providerId}
                 </span>
               )}
               <span

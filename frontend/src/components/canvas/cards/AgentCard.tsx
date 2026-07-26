@@ -61,12 +61,12 @@ export function AgentCard({ agent, onInvoke }: AgentCardProps) {
             agent
           </span>
         </div>
-        <div style={{ marginTop: 2, fontSize: 10, color: '#6b7280' }}>
+        <div style={{ marginTop: 2, fontSize: 10, color: 'var(--muted-foreground)' }}>
           {agent.steps.length} steps · max {agent.maxLoopIterations} iters · v{agent.version}
         </div>
       </header>
 
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#fafafa' }}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--muted)' }}>
         <svg
           width="100%"
           height="100%"
@@ -83,7 +83,7 @@ export function AgentCard({ agent, onInvoke }: AgentCardProps) {
                 y1={from.position.y + 18}
                 x2={to.position.x + 55}
                 y2={to.position.y + 18}
-                stroke="#9ca3af"
+                stroke="var(--border)"
                 strokeWidth={1.5}
                 markerEnd="url(#arrow-agent)"
               />

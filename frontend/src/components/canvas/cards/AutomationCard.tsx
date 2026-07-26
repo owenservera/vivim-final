@@ -63,13 +63,13 @@ export function AutomationCard({ automation, onExecute }: AutomationCardProps) {
             {automation.trigger.kind}
           </span>
         </div>
-        <div style={{ marginTop: 2, fontSize: 10, color: '#6b7280' }}>
+        <div style={{ marginTop: 2, fontSize: 10, color: 'var(--muted-foreground)' }}>
           {automation.nodes.length} nodes · v{automation.version} · {automation.status}
         </div>
       </header>
 
       {/* DAG canvas */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#fafafa' }}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: 'var(--muted)' }}>
         <svg
           width="100%"
           height="100%"
@@ -86,7 +86,7 @@ export function AutomationCard({ automation, onExecute }: AutomationCardProps) {
                 y1={from.position.y + 18}
                 x2={to.position.x + 50}
                 y2={to.position.y + 18}
-                stroke="#9ca3af"
+                stroke="var(--border)"
                 strokeWidth={1.5}
                 markerEnd="url(#arrow)"
               />

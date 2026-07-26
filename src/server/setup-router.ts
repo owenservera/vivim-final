@@ -2,7 +2,7 @@
 // REST API routes for workspace selection + provider setup wizard.
 
 import { BunCdpClient } from '../executor/cdp.js'
-import { launchChrome } from '../executor/launcher.js'
+import { killChrome, launchChrome } from '../executor/launcher.js'
 import { ProfileAllocator } from '../executor/profile-allocator.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
@@ -456,10 +456,46 @@ export function createSetupRouter(ctx: ServerContext) {
         return json({ profiles, workspacePath: hint })
       }
 
+      // POST /api/setup/kill — kill a Chrome process by debug port
+      if (pathname === '/api/setup/kill' && method === 'POST') {
+        const body = (await req.json()) as { port: number }
+        if (!body.port) return errorResponse('port required', 'ValidationError', 400)
+
+        // Find PID from port using netstat/tasklist
+        const pid = await findPidOnPort(body.port)
+        if (!pid) return json({ ok: true, message: 'No process on port' })
+
+        await killChrome(pid)
+        audit('chrome_killed', { port: body.port, pid })
+        return json({ ok: true, pid })
+      }
+
       return errorResponse('Not found', 'NotFoundError', 404)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Internal error'
       return errorResponse(message, 'InternalError', 500)
     }
   }
+}
+
+async function findPidOnPort(port: number): Promise<number | null> {
+  try {
+    const proc = Bun.spawn({
+      cmd: ['netstat', '-ano', '-p', 'TCP'],
+      stdout: 'pipe',
+      stderr: 'ignore',
+    })
+    const text = await new Response(proc.stdout).text()
+    const lines = text.split('\n')
+    for (const line of lines) {
+      if (line.includes(`:${port}`) && line.includes('LISTENING')) {
+        const parts = line.trim().split(/\s+/)
+        const lastPart = parts[parts.length - 1]
+        if (!lastPart) continue
+        const pid = Number.parseInt(lastPart, 10)
+        if (Number.isFinite(pid)) return pid
+      }
+    }
+  } catch {}
+  return null
 }

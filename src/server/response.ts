@@ -38,8 +38,7 @@ export function withCORS(res: Response): Response {
   for (const [k, v] of Object.entries(cors)) {
     headers.set(k, v)
   }
-  const body = res.body ? res.arrayBuffer() : null
-  return new Response(body, {
+  return new Response(res.body, {
     status: res.status,
     headers,
     // Preserve other response properties

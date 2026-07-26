@@ -71,7 +71,7 @@ async function loadCaptureFixture(providerId: string): Promise<string> {
 }
 
 async function loadDiscoveredCapabilities(provider?: string): Promise<string[]> {
-  if (!provider) return ['send_message']
+  if (!provider) return ['conversation_send']
   try {
     const draft = JSON.parse(await readFile(join('.runtime', `discover-${provider}.json`), 'utf8'))
     const draftObj = (draft as Record<string, unknown> | null) ?? {}
@@ -79,7 +79,7 @@ async function loadDiscoveredCapabilities(provider?: string): Promise<string[]> 
     const rawCaps = (manifestCaps.capabilities as string[] | undefined) ?? []
     if (rawCaps.length > 0) return rawCaps
   } catch { /* no draft */ }
-  return ['send_message']
+  return ['conversation_send']
 }
 
 export interface OnboardOptions {
@@ -602,7 +602,9 @@ export async function dispatchMode(phase: OnboardPhase, opts: OnboardOptions): P
       return modeTestParse(effectiveOpts, '', '')
     case 'test-cap': {
       const caps = await loadDiscoveredCapabilities(opts.provider)
-      const results = await Promise.all(caps.map((cap) => modeTestCap(effectiveOpts, cap)))
+      // Provide a test conversationId for capabilities that require it
+      const testInput = { conversationId: `test_${opts.provider}_${Date.now()}`, message: 'hello from onboard test' }
+      const results = await Promise.all(caps.map((cap) => modeTestCap(effectiveOpts, cap, testInput)))
       const allOk = results.every((r) => r.ok)
       return {
         phase: 'test-cap',

@@ -40,6 +40,8 @@ export function ThemeSettings({ onClose }: { onClose?: () => void }) {
             setOpen(false);
             onClose?.();
           }}
+          aria-label="Close theme settings"
+          className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
           style={btnStyle}
         >
           
@@ -48,11 +50,14 @@ export function ThemeSettings({ onClose }: { onClose?: () => void }) {
 
       <section style={{ marginBottom: 12 }}>
         <label style={labelStyle}>Mode</label>
-        <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+        <div role="radiogroup" aria-label="Theme mode" style={{ display: 'flex', gap: 4, marginTop: 4 }}>
           {(['light', 'dark', 'auto'] as const).map((m) => (
             <button
               key={m}
+              role="radio"
+              aria-checked={pref.mode === m}
               onClick={() => setMode(m)}
+              className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
               style={{
                 flex: 1,
                 padding: '6px 0',
@@ -75,12 +80,15 @@ export function ThemeSettings({ onClose }: { onClose?: () => void }) {
 
       <section style={{ marginBottom: 12 }}>
         <label style={labelStyle}>Accent</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, marginTop: 4 }}>
+        <div role="radiogroup" aria-label="Accent color" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, marginTop: 4 }}>
           {ACCENT_COLORS.map((a) => (
             <button
               key={a.id}
+              role="radio"
+              aria-checked={pref.accent === a.id}
+              aria-label={a.label}
               onClick={() => setAccent(a.id)}
-              title={a.label}
+              className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
               style={{
                 width: 32,
                 height: 32,
@@ -96,14 +104,17 @@ export function ThemeSettings({ onClose }: { onClose?: () => void }) {
       </section>
 
       <section style={{ marginBottom: 12 }}>
-        <label style={labelStyle}>Font scale ({pref.fontScale.toFixed(2)}×)</label>
+        <label htmlFor="font-scale-slider" style={labelStyle}>Font scale ({pref.fontScale.toFixed(2)}×)</label>
         <input
+          id="font-scale-slider"
           type="range"
           min={0.875}
           max={1.25}
           step={0.0625}
           value={pref.fontScale}
           onChange={(e) => setFontScale(Number(e.target.value))}
+          aria-label="Font scale"
+          className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
           style={{ width: '100%', marginTop: 4, accentColor: 'var(--accent)' }}
         />
       </section>
@@ -131,6 +142,8 @@ export function ThemeSettings({ onClose }: { onClose?: () => void }) {
 
       <button
         onClick={reset}
+        aria-label="Reset theme to defaults"
+        className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
         style={{
           width: '100%',
           padding: '6px 0',

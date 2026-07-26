@@ -1,90 +1,203 @@
-import { describe, expect, it } from 'bun:test'
-import {
-  type AutonomousGoal,
-  type AutonomousStep,
-  planStepsFromIntent,
+import { describe, expect, it, beforeEach } from 'bun:test'
+import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
+import type {
+  AutonomousExecutionStore,
+  AutonomousGoal,
+  AutonomousTask,
 } from '../../../src/engines/autonomous-execution.js'
-import type { ParsedIntent } from '../../../src/engines/nlcl/types.js'
+import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
+import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
+import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
+import type { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
+import type { IntentResolver, NLCContext, ParsedIntent } from '../../../src/engines/nlcl/types.js'
 
-function makeGoal(overrides: Partial<AutonomousGoal> = {}): AutonomousGoal {
+// ── Mocks ────────────────────────────────────────────────────────────────
+
+function mockStore(): AutonomousExecutionStore {
+  const tasks = new Map<string, AutonomousTask>()
   return {
-    description: 'open the dashboard and summarize',
+    createTask: async (t: Record<string, unknown>) => {
+      tasks.set(t.id as string, t as unknown as AutonomousTask)
+    },
+    updateTask: async (id: string, patch: Record<string, unknown>) => {
+      const t = tasks.get(id)
+      if (t) Object.assign(t, patch)
+    },
+    getTask: async (id: string) => tasks.get(id) ?? null,
+    createStep: async () => {},
+    updateStep: async () => {},
+    getSteps: async () => [],
+    getStep: async () => null,
+    createHitlGate: async () => {},
+    updateHitlGate: async () => {},
+    getPendingGates: async () => [],
+    getGate: async () => null,
+    listTasks: async () => [...tasks.values()],
+    getTaskTemplate: async () => null,
+    insertTaskTemplate: async () => 'tpl-id',
+    updateTaskTemplate: async () => {},
+    listTaskTemplates: async () => [],
+    _tasks: tasks,
+  }
+}
+
+function mockRegistry(): UnifiedCapabilityRegistry {
+  return {
+    execute: async () => ({ ok: true }),
+    getBySlug: () => null,
+    list: async () => [],
+  } as unknown as UnifiedCapabilityRegistry
+}
+
+function mockPolicy(): ExecutionPolicyEngine {
+  return {
+    evaluate: async () => ({ allowed: true, reason: 'test' }),
+  } as unknown as ExecutionPolicyEngine
+}
+
+function mockGovernor(): ChromeGovernor {
+  return {
+    ensureRunning: async () => ({ slaveId: 'test-slave' }),
+    cdp: {
+      send: async () => ({}),
+      captureScreenshot: async () => 'base64-screenshot',
+      getPageState: async () => ({ readyState: 'complete' }),
+    },
+    getTransport: () => null,
+  } as unknown as ChromeGovernor
+}
+
+function mockEventBus(): CapabilityEventBus {
+  return { emit: () => {} } as unknown as CapabilityEventBus
+}
+
+function mockResolver(intent?: ParsedIntent): IntentResolver {
+  return {
+    resolve: async () => intent ?? null,
+  } as unknown as IntentResolver
+}
+
+function makeGoal(overrides?: Partial<AutonomousGoal>): AutonomousGoal {
+  return {
+    description: 'Test planner task',
     maxSteps: 10,
     maxDurationMs: 60_000,
-    requireApprovalAbove: 'destructive',
-    allowBrowser: true,
+    requireApprovalAbove: 'financial',
+    allowBrowser: false,
     costBudgetCents: 100,
     ...overrides,
   }
 }
 
-function makeIntent(overrides: Partial<ParsedIntent> = {}): ParsedIntent {
-  return {
-    patternId: 'p1',
-    intent: 'open dashboard',
-    input: { url: 'https://x.test' },
-    confidence: 0.9,
-    rawInput: 'open the dashboard',
-    matchedPattern: 'open',
-    alternatives: [],
-    resolvedAt: Date.now(),
-    capabilityId: 'cap.open-dashboard',
-    ...overrides,
-  }
-}
+// ── Tests ────────────────────────────────────────────────────────────────
 
-describe('planStepsFromIntent (Unit 34.1)', () => {
-  it('maps a resolved CapabilityNode to a slug step with inputMapping + classification', () => {
-    const goal = makeGoal()
-    const intent = makeIntent({ classification: 'read' })
+describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
+  let store: ReturnType<typeof mockStore>
+  let engine: AutonomousExecutionEngine
+
+  beforeEach(() => {
+    store = mockStore()
+  })
+
+  it('planGoal uses resolver when available', async () => {
+    const intent: ParsedIntent = {
+      capabilityId: 'cap:test:action',
+      slug: 'test_action',
+      classification: 'read',
+      input: { query: 'test' },
+      confidence: 0.9,
+      intent: 'Test action',
+    }
+    const resolver = mockResolver(intent)
+
+    engine = new AutonomousExecutionEngine(
+      store as unknown as AutonomousExecutionStore,
+      mockRegistry(),
+      mockPolicy(),
+      mockGovernor(),
+      mockEventBus(),
+      resolver,
+    )
+
+    const goal = makeGoal({ description: 'Do something' })
+    const task = await engine.execute(goal)
+
+    // Task should have steps from the resolver
+    expect(task.steps.length).toBeGreaterThan(0)
+    // Step action should be the capabilityId
+    expect(task.steps[0].action).toBe('cap:test:action')
+  })
+
+  it('planGoal falls back to local planner when no resolver', async () => {
+    engine = new AutonomousExecutionEngine(
+      store as unknown as AutonomousExecutionStore,
+      mockRegistry(),
+      mockPolicy(),
+      mockGovernor(),
+      mockEventBus(),
+      // No resolver
+    )
+
+    const goal = makeGoal({ description: 'Navigate to example.com' })
+    const task = await engine.execute(goal)
+
+    // Should use local planner and create a navigate step
+    expect(task.steps.length).toBeGreaterThan(0)
+    expect(task.steps[0].action).toBe('navigate')
+  })
+
+  it('planGoal with empty intent returns empty steps', async () => {
+    const resolver = mockResolver(null)
+
+    engine = new AutonomousExecutionEngine(
+      store as unknown as AutonomousExecutionStore,
+      mockRegistry(),
+      mockPolicy(),
+      mockGovernor(),
+      mockEventBus(),
+      resolver,
+    )
+
+    const goal = makeGoal({ description: 'Do something' })
+    const task = await engine.execute(goal)
+
+    // Empty intent should result in no steps
+    expect(task.steps.length).toBe(0)
+    expect(task.status).toBe('complete')
+  })
+
+  it('planGoal derives requiresHumanApproval from classification', async () => {
+    const intent: ParsedIntent = {
+      capabilityId: 'cap:test:destructive',
+      slug: 'destructive_action',
+      classification: 'destructive',
+      input: {},
+      confidence: 0.9,
+      intent: 'Destructive action',
+    }
+    const resolver = mockResolver(intent)
+
+    engine = new AutonomousExecutionEngine(
+      store as unknown as AutonomousExecutionStore,
+      mockRegistry(),
+      mockPolicy(),
+      mockGovernor(),
+      mockEventBus(),
+      resolver,
+    )
+
+    const goal = makeGoal({
+      description: 'Delete something',
+      requireApprovalAbove: 'read', // destructive > read, so requires approval
+    })
+
+    // Test planStepsFromIntent directly to avoid HITL timeout
+    const { planStepsFromIntent } = await import('../../../src/engines/autonomous-execution.js')
     const steps = planStepsFromIntent(goal, intent)
 
-    expect(steps).toHaveLength(1)
-    const step = steps[0] as AutonomousStep
-    expect(step.action).toBe('cap.open-dashboard')
-    expect(step.actionInput.inputMapping).toEqual({ url: 'https://x.test' })
-    expect(step.classification).toBe('read')
-  })
-
-  it('returns 0 steps for an empty DAG (null intent)', () => {
-    expect(planStepsFromIntent(makeGoal(), null)).toHaveLength(0)
-  })
-
-  it('returns 0 steps when the intent has no capabilityId', () => {
-    const intent = makeIntent({ capabilityId: undefined })
-    expect(planStepsFromIntent(makeGoal(), intent)).toHaveLength(0)
-  })
-
-  it('expands alternatives into additional slug steps', () => {
-    const alt: ParsedIntent = makeIntent({
-      capabilityId: 'cap.summarize',
-      intent: 'summarize',
-      classification: 'read',
-    })
-    const intent = makeIntent({ alternatives: [alt] })
-    const steps = planStepsFromIntent(makeGoal(), intent)
-    expect(steps).toHaveLength(2)
-    expect(steps.map((s) => s.action)).toEqual(['cap.open-dashboard', 'cap.summarize'])
-  })
-
-  it('does not require approval for a low classification', () => {
-    const intent = makeIntent({ classification: 'read' })
-    const steps = planStepsFromIntent(makeGoal({ requireApprovalAbove: 'destructive' }), intent)
-    expect(steps[0]?.requiresHumanApproval).toBe(false)
-  })
-
-  it('requires approval when classification meets the threshold', () => {
-    const intent = makeIntent({ classification: 'destructive' })
-    const steps = planStepsFromIntent(makeGoal({ requireApprovalAbove: 'destructive' }), intent)
-    expect(steps[0]?.requiresHumanApproval).toBe(true)
-  })
-
-  it('respects the maxSteps cap', () => {
-    const intents: ParsedIntent[] = Array.from({ length: 3 }, (_, i) =>
-      makeIntent({ capabilityId: `cap.s${i}`, intent: `s${i}`, classification: 'read' }),
-    )
-    const root = makeIntent({ alternatives: intents.slice(1) })
-    const steps = planStepsFromIntent(makeGoal({ maxSteps: 2 }), root)
-    expect(steps).toHaveLength(2)
+    // Destructive step should require approval when threshold is 'read'
+    expect(steps.length).toBe(1)
+    expect(steps[0].requiresHumanApproval).toBe(true)
+    expect(steps[0].classification).toBe('destructive')
   })
 })

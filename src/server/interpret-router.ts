@@ -1,39 +1,14 @@
 import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
+import type {
+  InterpretClarificationResponse,
+  InterpretConfirmationResponse,
+  InterpretErrorResponse,
+  InterpretSuccessResponse,
+  InterpretBody,
+} from '../schema/api-types.js'
 import { errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
-
-export interface InterpretBody {
-  text: string
-  ctx?: {
-    conversationId?: string
-    providerId?: string
-    slaveId?: string
-    userId?: string
-    metadata?: Record<string, unknown>
-    conversationState?: Record<string, unknown>
-    canvasState?: Record<string, unknown>
-    activeSessionId?: string
-  }
-}
-
-export interface InterpretResponse {
-  ok: boolean
-  capabilityId?: string
-  output?: unknown
-  text?: string
-  error?: string
-  traceId: string
-  latencyMs: number
-  requiresConfirmation?: boolean
-  confirmation?: { token: string; prompt: string }
-  clarification?: {
-    prompt: string
-    missing?: string[]
-    ambiguous?: string[]
-    options?: string[]
-  }
-}
 
 /**
  * Creates the /api/interpret router.
@@ -78,7 +53,7 @@ export function createInterpretRouter(nlclEngine: NLCLEngine) {
     // Handle confirmation flow (25.6)
     if (result.requiresConfirmation) {
       const token = generateConfirmationToken()
-      return json({
+      const response: InterpretConfirmationResponse = {
         ok: true,
         requiresConfirmation: true,
         confirmation: {
@@ -87,35 +62,40 @@ export function createInterpretRouter(nlclEngine: NLCLEngine) {
         },
         traceId: result.traceId,
         latencyMs: Date.now() - start,
-      })
+      }
+      return json(response)
     }
 
     // Handle clarification / missing parameters
     if (result.clarification || result.error?.includes('Missing required')) {
-      return json({
+      if (result.clarification) {
+        const response: InterpretClarificationResponse = {
+          ok: false,
+          clarification: result.clarification,
+          traceId: result.traceId,
+          latencyMs: Date.now() - start,
+        }
+        return json(response)
+      }
+      const response: InterpretErrorResponse = {
         ok: false,
-        clarification: result.clarification ?? {
-          prompt: `Missing parameters for: ${result.intent}`,
-          missing: result.error ? [result.error] : [],
-        },
+        error: result.error ?? 'Missing required parameters',
         traceId: result.traceId,
         latencyMs: Date.now() - start,
-      })
+      }
+      return json(response)
     }
 
     // Normal response
-    return json({
+    const response: InterpretSuccessResponse = {
       ok: result.ok,
-      capabilityId: result.capabilityId,
+      capabilityId: result.capabilityId ?? 'unknown',
       output: result.output,
       text: result.text,
-      error: result.error,
       traceId: result.traceId,
       latencyMs: Date.now() - start,
-      requiresConfirmation: result.requiresConfirmation,
-      confirmation: result.confirmation,
-      clarification: result.clarification,
-    } as InterpretResponse)
+    }
+    return json(response)
   }
 }
 

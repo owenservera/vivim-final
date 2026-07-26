@@ -25,7 +25,9 @@ export interface CanvasEvent {
     | 'workspace:reresolved'
     | 'canvas:def:updated'
     | 'canvas:def:deprecated'
-    | 'capability:actions:changed';
+    | 'capability:actions:changed'
+    | 'stream:open'
+    | 'heartbeat';
   traceId?: string;
   workspaceId?: string;
   definitionId?: string;
@@ -58,6 +60,8 @@ export function useCanvasEvents(workspaceId: string | null) {
       es.onmessage = (msg) => {
         try {
           const evt = JSON.parse(msg.data) as CanvasEvent;
+          // Skip stream:open and heartbeat — these are connection signals, not canvas updates
+          if (evt.type === 'stream:open' || evt.type === 'heartbeat') return;
           // Deduplicate: track by traceId to prevent replays on reconnect
           const key = evt.traceId ?? `${evt.type}:${evt.workspaceId ?? ''}:${evt.definitionId ?? ''}:${Date.now()}`;
           if (seenRef.current.has(key)) return;

@@ -12,7 +12,7 @@ function getPrismaForSeed(external?: PrismaClient): PrismaClient {
   return external ?? new PrismaClient()
 }
 
-interface TaxonomyNode {
+interface PoolNode {
   id: string
   kind: string
   slug: string
@@ -22,28 +22,27 @@ interface TaxonomyNode {
   tags: string[]
   shared: boolean
   capabilityKind?: string
-  transport?: string
-  family?: string
-  composerHint?: string
-  sendHint?: string
-  parserType?: string
-  fallbackSlug?: string | null
+  ui_component?: string
+  ui_label?: string
+  ui_icon?: string
+  ui_position?: string
+  ui_order?: number
+  ui_group?: string
+  ui_layer_depth?: number
+  ui_priority?: string
+  interaction_mode?: string
+  ui_states_json?: string
+  ui_visibility_rule?: string | null
+  ui_input_schema?: string
+  result_component?: string
+  result_layout?: string
+  parent_slug?: string | null
 }
 
 interface TaxonomyPool {
   version: string
   generatedAt: string
-  platforms: Array<{
-    slug: string
-    category: string
-    label: string
-    url: string
-    authType: string
-    interactionPattern: string
-    techStackSlugs: string[]
-    sourceConfidence: string
-  }>
-  nodes: TaxonomyNode[]
+  nodes: PoolNode[]
   edges: Array<{
     id: string
     fromSlug: string
@@ -53,27 +52,6 @@ interface TaxonomyPool {
     relation: string
     confidence: string
   }>
-}
-
-interface CapabilityHierarchy {
-  id: string
-  slug: string
-  name: string
-  category: string
-  inputType?: string
-  uiComponent: string
-  uiLabel?: string
-  uiIcon?: string
-  uiPosition: string
-  uiOrder: number
-  uiLayerDepth: number
-  uiGroup: string
-  uiPriority: string
-  parentCapabilityId: string | null
-  interactionMode?: string
-  resultComponent?: string
-  resultLayout?: string
-  children?: string[]
 }
 
 function loadJson<T>(path: string): T {
@@ -101,54 +79,53 @@ export async function ensureTaxonomySeeded(
   }
 
   const rootDir = join(import.meta.dir, '..', '..')
-  const hierarchyData = loadJson<{ hierarchy: CapabilityHierarchy[] }>(
-    join(rootDir, 'scripts', 'taxonomy-gen', 'output', 'capability-hierarchy.json'),
+  const pool = loadJson<TaxonomyPool>(
+    join(rootDir, 'seeds', 'taxonomy', 'pool.taxonomy.json'),
   )
-  const hierarchy = hierarchyData.hierarchy
+
+  // Filter to capability nodes only
+  const capabilityNodes = pool.nodes.filter((n) => n.kind === 'capability')
 
   console.log(
-    `[seed] ${force ? 'Force-' : ''}seeding ${hierarchy.length} capability taxonomy entries ` +
-      `(existing=${existing})...`,
+    `[seed] ${force ? 'Force-' : ''}seeding ${capabilityNodes.length} capability taxonomy entries ` +
+      `(existing=${existing}, pool=${pool.nodes.length} total nodes)...`,
   )
 
   const now = BigInt(Date.now())
-  const slugToCapId = new Map<string, string>()
-  for (const node of hierarchy) {
-    slugToCapId.set(node.slug, node.id)
+  const slugToId = new Map<string, string>()
+  for (const node of capabilityNodes) {
+    slugToId.set(node.slug, node.id)
   }
-  const sorted = hierarchy
-    .filter((n) => n.id !== 'root')
-    .sort((a, b) => a.uiLayerDepth - b.uiLayerDepth)
 
   let upserted = 0
-  for (const node of sorted) {
-    const parentSlug = node.parentCapabilityId
-    const parentCapId =
-      parentSlug && parentSlug !== 'root' ? (slugToCapId.get(parentSlug) ?? null) : null
+  for (const node of capabilityNodes) {
+    const parentSlug = node.parent_slug
+    const parentCapId = parentSlug ? (slugToId.get(parentSlug) ?? null) : null
+
     try {
       await prisma.capabilityTaxonomy.upsert({
         where: { slug: node.slug },
         create: {
           id: node.id,
-          name: node.name,
+          name: node.label,
           slug: node.slug,
-          category: node.category,
-          description: node.name,
-          inputType: node.inputType ?? 'void',
-          uiComponent: node.uiComponent,
-          uiLabel: node.uiLabel ?? node.name,
-          uiIcon: node.uiIcon ?? null,
-          uiPosition: node.uiPosition,
-          uiOrder: node.uiOrder,
-          uiLayerDepth: node.uiLayerDepth,
+          category: node.capabilityKind ?? 'action',
+          description: node.description,
+          inputType: 'void',
+          uiComponent: node.ui_component ?? 'action_button',
+          uiLabel: node.ui_label ?? node.label,
+          uiIcon: node.ui_icon ?? null,
+          uiPosition: node.ui_position ?? 'composer',
+          uiOrder: node.ui_order ?? 0,
+          uiLayerDepth: node.ui_layer_depth ?? 0,
           parentCapabilityId: parentCapId,
-          uiGroup: node.uiGroup,
-          uiPriority: node.uiPriority,
-          interactionMode: node.interactionMode ?? 'single_click',
-          uiStatesJson: '[]',
-          uiVisibilityRule: null,
+          uiGroup: node.ui_group ?? 'default',
+          uiPriority: node.ui_priority ?? 'secondary',
+          interactionMode: node.interaction_mode ?? 'single_click',
+          uiStatesJson: node.ui_states_json ?? '[]',
+          uiVisibilityRule: node.ui_visibility_rule ?? null,
           existentialRule: null,
-          uiInputSchema: '{}',
+          uiInputSchema: node.ui_input_schema ?? '{}',
           mutationEffectsJson: '{}',
           recoveryBehavior: 'retry_manual',
           statePersistence: 'none',
@@ -159,8 +136,8 @@ export async function ensureTaxonomySeeded(
           opClassification: null,
           requiresUserConfirmation: 0,
           maxResultSize: 100000,
-          resultComponent: node.resultComponent ?? 'text_block',
-          resultLayout: node.resultLayout ?? 'inline',
+          resultComponent: node.result_component ?? 'text_block',
+          resultLayout: node.result_layout ?? 'inline',
           searchHintsJson: '[]',
           aliasesJson: '[]',
           availabilityJson: '{}',
@@ -169,20 +146,24 @@ export async function ensureTaxonomySeeded(
           updatedAt: now,
         },
         update: {
-          name: node.name,
-          category: node.category,
-          uiComponent: node.uiComponent,
-          uiLabel: node.uiLabel ?? node.name,
-          uiIcon: node.uiIcon ?? null,
-          uiPosition: node.uiPosition,
-          uiOrder: node.uiOrder,
-          uiLayerDepth: node.uiLayerDepth,
+          name: node.label,
+          category: node.capabilityKind ?? 'action',
+          description: node.description,
+          uiComponent: node.ui_component ?? 'action_button',
+          uiLabel: node.ui_label ?? node.label,
+          uiIcon: node.ui_icon ?? null,
+          uiPosition: node.ui_position ?? 'composer',
+          uiOrder: node.ui_order ?? 0,
+          uiLayerDepth: node.ui_layer_depth ?? 0,
           parentCapabilityId: parentCapId,
-          uiGroup: node.uiGroup,
-          uiPriority: node.uiPriority,
-          interactionMode: node.interactionMode ?? 'single_click',
-          resultComponent: node.resultComponent ?? 'text_block',
-          resultLayout: node.resultLayout ?? 'inline',
+          uiGroup: node.ui_group ?? 'default',
+          uiPriority: node.ui_priority ?? 'secondary',
+          interactionMode: node.interaction_mode ?? 'single_click',
+          uiStatesJson: node.ui_states_json ?? '[]',
+          uiVisibilityRule: node.ui_visibility_rule ?? null,
+          uiInputSchema: node.ui_input_schema ?? '{}',
+          resultComponent: node.result_component ?? 'text_block',
+          resultLayout: node.result_layout ?? 'inline',
           updatedAt: now,
         },
       })
@@ -200,7 +181,8 @@ async function main() {
 
   // Load pool for node/edge stats
   const pool = loadJson<TaxonomyPool>(join(rootDir, 'seeds', 'taxonomy', 'pool.taxonomy.json'))
-  console.log(`[seed] Pool: ${pool.nodes.length} nodes, ${pool.edges.length} edges`)
+  const capabilityCount = pool.nodes.filter((n) => n.kind === 'capability').length
+  console.log(`[seed] Pool: ${pool.nodes.length} nodes (${capabilityCount} capabilities), ${pool.edges.length} edges`)
 
   // Seed capability taxonomy (idempotent — force to overwrite existing rows)
   const { upserted } = await ensureTaxonomySeeded(prisma, true)
