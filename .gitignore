@@ -35,6 +35,27 @@ yarn-error.log*
 # Kilo
 .kilo/
 
+# Generated audit artifacts (per-machine)
+docs/audits/CONVERGE-*
+docs/audits/ARCH-AUDIT-*
+docs/audits/FRONTEND-*
+docs/audits/extraction/
+docs/audits/arch/*.json
+docs/audits/arch/ARCH-AUDIT-*
+
+# Generated plans/blueprints (per-machine)
+docs/blueprints/
+docs/plans/sota-10-impl/
+
+# Session state (per-machine)
+docs/session/
+
+# Test artifacts
+tests/**/.tmp-export-test/
+
+# Boot test output
+.runtime/boot-test-*
+
 # Bun
 .bunv/
 

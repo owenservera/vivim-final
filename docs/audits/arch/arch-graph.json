@@ -91,6 +91,7 @@
     "engines/execution-policy",
     "engines/export",
     "engines/format-classifier",
+    "engines/generative",
     "engines/governance-engine",
     "engines/harness",
     "engines/harness-checkpoint",
@@ -130,6 +131,7 @@
     "engines/objective-engine",
     "engines/observability",
     "engines/observation-tap",
+    "engines/onboarding",
     "engines/opencode",
     "engines/otel-sink",
     "engines/parser-repair",
@@ -147,6 +149,7 @@
     "engines/provider-selectors",
     "engines/provider-test-harness",
     "engines/registration-auditor",
+    "engines/reprogrammability",
     "engines/request-queue",
     "engines/retry-engine",
     "engines/safe-eval",
@@ -204,6 +207,13 @@
     "executor/slave-states",
     "executor/slave-write",
     "executor/system-pressure",
+    "framing/adapter",
+    "framing/adapters",
+    "framing/engine",
+    "framing/frame-version",
+    "framing/index",
+    "framing/schemas",
+    "framing/__tests__",
     "ids",
     "index",
     "lib/logger",
@@ -212,6 +222,15 @@
     "mcp/nlcl-tools",
     "mcp/server",
     "mcp/types",
+    "reprogrammability/canonical-surfaces",
+    "reprogrammability/contract",
+    "reprogrammability/dsl",
+    "reprogrammability/index",
+    "reprogrammability/mutation-schema",
+    "reprogrammability/registry",
+    "reprogrammability/schema",
+    "reprogrammability/variant-schema",
+    "reprogrammability/__tests__",
     "router/index",
     "router/router",
     "schema/agentic",
@@ -257,21 +276,32 @@
     "server/canvas-router",
     "server/canvas-ws",
     "server/capability-router",
+    "server/chrome-router",
     "server/conceptual-router",
     "server/conversation-router",
+    "server/generative-router",
     "server/index",
     "server/interpret-router",
     "server/kernel-router",
     "server/knowledge-router",
+    "server/llm-harness-router",
     "server/memory-router",
     "server/memory-viz-router",
+    "server/mutation-router",
     "server/mux-router",
     "server/nlcl-router",
+    "server/onboarding-boot",
+    "server/plugin-builder-router",
     "server/plugin-router",
     "server/response",
     "server/routes",
+    "server/service-container",
     "server/setup-router",
     "server/source-middleware",
+    "server/surface-router",
+    "server/template-router",
+    "server/variant-router",
+    "server/version-router",
     "server/webhook-router",
     "server/websocket",
     "shared/agent-canvas",
@@ -601,6 +631,14 @@
     {
       "from": "cli/commands",
       "to": "api/setup-client"
+    },
+    {
+      "from": "cli/commands",
+      "to": "server/service-container"
+    },
+    {
+      "from": "cli/commands",
+      "to": "engines/onboarding"
     },
     {
       "from": "cli/commands",
@@ -1451,6 +1489,10 @@
       "to": "engines/streaming-response-analyzer"
     },
     {
+      "from": "engines/generative",
+      "to": "ids"
+    },
+    {
       "from": "engines/governance-engine",
       "to": "errors"
     },
@@ -1900,11 +1942,19 @@
     },
     {
       "from": "engines/nlcl",
-      "to": "engines/opencode"
+      "to": "engines/embedding-minilm"
     },
     {
       "from": "engines/nlcl",
       "to": "engines/semantic-search"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "engines/opencode"
+    },
+    {
+      "from": "engines/nlcl",
+      "to": "engines/otel-sink"
     },
     {
       "from": "engines/objective-engine",
@@ -1937,6 +1987,22 @@
     {
       "from": "engines/observability",
       "to": "engines/sla-monitor"
+    },
+    {
+      "from": "engines/onboarding",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "engines/onboarding",
+      "to": "engines/onboarding"
+    },
+    {
+      "from": "engines/onboarding",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "engines/onboarding",
+      "to": "engines/otel-sink"
     },
     {
       "from": "engines/opencode",
@@ -2001,6 +2067,22 @@
     {
       "from": "engines/plugin-system",
       "to": "engines/capability-event-bus"
+    },
+    {
+      "from": "engines/plugin-system",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "engines/plugin-system",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "engines/plugin-system",
+      "to": "reprogrammability/schema"
+    },
+    {
+      "from": "engines/plugin-system",
+      "to": "reprogrammability/registry"
     },
     {
       "from": "engines/protocol-discovery",
@@ -2177,6 +2259,46 @@
     {
       "from": "engines/registration-auditor",
       "to": "storage/contracts"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "lib/logger"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "engines/reprogrammability"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "engines/plugin-system"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "reprogrammability/canonical-surfaces"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "reprogrammability/schema"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "reprogrammability/dsl"
     },
     {
       "from": "engines/request-queue",
@@ -2585,6 +2707,70 @@
     {
       "from": "executor/slave-write",
       "to": "executor/cdp"
+    },
+    {
+      "from": "framing/adapter",
+      "to": "framing/schemas"
+    },
+    {
+      "from": "framing/adapter",
+      "to": "framing/frame-version"
+    },
+    {
+      "from": "framing/adapter",
+      "to": "schema/streaming"
+    },
+    {
+      "from": "framing/adapters",
+      "to": "framing/adapter"
+    },
+    {
+      "from": "framing/adapters",
+      "to": "framing/schemas"
+    },
+    {
+      "from": "framing/adapters",
+      "to": "schema/streaming"
+    },
+    {
+      "from": "framing/engine",
+      "to": "framing/adapter"
+    },
+    {
+      "from": "framing/engine",
+      "to": "framing/schemas"
+    },
+    {
+      "from": "framing/engine",
+      "to": "schema/streaming"
+    },
+    {
+      "from": "framing/index",
+      "to": "framing/frame-version"
+    },
+    {
+      "from": "framing/index",
+      "to": "framing/schemas"
+    },
+    {
+      "from": "framing/index",
+      "to": "framing/adapter"
+    },
+    {
+      "from": "framing/index",
+      "to": "framing/engine"
+    },
+    {
+      "from": "framing/index",
+      "to": "framing/adapters"
+    },
+    {
+      "from": "framing/schemas",
+      "to": "schema/streaming"
+    },
+    {
+      "from": "framing/__tests__",
+      "to": "framing/index"
     },
     {
       "from": "index",
@@ -3007,6 +3193,126 @@
       "to": "engines/provider-registrar"
     },
     {
+      "from": "reprogrammability/canonical-surfaces",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "reprogrammability/canonical-surfaces",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "reprogrammability/canonical-surfaces",
+      "to": "reprogrammability/schema"
+    },
+    {
+      "from": "reprogrammability/canonical-surfaces",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "reprogrammability/contract",
+      "to": "reprogrammability/schema"
+    },
+    {
+      "from": "reprogrammability/contract",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "reprogrammability/dsl",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "reprogrammability/dsl",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "reprogrammability/dsl",
+      "to": "reprogrammability/schema"
+    },
+    {
+      "from": "reprogrammability/dsl",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "reprogrammability/dsl",
+      "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "reprogrammability/dsl",
+      "to": "reprogrammability/index"
+    },
+    {
+      "from": "reprogrammability/index",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "reprogrammability/index",
+      "to": "reprogrammability/schema"
+    },
+    {
+      "from": "reprogrammability/index",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "reprogrammability/index",
+      "to": "reprogrammability/variant-schema"
+    },
+    {
+      "from": "reprogrammability/index",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "reprogrammability/mutation-schema",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "reprogrammability/registry",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "reprogrammability/registry",
+      "to": "reprogrammability/variant-schema"
+    },
+    {
+      "from": "reprogrammability/variant-schema",
+      "to": "reprogrammability/schema"
+    },
+    {
+      "from": "reprogrammability/variant-schema",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/index"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/schema"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "engines/reprogrammability"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/canonical-surfaces"
+    },
+    {
       "from": "router/index",
       "to": "router/router"
     },
@@ -3279,6 +3585,18 @@
       "to": "server/source-middleware"
     },
     {
+      "from": "server/chrome-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/chrome-router",
+      "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "server/chrome-router",
+      "to": "reprogrammability/schema"
+    },
+    {
       "from": "server/conceptual-router",
       "to": "server/index"
     },
@@ -3309,6 +3627,18 @@
     {
       "from": "server/conversation-router",
       "to": "engines/mirror-engine"
+    },
+    {
+      "from": "server/generative-router",
+      "to": "engines/generative"
+    },
+    {
+      "from": "server/generative-router",
+      "to": "schema/api-types"
+    },
+    {
+      "from": "server/generative-router",
+      "to": "server/response"
     },
     {
       "from": "server/index",
@@ -3457,6 +3787,50 @@
     {
       "from": "server/index",
       "to": "server/nlcl-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/chrome-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/generative-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/llm-harness-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/mutation-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/onboarding-boot"
+    },
+    {
+      "from": "server/index",
+      "to": "server/plugin-builder-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/service-container"
+    },
+    {
+      "from": "server/index",
+      "to": "server/surface-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/template-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/variant-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/version-router"
     },
     {
       "from": "server/index",
@@ -3635,6 +4009,30 @@
       "to": "server/source-middleware"
     },
     {
+      "from": "server/llm-harness-router",
+      "to": "lib/logger"
+    },
+    {
+      "from": "server/llm-harness-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/llm-harness-router",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "server/llm-harness-router",
+      "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "server/llm-harness-router",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "server/llm-harness-router",
+      "to": "engines/reprogrammability"
+    },
+    {
       "from": "server/memory-router",
       "to": "server/index"
     },
@@ -3663,6 +4061,30 @@
       "to": "engines/memory-export"
     },
     {
+      "from": "server/mutation-router",
+      "to": "lib/logger"
+    },
+    {
+      "from": "server/mutation-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/mutation-router",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "server/mutation-router",
+      "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "server/mutation-router",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "server/mutation-router",
+      "to": "reprogrammability/contract"
+    },
+    {
       "from": "server/mux-router",
       "to": "engines/cost-optimizer"
     },
@@ -3684,7 +4106,47 @@
     },
     {
       "from": "server/nlcl-router",
+      "to": "schema/api-types"
+    },
+    {
+      "from": "server/nlcl-router",
+      "to": "server/interpret-router"
+    },
+    {
+      "from": "server/nlcl-router",
       "to": "server/response"
+    },
+    {
+      "from": "server/onboarding-boot",
+      "to": "engines/chrome-governor"
+    },
+    {
+      "from": "server/onboarding-boot",
+      "to": "engines/onboarding"
+    },
+    {
+      "from": "server/onboarding-boot",
+      "to": "storage/db"
+    },
+    {
+      "from": "server/onboarding-boot",
+      "to": "storage/impl"
+    },
+    {
+      "from": "server/onboarding-boot",
+      "to": "server/service-container"
+    },
+    {
+      "from": "server/onboarding-boot",
+      "to": "storage/contracts"
+    },
+    {
+      "from": "server/plugin-builder-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/plugin-builder-router",
+      "to": "engines/reprogrammability"
     },
     {
       "from": "server/plugin-router",
@@ -3749,6 +4211,62 @@
     {
       "from": "server/setup-router",
       "to": "config/provider-registry"
+    },
+    {
+      "from": "server/surface-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/surface-router",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "server/surface-router",
+      "to": "reprogrammability/contract"
+    },
+    {
+      "from": "server/template-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/template-router",
+      "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "server/template-router",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "server/variant-router",
+      "to": "lib/logger"
+    },
+    {
+      "from": "server/variant-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/variant-router",
+      "to": "reprogrammability/variant-schema"
+    },
+    {
+      "from": "server/variant-router",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "server/variant-router",
+      "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "server/version-router",
+      "to": "server/response"
+    },
+    {
+      "from": "server/version-router",
+      "to": "engines/reprogrammability"
+    },
+    {
+      "from": "server/version-router",
+      "to": "reprogrammability/dsl"
     },
     {
       "from": "server/webhook-router",
@@ -4305,6 +4823,10 @@
       "layer": 3
     },
     {
+      "module": "engines/generative",
+      "layer": 3
+    },
+    {
       "module": "engines/governance-engine",
       "layer": 3
     },
@@ -4461,6 +4983,10 @@
       "layer": 3
     },
     {
+      "module": "engines/onboarding",
+      "layer": 3
+    },
+    {
       "module": "engines/opencode",
       "layer": 3
     },
@@ -4527,6 +5053,10 @@
     {
       "module": "engines/registration-auditor",
       "layer": 1
+    },
+    {
+      "module": "engines/reprogrammability",
+      "layer": 3
     },
     {
       "module": "engines/request-queue",
@@ -4757,6 +5287,34 @@
       "layer": 1
     },
     {
+      "module": "framing/adapter",
+      "layer": 3
+    },
+    {
+      "module": "framing/adapters",
+      "layer": 3
+    },
+    {
+      "module": "framing/engine",
+      "layer": 3
+    },
+    {
+      "module": "framing/frame-version",
+      "layer": 3
+    },
+    {
+      "module": "framing/index",
+      "layer": 3
+    },
+    {
+      "module": "framing/schemas",
+      "layer": 3
+    },
+    {
+      "module": "framing/__tests__",
+      "layer": 3
+    },
+    {
       "module": "ids",
       "layer": 0
     },
@@ -4787,6 +5345,42 @@
     {
       "module": "mcp/types",
       "layer": 5
+    },
+    {
+      "module": "reprogrammability/canonical-surfaces",
+      "layer": 3
+    },
+    {
+      "module": "reprogrammability/contract",
+      "layer": 3
+    },
+    {
+      "module": "reprogrammability/dsl",
+      "layer": 3
+    },
+    {
+      "module": "reprogrammability/index",
+      "layer": 3
+    },
+    {
+      "module": "reprogrammability/mutation-schema",
+      "layer": 3
+    },
+    {
+      "module": "reprogrammability/registry",
+      "layer": 3
+    },
+    {
+      "module": "reprogrammability/schema",
+      "layer": 3
+    },
+    {
+      "module": "reprogrammability/variant-schema",
+      "layer": 3
+    },
+    {
+      "module": "reprogrammability/__tests__",
+      "layer": 3
     },
     {
       "module": "router/index",
@@ -4969,11 +5563,19 @@
       "layer": 5
     },
     {
+      "module": "server/chrome-router",
+      "layer": 5
+    },
+    {
       "module": "server/conceptual-router",
       "layer": 5
     },
     {
       "module": "server/conversation-router",
+      "layer": 5
+    },
+    {
+      "module": "server/generative-router",
       "layer": 5
     },
     {
@@ -4993,6 +5595,10 @@
       "layer": 5
     },
     {
+      "module": "server/llm-harness-router",
+      "layer": 5
+    },
+    {
       "module": "server/memory-router",
       "layer": 5
     },
@@ -5001,11 +5607,23 @@
       "layer": 5
     },
     {
+      "module": "server/mutation-router",
+      "layer": 5
+    },
+    {
       "module": "server/mux-router",
       "layer": 5
     },
     {
       "module": "server/nlcl-router",
+      "layer": 5
+    },
+    {
+      "module": "server/onboarding-boot",
+      "layer": 5
+    },
+    {
+      "module": "server/plugin-builder-router",
       "layer": 5
     },
     {
@@ -5021,11 +5639,31 @@
       "layer": 5
     },
     {
+      "module": "server/service-container",
+      "layer": 5
+    },
+    {
       "module": "server/setup-router",
       "layer": 5
     },
     {
       "module": "server/source-middleware",
+      "layer": 5
+    },
+    {
+      "module": "server/surface-router",
+      "layer": 5
+    },
+    {
+      "module": "server/template-router",
+      "layer": 5
+    },
+    {
+      "module": "server/variant-router",
+      "layer": 5
+    },
+    {
+      "module": "server/version-router",
       "layer": 5
     },
     {
@@ -5301,12 +5939,12 @@
     {
       "module": "cli/commands",
       "fanIn": 2,
-      "fanOut": 5,
-      "instability": 0.7142857142857143,
+      "fanOut": 7,
+      "instability": 0.7777777777777778,
       "selfDeps": 1,
-      "totalDeps": 5,
-      "cohesion": 0.2,
-      "files": 4
+      "totalDeps": 7,
+      "cohesion": 0.14285714285714285,
+      "files": 5
     },
     {
       "module": "cli/discovery-stack",
@@ -5720,9 +6358,9 @@
     },
     {
       "module": "engines/chrome-governor",
-      "fanIn": 29,
+      "fanIn": 31,
       "fanOut": 11,
-      "instability": 0.275,
+      "instability": 0.2619047619047619,
       "selfDeps": 0,
       "totalDeps": 11,
       "cohesion": 0,
@@ -5890,9 +6528,9 @@
     },
     {
       "module": "engines/embedding-minilm",
-      "fanIn": 2,
+      "fanIn": 3,
       "fanOut": 1,
-      "instability": 0.3333333333333333,
+      "instability": 0.25,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -5985,6 +6623,16 @@
       "instability": 0.6666666666666666,
       "selfDeps": 0,
       "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/generative",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
       "cohesion": 0,
       "files": 1
     },
@@ -6340,13 +6988,13 @@
     },
     {
       "module": "engines/nlcl",
-      "fanIn": 10,
-      "fanOut": 12,
-      "instability": 0.5454545454545454,
+      "fanIn": 12,
+      "fanOut": 14,
+      "instability": 0.5384615384615384,
       "selfDeps": 1,
-      "totalDeps": 12,
-      "cohesion": 0.08333333333333333,
-      "files": 32
+      "totalDeps": 14,
+      "cohesion": 0.07142857142857142,
+      "files": 40
     },
     {
       "module": "engines/objective-engine",
@@ -6379,6 +7027,16 @@
       "files": 1
     },
     {
+      "module": "engines/onboarding",
+      "fanIn": 3,
+      "fanOut": 4,
+      "instability": 0.5714285714285714,
+      "selfDeps": 1,
+      "totalDeps": 4,
+      "cohesion": 0.25,
+      "files": 11
+    },
+    {
       "module": "engines/opencode",
       "fanIn": 4,
       "fanOut": 9,
@@ -6390,9 +7048,9 @@
     },
     {
       "module": "engines/otel-sink",
-      "fanIn": 0,
+      "fanIn": 2,
       "fanOut": 1,
-      "instability": 1,
+      "instability": 0.3333333333333333,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -6430,11 +7088,11 @@
     },
     {
       "module": "engines/plugin-system",
-      "fanIn": 0,
-      "fanOut": 2,
-      "instability": 1,
+      "fanIn": 1,
+      "fanOut": 6,
+      "instability": 0.8571428571428571,
       "selfDeps": 0,
-      "totalDeps": 2,
+      "totalDeps": 6,
       "cohesion": 0,
       "files": 1
     },
@@ -6547,6 +7205,16 @@
       "totalDeps": 3,
       "cohesion": 0,
       "files": 1
+    },
+    {
+      "module": "engines/reprogrammability",
+      "fanIn": 5,
+      "fanOut": 10,
+      "instability": 0.6666666666666666,
+      "selfDeps": 1,
+      "totalDeps": 10,
+      "cohesion": 0.1,
+      "files": 7
     },
     {
       "module": "engines/request-queue",
@@ -7119,8 +7787,78 @@
       "files": 1
     },
     {
+      "module": "framing/adapter",
+      "fanIn": 3,
+      "fanOut": 3,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "framing/adapters",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 2
+    },
+    {
+      "module": "framing/engine",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "framing/frame-version",
+      "fanIn": 2,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "framing/index",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "framing/schemas",
+      "fanIn": 4,
+      "fanOut": 1,
+      "instability": 0.2,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "framing/__tests__",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "ids",
-      "fanIn": 52,
+      "fanIn": 53,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7140,7 +7878,7 @@
     },
     {
       "module": "lib/logger",
-      "fanIn": 16,
+      "fanIn": 20,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7199,6 +7937,96 @@
       "files": 1
     },
     {
+      "module": "reprogrammability/canonical-surfaces",
+      "fanIn": 2,
+      "fanOut": 4,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "reprogrammability/contract",
+      "fanIn": 10,
+      "fanOut": 2,
+      "instability": 0.16666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "reprogrammability/dsl",
+      "fanIn": 9,
+      "fanOut": 6,
+      "instability": 0.4,
+      "selfDeps": 1,
+      "totalDeps": 6,
+      "cohesion": 0.16666666666666666,
+      "files": 5
+    },
+    {
+      "module": "reprogrammability/index",
+      "fanIn": 2,
+      "fanOut": 5,
+      "instability": 0.7142857142857143,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "reprogrammability/mutation-schema",
+      "fanIn": 11,
+      "fanOut": 1,
+      "instability": 0.08333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "reprogrammability/registry",
+      "fanIn": 9,
+      "fanOut": 2,
+      "instability": 0.18181818181818182,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "reprogrammability/schema",
+      "fanIn": 9,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "reprogrammability/variant-schema",
+      "fanIn": 3,
+      "fanOut": 2,
+      "instability": 0.4,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "reprogrammability/__tests__",
+      "fanIn": 0,
+      "fanOut": 8,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 8,
+      "cohesion": 0,
+      "files": 2
+    },
+    {
       "module": "router/index",
       "fanIn": 0,
       "fanOut": 1,
@@ -7230,7 +8058,7 @@
     },
     {
       "module": "schema/api-types",
-      "fanIn": 2,
+      "fanIn": 4,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7510,9 +8338,9 @@
     },
     {
       "module": "schema/streaming",
-      "fanIn": 13,
+      "fanIn": 17,
       "fanOut": 1,
-      "instability": 0.07142857142857142,
+      "instability": 0.05555555555555555,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -7649,6 +8477,16 @@
       "files": 1
     },
     {
+      "module": "server/chrome-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "server/conceptual-router",
       "fanIn": 0,
       "fanOut": 2,
@@ -7669,20 +8507,30 @@
       "files": 1
     },
     {
+      "module": "server/generative-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "server/index",
       "fanIn": 13,
-      "fanOut": 70,
-      "instability": 0.8433734939759037,
+      "fanOut": 81,
+      "instability": 0.8617021276595744,
       "selfDeps": 0,
-      "totalDeps": 70,
+      "totalDeps": 81,
       "cohesion": 0,
       "files": 1
     },
     {
       "module": "server/interpret-router",
-      "fanIn": 1,
+      "fanIn": 2,
       "fanOut": 4,
-      "instability": 0.8,
+      "instability": 0.6666666666666666,
       "selfDeps": 0,
       "totalDeps": 4,
       "cohesion": 0,
@@ -7709,6 +8557,16 @@
       "files": 1
     },
     {
+      "module": "server/llm-harness-router",
+      "fanIn": 1,
+      "fanOut": 6,
+      "instability": 0.8571428571428571,
+      "selfDeps": 0,
+      "totalDeps": 6,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "server/memory-router",
       "fanIn": 0,
       "fanOut": 4,
@@ -7729,6 +8587,16 @@
       "files": 1
     },
     {
+      "module": "server/mutation-router",
+      "fanIn": 1,
+      "fanOut": 6,
+      "instability": 0.8571428571428571,
+      "selfDeps": 0,
+      "totalDeps": 6,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "server/mux-router",
       "fanIn": 1,
       "fanOut": 4,
@@ -7740,6 +8608,26 @@
     },
     {
       "module": "server/nlcl-router",
+      "fanIn": 1,
+      "fanOut": 4,
+      "instability": 0.8,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/onboarding-boot",
+      "fanIn": 1,
+      "fanOut": 6,
+      "instability": 0.8571428571428571,
+      "selfDeps": 0,
+      "totalDeps": 6,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/plugin-builder-router",
       "fanIn": 1,
       "fanOut": 2,
       "instability": 0.6666666666666666,
@@ -7760,7 +8648,7 @@
     },
     {
       "module": "server/response",
-      "fanIn": 16,
+      "fanIn": 25,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7776,6 +8664,16 @@
       "selfDeps": 0,
       "totalDeps": 2,
       "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/service-container",
+      "fanIn": 3,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
       "files": 1
     },
     {
@@ -7796,6 +8694,46 @@
       "selfDeps": 0,
       "totalDeps": 0,
       "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "server/surface-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/template-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/variant-router",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "server/version-router",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
       "files": 1
     },
     {
@@ -7840,13 +8778,13 @@
     },
     {
       "module": "storage/contracts",
-      "fanIn": 73,
+      "fanIn": 75,
       "fanOut": 13,
-      "instability": 0.1511627906976744,
+      "instability": 0.14772727272727273,
       "selfDeps": 1,
       "totalDeps": 13,
       "cohesion": 0.07692307692307693,
-      "files": 56
+      "files": 63
     },
     {
       "module": "storage/cozo",
@@ -7860,9 +8798,9 @@
     },
     {
       "module": "storage/db",
-      "fanIn": 16,
+      "fanIn": 17,
       "fanOut": 4,
-      "instability": 0.2,
+      "instability": 0.19047619047619047,
       "selfDeps": 0,
       "totalDeps": 4,
       "cohesion": 0,
@@ -7870,13 +8808,13 @@
     },
     {
       "module": "storage/impl",
-      "fanIn": 6,
+      "fanIn": 7,
       "fanOut": 18,
-      "instability": 0.75,
+      "instability": 0.72,
       "selfDeps": 1,
       "totalDeps": 18,
       "cohesion": 0.05555555555555555,
-      "files": 61
+      "files": 68
     },
     {
       "module": "storage/prisma",

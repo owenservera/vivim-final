@@ -1,15 +1,15 @@
 # lefthook.yml — Git hooks for vivim-final
-# Install: bunx lefthook install
+# Install: bun x lefthook install
 
 pre-commit:
   parallel: true
   commands:
     lint:
       glob: "*.ts"
-      run: bunx @biomejs/biome lint {staged_files}
+      run: bun x @biomejs/biome lint {staged_files}
     format:
       glob: "*.{js,ts,json,md}"
-      run: bunx @biomejs/biome check --write {staged_files}
+      run: bun x @biomejs/biome check --write {staged_files}
     typecheck:
       glob: "*.ts"
       run: bun run typecheck

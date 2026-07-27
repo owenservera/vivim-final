@@ -1,39 +1,75 @@
-# Research: Universal Atomic TextEntryBox
+# Research: Universal Atomic TextEntryBox + Pluggable Add-On System
 
----
+**Date**: 2026-07-27
+**Spec**: `specs/001-universal-input-card/spec.md`
 
-## Decision 1: Scope behavior dispatch — stub vs real
+## Design Decisions
 
-- **Decision**: Stub for now. `scope.behavior = 'chat'` calls `sendMessage()`. All other behavior values fire a generic `onBehaviorAction(behavior, text)` callback that logs to console. Real capability event dispatch is a follow-up.
-- **Rationale**: The existing system only has one real input (chat composer). Other behaviors (search, execute, prompt, command, comment) will be wired when their respective surfaces (docs, automation, agents, shell) are built. The stub ensures the architecture works without blocking.
-- **Alternatives considered**: Full capability dispatch via `CapabilityResolutionEngine` — over-engineered for now; the engine integration is straightforward and well-understood.
+### 1. ComposerShell replaces only the input area of Composer.tsx
 
-## Decision 2: Scope propagation — props vs React context
+**Decision**: `ComposerShell` is an internal sub-component of `Composer`, replacing the textarea + send button region only. `Composer.tsx` retains WebSocket streaming, message history, and error state management.
 
-- **Decision**: Pass `scope` as a prop to `ComposerShell`. For deeply nested add-ons that need scope, create a `ComposerShellContext` that wraps the shell children and contains `scope` + all state (models, capabilities, streaming, etc.).
-- **Rationale**: Props are explicit and testable. The context is created inside `ComposerShell` so add-ons receive it automatically without prop drilling.
-- **Alternatives considered**: Global React context at the app level — overkill and couples the shell to app structure.
+**Rationale**: Minimal refactor. The existing `Composer.tsx` already handles WS streaming and message lifecycle. Replacing only the input area preserves all existing behavior and avoids a full rewrite.
 
-## Decision 3: Z-layer binding for composer
+**Alternatives considered**:
+- Full Composer rewrite: rejected — high risk, no benefit for this feature
+- Inline all add-ons in Composer: rejected — defeats pluggability goal
 
-- **Decision**: The composer always mounts in whatever Z-layer its parent region specifies. The `scope.activeZLayer` field is purely informational for add-ons that want to know their depth. No rendering logic changes based on layer.
-- **Rationale**: Z-layers determine visual stacking (opacity, depth, z-index), not input behavior. The existing `ZLayerConfig` from the workspace store already handles visual properties.
-- **Alternatives considered**: Mapping behavior → Z-layer (chat=base, search=overlay, etc.) — too opinionated; surfaces already specify their layers via `routeSyncWorkspace`.
+### 2. Add-on registration via BUILTIN_ADDONS array
 
-## Decision 4: Add-on data loading — parallel vs waterfall
+**Decision**: Add-ons are registered in a static `BUILTIN_ADDONS` array with `{key, position, Component, label, icon}`. The gear menu iterates this array to render toggles. Position determines render slot ('top', 'bottom', 'inline').
 
-- **Decision**: Fire all model/capability fetches in parallel in a single `useEffect` using `Promise.allSettled()`. Each add-on renders a null state (not rendered) until its data is available.
-- **Rationale**: Models and capabilities are independent API calls. Parallel fetch minimizes time-to-interactive. Add-ons without data gracefully disappear.
-- **Alternatives considered**: Sequential fetch — slower. Add-on-level data fetching — duplicates requests if two add-ons need the same data.
+**Rationale**: Simple, no DI framework needed. The array is small (<10 items). Future dynamic registration can be layered on top.
 
-## Decision 5: ContentBlock normalization location
+**Alternatives considered**:
+- Plugin registry with async loading: overengineered for current needs
+- Context-based registration: harder to debug
 
-- **Decision**: Normalize in `ComposerShell` (the parent, passed down), not in `TextEntryBox`. The atomic unit never touches blocks.
-- **Rationale**: TextEntryBox is pure text input/output. Block normalization belongs in the message-management layer.
-- **Alternatives considered**: Normalize in a custom hook reused by both old `Composer` and new `ComposerShell` — good but out of scope for this feature; existing `Composer` already does it.
+### 3. Add-on config persisted to localStorage per instanceId
 
-## Decision 6: localStorage key format
+**Decision**: Each shell instance stores its enabled add-ons under `vivim:composer-addons:{instanceId}`. On mount, reads localStorage; on toggle, writes immediately.
 
-- **Decision**: `vivim:composer-addons:{instanceId}` — scoped per instance. On remount with a new `instanceId`, the config starts fresh (empty add-ons).
-- **Rationale**: Instance-level isolation prevents cross-contamination. A future enhancement can fall back to `vivim:composer-addons:{workspaceId}:{surfaceSlug}:{regionSlotId}` for persistent defaults across remounts.
-- **Alternatives considered**: Single key for all instances — loses per-box customization. Workspace-level key — too coarse.
+**Rationale**: No backend dependency. InstanceId ensures isolation between multiple composers on the same canvas. localStorage catches corruption gracefully (falls back to defaults).
+
+**Alternatives considered**:
+- Backend DB storage: overkill for UI toggle state
+- URL params: lost on reload
+
+### 4. CSS variables + inline styles (no Tailwind)
+
+**Decision**: All new components use `style={{}}` with CSS variables (`--bg`, `--accent`, `--text`, `--border`).
+
+**Rationale**: Mandated by FR-008 and constitution (frontend conventions). Consistent with existing vivim-final components.
+
+**Alternatives considered**:
+- Tailwind classes: violates FR-008
+- CSS modules: additional build complexity
+
+### 5. ContentPart normalization to legacy format
+
+**Decision**: `ComposerShell` normalizes backend `ContentPart` blocks to `{kind, content, index}` for `MessageBlock.tsx` compatibility.
+
+**Rationale**: FR-009 requirement. The backend returns structured ContentPart blocks; MessageBlock expects the legacy flat format. Normalization in ComposerShell keeps both systems working.
+
+**Alternatives considered**:
+- Rewrite MessageBlock: out of scope
+- Normalize in backend: would break other consumers
+
+### 6. ML prerouter classify() called on every submit
+
+**Decision**: `classify()` from `frontend/src/ml/prerouter.ts` is called on submit before sending.
+
+**Rationale**: FR-010 requirement. The prerouter classifies the input text to determine if it's a capability invocation, a search query, or a chat message. Result is available for the add-on system.
+
+**Dependency**: `frontend/src/ml/prerouter.ts` — exists and is already imported in capability flows.
+
+## Dependency Check
+
+| Dependency | Status | Location |
+|-----------|--------|----------|
+| `classify()` prerouter | ✅ exists | `frontend/src/ml/prerouter.ts:23` |
+| `ZLayerId` type | ✅ exists | `frontend/src/shared/z-layer.ts` |
+| `WorkspaceTaxonomy` types | ✅ exists | `frontend/src/shared/workspace.ts` |
+| `ContentPart` type | ✅ exists | Backend API response format |
+| `MessageBlock.tsx` | ✅ exists | `frontend/src/components/canvas/MessageBlock.tsx` |
+| `Composer.tsx` | ✅ exists | `frontend/src/components/canvas/Composer.tsx` |

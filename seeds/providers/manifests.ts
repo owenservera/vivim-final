@@ -476,7 +476,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
           send_button: "button[aria-label='Send message']",
         },
         composer_type: 'quill',
-        send_method: 'click',
+        send_method: 'button_click',
         content_editable: true,
       },
       {
@@ -1055,12 +1055,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       fleet_config: {
         port_range: [9412, 9440],
       },
-      capabilities: [
-        'send_message',
-        'create_new_chat',
-        'navigate_chat',
-        'delete_chat',
-      ],
+      capabilities: ['send_message', 'create_new_chat', 'navigate_chat', 'delete_chat'],
     },
     endpoints: [
       {

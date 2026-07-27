@@ -100,8 +100,7 @@ export class FormatClassifier {
     const bodySample = body.slice(0, 5000)
     const classificationJson = JSON.stringify(classification, null, 2)
 
-    const prompt = GENERATE_PARSER_PROMPT
-      .replace('{classification}', classificationJson)
+    const prompt = GENERATE_PARSER_PROMPT.replace('{classification}', classificationJson)
       .replace('{bodySample}', bodySample)
       .replace(/{providerSlug}/g, providerSlug)
 
@@ -119,8 +118,9 @@ export class FormatClassifier {
 
   private parseClassificationResponse(response: string): FormatClassification {
     // Try to extract JSON from the response (may be wrapped in markdown)
-    const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/) ?? response.match(/(\{[\s\S]*\})/)
-    const jsonStr = jsonMatch ? jsonMatch[1].trim() : response.trim()
+    const jsonMatch =
+      response.match(/```(?:json)?\s*([\s\S]*?)```/) ?? response.match(/(\{[\s\S]*\})/)
+    const jsonStr = jsonMatch ? (jsonMatch[1]?.trim() ?? '') : response.trim()
 
     try {
       const parsed = JSON.parse(jsonStr)
@@ -131,24 +131,32 @@ export class FormatClassifier {
         transport,
         eventName: parsed.eventName ?? undefined,
         providerHint: parsed.providerHint ?? undefined,
-        confidence: typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : 0.5,
+        confidence:
+          typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : 0.5,
         dataPath: parsed.dataPath ?? undefined,
-        schemaDescription: typeof parsed.schemaDescription === 'string' ? parsed.schemaDescription : 'Unknown format',
-        rationale: typeof parsed.rationale === 'string' ? parsed.rationale : 'No rationale provided',
+        schemaDescription:
+          typeof parsed.schemaDescription === 'string'
+            ? parsed.schemaDescription
+            : 'Unknown format',
+        rationale:
+          typeof parsed.rationale === 'string' ? parsed.rationale : 'No rationale provided',
       }
     } catch {
-      throw new EngineError('FormatClassifierError', `Failed to parse LLM response as JSON: ${response.slice(0, 200)}`)
+      throw new EngineError(
+        'FormatClassifierError',
+        `Failed to parse LLM response as JSON: ${response.slice(0, 200)}`,
+      )
     }
   }
 
   private extractCodeBlock(response: string): string {
     // Extract from markdown code block
     const codeBlockMatch = response.match(/```(?:javascript|js)?\s*([\s\S]*?)```/)
-    if (codeBlockMatch) return codeBlockMatch[1].trim()
+    if (codeBlockMatch) return codeBlockMatch[1]?.trim() ?? ''
 
     // If no code block, try to find exports.default pattern
     const exportsMatch = response.match(/(exports\.default\s*=\s*\{[\s\S]*\})/)
-    if (exportsMatch) return exportsMatch[1].trim()
+    if (exportsMatch) return exportsMatch[1]?.trim() ?? ''
 
     // Return raw response as last resort
     return response.trim()
