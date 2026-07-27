@@ -1,19 +1,27 @@
+// src/server/interpret-router.ts
+// POST /api/interpret — thin adapter that delegates to the canonical /api/nlcl/interpret
+// handler. Audit finding A.2 fix: previously this router minted its OWN confirmation
+// token (different from the one NLCLEngine minted), so confirmations never matched.
+// Now it just wraps the engine result in the InterpretResponse discriminated union
+// (already defined in src/schema/api-types.ts) — one envelope, one token, one shape.
+
 import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
 import type {
+  InterpretBody,
   InterpretClarificationResponse,
   InterpretConfirmationResponse,
   InterpretErrorResponse,
+  InterpretResponse,
   InterpretSuccessResponse,
-  InterpretBody,
 } from '../schema/api-types.js'
 import { errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
 /**
- * Creates the /api/interpret router.
- * Binds context, runs resolver + parameter extraction + confirmation flow,
- * and returns either executed result or clarification/confirmation request.
+ * Creates the /api/interpret router — now a thin adapter over `interpretViaEngine`
+ * that wraps the engine's CommandResult into the canonical InterpretResponse union.
+ * The response shape is IDENTICAL to /api/nlcl/interpret (audit A.2 fix).
  */
 export function createInterpretRouter(nlclEngine: NLCLEngine) {
   return async function interpretRouter(req: Request): Promise<Response> {
@@ -37,7 +45,6 @@ export function createInterpretRouter(nlclEngine: NLCLEngine) {
 
     const start = Date.now()
 
-    // Build NLCContext directly from request body
     const nlclCtx: NLCContext = {
       conversationId: body.ctx?.conversationId,
       providerId: body.ctx?.providerId,
@@ -47,60 +54,81 @@ export function createInterpretRouter(nlclEngine: NLCLEngine) {
       surface: 'frontend',
     }
 
-    // Interpret through NLCL engine
     const result = await nlclEngine.interpret(body.text, nlclCtx)
-
-    // Handle confirmation flow (25.6)
-    if (result.requiresConfirmation) {
-      const token = generateConfirmationToken()
-      const response: InterpretConfirmationResponse = {
-        ok: true,
-        requiresConfirmation: true,
-        confirmation: {
-          token,
-          prompt: `Confirm: ${result.text ?? 'This action requires confirmation'}`,
-        },
-        traceId: result.traceId,
-        latencyMs: Date.now() - start,
-      }
-      return json(response)
-    }
-
-    // Handle clarification / missing parameters
-    if (result.clarification || result.error?.includes('Missing required')) {
-      if (result.clarification) {
-        const response: InterpretClarificationResponse = {
-          ok: false,
-          clarification: result.clarification,
-          traceId: result.traceId,
-          latencyMs: Date.now() - start,
-        }
-        return json(response)
-      }
-      const response: InterpretErrorResponse = {
-        ok: false,
-        error: result.error ?? 'Missing required parameters',
-        traceId: result.traceId,
-        latencyMs: Date.now() - start,
-      }
-      return json(response)
-    }
-
-    // Normal response
-    const response: InterpretSuccessResponse = {
-      ok: result.ok,
-      capabilityId: result.capabilityId ?? 'unknown',
-      output: result.output,
-      text: result.text,
-      traceId: result.traceId,
-      latencyMs: Date.now() - start,
-    }
+    const response = wrapCommandResultAsInterpretResponse(result, Date.now() - start)
     return json(response)
   }
 }
 
-function generateConfirmationToken(): string {
-  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+/**
+ * Shared wrapper — used by both /api/interpret and /api/nlcl/interpret so the
+ * response shape is guaranteed identical (audit A.2 fix: previously the two
+ * routes returned different shapes with different field names).
+ */
+export function wrapCommandResultAsInterpretResponse(
+  result: {
+    ok: boolean
+    intent: string
+    output?: unknown
+    text?: string
+    error?: string
+    latencyMs: number
+    traceId: string
+    requiresConfirmation?: boolean
+    classification?: string
+    capabilityId?: string
+    confirmation?: { token: string; prompt: string }
+    clarification?: { prompt: string; missing?: string[]; ambiguous?: string[]; options?: string[] }
+  },
+  latencyMs: number,
+): InterpretResponse {
+  // Confirmation — uses the engine-issued token directly (audit A.1 fix).
+  if (result.requiresConfirmation && result.confirmation) {
+    const response: InterpretConfirmationResponse = {
+      ok: true,
+      requiresConfirmation: true,
+      confirmation: {
+        token: result.confirmation.token,
+        prompt: result.confirmation.prompt,
+      },
+      traceId: result.traceId,
+      latencyMs,
+    }
+    return response
+  }
+
+  // Clarification
+  if (result.clarification) {
+    const response: InterpretClarificationResponse = {
+      ok: false,
+      clarification: result.clarification,
+      traceId: result.traceId,
+      latencyMs,
+    }
+    return response
+  }
+
+  // Error
+  if (!result.ok) {
+    const response: InterpretErrorResponse = {
+      ok: false,
+      error: result.error ?? 'Interpretation failed',
+      traceId: result.traceId,
+      latencyMs,
+    }
+    return response
+  }
+
+  // Success
+  const response: InterpretSuccessResponse = {
+    ok: true,
+    capabilityId: result.capabilityId ?? 'unknown',
+    output: result.output,
+    text: result.text,
+    traceId: result.traceId,
+    latencyMs,
+  }
+  return response
 }
 
 /**

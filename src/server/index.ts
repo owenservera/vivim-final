@@ -49,6 +49,17 @@ import { createKnowledgeRouter } from './knowledge-router.js'
 import { createMemoryVizRouter } from './memory-viz-router.js'
 import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
+import { createChromeRouter } from './chrome-router.js'
+import { createGenerativeRouter } from './generative-router.js'
+import { createLlmHarnessRouter } from './llm-harness-router.js'
+import { createMutationRouter } from './mutation-router.js'
+import { bootOnboardingPipeline } from './onboarding-boot.js'
+import { createPluginBuilderRouter } from './plugin-builder-router.js'
+import { serviceContainer } from './service-container.js'
+import { createSurfaceRouter } from './surface-router.js'
+import { createTemplateRouter } from './template-router.js'
+import { createVariantRouter } from './variant-router.js'
+import { createVersionRouter } from './version-router.js'
 import { errorResponse, json } from './response.js'
 import { createSetupRouter } from './setup-router.js'
 import {
@@ -167,6 +178,20 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   const setupRouter = createSetupRouter(ctx)
   const muxRouter = createMuxRouter(ctx)
   const nlclRouter = createNLCLRouter(nlclEngine)
+  const chromeRouter = createChromeRouter(ctx)
+  const generativeRouter = createGenerativeRouter(ctx)
+  const llmHarnessRouter = createLlmHarnessRouter(ctx)
+  const mutationRouter = createMutationRouter(ctx)
+  const pluginBuilderRouter = createPluginBuilderRouter(ctx)
+  const surfaceRouter = createSurfaceRouter(ctx)
+  const templateRouter = createTemplateRouter(ctx)
+  const variantRouter = createVariantRouter(ctx)
+  const versionRouter = createVersionRouter(ctx)
+
+  // Boot onboarding pipeline (non-blocking, attaches to service container)
+  bootOnboardingPipeline(serviceContainer).catch((err: unknown) => {
+    log.warn({ err }, 'Onboarding pipeline boot failed (non-fatal)')
+  })
 
   // Track readiness — becomes true after server boots
   let ready = false
@@ -234,6 +259,51 @@ export async function createServer(port = 9420): Promise<ServerContext> {
         // Knowledge routes
         if (url.pathname.startsWith('/api/knowledge/')) {
           return knowledgeRouter(req)
+        }
+
+        // Chrome automation routes
+        if (url.pathname.startsWith('/api/chrome/')) {
+          return chromeRouter(req)
+        }
+
+        // Generative engine routes
+        if (url.pathname.startsWith('/api/generative/')) {
+          return generativeRouter(req)
+        }
+
+        // LLM harness routes
+        if (url.pathname.startsWith('/api/harness/')) {
+          return llmHarnessRouter(req)
+        }
+
+        // Mutation routes
+        if (url.pathname.startsWith('/api/mutation/')) {
+          return mutationRouter(req)
+        }
+
+        // Plugin builder routes
+        if (url.pathname.startsWith('/api/plugins/')) {
+          return pluginBuilderRouter(req)
+        }
+
+        // Surface routes
+        if (url.pathname.startsWith('/api/surface/')) {
+          return surfaceRouter(req)
+        }
+
+        // Template routes
+        if (url.pathname.startsWith('/api/template/')) {
+          return templateRouter(req)
+        }
+
+        // Variant routes
+        if (url.pathname.startsWith('/api/variant/')) {
+          return variantRouter(req)
+        }
+
+        // Version routes
+        if (url.pathname.startsWith('/api/version/')) {
+          return versionRouter(req)
         }
 
         return conversationRouter(req)
