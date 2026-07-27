@@ -15,6 +15,7 @@ interface PrismaParserRow {
   parserFilePath: string | null
   parserLogicCode: string | null
   parserHash: string | null
+  sampleBody: string | null
   isActive: number
   fallbackParserId: string | null
   createdAt: number

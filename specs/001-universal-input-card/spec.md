@@ -18,10 +18,10 @@ A user opens the chat surface and sees only a textarea + send button. No model p
 
 **Why this priority**: This is the irreducible atomic unit. Everything else builds on it. Without this, there is no input at all.
 
-**Independent Test**: Open the app, verify only textarea + send button render (no toolbar, no chips, no footer). Type "hello" and press Enter — message is sent and appears in the thread.
+**Independent Test**: Open the app, verify only textarea + send button render (no toolbar, no chips, no footer). Type "hello" and press Enter ΓÇö message is sent and appears in the thread.
 
 **Acceptance Scenarios**:
-1. **Given** a fresh load with no localStorage config, **When** the chat composer renders, **Then** it shows only a textarea (with placeholder "Message...") and a Send button — no model selector, no chips, no footer
+1. **Given** a fresh load with no localStorage config, **When** the chat composer renders, **Then** it shows only a textarea (with placeholder "Message...") and a Send button ΓÇö no model selector, no chips, no footer
 2. **Given** the textarea is empty, **When** the user clicks Send, **Then** nothing happens (disabled state)
 3. **Given** the user types text and clicks Send or presses Enter, **Then** the text is sent via `POST /api/conversations/:id/send` and the textarea clears
 4. **Given** the user holds Shift and presses Enter, **Then** a newline is inserted instead of sending
@@ -30,7 +30,7 @@ A user opens the chat surface and sees only a textarea + send button. No model p
 
 ### User Story 2 - Stateful Role Context (Priority: P1)
 
-The TextEntryBox knows which workspace, surface, region, and Z-layer it belongs to. Two boxes in different workspaces behave differently — different placeholder, different submit action, different add-ons.
+The TextEntryBox knows which workspace, surface, region, and Z-layer it belongs to. Two boxes in different workspaces behave differently ΓÇö different placeholder, different submit action, different add-ons.
 
 **Why this priority**: The architecture allows multiple text entry boxes across the multi-surface canvas. Each must know its identity.
 
@@ -78,10 +78,10 @@ While a message is being sent, a streaming status bar appears below the textarea
 
 ### Edge Cases
 
-- What happens when localStorage is full or corrupted? → Catch block returns default config, no crash
-- What happens when no provider is active? → Send button is disabled, placeholder still shows
-- What happens when the same workspace+surface combo has multiple instances? → Each has a unique `instanceId` and separate localStorage key
-- What happens when an add-on is enabled but its data hasn't loaded yet (e.g. models fetching)? → Add-on renders a null/loading state gracefully
+- What happens when localStorage is full or corrupted? ΓåÆ Catch block returns default config, no crash
+- What happens when no provider is active? ΓåÆ Send button is disabled, placeholder still shows
+- What happens when the same workspace+surface combo has multiple instances? ΓåÆ Each has a unique `instanceId` and separate localStorage key
+- What happens when an add-on is enabled but its data hasn't loaded yet (e.g. models fetching)? ΓåÆ Add-on renders a null/loading state gracefully
 
 ---
 
@@ -91,12 +91,12 @@ While a message is being sent, a streaming status bar appears below the textarea
 
 - **FR-001**: System MUST render a `TextEntryBox` (auto-resizing textarea) + `SendButton` as the minimum atomic input unit
 - **FR-002**: System MUST accept a `ComposerInstanceScope` prop on every shell instance identifying its workspace, surface, region, Z-layer, and behavior mode
-- **FR-003**: Placeholder text MUST be derived from `scope.behavior` ('chat' → "Message...", 'search' → "Search...", 'prompt' → "What should the agent do?", 'command' → "Type a command...", 'comment' → "Add a comment...")
-- **FR-004**: Submit behavior MUST vary by `scope.behavior` (chat → `sendMessage()`, search/execute/prompt/command/comment → dispatch capability events)
+- **FR-003**: Placeholder text MUST be derived from `scope.behavior` ('chat' ΓåÆ "Message...", 'search' ΓåÆ "Search...", 'prompt' ΓåÆ "What should the agent do?", 'command' ΓåÆ "Type a command...", 'comment' ΓåÆ "Add a comment...")
+- **FR-004**: Submit behavior MUST vary by `scope.behavior` (chat ΓåÆ `sendMessage()`, search/execute/prompt/command/comment ΓåÆ dispatch capability events)
 - **FR-005**: Each shell instance MUST persist its enabled add-ons to `vivim:composer-addons:{instanceId}` in localStorage
 - **FR-006**: Add-ons MUST be pluggable via a `BUILTIN_ADDONS` array with key, position ('top'|'bottom'|'inline'), Component, label, and icon
 - **FR-007**: A gear menu MUST expose toggles for all registered add-ons
-- **FR-008**: All components MUST use `style={{}}` + CSS variables (`--bg`, `--accent`, `--text`, `--border`, etc.) — no Tailwind
+- **FR-008**: All components MUST use `style={{}}` + CSS variables (`--bg`, `--accent`, `--text`, `--border`, etc.) ΓÇö no Tailwind
 - **FR-009**: The `ComposerShell` MUST normalize `ContentPart` blocks from the backend to the legacy `{kind, content, index}` format for `MessageBlock.tsx` compatibility
 - **FR-010**: The ML prerouter `classify()` MUST be called on every submit before sending
 
@@ -117,7 +117,7 @@ While a message is being sent, a streaming status bar appears below the textarea
 
 - **SC-001**: TextEntryBox + SendButton render in under 100ms on a cold mount
 - **SC-002**: All add-ons can be toggled on/off without a full re-render of the shell
-- **SC-003**: No regressions in existing send flow — messages send correctly via the existing Composer integration
+- **SC-003**: No regressions in existing send flow ΓÇö messages send correctly via the existing Composer integration
 - **SC-004**: TypeScript strict mode passes with no `any` types
 - **SC-005**: All components pass `bun test` for the frontend test suite
 
@@ -125,8 +125,8 @@ While a message is being sent, a streaming status bar appears below the textarea
 
 ## Assumptions
 
-- The existing `Composer.tsx` remains as the parent component that manages WebSocket streaming, message history, and error state — `ComposerShell` replaces only the input area
-- `ChatSlotSurface` layout is NOT changed — `ComposerShell` is an internal sub-component of `Composer`
+- The existing `Composer.tsx` remains as the parent component that manages WebSocket streaming, message history, and error state ΓÇö `ComposerShell` replaces only the input area
+- `ChatSlotSurface` layout is NOT changed ΓÇö `ComposerShell` is an internal sub-component of `Composer`
 - Models and capabilities are fetched from the existing per-provider API endpoints
 - `ZLayerId` type is already defined in `frontend/src/shared/z-layer.ts`
 - `WorkspaceTaxonomy` types are already defined in `frontend/src/shared/workspace.ts`

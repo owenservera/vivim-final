@@ -23,7 +23,9 @@ export function runGuard(): GuardResult {
     if (existsSync('.runtime')) {
       const pids = readdirSync('.runtime').filter((f) => f.endsWith('.pid'))
       if (pids.length > 0) {
-        violations.push(`servers still running (${pids.join(', ')}); run 'devops runtime-test stop'`)
+        violations.push(
+          `servers still running (${pids.join(', ')}); run 'devops runtime-test stop'`,
+        )
       }
     }
   } catch {
@@ -31,7 +33,7 @@ export function runGuard(): GuardResult {
   }
 
   // 2) Pending Prisma migration
-  const mig = spawnSync('bunx', ['prisma', 'migrate', 'status'], {
+  const mig = spawnSync('bun', ['x', 'prisma', 'migrate', 'status'], {
     encoding: 'utf8',
     timeout: 30_000,
   })

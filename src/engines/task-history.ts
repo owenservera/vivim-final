@@ -1,7 +1,7 @@
 // src/engines/task-history.ts
 // TaskHistoryService — task list with full-text search + per-task timeline (Unit 8.11)
 
-import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
+import { NotFoundError } from '../errors.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -96,11 +96,13 @@ export class TaskHistoryService {
     }))
 
     // Date filters
-    if (filter?.from !== undefined) {
-      results = results.filter((t) => t.startedAt >= filter.from!)
+    const filterFrom = filter?.from
+    if (filterFrom !== undefined) {
+      results = results.filter((t) => t.startedAt >= filterFrom)
     }
-    if (filter?.to !== undefined) {
-      results = results.filter((t) => t.startedAt <= filter.to!)
+    const filterTo = filter?.to
+    if (filterTo !== undefined) {
+      results = results.filter((t) => t.startedAt <= filterTo)
     }
 
     // Enrich with step counts
@@ -131,7 +133,7 @@ export class TaskHistoryService {
    */
   async timeline(taskId: string): Promise<TaskTimeline> {
     const task = await this.store.getTask(taskId)
-    if (!task) throw new Error(`Task not found: ${taskId}`)
+    if (!task) throw new NotFoundError(`Task not found: ${taskId}`)
 
     const steps = await this.store.getSteps(taskId)
     const gates = await this.store.getPendingGates(taskId)

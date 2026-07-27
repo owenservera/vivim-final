@@ -5,10 +5,10 @@
 // and WebSocket bridge. Engine wiring is deferred to the full bootstrap
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
-import { config } from '../config.js'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { connectCapabilityRegistry } from '../cli/index.js'
+import { config } from '../config.js'
 import { registerGeneratedCapabilities } from '../engines/capability-bootstrap-generated.js'
 import { registerDefaultCapabilities } from '../engines/capability-bootstrap.js'
 import { registerNlInterpretCapability } from '../engines/capability-bootstrap.js'
@@ -25,43 +25,43 @@ import type { ConversationManager } from '../engines/conversation-manager.js'
 import type { CostOptimizer } from '../engines/cost-optimizer.js'
 import type { CrossConversationSynthesizer } from '../engines/cross-conversation-synthesis.js'
 import type { ExportEngine } from '../engines/export.js'
+import { InMemoryGenerativeTaskStore } from '../engines/generative/generative-task-store.js'
 import type { IdempotencyGuard } from '../engines/idempotency-guard.js'
 import { bootstrapKernel } from '../engines/kernel/kernel-bootstrap.js'
 import type { Kernel } from '../engines/kernel/kernel-context.js'
 import type { KnowledgeIngestionEngine } from '../engines/knowledge-ingestion.js'
 import type { LockManager } from '../engines/lock-manager.js'
-import { getLogger } from '../lib/logger.js'
 import { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { ProviderHealthKernel } from '../engines/provider-health.js'
 import type { ProviderMuxEngine } from '../engines/provider-mux.js'
 import type { RetryEngine } from '../engines/retry-engine.js'
-import { type EmbeddingProvider, SemanticSearchEngine } from '../engines/semantic-search.js'
+import type { EmbeddingProvider, SemanticSearchEngine } from '../engines/semantic-search.js'
 import { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import type { UserIdentityEngine } from '../engines/user-identity.js'
+import { getLogger } from '../lib/logger.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { createAuthMiddleware } from './auth-gate.js'
 import { createAutomationRouter } from './automation-router.js'
 import { createAutonomousRouter } from './autonomous-router.js'
 import { createCapabilityRouter } from './capability-router.js'
+import { createChromeRouter } from './chrome-router.js'
 import { createConversationRouter } from './conversation-router.js'
+import { createGenerativeRouter } from './generative-router.js'
 import { createInterpretRouter } from './interpret-router.js'
 import { createKnowledgeRouter } from './knowledge-router.js'
+import { createLlmHarnessRouter } from './llm-harness-router.js'
 import { createMemoryVizRouter } from './memory-viz-router.js'
+import { createMutationRouter } from './mutation-router.js'
 import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
-import { createChromeRouter } from './chrome-router.js'
-import { createGenerativeRouter } from './generative-router.js'
-import { createLlmHarnessRouter } from './llm-harness-router.js'
-import { createMutationRouter } from './mutation-router.js'
 import { bootOnboardingPipeline } from './onboarding-boot.js'
 import { createPluginBuilderRouter } from './plugin-builder-router.js'
-import { serviceContainer } from './service-container.js'
+import { errorResponse, json } from './response.js'
+import { createSetupRouter } from './setup-router.js'
 import { createSurfaceRouter } from './surface-router.js'
 import { createTemplateRouter } from './template-router.js'
 import { createVariantRouter } from './variant-router.js'
 import { createVersionRouter } from './version-router.js'
-import { errorResponse, json } from './response.js'
-import { createSetupRouter } from './setup-router.js'
 import {
   handleWebSocket,
   registerCanvasMutationForwarder,
@@ -178,20 +178,18 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   const setupRouter = createSetupRouter(ctx)
   const muxRouter = createMuxRouter(ctx)
   const nlclRouter = createNLCLRouter(nlclEngine)
-  const chromeRouter = createChromeRouter(ctx)
-  const generativeRouter = createGenerativeRouter(ctx)
-  const llmHarnessRouter = createLlmHarnessRouter(ctx)
-  const mutationRouter = createMutationRouter(ctx)
-  const pluginBuilderRouter = createPluginBuilderRouter(ctx)
-  const surfaceRouter = createSurfaceRouter(ctx)
-  const templateRouter = createTemplateRouter(ctx)
-  const variantRouter = createVariantRouter(ctx)
-  const versionRouter = createVersionRouter(ctx)
+  const chromeRouter = createChromeRouter()
+  const generativeStore = new InMemoryGenerativeTaskStore()
+  const generativeRouter = createGenerativeRouter(generativeStore)
+  const llmHarnessRouter = createLlmHarnessRouter()
+  const mutationRouter = createMutationRouter()
+  const pluginBuilderRouter = createPluginBuilderRouter()
+  const surfaceRouter = createSurfaceRouter()
+  const templateRouter = createTemplateRouter()
+  const variantRouter = createVariantRouter()
+  const versionRouter = createVersionRouter()
 
-  // Boot onboarding pipeline (non-blocking, attaches to service container)
-  bootOnboardingPipeline(serviceContainer).catch((err: unknown) => {
-    log.warn({ err }, 'Onboarding pipeline boot failed (non-fatal)')
-  })
+  // bootOnboardingPipeline called after governor is created (see below)
 
   // Track readiness — becomes true after server boots
   let ready = false
@@ -234,7 +232,9 @@ export async function createServer(port = 9420): Promise<ServerContext> {
         // WebSocket upgrade
         if (url.pathname === '/ws') {
           const ok = server.upgrade(req, { data: {} })
-          return ok ? new Response(null, { status: 101 }) : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+          return ok
+            ? new Response(null, { status: 101 })
+            : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
         }
 
         // Reject requests during shutdown
@@ -263,7 +263,7 @@ export async function createServer(port = 9420): Promise<ServerContext> {
 
         // Chrome automation routes
         if (url.pathname.startsWith('/api/chrome/')) {
-          return chromeRouter(req)
+          return chromeRouter(req, url).then((r) => r ?? conversationRouter(req))
         }
 
         // Generative engine routes
@@ -273,37 +273,37 @@ export async function createServer(port = 9420): Promise<ServerContext> {
 
         // LLM harness routes
         if (url.pathname.startsWith('/api/harness/')) {
-          return llmHarnessRouter(req)
+          return llmHarnessRouter(req, url).then((r) => r ?? conversationRouter(req))
         }
 
         // Mutation routes
         if (url.pathname.startsWith('/api/mutation/')) {
-          return mutationRouter(req)
+          return mutationRouter(req, url).then((r) => r ?? conversationRouter(req))
         }
 
         // Plugin builder routes
         if (url.pathname.startsWith('/api/plugins/')) {
-          return pluginBuilderRouter(req)
+          return pluginBuilderRouter(req, url).then((r) => r ?? conversationRouter(req))
         }
 
         // Surface routes
         if (url.pathname.startsWith('/api/surface/')) {
-          return surfaceRouter(req)
+          return surfaceRouter(req, url).then((r) => r ?? conversationRouter(req))
         }
 
         // Template routes
         if (url.pathname.startsWith('/api/template/')) {
-          return templateRouter(req)
+          return templateRouter(req, url).then((r) => r ?? conversationRouter(req))
         }
 
         // Variant routes
         if (url.pathname.startsWith('/api/variant/')) {
-          return variantRouter(req)
+          return variantRouter(req, url).then((r) => r ?? conversationRouter(req))
         }
 
         // Version routes
         if (url.pathname.startsWith('/api/version/')) {
-          return versionRouter(req)
+          return versionRouter(req, url).then((r) => r ?? conversationRouter(req))
         }
 
         return conversationRouter(req)
@@ -401,10 +401,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const { createProviderRegistry } = await import('../config/provider-registry.js')
   const providerRegistry = createProviderRegistry(db)
   await providerRegistry.initialize()
-  log.info(
-    { count: providerRegistry.getProviderList().length },
-    'Provider registry initialized',
-  )
+  log.info({ count: providerRegistry.getProviderList().length }, 'Provider registry initialized')
 
   // Seed browser-automation substrate (idempotent: agent-loop role anchors)
   try {
@@ -530,6 +527,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
   // Boot governor (seeds accounts, starts fleet)
   await governor.boot()
+
+  // Boot onboarding pipeline (non-blocking, attaches to service container)
+  bootOnboardingPipeline(governor, db).catch((err: unknown) => {
+    log.warn({ err }, 'Onboarding pipeline boot failed (non-fatal)')
+  })
 
   // Knowledge engines (optional — wired if stores are available)
   let knowledgeIngestion:
@@ -886,10 +888,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       const mcpServer = new McpServerAdapter(governor, registry)
       await mcpServer.start({ port: mcpPort, hostname: '127.0.0.1' })
       ;(globalThis as Record<string, unknown>).__mcpServer = mcpServer
-      log.info(
-        { port: mcpPort, tools: mcpServer.getTools().length },
-        'MCP server listening',
-      )
+      log.info({ port: mcpPort, tools: mcpServer.getTools().length }, 'MCP server listening')
     } catch (err) {
       log.warn({ err }, 'MCP server skipped')
     }
@@ -1100,9 +1099,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         ).ingest
       : undefined,
   })
-  log.info(
-    `[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`,
-  )
+  log.info(`[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`)
 
   // 24.7 — register NLCL itself as a capability on the unified registry
   if (registry) {
@@ -1369,7 +1366,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
         if (url.pathname === '/ws') {
           const ok = server.upgrade(req, { data: {} })
-          return ok ? new Response(null, { status: 101 }) : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+          return ok
+            ? new Response(null, { status: 101 })
+            : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
         }
 
         if (isShuttingDown) {
@@ -1450,7 +1449,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         if (url.pathname === '/api/system/refresh-provider-snapshot' && req.method === 'POST') {
           try {
             const { ProviderStoreImpl } = await import('../storage/impl/provider-store-impl.js')
-            const { CapabilitySnapshot: CapSnapshot } = await import('../engines/capability-snapshot.js')
+            const { CapabilitySnapshot: CapSnapshot } = await import(
+              '../engines/capability-snapshot.js'
+            )
             const pStore = new ProviderStoreImpl(db)
             const registeredProviders = (await pStore.listDefinitions({ isActive: true })).map(
               (d) => d.id,

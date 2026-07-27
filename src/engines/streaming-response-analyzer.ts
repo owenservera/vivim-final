@@ -5,7 +5,7 @@
 // `getConfidence`). CDP-agnostic: takes a raw captured body, not a live browser.
 // Capture itself stays in ProtocolDiscoveryEngine (Governor Canon preserved).
 
-export type StreamTransport = 'sse' | 'websocket' | 'polling' | 'unknown'
+export type StreamTransport = 'sse' | 'batchexecute' | 'websocket' | 'polling' | 'unknown'
 
 export interface StreamAnalysis {
   transport: StreamTransport

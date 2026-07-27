@@ -68,8 +68,7 @@ export class SelectorRefiner {
     const composers = JSON.stringify(probeResults.composers, null, 2)
     const buttons = JSON.stringify(probeResults.buttons, null, 2)
 
-    const prompt = REFINE_PROMPT
-      .replace('{url}', url)
+    const prompt = REFINE_PROMPT.replace('{url}', url)
       .replace('{composers}', composers)
       .replace('{buttons}', buttons)
       .replace('{snapshot}', snapshot)
@@ -82,25 +81,34 @@ export class SelectorRefiner {
 
   private parseRefinementResponse(response: string): SelectorRefinement {
     // Try to extract JSON from the response
-    const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/) ?? response.match(/(\{[\s\S]*\})/)
-    const jsonStr = jsonMatch ? jsonMatch[1].trim() : response.trim()
+    const jsonMatch =
+      response.match(/```(?:json)?\s*([\s\S]*?)```/) ?? response.match(/(\{[\s\S]*\})/)
+    const jsonStr = jsonMatch ? (jsonMatch[1]?.trim() ?? '') : response.trim()
 
     try {
       const parsed = JSON.parse(jsonStr)
 
       const composer = typeof parsed.composer === 'string' ? parsed.composer : ''
       const sendButton = typeof parsed.sendButton === 'string' ? parsed.sendButton : ''
-      const responseContainer = typeof parsed.responseContainer === 'string' ? parsed.responseContainer : ''
-      const rationale = typeof parsed.rationale === 'string' ? parsed.rationale : 'No rationale provided'
+      const responseContainer =
+        typeof parsed.responseContainer === 'string' ? parsed.responseContainer : ''
+      const rationale =
+        typeof parsed.rationale === 'string' ? parsed.rationale : 'No rationale provided'
 
       if (!composer || !sendButton) {
-        throw new EngineError('SelectorRefinerError', 'LLM response missing required selectors (composer, sendButton)')
+        throw new EngineError(
+          'SelectorRefinerError',
+          'LLM response missing required selectors (composer, sendButton)',
+        )
       }
 
       return { composer, sendButton, responseContainer, rationale }
     } catch (err) {
       if (err instanceof EngineError) throw err
-      throw new EngineError('SelectorRefinerError', `Failed to parse LLM response as JSON: ${response.slice(0, 200)}`)
+      throw new EngineError(
+        'SelectorRefinerError',
+        `Failed to parse LLM response as JSON: ${response.slice(0, 200)}`,
+      )
     }
   }
 }

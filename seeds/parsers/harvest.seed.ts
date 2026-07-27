@@ -79,6 +79,7 @@ export async function seedHarvestedParsers(store: ProviderStore): Promise<number
       parser_file_path: null,
       parser_logic_code: def.logicCode,
       parser_hash: StreamAlignmentEngine.computeParserHash(def.logicCode),
+      sample_body: null,
       is_active: 1,
       fallback_parser_id: null,
       created_at: now,
