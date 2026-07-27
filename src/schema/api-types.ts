@@ -136,6 +136,51 @@ export type InterpretResponse =
   | InterpretClarificationResponse
   | InterpretErrorResponse
 
+// ── Async Capability Result (audit 🚀-27) ────────────────────────────────────
+// Tier 4 units 16.2–16.4 — shared contract for long-running capabilities.
+// Both onboarding (long-running CDP) and NLCL (generative tasks) return this
+// shape from execute() when the operation can't complete synchronously.
+
+export interface AsyncCapabilityResult {
+  /** Marker field — always 'async'. */
+  async: true
+  /** The task ID — poll /api/generative/status/:taskId or subscribe via WS. */
+  taskId: string
+  /** Estimated time to completion (ms), or null if unknown. */
+  estimatedMs: number | null
+  /** Human-readable status message. */
+  message: string
+}
+
+export function isAsyncCapabilityResult(v: unknown): v is AsyncCapabilityResult {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    (v as { async?: unknown }).async === true &&
+    typeof (v as { taskId?: unknown }).taskId === 'string'
+  )
+}
+
+// ── Generative Task Response Types ───────────────────────────────────────────
+
+export interface GenerativeTaskStatusResponse {
+  taskId: string
+  capabilityId: string
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+  output: unknown
+  error: string | null
+  progress: Array<{
+    fraction: number
+    message: string
+    timestamp: number
+  }>
+  createdAt: number
+  updatedAt: number
+  completedAt: number | null
+  /** True if the task is still in a terminal state within the TTL window. */
+  expired: boolean
+}
+
 // ── Conversation Response Types ──────────────────────────────────────────────
 
 export interface ConversationDetail {

@@ -49,5 +49,6 @@ export function buildIntentFromPattern(
     matchedPattern,
     alternatives: [],
     resolvedAt: Date.now(),
+    capabilityId: pattern.capabilityId,
   }
 }

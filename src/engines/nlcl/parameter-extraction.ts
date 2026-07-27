@@ -3,6 +3,7 @@
 
 import type { ZodSchema } from 'zod'
 import { z } from 'zod'
+import type { DynamicEntityLinker } from './dynamic-entity-linker.js'
 import type { NLCContext } from './types.js'
 
 export interface ExtractResult {
@@ -13,11 +14,16 @@ export interface ExtractResult {
 
 /**
  * Extracts parameters from NL tokens + context metadata matching schema properties.
+ *
+ * Tier 4 unit 16.5 — accepts an optional DynamicEntityLinker. When present,
+ * schema properties handled by a registered entity provider are resolved
+ * via the linker (audit ❌-12: runs INSIDE param-extract, not as a stage).
  */
 export function extractParameters(
   rawInput: string,
   schema: ZodSchema,
   ctx: NLCContext,
+  linker?: DynamicEntityLinker,
 ): ExtractResult {
   const input: Record<string, unknown> = {}
   const missing: string[] = []
@@ -53,6 +59,53 @@ export function extractParameters(
   }
 
   return { input, missing, ambiguous }
+}
+
+/**
+ * Tier 4 unit 16.5 — async version of extractParameters that runs the
+ * DynamicEntityLinker for any schema property handled by a registered
+ * provider. The sync version above is kept for backward compatibility.
+ *
+ * Audit ❌-12: entity linking runs INSIDE param-extract, not as a stage.
+ */
+export async function extractParametersWithLinker(
+  rawInput: string,
+  schema: ZodSchema,
+  ctx: NLCContext,
+  linker: DynamicEntityLinker,
+): Promise<ExtractResult> {
+  // First, run the sync extraction to get the baseline values.
+  const base = extractParameters(rawInput, schema, ctx)
+
+  // Then, for each schema property the linker handles, resolve the
+  // raw input as an entity reference. If the linker returns a match,
+  // OVERRIDE the sync-extracted value with the resolved entity ID.
+  const shape = schema instanceof z.ZodObject ? schema.shape : {}
+  const schemaKeys = Object.keys(shape)
+  for (const key of schemaKeys) {
+    if (!linker.hasProviderFor(key)) continue
+    // If sync extraction already produced a non-empty value for this key,
+    // use THAT as the query (the user may have typed "vivim" as a quoted
+    // string and we want to resolve "vivim" to a workspace ID).
+    const existingValue = base.input[key]
+    const query = typeof existingValue === 'string' ? existingValue : rawInput
+    try {
+      const result = await linker.resolve(key, query, ctx)
+      if (result && result.entityId) {
+        base.input[key] = result.entityId
+        // If the original extraction marked this as missing, clear it.
+        const idx = base.missing.indexOf(key)
+        if (idx >= 0) base.missing.splice(idx, 1)
+        // If confidence is low, mark as ambiguous.
+        if (result.confidence < 0.7 && result.candidates.length > 1) {
+          if (!base.ambiguous.includes(key)) base.ambiguous.push(key)
+        }
+      }
+    } catch {
+      // Linker failed — leave the sync-extracted value (if any) in place.
+    }
+  }
+  return base
 }
 
 interface ValueResult {

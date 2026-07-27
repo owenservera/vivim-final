@@ -182,3 +182,45 @@ export class TrustScoreEngine {
     return sorted[Math.floor(sorted.length * 0.95)] ?? sorted[sorted.length - 1] ?? 0
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 8 of ROADMAP-REPROGRAMMABLE-CANVAS.md — Provenance-weighted
+// mutation trust scores.
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Provenance weights for mutations. Lower = less trusted.
+ * Used by the MutationHistoryPanel (Phase 4) and the TimeMachinePanel (Phase 8)
+ * to display trust badges alongside each mutation record.
+ *
+ * Order: manual > nlcl > prefix > plugin > llm-harness > system
+ */
+export const MUTATION_PROVENANCE_WEIGHTS = {
+  manual: 100,
+  nlcl: 90,
+  prefix: 80,
+  plugin: 60,
+  'llm-harness': 40,
+  system: 20,
+} as const
+
+export type MutationProvenanceForTrust =
+  keyof typeof MUTATION_PROVENANCE_WEIGHTS
+
+/**
+ * Compute a 0-100 trust score for a mutation based on its provenance tag.
+ * This is the Phase 8 addition to the trust-score engine — separate from
+ * the per-provider TrustScoreEngine above (which is about provider health,
+ * not mutation provenance).
+ *
+ * Low-trust mutations (score < 50) get a confirmation prompt even in
+ * Builder Mode (per ROADMAP §10).
+ */
+export function computeMutationTrustScore(
+  provenance: MutationProvenanceForTrust,
+): { score: number; label: 'high' | 'medium' | 'low'; weight: number } {
+  const weight = MUTATION_PROVENANCE_WEIGHTS[provenance] ?? 50
+  const label: 'high' | 'medium' | 'low' =
+    weight >= 80 ? 'high' : weight >= 50 ? 'medium' : 'low'
+  return { score: weight, label, weight }
+}

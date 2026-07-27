@@ -3072,3 +3072,160 @@ model CommandDescription {
   @@index([enabled], map: "idx_cd_enabled")
   @@map("command_description")
 }
+
+// ── Onboarding pipeline: Provider auto-onboarding ─────────────────────
+model ProviderOnboardingSession {
+  id                      String          @id @default(cuid())
+  providerId              String?
+  slaveId                 String
+  targetOrigin            String
+  status                  String // attached|fingerprinted|taxonomy_resolved|discovered|synthesized|promoted|registered|failed
+  wfvJson                 String?
+  wfvShapeSignature       String?
+  taxonomyId              String?
+  taxonomy                WebAppTaxonomy? @relation(fields: [taxonomyId], references: [id])
+  discoveredEntitiesJson  String?
+  parserCandidatesJson    String?
+  protocolFingerprintJson String?
+  errorJson               String?
+  startedAt               DateTime        @default(now())
+  completedAt             DateTime?
+
+  discoveredEntities    DiscoveredDomEntity[]
+  protocolFingerprints  ProtocolFingerprint[]
+  parserCandidates      ParserCandidate[]
+  taxonomyGenerationRun TaxonomyGenerationRun?
+
+  @@unique([slaveId, targetOrigin, wfvShapeSignature])
+  @@index([status])
+  @@index([targetOrigin])
+  @@map("provider_onboarding_session")
+}
+
+model DiscoveredDomEntity {
+  id           String                    @id @default(cuid())
+  sessionId    String
+  session      ProviderOnboardingSession @relation(fields: [sessionId], references: [id])
+  role         String // 'input' | 'send_control' | 'message_container' | 'stream_region' | ...
+  selectorJson String // candidate SelectorStrategy payload
+  confidence   Float                     @default(0)
+  testedAt     DateTime?
+  status       String                    @default("prospect") // prospect|active|rejected
+
+  @@index([sessionId, role])
+  @@map("discovered_dom_entity")
+}
+
+model ProtocolFingerprint {
+  id                String                    @id @default(cuid())
+  sessionId         String
+  session           ProviderOnboardingSession @relation(fields: [sessionId], references: [id])
+  transportClass    String // sse|websocket|chunked_fetch|xhr_poll|dom_mutation_only
+  endpointPattern   String?
+  sampleHeadersJson String?
+  cadenceMs         Int?
+  confidence        Float                     @default(0)
+
+  parserCandidates ParserCandidate[]
+
+  @@map("protocol_fingerprint")
+}
+
+model ParserCandidate {
+  id                    String                    @id @default(cuid())
+  sessionId             String
+  session               ProviderOnboardingSession @relation(fields: [sessionId], references: [id])
+  protocolFingerprintId String?
+  protocolFingerprint   ProtocolFingerprint?      @relation(fields: [protocolFingerprintId], references: [id])
+  inducedShapeJson      String // output of Structural Parser Induction
+  parserProgramId       String?
+  confidence            Float                     @default(0)
+  sampleCount           Int                       @default(0)
+  status                String                    @default("prospect") // prospect|active|rejected
+
+  testResults ParserTestResult[]
+
+  @@map("parser_candidate")
+}
+
+model ParserTestResult {
+  id                String          @id @default(cuid())
+  parserCandidateId String
+  parserCandidate   ParserCandidate @relation(fields: [parserCandidateId], references: [id])
+  passed            Boolean
+  detailJson        String?
+  runAt             DateTime        @default(now())
+
+  @@map("parser_test_result")
+}
+
+model WebAppTaxonomy {
+  id                     String   @id @default(cuid())
+  slug                   String   @unique
+  origin                 String // 'curated' | 'auto_generated'
+  displayName            String
+  centroidVectorJson     String
+  capabilityTemplateJson String
+  confidence             Float    @default(0.5)
+  sampleCount            Int      @default(0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  generationRuns     TaxonomyGenerationRun[]
+  onboardingSessions ProviderOnboardingSession[]
+
+  @@index([origin])
+  @@map("webapp_taxonomy")
+}
+
+model TaxonomyGenerationRun {
+  id                  String                    @id @default(cuid())
+  taxonomyId          String
+  taxonomy            WebAppTaxonomy            @relation(fields: [taxonomyId], references: [id])
+  onboardingSessionId String                    @unique
+  onboardingSession   ProviderOnboardingSession @relation(fields: [onboardingSessionId], references: [id])
+  inputWfvJson        String
+  method              String // 'auto_generated' | 'matched_existing'
+  matchScore          Float?
+  createdAt           DateTime                  @default(now())
+
+  @@map("taxonomy_generation_run")
+}
+
+// ── Reprogrammability: Surface versioning ─────────────────────────────
+model SurfaceVersion {
+  id         String   @id @default(cuid())
+  surfaceId  String
+  version    Int
+  specJson   String
+  provenance String // manual | nlcl | prefix | plugin | llm-harness | system
+  mutationId String?
+  createdAt  DateTime @default(now())
+
+  @@unique([surfaceId, version])
+  @@index([surfaceId, createdAt])
+  @@map("surface_version")
+}
+
+// ── Workspace management ──────────────────────────────────────────────
+model WorkspaceBackup {
+  id           String   @id @default(cuid())
+  snapshotJson String
+  source       String // cron | manual | pre-restore
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("workspace_backup")
+}
+
+model WorkspaceTemplateRow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  graphJson   String
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("workspace_template_row")
+}

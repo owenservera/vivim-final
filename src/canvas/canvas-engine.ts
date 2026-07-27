@@ -30,6 +30,13 @@ export interface CanvasEngineDeps {
   primities?: PrimitiveProvider[]
   mirrorStore?: CanvasMirrorStore
   eventBus?: import('../engines/capability-event-bus.js').CapabilityEventBus
+  /**
+   * Audit finding G.1 / unit 16.1 fix — image generation bridge for
+   * `cap:canvas:set_background` when called with an `imageQuery` parameter
+   * (e.g. "change canvas background to an image of an elephant"). If omitted,
+   * the capability throws a misleading error when imageQuery is provided.
+   */
+  imageGen?: { generateImage: (query: string) => Promise<{ dataUrl: string; source: string }> }
 }
 
 export class CanvasEngine {
@@ -45,11 +52,15 @@ export class CanvasEngine {
   private readonly eventBus:
     | import('../engines/capability-event-bus.js').CapabilityEventBus
     | undefined
+  private readonly imageGen:
+    | { generateImage: (query: string) => Promise<{ dataUrl: string; source: string }> }
+    | undefined
 
   constructor(deps: CanvasEngineDeps) {
     this.store = deps.store
     this.host = deps.host
     this.eventBus = deps.eventBus
+    this.imageGen = deps.imageGen
     this.registry = new CanvasRegistry(deps.store)
     this.mounter = new LayerMounter(deps.store, deps.host, this.registry)
     this.mirror = new CanvasMirror(deps.mirrorStore ?? new InMemoryCanvasMirrorStore())
@@ -83,6 +94,11 @@ export class CanvasEngine {
       mirror: this.mirror,
       designer: this.designer,
       eventBus: this.eventBus,
+      // Audit G.1 / 16.1 fix — inject imageGen so cap:canvas:set_background can
+      // resolve imageQuery params end-to-end. Without this, the capability
+      // throws `Error('Either imageBase64 or imageQuery must be provided')`
+      // even when imageQuery IS provided, because svc.imageGen is undefined.
+      imageGen: this.imageGen,
     })
   }
 

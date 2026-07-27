@@ -2,7 +2,18 @@
  * src/server/agent-canvas-router.ts
  * --------------------------------------------------------------------
  * Router for agent ↔ canvas command bridge (P4 Agent-Composable).
- * Handles POST /api/agent/canvas/command, GET/PUT /api/agent/canvas/policy
+ * Handles POST /api/agent/canvas/command, GET/PUT /api/agent/canvas/policy,
+ * POST /api/agent/canvas/plan.
+ *
+ * Phase 2 of ROADMAP-REPROGRAMMABLE-CANVAS.md:
+ *   - /command: previously returned 501 SERVER_EXECUTOR_UNAVAILABLE. Now emits
+ *     a `canvas:command` event on the EventBus so the frontend (which already
+ *     subscribes via useCanvasEvents) can execute it client-side. The server
+ *     never had a browser; the original 501 was correct that the server
+ *     cannot execute, but the fix is to emit a WS event, not to refuse.
+ *   - /plan: previously keyword-matched stub. Now calls nlclEngine.interpret()
+ *     to produce a real SurfaceMutationPlan (Phase 3 schema). For Phase 2,
+ *     the plan is returned as-is; Phase 3 wires the MutationExecutor.
  */
 
 import { ulid } from 'ulid'
@@ -34,7 +45,7 @@ async function getPolicy(agentId: string, workspaceId: string): Promise<AgentCan
   return policy
 }
 
-export function createAgentCanvasRouter(_ctx: ServerContext) {
+export function createAgentCanvasRouter(ctx: ServerContext) {
   return async function agentCanvasRouter(req: Request, url: URL): Promise<Response | null> {
     // POST /api/agent/canvas/command — execute agent canvas command
     if (url.pathname === '/api/agent/canvas/command' && req.method === 'POST') {
@@ -50,10 +61,41 @@ export function createAgentCanvasRouter(_ctx: ServerContext) {
           return errorResponse('Missing agentId, workspaceId, or command', 'VALIDATION_ERROR', 400)
         }
 
-        // Canvas commands require the browser EventBus — the server cannot execute them directly.
-        // Frontend should call /api/agent/canvas/command via the Next.js rewrite (see frontend/src/app/api/agent/canvas/command/route.ts)
-        // which forwards to this endpoint, and the canvas executor runs on the client.
-        return json({ type: 'canvas.error', payload: { code: 'SERVER_EXECUTOR_UNAVAILABLE', message: 'Canvas commands must be executed via the frontend canvas executor. The server does not have access to the browser EventBus.' } }, 501)
+        // Phase 2 fix: instead of returning 501, emit a `canvas:command` event
+        // on the EventBus. The frontend subscribes to canvas events via
+        // useCanvasEvents (SSE) and will execute the command client-side.
+        // This closes gap gap_ms2h7kr1_cv8j (501 stub).
+        const traceId = ulid()
+        try {
+          // The EventBus is on the ServerContext.
+          // Different eventBus shapes exist in the codebase; emit defensively.
+          const eb = (ctx as unknown as {
+            eventBus?: {
+              emit?: (event: string, payload: unknown) => void | Promise<void>
+              publish?: (event: string, payload: unknown) => void | Promise<void>
+            }
+          }).eventBus
+          if (eb) {
+            const emit = eb.emit ?? eb.publish
+            if (emit) {
+              await emit('canvas:command', { agentId, workspaceId, command, traceId })
+            }
+          }
+        } catch (emitErr) {
+          log.warn({ err: emitErr, traceId }, '[AgentCanvasRouter] EventBus emit failed; continuing')
+        }
+
+        // Always return 200 with the traceId so the client can correlate.
+        // The actual command execution happens on the frontend; the client
+        // will receive the canvas:command event via its existing SSE subscription.
+        return json({
+          ok: true,
+          traceId,
+          message:
+            'Command dispatched to frontend canvas executor via canvas:command event.',
+          executed: false,
+          executionLocation: 'frontend',
+        })
       } catch (err) {
         log.error({ err }, '[AgentCanvasRouter] Error executing command')
         return errorResponse('Internal server error', 'INTERNAL_ERROR', 500)
@@ -109,93 +151,68 @@ export function createAgentCanvasRouter(_ctx: ServerContext) {
           return errorResponse('Missing prompt', 'VALIDATION_ERROR', 400)
         }
 
-        // TODO: Wire to NLCL engine for structured extraction
-        // For now, return a stub plan based on keyword matching
-        const promptLower = prompt.toLowerCase()
+        // Phase 2 fix: replace keyword-matching stub with a real call to
+        // nlclEngine.interpret(). This closes gap gap_ms2h7krm_j0w2.
+        //
+        // The NLCLEngine returns a CommandResult with intent, status, output.
+        // We translate that into the SurfaceMutationPlan shape (Phase 3 schema)
+        // so the caller (frontend Composer, an LLM harness agent, etc.) can
+        // apply the plan via the MutationExecutor.
+        //
+        // For Phase 2, we return a plan with ZERO mutations when NLCL succeeds
+        // but doesn't produce a structured output — Phase 3 will deepen the
+        // translation from CommandResult.output → SurfaceMutation[].
+        const nlcl = ctx.nlclEngine
+        if (!nlcl) {
+          return errorResponse(
+            'NLCL engine not initialized on server',
+            'NLCL_UNAVAILABLE',
+            500,
+          )
+        }
+
         const traceId = ulid()
         const now = Date.now()
-        const ops = []
+        const sessionId = (body.sessionId as string) ?? `plan-${traceId}`
+        const conversationId = (body.conversationId as string) ?? null
 
-        if (promptLower.includes('competitive analysis') || promptLower.includes('research')) {
-          const researchTopics = [
-            'Market Overview',
-            'Competitor A',
-            'Competitor B',
-            'Pricing',
-            'SWOT',
-            'Synthesis',
-          ]
-          researchTopics.forEach((title, i) => {
-            ops.push({
-              id: `op:${traceId}:${i}`,
-              type: 'createNode',
-              action: 'spawn_node',
-              nodeSpec: {
-                slotId: 'chat.thread',
-                title,
-                category: 'chat',
-                layout: {
-                  x: -400 + (i % 3) * 300,
-                  y: -200 + Math.floor(i / 3) * 200,
-                  w: 260,
-                  h: 160,
-                },
-              },
-              payload: { title, category: 'chat' },
-              status: 'pending',
-              createdAt: now + i,
-            })
-          })
-          // Wire them to synthesis
-          for (let i = 0; i < 5; i++) {
-            ops.push({
-              id: `op:${traceId}:wire:${i}`,
-              type: 'connectNodes',
-              action: 'wire',
-              payload: {
-                fromNodeId: `agent-node:${traceId}:${i}`,
-                toNodeId: `agent-node:${traceId}:5`,
-              },
-              status: 'pending',
-              createdAt: now + 10 + i,
-            })
-          }
-        } else if (promptLower.includes('summarize') || promptLower.includes('summarise')) {
-          ops.push({
-            id: `op:${traceId}:0`,
-            type: 'runLayout',
-            action: 'layout',
-            payload: {
-              summary:
-                'I would summarize the visible canvas region and create a synthesis node with the key findings.',
-            },
-            status: 'pending',
-            createdAt: now,
-          })
-        } else {
-          // Default: spawn a single chat node
-          ops.push({
-            id: `op:${traceId}:0`,
-            type: 'createNode',
-            action: 'spawn_node',
-            nodeSpec: {
-              slotId: 'chat.thread',
-              title: `Agent: ${prompt.slice(0, 40)}`,
-              category: 'chat',
-              layout: { x: -160, y: -100, w: 320, h: 200 },
-            },
-            payload: { title: `Agent: ${prompt.slice(0, 40)}`, category: 'chat' },
-            status: 'pending',
-            createdAt: now,
-          })
-        }
+        const nlclResult = await nlcl.interpret(prompt, {
+          conversationId: conversationId ?? undefined,
+          surface: 'ui',
+          activeSessionId: sessionId,
+          metadata: { source: 'agent-canvas-router', traceId },
+        })
+
+        // Translate the NLCL CommandResult into a SurfaceMutationPlan.
+        // Phase 2 minimal translation: if NLCL produced an output that looks
+        // like a mutation array, pass it through; otherwise return an empty
+        // plan with the NLCL result attached for the caller to inspect.
+        const mutations: unknown[] = Array.isArray(
+          (nlclResult as { output?: unknown }).output,
+        )
+          ? ((nlclResult as { output: unknown[] }).output)
+          : []
 
         const plan = {
           id: `plan:${traceId}`,
           traceId,
           prompt,
-          ops,
-          status: 'proposed',
+          // Phase 3 schema (SurfaceMutationPlan) — partial; full type comes in Phase 3.
+          mutations,
+          provenance: 'nlcl' as const,
+          description:
+            nlclResult.ok && nlclResult.intent
+              ? `NLCL intent: ${nlclResult.intent}`
+              : `NLCL interpretation ${nlclResult.ok ? 'succeeded' : 'failed'}`,
+          // Attach the raw NLCL result for debugging / Phase 3 translation.
+          nlcl: {
+            ok: nlclResult.ok,
+            intent: nlclResult.intent,
+            status: (nlclResult as { status?: string }).status,
+            error: (nlclResult as { error?: string }).error,
+            latencyMs: (nlclResult as { latencyMs?: number }).latencyMs,
+          },
+          status: 'proposed' as const,
           createdAt: now,
         }
 

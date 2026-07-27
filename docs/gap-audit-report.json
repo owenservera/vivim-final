@@ -1,0 +1,162 @@
+{
+  "summary": {
+    "totalSameNamed": 725,
+    "bothExist": 580,
+    "vivimOnly": 143,
+    "vvvOnly": 2,
+    "enhancements": 9,
+    "regressions": 3,
+    "identical": 568,
+    "alreadyPorted": 560
+  },
+  "enhancements": [
+    {
+      "file": "agent-canvas.ts",
+      "vivimPath": "agent-canvas.ts",
+      "vvvPath": "agent-canvas.ts",
+      "vivimLines": 105,
+      "vvvLines": 153,
+      "lineDiff": 48,
+      "vivimFunctions": 0,
+      "vvvFunctions": 0,
+      "vivimExports": 7,
+      "vvvExports": 15
+    },
+    {
+      "file": "api-types.ts",
+      "vivimPath": "api-types.ts",
+      "vvvPath": "api-types.ts",
+      "vivimLines": 268,
+      "vvvLines": 313,
+      "lineDiff": 45,
+      "vivimFunctions": 0,
+      "vvvFunctions": 1,
+      "vivimExports": 26,
+      "vvvExports": 29
+    },
+    {
+      "file": "interpret-router.ts",
+      "vivimPath": "interpret-router.ts",
+      "vvvPath": "interpret-router.ts",
+      "vivimLines": 112,
+      "vvvLines": 140,
+      "lineDiff": 28,
+      "vivimFunctions": 4,
+      "vvvFunctions": 4,
+      "vivimExports": 2,
+      "vvvExports": 3
+    },
+    {
+      "file": "autonomous-store-impl.ts",
+      "vivimPath": "autonomous-store-impl.ts",
+      "vvvPath": "autonomous-store-impl.ts",
+      "vivimLines": 136,
+      "vvvLines": 157,
+      "lineDiff": 21,
+      "vivimFunctions": 0,
+      "vvvFunctions": 0,
+      "vivimExports": 1,
+      "vvvExports": 1
+    },
+    {
+      "file": "canvas-engine.ts",
+      "vivimPath": "canvas-engine.ts",
+      "vvvPath": "canvas-engine.ts",
+      "vivimLines": 180,
+      "vvvLines": 196,
+      "lineDiff": 16,
+      "vivimFunctions": 0,
+      "vvvFunctions": 0,
+      "vivimExports": 3,
+      "vvvExports": 3
+    },
+    {
+      "file": "canvas-router.ts",
+      "vivimPath": "canvas-router.ts",
+      "vvvPath": "canvas-router.ts",
+      "vivimLines": 196,
+      "vvvLines": 211,
+      "lineDiff": 15,
+      "vivimFunctions": 9,
+      "vvvFunctions": 9,
+      "vivimExports": 2,
+      "vvvExports": 2
+    },
+    {
+      "file": "agent-canvas-router.ts",
+      "vivimPath": "agent-canvas-router.ts",
+      "vvvPath": "agent-canvas-router.ts",
+      "vivimLines": 212,
+      "vvvLines": 226,
+      "lineDiff": 14,
+      "vivimFunctions": 6,
+      "vvvFunctions": 9,
+      "vivimExports": 1,
+      "vvvExports": 1
+    },
+    {
+      "file": "autonomous-execution.ts",
+      "vivimPath": "autonomous-execution.ts",
+      "vvvPath": "autonomous-execution.ts",
+      "vivimLines": 1335,
+      "vvvLines": 1348,
+      "lineDiff": 13,
+      "vivimFunctions": 9,
+      "vvvFunctions": 9,
+      "vivimExports": 17,
+      "vvvExports": 17
+    },
+    {
+      "file": "capability-store-impl.ts",
+      "vivimPath": "capability-store-impl.ts",
+      "vvvPath": "capability-store-impl.ts",
+      "vivimLines": 418,
+      "vvvLines": 430,
+      "lineDiff": 12,
+      "vivimFunctions": 6,
+      "vvvFunctions": 6,
+      "vivimExports": 1,
+      "vvvExports": 1
+    }
+  ],
+  "vvvOnly": [
+    {
+      "file": "variant-router.test.ts",
+      "vvvPath": "variant-router.test.ts",
+      "vvvLines": 247,
+      "vvvSizeKB": 8.2275390625
+    },
+    {
+      "file": "template-router.test.ts",
+      "vvvPath": "template-router.test.ts",
+      "vvvLines": 145,
+      "vvvSizeKB": 5.0185546875
+    }
+  ],
+  "regressions": [
+    {
+      "file": "provider-protocol.dev.ts",
+      "vivimPath": "provider-protocol.dev.ts",
+      "vvvPath": "provider-protocol.dev.ts",
+      "vivimLines": 838,
+      "vvvLines": 10,
+      "lineDiff": -828
+    },
+    {
+      "file": "capabilities.ts",
+      "vivimPath": "capabilities.ts",
+      "vvvPath": "capabilities.ts",
+      "vivimLines": 361,
+      "vvvLines": 28,
+      "lineDiff": -333
+    },
+    {
+      "file": "chrome-governor.ts",
+      "vivimPath": "chrome-governor.ts",
+      "vvvPath": "chrome-governor.ts",
+      "vivimLines": 1404,
+      "vvvLines": 1393,
+      "lineDiff": -11
+    }
+  ]
+}
