@@ -24,7 +24,7 @@ export function runMigrate(name: string, timeoutMs = 120_000): Promise<MigrateRe
     const args = ['prisma', 'migrate', 'dev', '--name', name]
     let out = ''
     let done = false
-    const child = spawn('bunx', args, { stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn('bun', ['x', ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
 
     const finish = (r: MigrateResult) => {
       if (done) return

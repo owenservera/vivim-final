@@ -19,22 +19,21 @@ function makeCap(): CapabilityTaxonomyRow {
     slug: 'send_message',
     name: 'Send Message',
     description: null,
-    kind: 'composer',
     createdAt: 0,
     updatedAt: 0,
-  }
+  } as any
 }
 
 function makeBinding(): CapabilityBindingRow {
   return {
     id: 'bind_1',
-    capabilityId: 'cap_send',
+    globalId: 'cap_send',
     providerId: 'claude',
-    selectorStrategyId: 'sel_1',
     status: 'healthy',
-    healthScore: 1,
-    lastSuccessAt: null,
-    lastFailureAt: null,
+    bestProgramId: null,
+    currentProgramId: null,
+    promotionHistoryJson: '{}',
+    confidence: 0.9,
     createdAt: 0,
     updatedAt: 0,
   }
@@ -49,7 +48,7 @@ function makeSelector(): SelectorStrategyRow {
     selectorValue: 'textarea',
     priority: 1,
     strategyType: 'css',
-    isActive: true,
+    isActive: 1,
     hitCount: 0,
     missCount: 0,
     lastUsedAt: null,
@@ -74,7 +73,7 @@ function mockStore(overrides?: Partial<CapabilityStore>): CapabilityStore {
     updateBindingHealth: mock(async () => {}),
     updateSelectorHealth: mock(async () => {}),
     ...overrides,
-  }
+  } as any
 }
 
 function mockEventBus(): CapabilityEventBus & { events: unknown[] } {

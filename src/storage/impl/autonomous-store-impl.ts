@@ -6,6 +6,8 @@ import type { AutonomousExecutionStore } from '../contracts/autonomous-store.js'
 
 const prisma = new PrismaClient()
 
+const templateStore = new Map<string, Record<string, unknown>>()
+
 export class AutonomousStoreImpl implements AutonomousExecutionStore {
   async createTask(task: Record<string, unknown>): Promise<void> {
     await prisma.autonomousTask.create({
@@ -131,5 +133,26 @@ export class AutonomousStoreImpl implements AutonomousExecutionStore {
   async getGate(id: string): Promise<Record<string, unknown> | null> {
     const row = await prisma.hitlGate.findUnique({ where: { id } })
     return row as unknown as Record<string, unknown> | null
+  }
+
+  async getTaskTemplate(id: string): Promise<Record<string, unknown> | null> {
+    return templateStore.get(id) ?? null
+  }
+
+  async insertTaskTemplate(template: Record<string, unknown>): Promise<string> {
+    const id = template.id as string
+    templateStore.set(id, { ...template })
+    return id
+  }
+
+  async updateTaskTemplate(id: string, patch: Record<string, unknown>): Promise<void> {
+    const existing = templateStore.get(id)
+    if (existing) templateStore.set(id, { ...existing, ...patch })
+  }
+
+  async listTaskTemplates(opts?: { isShared?: boolean }): Promise<Array<Record<string, unknown>>> {
+    const all = Array.from(templateStore.values())
+    if (opts?.isShared !== undefined) return all.filter((t) => t.isShared === opts.isShared)
+    return all
   }
 }

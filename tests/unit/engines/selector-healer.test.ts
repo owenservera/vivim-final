@@ -10,7 +10,7 @@ function makeGov() {
 }
 
 function selText(sel: SemanticSelector): string {
-  return sel.selector ?? sel.css ?? sel.text ?? sel.role ?? ''
+  return (sel as any).selector ?? sel.css ?? sel.text ?? sel.role ?? ''
 }
 
 function makeGrounding() {
@@ -20,7 +20,7 @@ function makeGrounding() {
       if (!s || s.includes('missing')) return Promise.reject(new Error('not found'))
       return Promise.resolve({
         selector: s,
-        mode: sel.mode ?? 'css',
+        mode: (sel as any).mode ?? 'css',
         box: { x: 0, y: 0, width: 5, height: 5 },
       })
     }),
@@ -42,10 +42,9 @@ function makeStore() {
 }
 
 const original: SemanticSelector = {
-  axis: 'input',
-  mode: 'css',
-  selector: '#submit-missing',
-  heuristics: [{ attr: 'text', value: 'Submit', weight: 1 }],
+  role: 'button',
+  text: 'Submit',
+  css: '#submit-missing',
 }
 
 describe('SelectorHealer', () => {

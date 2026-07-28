@@ -28,13 +28,11 @@ if (-not (Test-Path $frontendDir)) {
     exit 1
 }
 
-Write-Output "[frontend] Resolving port (start: $Port)"
+Log "Resolving port (start: $Port)"
 
 Stop-ByPidFile $runtimeDir "frontend"
 Kill-Port $Port
 
-# Mirror backend: if the start port is still held by a foreign process, walk
-# UP to the first free port instead of hard-failing on --strictPort.
 $chosenPort = $Port
 if (-not (Test-PortFree $chosenPort)) {
     LogWarn ":$Port not free (zombie or live). Scanning for free port..."
@@ -46,7 +44,6 @@ if (-not (Test-PortFree $chosenPort)) {
     LogWarn "Falling back to :$chosenPort"
 }
 
-# Record the chosen port so all clients resolve it identically.
 $chosenPort | Set-Content (Join-Path $runtimeDir "frontend.port") -Force
 
 if (-not (Test-Path (Join-Path $frontendDir "node_modules"))) {
@@ -56,7 +53,7 @@ if (-not (Test-Path (Join-Path $frontendDir "node_modules"))) {
     Pop-Location
 }
 
-$proc = Start-Process -FilePath $bunExe -ArgumentList "run", "dev" `
+$proc = Start-Process -FilePath $bunExe -ArgumentList "run", "dev", "--", "-p", $chosenPort `
     -WorkingDirectory $frontendDir `
     -WindowStyle Hidden -PassThru -ErrorAction SilentlyContinue
 

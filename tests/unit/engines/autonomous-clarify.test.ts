@@ -19,6 +19,8 @@ function makeStep(): AutonomousStep {
     startedAt: null,
     completedAt: null,
     requiresHumanApproval: false,
+    parentStepId: null,
+    isCompositeRoot: false,
   }
 }
 

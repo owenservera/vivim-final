@@ -83,34 +83,34 @@ describe('CapabilityShapeRegistry (Phase 22)', () => {
   describe('adapter round-trip', () => {
     test('chat_app adapter passes through', async () => {
       await registry.loadAdaptersFromDir('C:\\0-BlackBoxProject-0\\vivim-final\\seeds\\adapters')
-      const adapter = registry.getAdapter('chat_app')
+      const adapter = registry.getAdapter('chat_app')!
       expect(adapter).not.toBeNull()
       const shape = registry.getShape('chat_app')
       expect(shape).toBeDefined()
       const cap = { type: 'send_message' }
-      const universal = adapter?.toUniversal(cap, shape)
+      const universal = adapter.toUniversal(cap, shape!)
       expect(universal).toEqual(cap)
     })
 
     test('coding_ide adapter maps run_code', async () => {
       await registry.loadAdaptersFromDir('C:\\0-BlackBoxProject-0\\vivim-final\\seeds\\adapters')
-      const adapter = registry.getAdapter('coding_ide')
+      const adapter = registry.getAdapter('coding_ide')!
       expect(adapter).not.toBeNull()
       const shape = registry.getShape('coding_ide')
       expect(shape).toBeDefined()
       const cap = { type: 'run_code' }
-      const universal = adapter.toUniversal(cap, shape)
+      const universal = adapter.toUniversal(cap, shape!)
       expect(universal.uiComponent).toBe('action_button')
     })
 
     test('search_engine adapter maps search', async () => {
       await registry.loadAdaptersFromDir('C:\\0-BlackBoxProject-0\\vivim-final\\seeds\\adapters')
-      const adapter = registry.getAdapter('search_engine')
+      const adapter = registry.getAdapter('search_engine')!
       expect(adapter).not.toBeNull()
       const shape = registry.getShape('search_engine')
       expect(shape).toBeDefined()
       const cap = { type: 'search' }
-      const universal = adapter.toUniversal(cap, shape)
+      const universal = adapter.toUniversal(cap, shape!)
       expect(universal.uiComponent).toBe('text_input')
     })
   })

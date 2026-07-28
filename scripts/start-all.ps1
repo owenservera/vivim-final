@@ -118,8 +118,8 @@ if (-not $BackendOnly) {
             Pop-Location
         }
 
-        # Port scan for frontend (mirror backend: walk UP from 5173 if zombie-held)
-        $frontendPort = 5173
+        # Port scan for frontend (walk UP from 3000 if zombie-held)
+        $frontendPort = 3000
         Kill-Port $frontendPort
         if (-not (Test-PortFree $frontendPort)) {
             LogWarn ":$frontendPort zombie-held. Scanning for free port..."
@@ -133,8 +133,7 @@ if (-not $BackendOnly) {
         $frontendPort | Set-Content (Join-Path $runtimeDir "frontend.port") -Force
 
         Log "Phase 3: Launch frontend on :$frontendPort"
-        $frontendPort = 3000  # Next.js dev server
-        $proc = Start-Process -FilePath $bunExe -ArgumentList "run", "dev" `
+        $proc = Start-Process -FilePath $bunExe -ArgumentList "run", "dev", "--", "-p", $frontendPort `
             -WorkingDirectory $frontendDir `
             -WindowStyle Hidden `
             -PassThru `
@@ -174,7 +173,7 @@ $backendPort = 9420
 $portFile = Join-Path $runtimeDir "backend.port"
 if (Test-Path $portFile) { $backendPort = [int](Get-Content $portFile -ErrorAction SilentlyContinue) }
 
-$frontendPort = 5173
+$frontendPort = 3000
 $fePortFile = Join-Path $runtimeDir "frontend.port"
 if (Test-Path $fePortFile) { $frontendPort = [int](Get-Content $fePortFile -ErrorAction SilentlyContinue) }
 

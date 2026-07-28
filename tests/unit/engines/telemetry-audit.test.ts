@@ -20,7 +20,6 @@ describe('TelemetryAudit', () => {
       initiator: 'CapabilityEngine',
       responseStatus: 200,
       durationMs: 150,
-      isToAiProvider: false, // will be overridden
     })
     const calls = audit.getCalls()
     expect(calls).toHaveLength(1)
@@ -36,7 +35,6 @@ describe('TelemetryAudit', () => {
       initiator: 'CapabilityEngine',
       responseStatus: 200,
       durationMs: 100,
-      isToAiProvider: false,
     })
     const report = audit.generateReport(now - 1000, now + 1000)
     expect(report.verdict).toBe('clean')
@@ -54,7 +52,6 @@ describe('TelemetryAudit', () => {
       initiator: 'TelemetryModule',
       responseStatus: 200,
       durationMs: 50,
-      isToAiProvider: false,
     })
     const report = audit.generateReport(now - 1000, now + 1000)
     expect(report.verdict).toBe('suspicious')
@@ -73,7 +70,6 @@ describe('TelemetryAudit', () => {
         initiator: 'Tracker',
         responseStatus: 200,
         durationMs: 10,
-        isToAiProvider: false,
       })
     }
     const report = audit.generateReport(now - 1000, now + 10000)
@@ -90,7 +86,6 @@ describe('TelemetryAudit', () => {
       initiator: 'UI',
       responseStatus: 200,
       durationMs: 30,
-      isToAiProvider: false,
     })
     const report = audit.generateReport(now - 1000, now + 1000)
     expect(report.nonProviderCalls[0]?.url).toBe('https://cdn.example.com')
@@ -105,7 +100,6 @@ describe('TelemetryAudit', () => {
       initiator: 'Old',
       responseStatus: 200,
       durationMs: 10,
-      isToAiProvider: false,
     })
     audit.recordCall({
       timestamp: now,
@@ -114,7 +108,6 @@ describe('TelemetryAudit', () => {
       initiator: 'New',
       responseStatus: 200,
       durationMs: 10,
-      isToAiProvider: false,
     })
     const report = audit.generateReport(now - 1000, now + 1000)
     expect(report.totalOutboundCalls).toBe(1)
@@ -137,7 +130,6 @@ describe('TelemetryAudit', () => {
       initiator: 'Test',
       responseStatus: 200,
       durationMs: 10,
-      isToAiProvider: false,
     })
     expect(audit.getCalls()).toHaveLength(1)
     audit.clear()
@@ -153,7 +145,6 @@ describe('TelemetryAudit', () => {
       initiator: 'ClaudeEngine',
       responseStatus: 200,
       durationMs: 200,
-      isToAiProvider: false,
     })
     const calls = audit.getCalls()
     expect(calls[0]?.isToAiProvider).toBe(true)

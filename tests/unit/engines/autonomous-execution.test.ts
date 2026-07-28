@@ -168,6 +168,8 @@ describe('AutonomousExecutionEngine', () => {
       requireApprovalAbove: 'write',
       allowBrowser: true,
       costBudgetCents: 100,
+      tokenBudget: 1000,
+      iterationBudget: 10,
     }
     const task = await engine.execute(goal)
     expect(task.status).toBe('complete')
@@ -183,6 +185,8 @@ describe('AutonomousExecutionEngine', () => {
       requireApprovalAbove: 'read',
       allowBrowser: true,
       costBudgetCents: 100,
+      tokenBudget: 1000,
+      iterationBudget: 10,
     }
     // Execute in background, resolve gate when created
     const taskPromise = engine.execute(goal)
@@ -205,6 +209,8 @@ describe('AutonomousExecutionEngine', () => {
       requireApprovalAbove: 'financial',
       allowBrowser: false,
       costBudgetCents: 100,
+      tokenBudget: 1000,
+      iterationBudget: 10,
     }
     const task = await engine.execute(goal)
     expect(task.steps.length).toBeLessThanOrEqual(2)
@@ -218,6 +224,8 @@ describe('AutonomousExecutionEngine', () => {
       requireApprovalAbove: 'financial',
       allowBrowser: true,
       costBudgetCents: 100,
+      tokenBudget: 1000,
+      iterationBudget: 10,
     }
     // Start execution and immediately cancel
     const taskPromise = engine.execute(goal)
@@ -239,6 +247,8 @@ describe('AutonomousExecutionEngine', () => {
       requireApprovalAbove: 'financial',
       allowBrowser: true,
       costBudgetCents: 100,
+      tokenBudget: 1000,
+      iterationBudget: 10,
     }
     const task = await engine.execute(goal)
     const status = await engine.getStatus(task.id)
@@ -259,6 +269,8 @@ describe('AutonomousExecutionEngine', () => {
       requireApprovalAbove: 'read',
       allowBrowser: false,
       costBudgetCents: 100,
+      tokenBudget: 1000,
+      iterationBudget: 10,
     }
     const taskPromise = engine.execute(goal)
     await new Promise((r) => setTimeout(r, 50))

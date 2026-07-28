@@ -12,7 +12,7 @@ export function fmt(): void {
     console.log('devops fmt: no changed .ts files to format')
     return
   }
-  const res = spawnSync('bunx', ['@biomejs/biome', 'check', '--write', ...files], {
+  const res = spawnSync('bun', ['x', '@biomejs/biome', 'check', '--write', ...files], {
     stdio: 'inherit',
   })
   if (res.status !== 0) {

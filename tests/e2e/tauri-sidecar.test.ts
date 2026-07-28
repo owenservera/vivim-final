@@ -36,11 +36,11 @@ async function main(): Promise<void> {
   await waitForHealth()
 
   // FR-002: backend serves liveness.
-  const health = await (await fetch(`${BASE}/health`)).json()
+  const health = (await (await fetch(`${BASE}/health`)).json()) as { status: string }
   assert(health.status === 'ok', '/health returns ok')
 
   // FR-003: readiness flips after bootstrap.
-  const ready = await (await fetch(`${BASE}/readyz`)).json()
+  const ready = (await (await fetch(`${BASE}/readyz`)).json()) as { status: string }
   assert(ready.status === 'ready', '/readyz returns ready')
 
   // FR-004: existing MVP chat surface is reachable through the sidecar.

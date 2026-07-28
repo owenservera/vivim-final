@@ -18,7 +18,7 @@
 
 import { useEffect, useRef, useState, Suspense, lazy } from 'react';
 import { useIO } from '@/components/canvas/UnifiedIOProvider';
-import { OnboardFlow, checkNeedsSetup } from '@/features/onboard-flow';
+import { GuidedLanding, checkNeedsSetup } from '@/features/guided-landing';
 import {
   LivingCanvas,
   LiveConfigProvider,
@@ -75,6 +75,7 @@ function CanvasApp() {
 
   // UI state
   const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
+  const [guidedOpen, setGuidedOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
@@ -83,11 +84,13 @@ function CanvasApp() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
-  // Check if onboarding needed
+  // Check if onboarding needed — auto-open guided assistant for first run
   useEffect(() => {
     mountedRef.current = true;
-    checkNeedsSetup().then((needs) => {
-      if (mountedRef.current) setNeedsSetup(needs);
+    checkNeedsSetup().then((needs: boolean) => {
+      if (!mountedRef.current) return;
+      setNeedsSetup(needs);
+      if (needs) setGuidedOpen(true);
     }).catch(() => { if (mountedRef.current) setNeedsSetup(false); });
     return () => { mountedRef.current = false; };
   }, []);
@@ -99,6 +102,11 @@ function CanvasApp() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setPaletteOpen((o) => !o);
+      }
+      // Cmd+Shift+H: Toggle Vivim assistant
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'H') {
+        e.preventDefault();
+        setGuidedOpen((o) => !o);
       }
       // Cmd+`: Dev console
       if ((e.metaKey || e.ctrlKey) && e.key === '`') {
@@ -118,7 +126,7 @@ function CanvasApp() {
           return next;
         });
       }
-      // Escape: Close all panels
+      // Escape: Close all panels (but not guided — it handles its own Escape)
       if (e.key === 'Escape') {
         setPaletteOpen(false);
         setMenuOpen(false);
@@ -172,14 +180,18 @@ function CanvasApp() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', fontFamily: 'var(--font-sans)', background: 'var(--background)', color: 'var(--foreground)' }}>
-      {/* Onboarding wizard (if needed) */}
-      {needsSetup && (
-        <OnboardFlow onComplete={(convId) => {
+      {/* Vivim Assistant — onboarding (first run) + universal help (anytime) */}
+      <GuidedLanding
+        isOpen={guidedOpen}
+        mode={needsSetup ? 'onboarding' : 'assistant'}
+        onClose={() => setGuidedOpen(false)}
+        onComplete={(convId) => {
+          setGuidedOpen(false);
           setNeedsSetup(false);
           refreshConversations();
           refreshProviders();
-        }} />
-      )}
+        }}
+      />
 
       {/* LivingCanvas — 100% viewport, no chrome fighting for space */}
       <main
@@ -204,6 +216,7 @@ function CanvasApp() {
         onOpenSearch={() => setPaletteOpen(true)}
         onTogglePanel={togglePanel}
         onOpenMenu={() => setMenuOpen((o) => !o)}
+        onOpenAssistant={() => setGuidedOpen(true)}
       />
 
       {/* Floating panels — appear on demand, float over canvas */}
@@ -238,6 +251,7 @@ function CanvasApp() {
         onTogglePanel={togglePanel}
         onToggleDevConsole={() => setDevConsoleOpen((o) => !o)}
         onOpenThemeSettings={() => setThemeOpen(true)}
+        onOpenAssistant={() => setGuidedOpen(true)}
       />
 
       {/* Command palette (Cmd+K) */}
@@ -245,6 +259,7 @@ function CanvasApp() {
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
         workspaceId={workspaceId}
+        onOpenAssistant={() => setGuidedOpen(true)}
       />
 
       {/* Theme settings */}

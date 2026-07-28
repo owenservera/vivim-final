@@ -9,6 +9,15 @@ const mockCtx: CommandContext = {
   activeProvider: 'claude',
   activeConvId: 'conv-1',
   activeAccountId: 'acc-1',
+  lastAssistantText: null,
+  lastAssistantAt: null,
+  lastUserPrompt: null,
+  gmailAccounts: [],
+  dueMemoryCount: 0,
+  panelStatus: 'disconnected',
+  activeTags: [],
+  recentCommands: [],
+  sessionState: {},
 }
 
 const healthIntent: CommandIntent = {
@@ -16,6 +25,10 @@ const healthIntent: CommandIntent = {
   confidence: 0.9,
   category: 'system',
   matchedPattern: 'health check',
+  args: {},
+  source: 'nlcl',
+  color: { category: 'system' },
+  interpretation: '/health',
 }
 
 const switchIntent: CommandIntent = {
@@ -23,6 +36,10 @@ const switchIntent: CommandIntent = {
   confidence: 0.85,
   category: 'provider',
   matchedPattern: 'switch to claude',
+  args: {},
+  source: 'nlcl',
+  color: { category: 'provider' },
+  interpretation: '/switch',
 }
 
 describe('InterpretationEngine', () => {
@@ -39,7 +56,7 @@ describe('InterpretationEngine', () => {
     const engine = new InterpretationEngine()
     const state = engine.render(healthIntent, 'L1', mockCtx)
     expect(state.level).toBe('L1')
-    expect(state.label.toLowerCase()).toContain('health')
+    expect(state.label!.toLowerCase()).toContain('health')
     expect(state.preview).toBeUndefined()
     expect(state.details).toBeUndefined()
   })
@@ -48,7 +65,7 @@ describe('InterpretationEngine', () => {
     const engine = new InterpretationEngine()
     const state = engine.render(healthIntent, 'L2', mockCtx)
     expect(state.level).toBe('L2')
-    expect(state.label.toLowerCase()).toContain('health')
+    expect(state.label!.toLowerCase()).toContain('health')
     expect(state.preview).toBeDefined()
     expect(state.details).toBeUndefined()
   })
@@ -57,7 +74,7 @@ describe('InterpretationEngine', () => {
     const engine = new InterpretationEngine()
     const state = engine.render(healthIntent, 'L3', mockCtx)
     expect(state.level).toBe('L3')
-    expect(state.label.toLowerCase()).toContain('health')
+    expect(state.label!.toLowerCase()).toContain('health')
     expect(state.preview).toBeDefined()
     expect(state.details).toBeDefined()
   })
@@ -66,13 +83,13 @@ describe('InterpretationEngine', () => {
     const engine = new InterpretationEngine()
     const state = engine.render(healthIntent, 'L1', mockCtx)
     expect(state.color).toBeDefined()
-    expect(state.color?.h).toBeGreaterThanOrEqual(0)
+    expect(state.color!.h).toBeGreaterThanOrEqual(0)
   })
 
   it('handles provider intent', () => {
     const engine = new InterpretationEngine()
     const state = engine.render(switchIntent, 'L2', mockCtx)
-    expect(state.label.toLowerCase()).toContain('switch')
+    expect(state.label!.toLowerCase()).toContain('switch')
     expect(state.preview).toBeDefined()
   })
 

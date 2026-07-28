@@ -137,8 +137,8 @@ describe('MemoryFabric', () => {
     const { fabric, nodeStore } = makeFabric()
     await fabric.provisionAgentMemory('agentA', 'runA')
     await fabric.provisionAgentMemory('agentB', 'runB')
-    const oa = fabric.getSubsystem('agentA')?.oracle
-    const ob = fabric.getSubsystem('agentB')?.oracle
+    const oa = fabric.getSubsystem('agentA')!.oracle
+    const ob = fabric.getSubsystem('agentB')!.oracle
     await oa.consolidate({ userContent: 'secret A', assistantContent: 'reply A', sessionId: 's' })
     await ob.consolidate({ userContent: 'secret B', assistantContent: 'reply B', sessionId: 's' })
     const ra = await oa.recall('secret')
@@ -154,7 +154,7 @@ describe('MemoryFabric', () => {
     const { fabric, nodeStore } = makeFabric()
     await fabric.provisionAgentMemory('agentA', 'runA')
     await fabric.provisionAgentMemory('agentB', 'runB')
-    const oa = fabric.getSubsystem('agentA')?.oracle
+    const oa = fabric.getSubsystem('agentA')!.oracle
     await oa.consolidate({ userContent: 'fact', assistantContent: 'r', sessionId: 's' })
     // The persisted node must carry conversationId = agentMem:agentA
     const scoped = await nodeStore.listNodes({
@@ -182,11 +182,11 @@ describe('MemoryFabric', () => {
   it('forks parent memory into a sub-agent (frozen copy)', async () => {
     const { fabric } = makeFabric()
     await fabric.provisionAgentMemory('parent', 'runP')
-    const op = fabric.getSubsystem('parent')?.oracle
+    const op = fabric.getSubsystem('parent')!.oracle
     await op.consolidate({ userContent: 'parent fact', assistantContent: 'x', sessionId: 's' })
     const { agentId: child } = { agentId: 'child' }
     await fabric.provisionAgentMemory(child, 'runC', 'parent')
-    const oc = fabric.getSubsystem(child)?.oracle
+    const oc = fabric.getSubsystem(child)!.oracle
     const recalled = await oc.recall('parent fact')
     expect(recalled.some((t) => t.includes('parent fact'))).toBe(true)
   })

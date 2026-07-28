@@ -37,8 +37,8 @@ describe('MetricsRegistry', () => {
     const snapshots = registry.collect()
     const req = snapshots.find((s) => s.name === 'vivim_requests')
     expect(req).toBeDefined()
-    expect(req.value).toBe(5)
-    expect(req.type).toBe('counter')
+    expect(req!.value).toBe(5)
+    expect(req!.type).toBe('counter')
   })
 
   it('gauge sets value', () => {
@@ -46,8 +46,8 @@ describe('MetricsRegistry', () => {
     const snapshots = registry.collect()
     const g = snapshots.find((s) => s.name === 'vivim_connections')
     expect(g).toBeDefined()
-    expect(g.value).toBe(42)
-    expect(g.type).toBe('gauge')
+    expect(g!.value).toBe(42)
+    expect(g!.type).toBe('gauge')
   })
 
   it('histogram tracks buckets', () => {

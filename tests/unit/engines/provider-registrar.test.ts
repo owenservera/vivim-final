@@ -69,6 +69,13 @@ function createMockStore(): ProviderStore & {
       return [...defs.values()]
     },
 
+    async setParserFallback(_parserId: string, _fallbackParserId: string) {
+      calls.push(`setParserFallback:${_parserId}->${_fallbackParserId}`)
+    },
+    async upsertStreamConfig(_config) {
+      calls.push(`upsertStreamConfig:${_config.provider_id}`)
+    },
+
     // ── 1.3 taxonomy layer ──────────────────────────────────────────────────────
     async registerCapability(input) {
       calls.push(`registerCap:${input.providerId}/${input.slug}`)

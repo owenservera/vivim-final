@@ -221,9 +221,9 @@ describe('getCategoryColor', () => {
       const color = getCategoryColor(cat)
       expect(color.category).toBe(cat)
       expect(color.primary).toMatch(/^#[0-9A-Fa-f]{6}$/)
-      expect(color.shades.light).toContain('hsl')
-      expect(color.shades.medium).toContain('hsl')
-      expect(color.shades.dark).toContain('hsl')
+      expect(color.shades!.light).toContain('hsl')
+      expect(color.shades!.medium).toContain('hsl')
+      expect(color.shades!.dark).toContain('hsl')
     }
   })
 })

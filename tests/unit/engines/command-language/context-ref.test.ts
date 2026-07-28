@@ -12,6 +12,14 @@ describe('context-ref', () => {
       lastUserPrompt: 'what is the meaning of life',
       activeConvId: 'conv-1',
       activeProvider: 'claude',
+      activeAccountId: null,
+      lastAssistantAt: null,
+      gmailAccounts: [],
+      dueMemoryCount: 0,
+      panelStatus: 'disconnected' as const,
+      activeTags: [],
+      recentCommands: [],
+      sessionState: {},
     }
 
     it('resolves ~last', () => {

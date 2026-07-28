@@ -37,7 +37,7 @@ describe('ObjectiveDecomposer', () => {
         const depTask = dag.tasks.find((t) => t.id === depId)
         expect(depTask).toBeDefined()
         // Dependency should appear before the dependent in the task list
-        const depIdx = dag.tasks.indexOf(depTask ?? '')
+        const depIdx = dag.tasks.indexOf(depTask ?? ('' as any))
         const taskIdx = dag.tasks.indexOf(task)
         expect(depIdx).toBeLessThan(taskIdx)
       }
@@ -83,7 +83,7 @@ describe('ObjectiveDecomposer', () => {
       const taskIndices = dag.phases[p] ?? []
       const taskIds = new Set(taskIndices.map((i) => dag.tasks[i]?.id))
       for (const idx of taskIndices) {
-        const task = dag.tasks[idx]
+        const task = dag.tasks[idx]!
         for (const dep of task.dependsOn) {
           // Dependency must NOT be in the same phase
           if (taskIds.has(dep)) {

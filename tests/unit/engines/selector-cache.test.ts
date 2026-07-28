@@ -58,6 +58,6 @@ describe('selector-cache', () => {
     const s = cache.stats()
     expect(s.size).toBe(2)
     expect(s.entries).toHaveLength(2)
-    expect(s.entries[0].key).toBe('p:c1')
+    expect(s.entries[0]!.key).toBe('p:c1')
   })
 })

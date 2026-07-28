@@ -619,6 +619,8 @@ export class AutonomousExecutionEngine {
         startedAt: s.startedAt as number | null,
         completedAt: s.completedAt as number | null,
         requiresHumanApproval: (s.requiresHumanApproval as number) === 1,
+        parentStepId: s.parentStepId as string | null ?? null,
+        isCompositeRoot: (s.isCompositeRoot as number) === 1,
       })),
       startedAt: row.startedAt as number,
       completedAt: row.completedAt as number | null,
@@ -655,6 +657,8 @@ export class AutonomousExecutionEngine {
           startedAt: s.startedAt as number | null,
           completedAt: s.completedAt as number | null,
           requiresHumanApproval: (s.requiresHumanApproval as number) === 1,
+          parentStepId: s.parentStepId as string | null ?? null,
+          isCompositeRoot: (s.isCompositeRoot as number) === 1,
         })),
         startedAt: row.startedAt as number,
         completedAt: row.completedAt as number | null,
@@ -941,7 +945,7 @@ export class AutonomousExecutionEngine {
 
       subStep.status = 'running'
       subStep.startedAt = Date.now()
-      await this.store.createStep(subStep)
+      await this.store.createStep(subStep as unknown as Record<string, unknown>)
       await this.store.updateStep(subStep.id, { status: 'running', startedAt: subStep.startedAt })
 
       try {

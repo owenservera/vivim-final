@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { AGENT_ROLES, getAgentRole } from '../../../src/engines/automation/agents.js'
 import { RECIPES, getRecipe } from '../../../src/engines/browser-automation/recipes.js'
+import type { CapabilityAxis } from '../../../src/engines/browser-automation/types.js'
 import { BrowserCapabilityRegistry } from '../../../src/engines/browser-automation/registry.js'
 
 function makeGov() {
@@ -33,12 +34,12 @@ describe('BrowserCapabilityRegistry', () => {
       'flow',
       'os',
     ]) {
-      expect(axes.has(axis)).toBe(true)
+      expect(axes.has(axis as CapabilityAxis)).toBe(true)
     }
   })
 
   test('resolve returns a known capability', () => {
-    const def = reg.resolve('auto:nav:navigate')
+    const def = reg.resolve('auto:nav:navigate' as any)
     expect(def.id).toBe('auto:nav:navigate')
   })
 

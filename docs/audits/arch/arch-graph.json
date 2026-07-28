@@ -2522,7 +2522,7 @@
     },
     {
       "from": "engines/task-history",
-      "to": "storage/contracts"
+      "to": "errors"
     },
     {
       "from": "engines/telemetry-aggregator",
@@ -3642,11 +3642,11 @@
     },
     {
       "from": "server/index",
-      "to": "config"
+      "to": "cli/index"
     },
     {
       "from": "server/index",
-      "to": "cli/index"
+      "to": "config"
     },
     {
       "from": "server/index",
@@ -3698,6 +3698,10 @@
     },
     {
       "from": "server/index",
+      "to": "engines/generative"
+    },
+    {
+      "from": "server/index",
       "to": "engines/idempotency-guard"
     },
     {
@@ -3711,10 +3715,6 @@
     {
       "from": "server/index",
       "to": "engines/lock-manager"
-    },
-    {
-      "from": "server/index",
-      "to": "lib/logger"
     },
     {
       "from": "server/index",
@@ -3746,6 +3746,10 @@
     },
     {
       "from": "server/index",
+      "to": "lib/logger"
+    },
+    {
+      "from": "server/index",
       "to": "storage/db"
     },
     {
@@ -3766,7 +3770,15 @@
     },
     {
       "from": "server/index",
+      "to": "server/chrome-router"
+    },
+    {
+      "from": "server/index",
       "to": "server/conversation-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/generative-router"
     },
     {
       "from": "server/index",
@@ -3778,7 +3790,15 @@
     },
     {
       "from": "server/index",
+      "to": "server/llm-harness-router"
+    },
+    {
+      "from": "server/index",
       "to": "server/memory-viz-router"
+    },
+    {
+      "from": "server/index",
+      "to": "server/mutation-router"
     },
     {
       "from": "server/index",
@@ -3790,22 +3810,6 @@
     },
     {
       "from": "server/index",
-      "to": "server/chrome-router"
-    },
-    {
-      "from": "server/index",
-      "to": "server/generative-router"
-    },
-    {
-      "from": "server/index",
-      "to": "server/llm-harness-router"
-    },
-    {
-      "from": "server/index",
-      "to": "server/mutation-router"
-    },
-    {
-      "from": "server/index",
       "to": "server/onboarding-boot"
     },
     {
@@ -3814,7 +3818,11 @@
     },
     {
       "from": "server/index",
-      "to": "server/service-container"
+      "to": "server/response"
+    },
+    {
+      "from": "server/index",
+      "to": "server/setup-router"
     },
     {
       "from": "server/index",
@@ -3831,14 +3839,6 @@
     {
       "from": "server/index",
       "to": "server/version-router"
-    },
-    {
-      "from": "server/index",
-      "to": "server/response"
-    },
-    {
-      "from": "server/index",
-      "to": "server/setup-router"
     },
     {
       "from": "server/index",
@@ -6628,9 +6628,9 @@
     },
     {
       "module": "engines/generative",
-      "fanIn": 1,
+      "fanIn": 2,
       "fanOut": 1,
-      "instability": 0.5,
+      "instability": 0.3333333333333333,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -7588,7 +7588,7 @@
     },
     {
       "module": "errors",
-      "fanIn": 79,
+      "fanIn": 80,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -8668,7 +8668,7 @@
     },
     {
       "module": "server/service-container",
-      "fanIn": 3,
+      "fanIn": 2,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -8778,9 +8778,9 @@
     },
     {
       "module": "storage/contracts",
-      "fanIn": 75,
+      "fanIn": 74,
       "fanOut": 13,
-      "instability": 0.14772727272727273,
+      "instability": 0.14942528735632185,
       "selfDeps": 1,
       "totalDeps": 13,
       "cohesion": 0.07692307692307693,

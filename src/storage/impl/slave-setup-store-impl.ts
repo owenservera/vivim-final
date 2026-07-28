@@ -1,13 +1,15 @@
 // src/storage/impl/slave-setup-store-impl.ts
 // SlaveSetupStoreImpl — workspace hint + profile allocation for provider setup.
-// Config stored in C:\.config\vivim\setup-config.json (Windows) or /.config/vivim/ (Unix).
+// Config stored in %APPDATA%/vivim (Windows) or ~/.config/vivim (Unix).
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { SetupAccount, SlaveSetupStore } from '../contracts/slave-setup-store.js'
 import type { CapStoreDb } from '../db.js'
 
-const CONFIG_DIR = process.platform === 'win32' ? 'C:\\.config\\vivim' : '/.config/vivim'
+const CONFIG_DIR = process.platform === 'win32'
+  ? `${process.env.APPDATA ?? process.env.LOCALAPPDATA ?? 'C:\\'}\\vivim`
+  : `${process.env.HOME ?? '/tmp'}/.config/vivim`
 const CONFIG_FILE = join(CONFIG_DIR, 'setup-config.json')
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

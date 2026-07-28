@@ -73,9 +73,9 @@ describe('S2b: Governor permission (tier > 3 auto-deny)', () => {
       where: { agentSessionId: agentSession?.id },
     })
     expect(perms.length).toBe(1)
-    expect(perms[0].decision).toBe('deny')
-    expect(perms[0].riskTier).toBe(4)
-    expect(perms[0].decidedBy).toBe('governor')
+    expect(perms[0]!.decision).toBe('deny')
+    expect(perms[0]!.riskTier).toBe(4)
+    expect(perms[0]!.decidedBy).toBe('governor')
     expect(client.posted).toContainEqual({ id: 'perm-bash', decision: 'deny' })
 
     await ingest.stop(SESSION)

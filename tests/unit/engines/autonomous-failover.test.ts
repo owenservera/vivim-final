@@ -83,12 +83,14 @@ function makeResolver(): IntentResolver {
   }
 }
 
-function makeGoal() {
+function makeGoal(): any {
   return {
     description: 'do one thing',
     maxSteps: 10,
     maxDurationMs: 60_000,
     requireApprovalAbove: 'destructive' as const,
+    tokenBudget: 1000,
+    iterationBudget: 10,
     allowBrowser: true,
     costBudgetCents: 100,
   }

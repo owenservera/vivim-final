@@ -1,11 +1,11 @@
 import { describe, expect, it, beforeEach } from 'bun:test'
 import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type {
-  AutonomousExecutionStore,
   AutonomousGoal,
   AutonomousTask,
   AutonomousStep,
 } from '../../../src/engines/autonomous-execution.js'
+import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
 import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
@@ -27,7 +27,7 @@ function mockStore(): AutonomousExecutionStore & {
       const t = tasks.get(id)
       if (t) Object.assign(t, patch)
     },
-    getTask: async (id: string) => tasks.get(id) ?? null,
+    getTask: async (id: string) => (tasks.get(id) ?? null) as unknown as Record<string, unknown>,
     createStep: async () => {},
     updateStep: async () => {},
     getSteps: async () => [],
@@ -36,12 +36,12 @@ function mockStore(): AutonomousExecutionStore & {
     updateHitlGate: async () => {},
     getPendingGates: async () => [],
     getGate: async () => null,
-    listTasks: async () => [...tasks.values()],
+    listTasks: async () => [...tasks.values()] as unknown as Array<Record<string, unknown>>,
     getTaskTemplate: async () => null,
     insertTaskTemplate: async () => 'tpl-id',
     updateTaskTemplate: async () => {},
     listTaskTemplates: async () => [],
-  }
+  } as any
 }
 
 function mockRegistry(): UnifiedCapabilityRegistry & {
@@ -97,6 +97,8 @@ function makeGoal(overrides?: Partial<AutonomousGoal>): AutonomousGoal {
     requireApprovalAbove: 'financial',
     allowBrowser: false,
     costBudgetCents: 100,
+    tokenBudget: 1000,
+    iterationBudget: 10,
     ...overrides,
   }
 }

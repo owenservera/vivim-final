@@ -34,15 +34,15 @@ describe('content-pipeline-adapter', () => {
       const input = 'Some text\n\n```\ncode here\n```\n\nMore text'
       const blocks = reconstructCapture(input)
       expect(blocks).toHaveLength(3)
-      expect(blocks[0].blockKind).toBe('text')
-      expect(blocks[1].blockKind).toBe('code')
-      expect(blocks[2].blockKind).toBe('text')
+      expect(blocks[0]!.blockKind).toBe('text')
+      expect(blocks[1]!.blockKind).toBe('code')
+      expect(blocks[2]!.blockKind).toBe('text')
     })
 
     it('trims whitespace from blocks', () => {
       const blocks = reconstructCapture('  hello  \n\n  world  ')
-      expect(blocks[0].blockData).toBe('hello')
-      expect(blocks[1].blockData).toBe('world')
+      expect(blocks[0]!.blockData).toBe('hello')
+      expect(blocks[1]!.blockData).toBe('world')
     })
 
     it('filters out empty paragraphs', () => {

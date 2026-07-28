@@ -53,21 +53,35 @@ async function _computeDirectoryHash(dir: string): Promise<string> {
 
 async function extractTarGz(archivePath: string, destDir: string): Promise<void> {
   await mkdir(destDir, { recursive: true })
+
   const { spawn } = await import('node:child_process')
-  return new Promise((resolve, reject) => {
-    const child = spawn('tar', ['-xzf', archivePath, '-C', destDir], {
-      stdio: ['ignore', 'ignore', 'pipe'],
-    })
-    let stderr = ''
-    child.stderr?.on('data', (d: Buffer) => {
-      stderr += d.toString()
-    })
-    child.on('close', (code) => {
-      if (code !== 0) reject(new Error(`tar extraction failed (code ${code}): ${stderr}`))
-      else resolve()
-    })
-    child.on('error', reject)
-  })
+
+  const tryNativeTar = async (): Promise<boolean> => {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const child = spawn('tar', ['-xzf', archivePath, '-C', destDir], {
+          stdio: ['ignore', 'ignore', 'pipe'],
+        })
+        let stderr = ''
+        child.stderr?.on('data', (d: Buffer) => { stderr += d.toString() })
+        child.on('close', (code) => {
+          if (code === 0) resolve()
+          else reject(new Error(`tar extraction failed (code ${code}): ${stderr}`))
+        })
+        child.on('error', reject)
+      })
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  if (await tryNativeTar()) return
+
+  throw new Error(
+    `Failed to extract ${archivePath}: tar command not available. ` +
+    'On Windows, install Git for Windows (provides tar.exe) or WSL.',
+  )
 }
 
 async function _createTarGz(sourceDir: string, destFile: string): Promise<void> {
@@ -77,9 +91,7 @@ async function _createTarGz(sourceDir: string, destFile: string): Promise<void> 
       stdio: ['ignore', 'ignore', 'pipe'],
     })
     let stderr = ''
-    child.stderr?.on('data', (d: Buffer) => {
-      stderr += d.toString()
-    })
+    child.stderr?.on('data', (d: Buffer) => { stderr += d.toString() })
     child.on('close', (code) => {
       if (code !== 0) reject(new Error(`tar creation failed (code ${code}): ${stderr}`))
       else resolve()

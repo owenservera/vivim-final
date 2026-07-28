@@ -39,7 +39,7 @@ describe('ApiProviderAdapter', () => {
 
     const adapter = new ApiProviderAdapter({
       baseUrl: 'https://example.com/api',
-      keyRef: 'TEST_API_KEY',
+      apiKey: 'set_by_env',
       providerId: 'test',
     })
     const tokens: string[] = []
@@ -58,7 +58,7 @@ describe('ApiProviderAdapter', () => {
     delete process.env.MISSING_KEY
     const adapter = new ApiProviderAdapter({
       baseUrl: 'https://example.com/api',
-      keyRef: 'MISSING_KEY',
+      apiKey: 'will_be_deleted',
       providerId: 'test',
     })
     await expect(adapter.send('hey', 'model', () => {})).rejects.toThrow(/Missing API key/)

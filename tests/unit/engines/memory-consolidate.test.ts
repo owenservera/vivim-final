@@ -18,7 +18,7 @@ function mockStores() {
       query: async () => [],
       count: async () => 0,
       findAll: async () => [],
-    } as EpisodicMemoryStore,
+    } as unknown as EpisodicMemoryStore,
     semantic: {
       save: async (fact: SemanticMemory) => {
         semanticFacts.push(fact)
@@ -33,7 +33,7 @@ function mockStores() {
         const fact = semanticFacts.find((f) => f.id === id)
         if (fact) fact.confidence = confidence
       },
-    } as SemanticMemoryStore,
+    } as unknown as SemanticMemoryStore,
     procedural: {
       save: async (rule: ProceduralRule) => {
         proceduralRules.push(rule)
@@ -44,7 +44,7 @@ function mockStores() {
         const idx = proceduralRules.findIndex((r) => r.id === id)
         if (idx >= 0) proceduralRules.splice(idx, 1)
       },
-    } as ProceduralMemoryStore,
+    } as unknown as ProceduralMemoryStore,
   }
 }
 
@@ -95,7 +95,7 @@ describe('MemoryEngine.consolidate', () => {
     expect(report.merged).toBe(2)
     const remaining = await stores.semantic.findAll()
     expect(remaining.length).toBe(1)
-    expect(remaining[0].confidence).toBe(0.9) // highest confidence kept
+    expect(remaining[0]!.confidence).toBe(0.9) // highest confidence kept
   })
 
   it('decays old unverified facts', async () => {
@@ -114,7 +114,7 @@ describe('MemoryEngine.consolidate', () => {
 
     expect(report.decayed).toBe(1)
     const facts = await stores.semantic.findAll()
-    expect(facts[0].confidence).toBe(0.25) // 0.5 * 0.5
+    expect(facts[0]!.confidence).toBe(0.25) // 0.5 * 0.5
   })
 
   it('deprecates facts below minConfidence after decay', async () => {
@@ -156,7 +156,7 @@ describe('MemoryEngine.consolidate', () => {
     expect(report.promoted).toBe(1)
     const rules = await stores.procedural.findAll()
     expect(rules.length).toBe(1)
-    expect(rules[0].name).toBe('deploy_requires')
+    expect(rules[0]!.name).toBe('deploy_requires')
   })
 
   it('emits memory:consolidated event with report', async () => {

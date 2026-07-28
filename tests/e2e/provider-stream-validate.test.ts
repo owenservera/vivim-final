@@ -153,7 +153,7 @@ describe('Grounded Truth: Provider Stream Parsing', () => {
           const innerParsed = JSON.parse(innerStr)
           const textParts = innerParsed[0] as string[]
           expect(Array.isArray(textParts)).toBe(true)
-          if (textParts.length > 0 && textParts[0]?.length > 0) {
+          if (textParts.length > 0 && textParts[0]?.length && textParts[0].length > 0) {
             expect(typeof textParts[0]).toBe('string')
           }
         }

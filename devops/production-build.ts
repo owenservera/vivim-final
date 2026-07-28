@@ -253,7 +253,7 @@ async function phaseCleanup(opts: Opts): Promise<PhaseResult> {
   }
 
   // 4) Dead-code scan via biome (unused exports/vars). Non-fatal; surfaces debt.
-  const biome = await runSync('bunx', ['@biomejs/biome', 'lint', '--reporter=summary', 'src'], process.cwd())
+  const biome = await runSync('bun', ['x', '@biomejs/biome', 'lint', '--reporter=summary', 'src'], process.cwd())
   findings.push(`biome lint summary: ${biome.out.split('\n').slice(-3).join(' | ').trim() || '(no output)'}`)
 
   // 5) Git hygiene: no credentials/secrets accidentally staged. HARD BLOCKER.

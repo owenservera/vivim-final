@@ -14,7 +14,11 @@ function makeProgram(overrides?: Partial<CapabilityProgramRow>): CapabilityProgr
   return {
     id: 'prog-1',
     bindingId: 'bind-1',
-    capabilityId: 'cap:send_message',
+    version: 1,
+    name: 'send_message',
+    supersededById: null,
+    isActive: 1,
+    status: 'promoted',
     configJson: JSON.stringify({
       schemaVersion: 1,
       recipe: {
@@ -22,8 +26,6 @@ function makeProgram(overrides?: Partial<CapabilityProgramRow>): CapabilityProgr
         timeoutMs: 5000,
       },
     }),
-    status: 'promoted',
-    score: 0.9,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     ...overrides,

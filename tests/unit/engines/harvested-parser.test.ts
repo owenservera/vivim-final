@@ -108,14 +108,14 @@ describe('020 harvested parsers', () => {
     const p = compile(GENERIC)
     const blocks = p.parse(RAW_TEXT)
     expect(blocks.length).toBeGreaterThan(0)
-    expect(blocks[0].text).toBe(RAW_TEXT)
+    expect(blocks[0]!.text).toBe(RAW_TEXT)
   })
 
   test('system-raw-text returns body as single text block', () => {
     const p = compile(SYSTEM)
     const blocks = p.parse(RAW_TEXT)
     expect(blocks.length).toBe(1)
-    expect(blocks[0].text).toBe(RAW_TEXT)
+    expect(blocks[0]!.text).toBe(RAW_TEXT)
   })
 
   test('system-raw-text always completes and has low confidence', () => {

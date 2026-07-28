@@ -54,7 +54,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       },
       {
         label: 'Login',
-        url: 'https://chatgpt.com/auth/login',
+        url: 'https://chatgpt.com',
         endpoint_type: 'login',
         selector: {
           email_input: "input[name='email']",
@@ -193,7 +193,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       },
       {
         label: 'Login',
-        url: 'https://claude.ai/login',
+        url: 'https://claude.ai',
         endpoint_type: 'login',
         selector: {
           email_input: "input[type='email']",
@@ -340,7 +340,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       },
       {
         label: 'Login',
-        url: 'https://chat.deepseek.com/sign_in',
+        url: 'https://chat.deepseek.com',
         endpoint_type: 'login',
         selector: {
           email_input: "input[type='email']",

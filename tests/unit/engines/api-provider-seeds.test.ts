@@ -16,7 +16,7 @@ describe('API Provider seeds validate', () => {
       const result = ProviderManifestSchema.safeParse(manifest)
       expect(result.success).toBe(true)
       if (!result.success) {
-        console.error(z.prettifyError(result.error))
+        console.error((z as any).prettifyError?.(result.error) ?? result.error)
       }
     })
   }

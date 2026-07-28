@@ -35,9 +35,9 @@ describe('program-schema', () => {
   describe('configToProgram', () => {
     it('parses valid config JSON', () => {
       const json = recipeToConfig(recipe as any)
-      const cfg = configToProgram(json)
+      const cfg = configToProgram(json as any)
       expect(cfg.schemaVersion).toBe(1)
-      expect(cfg.recipe).toEqual(recipe)
+      expect(cfg.recipe).toEqual(recipe as any)
     })
 
     it('throws for non-object', () => {

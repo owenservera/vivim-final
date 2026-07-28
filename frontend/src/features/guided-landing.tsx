@@ -417,11 +417,16 @@ function MinimalComposer({ value, onChange, onSubmit, disabled, placeholder, aut
 
 // ── Main component ───────────────────────────────────────────────────────────
 
+export type GuidedLandingMode = 'onboarding' | 'assistant';
+
 interface GuidedLandingProps {
+  isOpen: boolean;
+  mode?: GuidedLandingMode;
+  onClose?: () => void;
   onComplete: (conversationId: string, providerId: string) => void;
 }
 
-export function GuidedLanding({ onComplete }: GuidedLandingProps) {
+export function GuidedLanding({ isOpen, mode = 'onboarding', onClose, onComplete }: GuidedLandingProps) {
   const [messages, setMessages] = useState<LandingMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [state, setState] = useState<LandingState>('booting');
@@ -453,6 +458,29 @@ export function GuidedLanding({ onComplete }: GuidedLandingProps) {
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, lastTypedId]);
+
+  // Escape key closes the overlay
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && onClose) {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
+
+  // Reset state when opening fresh
+  useEffect(() => {
+    if (!isOpen) return;
+    setMessages([]);
+    setDraft('');
+    setState('booting');
+    setLastTypedId(null);
+    setPickedProviderId(null);
+  }, [isOpen]);
 
   // ── Message queue helpers ────────────────────────────────────────────────
 
@@ -508,10 +536,14 @@ export function GuidedLanding({ onComplete }: GuidedLandingProps) {
     (async () => {
       await new Promise((r) => setTimeout(r, 350));
       if (cancelled || !mountedRef.current) return;
-      pushAgent("Hey — I'm Vivim. I'll be your canvas.", {});
+      if (mode === 'assistant') {
+        pushAgent("Hey — I'm Vivim. What can I help you with?", {});
+      } else {
+        pushAgent("Hey — I'm Vivim. I'll be your canvas.", {});
+      }
     })();
     return () => { cancelled = true; };
-  }, [pushAgent]);
+  }, [pushAgent, mode]);
 
   // When the first agent message finishes typing, push the second.
   useEffect(() => {
@@ -522,14 +554,21 @@ export function GuidedLanding({ onComplete }: GuidedLandingProps) {
     (async () => {
       await new Promise((r) => setTimeout(r, 280));
       if (cancelled || !mountedRef.current) return;
-      pushAgent(
-        "Pick the AI you already use and I'll wire it into your canvas automatically. You can also just type its name below.",
-        { chips: PROVIDERS, chipsDisabled: false },
-      );
+      if (mode === 'assistant') {
+        pushAgent(
+          "You can ask me to set up a new provider, troubleshoot connections, or anything else about Vivim. Pick a provider below to get started, or just type what you need.",
+          { chips: PROVIDERS, chipsDisabled: false },
+        );
+      } else {
+        pushAgent(
+          "Pick the AI you already use and I'll wire it into your canvas automatically. You can also just type its name below.",
+          { chips: PROVIDERS, chipsDisabled: false },
+        );
+      }
       setState('awaiting_provider_pick');
     })();
     return () => { cancelled = true; };
-  }, [messages, state, pushAgent]);
+  }, [messages, state, pushAgent, mode]);
 
   // ── Onboarding flow runner (shared by chip-click and typed-provider paths) ─
   // Launches Chrome, polls for login, finalizes account + conversation.
@@ -691,6 +730,8 @@ export function GuidedLanding({ onComplete }: GuidedLandingProps) {
 
   // ── Render ───────────────────────────────────────────────────────────────
 
+  if (!isOpen) return null;
+
   return (
     <div
       className="guided-landing-root"
@@ -730,6 +771,43 @@ export function GuidedLanding({ onComplete }: GuidedLandingProps) {
       >
         Vivim
       </div>
+
+      {/* Close button — top-right */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          aria-label="Close assistant"
+          style={{
+            position: 'absolute',
+            top: 20,
+            right: 24,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid var(--border)',
+            borderRadius: 8,
+            background: 'var(--card)',
+            color: 'var(--muted-foreground)',
+            cursor: 'pointer',
+            fontSize: 16,
+            lineHeight: 1,
+            transition: 'background 0.15s ease, color 0.15s ease',
+            zIndex: 10,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--muted)';
+            e.currentTarget.style.color = 'var(--foreground)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--card)';
+            e.currentTarget.style.color = 'var(--muted-foreground)';
+          }}
+        >
+          ×
+        </button>
+      )}
 
       {/* Conversation thread — scrollable, max-width for readability */}
       <div
@@ -915,3 +993,6 @@ function detectProvider(text: string): string | null {
 // ── Export for page.tsx integration ─────────────────────────────────────────
 
 export { detectProvider as _detectProvider };
+
+// Re-export checkNeedsSetup from onboard-flow for convenience
+export { checkNeedsSetup } from './onboard-flow';

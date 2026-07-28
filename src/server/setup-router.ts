@@ -15,9 +15,9 @@ function getLoginUrl(providerId: string, _ctx?: ServerContext): string {
   try {
     return getProviderRegistry().getLoginUrl(providerId)
   } catch {
-    if (providerId === 'chatgpt') return 'https://chatgpt.com/auth/login'
-    if (providerId === 'claude') return 'https://claude.ai/login'
-    return `https://${providerId}.com/login`
+    if (providerId === 'chatgpt') return 'https://chatgpt.com'
+    if (providerId === 'claude') return 'https://claude.ai'
+    return `https://${providerId}.com`
   }
 }
 

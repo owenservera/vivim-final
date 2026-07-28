@@ -7,7 +7,7 @@ import type {
   LiveCapabilitySpec,
   LiveCapabilityStore,
 } from '../../../src/engines/live-capability-registry.js'
-import type { TelemetryAudit } from '../../../src/engines/telemetry-audit.js'
+import type { AuditReport, TelemetryAudit } from '../../../src/engines/telemetry-audit.js'
 import { EngineError } from '../../../src/errors.js'
 
 class MockBus {
@@ -25,10 +25,13 @@ class MockStore implements LiveCapabilityStore {
   async revoke() {}
 }
 
-class MockAudit implements TelemetryAudit {
+class MockAudit {
   calls: Array<{ url: string; opts: RequestInit }> = []
   blockNonConsented = false
   nextResponse = { ok: true, json: async () => ({ data: 'ok' }) }
+  records: any[] = []
+  providerDomains: string[] = []
+  consentMode = false
 
   async fetch(url: string, opts: RequestInit): Promise<Response> {
     if (this.blockNonConsented) {
@@ -41,7 +44,7 @@ class MockAudit implements TelemetryAudit {
     return this.nextResponse as unknown as Response
   }
   recordCall() {}
-  generateReport() {
+  generateReport(_from: number, _to: number): AuditReport {
     return {
       generatedAt: 0,
       periodFrom: 0,
@@ -58,6 +61,8 @@ class MockAudit implements TelemetryAudit {
     return []
   }
   clear() {}
+  extractHostname(url: string) { return new URL(url).hostname }
+  normalizeUrl(url: string) { return url }
 }
 
 const httpSpec: LiveCapabilitySpec = {
@@ -82,15 +87,15 @@ describe('LiveCapabilityRegistry — http handler', () => {
       new MockBus() as never,
       undefined,
       undefined,
-      audit,
+      audit as any,
     )
     await reg.registerLive(httpSpec)
     // biome-ignore lint/style/noNonNullAssertion: capability was just registered above
     const cap = reg.getBySlug('http_cap')!
-    await cap.handler?.({ x: 42 })
+    await cap.handler?.({ x: 42 }, {} as any)
     expect(audit.calls).toHaveLength(1)
-    expect(audit.calls[0].url).toBe('https://consented.example.com/api')
-    expect(audit.calls[0].opts.body).toContain('"x"')
+    expect(audit.calls[0]!.url).toBe('https://consented.example.com/api')
+    expect(audit.calls[0]!.opts.body).toContain('"x"')
   })
 
   it('unknown {{var}} → empty string substitution (no throw)', async () => {
@@ -100,14 +105,14 @@ describe('LiveCapabilityRegistry — http handler', () => {
       new MockBus() as never,
       undefined,
       undefined,
-      audit,
+      audit as any,
     )
     await reg.registerLive(httpSpec)
     // biome-ignore lint/style/noNonNullAssertion: capability was just registered above
     const cap = reg.getBySlug('http_cap')!
     // x is undefined, so {{x}} becomes empty string
-    await cap.handler?.({})
-    expect(audit.calls[0].opts.body).toContain('"x":')
+    await cap.handler?.({}, {} as any)
+    expect(audit.calls[0]!.opts.body).toContain('"x":')
   })
 
   it('non-consented host → fetch not called, error surfaced', async () => {
@@ -118,7 +123,7 @@ describe('LiveCapabilityRegistry — http handler', () => {
       new MockBus() as never,
       undefined,
       undefined,
-      audit,
+      audit as any,
     )
     await reg.registerLive({
       ...httpSpec,
@@ -127,6 +132,6 @@ describe('LiveCapabilityRegistry — http handler', () => {
     })
     // biome-ignore lint/style/noNonNullAssertion: capability was just registered above
     const cap = reg.getBySlug('evil_cap')!
-    await expect(cap.handler?.({})).rejects.toThrow(EngineError)
+    await expect(cap.handler?.({}, {} as any)).rejects.toThrow(EngineError)
   })
 })

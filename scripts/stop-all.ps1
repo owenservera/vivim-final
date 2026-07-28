@@ -90,7 +90,7 @@ if (Test-Path $portFile) {
 }
 
 Stop-Service "backend" $backendPort
-Stop-Service "frontend" 5173
+Stop-Service "frontend" 3000
 
 Write-Host ""
 LogOk "All services stopped"

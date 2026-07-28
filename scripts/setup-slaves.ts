@@ -48,9 +48,9 @@ interface SetupProvider {
 }
 
 const PROVIDERS: SetupProvider[] = [
-  { provider: 'chatgpt', loginUrl: 'https://chat.openai.com/' },
-  { provider: 'claude', loginUrl: 'https://claude.ai/login' },
-  { provider: 'gemini', loginUrl: 'https://gemini.google.com/' },
+  { provider: 'chatgpt', loginUrl: 'https://chatgpt.com' },
+  { provider: 'claude', loginUrl: 'https://claude.ai' },
+  { provider: 'gemini', loginUrl: 'https://gemini.google.com/app' },
 ]
 
 // Derive the profile folder name from the login email, e.g.
