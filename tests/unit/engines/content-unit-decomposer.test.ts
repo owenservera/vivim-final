@@ -34,7 +34,7 @@ describe('decomposeToContentUnits', () => {
     const units = decomposeToContentUnits(blocks, 'c', 'm', idGen)
     expect(units[0]?.unitType).toBe('code')
     expect(units[0]?.mimeType).toBe('text/x-javascript')
-    expect(JSON.parse(units[0]?.metadataJson).language).toBe('javascript')
+    expect(JSON.parse(units[0]!.metadataJson!).language).toBe('javascript')
   })
 
   it('decomposes file blocks', () => {
@@ -54,12 +54,12 @@ describe('decomposeToContentUnits', () => {
 
   it('decomposes tool-call blocks', () => {
     const blocks: ContentBlock[] = [
-      { type: 'tool-call', toolName: 'bash', input: 'ls', toolCallId: 'tc1', state: 'running' },
+      { type: 'tool-call', toolName: 'bash', input: { cmd: 'ls' }, toolCallId: 'tc1', state: 'input-available' },
     ]
     const units = decomposeToContentUnits(blocks, 'c', 'm', idGen)
     expect(units[0]?.unitType).toBe('tool-call')
     expect(units[0]?.mimeType).toBe('application/json')
-    const parsed = JSON.parse(units[0]?.content)
+    const parsed = JSON.parse(units[0]!.content!)
     expect(parsed.toolName).toBe('bash')
   })
 
@@ -83,7 +83,7 @@ describe('decomposeToContentUnits', () => {
     const blocks: ContentBlock[] = [{ type: 'meta', key: 'model', value: 'gpt-4' }]
     const units = decomposeToContentUnits(blocks, 'c', 'm', idGen)
     expect(units[0]?.unitType).toBe('meta')
-    const parsed = JSON.parse(units[0]?.content)
+    const parsed = JSON.parse(units[0]!.content!)
     expect(parsed.key).toBe('model')
     expect(parsed.value).toBe('gpt-4')
   })

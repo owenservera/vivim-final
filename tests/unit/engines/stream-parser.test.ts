@@ -18,6 +18,7 @@ function row(id: string, overrides: Partial<ProviderParserRow>): ProviderParserR
     filePath: join(FIX, 'claude-ok.ts'),
     logicCode: null,
     hash: `h-${id}`,
+    sampleBody: null,
     isActive: 1,
     fallbackParserId: null,
     createdAt: 0,

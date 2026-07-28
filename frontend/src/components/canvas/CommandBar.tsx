@@ -20,6 +20,7 @@ export interface CommandBarProps {
   onOpenSearch: () => void;
   onTogglePanel: (panelId: string) => void;
   onOpenMenu: () => void;
+  onOpenAssistant?: () => void;
   position?: { x: number; y: number };
   onPositionChange?: (pos: { x: number; y: number }) => void;
   autoHide?: boolean;
@@ -30,6 +31,7 @@ export function CommandBar({
   onOpenSearch,
   onTogglePanel,
   onOpenMenu,
+  onOpenAssistant,
   position: externalPosition,
   onPositionChange,
   autoHide = false,
@@ -179,6 +181,35 @@ export function CommandBar({
       <PanelToggle icon="message-square" panelId="conversations" onToggle={onTogglePanel} />
       <PanelToggle icon="cpu" panelId="providers" onToggle={onTogglePanel} />
       <PanelToggle icon="settings" panelId="settings" onToggle={onTogglePanel} />
+
+      {/* Divider */}
+      <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 2px' }} />
+
+      {/* Assistant trigger */}
+      {onOpenAssistant && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onOpenAssistant(); }}
+          aria-label="Open Vivim assistant (Cmd+Shift+H)"
+          className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 44,
+            height: 44,
+            border: 'none',
+            background: 'transparent',
+            color: 'var(--muted-foreground)',
+            borderRadius: 'calc(var(--radius) - 4px)',
+            cursor: 'pointer',
+            transition: 'background 0.15s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--muted)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+        >
+          <Icon name="chat" size={14} />
+        </button>
+      )}
 
       {/* Divider */}
       <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 2px' }} />

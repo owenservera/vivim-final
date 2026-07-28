@@ -134,7 +134,14 @@ export class ChromeSetupWizard {
       log('[setup] Login timed out — killing Chrome')
       if (launchResult?.pid) {
         try {
-          process.kill(launchResult.pid, 'SIGTERM')
+          if (process.platform === 'win32') {
+            Bun.spawnSync(['taskkill', '/F', '/T', '/PID', String(launchResult.pid)], {
+              stdout: 'ignore',
+              stderr: 'ignore',
+            })
+          } else {
+            process.kill(launchResult.pid, 'SIGTERM')
+          }
         } catch {}
       }
       return {

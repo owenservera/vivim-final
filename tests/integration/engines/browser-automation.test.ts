@@ -5,6 +5,7 @@ import { SelectorHealer } from '../../../src/engines/browser-automation/selector
 import type { CDPTransport } from '../../../src/engines/chrome-governor.js'
 import { compileRecipe } from '../../../src/engines/harness/recipe-compiler.js'
 import type { GovernorStore } from '../../../src/storage/contracts/governor-store.js'
+import type { SemanticGroundingEngine } from '../../../src/engines/browser-automation/semantic-grounding.js'
 import type {
   SelectorHealStore,
   SelectorStrategyRow,
@@ -32,7 +33,7 @@ function makeMockGovernor() {
       return { body: '', matches: [] }
     },
     async getPageState(_slaveId: string) {
-      return { url: 'about:blank', title: '' }
+      return { url: 'about:blank', title: '', readyState: 'complete' }
     },
     async captureScreenshot(_slaveId: string, _format?: 'png' | 'jpeg') {
       return ''
@@ -104,7 +105,7 @@ describe('browser-automation integration: orchestrator → governor (Governor Ca
     const { gov } = makeMockGovernor()
     const orch = new AutomationOrchestrator(gov)
 
-    const recipe = getRecipe('auto:research:report')
+    const recipe = getRecipe('auto:research:report')!
     expect(recipe).toBeDefined()
 
     const result = await orch.run({
@@ -136,7 +137,7 @@ describe('browser-automation integration: orchestrator → governor (Governor Ca
   })
 
   test('recipe compiles to a runnable DAG', () => {
-    const recipe = getRecipe('auto:research:report')
+    const recipe = getRecipe('auto:research:report')!
     const dag = compileRecipe(recipe)
     expect(dag.nodes.length).toBeGreaterThan(0)
     expect(dag.nodes.some((n) => n.type === 'action' && n.action === 'loop_while')).toBe(true)

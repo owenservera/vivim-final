@@ -40,7 +40,7 @@ describe('context-binder', () => {
         conversationId: 'conv-1',
         providerId: 'chatgpt',
         activeSessionId: 'slave-1',
-      })
+      }, {})
       expect(ctx.conversationId).toBe('conv-1')
       expect(ctx.providerId).toBe('chatgpt')
       expect(ctx.slaveId).toBe('slave-1')
@@ -50,14 +50,14 @@ describe('context-binder', () => {
     it('includes canvas state in metadata', async () => {
       const ctx = await bindContext({
         canvasState: { activeLayerId: 'layer-1', background: 'dark' },
-      })
+      }, {})
       expect(ctx.metadata.activeLayerId).toBe('layer-1')
       expect(ctx.metadata.canvasBackground).toBe('dark')
     })
 
     it('resolves providerId from conversation store', async () => {
       const convStore = {
-        getConversation: async () => ({ providerId: 'gemini' }),
+        getConversation: async (_id: string) => ({ id: 'conv-1', providerSessionId: 'ps-1', providerId: 'gemini', title: null, state: 'active', messageCount: 0, lastMessageAt: null, contextJson: '{}', createdAt: Date.now(), updatedAt: Date.now() }),
       }
       const ctx = await bindContext({ conversationId: 'conv-1' }, { conversationStore: convStore })
       expect(ctx.providerId).toBe('gemini')
@@ -65,7 +65,7 @@ describe('context-binder', () => {
 
     it('gracefully handles conversation store errors', async () => {
       const convStore = {
-        getConversation: async () => {
+        getConversation: async (_id: string) => {
           throw new Error('db error')
         },
       }

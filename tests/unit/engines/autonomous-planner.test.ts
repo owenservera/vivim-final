@@ -1,10 +1,10 @@
 import { describe, expect, it, beforeEach } from 'bun:test'
 import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type {
-  AutonomousExecutionStore,
   AutonomousGoal,
   AutonomousTask,
 } from '../../../src/engines/autonomous-execution.js'
+import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
 import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
@@ -23,7 +23,7 @@ function mockStore(): AutonomousExecutionStore {
       const t = tasks.get(id)
       if (t) Object.assign(t, patch)
     },
-    getTask: async (id: string) => tasks.get(id) ?? null,
+    getTask: async (id: string) => (tasks.get(id) ?? null) as unknown as Record<string, unknown>,
     createStep: async () => {},
     updateStep: async () => {},
     getSteps: async () => [],
@@ -32,13 +32,13 @@ function mockStore(): AutonomousExecutionStore {
     updateHitlGate: async () => {},
     getPendingGates: async () => [],
     getGate: async () => null,
-    listTasks: async () => [...tasks.values()],
+    listTasks: async () => [...tasks.values()] as unknown as Array<Record<string, unknown>>,
     getTaskTemplate: async () => null,
     insertTaskTemplate: async () => 'tpl-id',
     updateTaskTemplate: async () => {},
     listTaskTemplates: async () => [],
     _tasks: tasks,
-  }
+  } as any
 }
 
 function mockRegistry(): UnifiedCapabilityRegistry {
@@ -85,6 +85,8 @@ function makeGoal(overrides?: Partial<AutonomousGoal>): AutonomousGoal {
     requireApprovalAbove: 'financial',
     allowBrowser: false,
     costBudgetCents: 100,
+    tokenBudget: 1000,
+    iterationBudget: 10,
     ...overrides,
   }
 }
@@ -102,11 +104,15 @@ describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
   it('planGoal uses resolver when available', async () => {
     const intent: ParsedIntent = {
       capabilityId: 'cap:test:action',
-      slug: 'test_action',
       classification: 'read',
       input: { query: 'test' },
       confidence: 0.9,
       intent: 'Test action',
+      patternId: 'test',
+      rawInput: 'test',
+      matchedPattern: 'test',
+      alternatives: [],
+      resolvedAt: Date.now(),
     }
     const resolver = mockResolver(intent)
 
@@ -125,7 +131,7 @@ describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
     // Task should have steps from the resolver
     expect(task.steps.length).toBeGreaterThan(0)
     // Step action should be the capabilityId
-    expect(task.steps[0].action).toBe('cap:test:action')
+    expect(task.steps[0]!.action).toBe('cap:test:action')
   })
 
   it('planGoal falls back to local planner when no resolver', async () => {
@@ -143,11 +149,11 @@ describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
 
     // Should use local planner and create a navigate step
     expect(task.steps.length).toBeGreaterThan(0)
-    expect(task.steps[0].action).toBe('navigate')
+    expect(task.steps[0]!.action).toBe('navigate')
   })
 
   it('planGoal with empty intent returns empty steps', async () => {
-    const resolver = mockResolver(null)
+    const resolver = mockResolver(undefined as any)
 
     engine = new AutonomousExecutionEngine(
       store as unknown as AutonomousExecutionStore,
@@ -169,9 +175,13 @@ describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
   it('planGoal derives requiresHumanApproval from classification', async () => {
     const intent: ParsedIntent = {
       capabilityId: 'cap:test:destructive',
-      slug: 'destructive_action',
       classification: 'destructive',
       input: {},
+      patternId: 'test',
+      rawInput: 'test',
+      matchedPattern: 'test',
+      alternatives: [],
+      resolvedAt: Date.now(),
       confidence: 0.9,
       intent: 'Destructive action',
     }
@@ -197,7 +207,7 @@ describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
 
     // Destructive step should require approval when threshold is 'read'
     expect(steps.length).toBe(1)
-    expect(steps[0].requiresHumanApproval).toBe(true)
-    expect(steps[0].classification).toBe('destructive')
+    expect(steps[0]!.requiresHumanApproval).toBe(true)
+    expect(steps[0]!.classification).toBe('destructive')
   })
 })

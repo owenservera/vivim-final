@@ -9,6 +9,8 @@ const baseGoal: AutonomousGoal = {
   requireApprovalAbove: 'destructive',
   allowBrowser: false,
   costBudgetCents: 100,
+  tokenBudget: 1000,
+  iterationBudget: 10,
 }
 
 describe('autonomous-offline (36.2)', () => {

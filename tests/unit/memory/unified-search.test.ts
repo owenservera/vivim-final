@@ -43,7 +43,7 @@ function makeStores() {
           slaveId: undefined,
         },
       ],
-    } as EpisodicMemoryStore,
+    } as unknown as EpisodicMemoryStore,
     semantic: {
       save: async () => {},
       findBySubject: async () => [
@@ -69,7 +69,7 @@ function makeStores() {
           timestamp: Date.now(),
         },
       ],
-    } as SemanticMemoryStore,
+    } as unknown as SemanticMemoryStore,
     procedural: {
       save: async () => {},
       findByContext: async () => [],
@@ -87,7 +87,7 @@ function makeStores() {
         },
       ],
       delete: async () => {},
-    } as ProceduralMemoryStore,
+    } as unknown as ProceduralMemoryStore,
   }
 }
 

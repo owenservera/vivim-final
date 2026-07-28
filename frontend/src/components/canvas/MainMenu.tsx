@@ -25,6 +25,7 @@ interface MainMenuProps {
   onTogglePanel: (panelId: string) => void;
   onToggleDevConsole: () => void;
   onOpenThemeSettings: () => void;
+  onOpenAssistant?: () => void;
 }
 
 export function MainMenu({
@@ -33,6 +34,7 @@ export function MainMenu({
   onTogglePanel,
   onToggleDevConsole,
   onOpenThemeSettings,
+  onOpenAssistant,
 }: MainMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -56,6 +58,8 @@ export function MainMenu({
   }, [isOpen, onClose]);
 
   const items: MenuItem[] = [
+    { id: 'assistant', label: 'Ask Vivim', icon: 'chat', shortcut: 'Cmd+Shift+H', action: () => { onOpenAssistant?.(); onClose(); } },
+    { id: 'divider-0', label: '', icon: 'circle', action: () => {}, divider: true },
     { id: 'conversations', label: 'Conversations', icon: 'message-square', action: () => { onTogglePanel('conversations'); onClose(); } },
     { id: 'providers', label: 'Providers', icon: 'cpu', action: () => { onTogglePanel('providers'); onClose(); } },
     { id: 'settings', label: 'Settings', icon: 'settings', shortcut: 'Cmd+,', action: () => { onTogglePanel('settings'); onClose(); } },

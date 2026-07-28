@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeEach } from 'bun:test'
 import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type {
-  AutonomousExecutionStore,
   AutonomousTask,
 } from '../../../src/engines/autonomous-execution.js'
+import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
 import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
@@ -22,7 +22,7 @@ function mockStore(): AutonomousExecutionStore {
       const t = tasks.get(id)
       if (t) Object.assign(t, patch)
     },
-    getTask: async (id: string) => tasks.get(id) ?? null,
+    getTask: async (id: string) => (tasks.get(id) ?? null) as unknown as Record<string, unknown>,
     createStep: async () => {},
     updateStep: async () => {},
     getSteps: async () => [],
@@ -31,7 +31,7 @@ function mockStore(): AutonomousExecutionStore {
     updateHitlGate: async () => {},
     getPendingGates: async () => [],
     getGate: async () => null,
-    listTasks: async () => [...tasks.values()],
+    listTasks: async () => [...tasks.values()] as unknown as Array<Record<string, unknown>>,
     // Template methods
     getTaskTemplate: async (id: string) => templates.get(id) ?? null,
     insertTaskTemplate: async (t: Record<string, unknown>) => {
@@ -51,7 +51,7 @@ function mockStore(): AutonomousExecutionStore {
     },
     _tasks: tasks,
     _templates: templates,
-  }
+  } as any
 }
 
 function mockRegistry(): UnifiedCapabilityRegistry {
@@ -162,6 +162,6 @@ describe('AutonomousExecutionEngine — Unit 8.10: Task templates', () => {
 
     const shared = await store.listTaskTemplates({ isShared: true })
     expect(shared.length).toBe(1)
-    expect(shared[0].name).toBe('Shared')
+    expect(shared[0]!.name).toBe('Shared')
   })
 })

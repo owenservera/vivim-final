@@ -33,10 +33,11 @@ export interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
   onAction?: (hit: SearchHit) => void;
+  onOpenAssistant?: () => void;
   workspaceId: string;
 }
 
-export function CommandPalette({ open, onClose, onAction, workspaceId }: CommandPaletteProps) {
+export function CommandPalette({ open, onClose, onAction, onOpenAssistant, workspaceId }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -189,17 +190,22 @@ export function CommandPalette({ open, onClose, onAction, workspaceId }: Command
           {hits.length === 0 && query.trim().length === 0 && (
             <div style={{ padding: 24, color: 'var(--text-subtle)', fontSize: 12 }}>
               <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>Quick actions</div>
-              {[
+              {([
+                { label: 'Ask Vivim', cmd: 'assistant:open', action: () => onOpenAssistant?.() },
                 { label: 'Open Shell tab', cmd: 'switch-surface:shell' },
                 { label: 'Open Documents tab', cmd: 'switch-surface:docs' },
                 { label: 'Open Automation Builder', cmd: 'switch-surface:automation' },
                 { label: 'Open Agents Builder', cmd: 'switch-surface:agents' },
                 { label: 'Run "admin db status"', cmd: 'shell:admin db status' },
-              ].map((a) => (
+              ] as Array<{ label: string; cmd: string; action?: () => void }>).map((a) => (
                 <button
                   key={a.cmd}
                   onClick={() => {
-                    onAction?.({ kind: 'command', id: a.cmd, title: a.label, score: 0, icon: '', actionUrl: a.cmd });
+                    if (a.action) {
+                      a.action();
+                    } else {
+                      onAction?.({ kind: 'command', id: a.cmd, title: a.label, score: 0, icon: '', actionUrl: a.cmd });
+                    }
                     onClose();
                   }}
                   style={{

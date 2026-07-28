@@ -121,7 +121,7 @@ function makeVersionStore(): VersionStore & { rows: TaxonomyVersionRow[] } {
       return 0
     },
     async createStatusLog(input) {
-      return input as unknown as TaxonomyVersionRow
+      return input as any
     },
     async getStatusHistory() {
       return []

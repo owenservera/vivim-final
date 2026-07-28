@@ -67,9 +67,9 @@ describe('KnowledgeExtractorContinuous', () => {
     await new Promise((r) => setTimeout(r, 50))
 
     expect(memory.facts).toHaveLength(1)
-    expect(memory.facts[0].subject).toBe('project')
-    expect(memory.facts[0].predicate).toBe('uses')
-    expect(memory.facts[0].object).toBe('TypeScript')
+    expect(memory.facts[0]!.subject).toBe('project')
+    expect(memory.facts[0]!.predicate).toBe('uses')
+    expect(memory.facts[0]!.object).toBe('TypeScript')
   })
 
   it('boosts confidence when turnSuccess is true', async () => {
@@ -88,7 +88,7 @@ describe('KnowledgeExtractorContinuous', () => {
 
     expect(memory.facts).toHaveLength(1)
     // Base confidence 0.8 + boost 0.2 = 1.0 (capped)
-    expect(memory.facts[0].confidence).toBe(1.0)
+    expect(memory.facts[0]!.confidence).toBe(1.0)
   })
 
   it('does not boost confidence when turnSuccess is false', async () => {
@@ -107,7 +107,7 @@ describe('KnowledgeExtractorContinuous', () => {
 
     expect(memory.facts).toHaveLength(1)
     // Base confidence 0.8 + no boost = 0.8
-    expect(memory.facts[0].confidence).toBe(0.8)
+    expect(memory.facts[0]!.confidence).toBe(0.8)
   })
 
   it('processes multiple messages in one event', async () => {
@@ -149,7 +149,7 @@ describe('KnowledgeExtractorContinuous', () => {
           },
         ]
       },
-    } as KnowledgeExtractor
+  } as unknown as KnowledgeExtractor
 
     const failingContinuous = new KnowledgeExtractorContinuous(failingExtractor, bus, memory.engine)
     failingContinuous.start()

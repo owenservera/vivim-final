@@ -102,7 +102,7 @@ describe('Profile Cleanup (US6)', () => {
       await mkdir(stray, { recursive: true })
       await writeFile(join(stray, 'Cookies'), 'stray-data')
 
-      const plan = await alloc.plan({ dryRun: true })
+      const plan = await alloc.plan({})
 
       // Dry run: plan identifies stray but doesn't remove
       expect(plan.strayRoots.length).toBeGreaterThanOrEqual(1)

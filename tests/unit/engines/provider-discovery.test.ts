@@ -44,8 +44,13 @@ describe('ProviderDiscoveryEngine', () => {
     engine = new ProviderDiscoveryEngine(governor, shapeRegistry, null, null, null, eventBus)
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function disc(url: string): Promise<any> {
+    return await engine.discover(url)
+  }
+
   test('discover navigates and probes DOM', async () => {
-    const session = await engine.discover('https://chat.example.com')
+    const session = await disc('https://chat.example.com')
     expect(session.status).toBe('complete')
     expect(session.manifestDraft).not.toBeNull()
     expect(session.detectedCapabilities).toContain('send_message')
@@ -54,13 +59,13 @@ describe('ProviderDiscoveryEngine', () => {
 
   test('discover sets status to failed on error', async () => {
     governor.cdp.send.mockRejectedValueOnce(new Error('CDP error'))
-    const session = await engine.discover('https://example.com')
+    const session = await disc('https://example.com')
     expect(session.status).toBe('failed')
     expect(session.error).toContain('CDP error')
   })
 
   test('getDiscoverySession returns known session', async () => {
-    const session = await engine.discover('https://chat.example.com')
+    const session = await disc('https://chat.example.com')
     const retrieved = await engine.getDiscoverySession(session.id)
     expect(retrieved?.id).toBe(session.id)
   })
@@ -75,14 +80,14 @@ describe('ProviderDiscoveryEngine', () => {
   })
 
   test('approveDiscovery returns providerId', async () => {
-    const session = await engine.discover('https://chat.example.com')
+    const session = await disc('https://chat.example.com')
     const result = await engine.approveDiscovery(session.id)
     expect(result.providerId).toBeTruthy()
     expect(result.version).toBe(1)
   })
 
   test('approveDiscovery throws for incomplete session', async () => {
-    const session = await engine.discover('https://chat.example.com')
+    const session = await disc('https://chat.example.com')
     const sessions = (engine as any).sessions as Map<string, any>
     const s = sessions.get(session.id)
     if (s) s.status = 'navigating'
@@ -90,7 +95,7 @@ describe('ProviderDiscoveryEngine', () => {
   })
 
   test('approveDiscovery applies edits', async () => {
-    const session = await engine.discover('https://chat.example.com')
+    const session = await disc('https://chat.example.com')
     const result = await engine.approveDiscovery(session.id, { slug: 'custom-slug' })
     expect(result.providerId).toBe('custom-slug')
   })

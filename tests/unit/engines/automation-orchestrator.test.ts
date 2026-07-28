@@ -33,7 +33,7 @@ describe('AutomationOrchestrator', () => {
       params: { queryUrl: 'https://example.com' },
       destructive: false,
     })
-    expect(result.ok ?? true).toBe(true)
+    expect((result as any).ok ?? true).toBe(true)
     expect(result.role).toBe('researcher')
     expect(result.recipeId).toBe('auto:research:report')
     expect(result.steps).toBeGreaterThan(0)

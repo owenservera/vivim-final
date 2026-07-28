@@ -26,8 +26,8 @@ export function getProviderUrl(providerId: string): string {
   try {
     return getProviderRegistry().getProviderUrl(providerId)
   } catch {
-    if (providerId === 'chatgpt') return 'https://chatgpt.com/app'
-    if (providerId === 'claude') return 'https://claude.ai/chat'
+    if (providerId === 'chatgpt') return 'https://chatgpt.com'
+    if (providerId === 'claude') return 'https://claude.ai'
     return `https://${providerId}.com`
   }
 }
@@ -37,9 +37,9 @@ export function getProviderLoginUrl(providerId: string): string {
   try {
     return getProviderRegistry().getLoginUrl(providerId)
   } catch {
-    if (providerId === 'chatgpt') return 'https://chatgpt.com/auth/login'
-    if (providerId === 'claude') return 'https://claude.ai/login'
-    return `https://${providerId}.com/login`
+    if (providerId === 'chatgpt') return 'https://chatgpt.com'
+    if (providerId === 'claude') return 'https://claude.ai'
+    return `https://${providerId}.com`
   }
 }
 

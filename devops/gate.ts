@@ -64,7 +64,7 @@ function newIssuesInChangedFiles(): string[] {
   if (changed.size === 0) return []
   // biome exits non-zero when it finds issues, but still prints JSON to stdout.
   // Use spawnSync so we capture stdout regardless of the exit code.
-  const res = spawnSync('bunx', ['@biomejs/biome', 'check', '--reporter=json', ...changed], {
+  const res = spawnSync('bun', ['x', '@biomejs/biome', 'check', '--reporter=json', ...changed], {
     encoding: 'utf8',
   })
   const json = res.stdout ?? ''

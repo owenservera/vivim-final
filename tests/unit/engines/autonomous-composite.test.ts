@@ -1,11 +1,11 @@
 import { describe, expect, it, beforeEach } from 'bun:test'
 import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type {
-  AutonomousExecutionStore,
   AutonomousGoal,
   AutonomousStep,
   AutonomousTask,
 } from '../../../src/engines/autonomous-execution.js'
+import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
 import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
@@ -30,7 +30,7 @@ function mockStore(): AutonomousExecutionStore {
       const t = tasks.get(id)
       if (t) Object.assign(t, patch)
     },
-    getTask: async (id: string) => tasks.get(id) ?? null,
+    getTask: async (id: string) => (tasks.get(id) ?? null) as unknown as Record<string, unknown>,
     createStep: async (s: Record<string, unknown>) => {
       steps.set(s.id as string, s as unknown as AutonomousStep)
     },
@@ -38,10 +38,10 @@ function mockStore(): AutonomousExecutionStore {
       const s = steps.get(id)
       if (s) Object.assign(s, patch)
     },
-    listTasks: async () => [...tasks.values()],
+    listTasks: async () => [...tasks.values()] as unknown as Array<Record<string, unknown>>,
     _tasks: tasks,
     _steps: steps,
-  }
+  } as any
 }
 
 function mockRegistry(): UnifiedCapabilityRegistry {
@@ -98,6 +98,8 @@ function makeGoal(overrides?: Partial<AutonomousGoal>): AutonomousGoal {
     requireApprovalAbove: 'financial',
     allowBrowser: false,
     costBudgetCents: 100,
+    tokenBudget: 1000,
+    iterationBudget: 10,
     ...overrides,
   }
 }
@@ -159,8 +161,8 @@ describe('AutonomousExecutionEngine — Unit 8.9: Composite step execution', () 
     // The task should have sub-steps from the composite
     const compositeSteps = task.steps.filter((s) => s.parentStepId !== null)
     expect(compositeSteps.length).toBe(2)
-    expect(compositeSteps[0].description).toContain('extract_content')
-    expect(compositeSteps[1].description).toContain('summarize_text')
+    expect(compositeSteps[0]!.description).toContain('extract_content')
+    expect(compositeSteps[1]!.description).toContain('summarize_text')
 
     // Sub-steps should have parentStepId set
     for (const s of compositeSteps) {
@@ -212,7 +214,7 @@ describe('AutonomousExecutionEngine — Unit 8.9: Composite step execution', () 
     // Only the first sub-step should have been created (second never reached)
     const subSteps = task.steps.filter((s) => s.parentStepId !== null)
     expect(subSteps.length).toBe(1)
-    expect(subSteps[0].status).toBe('failed')
+    expect(subSteps[0]!.status).toBe('failed')
   })
 
   it('non-composite steps pass through to regular execution', async () => {
@@ -258,7 +260,7 @@ describe('AutonomousExecutionEngine — Unit 8.9: Composite step execution', () 
     // Find the composite root step (the one with isCompositeRoot=true)
     const roots = task.steps.filter((s) => s.isCompositeRoot)
     expect(roots.length).toBe(1)
-    expect(roots[0].action).toBe('composite:simple_composite')
+    expect(roots[0]!.action).toBe('composite:simple_composite')
   })
 
   it('missing composite throws EngineError', async () => {

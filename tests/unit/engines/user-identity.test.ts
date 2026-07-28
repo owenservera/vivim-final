@@ -16,7 +16,9 @@ function makeUser(overrides?: Partial<UserRow>): UserRow {
     avatarColor: '#4F46E5',
     avatarUrl: null,
     createdAt: Date.now(),
+    updatedAt: Date.now(),
     lastActiveAt: null,
+    lastSessionId: null,
     ...overrides,
   }
 }
@@ -94,7 +96,7 @@ describe('UserIdentityEngine', () => {
   })
 
   it('switchProfile throws for non-existent user', async () => {
-    store.getById.mockResolvedValue(null)
+    ;(store.getById.mockResolvedValue as any)(null)
     await expect(engine.switchProfile('missing')).rejects.toThrow(EngineError)
   })
 

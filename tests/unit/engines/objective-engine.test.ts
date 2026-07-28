@@ -57,7 +57,7 @@ describe('ObjectiveEngine', () => {
     } as never)
     await engine.pursue('agent-1', 'obj-1')
     expect(store.nodes.updateNode).toHaveBeenCalled()
-    const call = store.nodes.updateNode.mock.calls[0]
+    const call = (store.nodes.updateNode.mock.calls[0] as any) as [string, { edgesJson: string }]
     const edges = JSON.parse(call[1].edgesJson)
     expect(edges[0].type).toBe('pursues')
     expect(edges[0].targetId).toBe('obj-1')

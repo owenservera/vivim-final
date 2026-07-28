@@ -19,7 +19,7 @@ if (Test-Path $portFile) {
 }
 
 $BackendUrl = "http://127.0.0.1:$BackendPort"
-$FrontendUrl = "http://127.0.0.1:5173"
+$FrontendUrl = "http://127.0.0.1:3000"
 
 $failures = 0
 $totalChecks = 0

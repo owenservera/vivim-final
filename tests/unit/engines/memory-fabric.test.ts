@@ -32,10 +32,14 @@ function makeDeps(overrides?: Partial<MemoryFabricDeps>): MemoryFabricDeps {
 function makeBackend(name = 'external'): MemoryBackend {
   return {
     name,
-    recall: mock(() => Promise.resolve([])),
-    record: mock(() => Promise.resolve({ id: 'mem-1' })),
-    consolidate: mock(() => Promise.resolve()),
-    prune: mock(() => Promise.resolve(0)),
+    isAvailable: () => true,
+    initialize: () => {},
+    shutdown: () => {},
+    systemPromptBlock: () => '',
+    prefetch: mock(() => Promise.resolve('')),
+    syncTurn: () => {},
+    getToolSchemas: () => [],
+    handleToolCall: () => '',
   }
 }
 

@@ -224,7 +224,7 @@ export class ProviderProtocolGenerator {
 
   private async formatGenerated(paths: string[]): Promise<void> {
     try {
-      const proc = Bun.spawn(['bunx', 'biome', 'check', '--write', ...paths], {
+      const proc = Bun.spawn(['bun', 'x', 'biome', 'check', '--write', ...paths], {
         stdout: 'ignore',
         stderr: 'ignore',
       })

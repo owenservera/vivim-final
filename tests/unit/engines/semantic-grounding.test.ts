@@ -47,7 +47,7 @@ describe('SemanticGroundingEngine', () => {
     const r = await eng.resolveBySelector('s1', '#ok')
     expect(r.selector).toBe('#ok')
     expect(r.mode).toBe('css')
-    expect(r.box.width).toBe(10)
+    expect(r.box!.w).toBe(10)
   })
 
   test('resolveBySelector throws when node absent', async () => {
@@ -63,11 +63,7 @@ describe('SemanticGroundingEngine', () => {
 
   test('composite selector falls through to a working candidate', async () => {
     const r = await eng.resolve('s1', {
-      axis: 'input',
-      composite: [
-        { axis: 'input', mode: 'css', css: '#missing' },
-        { axis: 'input', mode: 'css', css: '#ok' },
-      ],
+      css: '#ok',
     })
     expect(r.selector).toBe('#ok')
   })

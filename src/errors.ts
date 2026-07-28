@@ -219,7 +219,7 @@ export class HitlGateDeniedError extends CapStoreError {
 
 // ── Budget ───────────────────────────────────────────────────
 export class BudgetExceededError extends CapStoreError {
-  constructor(budget: 'cost' | 'tokens' | 'iterations' | 'duration', used: number, limit: number) {
+  constructor(budget: string, used: unknown, limit: unknown) {
     super('BudgetExceededError', `${budget} ${used} > ${limit}`)
   }
 }

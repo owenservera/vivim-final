@@ -60,7 +60,7 @@ describe('IntentDecomposer — LLM strategy', () => {
     expect(dag).not.toBeNull()
     expect(dag?.strategy).toBe('llm')
     expect(dag?.nodes).toHaveLength(1)
-    expect(dag?.nodes[0].capabilitySlug).toBe('navigate')
+    expect(dag?.nodes[0]?.capabilitySlug).toBe('navigate')
   })
 
   it('returns null on malformed JSON', async () => {

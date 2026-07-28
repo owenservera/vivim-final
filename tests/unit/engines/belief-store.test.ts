@@ -86,14 +86,14 @@ describe('BeliefStore', () => {
   })
 
   it('getBeliefs delegates to store', async () => {
-    store.getBeliefs.mockResolvedValue([{ id: 'b1' }])
+    ;(store.getBeliefs.mockResolvedValue as any)([{ id: 'b1' }])
     const result = await beliefStore.getBeliefs('agent', 'agent-1')
     expect(result).toHaveLength(1)
     expect(store.getBeliefs).toHaveBeenCalledWith('agent', 'agent-1')
   })
 
   it('getLiveBeliefs filters out retracted beliefs', async () => {
-    store.getBeliefs.mockResolvedValue([
+    ;(store.getBeliefs.mockResolvedValue as any)([
       { id: 'b1', retracted: false },
       { id: 'b2', retracted: true },
       { id: 'b3', retracted: false },

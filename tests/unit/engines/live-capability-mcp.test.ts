@@ -92,7 +92,7 @@ describe('LiveCapabilityRegistry — mcp handler', () => {
     const id = await reg.registerLive(mcpSpec)
     // biome-ignore lint/style/noNonNullAssertion: capability was just registered above
     const cap = reg.get(`live:${id}`)!
-    const out = await cap.handler?.({ a: 1 })
+    const out = await cap.handler?.({ a: 1 }, {} as any)
     expect(mcp.calls).toHaveLength(1)
     expect(mcp.calls[0]).toMatchObject({ serverId: 'srv-1', toolName: 'do_thing', input: { a: 1 } })
     expect(out).toEqual({ ok: true })
@@ -109,8 +109,8 @@ describe('LiveCapabilityRegistry — mcp handler', () => {
     const id = await reg.registerLive(mcpSpec)
     // biome-ignore lint/style/noNonNullAssertion: capability was just registered above
     const cap = reg.get(`live:${id}`)!
-    await cap.handler?.({ x: 1 })
-    await cap.handler?.({ x: 2 })
+    await cap.handler?.({ x: 1 }, {} as any)
+    await cap.handler?.({ x: 2 }, {} as any)
     expect(mcp.connects).toEqual(['srv-1']) // connected once, reused
     expect(mcp.calls).toHaveLength(2)
   })
@@ -126,7 +126,7 @@ describe('LiveCapabilityRegistry — mcp handler', () => {
     const id = await reg.registerLive(mcpSpec)
     // biome-ignore lint/style/noNonNullAssertion: capability was just registered above
     const cap = reg.get(`live:${id}`)!
-    await cap.handler?.({}) // establishes connection
+    await cap.handler?.({}, {} as any) // establishes connection
     expect(mcp.isConnected('srv-1')).toBe(true)
     await reg.revokeLive(id)
     expect(mcp.disconnects).toEqual(['srv-1'])
@@ -145,7 +145,7 @@ describe('LiveCapabilityRegistry — mcp handler', () => {
     const id = await reg.registerLive(mcpSpec)
     // biome-ignore lint/style/noNonNullAssertion: capability was just registered above
     const cap = reg.get(`live:${id}`)!
-    await expect(cap.handler?.({})).rejects.toThrow(EngineError)
+    await expect(cap.handler?.({}, {} as any)).rejects.toThrow(EngineError)
   })
 
   it('throws when no McpClientAdapter is wired', async () => {
@@ -153,6 +153,6 @@ describe('LiveCapabilityRegistry — mcp handler', () => {
     const id = await reg.registerLive(mcpSpec)
     // biome-ignore lint/style/noNonNullAssertion: capability was just registered above
     const cap = reg.get(`live:${id}`)!
-    await expect(cap.handler?.({})).rejects.toThrow(/requires an McpClientAdapter/)
+    await expect(cap.handler?.({}, {} as any)).rejects.toThrow(/requires an McpClientAdapter/)
   })
 })

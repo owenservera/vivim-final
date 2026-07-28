@@ -14,20 +14,20 @@ function mockStores() {
       query: async () => [],
       count: async () => 0,
       findAll: async () => [],
-    } as EpisodicMemoryStore,
+    } as unknown as EpisodicMemoryStore,
     semantic: {
       save: async () => {},
       findBySubject: async () => [],
       delete: async () => {},
       findAll: async () => [],
       updateConfidence: async () => {},
-    } as SemanticMemoryStore,
+    } as unknown as SemanticMemoryStore,
     procedural: {
       save: async () => {},
       findByContext: async () => [],
       findAll: async () => [],
       delete: async () => {},
-    } as ProceduralMemoryStore,
+    } as unknown as ProceduralMemoryStore,
   }
 }
 

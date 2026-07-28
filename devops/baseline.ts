@@ -73,7 +73,7 @@ function runCapture(cmd: string, args: string[]): string {
 }
 
 export function lintFingerprints(): string[] {
-  const res = spawnSync('bunx', ['@biomejs/biome', 'check', '--reporter=json', 'src', 'tests', 'seeds'], {
+  const res = spawnSync('bun', ['x', '@biomejs/biome', 'check', '--reporter=json', 'src', 'tests', 'seeds'], {
     encoding: 'utf8',
     maxBuffer: 32 * 1024 * 1024,
   })
@@ -96,7 +96,7 @@ export function lintFingerprints(): string[] {
 }
 
 function typecheckLines(): string[] {
-  const out = runCapture('bunx', ['tsc', '--noEmit'])
+  const out = runCapture('bun', ['x', 'tsc', '--noEmit'])
   return out
     .split('\n')
     .map((l) => l.trim())

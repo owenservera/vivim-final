@@ -372,29 +372,55 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     '../storage/impl/procedural-memory-store-impl.js'
   )
 
-  // Seed providers at boot (idempotent upserts)
+  // ── Boot seeds (skip if already seeded; FORCE_SEED env to re-run) ────
   const { ProviderStoreImpl } = await import('../storage/impl/provider-store-impl.js')
   const { ProviderRegistrar } = await import('../engines/provider-registrar.js')
   const providerStore = new ProviderStoreImpl(db)
   const registrar = new ProviderRegistrar(providerStore, undefined, eventBus)
-  const seedResult = await registrar.seedAll()
-  log.info(
-    { seeded: seedResult.seeded.length, errors: seedResult.errors.length },
-    'Seeded providers',
-  )
-  if (seedResult.errors.length > 0) {
-    log.warn({ errors: seedResult.errors }, 'Provider seed errors')
-  }
 
-  // Harvest parser variants into DB inline rows (idempotent upsert). This is
-  // what populates providerParser so the protocol generator and the DB fallback
-  // chain both have a parser to resolve. Never called before this point.
-  try {
-    const { seedHarvestedParsers } = await import('../../seeds/parsers/harvest.seed.js')
-    const harvested = await seedHarvestedParsers(providerStore)
-    log.info({ count: harvested }, 'Harvested parser variants into DB')
-  } catch (err) {
-    log.warn({ err }, 'Harvest parser seed skipped')
+  const needsSeed = process.env.FORCE_SEED
+    ? true
+    : (await db.prisma.providerDefinition.count()) === 0
+
+  if (needsSeed) {
+    const seedResult = await registrar.seedAll()
+    log.info({ count: seedResult.seeded.length, errors: seedResult.errors.length }, 'Seeded providers')
+
+    try {
+      const { seedHarvestedParsers } = await import('../../seeds/parsers/harvest.seed.js')
+      const harvested = await seedHarvestedParsers(providerStore)
+      log.info({ count: harvested }, 'Harvested parser variants into DB')
+    } catch (err) {
+      log.warn({ err }, 'Parser harvest seed skipped')
+    }
+
+    try {
+      const { seedAutomation } = await import('../../seeds/automation/automation.seed.js')
+      const autoCount = await seedAutomation(db)
+      log.info({ count: autoCount }, 'Seeded browser-automation records')
+    } catch (err) {
+      log.warn({ err }, 'Automation seed skipped')
+    }
+
+    try {
+      const { ensureTaxonomySeeded } = await import('../../seeds/taxonomy/taxonomy-seed.js')
+      const tax = await ensureTaxonomySeeded(db.prisma)
+      if (tax.upserted > 0) {
+        log.info({ count: tax.upserted }, 'Seeded capability-taxonomy rows')
+      }
+    } catch (err) {
+      log.warn({ err }, 'Taxonomy seed skipped')
+    }
+
+    try {
+      const { seedHarnessCommands } = await import('../../seeds/harness/commands.seed.js')
+      const harnessCount = await seedHarnessCommands(db)
+      log.info({ count: harnessCount }, 'Seeded harness commands')
+    } catch (err) {
+      log.warn({ err }, 'Harness command seed skipped')
+    }
+  } else {
+    log.info('DB already seeded — skipping boot seeds (set FORCE_SEED=true to re-run)')
   }
 
   // Initialize provider registry cache (loads all provider data from DB)
@@ -402,36 +428,6 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const providerRegistry = createProviderRegistry(db)
   await providerRegistry.initialize()
   log.info({ count: providerRegistry.getProviderList().length }, 'Provider registry initialized')
-
-  // Seed browser-automation substrate (idempotent: agent-loop role anchors)
-  try {
-    const { seedAutomation } = await import('../../seeds/automation/automation.seed.js')
-    const autoCount = await seedAutomation(db)
-    log.info({ count: autoCount }, 'Seeded browser-automation records')
-  } catch (err) {
-    log.warn({ err }, 'Automation seed skipped')
-  }
-
-  // Seed capability taxonomy into DB (idempotent: only when table is empty, so
-  // a fresh clone or post-migration boot self-heals without `bun run seed`).
-  try {
-    const { ensureTaxonomySeeded } = await import('../../seeds/taxonomy/taxonomy-seed.js')
-    const tax = await ensureTaxonomySeeded(db.prisma)
-    if (tax.upserted > 0) {
-      log.info({ count: tax.upserted }, 'Seeded capability-taxonomy rows')
-    }
-  } catch (err) {
-    log.warn({ err }, 'Taxonomy seed skipped')
-  }
-
-  // Seed harness command registry (idempotent upsert; mirrors providers/parsers).
-  try {
-    const { seedHarnessCommands } = await import('../../seeds/harness/commands.seed.js')
-    const harnessCount = await seedHarnessCommands(db)
-    log.info({ count: harnessCount }, 'Seeded harness commands')
-  } catch (err) {
-    log.warn({ err }, 'Harness command seed skipped')
-  }
 
   // Store instances
   const convStore = new ConversationStoreImpl(db)
@@ -884,9 +880,18 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     // this the mcp surface silently yields 0 tests and parity is meaningless.
     try {
       const { McpServerAdapter } = await import('../engines/mcp-server-adapter.js')
-      const mcpPort = config.mcpPort ?? port + 1
       const mcpServer = new McpServerAdapter(governor, registry)
-      await mcpServer.start({ port: mcpPort, hostname: '127.0.0.1' })
+      const mcpStartPort = config.mcpPort ?? port + 1
+      let mcpPort = mcpStartPort
+      for (let attempt = 0; attempt < 20; attempt++) {
+        try {
+          await mcpServer.start({ port: mcpPort, hostname: '127.0.0.1' })
+          break
+        } catch {
+          if (attempt === 19) throw new Error(`MCP port ${mcpStartPort} and next 19 ports in use`)
+          mcpPort++
+        }
+      }
       ;(globalThis as Record<string, unknown>).__mcpServer = mcpServer
       log.info({ port: mcpPort, tools: mcpServer.getTools().length }, 'MCP server listening')
     } catch (err) {

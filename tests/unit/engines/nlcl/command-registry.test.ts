@@ -12,7 +12,7 @@ function makePattern(overrides: Partial<CommandPattern> = {}): CommandPattern {
     surfaces: ['cli'],
     aliases: ['test alias'],
     examples: ['test example'],
-    patterns: [{ regex: /test/, keywords: ['test'] }],
+    patterns: [{ regex: /test/, keywords: ['test'], priority: 1, extract: () => null } as any],
     inputSchema: {} as any,
     outputSchema: {} as any,
     executor: 'test' as any,
@@ -102,7 +102,7 @@ describe('command-registry', () => {
       registry.onRegister((p) => received.push(p))
       registry.register(makePattern())
       expect(received).toHaveLength(1)
-      expect(received[0].id).toBe('test_pattern_1')
+      expect(received[0]!.id).toBe('test_pattern_1')
     })
 
     it('returns unsubscribe function', () => {

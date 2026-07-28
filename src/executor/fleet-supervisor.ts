@@ -262,13 +262,17 @@ export class FleetSupervisor {
       for (const p of list) {
         const cmd = String(p.CommandLine ?? '').toLowerCase()
         if (cmd.includes(profileNorm) || cmd.includes(profileNorm.replace(/\//g, '\\'))) {
+          const pid = Number(p.ProcessId)
           try {
-            process.kill(Number(p.ProcessId), 'SIGTERM')
-            await Bun.sleep(500)
-            try {
-              process.kill(Number(p.ProcessId), 'SIGKILL')
-            } catch {
-              /* already dead */
+            if (process.platform === 'win32') {
+              Bun.spawnSync(['taskkill', '/F', '/T', '/PID', String(pid)], {
+                stdout: 'ignore',
+                stderr: 'ignore',
+              })
+            } else {
+              process.kill(pid, 'SIGTERM')
+              await Bun.sleep(500)
+              process.kill(pid, 'SIGKILL')
             }
           } catch {
             /* already dead */

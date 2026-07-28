@@ -120,8 +120,8 @@ describe('ConversationStoreImpl', () => {
     })
     const acc = await store.getAccount('ps_1')
     expect(acc?.id).toBe('acc_1')
-    expect(acc?.displayName).toBe('a@example.com')
-    expect(acc?.configJson).toBe('{"k":1}')
+    expect(acc?.email).toBe('a@example.com')
+    expect(acc?.providerStateJson).toBe('{"k":1}')
   })
 
   it('getAccount returns null when session missing', async () => {

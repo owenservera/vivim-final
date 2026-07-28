@@ -38,8 +38,8 @@ describe('PatternAnalyzer', () => {
 
     const delta = analyzer.analyze(results)
     expect(delta.newPatterns.length).toBe(1)
-    expect(delta.newPatterns[0].confidence).toBe(0.8)
-    expect(delta.newPatterns[0].surface).toBe('cli')
+    expect(delta.newPatterns[0]!.confidence).toBe(0.8)
+    expect(delta.newPatterns[0]!.surface).toBe('cli')
   })
 
   it('should create new pattern from failing test', () => {
@@ -61,8 +61,8 @@ describe('PatternAnalyzer', () => {
 
     const delta = analyzer.analyze(results)
     expect(delta.newPatterns.length).toBe(1)
-    expect(delta.newPatterns[0].confidence).toBe(0.3)
-    expect(delta.newPatterns[0].failures.length).toBe(1)
+    expect(delta.newPatterns[0]!.confidence).toBe(0.3)
+    expect(delta.newPatterns[0]!.failures.length).toBe(1)
   })
 
   it('should update confidence on pass', () => {
@@ -99,7 +99,7 @@ describe('PatternAnalyzer', () => {
 
     const delta2 = analyzer.analyze(results2)
     expect(delta2.updatedPatterns.length).toBe(1)
-    expect(delta2.updatedPatterns[0].confidence).toBeGreaterThan(0.8)
+    expect(delta2.updatedPatterns[0]!.confidence).toBeGreaterThan(0.8)
   })
 
   it('should decrease confidence on fail', () => {
@@ -137,7 +137,7 @@ describe('PatternAnalyzer', () => {
 
     const delta2 = analyzer.analyze(results2)
     expect(delta2.updatedPatterns.length).toBe(1)
-    expect(delta2.updatedPatterns[0].confidence).toBeLessThan(0.8)
+    expect(delta2.updatedPatterns[0]!.confidence).toBeLessThan(0.8)
   })
 
   it('should skip results with status skip', () => {
@@ -178,7 +178,7 @@ describe('PatternAnalyzer', () => {
 
     const delta = analyzer.analyze(results)
     expect(delta.newErrors.length).toBe(1)
-    expect(delta.newErrors[0].error).toBe('Composer not found')
-    expect(delta.newErrors[0].fix).toBe('Wait for page load')
+    expect(delta.newErrors[0]!.error).toBe('Composer not found')
+    expect(delta.newErrors[0]!.fix).toBe('Wait for page load')
   })
 })

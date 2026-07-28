@@ -19,7 +19,7 @@ describe('parseOpencodeJson reuse (serve SSE frames)', () => {
       ev({ type: 'text', part: { type: 'text', text: 'hello' } }),
     )
     expect(blocks).toHaveLength(1)
-    expect(blocks[0].type).toBe('text')
+    expect(blocks[0]!.type).toBe('text')
   })
 
   it('maps a tool event to tool-call + tool-result', () => {

@@ -919,7 +919,7 @@ export class ChromeGovernor {
     // ProfileAllocator uses so ChromeGovernor.spawn reuses the same session.
     const base =
       this.config.profileBaseDir ??
-      (process.platform === 'win32' ? 'C:\\.config\\vivim' : '/.config/vivim')
+      `chrome-profiles`
     return join(base, providerId, accountId)
   }
 

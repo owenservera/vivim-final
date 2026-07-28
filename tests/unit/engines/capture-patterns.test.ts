@@ -37,6 +37,7 @@ function row(providerId: string, filePath: string): ProviderParserRow {
     filePath,
     logicCode: null,
     hash: `h_${providerId}`,
+    sampleBody: null,
     isActive: 1,
     fallbackParserId: null,
     createdAt: 0,
@@ -54,6 +55,8 @@ function mockStore(getActiveParser: (p: string) => ProviderParserRow | null): Pa
     getParserByHash: async () => null,
     getGenericParser: async () => null,
     getSystemFallbackParser: async () => null,
+    getParserByProviderAndVersion: async () => null,
+    getParserById: async () => null,
   }
 }
 
