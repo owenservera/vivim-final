@@ -1,7 +1,51 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { CanvasCommandExecutor } from '@/engines/canvas-command-executor';
 import type { AgentCanvasPolicy, AgentCanvasCommand } from '@/shared/agent-canvas';
-import { DEFAULT_POLICY } from '@/shared/agent-canvas';
+import { DEFAULT_POLICY, type CanvasState } from '@/shared/agent-canvas';
+import { getCanvasEventBus, CanvasEventType } from '@/components/canvas/event-bus';
+
+/** Mock canvas state responder — tracks streams + viewport so executor gets real data. */
+function setupMockCanvas() {
+  const bus = getCanvasEventBus();
+  const state: CanvasState = {
+    nodes: [],
+    connections: [],
+    viewport: { x: 0, y: 0, zoom: 1 },
+    streams: [],
+  };
+
+  const onGetState = (payload: unknown) => {
+    const p = payload as { requestId: string };
+    bus.emit(CanvasEventType.CANVAS_STATE_RESPONSE, { ...state, requestId: p.requestId });
+  };
+  const onSetViewport = (payload: unknown) => {
+    const p = payload as { x: number; y: number; zoom: number };
+    state.viewport = { x: p.x, y: p.y, zoom: p.zoom };
+  };
+  const onStartStream = (payload: unknown) => {
+    const p = payload as { nodeId: string; capabilityId: string };
+    state.streams.push({ nodeId: p.nodeId, capabilityId: p.capabilityId, sessionId: `s:${Date.now()}`, state: 'streaming' });
+  };
+  const onStopStream = (payload: unknown) => {
+    const p = payload as { nodeId: string };
+    state.streams = state.streams.filter((s) => s.nodeId !== p.nodeId);
+  };
+
+  bus.on(CanvasEventType.CANVAS_GET_STATE, onGetState);
+  bus.on(CanvasEventType.AGENT_SET_VIEWPORT, onSetViewport);
+  bus.on(CanvasEventType.AGENT_START_STREAM, onStartStream);
+  bus.on(CanvasEventType.AGENT_STOP_STREAM, onStopStream);
+
+  return {
+    state,
+    cleanup: () => {
+      bus.off(CanvasEventType.CANVAS_GET_STATE, onGetState);
+      bus.off(CanvasEventType.AGENT_SET_VIEWPORT, onSetViewport);
+      bus.off(CanvasEventType.AGENT_START_STREAM, onStartStream);
+      bus.off(CanvasEventType.AGENT_STOP_STREAM, onStopStream);
+    },
+  };
+}
 
 function createExecutor(overrides: Partial<AgentCanvasPolicy> = {}) {
   const policy = { ...DEFAULT_POLICY, agentId: `agent:test`, workspaceId: 'ws:test', ...overrides };
@@ -10,6 +54,18 @@ function createExecutor(overrides: Partial<AgentCanvasPolicy> = {}) {
 
 const cmd = <T extends AgentCanvasCommand['type']>(type: T, payload: Extract<AgentCanvasCommand, { type: T }>['payload']) =>
   ({ type, payload } as AgentCanvasCommand);
+
+let mock: ReturnType<typeof setupMockCanvas>;
+
+beforeEach(() => {
+  getCanvasEventBus().clear();
+  mock = setupMockCanvas();
+});
+
+afterEach(() => {
+  mock.cleanup();
+  getCanvasEventBus().clear();
+});
 
 describe('CanvasCommandExecutor - validation', () => {
   it('createNode: validates allowed slot', async () => {

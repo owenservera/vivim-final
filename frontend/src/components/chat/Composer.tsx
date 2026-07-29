@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
 import { useWebSocket, type WsMessage } from '@/hooks/useWebSocket';
 import { StreamingIndicator } from '@/components/canvas/StreamingIndicator';
 import { EmptyState } from './EmptyState';
@@ -59,7 +59,7 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
   const rafRef = useRef<number | null>(null);
 
   const conversationIdRef = useRef(conversationId);
-  conversationIdRef.current = conversationId;
+  useEffect(() => { conversationIdRef.current = conversationId; });
 
   // RAF-batched flush for streaming blocks
   const scheduleFlush = useCallback(() => {

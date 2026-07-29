@@ -33,9 +33,9 @@ import {
 import type {
   SurfaceMutationPlan,
   SurfaceMutation,
-} from '../../../mini-services/backend/src/reprogrammability/mutation-schema.js';
-import type { SurfaceSpec } from '../../../mini-services/backend/src/reprogrammability/schema/spec.js';
-import type { SurfaceVariant } from '../../../mini-services/backend/src/reprogrammability/variant-schema.js';
+} from '@backend/reprogrammability/mutation-schema';
+import type { SurfaceSpec } from '@backend/reprogrammability/schema/spec';
+import type { SurfaceVariant } from '@backend/reprogrammability/variant-schema';
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -636,7 +636,7 @@ export function ReprogramModal({
                       padding: '10px',
                       border: `1px solid ${specError ? '#ef4444' : 'var(--border-subtle, #e2e8f0)'}`,
                       borderRadius: '6px',
-                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                      fontFamily: 'var(--font-mono)',
                       fontSize: '12px',
                       lineHeight: 1.5,
                       background: 'var(--bg-elevated, #f8fafc)',
@@ -695,7 +695,7 @@ export function ReprogramModal({
                   padding: '16px',
                   minHeight: '120px',
                   background: 'var(--bg-elevated, #f8fafc)',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                  fontFamily: 'var(--font-mono)',
                   fontSize: '11px',
                   color: 'var(--text-muted, #64748b)',
                   whiteSpace: 'pre-wrap',

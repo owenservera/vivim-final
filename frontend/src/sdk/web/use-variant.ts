@@ -22,7 +22,7 @@ import { useIO } from '@/components/canvas/UnifiedIOProvider';
 import type {
   SurfaceVariant,
   UpsertSurfaceVariantInput,
-} from '../../../mini-services/backend/src/reprogrammability/variant-schema.js';
+} from '@backend/reprogrammability/variant-schema';
 import type { AppliedMutationRecord } from './use-mutation';
 
 interface ListResponse {

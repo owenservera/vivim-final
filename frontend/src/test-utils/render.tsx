@@ -27,6 +27,7 @@ function AllProviders({ children, queryClient }: { children: ReactNode; queryCli
 function customRender(ui: ReactElement, options: CustomRenderOptions = {}) {
   const { queryClient = createTestQueryClient(), ...renderOptions } = options;
 
+  // eslint-disable-next-line react/no-children-prop
   return render(ui, {
     wrapper: ({ children }) => React.createElement(AllProviders, { queryClient, children }),
     ...renderOptions,

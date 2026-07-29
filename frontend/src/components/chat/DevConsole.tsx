@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getWsUrl } from '@/lib/ws-url';
+import { Truncate } from '@/components/canvas/Truncate';
 
 type Tab = 'events' | 'inject' | 'latency';
 
@@ -255,7 +256,7 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
                   background: 'var(--bg)',
                   color: 'var(--text)',
                   fontSize: 11,
-                  fontFamily: 'ui-monospace, monospace',
+                  fontFamily: 'var(--font-mono)',
                 }}
               />
             </div>
@@ -264,7 +265,7 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
               style={{
                 flex: 1,
                 overflowY: 'auto',
-                fontFamily: 'ui-monospace, monospace',
+                fontFamily: 'var(--font-mono)',
                 fontSize: 11,
                 padding: 6,
               }}
@@ -290,9 +291,9 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
                   <span style={{ color: eventColor(e.type), flexShrink: 0 }}>
                     {e.type}
                   </span>
-                  <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <Truncate style={{ color: 'var(--text-muted)' }}>
                     {JSON.stringify(stripMeta(e)).slice(0, 200)}
-                  </span>
+                  </Truncate>
                 </div>
               ))}
             </div>
@@ -326,7 +327,7 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
                 borderRadius: 4,
                 background: 'var(--bg)',
                 color: 'var(--text)',
-                fontFamily: 'ui-monospace, monospace',
+                fontFamily: 'var(--font-mono)',
                 fontSize: 12,
                 resize: 'none',
               }}
@@ -357,7 +358,7 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
                 border: '1px solid var(--border)',
                 borderRadius: 4,
                 background: 'var(--bg)',
-                fontFamily: 'ui-monospace, monospace',
+                fontFamily: 'var(--font-mono)',
                 fontSize: 11,
                 whiteSpace: 'pre-wrap',
               }}
@@ -386,9 +387,9 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
                 return (
                   <div key={`${l.traceId}-${i}`} style={{ fontSize: 11 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'ui-monospace, monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <Truncate style={{ fontFamily: 'var(--font-mono)' }}>
                         {l.capabilityId}
-                      </span>
+                      </Truncate>
                       <span style={{ color: over ? '#ef4444' : 'var(--text-muted)', flexShrink: 0 }}>
                         {l.latencyMs}ms
                       </span>
@@ -422,7 +423,7 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
                 paddingTop: 6,
                 fontSize: 10,
                 color: 'var(--text-subtle)',
-                fontFamily: 'ui-monospace, monospace',
+                fontFamily: 'var(--font-mono)',
               }}
             >
               Budgets:{' '}

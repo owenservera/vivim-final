@@ -22,11 +22,13 @@ import { ObservabilityHUD } from './ObservabilityHUD';
 import { AgentOverlay } from './AgentOverlay';
 import { StreamingNodeWrapper } from './StreamingNodeWrapper';
 import { Icon, type IconName, SURFACE_ICONS, LAYOUT_ICONS } from './Icon';
+import { Spinner } from './Spinner';
+import { Truncate } from './Truncate';
 import { CommandStack } from './command-stack';
 import { QuadTree } from './quad-tree';
 import { getCanvasEventBus, CanvasEventType } from './event-bus';
 import { computeLayout, type LayoutIntent, type LayoutNode, type LayoutEdge, LAYOUT_INTENT_LABELS } from '../../shared/layout-intent';
-import { useLiveConfig } from './LiveConfigProvider';
+import { useResolvedNodes } from './use-resolved-nodes';
 import type { VCardState, VCardCategory } from '../../shared/vcard';
 import type { ConnectionLine } from '../../shared/connection-line';
 import type { ResolvedSlot } from '../../shared/route-context';
@@ -93,7 +95,14 @@ export function LivingCanvas(props: LivingCanvasProps) {
   const dragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
 
   const slotsToResolve = slotIds ?? Object.keys(DEFAULT_LAYOUTS);
-  const { surface, isLoading, error } = useLiveConfig();
+  const { data: surface, isLoading, error } = useResolvedNodes({
+    workspaceId,
+    userId: 'user:demo',
+    providerIds,
+    accounts: [],
+    slotIds: slotsToResolve,
+    variant,
+  });
 
   // Real component resolution via slot registry
   const { getComponent } = useNodeTypes(providerIds, variant);
@@ -240,10 +249,9 @@ export function LivingCanvas(props: LivingCanvasProps) {
     return (
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted-foreground)', fontFamily: 'var(--font-sans)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 24, height: 24, border: '2px solid var(--border)', borderTopColor: 'var(--ring)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <Spinner size={24} />
           <span style={{ fontSize: 13, fontWeight: 500 }}>Resolving canvas</span>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -355,13 +363,12 @@ export function LivingCanvas(props: LivingCanvasProps) {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', minWidth: 0 }}>
                   <Icon name={surfaceIcon} size={14} className="text-muted-foreground shrink-0" />
-                  <span style={{
+                  <Truncate as="span" style={{
                     fontSize: 11, fontWeight: 600, color: 'var(--foreground)',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     letterSpacing: '-0.01em',
                   }}>
                     {slot.slotId.replace('chat.', '')}
-                  </span>
+                  </Truncate>
                   {zoomTier !== 'micro' && (
                     <span style={{ fontSize: 10, color: 'var(--muted-foreground)', flexShrink: 0 }}>
                       {slot.providerId}

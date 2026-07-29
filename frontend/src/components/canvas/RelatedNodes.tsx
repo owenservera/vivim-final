@@ -9,9 +9,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
 import { useMlStore } from '@/ml/ml-store';
 import { cosine } from '@/ml/embed-runtime';
+import { Truncate } from './Truncate';
 
 interface KnowledgeResult {
   id: string;
@@ -87,7 +88,7 @@ export function RelatedNodes({ query }: { query?: string }) {
               gap: 8,
             }}
           >
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</span>
+            <Truncate>{it.title}</Truncate>
             <span
               style={{
                 fontSize: 10,

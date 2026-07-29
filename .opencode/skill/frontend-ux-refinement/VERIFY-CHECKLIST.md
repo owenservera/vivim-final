@@ -154,7 +154,7 @@ curl http://localhost:9420/api/capabilities?surface=mcp | jq '.capabilities[] | 
 ### 5a. Screenshot Proof
 
 ```bash
-pwsh scripts/start-bg.ps1
+bun run dev
 bun run devops runtime-test health
 bun run devops runtime-test engage --provider=<slug>
 bun run devops runtime-test verify

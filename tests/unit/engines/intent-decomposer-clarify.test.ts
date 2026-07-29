@@ -37,15 +37,21 @@ class MockBus {
   emit(payload: Parameters<CapabilityEventBus['emit']>[0]): void {
     this.events.push({ type: payload.type, clarification: (payload as any).clarification })
   }
-  on() { return () => {} }
-  once() { return () => {} }
+  on() {
+    return () => {}
+  }
+  once() {
+    return () => {}
+  }
   subscribe() {
     return () => {}
   }
   unsubscribe() {}
   unsubscribeAll() {}
   removeAllListeners() {}
-  getInstance() { return this }
+  getInstance() {
+    return this
+  }
   resetInstance() {}
 }
 

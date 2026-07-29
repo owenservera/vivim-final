@@ -63,7 +63,9 @@ async function extractTarGz(archivePath: string, destDir: string): Promise<void>
           stdio: ['ignore', 'ignore', 'pipe'],
         })
         let stderr = ''
-        child.stderr?.on('data', (d: Buffer) => { stderr += d.toString() })
+        child.stderr?.on('data', (d: Buffer) => {
+          stderr += d.toString()
+        })
         child.on('close', (code) => {
           if (code === 0) resolve()
           else reject(new Error(`tar extraction failed (code ${code}): ${stderr}`))
@@ -80,7 +82,7 @@ async function extractTarGz(archivePath: string, destDir: string): Promise<void>
 
   throw new Error(
     `Failed to extract ${archivePath}: tar command not available. ` +
-    'On Windows, install Git for Windows (provides tar.exe) or WSL.',
+      'On Windows, install Git for Windows (provides tar.exe) or WSL.',
   )
 }
 
@@ -91,7 +93,9 @@ async function _createTarGz(sourceDir: string, destFile: string): Promise<void> 
       stdio: ['ignore', 'ignore', 'pipe'],
     })
     let stderr = ''
-    child.stderr?.on('data', (d: Buffer) => { stderr += d.toString() })
+    child.stderr?.on('data', (d: Buffer) => {
+      stderr += d.toString()
+    })
     child.on('close', (code) => {
       if (code !== 0) reject(new Error(`tar creation failed (code ${code}): ${stderr}`))
       else resolve()

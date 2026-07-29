@@ -7,9 +7,10 @@ import { join } from 'node:path'
 import type { SetupAccount, SlaveSetupStore } from '../contracts/slave-setup-store.js'
 import type { CapStoreDb } from '../db.js'
 
-const CONFIG_DIR = process.platform === 'win32'
-  ? `${process.env.APPDATA ?? process.env.LOCALAPPDATA ?? 'C:\\'}\\vivim`
-  : `${process.env.HOME ?? '/tmp'}/.config/vivim`
+const CONFIG_DIR =
+  process.platform === 'win32'
+    ? `${process.env.APPDATA ?? process.env.LOCALAPPDATA ?? 'C:\\'}\\vivim`
+    : `${process.env.HOME ?? '/tmp'}/.config/vivim`
 const CONFIG_FILE = join(CONFIG_DIR, 'setup-config.json')
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

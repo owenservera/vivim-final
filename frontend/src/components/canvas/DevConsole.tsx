@@ -10,6 +10,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useIO, useIOEvents } from './UnifiedIOProvider';
 import { Icon, type IconName } from './Icon';
+import { Truncate } from './Truncate';
+import { SectionLabel } from './SectionLabel';
 
 interface DevConsoleProps {
   isOpen: boolean;
@@ -85,7 +87,7 @@ export function DevConsole({ isOpen, onClose }: DevConsoleProps) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderBottom: '1px solid var(--border)', background: 'var(--secondary)', flexShrink: 0 }}>
         <Icon name="terminal" size={12} className="text-ring" />
-        <strong style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dev Console</strong>
+        <SectionLabel>Dev Console</SectionLabel>
         <span style={{ fontSize: 10, color: 'var(--muted-foreground)', marginLeft: 'auto' }}>{filteredEvents.length} / {events.length} events</span>
         <label htmlFor="dev-console-filter" className="sr-only">Filter events</label>
         <input
@@ -180,8 +182,8 @@ export function DevConsole({ isOpen, onClose }: DevConsoleProps) {
                         {e.type}
                       </span>
                     </td>
-                    <td style={{ padding: '2px 6px', color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)' }}>
-                      {e.url ?? ''}
+                    <td style={{ padding: '2px 6px', color: 'var(--foreground)', fontFamily: 'var(--font-mono)' }}>
+                      <Truncate>{e.url ?? ''}</Truncate>
                     </td>
                     <td style={{ padding: '2px 6px', textAlign: 'right', color: 'var(--muted-foreground)', fontFamily: 'var(--font-mono)' }}>
                       {e.durationMs !== undefined ? `${e.durationMs}ms` : '—'}

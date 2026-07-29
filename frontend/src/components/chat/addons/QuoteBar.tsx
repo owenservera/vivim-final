@@ -1,6 +1,7 @@
 'use client';
 
 import type { AddOnProps } from '@/types/api';
+import { Truncate } from '@/components/canvas/Truncate';
 
 export function QuoteBar({ context }: AddOnProps) {
   const { quotedMessage, setQuote } = context;
@@ -21,9 +22,9 @@ export function QuoteBar({ context }: AddOnProps) {
         color: 'var(--text-muted)',
       }}
     >
-      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <Truncate style={{ flex: 1 }}>
         {quotedMessage.snippet}
-      </span>
+      </Truncate>
       <button
         type="button"
         onClick={() => setQuote(null)}

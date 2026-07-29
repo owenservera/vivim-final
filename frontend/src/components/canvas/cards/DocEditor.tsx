@@ -146,7 +146,7 @@ export function DocEditor({ document: doc, userId = 'user:demo', onSaved }: DocE
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', borderBottom: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: 11 }}>
         <span>{ft?.icon ?? ''}</span>
         <strong style={{ fontSize: 12, flex: 1 }}>{doc.title}</strong>
-        <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'var(--text-muted)' }}>{ft?.label ?? doc.mimeType}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>{ft?.label ?? doc.mimeType}</span>
         {caps.canEdit && (
           <span style={{
             padding: '1px 6px',
@@ -281,7 +281,7 @@ function EditorForFiletype({
       );
     case 'code':
       return (
-        <div style={{ ...textareaStyle, padding: 12, overflow: 'auto', fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace', fontSize: 12, lineHeight: 1.5, whiteSpace: 'pre' }}>
+        <div style={{ ...textareaStyle, padding: 12, overflow: 'auto', fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.5, whiteSpace: 'pre' }}>
           <textarea
             ref={textareaRef}
             value={content}
@@ -350,7 +350,7 @@ function PreviewForFiletype({
     case 'tex':
       return (
         <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, monospace' }}>{content}</pre>
+          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)' }}>{content}</pre>
           <div style={{ marginTop: 8, fontSize: 10, color: 'var(--text-subtle)' }}> {ft.label} source (production: {ft.engine} renderer)</div>
         </div>
       );
@@ -362,7 +362,7 @@ function PreviewForFiletype({
       return <JsonPreview content={content} />;
     case 'code':
       return (
-        <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace', fontSize: 12, lineHeight: 1.5 }}>
+        <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.5 }}>
           {content}
         </pre>
       );
@@ -424,14 +424,14 @@ function JsonPreview({ content }: { content: string }) {
   }
   if (parseError) {
     return (
-      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#ef4444' }}>
+      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ef4444' }}>
         {content}
         {'\n\n Invalid JSON'}
       </pre>
     );
   }
   return (
-    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'ui-monospace, monospace', fontSize: 12, lineHeight: 1.5 }}>
+    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.5 }}>
       {JSON.stringify(parsed, null, 2)}
     </pre>
   );
@@ -446,7 +446,7 @@ function SheetEditor({ content, onChange, delimiter }: { content: string; onChan
   };
   return (
     <div style={{ overflow: 'auto', padding: 8 }}>
-      <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}>
+      <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--font-mono)' }}>
         <tbody>
           {rows.map((row, r) => (
             <tr key={r}>
@@ -481,7 +481,7 @@ function SheetEditor({ content, onChange, delimiter }: { content: string; onChan
 function SheetPreview({ content, delimiter }: { content: string; delimiter: string }) {
   const rows = content.split('\n').slice(0, 50);
   return (
-    <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'ui-monospace, monospace', width: '100%' }}>
+    <table style={{ borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--font-mono)', width: '100%' }}>
       <tbody>
         {rows.map((row, r) => {
           const cells = row.split(delimiter);
@@ -507,7 +507,7 @@ const textareaStyle: React.CSSProperties = {
   outline: 'none',
   background: 'var(--bg)',
   color: 'var(--text)',
-  fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+  fontFamily: 'var(--font-mono)',
   fontSize: 13,
   lineHeight: 1.6,
   padding: 12,

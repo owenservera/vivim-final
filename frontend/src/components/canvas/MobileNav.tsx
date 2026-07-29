@@ -6,7 +6,7 @@
  * Vivim 2026 mobile bottom-nav — thumb-friendly navigation for <768px.
  * Hidden on desktop (display:none via .mobile-nav CSS class).
  *
- * Replaces the floating CommandBar on mobile, which is unreachable.
+ * Replaces the floating UnifiedEntry on mobile, which is unreachable.
  *
  * Slots:
  *   - Search (center, prominent — brand gradient pill)

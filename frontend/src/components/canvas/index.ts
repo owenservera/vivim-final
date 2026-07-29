@@ -81,14 +81,45 @@ export type { MinimapNodeProps } from './MinimapNode';
 export { ChatSurface } from '../chat/ChatSurface';
 
 // New minimal chrome system
-export { CommandBar } from './CommandBar';
-export type { CommandBarProps } from './CommandBar';
 export { Panel } from './Panel';
 export type { PanelConfig, PanelDock, PanelSize, PanelProps } from './Panel';
 export { MainMenu } from './MainMenu';
 export { ConversationsPanel } from './panels/ConversationsPanel';
 export { ProvidersPanel } from './panels/ProvidersPanel';
 export { SettingsPanel } from './panels/SettingsPanel';
+
+// Canvas capability upgrade — new panel components
+export { HealthDashboard } from './HealthDashboard';
+export { CapabilityCatalog } from './CapabilityCatalog';
+export { SearchPanel } from './SearchPanel';
+export { CanvasControlPanel } from './CanvasControlPanel';
+export { TaskManager } from './TaskManager';
+export { AutomationLauncher } from './AutomationLauncher';
+export { FleetStatus } from './FleetStatus';
+export { SessionControls } from './SessionControls';
+
+// Shared UI primitives
+export { Spinner } from './Spinner';
+export { PanelShell } from './PanelShell';
+export { ErrorBanner } from './ErrorBanner';
+export { Toast } from './Toast';
+export { Button } from './Button';
+export { EmptyState } from './EmptyState';
+export { TextArea } from './TextArea';
+export { Truncate } from './Truncate';
+export { SectionLabel } from './SectionLabel';
+export { InputField } from './InputField';
+export { StatusDot } from './StatusDot';
+
+// SSOA — Session State-Organized Architecture
+export { SessionStateProvider, useSessionState } from './SessionStateProvider';
+export type { CanvasSessionState, SessionAction, LayerState } from './SessionStateProvider';
+export { TabBar } from './TabBar';
+export { LayerSwitcher } from './LayerSwitcher';
+export { SlidePanel } from './SlidePanel';
+export { UnifiedEntry } from './UnifiedEntry';
+export { getLayerConfig, getPanelType } from './TabConfig';
+export type { LayerConfig, TabConfig, LayerId, PanelType } from './TabConfig';
 
 // Universal registry — single registry for ALL UI components
 export { UniversalComponentProvider } from './UniversalComponentProvider';

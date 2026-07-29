@@ -93,7 +93,7 @@ export function ShellCard({ workspaceId }: { workspaceId: string }) {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+        fontFamily: 'var(--font-mono)',
         background: '#0f172a',
         color: '#e2e8f0',
         fontSize: 12,

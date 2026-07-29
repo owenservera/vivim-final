@@ -5,7 +5,7 @@
  * --------------------------------------------------------------------
  * Phase 9 of ROADMAP-REPROGRAMMABLE-CANVAS.md — Self-Modifying Chrome.
  *
- * A wrapper that turns each chrome element (Composer, CommandBar, MainMenu,
+ * A wrapper that turns each chrome element (UnifiedEntry, MainMenu,
  * etc.) into a ReprogrammableSurface. The wrapper:
  *   - reads the surface spec from the SurfaceRegistry (via /api/surface/:id/spec)
  *   - applies the spec to the wrapped children (placeholder text, button
@@ -22,7 +22,7 @@
  */
 
 import { useEffect, useState, type ReactNode } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
 import { dispatchReprogram } from '@/components/canvas/ReprogramController';
 
 export interface ChromeSurfaceProps {

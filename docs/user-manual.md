@@ -5,8 +5,7 @@
 **Goal:** Install vivim, log in, and send your first message within 10 minutes.
 
 1. Clone the repository and install dependencies with `bun install`.
-2. Start the backend: `pwsh scripts/start-backend.ps1` (or `bun run dev` from the repo root).
-3. Start the frontend: `pwsh scripts/start-frontend.ps1`.
+2. Start both services: `bun run dev` (or `bun run dev:backend` + `bun run dev:frontend` in separate terminals).
 4. Open `http://localhost:3000` (or the port shown in your terminal).
 5. The **Onboarding Wizard** walks you through:
    - **Welcome** — confirm you're setting up a local-first workspace.
@@ -117,7 +116,7 @@
 
 ### Offline / backend down
 - Verify the backend process is running (`Get-Process -Name bun` or check port `9420`).
-- Restart with `pwsh scripts/start-backend.ps1`.
+- Restart with `bun run dev:backend`.
 
 ### Consent / auth errors
 - Re-run provider setup: `bun run devops runtime-test setup --provider=<slug> --account=<id>`.

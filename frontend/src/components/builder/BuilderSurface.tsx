@@ -29,7 +29,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
+import { useAsyncOperation } from '@/hooks/useAsyncOperation';
 import { Icon } from '@/components/canvas/Icon';
 import {
   SurfaceNode,
@@ -44,8 +45,8 @@ import { Toolbar } from './Toolbar';
 import type {
   SurfaceMutation,
   SurfaceMutationPlan,
-} from '../../../mini-services/backend/src/reprogrammability/mutation-schema.js';
-import type { SurfaceSpec } from '../../../mini-services/backend/src/reprogrammability/schema/spec.js';
+} from '@backend/reprogrammability/mutation-schema';
+import type { SurfaceSpec } from '@backend/reprogrammability/schema/spec';
 
 // ── Graph data model ────────────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ export function BuilderSurface({
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { error, setError, run } = useAsyncOperation();
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -336,28 +337,24 @@ export function BuilderSurface({
       setSaving(true);
       setError(null);
       setSaveStatus(null);
-      try {
-        const res = await io.post<{
-          ok: boolean;
-          template?: { id: string };
-          error?: string;
-        }>('/api/template/from-graph', {
-          name,
-          description,
-          graphJson: graph,
-        });
-        if (!res.data?.ok || !res.data.template) {
-          setError(res.data?.error ?? 'Failed to save template');
-          return;
-        }
-        setSaveStatus(`Saved as template: ${res.data.template.id}`);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Network error');
-      } finally {
+      const res = await run(() => io.post<{
+        ok: boolean;
+        template?: { id: string };
+        error?: string;
+      }>('/api/template/from-graph', {
+        name,
+        description,
+        graphJson: graph,
+      }));
+      if (!res?.data?.ok || !res.data.template) {
+        setError(res?.data?.error ?? 'Failed to save template');
         setSaving(false);
+        return;
       }
+      setSaveStatus(`Saved as template: ${res.data.template.id}`);
+      setSaving(false);
     },
-    [io, graph],
+    [io, graph, run, setError],
   );
 
   // ── Run the graph: emit a mutation plan from the edges ───────────────────
@@ -403,20 +400,16 @@ export function BuilderSurface({
       description: `Visual Builder plan: ${mutations.length} binding(s)`,
     };
 
-    try {
-      const res = await io.post<{ ok: boolean; error?: string }>(
-        '/api/mutation/apply',
-        { plan },
-      );
-      if (!res.data?.ok) {
-        setError(res.data?.error ?? 'Apply failed');
-        return;
-      }
-      setSaveStatus(`Applied ${mutations.length} binding(s).`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Network error');
+    const res = await run(() => io.post<{ ok: boolean; error?: string }>(
+      '/api/mutation/apply',
+      { plan },
+    ));
+    if (!res?.data?.ok) {
+      setError(res?.data?.error ?? 'Apply failed');
+      return;
     }
-  }, [io, graph]);
+    setSaveStatus(`Applied ${mutations.length} binding(s).`);
+  }, [io, graph, run, setError]);
 
   // ── Export as JSON ────────────────────────────────────────────────────────
   const exportJson = useCallback(() => {

@@ -42,7 +42,11 @@ export function runMigrate(name: string, timeoutMs = 120_000): Promise<MigrateRe
     child.on('error', (err) => finish({ ok: false, output: out, error: String(err) }))
     child.on('close', (code) => {
       clearTimeout(timer)
-      finish({ ok: code === 0, output: out.slice(-2000), error: code === 0 ? undefined : `exit ${code}` })
+      finish({
+        ok: code === 0,
+        output: out.slice(-2000),
+        error: code === 0 ? undefined : `exit ${code}`,
+      })
     })
   })
 }

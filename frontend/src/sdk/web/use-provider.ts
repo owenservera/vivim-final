@@ -23,15 +23,23 @@ export function useProvider() {
       const raw = res.data;
       const all: Provider[] = (Array.isArray(raw) ? raw : (raw as { providers?: Provider[] })?.providers ?? [])
         .filter((p: Provider) => p.id !== 'generic')
-        .map((p: Provider) => ({
-          id: p.id,
-          name: (p as unknown as { displayName?: string }).displayName ?? p.name ?? p.id,
-          slug: p.slug ?? p.id,
-          status: (p as unknown as { protocolStatus?: string }).protocolStatus ?? p.status,
-          capabilities: (p as unknown as { capabilitiesJson?: string }).capabilitiesJson
-            ? JSON.parse((p as unknown as { capabilitiesJson: string }).capabilitiesJson)
-            : p.capabilities,
-        }));
+        .map((p: Provider) => {
+          let caps: string[] | undefined;
+          try {
+            caps = (p as unknown as { capabilitiesJson?: string }).capabilitiesJson
+              ? JSON.parse((p as unknown as { capabilitiesJson: string }).capabilitiesJson)
+              : p.capabilities;
+          } catch {
+            caps = [];
+          }
+          return {
+            id: p.id,
+            name: (p as unknown as { displayName?: string }).displayName ?? p.name ?? p.id,
+            slug: p.slug ?? p.id,
+            status: (p as unknown as { protocolStatus?: string }).protocolStatus ?? p.status,
+            capabilities: caps,
+          };
+        });
       setProviders(all);
     } catch (e) {
       if (!mountedRef.current) return;
@@ -41,6 +49,8 @@ export function useProvider() {
     }
   }, [io]);
 
+  // R3-06: Auto-fetch on mount
+  useEffect(() => { refresh(); }, [refresh]);
 
   return { providers, loading, error, refresh };
 }

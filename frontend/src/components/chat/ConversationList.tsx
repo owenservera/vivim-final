@@ -35,8 +35,8 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    const ok = await remove(id);
-    if (ok && activeId === id) onSelect('');
+    const removedId = await remove(id);
+    if (removedId && activeId === id) onSelect('');
   };
 
   return (
