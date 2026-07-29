@@ -3,7 +3,7 @@
 //
 // The dev loop keeps ONE server alive across many agent turns. When the default
 // port (9420) is held by a Windows zombie socket (a dead PID still LISTENING),
-// the launcher (scripts/start-backend.ps1) falls back to the next free port and
+// the launcher (scripts/dev.ts / bun run dev:backend) falls back to the next free port and
 // records it in .runtime/backend.port. Every client in the loop must resolve the
 // port the same way:
 //

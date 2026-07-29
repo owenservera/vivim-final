@@ -7,7 +7,7 @@ import type {
   LiveCapabilitySpec,
   LiveCapabilityStore,
 } from '../../../src/engines/live-capability-registry.js'
-import type { AuditReport, TelemetryAudit } from '../../../src/engines/telemetry-audit.js'
+import type { AuditReport } from '../../../src/engines/telemetry-audit.js'
 import { EngineError } from '../../../src/errors.js'
 
 class MockBus {
@@ -61,8 +61,12 @@ class MockAudit {
     return []
   }
   clear() {}
-  extractHostname(url: string) { return new URL(url).hostname }
-  normalizeUrl(url: string) { return url }
+  extractHostname(url: string) {
+    return new URL(url).hostname
+  }
+  normalizeUrl(url: string) {
+    return url
+  }
 }
 
 const httpSpec: LiveCapabilitySpec = {

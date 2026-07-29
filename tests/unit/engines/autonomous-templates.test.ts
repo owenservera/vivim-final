@@ -1,13 +1,11 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
-import type {
-  AutonomousTask,
-} from '../../../src/engines/autonomous-execution.js'
-import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
-import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
-import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
-import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
+import type { AutonomousTask } from '../../../src/engines/autonomous-execution.js'
 import type { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
+import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
+import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
+import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
+import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
 
 // ── Mocks ────────────────────────────────────────────────────────────────
 
@@ -120,11 +118,7 @@ describe('AutonomousExecutionEngine — Unit 8.10: Task templates', () => {
   })
 
   it('spawnFromTemplate substitutes bindings and executes', async () => {
-    const id = await engine.saveTemplate(
-      'Summarize PR',
-      'Summarize PR #{prNumber}',
-      ['prNumber'],
-    )
+    const id = await engine.saveTemplate('Summarize PR', 'Summarize PR #{prNumber}', ['prNumber'])
 
     const task = await engine.spawnFromTemplate(id, { prNumber: '42' })
 
@@ -134,11 +128,10 @@ describe('AutonomousExecutionEngine — Unit 8.10: Task templates', () => {
   })
 
   it('missing binding substitutes empty string', async () => {
-    const id = await engine.saveTemplate(
-      'Test Template',
-      'Process {item} in {context}',
-      ['item', 'context'],
-    )
+    const id = await engine.saveTemplate('Test Template', 'Process {item} in {context}', [
+      'item',
+      'context',
+    ])
 
     const task = await engine.spawnFromTemplate(id, { item: 'data' })
 

@@ -6,13 +6,13 @@ import { join } from 'node:path'
 import { ChromeGovernorError, EngineError } from '../errors.js'
 import { FleetSupervisor } from '../executor/fleet-supervisor.js'
 import type { FleetSuperState, SlaveLifecycle } from '../executor/slave-states.js'
+import { getLogger } from '../lib/logger.js'
 import type { FleetSupervisor as FleetSupervisorContract } from '../storage/contracts/fleet-supervisor.js'
 import type {
   GovernorStore,
   TraceEntryInput,
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
-import { getLogger } from '../lib/logger.js'
 import { injectAntiDetection } from './anti-detection.js'
 import type { BrowserHarnessActions } from './browser-automation/harness-actions.js'
 import type { CapabilitySnapshot, CapabilitySnapshotEntry } from './capability-snapshot.js'
@@ -271,13 +271,7 @@ export class CDPProxy {
             let typeSuccess = true
             let typeError: string | undefined
             try {
-              await typeMessage(
-                this.transport,
-                slaveId,
-                selector,
-                text,
-                composerType,
-              )
+              await typeMessage(this.transport, slaveId, selector, text, composerType)
             } catch (err) {
               typeSuccess = false
               typeError = err instanceof Error ? err.message : String(err)
@@ -302,12 +296,7 @@ export class CDPProxy {
             let submitSuccess = true
             let submitError: string | undefined
             try {
-              await submitMessage(
-                this.transport,
-                slaveId,
-                sendSelector,
-                key,
-              )
+              await submitMessage(this.transport, slaveId, sendSelector, key)
             } catch (err) {
               submitSuccess = false
               submitError = err instanceof Error ? err.message : String(err)
@@ -917,9 +906,7 @@ export class ChromeGovernor {
   deriveProfile(providerId: string, accountId: string): string {
     // Use the configured profile root (Windows-safe) — must match the layout
     // ProfileAllocator uses so ChromeGovernor.spawn reuses the same session.
-    const base =
-      this.config.profileBaseDir ??
-      `chrome-profiles`
+    const base = this.config.profileBaseDir ?? `chrome-profiles`
     return join(base, providerId, accountId)
   }
 

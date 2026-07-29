@@ -24,7 +24,7 @@ export function LatencyBreakdown({ timing }: { timing: TimingInfo }) {
         borderRadius: 6,
         fontSize: 11,
         color: 'var(--text-muted)',
-        fontFamily: 'ui-monospace, monospace',
+        fontFamily: 'var(--font-mono)',
       }}
     >
       <div style={{ marginBottom: 4, fontWeight: 600, color: 'var(--text)' }}>

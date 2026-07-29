@@ -29,6 +29,9 @@ export function useConversation() {
     }
   }, [io]);
 
+  // R3-05: Auto-fetch conversations on mount
+  useEffect(() => { refresh(); }, [refresh]);
+
   const create = useCallback(async (providerId?: string) => {
     setLoading(true);
     setError(null);
@@ -36,8 +39,13 @@ export function useConversation() {
       const res = await io.post<Conversation>('/api/conversations', { providerId });
       if (!mountedRef.current) return null;
       const conv = res.data;
-      setConversations(prev => [conv, ...prev]);
-      return conv;
+      // R3-09: Defensive parsing — ensure response has required fields
+      if (!conv || typeof conv !== 'object' || !('id' in conv) || typeof (conv as Conversation).id !== 'string') {
+        setError('Invalid conversation response from server');
+        return null;
+      }
+      setConversations(prev => [conv as Conversation, ...prev]);
+      return conv as Conversation;
     } catch (e) {
       if (!mountedRef.current) return null;
       setError(e instanceof Error ? e.message : 'Failed to create conversation');
@@ -47,18 +55,18 @@ export function useConversation() {
     }
   }, [io]);
 
-  const remove = useCallback(async (conversationId: string) => {
+  const remove = useCallback(async (conversationId: string): Promise<string | null> => {
     setLoading(true);
     setError(null);
     try {
       await io.request(`/api/conversations/${encodeURIComponent(conversationId)}`, { method: 'DELETE' });
-      if (!mountedRef.current) return false;
+      if (!mountedRef.current) return null;
       setConversations(prev => prev.filter(c => c.id !== conversationId));
-      return true;
+      return conversationId;
     } catch (e) {
-      if (!mountedRef.current) return false;
+      if (!mountedRef.current) return null;
       setError(e instanceof Error ? e.message : 'Failed to delete conversation');
-      return false;
+      return null;
     } finally {
       if (mountedRef.current) setLoading(false);
     }

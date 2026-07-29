@@ -29,7 +29,7 @@
 
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdir, writeFile, readFile, rm, readdir } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { runGate } from './gate.ts'
 import { checkInvariants } from './invariants.ts'
@@ -194,7 +194,14 @@ async function phaseGate(opts: Opts): Promise<PhaseResult> {
 
 // Canonical stray top-level dirs that must never be committed (per AGENTS.md).
 const STRAY_DIRS = ['gemini', 'chatgpt', 'claude']
-const TEMP_ARTIFACT_PATTERNS = ['.runtime/vivim-server-test.exe', '.runtime/capout.txt', '.runtime/caperr.txt', '.runtime/exeout.txt', '.runtime/exeerr.txt', '.runtime/ptest.ts']
+const TEMP_ARTIFACT_PATTERNS = [
+  '.runtime/vivim-server-test.exe',
+  '.runtime/capout.txt',
+  '.runtime/caperr.txt',
+  '.runtime/exeout.txt',
+  '.runtime/exeerr.txt',
+  '.runtime/ptest.ts',
+]
 // Coverage / build caches that are safe to prune before a release.
 const CACHE_DIRS = ['coverage', 'node_modules/.cache']
 
@@ -208,7 +215,9 @@ async function phaseCleanup(opts: Opts): Promise<PhaseResult> {
   for (const d of STRAY_DIRS) {
     const p = join(process.cwd(), d)
     if (existsSync(p)) {
-      findings.push(`STRAY DIR (will delete): ${d}/ — providers live under chrome-profiles/<slug>/<account>`)
+      findings.push(
+        `STRAY DIR (will delete): ${d}/ — providers live under chrome-profiles/<slug>/<account>`,
+      )
       if (opts.dryRun) continue
       try {
         await rm(p, { recursive: true, force: true })
@@ -253,8 +262,14 @@ async function phaseCleanup(opts: Opts): Promise<PhaseResult> {
   }
 
   // 4) Dead-code scan via biome (unused exports/vars). Non-fatal; surfaces debt.
-  const biome = await runSync('bun', ['x', '@biomejs/biome', 'lint', '--reporter=summary', 'src'], process.cwd())
-  findings.push(`biome lint summary: ${biome.out.split('\n').slice(-3).join(' | ').trim() || '(no output)'}`)
+  const biome = await runSync(
+    'bun',
+    ['x', '@biomejs/biome', 'lint', '--reporter=summary', 'src'],
+    process.cwd(),
+  )
+  findings.push(
+    `biome lint summary: ${biome.out.split('\n').slice(-3).join(' | ').trim() || '(no output)'}`,
+  )
 
   // 5) Git hygiene: no credentials/secrets accidentally staged. HARD BLOCKER.
   const secretScan = await scanForSecrets()
@@ -315,16 +330,24 @@ async function phaseConverge(opts: Opts): Promise<PhaseResult> {
   }
   // Invariant drift check is part of convergence (spec claims vs arch reality).
   const inv = await checkInvariants(undefined, undefined)
-  findings.push(`invariants: ${inv.pass ? 'PASS' : 'VIOLATIONS'} (${inv.violations.length} blocks, ${inv.warnings.length} warnings)`)
+  findings.push(
+    `invariants: ${inv.pass ? 'PASS' : 'VIOLATIONS'} (${inv.violations.length} blocks, ${inv.warnings.length} warnings)`,
+  )
   if (!inv.pass) {
-    findings.push(...inv.violations.slice(0, 10).map((v) => `    BLOCK: ${v.rule ?? v.id ?? '?'}: ${v.message ?? ''}`))
+    findings.push(
+      ...inv.violations
+        .slice(0, 10)
+        .map((v) => `    BLOCK: ${v.rule ?? v.id ?? '?'}: ${v.message ?? ''}`),
+    )
   }
   return {
     phase: 'converge',
     ok: inv.pass,
     skipped: false,
     dryRun: opts.dryRun,
-    summary: inv.pass ? 'spec/code convergence ok' : `convergence found ${inv.violations.length} invariant block(s)`,
+    summary: inv.pass
+      ? 'spec/code convergence ok'
+      : `convergence found ${inv.violations.length} invariant block(s)`,
     findings,
     metrics: { invariantBlocks: inv.violations.length, invariantWarnings: inv.warnings.length },
   }
@@ -335,19 +358,31 @@ async function phaseConverge(opts: Opts): Promise<PhaseResult> {
 async function phaseBuild(opts: Opts): Promise<PhaseResult> {
   const findings: string[] = []
   if (opts.target === 'tauri') {
-    findings.push('target=tauri: running scripts/tauri/build.ps1 (sidecar compile + web:build + cargo tauri build)')
-    const code = await sh('pwsh', [join(process.cwd(), 'scripts', 'tauri', 'build.ps1')], opts.dryRun)
+    findings.push(
+      'target=tauri: running scripts/tauri/build.ps1 (sidecar compile + web:build + cargo tauri build)',
+    )
+    const code = await sh(
+      'pwsh',
+      [join(process.cwd(), 'scripts', 'tauri', 'build.ps1')],
+      opts.dryRun,
+    )
     return {
       phase: 'build',
       ok: opts.dryRun ? true : code === 0,
       skipped: false,
       dryRun: opts.dryRun,
-      summary: opts.dryRun ? '[dry-run] would build tauri artifacts' : code === 0 ? 'tauri artifacts built' : 'tauri build FAILED',
+      summary: opts.dryRun
+        ? '[dry-run] would build tauri artifacts'
+        : code === 0
+          ? 'tauri artifacts built'
+          : 'tauri build FAILED',
       findings,
     }
   }
   // Pluggable future targets (frontend-only, backend-only, docker) hook here.
-  findings.push(`target=${opts.target}: no build script registered (add a case in production-build.ts)`)
+  findings.push(
+    `target=${opts.target}: no build script registered (add a case in production-build.ts)`,
+  )
   return {
     phase: 'build',
     ok: false,
@@ -366,7 +401,12 @@ async function phaseDocs(opts: Opts): Promise<PhaseResult> {
   if (existsSync(docsDir) && !opts.dryRun) {
     // Regenerate ADR index so the release carries an accurate decision ledger.
     const adrs = (await readdir(docsDir)).filter((f) => /^ADR-\d+\.md$/.test(f))
-    const index: string[] = ['# ADR Index', '', `Generated by \`devops production-build docs\` — ${adrs.length} decisions.`, '']
+    const index: string[] = [
+      '# ADR Index',
+      '',
+      `Generated by \`devops production-build docs\` — ${adrs.length} decisions.`,
+      '',
+    ]
     for (const a of adrs.sort()) {
       const body = await readFile(join(docsDir, a), 'utf8').catch(() => '')
       const titleM = body.match(/^#\s+.*?:\s*(.*)$/m)
@@ -382,7 +422,11 @@ async function phaseDocs(opts: Opts): Promise<PhaseResult> {
   // Reconcile CHANGELOG entry stub if missing.
   const changelog = join(process.cwd(), 'CHANGELOG.md')
   if (!existsSync(changelog) && !opts.dryRun) {
-    await writeFile(changelog, '# Changelog\n\n## Unreleased\n- see docs/decisions/ADR-INDEX.md\n', 'utf8')
+    await writeFile(
+      changelog,
+      '# Changelog\n\n## Unreleased\n- see docs/decisions/ADR-INDEX.md\n',
+      'utf8',
+    )
     findings.push('created CHANGELOG.md stub')
   } else {
     findings.push('changelog present')
@@ -405,8 +449,10 @@ async function phaseVerify(opts: Opts): Promise<PhaseResult> {
     const testPath = join(process.cwd(), 'tests', 'e2e', 'tauri-sidecar.test.ts')
     if (existsSync(testPath)) {
       findings.push('running desktop smoke test (tests/e2e/tauri-sidecar.test.ts)')
-      findings.push('NOTE: start the built sidecar on 127.0.0.1:9421 first, or run against a live server')
-      const code = opts.dryRun ? 0 : (await sh('bun', ['run', testPath], false)) ?? 0
+      findings.push(
+        'NOTE: start the built sidecar on 127.0.0.1:9421 first, or run against a live server',
+      )
+      const code = opts.dryRun ? 0 : ((await sh('bun', ['run', testPath], false)) ?? 0)
       // The smoke test expects a live sidecar; in CI it runs after `build` starts it.
       // We treat a non-zero as a warning (the harness may not have the sidecar up) but
       // still surface it. For a hard gate, pass --strict-verify.
@@ -416,7 +462,13 @@ async function phaseVerify(opts: Opts): Promise<PhaseResult> {
         ok: opts.dryRun ? true : code === 0 || !strict,
         skipped: false,
         dryRun: opts.dryRun,
-        summary: opts.dryRun ? '[dry-run] would run desktop smoke test' : code === 0 ? 'desktop smoke test passed' : strict ? 'desktop smoke test FAILED' : 'desktop smoke test not run live (non-strict)',
+        summary: opts.dryRun
+          ? '[dry-run] would run desktop smoke test'
+          : code === 0
+            ? 'desktop smoke test passed'
+            : strict
+              ? 'desktop smoke test FAILED'
+              : 'desktop smoke test not run live (non-strict)',
         findings,
       }
     }

@@ -1,5 +1,7 @@
 'use client';
 
+import { memo } from 'react';
+
 /**
  * UI rendering type — superset of shared/stream-blocks.ts canonical ContentBlock.
  * Adds tool-result, file, step-start for progressive rendering.
@@ -12,7 +14,8 @@ export interface ContentBlock {
   [key: string]: unknown;
 }
 
-export function MessageBlock({ block }: { block: ContentBlock }) {
+// R3-15: Memoize to prevent re-render per streaming chunk
+export const MessageBlock = memo(function MessageBlock({ block }: { block: ContentBlock }) {
   const kind = block.kind ?? 'text'
   switch (kind) {
     case 'code':
@@ -26,7 +29,7 @@ export function MessageBlock({ block }: { block: ContentBlock }) {
             marginTop: 8,
             overflowX: 'auto',
             fontSize: 12,
-            fontFamily: 'ui-monospace, monospace',
+            fontFamily: 'var(--font-mono)',
             lineHeight: 1.5,
             border: '1px solid var(--border)',
           }}
@@ -79,7 +82,7 @@ export function MessageBlock({ block }: { block: ContentBlock }) {
           <summary style={{ cursor: 'pointer', userSelect: 'none', padding: '6px 10px', background: 'var(--bg-subtle)' }}>
             Tool: {String((block as Record<string, unknown>).toolName ?? 'unknown')}
           </summary>
-          <pre style={{ margin: 0, padding: 10, fontSize: 11, fontFamily: 'ui-monospace, monospace', overflowX: 'auto' }}>
+          <pre style={{ margin: 0, padding: 10, fontSize: 11, fontFamily: 'var(--font-mono)', overflowX: 'auto' }}>
             {JSON.stringify((block as Record<string, unknown>).input ?? '', null, 2)}
           </pre>
         </details>
@@ -97,7 +100,7 @@ export function MessageBlock({ block }: { block: ContentBlock }) {
           <summary style={{ cursor: 'pointer', userSelect: 'none', padding: '6px 10px', background: 'var(--bg-subtle)' }}>
             Result: {String((block as Record<string, unknown>).toolName ?? 'unknown')}
           </summary>
-          <pre style={{ margin: 0, padding: 10, fontSize: 11, fontFamily: 'ui-monospace, monospace', overflowX: 'auto' }}>
+          <pre style={{ margin: 0, padding: 10, fontSize: 11, fontFamily: 'var(--font-mono)', overflowX: 'auto' }}>
             {typeof (block as Record<string, unknown>).output === 'string'
               ? (block as Record<string, unknown>).output as string
               : JSON.stringify((block as Record<string, unknown>).output ?? {}, null, 2)}
@@ -132,7 +135,7 @@ export function MessageBlock({ block }: { block: ContentBlock }) {
             borderRadius: 4,
             background: 'var(--bg-subtle)',
             fontSize: 11,
-            fontFamily: 'ui-monospace, monospace',
+            fontFamily: 'var(--font-mono)',
             color: 'var(--text-muted)',
           }}
         >
@@ -160,7 +163,7 @@ export function MessageBlock({ block }: { block: ContentBlock }) {
     default:
       return <span style={{ whiteSpace: 'pre-wrap' }}>{block.content}</span>;
   }
-}
+});
 
 export function RenderBlocks({ blocks }: { blocks: ContentBlock[] }) {
   const merged: ContentBlock[] = [];

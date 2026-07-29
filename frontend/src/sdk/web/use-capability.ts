@@ -8,11 +8,13 @@ export function useCapability(surface?: string) {
   const io = useIO();
   const [capabilities, setCapabilities] = useState<Capability[]>([]);
   const [loading, setLoading] = useState(false);
+  const [executing, setExecuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
   useEffect(() => () => { mountedRef.current = false }, []);
 
+  // R3-06: Auto-fetch on mount
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -29,8 +31,11 @@ export function useCapability(surface?: string) {
     }
   }, [io, surface]);
 
+  useEffect(() => { refresh(); }, [refresh]);
+
+  // R3-07: Separate executing state (doesn't block refresh)
   const execute = useCallback(async (capabilityId: string, input?: Record<string, unknown>) => {
-    setLoading(true);
+    setExecuting(true);
     setError(null);
     try {
       const res = await io.post<{ success?: boolean; result?: unknown; error?: string }>(
@@ -44,9 +49,9 @@ export function useCapability(surface?: string) {
       setError(e instanceof Error ? e.message : 'Failed to execute capability');
       return null;
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current) setExecuting(false);
     }
   }, [io]);
 
-  return { capabilities, loading, error, refresh, execute };
+  return { capabilities, loading, executing, error, refresh, execute };
 }

@@ -34,7 +34,7 @@ import { useMutation, type AppliedMutationRecord, type PreviewEntry } from '@/sd
 import type {
   SurfaceMutation,
   SurfaceMutationPlan,
-} from '@/reprogrammability/mutation-schema';
+} from '@backend/reprogrammability/mutation-schema';
 
 // ── Context shape ────────────────────────────────────────────────────────────
 
@@ -171,7 +171,6 @@ export function BuilderProvider({ children }: { children: ReactNode }) {
       try {
         const json = JSON.stringify(target, null, 2);
         navigator.clipboard?.writeText(json);
-        // eslint-disable-next-line no-console
         console.log('[Builder] edit mutation (Phase 5 will open Reprogram-Modal):', json);
       } catch {
         // clipboard may be unavailable

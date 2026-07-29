@@ -25,7 +25,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ReprogramModal } from './ReprogramModal';
 import { useIO } from './UnifiedIOProvider';
-import type { SurfaceSpec } from '../../../mini-services/backend/src/reprogrammability/schema/spec.js';
+import type { SurfaceSpec } from '@backend/reprogrammability/schema/spec';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

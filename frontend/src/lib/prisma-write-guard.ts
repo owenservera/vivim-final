@@ -55,7 +55,7 @@ export function withWriteGuard<T extends PrismaClient>(client: T): T {
                   `[db-guard] WARNING: Frontend writing to backend-owned table "${prop}.${method}()". ` +
                   `This violates table ownership — use the backend API instead.`
                 )
-                return (fn as Function).apply(model, args)
+                return (fn as (...args: unknown[]) => unknown).apply(model, args)
               }
             }
             return fn

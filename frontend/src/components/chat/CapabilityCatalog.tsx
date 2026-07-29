@@ -1,7 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
+import { useAsyncOperation } from '@/hooks/useAsyncOperation';
+import { useToast } from '@/hooks/useToast';
 
 interface Capability {
   id: string;
@@ -14,27 +16,20 @@ interface Capability {
 
 export function CapabilityCatalog() {
   const io = useIO();
+  const { loading, error, run } = useAsyncOperation();
+  const { toast, showToast } = useToast(2000);
   const [caps, setCaps] = useState<Capability[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [executing, setExecuting] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ slug: string; ok: boolean } | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await io.get<{ capabilities?: Capability[] } | Capability[]>('/api/capabilities?surface=ui');
+    const res = await run(() => io.get<{ capabilities?: Capability[] } | Capability[]>('/api/capabilities?surface=ui'));
+    if (res) {
       const data = res.data;
       setCaps(Array.isArray(data) ? data : (data?.capabilities ?? []));
-    } catch (e: unknown) {
-      setError(String(e));
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [io, run]);
 
   useEffect(() => {
     load();
@@ -43,19 +38,16 @@ export function CapabilityCatalog() {
   const execute = async (cap: Capability) => {
     setExecuting(cap.id);
     setResult(null);
-    try {
-      const res = await io.post<{ ok?: boolean }>(`/api/capabilities/${cap.id}/execute`, {});
+    const res = await run(() => io.post<{ ok?: boolean }>(`/api/capabilities/${cap.id}/execute`, {}));
+    if (res) {
       const ok = res.data?.ok === true;
       setResult(`${cap.label}: ${ok ? 'OK' : 'failed'} — ${JSON.stringify(res.data).slice(0, 200)}`);
-      setToast({ slug: cap.slug, ok });
-      setTimeout(() => setToast(null), 2000);
-    } catch (e: unknown) {
-      setResult(`${cap.label}: error — ${String(e)}`);
-      setToast({ slug: cap.slug, ok: false });
-      setTimeout(() => setToast(null), 2000);
-    } finally {
-      setExecuting(null);
+      showToast(ok ? 'ok' : 'err', `${cap.slug} ${ok ? 'executed' : 'failed'}`);
+    } else {
+      setResult(`${cap.label}: error`);
+      showToast('err', `${cap.slug} failed`);
     }
+    setExecuting(null);
   };
 
   const filtered = search
@@ -186,7 +178,7 @@ export function CapabilityCatalog() {
                   style={{
                     fontSize: 10,
                     color: 'var(--text-subtle)',
-                    fontFamily: 'ui-monospace, monospace',
+                    fontFamily: 'var(--font-mono)',
                   }}
                 >
                   {cap.slug}
@@ -222,7 +214,7 @@ export function CapabilityCatalog() {
             background: 'var(--bg-subtle)',
             fontSize: 11,
             color: 'var(--text)',
-            fontFamily: 'ui-monospace, monospace',
+            fontFamily: 'var(--font-mono)',
           }}
         >
           {result}
@@ -253,8 +245,8 @@ export function CapabilityCatalog() {
             padding: '8px 14px',
             borderRadius: 6,
             border: '1px solid var(--border)',
-            background: toast.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-            color: toast.ok ? '#22c55e' : '#ef4444',
+            background: toast.kind === 'ok' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+            color: toast.kind === 'ok' ? '#22c55e' : '#ef4444',
             fontSize: 12,
             fontWeight: 600,
             fontFamily: 'ui-sans-serif, system-ui',
@@ -262,7 +254,7 @@ export function CapabilityCatalog() {
             pointerEvents: 'none',
           }}
         >
-          {toast.ok ? '✓' : '✗'} {toast.slug}
+          {toast.kind === 'ok' ? '✓' : '✗'} {toast.msg}
         </div>
       )}
     </div>

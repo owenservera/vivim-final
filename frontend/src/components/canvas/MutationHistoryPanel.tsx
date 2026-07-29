@@ -103,7 +103,7 @@ function HistoryRow({
       </span>
       <code
         style={{
-          fontFamily: 'var(--font-mono, ui-monospace, monospace)',
+          fontFamily: 'var(--font-mono)',
           fontSize: 11,
           color: 'var(--text, #0f172a)',
           wordBreak: 'break-all',

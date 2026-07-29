@@ -83,7 +83,7 @@ function CardFrame({
         }}
       >
         <strong style={{ color: 'var(--text)' }}>{title}</strong>
-        <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10 }}>{badge}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}>{badge}</span>
       </div>
       <div style={{ flex: 1 }}>{children}</div>
     </div>

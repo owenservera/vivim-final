@@ -384,7 +384,10 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
   if (needsSeed) {
     const seedResult = await registrar.seedAll()
-    log.info({ count: seedResult.seeded.length, errors: seedResult.errors.length }, 'Seeded providers')
+    log.info(
+      { count: seedResult.seeded.length, errors: seedResult.errors.length },
+      'Seeded providers',
+    )
 
     try {
       const { seedHarvestedParsers } = await import('../../seeds/parsers/harvest.seed.js')

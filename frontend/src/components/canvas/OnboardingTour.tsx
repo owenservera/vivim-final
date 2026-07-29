@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react';
 import type { OnboardingStep } from '../../shared/onboarding';
 import { ONBOARDING_STEPS } from '../../shared/onboarding';
+import { SectionLabel } from './SectionLabel';
 
 export interface OnboardingTourProps {
   userId: string;
@@ -158,9 +159,9 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <SectionLabel style={{ marginBottom: 0 }}>
             Tour · {stepIdx + 1} / {ONBOARDING_STEPS.length}
-          </div>
+          </SectionLabel>
           <button onClick={skip} style={skipBtnStyle}>Skip</button>
         </div>
         <h3 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 600 }}>{step.title}</h3>

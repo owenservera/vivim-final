@@ -1,16 +1,11 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
-import type {
-  AutonomousGoal,
-  AutonomousTask,
-  AutonomousStep,
-} from '../../../src/engines/autonomous-execution.js'
-import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
-import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
-import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
-import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
+import type { AutonomousGoal, AutonomousTask } from '../../../src/engines/autonomous-execution.js'
 import type { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
-import { newId } from '../../../src/ids.js'
+import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
+import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'
+import type { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
+import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
 
 // ── Mocks ────────────────────────────────────────────────────────────────
 

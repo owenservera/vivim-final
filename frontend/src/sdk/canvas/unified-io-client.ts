@@ -131,6 +131,12 @@ export function createUnifiedIO(opts: { fetchImpl?: typeof fetch; ulidImpl?: () 
     async patch<T>(url: string, body?: unknown, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>> {
       return this.request<T>(url, { ...init, method: 'PATCH', body });
     },
+    async put<T>(url: string, body?: unknown, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>> {
+      return this.request<T>(url, { ...init, method: 'PUT', body });
+    },
+    async delete<T>(url: string, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>> {
+      return this.request<T>(url, { ...init, method: 'DELETE' });
+    },
 
     subscribeSSE(url: string, onEvent: (data: unknown) => void, onError?: (err: Error) => void): SSESubscription {
       const traceId = ulid();

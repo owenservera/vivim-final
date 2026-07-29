@@ -100,7 +100,7 @@ export function ZLayerPanel({ workspaceId }: { workspaceId: string }) {
               >
                 {def.label}
               </button>
-              <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: 'var(--text-subtle)', minWidth: 40, textAlign: 'right' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-subtle)', minWidth: 40, textAlign: 'right' }}>
                 z={layer.depth}
               </span>
               <button

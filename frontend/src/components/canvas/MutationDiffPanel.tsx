@@ -24,8 +24,8 @@ import { useMemo, useState } from 'react';
 import type {
   SurfaceMutation,
   SurfaceMutationPlan,
-} from '../../../mini-services/backend/src/reprogrammability/mutation-schema.js';
-import type { SurfaceSpec } from '../../../mini-services/backend/src/reprogrammability/schema/spec.js';
+} from '@backend/reprogrammability/mutation-schema';
+import type { SurfaceSpec } from '@backend/reprogrammability/schema/spec';
 import type { PreviewEntry } from '@/sdk/web/use-mutation';
 
 // ── Props ────────────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ function SpecView({ spec, label, color }: { spec?: SurfaceSpec | null; label: st
         border: `1px solid ${color}33`,
         borderRadius: 4,
         padding: 8,
-        fontFamily: 'var(--font-mono, ui-monospace, monospace)',
+        fontFamily: 'var(--font-mono)',
         fontSize: 11,
         lineHeight: 1.4,
         whiteSpace: 'pre-wrap',
@@ -194,7 +194,7 @@ function MutationCard({ entry, mutation, index }: { entry?: PreviewEntry; mutati
         <code
           style={{
             fontSize: 11,
-            fontFamily: 'var(--font-mono, ui-monospace, monospace)',
+            fontFamily: 'var(--font-mono)',
             color: 'var(--text, #0f172a)',
             wordBreak: 'break-all',
           }}
@@ -274,7 +274,7 @@ function MutationCard({ entry, mutation, index }: { entry?: PreviewEntry; mutati
               background: 'var(--bg-elevated, #f8fafc)',
               borderRadius: 3,
               fontSize: 11,
-              fontFamily: 'var(--font-mono, ui-monospace, monospace)',
+              fontFamily: 'var(--font-mono)',
               overflowX: 'auto',
               color: 'var(--text, #0f172a)',
             }}
@@ -351,7 +351,7 @@ function ErrorState({ error }: { error: string }) {
       }}
     >
       <div style={{ fontWeight: 600, marginBottom: 4 }}>Preview failed</div>
-      <div style={{ fontSize: 11, fontFamily: 'var(--font-mono, ui-monospace, monospace)' }}>{error}</div>
+      <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)' }}>{error}</div>
     </div>
   );
 }

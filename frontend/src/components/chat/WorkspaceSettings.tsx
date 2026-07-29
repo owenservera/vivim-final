@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
 
 interface WorkspaceSettingsData {
   workspacePath: string;
@@ -151,7 +151,7 @@ export function WorkspaceSettings({ onClose }: WorkspaceSettingsProps) {
             background: 'var(--bg)',
             color: 'var(--text)',
             fontSize: 12,
-            fontFamily: 'ui-monospace, monospace',
+            fontFamily: 'var(--font-mono)',
           }}
         />
         <p style={{ marginTop: 4, fontSize: 10, color: 'var(--text-muted)' }}>
@@ -243,7 +243,7 @@ export function WorkspaceSettings({ onClose }: WorkspaceSettingsProps) {
               }))
             }
             placeholder="Auto-detect"
-            style={{ ...inputStyle, fontFamily: 'ui-monospace, monospace' }}
+            style={{ ...inputStyle, fontFamily: 'var(--font-mono)' }}
           />
         </Field>
         <div style={{ marginTop: 8 }}>

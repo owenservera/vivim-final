@@ -76,7 +76,7 @@ export function ChatHeader({
             border: '1px solid var(--border)',
             borderRadius: 3,
             fontSize: 9,
-            fontFamily: 'ui-monospace, monospace',
+            fontFamily: 'var(--font-mono)',
           }}
         >
           ⌘K

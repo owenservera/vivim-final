@@ -26,8 +26,8 @@ import type { IOEvent } from '@/components/canvas/UnifiedIOProvider';
 import type {
   SurfaceMutation,
   SurfaceMutationPlan,
-} from '../../../mini-services/backend/src/reprogrammability/mutation-schema.js';
-import type { SurfaceSpec } from '../../../mini-services/backend/src/reprogrammability/schema/spec.js';
+} from '@backend/reprogrammability/mutation-schema';
+import type { SurfaceSpec } from '@backend/reprogrammability/schema/spec';
 
 // ── Mirror of backend executor's AppliedMutationRecord ────────────────────────
 // Kept in sync with mini-services/backend/src/reprogrammability/dsl/executor.ts.

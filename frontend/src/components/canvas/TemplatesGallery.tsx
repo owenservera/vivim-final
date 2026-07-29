@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import type { WorkspaceTemplate } from '../../shared/template';
+import { SectionLabel } from './SectionLabel';
 
 export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: string) => void }) {
   const [templates, setTemplates] = useState<WorkspaceTemplate[]>([]);
@@ -84,10 +85,10 @@ export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: stri
               <span style={{ fontSize: 24 }}>{tpl.icon}</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{tpl.name}</div>
-                <div style={{ fontSize: 9, color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <SectionLabel style={{ fontSize: 9 }}>
                   {tpl.category}
                   {tpl.featured && ' · ⭐ featured'}
-                </div>
+                </SectionLabel>
               </div>
             </div>
             <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>{tpl.description}</p>
@@ -111,7 +112,7 @@ export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: stri
                   textAlign: 'center',
                 }}
               >
-                 Created  <code style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10 }}>{created[tpl.id].slice(0, 24)}</code>
+                 Created  <code style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}>{created[tpl.id].slice(0, 24)}</code>
               </div>
             ) : (
               <button

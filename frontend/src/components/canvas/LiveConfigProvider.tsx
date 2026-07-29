@@ -40,6 +40,7 @@ export interface LiveConfigProviderProps {
   initialAccounts?: AccountContext[];
   initialSlotIds?: string[];
   initialVariant?: string;
+  slotIds?: string[];
   children: ReactNode;
 }
 
@@ -50,7 +51,7 @@ export function LiveConfigProvider(props: LiveConfigProviderProps) {
   const [variant, setVariant] = useState(props.initialVariant);
   const userId = props.initialUserId ?? 'user:1';
 
-  const slotIds = props.initialSlotIds ?? [
+  const slotIds = props.slotIds ?? props.initialSlotIds ?? [
     'chat.header', 'chat.sidebar', 'chat.thread', 'chat.composer', 'chat.send',
     'chat.attach', 'chat.streaming', 'chat.result', 'chat.actionBar',
   ];

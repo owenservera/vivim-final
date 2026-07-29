@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { TaskHistoryService, type TaskHistoryStore } from '../../../src/engines/task-history.js'
 
 // ── Mock Store ───────────────────────────────────────────────────────────
