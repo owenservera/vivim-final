@@ -18,12 +18,13 @@
  */
 
 import { useState } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
+import { useAsyncOperation } from '@/hooks/useAsyncOperation';
 import { Icon } from '@/components/canvas/Icon';
 import type {
   SurfaceMutationPlan,
   SurfaceMutation,
-} from '@/reprogrammability/mutation-schema';
+} from '@backend/reprogrammability/mutation-schema';
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -65,8 +66,7 @@ export function AgentPlanCard({
 }: AgentPlanCardProps) {
   const io = useIO();
   const [skipped, setSkipped] = useState<Set<number>>(new Set());
-  const [applying, setApplying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { loading: applying, error, setError, run } = useAsyncOperation();
 
   const toggleSkip = (idx: number) => {
     setSkipped((prev) => {
@@ -78,40 +78,31 @@ export function AgentPlanCard({
   };
 
   const handleConfirmAll = async () => {
-    setApplying(true);
     setError(null);
-    try {
-      // Filter out skipped mutations.
-      const filteredPlan: SurfaceMutationPlan = {
-        ...plan,
-        mutations: plan.mutations.filter((_, i) => !skipped.has(i)),
-      };
+    // Filter out skipped mutations.
+    const filteredPlan: SurfaceMutationPlan = {
+      ...plan,
+      mutations: plan.mutations.filter((_, i) => !skipped.has(i)),
+    };
 
-      if (filteredPlan.mutations.length === 0) {
-        setError('All mutations skipped — nothing to apply.');
-        setApplying(false);
-        return;
-      }
-
-      const res = await io.post<{
-        ok: boolean;
-        error?: string;
-        result?: { ok: boolean; records: unknown[] };
-      }>('/api/llm-harness/apply', {
-        plan: filteredPlan,
-        confirmationToken,
-      });
-      const data = res.data;
-      if (!data?.ok) {
-        setError(data?.error ?? 'Apply failed');
-        return;
-      }
-      onConfirmed?.();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Network error');
-    } finally {
-      setApplying(false);
+    if (filteredPlan.mutations.length === 0) {
+      setError('All mutations skipped — nothing to apply.');
+      return;
     }
+
+    const res = await run(() => io.post<{
+      ok: boolean;
+      error?: string;
+      result?: { ok: boolean; records: unknown[] };
+    }>('/api/llm-harness/apply', {
+      plan: filteredPlan,
+      confirmationToken,
+    }));
+    if (!res?.data?.ok) {
+      setError(res?.data?.error ?? 'Apply failed');
+      return;
+    }
+    onConfirmed?.();
   };
 
   const activeCount = plan.mutations.length - skipped.size;

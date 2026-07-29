@@ -19,8 +19,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useIO } from './UnifiedIOProvider';
+import { useAsyncOperation } from '@/hooks/useAsyncOperation';
 import { Icon } from './Icon';
-import type { MutationProvenance } from '../../../mini-services/backend/src/reprogrammability/contract.js';
+import type { MutationProvenance } from '@backend/reprogrammability/contract';
 
 // ── Types (mirror of backend version-store.ts SurfaceVersion) ────────────────
 
@@ -72,35 +73,26 @@ function formatTime(ms: number): string {
 export function TimeMachinePanel({ surfaceId }: TimeMachinePanelProps) {
   const io = useIO();
   const [versions, setVersions] = useState<SurfaceVersion[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { loading, error, setError, run } = useAsyncOperation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [diffWith, setDiffWith] = useState<string | null>(null);
   const [diff, setDiff] = useState<string | null>(null);
-  const [restoring, setRestoring] = useState(false);
+  const { loading: restoring, run: runRestore } = useAsyncOperation();
 
   // ── Refresh versions ──────────────────────────────────────────────────────
   const refresh = useCallback(async () => {
     if (!surfaceId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await io.get<{
-        ok: boolean;
-        versions?: SurfaceVersion[];
-        error?: string;
-      }>('/api/version', { query: { surfaceId, limit: '100' } });
-      if (res.data?.ok && res.data.versions) {
-        setVersions(res.data.versions);
-      } else {
-        setError(res.data?.error ?? 'Failed to load versions');
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Network error');
-    } finally {
-      setLoading(false);
+    const res = await run(() => io.get<{
+      ok: boolean;
+      versions?: SurfaceVersion[];
+      error?: string;
+    }>('/api/version', { query: { surfaceId, limit: '100' } }));
+    if (res?.data?.ok && res.data.versions) {
+      setVersions(res.data.versions);
+    } else {
+      setError(res?.data?.error ?? 'Failed to load versions');
     }
-  }, [io, surfaceId]);
+  }, [io, surfaceId, run, setError]);
 
   useEffect(() => {
     void refresh();
@@ -109,47 +101,34 @@ export function TimeMachinePanel({ surfaceId }: TimeMachinePanelProps) {
   // ── Restore a version ────────────────────────────────────────────────────
   const restore = useCallback(
     async (versionId: string) => {
-      setRestoring(true);
-      setError(null);
-      try {
-        const res = await io.post<{
-          ok: boolean;
-          error?: string;
-          record?: { ok: boolean };
-        }>(`/api/version/${versionId}/restore`, {});
-        if (!res.data?.ok) {
-          setError(res.data?.error ?? 'Restore failed');
-          return;
-        }
-        // Refresh after restore — the restore itself adds a new version.
-        await refresh();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Network error');
-      } finally {
-        setRestoring(false);
+      const res = await runRestore(() => io.post<{
+        ok: boolean;
+        error?: string;
+        record?: { ok: boolean };
+      }>(`/api/version/${versionId}/restore`, {}));
+      if (!res?.data?.ok) {
+        setError(res?.data?.error ?? 'Restore failed');
+        return;
       }
+      // Refresh after restore — the restore itself adds a new version.
+      await refresh();
     },
-    [io, refresh],
+    [io, refresh, runRestore, setError],
   );
 
   // ── Diff two versions ─────────────────────────────────────────────────────
   const showDiff = useCallback(
     async (versionIdA: string, versionIdB: string) => {
-      setError(null);
-      try {
-        const res = await io.get<DiffResponse>('/api/version/diff', {
-          query: { a: versionIdA, b: versionIdB },
-        });
-        if (res.data?.ok && res.data.diff) {
-          setDiff(res.data.diff.jsonDiff);
-        } else {
-          setError('Diff failed');
-        }
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Network error');
+      const res = await run(() => io.get<DiffResponse>('/api/version/diff', {
+        query: { a: versionIdA, b: versionIdB },
+      }));
+      if (res?.data?.ok && res.data.diff) {
+        setDiff(res.data.diff.jsonDiff);
+      } else {
+        setError('Diff failed');
       }
     },
-    [io],
+    [io, run, setError],
   );
 
   if (!surfaceId) {
@@ -401,7 +380,7 @@ export function TimeMachinePanel({ surfaceId }: TimeMachinePanelProps) {
               fontSize: 10,
               margin: 0,
               whiteSpace: 'pre-wrap',
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-mono)',
               color: 'var(--text-primary, #0f172a)',
             }}
           >

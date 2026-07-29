@@ -15,6 +15,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { StreamEvent, StreamSession, StreamState } from '../../shared/streaming';
 import { STREAM_STATE_INDICATOR } from '../../shared/streaming';
 
+// R3-13: Maximum events to retain in memory (backpressure cap)
+const MAX_EVENTS = 500;
+
 export interface UseStreamSlotOptions {
   nodeId: string;
   capabilityId: string;
@@ -107,7 +110,11 @@ export function useStreamSlot(opts: UseStreamSlotOptions): UseStreamSlotResult {
               const evt = JSON.parse(line) as StreamEvent & { traceId?: string };
               evt.index = eventIndex++;
               evt.timestamp = Date.now();
-              setEvents((prev) => [...prev, evt]);
+              setEvents((prev) => {
+                const next = [...prev, evt];
+                // R3-13: Backpressure — cap event history to prevent unbounded growth
+                return next.length > MAX_EVENTS ? next.slice(-MAX_EVENTS) : next;
+              });
               setLastEventAt(evt.timestamp);
               if (evt.traceId) setTraceId(evt.traceId);
 

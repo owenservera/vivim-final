@@ -11,15 +11,10 @@
 // --sandbox-mode validates sandbox + real capability execution
 
 import { spawn, spawnSync } from 'node:child_process'
+import { type BaselineDiff, diffBaseline, hasBaseline, lintFingerprints } from './baseline.ts'
 import { getChangedFiles } from './changed.ts'
 import { checkInvariants } from './invariants.ts'
 import { verifySkillCliDrift } from './skill-cli-verifier.ts'
-import {
-  diffBaseline,
-  hasBaseline,
-  lintFingerprints,
-  type BaselineDiff,
-} from './baseline.ts'
 
 export type GateMode = 'regression' | 'full'
 
@@ -310,7 +305,14 @@ export async function runGate(
   const skillCliDrift = { ok: driftIssues.length === 0, issues: driftIssues.length }
   const driftFailed = !skillCliDrift.ok
 
-  let ok = corePass && !strictFailed && !invariantFailed && !auditFailed && !coverageFailed && !integrationFailed && !driftFailed
+  let ok =
+    corePass &&
+    !strictFailed &&
+    !invariantFailed &&
+    !auditFailed &&
+    !coverageFailed &&
+    !integrationFailed &&
+    !driftFailed
   let baseline: BaselineDiff | undefined
   let baselineNote = ''
 
@@ -362,7 +364,15 @@ export async function runGate(
   return {
     pass: ok,
     steps,
-    summary: summary + strictExtra + auditExtra + coverageExtra + integExtra + invSummary + driftExtra + baselineNote,
+    summary:
+      summary +
+      strictExtra +
+      auditExtra +
+      coverageExtra +
+      integExtra +
+      invSummary +
+      driftExtra +
+      baselineNote,
     strict: strictResult,
     invariants: invariantResult,
     integration: integrationResult,

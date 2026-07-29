@@ -192,16 +192,22 @@ export class AutonomousExecutionEngine {
     u.iterations += 1
     const g = task.goal
     const over =
-      u.costCents >= g.costBudgetCents || u.tokens >= g.tokenBudget || u.iterations >= g.iterationBudget
+      u.costCents >= g.costBudgetCents ||
+      u.tokens >= g.tokenBudget ||
+      u.iterations >= g.iterationBudget
     if (over) {
       task.status = 'paused'
       this.store.updateTask(task.id, { status: 'paused', pauseReason: 'budget_exceeded' })
       this.usage.set(task.id, u)
-      throw new BudgetExceededError('budget', JSON.stringify(u), JSON.stringify({
-        costBudgetCents: g.costBudgetCents,
-        tokenBudget: g.tokenBudget,
-        iterationBudget: g.iterationBudget,
-      }))
+      throw new BudgetExceededError(
+        'budget',
+        JSON.stringify(u),
+        JSON.stringify({
+          costBudgetCents: g.costBudgetCents,
+          tokenBudget: g.tokenBudget,
+          iterationBudget: g.iterationBudget,
+        }),
+      )
     }
     this.usage.set(task.id, u)
   }
@@ -534,7 +540,8 @@ export class AutonomousExecutionEngine {
         provenanceRoot: string | null
       }
       worldMatches =
-        this.cursorMatches(task, snapshot.cursor) && this.provChainIntact(task, snapshot.provenanceRoot)
+        this.cursorMatches(task, snapshot.cursor) &&
+        this.provChainIntact(task, snapshot.provenanceRoot)
     }
 
     this.activeTasks.set(taskId, task)
@@ -619,7 +626,7 @@ export class AutonomousExecutionEngine {
         startedAt: s.startedAt as number | null,
         completedAt: s.completedAt as number | null,
         requiresHumanApproval: (s.requiresHumanApproval as number) === 1,
-        parentStepId: s.parentStepId as string | null ?? null,
+        parentStepId: (s.parentStepId as string | null) ?? null,
         isCompositeRoot: (s.isCompositeRoot as number) === 1,
       })),
       startedAt: row.startedAt as number,
@@ -657,7 +664,7 @@ export class AutonomousExecutionEngine {
           startedAt: s.startedAt as number | null,
           completedAt: s.completedAt as number | null,
           requiresHumanApproval: (s.requiresHumanApproval as number) === 1,
-          parentStepId: s.parentStepId as string | null ?? null,
+          parentStepId: (s.parentStepId as string | null) ?? null,
           isCompositeRoot: (s.isCompositeRoot as number) === 1,
         })),
         startedAt: row.startedAt as number,
@@ -1198,27 +1205,32 @@ export class AutonomousExecutionEngine {
       this.gateWaiters.set(gateId, { resolve, timer })
 
       // Also poll in case resolveGate was called before we registered
-      this.store.getGate(gateId).then((gate) => {
-        if (gate && gate.status !== 'pending') {
-          clearTimeout(timer)
-          this.gateWaiters.delete(gateId)
-          resolve({
-            id: gateId,
-            taskId: gate.taskId as string,
-            stepId: gate.stepId as string,
-            gateType: gate.gateType as GateType,
-            prompt: gate.prompt as string,
-            options: JSON.parse(gate.optionsJson as string),
-            defaultValue: gate.defaultValue as string | null,
-            status: gate.status as GateStatus,
-            resolvedBy: gate.resolvedBy as string | null,
-            resolvedAt: gate.resolvedAt as number | null,
-            response: gate.response as string | null,
-            createdAt: gate.createdAt as number,
-            expiresAt: gate.expiresAt as number | null,
-          })
-        }
-      }).catch(() => { /* poll failure — timer fallback handles it */ })
+      this.store
+        .getGate(gateId)
+        .then((gate) => {
+          if (gate && gate.status !== 'pending') {
+            clearTimeout(timer)
+            this.gateWaiters.delete(gateId)
+            resolve({
+              id: gateId,
+              taskId: gate.taskId as string,
+              stepId: gate.stepId as string,
+              gateType: gate.gateType as GateType,
+              prompt: gate.prompt as string,
+              options: JSON.parse(gate.optionsJson as string),
+              defaultValue: gate.defaultValue as string | null,
+              status: gate.status as GateStatus,
+              resolvedBy: gate.resolvedBy as string | null,
+              resolvedAt: gate.resolvedAt as number | null,
+              response: gate.response as string | null,
+              createdAt: gate.createdAt as number,
+              expiresAt: gate.expiresAt as number | null,
+            })
+          }
+        })
+        .catch(() => {
+          /* poll failure — timer fallback handles it */
+        })
     })
   }
 }

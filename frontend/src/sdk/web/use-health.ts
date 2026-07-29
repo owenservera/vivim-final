@@ -28,5 +28,8 @@ export function useHealth() {
     }
   }, [io]);
 
+  // R3-06: Auto-fetch on mount
+  useEffect(() => { check(); }, [check]);
+
   return { health, loading, error, check };
 }

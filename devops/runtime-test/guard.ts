@@ -18,7 +18,7 @@ export interface GuardResult {
 export function runGuard(): GuardResult {
   const violations: string[] = []
 
-  // 1) Running servers (PID files written by start-all.ps1 / supervisor)
+  // 1) Running servers (PID files in .runtime/)
   try {
     if (existsSync('.runtime')) {
       const pids = readdirSync('.runtime').filter((f) => f.endsWith('.pid'))

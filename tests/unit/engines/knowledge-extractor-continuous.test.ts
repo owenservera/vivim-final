@@ -149,7 +149,7 @@ describe('KnowledgeExtractorContinuous', () => {
           },
         ]
       },
-  } as unknown as KnowledgeExtractor
+    } as unknown as KnowledgeExtractor
 
     const failingContinuous = new KnowledgeExtractorContinuous(failingExtractor, bus, memory.engine)
     failingContinuous.start()

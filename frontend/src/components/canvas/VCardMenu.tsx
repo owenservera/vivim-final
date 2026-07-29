@@ -156,7 +156,7 @@ export function VCardMenu({ state, onAction, trigger = 'both', children }: VCard
               <span style={{ width: 16, textAlign: 'center', fontSize: 13 }}>{action.icon}</span>
               <span style={{ flex: 1 }}>{action.label}</span>
               {action.shortcut && (
-                <kbd style={{ fontSize: 9, color: 'var(--text-subtle)', fontFamily: 'ui-monospace, monospace' }}>
+                <kbd style={{ fontSize: 9, color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)' }}>
                   {action.shortcut}
                 </kbd>
               )}

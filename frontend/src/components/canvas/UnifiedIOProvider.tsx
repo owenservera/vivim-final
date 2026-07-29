@@ -19,6 +19,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -223,6 +224,14 @@ class BrowserUnifiedIO implements UnifiedIO {
     return this.request<T>(url, { ...init, method: 'PATCH', body });
   }
 
+  async put<T>(url: string, body?: unknown, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>> {
+    return this.request<T>(url, { ...init, method: 'PUT', body });
+  }
+
+  async delete<T>(url: string, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>> {
+    return this.request<T>(url, { ...init, method: 'DELETE' });
+  }
+
   subscribeSSE(url: string, onEvent: (data: unknown) => void, onError?: (err: Error) => void): SSESubscription {
     const traceId = this.newTraceId();
     const es = new EventSource(url);
@@ -255,6 +264,15 @@ class BrowserUnifiedIO implements UnifiedIO {
     const port = this.sandboxPorts.get(instanceId);
     if (port) {
       port.postMessage(message);
+    } else {
+      this.emit({
+        type: 'request:error',
+        traceId: this.newTraceId(),
+        method: 'POST',
+        url: `sandbox:${instanceId}`,
+        error: `No sandbox port registered for instance "${instanceId}"`,
+        timestamp: Date.now(),
+      });
     }
   }
 
@@ -301,7 +319,7 @@ export function useIO(): UnifiedIO {
 export function useIOEvents(): IOEvent[] {
   const io = useIO();
   const [events, setEvents] = useState<IOEvent[]>([]);
-  useMemo(() => {
+  useEffect(() => {
     const unsub = io.on((e) => {
       setEvents((prev) => [...prev.slice(-99), e]);
     });

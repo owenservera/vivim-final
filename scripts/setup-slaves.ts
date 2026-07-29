@@ -38,9 +38,8 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { BunCdpClient } from '../src/executor/cdp.js'
-import { type LaunchResult, killChrome, launchChrome } from '../src/executor/launcher.js'
+import { killChrome, launchChrome } from '../src/executor/launcher.js'
 import { ProfileAllocator } from '../src/executor/profile-allocator.js'
-import { config } from '../src/config.js'
 
 interface SetupProvider {
   provider: string
@@ -75,9 +74,7 @@ function readFlag(name: string): string | undefined {
 }
 
 const PROFILE_BASE =
-  readFlag('--profile-base') ??
-  process.env.CAP_STORE_PROFILE_DIR ??
-  'chrome-profiles'  // matches default in ProfileAllocator + FleetSupervisor
+  readFlag('--profile-base') ?? process.env.CAP_STORE_PROFILE_DIR ?? 'chrome-profiles' // matches default in ProfileAllocator + FleetSupervisor
 
 const BASE_PORT = 9222
 
@@ -190,7 +187,9 @@ async function run(): Promise<void> {
     for (let i = 0; i < PROVIDERS.length; i++) {
       const p = PROVIDERS[i]
       const port = BASE_PORT + i
-      const email = await ask(`Email you will use to log in to ${p.provider} (e.g. you@domain.com):`)
+      const email = await ask(
+        `Email you will use to log in to ${p.provider} (e.g. you@domain.com):`,
+      )
       const account = accountFromEmail(p.provider, email)
       console.log(
         `[${i + 1}/${PROVIDERS.length}] Launching VISIBLE Chrome for ${p.provider}/${account} → ${p.loginUrl}`,

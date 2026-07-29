@@ -110,7 +110,7 @@ function useTypewriter(text: string, opts?: { cps?: number; onDone?: () => void;
   const { cps = 55, onDone, enabled = true } = opts ?? {};
   const [visible, setVisible] = useState('');
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+  useEffect(() => { onDoneRef.current = onDone; });
 
   useEffect(() => {
     setVisible('');
@@ -440,8 +440,8 @@ export function GuidedLanding({ isOpen, mode = 'onboarding', onClose, onComplete
   const stateRef = useRef<LandingState>('booting');
   // Refs to avoid stale-closure bugs in async flows that need to read latest state
   const messagesRef = useRef<LandingMessage[]>([]);
-  messagesRef.current = messages;
-  stateRef.current = state;
+  useEffect(() => { messagesRef.current = messages; });
+  useEffect(() => { stateRef.current = state; });
 
   // Cleanup
   useEffect(() => {

@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import type { AuditEntry, AuditStats } from '../../shared/audit';
+import { SectionLabel } from './SectionLabel';
 
 export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
@@ -182,7 +183,7 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
               alignItems: 'center',
             }}
           >
-            <span style={{ color: 'var(--text-muted)', fontFamily: 'ui-monospace, monospace', fontSize: 10 }}>
+            <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>
               {new Date(e.createdAt).toLocaleTimeString()}
             </span>
             <span style={{ fontWeight: 600, minWidth: 120 }}>{e.engine}</span>
@@ -190,7 +191,7 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
             {e.capabilityId && (
               <code style={{ fontSize: 9, color: 'var(--text-subtle)' }}>{e.capabilityId}</code>
             )}
-            <span style={{ color: 'var(--text-subtle)', fontFamily: 'ui-monospace, monospace', fontSize: 10 }}>
+            <span style={{ color: 'var(--text-subtle)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>
               {e.durationMs}ms
             </span>
             {e.workspaceId && (
@@ -213,7 +214,7 @@ function StatCard({ label, value, color }: { label: string; value: number; color
         borderRadius: 8,
       }}
     >
-      <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+      <SectionLabel>{label}</SectionLabel>
       <div style={{ fontSize: 22, fontWeight: 700, color, marginTop: 2 }}>{value.toLocaleString()}</div>
     </div>
   );

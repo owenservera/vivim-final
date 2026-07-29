@@ -46,7 +46,12 @@ describe('detectCombo', () => {
   it('detects sequential combo with "then"', () => {
     const intents: CommandIntent[] = [
       cmd({ commandId: '/switch', category: 'provider', matchedPattern: 'switch to' }),
-      cmd({ commandId: '/send', confidence: 0.85, category: 'conversation', matchedPattern: 'send message' }),
+      cmd({
+        commandId: '/send',
+        confidence: 0.85,
+        category: 'conversation',
+        matchedPattern: 'send message',
+      }),
     ]
     const combo = detectCombo(intents, mockCtx)
     expect(combo.steps).toHaveLength(2)
@@ -58,7 +63,12 @@ describe('detectCombo', () => {
   it('detects parallel combo with "and"', () => {
     const intents: CommandIntent[] = [
       cmd(),
-      cmd({ commandId: '/providers', confidence: 0.85, category: 'provider', matchedPattern: 'list providers' }),
+      cmd({
+        commandId: '/providers',
+        confidence: 0.85,
+        category: 'provider',
+        matchedPattern: 'list providers',
+      }),
     ]
     const combo = detectCombo(intents, mockCtx)
     expect(combo.steps).toHaveLength(2)
@@ -74,7 +84,12 @@ describe('detectCombo', () => {
   it('marks dependent steps', () => {
     const intents: CommandIntent[] = [
       cmd({ commandId: '/switch', category: 'provider', matchedPattern: 'switch to' }),
-      cmd({ commandId: '/send', confidence: 0.85, category: 'conversation', matchedPattern: 'send message' }),
+      cmd({
+        commandId: '/send',
+        confidence: 0.85,
+        category: 'conversation',
+        matchedPattern: 'send message',
+      }),
     ]
     const combo = detectCombo(intents, mockCtx)
     expect(combo.steps[1]!.dependsOn).toContain('step-0')
@@ -84,7 +99,12 @@ describe('detectCombo', () => {
     const intents: CommandIntent[] = [
       cmd({ commandId: '/switch', category: 'provider', matchedPattern: 'switch to' }),
       cmd(),
-      cmd({ commandId: '/providers', confidence: 0.85, category: 'provider', matchedPattern: 'list providers' }),
+      cmd({
+        commandId: '/providers',
+        confidence: 0.85,
+        category: 'provider',
+        matchedPattern: 'list providers',
+      }),
     ]
     const combo = detectCombo(intents, mockCtx)
     expect(combo.steps.length).toBeGreaterThanOrEqual(2)

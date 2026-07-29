@@ -23,6 +23,23 @@ export const SLOT_IDS = [
   'chat.error', // error/toast surface
   'chat.header', // provider switcher + account status
   'chat.actionBar', // capability action buttons (B8)
+  // Canvas-level slots
+  'canvas.controls',
+  'session.controls',
+  'autonomous.controls',
+  'automation.launcher',
+  'fleet.controls',
+  'capabilities.panel',
+  'health.panel',
+  'search.panel',
+  'zlayers.panel',
+  'audit.panel',
+  'templates.panel',
+  'rbac.panel',
+  'tab.bar',
+  'tab.layer-switcher',
+  'tab.panel-content',
+  'entry.unified',
 ] as const
 
 export type SlotId = (typeof SLOT_IDS)[number]
@@ -50,6 +67,22 @@ export const SLOT_META: Record<SlotId, SlotMeta> = {
   'chat.error': { id: 'chat.error', label: 'Error/toast', overridableBy: 'capability' },
   'chat.header': { id: 'chat.header', label: 'Header', overridableBy: 'provider' },
   'chat.actionBar': { id: 'chat.actionBar', label: 'Action bar', overridableBy: 'capability' },
+  'canvas.controls': { id: 'canvas.controls', label: 'Canvas Controls', overridableBy: 'capability' },
+  'session.controls': { id: 'session.controls', label: 'Session Controls', overridableBy: 'provider' },
+  'autonomous.controls': { id: 'autonomous.controls', label: 'Autonomous Controls', overridableBy: 'capability' },
+  'automation.launcher': { id: 'automation.launcher', label: 'Automation Launcher', overridableBy: 'capability' },
+  'fleet.controls': { id: 'fleet.controls', label: 'Fleet Status', overridableBy: 'provider' },
+  'capabilities.panel': { id: 'capabilities.panel', label: 'Capabilities Panel', overridableBy: 'capability' },
+  'health.panel': { id: 'health.panel', label: 'Health Dashboard', overridableBy: 'provider' },
+  'search.panel': { id: 'search.panel', label: 'Search Panel', overridableBy: 'capability' },
+  'zlayers.panel': { id: 'zlayers.panel', label: 'Z-Layers Panel', overridableBy: 'capability' },
+  'audit.panel': { id: 'audit.panel', label: 'Audit Panel', overridableBy: 'capability' },
+  'templates.panel': { id: 'templates.panel', label: 'Templates Panel', overridableBy: 'capability' },
+  'rbac.panel': { id: 'rbac.panel', label: 'RBAC Panel', overridableBy: 'capability' },
+  'tab.bar': { id: 'tab.bar', label: 'Tab Bar', overridableBy: 'capability' },
+  'tab.layer-switcher': { id: 'tab.layer-switcher', label: 'Layer Switcher', overridableBy: 'capability' },
+  'tab.panel-content': { id: 'tab.panel-content', label: 'Tab Panel Content', overridableBy: 'capability' },
+  'entry.unified': { id: 'entry.unified', label: 'Unified Entry', overridableBy: 'provider' },
 }
 
 /** Type guard for arbitrary strings. */

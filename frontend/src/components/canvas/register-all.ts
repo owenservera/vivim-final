@@ -211,6 +211,120 @@ export function registerAllComponents(): void {
     isDefault: true,
   });
 
+  // ── New canvas-level panels ────────────────────────────────────────
+  register({
+    id: 'panel.health',
+    label: 'Health Dashboard',
+    kind: 'panel',
+    category: 'generic',
+    slot: 'health.panel',
+    Component: C.HealthDashboard ?? null,
+    capabilities: ['cap:health:check'],
+    version: 1,
+    author: 'system',
+    tags: ['health', 'monitoring'],
+    enabled: true,
+    isDefault: true,
+  });
+  register({
+    id: 'panel.capability-catalog',
+    label: 'Capability Catalog',
+    kind: 'panel',
+    category: 'generic',
+    slot: 'capabilities.panel',
+    Component: C.CapabilityCatalog ?? null,
+    capabilities: ['cap:capability:list', 'cap:capability:execute'],
+    version: 1,
+    author: 'system',
+    tags: ['capabilities'],
+    enabled: true,
+    isDefault: true,
+  });
+  register({
+    id: 'panel.search',
+    label: 'Search Panel',
+    kind: 'panel',
+    category: 'search',
+    slot: 'search.panel',
+    Component: C.SearchPanel ?? null,
+    capabilities: ['cap:search:query'],
+    version: 1,
+    author: 'system',
+    tags: ['search'],
+    enabled: true,
+    isDefault: true,
+  });
+  register({
+    id: 'panel.canvas-controls',
+    label: 'Mutation Controls',
+    kind: 'panel',
+    category: 'generic',
+    slot: 'canvas.controls',
+    Component: C.CanvasControlPanel ?? null,
+    capabilities: ['cap:mutation:apply', 'cap:mutation:undo', 'cap:mutation:redo'],
+    version: 1,
+    author: 'system',
+    tags: ['mutation', 'undo-redo'],
+    enabled: true,
+    isDefault: true,
+  });
+  register({
+    id: 'panel.task-manager',
+    label: 'Task Manager',
+    kind: 'panel',
+    category: 'generic',
+    slot: 'autonomous.controls',
+    Component: C.TaskManager ?? null,
+    capabilities: ['cap:autonomous:execute', 'cap:autonomous:cancel'],
+    version: 1,
+    author: 'system',
+    tags: ['autonomous', 'tasks'],
+    enabled: true,
+    isDefault: true,
+  });
+  register({
+    id: 'panel.automation-launcher',
+    label: 'Automation Launcher',
+    kind: 'panel',
+    category: 'automation',
+    slot: 'automation.launcher',
+    Component: C.AutomationLauncher ?? null,
+    capabilities: ['cap:automation:run', 'cap:automation:list'],
+    version: 1,
+    author: 'system',
+    tags: ['automation', 'browser'],
+    enabled: true,
+    isDefault: true,
+  });
+  register({
+    id: 'panel.fleet-status',
+    label: 'Fleet Status',
+    kind: 'panel',
+    category: 'generic',
+    slot: 'fleet.controls',
+    Component: C.FleetStatus ?? null,
+    capabilities: ['cap:provider:list', 'cap:health:check'],
+    version: 1,
+    author: 'system',
+    tags: ['fleet', 'providers'],
+    enabled: true,
+    isDefault: true,
+  });
+  register({
+    id: 'panel.session-controls',
+    label: 'Session Controls',
+    kind: 'panel',
+    category: 'generic',
+    slot: 'session.controls',
+    Component: C.SessionControls ?? null,
+    capabilities: ['cap:session:login', 'cap:session:logout'],
+    version: 1,
+    author: 'system',
+    tags: ['session', 'auth'],
+    enabled: true,
+    isDefault: true,
+  });
+
   // ── Overlays ───────────────────────────────────────────────────────
   register({
     id: 'overlay.palette',
@@ -458,8 +572,8 @@ export function registerAllComponents(): void {
   registerCatalogComponent('AgentOverlay', C.AgentOverlay ?? null as unknown as any);
   registerCatalogComponent('AuditDashboard', C.AuditDashboard ?? null as unknown as any);
   registerCatalogComponent('TemplatesGallery', C.TemplatesGallery ?? null as unknown as any);
-  registerCatalogComponent('HealthDashboard', null as unknown as any);
-  registerCatalogComponent('CapabilityCatalog', null as unknown as any);
+  registerCatalogComponent('HealthDashboard', C.HealthDashboard ?? null as unknown as any);
+  registerCatalogComponent('CapabilityCatalog', C.CapabilityCatalog ?? null as unknown as any);
   registerCatalogComponent('NotificationsCenter', C.NotificationsCenter ?? null as unknown as any);
   registerCatalogComponent('PresenceIndicator', C.PresenceIndicator ?? null as unknown as any);
   registerCatalogComponent('ZLayerPanel', C.ZLayerPanel ?? null as unknown as any);
@@ -470,9 +584,76 @@ export function registerAllComponents(): void {
   registerCatalogComponent('ShellCard', C.ShellCard ?? null as unknown as any);
   registerCatalogComponent('AutomationCard', C.AutomationCard ?? null as unknown as any);
   registerCatalogComponent('RbacManager', C.RbacManager ?? null as unknown as any);
-  registerCatalogComponent('SearchPanel', null as unknown as any);
+  registerCatalogComponent('SearchPanel', C.SearchPanel ?? null as unknown as any);
+  registerCatalogComponent('CanvasControlPanel', C.CanvasControlPanel ?? null as unknown as any);
+  registerCatalogComponent('TaskManager', C.TaskManager ?? null as unknown as any);
+  registerCatalogComponent('AutomationLauncher', C.AutomationLauncher ?? null as unknown as any);
+  registerCatalogComponent('FleetStatus', C.FleetStatus ?? null as unknown as any);
+  registerCatalogComponent('SessionControls', C.SessionControls ?? null as unknown as any);
   registerCatalogComponent('QuickActionsMenu', C.QuickActionsMenu ?? null as unknown as any);
   registerCatalogComponent('ThemeProvider', C.ThemeProvider ?? null as unknown as any);
   registerCatalogComponent('ThemeSettings', C.ThemeSettings ?? null as unknown as any);
   registerCatalogComponent('VCardMenu', C.VCardMenu ?? null as unknown as any);
+
+  // ── SSOA tab components ──────────────────────────────────────────────
+  register({
+    id: 'tab.bar',
+    label: 'Tab Bar',
+    kind: 'panel',
+    category: 'chat',
+    slot: 'tab.bar',
+    Component: C.TabBar ?? null,
+    capabilities: ['cap:tab:navigate', 'cap:tab:toggle'],
+    version: 1,
+    author: 'system',
+    tags: ['ssoa', 'tabs', 'binder'],
+    enabled: true,
+    isDefault: true,
+  });
+  register({
+    id: 'tab.layer-switcher',
+    label: 'Layer Switcher',
+    kind: 'panel',
+    category: 'chat',
+    slot: 'tab.layer-switcher',
+    Component: C.LayerSwitcher ?? null,
+    capabilities: ['cap:layer:switch'],
+    version: 1,
+    author: 'system',
+    tags: ['ssoa', 'layers'],
+    enabled: true,
+    isDefault: true,
+  });
+
+  // ── Unified entry point ─────────────────────────────────────────────
+  register({
+    id: 'entry.unified',
+    label: 'Unified Entry',
+    kind: 'panel',
+    category: 'chat',
+    slot: 'entry.unified',
+    Component: C.UnifiedEntry ?? null,
+    capabilities: ['cap:entry:send', 'cap:entry:create-conversation'],
+    version: 1,
+    author: 'system',
+    tags: ['ssoa', 'entry', 'composer', 'input'],
+    enabled: true,
+    isDefault: true,
+  });
+
+  // ── P2-6: SlidePanel (SSOA panel content renderer) ─────────────────
+  register({
+    id: 'tab.panel-content',
+    label: 'Slide Panel',
+    kind: 'panel',
+    category: 'chat',
+    slot: 'tab.panel-content',
+    Component: C.SlidePanel ?? null,
+    capabilities: [],
+    version: 1,
+    author: 'system',
+    tags: ['ssoa', 'panel', 'slide', 'overlay'],
+    enabled: true,
+    isDefault: true,
+  });
 }

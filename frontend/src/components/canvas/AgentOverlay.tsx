@@ -14,6 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import type { AgentCanvasPlan, AgentCanvasOp } from '../../shared/agent-canvas';
+import { Truncate } from './Truncate';
 
 export interface AgentOverlayProps {
   plan: AgentCanvasPlan | null;
@@ -145,8 +146,8 @@ export function AgentOverlay({
           <span style={{ fontSize: 16 }}></span>
           <div>
             <div style={{ fontSize: 12, fontWeight: 600 }}>Agent proposes {pendingOps.length} changes</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              "{plan.prompt}"
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', maxWidth: 300 }}>
+              <Truncate>"{plan.prompt}"</Truncate>
             </div>
           </div>
         </div>

@@ -23,13 +23,11 @@ async function isBackendHealthy(): Promise<boolean> {
   }
 }
 
-/** Auto-launch the backend via start-backend.ps1 and wait for it to bind. */
+/** Auto-launch the backend via bun run dev:backend and wait for it to bind. */
 async function launchBackend(): Promise<boolean> {
   try {
     const { execSync } = await import('node:child_process')
-    const { join } = await import('node:path')
-    const script = join(process.cwd(), 'scripts', 'start-backend.ps1')
-    execSync(`pwsh "${script}"`, { timeout: 45_000, stdio: 'pipe' })
+    execSync('bun run dev:backend', { timeout: 45_000, stdio: 'pipe' })
     // Wait up to 15s for the port to become available
     const deadline = Date.now() + 15_000
     while (Date.now() < deadline) {
@@ -111,7 +109,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
           summary: 'Backend unreachable',
         },
         verdict: 'absent',
-        recommendedAction: 'Backend could not be started. Run pwsh scripts/start-backend.ps1 manually.',
+        recommendedAction: 'Backend could not be started. Run bun run dev:backend manually.',
       }
     }
     console.log('[status] Backend launched successfully')

@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import { Icon } from '@/components/canvas/Icon';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
 
 export interface Port {
   id: string;

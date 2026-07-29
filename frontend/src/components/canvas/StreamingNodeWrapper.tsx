@@ -11,6 +11,7 @@ import { useCallback, useMemo } from 'react';
 import { useStreamSlot, type UseStreamSlotOptions, type UseStreamSlotResult } from './use-stream-slot';
 import { Icon, type IconName } from './Icon';
 import { ObservabilityHUD } from './ObservabilityHUD';
+import { Truncate } from './Truncate';
 
 interface StreamingNodeWrapperProps {
   nodeId: string;
@@ -150,9 +151,9 @@ export function StreamingNodeWrapper({
             }}
           >
             <Icon name={STREAM_KIND_ICONS[evt.kind] ?? 'circle'} size={10} style={{ color: STREAM_KIND_COLORS[evt.kind] ?? 'var(--muted-foreground)' }} />
-            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <Truncate style={{ flex: 1 }}>
               {evt.kind}: {evt.content?.slice(0, 60) ?? evt.status ?? ''}
-            </span>
+            </Truncate>
             <span style={{ opacity: 0.5, fontSize: 9 }}>
               {new Date(evt.timestamp).toLocaleTimeString().slice(0, 8)}
             </span>

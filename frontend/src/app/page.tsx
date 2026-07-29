@@ -4,37 +4,39 @@
  * app/page.tsx — Vivim Canvas (V10 Minimal Chrome)
  * --------------------------------------------------------------------
  * Canvas is king. The UI is minimal:
- *   - Floating CommandBar (single entry point)
+ *   - UnifiedEntry (single entry point — input + nav)
  *   - Panels float over the canvas (on-demand only)
  *   - LivingCanvas fills 100% viewport
  *   - No permanent sidebar, no permanent top bar
  *
  * User flow:
+ *   - Type in UnifiedEntry → sends to active layer
  *   - Cmd+K: Command palette (search everything)
  *   - Cmd+.: Toggle panels dock
  *   - Cmd+`: Dev console
  *   - Menu button: All actions in one place
  */
 
-import { useEffect, useRef, useState, Suspense, lazy } from 'react';
+import { useEffect, useMemo, useRef, useState, Suspense, lazy } from 'react';
 import { useIO } from '@/components/canvas/UnifiedIOProvider';
 import { GuidedLanding, checkNeedsSetup } from '@/features/guided-landing';
 import {
   LivingCanvas,
   LiveConfigProvider,
   useLiveConfig,
-  CommandBar,
-  Panel,
+  UnifiedEntry,
   MainMenu,
   CommandPalette,
   OnboardingTour,
   DrawerSystem,
-  ConversationsPanel,
-  ProvidersPanel,
-  SettingsPanel,
   ThemeSettings,
-  type PanelConfig,
+  SessionStateProvider,
+  useSessionState,
+  TabBar,
+  SlidePanel,
+  getLayerConfig,
 } from '@/components/canvas';
+import { getPanelType } from '@/components/canvas/TabConfig';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useConversation } from '@/sdk/web/use-conversation';
 import { useCapability } from '@/sdk/web/use-capability';
@@ -47,20 +49,15 @@ const DevConsoleLazy = lazy(() => import('@/components/canvas/DevConsole').then(
 
 const TIER_OPTIONS: PlanTier[] = ['free', 'trial', 'pro', 'enterprise'];
 
-// Panel configurations
-const PANELS: PanelConfig[] = [
-  { id: 'conversations', title: 'Conversations', icon: 'message-square', defaultDock: 'left', defaultSize: 'normal' },
-  { id: 'providers', title: 'Providers', icon: 'cpu', defaultDock: 'left', defaultSize: 'normal' },
-  { id: 'settings', title: 'Settings', icon: 'settings', defaultDock: 'right', defaultSize: 'compact' },
-];
-
 export default function Home() {
   return (
     <LiveConfigProvider
       initialWorkspaceId="ws:global"
       initialUserId="user:demo"
     >
-      <CanvasApp />
+      <SessionStateProvider workspaceId="ws:global">
+        <CanvasApp />
+      </SessionStateProvider>
     </LiveConfigProvider>
   );
 }
@@ -68,7 +65,7 @@ export default function Home() {
 function CanvasApp() {
   const io = useIO();
   const { workspaceId, setWorkspace, providerIds, setProviderIds, accounts, setAccounts, variant, setVariant } = useLiveConfig();
-  const { conversations, loading: convLoading, refresh: refreshConversations } = useConversation();
+  const { conversations, loading: convLoading, refresh: refreshConversations, create: createConversation } = useConversation();
   const { capabilities, loading: capLoading, refresh: refreshCapabilities } = useCapability();
   const { providers, loading: provLoading, refresh: refreshProviders } = useProvider();
   const { health, loading: healthLoading, check: checkHealth } = useHealth();
@@ -80,9 +77,19 @@ function CanvasApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [devConsoleOpen, setDevConsoleOpen] = useState(false);
-  const [openPanels, setOpenPanels] = useState<Set<string>>(new Set());
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const mountedRef = useRef(true);
+
+  // SSOA session state
+  const { state: sessionState, dispatch } = useSessionState();
+  const layerConfig = useMemo(() => getLayerConfig(sessionState.activeLayer), [sessionState.activeLayer]);
+  const slotIds = layerConfig.canvasSlots;
+
+  // P0-1 fix: ref to avoid stale closure in keyboard handler
+  const sessionRef = useRef(sessionState);
+  const dispatchRef = useRef(dispatch);
+  useEffect(() => { sessionRef.current = sessionState; });
+  useEffect(() => { dispatchRef.current = dispatch; });
 
   // Check if onboarding needed — auto-open guided assistant for first run
   useEffect(() => {
@@ -95,14 +102,12 @@ function CanvasApp() {
     return () => { mountedRef.current = false; };
   }, []);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts (P0-1: reads from refs to avoid stale closure)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Cmd+K: Command palette
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setPaletteOpen((o) => !o);
-      }
+      const ss = sessionRef.current;
+      const dispatch = dispatchRef.current;
+      // R2-P2-3: Cmd+K removed — handled by UnifiedEntry
       // Cmd+Shift+H: Toggle Vivim assistant
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'H') {
         e.preventDefault();
@@ -113,18 +118,66 @@ function CanvasApp() {
         e.preventDefault();
         setDevConsoleOpen((o) => !o);
       }
-      // Cmd+.: Toggle panels
+      // Cmd+1/2/3: Switch SSOA layers
+      if ((e.metaKey || e.ctrlKey) && ['1', '2', '3'].includes(e.key)) {
+        e.preventDefault();
+        const layerIds = ['chat', 'build', 'admin'] as const;
+        const idx = parseInt(e.key) - 1;
+        if (layerIds[idx]) {
+          dispatch({ type: 'LAYER_SWITCH', layerId: layerIds[idx]! });
+        }
+      }
+      // Cmd+0: Close all panels in current layer
+      if ((e.metaKey || e.ctrlKey) && e.key === '0') {
+        e.preventDefault();
+        const layer = ss.layers[ss.activeLayer];
+        if (layer) {
+          layer.openPanels.forEach((panelId) => {
+            dispatch({ type: 'PANEL_CLOSE', layerId: ss.activeLayer, panelId });
+          });
+        }
+      }
+      // Cmd+.: Toggle SSOA panels for current layer
       if ((e.metaKey || e.ctrlKey) && e.key === '.') {
         e.preventDefault();
-        setOpenPanels((prev) => {
-          const next = new Set(prev);
-          if (next.size > 0) {
-            next.clear();
-          } else {
-            PANELS.forEach((p) => next.add(p.id));
-          }
-          return next;
-        });
+        const currentOpen = ss.layers[ss.activeLayer]?.openPanels ?? [];
+        if (currentOpen.length > 0) {
+          currentOpen.forEach((id) => {
+            dispatch({ type: 'PANEL_CLOSE', layerId: ss.activeLayer, panelId: id });
+          });
+        } else {
+          const defaultPanels = ss.activeLayer === 'chat' ? ['conversations', 'search']
+            : ss.activeLayer === 'build' ? ['capabilities', 'automation']
+            : ['audit', 'rbac'];
+          defaultPanels.forEach((id) => {
+            dispatch({ type: 'PANEL_OPEN', layerId: ss.activeLayer, panelId: id });
+          });
+        }
+      }
+      // Cmd+H → health panel
+      if ((e.metaKey || e.ctrlKey) && e.key === 'h' && !e.shiftKey) {
+        e.preventDefault();
+        dispatch({ type: 'PANEL_TOGGLE', layerId: ss.activeLayer, panelId: 'health' });
+      }
+      // R2-P1-5: Cmd+Shift+T → terminal (was Cmd+T, which hijacked browser new-tab)
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'T') {
+        e.preventDefault();
+        dispatch({ type: 'PANEL_TOGGLE', layerId: ss.activeLayer, panelId: 'terminal' });
+      }
+      // Cmd+Shift+K → capabilities
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'K') {
+        e.preventDefault();
+        dispatch({ type: 'PANEL_TOGGLE', layerId: ss.activeLayer, panelId: 'capabilities' });
+      }
+      // Cmd+Shift+A → automations
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        dispatch({ type: 'PANEL_TOGGLE', layerId: ss.activeLayer, panelId: 'automation' });
+      }
+      // Cmd+/ → search panel
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+        e.preventDefault();
+        dispatch({ type: 'PANEL_TOGGLE', layerId: ss.activeLayer, panelId: 'search' });
       }
       // Escape: Close all panels (but not guided — it handles its own Escape)
       if (e.key === 'Escape') {
@@ -165,17 +218,9 @@ function CanvasApp() {
     }));
   };
 
-  // Panel toggle
+  // Panel toggle (SSOA-aware)
   const togglePanel = (panelId: string) => {
-    setOpenPanels((prev) => {
-      const next = new Set(prev);
-      if (next.has(panelId)) {
-        next.delete(panelId);
-      } else {
-        next.add(panelId);
-      }
-      return next;
-    });
+    dispatch({ type: 'PANEL_TOGGLE', layerId: sessionState.activeLayer, panelId });
   };
 
   return (
@@ -206,42 +251,40 @@ function CanvasApp() {
               providerIds={providerIds}
               variant={variant}
               conversationId={activeConversationId}
+              slotIds={slotIds}
             />
           </DrawerSystem>
         </ErrorBoundary>
       </main>
 
-      {/* Floating CommandBar — single entry point */}
-      <CommandBar
+      {/* Unified entry point — single I/O for all input (SSOA) */}
+      <UnifiedEntry
+        workspaceId={workspaceId}
+        conversationId={activeConversationId}
+        providerId={providerIds[0] ?? null}
+        createConversation={createConversation}
+        onConversationCreated={(id) => setActiveConversationId(id)}
         onOpenSearch={() => setPaletteOpen(true)}
-        onTogglePanel={togglePanel}
         onOpenMenu={() => setMenuOpen((o) => !o)}
         onOpenAssistant={() => setGuidedOpen(true)}
+        onTogglePanel={togglePanel}
       />
 
-      {/* Floating panels — appear on demand, float over canvas */}
-      {PANELS.map((panelConfig) => (
-        <Panel
-          key={panelConfig.id}
-          config={panelConfig}
-          isOpen={openPanels.has(panelConfig.id)}
-          onClose={() => togglePanel(panelConfig.id)}
-        >
-          {panelConfig.id === 'conversations' && (
-            <ConversationsPanel onSelect={setActiveConversationId} />
-          )}
-          {panelConfig.id === 'providers' && (
-            <ProvidersPanel
-              providerIds={providerIds}
-              accounts={accounts}
-              onToggleProvider={toggleProvider}
-              onCycleTier={cycleTier}
-            />
-          )}
-          {panelConfig.id === 'settings' && (
-            <SettingsPanel />
-          )}
-        </Panel>
+      {/* Tab bar — notebook binder edge tabs (SSOA) */}
+      <TabBar workspaceId={workspaceId} onPanelClick={togglePanel} />
+
+      {/* Slide panels — edge-sliding, tab-driven (SSOA) */}
+      {sessionState.layers[sessionState.activeLayer]?.openPanels.map((panelId) => (
+        <SlidePanel
+          key={panelId}
+          panelId={panelId}
+          isOpen={true}
+          onClose={() => dispatch({ type: 'PANEL_CLOSE', layerId: sessionState.activeLayer, panelId })}
+          position={sessionState.tabs.position}
+          width={sessionState.tabs.expandedWidth}
+          workspaceId={workspaceId}
+          mini={getPanelType(panelId) === 'mini'}
+        />
       ))}
 
       {/* Main menu dropdown */}
@@ -277,6 +320,7 @@ function CanvasApp() {
           />
         </Suspense>
       )}
+
     </div>
   );
 }

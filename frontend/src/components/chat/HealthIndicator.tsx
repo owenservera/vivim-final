@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react';
 import { useHealth } from '@/sdk/web/use-health';
 import { useSession } from '@/sdk/web/use-session';
+import { StatusDot } from '@/components/canvas/StatusDot';
 
 export function HealthIndicator({ pollMs = 15000 }: { pollMs?: number }) {
   const { health, check: checkHealth } = useHealth();
@@ -48,10 +49,7 @@ export function HealthIndicator({ pollMs = 15000 }: { pollMs?: number }) {
         color: 'var(--text)',
       }}
     >
-      <span
-        title={label}
-        style={{ width: 8, height: 8, borderRadius: '50%', background: dot, flexShrink: 0 }}
-      />
+        <StatusDot color={dot} />
       <span style={{ fontWeight: 600 }}>{label}</span>
       {session.authenticated ? (
         <span style={{ color: 'var(--text-muted)' }}>

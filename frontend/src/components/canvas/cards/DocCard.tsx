@@ -77,7 +77,7 @@ export function DocCard({ document: doc, onAnnotate }: DocCardProps) {
           whiteSpace: 'pre-wrap',
           fontFamily:
             doc.engine === 'code'
-              ? 'ui-monospace, "SF Mono", Menlo, monospace'
+              ? 'var(--font-mono)'
               : 'ui-sans-serif, system-ui, sans-serif',
         }}
       >

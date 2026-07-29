@@ -76,6 +76,25 @@
   --sidebar-accent-foreground: oklch(0.2 0.01 247);
   --sidebar-border: oklch(0.91 0.003 247);
   --sidebar-ring: oklch(0.52 0.02 247);
+  /* SSOA layer colors */
+  --layer-chat: #3b82f6;
+  --layer-build: #10b981;
+  --layer-admin: #ef4444;
+  --tab-communication: #3b82f6;
+  --tab-providers: #8b5cf6;
+  --tab-tools: #10b981;
+  --tab-content: #f59e0b;
+  --tab-admin: #ef4444;
+  --tab-canvas: #06b6d4;
+  --tab-session: #ec4899;
+  /* Shorthand aliases (used by inline styles throughout codebase) */
+  --bg: var(--background);
+  --bg-elevated: oklch(1 0 0);
+  --bg-subtle: oklch(0.97 0.002 247);
+  --text: var(--foreground);
+  --text-muted: oklch(0.5 0.01 247);
+  --text-subtle: oklch(0.6 0.01 247);
+  --font-mono: 'ui-monospace', monospace;
 }
 
 .dark {
@@ -110,6 +129,11 @@
   --sidebar-accent-foreground: oklch(0.92 0.005 247);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.65 0.03 247);
+  /* Shorthand aliases — dark mode overrides */
+  --bg-elevated: oklch(0.22 0.005 247);
+  --bg-subtle: oklch(0.20 0.005 247);
+  --text-muted: oklch(0.6 0.01 247);
+  --text-subtle: oklch(0.5 0.01 247);
 }
 
 @layer base {
@@ -123,6 +147,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* SOTA Canvas Design System — anti-slop patterns */

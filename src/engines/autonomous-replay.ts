@@ -185,7 +185,7 @@ export class ReplayController {
         startedAt: s.startedAt as number | null,
         completedAt: s.completedAt as number | null,
         requiresHumanApproval: (s.requiresHumanApproval as number) === 1,
-        parentStepId: s.parentStepId as string | null ?? null,
+        parentStepId: (s.parentStepId as string | null) ?? null,
         isCompositeRoot: (s.isCompositeRoot as number) === 1,
       })),
       startedAt: row.startedAt as number,

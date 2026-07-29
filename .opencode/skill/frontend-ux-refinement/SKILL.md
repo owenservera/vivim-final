@@ -167,8 +167,8 @@ Only after code-tests pass. Use browser automation for visual proof, not as prim
 3. **CDP engage/verify** — native project CDP tools for provider-specific testing
 
 ```bash
-# Launch stack (non-blocking)
-pwsh scripts/start-bg.ps1
+# Launch stack (blocks until Ctrl+C; run `bun run stop` in a 2nd terminal to kill orphans)
+bun run dev
 
 # Health check
 bun run devops runtime-test health
@@ -427,8 +427,8 @@ resolve(slot, ctx) ->
 
 | Command | Purpose |
 |---------|---------|
-| `pwsh scripts/start-bg.ps1` | Launch stack (non-blocking) |
-| `pwsh scripts/stop-all.ps1` | Tear down all services |
+| `bun run dev` | Launch stack (blocking — `bun run stop` to kill orphans) |
+| `bun run stop` | Tear down all services (port-scanner, no PID files) |
 | `bun run devops runtime-test engage --provider=...` | Attach browser |
 | `bun run devops runtime-test verify` | Screenshot verification |
 | `bun run devops runtime-test debug` | Capture console/errors |
@@ -469,5 +469,5 @@ resolve(slot, ctx) ->
 - Using browser testing for API contract verification (use fetch/CLI).
 - Hardcoding `if (slug === 'x')` in components (use slot resolution).
 - Trusting DB `loginState` — verify actual browser cookies.
-- Leaving orphan processes — always `pwsh scripts/stop-all.ps1`.
+- Leaving orphan processes — always `bun run stop`.
 - Claiming success without running verification commands.

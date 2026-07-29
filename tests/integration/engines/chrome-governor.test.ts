@@ -39,42 +39,7 @@ function makeMockTransport() {
   return { transport, calls }
 }
 
-function makeMockFleet() {
-  const instance = {
-    id: 'slave-1',
-    providerSlug: 'p1',
-    accountId: 'default',
-    debugPort: 9301,
-    profileDir: 'chrome-profiles/p1/default',
-    status: 'running' as const,
-    pid: 1234,
-    consecutiveFailures: 0,
-    restartAttempts: 0,
-    lastHealthCheck: Date.now(),
-    createdAt: Date.now(),
-    channel: 'system' as const,
-    mode: 'headless-new' as const,
-  }
-  return {
-    spawn: async () => instance,
-    kill: async () => {},
-    killAll: async () => {},
-    ensureRunning: async () => instance,
-    recoverAuth: async () => instance,
-    getSuperState: () => 'active' as const,
-    getInstance: () => instance,
-    getAllInstances: () => [instance],
-    getInstancesByProvider: () => [instance],
-    healthCheck: async () => ({ ok: true, latencyMs: 1, status: 'running' as const }),
-    healthCheckAll: async () =>
-      new Map([['slave-1', { ok: true, latencyMs: 1, status: 'running' as const }]]),
-    getCircuitState: () => 'closed' as const,
-    startHealthProbe: () => {},
-    stopHealthProbe: () => {},
-  }
-}
-
-function makeGovernor(transport: CDPTransport) {
+function makeGovernor(_transport: CDPTransport) {
   const store = {} as unknown as GovernorStore
   const config = {
     portRange: [9300, 9400] as [number, number],
@@ -86,7 +51,7 @@ function makeGovernor(transport: CDPTransport) {
     circuitBreakerResetMs: 60_000,
     profileBaseDir: 'chrome-profiles',
   }
-  return new ChromeGovernor(store, config, undefined, transport, makeMockFleet())
+  return new ChromeGovernor(store, config)
 }
 
 describe('ChromeGovernor mediated CDP surface (1.2)', () => {

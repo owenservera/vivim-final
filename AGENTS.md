@@ -389,62 +389,40 @@ Lessons from building the taxonomy generation pipeline and cross-surface verific
 
 **All commands MUST be PowerShell-compatible.** The default shell is PowerShell 7+.
 
-### PS1 Script Invocation (CRITICAL — NEVER GET WRONG)
+### Dev Server Startup (`scripts/dev.ts` + `scripts/stop.ts`)
 
-PS1 scripts use `$PSScriptRoot` to find the project root. This auto-variable is `$null`
-when the script is NOT invoked as a direct file — causing ALL downstream paths to collapse.
-These scripts start/stop the backend, frontend, and health monitor:
+The old PowerShell startup scripts (`scripts/start-all.ps1`, `scripts/stop-all.ps1`, etc.)
+have been replaced by pure TypeScript scripts:
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/start-all.ps1` | Launch backend + frontend, fully detached |
-| `scripts/start-backend.ps1` | Launch backend only |
-| `scripts/start-frontend.ps1` | Launch frontend only |
-| `scripts/stop-all.ps1` | Stop all services (infallible) |
-| `scripts/health-check.ps1` | Continuous health monitoring (use `-Once` for single check) |
+| Command | Purpose |
+|---------|---------|
+| `bun run dev` | Start backend + frontend in one foreground process (Ctrl+C to stop) |
+| `bun run stop` | Kill any orphaned processes on ports 9420/3000, clean `.runtime/` |
+| `bun run dev:backend` | Start backend only (standalone) |
+| `bun run dev:frontend` | Start frontend only (standalone) |
 
-**✅ CORRECT — always use `pwsh scripts/<name>.ps1` from repo root:**
-```powershell
-# From repo root (C:\0-BlackBoxProject-0\vivim-final):
-pwsh scripts/start-all.ps1
-pwsh scripts/start-backend.ps1
-pwsh scripts/start-frontend.ps1
-pwsh scripts/stop-all.ps1
+**Usage:**
+```bash
+# Start both services (blocking — Ctrl+C to stop)
+bun run dev
+
+# Or start individually in separate terminals:
+bun run dev:backend   # terminal 1
+bun run dev:frontend  # terminal 2
+
+# Cleanup orphaned processes:
+bun run stop
 ```
 
-**❌ NEVER do any of these (they silently break `$PSScriptRoot`):**
-```powershell
-Get-Content scripts/start-all.ps1 | pwsh -            # inline pipe → $null
-pwsh -c "scripts/start-all.ps1"                       # -c string → $null
-pwsh -Command ".\scripts\start-all.ps1"               # -Command → $null
-& "scripts/start-all.ps1"                              # call-operator → $null
-Start-Process pwsh -ArgumentList "scripts\start-all.ps1"  # nested pwsh → path broken
-pwsh -File scripts/start-all.ps1                      # -File from wrong CWD → path wrong
-```
+**Key behaviors:**
+- `bun run dev` kills stale processes on ports 9420/3000 before starting
+- Output is prefixed with `[backend]` / `[frontend]` labels
+- Ctrl+C shuts down both services gracefully
+- `bun run stop` is a port-scanner (no PID files needed), kills any process on the known ports and cleans `.runtime/`
 
-### PS1 Internal Invariants (agents must know these)
-
-When editing or creating PS1 scripts, these rules prevent hangs:
-
-1. **Never use `-RedirectStandardOutput`/`-RedirectStandardError` in `Start-Process`.** On this
-   machine, `bun` resolves to `bun.ps1` (npm wrapper at `AppData\Roaming\npm\bun.ps1`). The real
-   exe is at `C:\Users\VIVIM.inc\.bun\bin\bun.exe`. `Resolve-Bun` in `_shared.ps1` unwraps it.
-   Even with the real `bun.exe`, `-RedirectStandardOutput` creates a pipe. If `bun.exe` writes
-   >4KB to stdout before the parent reads, the pipe buffer fills, `bun.exe` blocks, the parent
-   never reads (it's in a polling loop), and the backend never starts. **Fix:** remove the
-   redirect — output goes to the terminal directly.
-
-2. **Use `Write-Output` for Log functions, not `Write-Host`.** `Write-Host` goes to stream 6
-   (Information), which `2>&1 | Select-Object` does not capture. If you need the agent to see
-   log output, use `Write-Output` (stream 1).
-
-3. **All shared helpers live in `scripts/_shared.ps1`.** Dot-source it:
-   `. (Join-Path $PSScriptRoot '_shared.ps1')`. Provides `Resolve-Bun`, `Kill-Pid`,
-   `Kill-Port`, `Find-PidOnPort`, `Stop-ByPidFile`, `Test-PortFree`.
-
-4. **Smoke tests must have client-side timeouts.** Endpoints like `/api/conversations/:id/send`
-   block forever waiting for a CDP browser that isn't attached. Always wrap `fetch` calls with
-   `AbortController` + timeout so the test completes.
+**Smoke tests must have client-side timeouts.** Endpoints like `/api/conversations/:id/send`
+block forever waiting for a CDP browser that isn't attached. Always wrap `fetch` calls with
+`AbortController` + timeout so the test completes.
 
 ### PowerShell Command Patterns
 ```powershell

@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Icon } from '../Icon';
+import { EmptyState } from '../EmptyState';
 import { useProvider } from '@/sdk/web/use-provider';
 import { useHealth } from '@/sdk/web/use-health';
 import { PROVIDER_THEME, getProviderTheme } from '@/lib/provider-theme';
@@ -57,16 +58,8 @@ export function ProvidersPanel({
 
       {/* Provider list */}
       <div style={{ flex: 1, overflow: 'auto', padding: 8 }} className="scrollbar-thin">
-        {provLoading && (
-          <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 11 }}>
-            Loading providers...
-          </div>
-        )}
-        {!provLoading && providers.length === 0 && (
-          <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 11 }}>
-            No providers configured
-          </div>
-        )}
+        {provLoading && <EmptyState>Loading providers...</EmptyState>}
+        {!provLoading && providers.length === 0 && <EmptyState>No providers configured</EmptyState>}
         {providers.map((provider) => {
           const isEnabled = providerIds.includes(provider.id);
           const account = accounts.find((a) => a.providerId === provider.id);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
 
 interface ProviderHealth {
   status: string;
@@ -161,7 +161,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
       <span>{label}</span>
-      <span style={{ fontFamily: 'ui-monospace, monospace', color: 'var(--text)' }}>{value}</span>
+      <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{value}</span>
     </div>
   );
 }

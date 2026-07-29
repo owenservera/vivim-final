@@ -1,5 +1,8 @@
 import { Window } from 'happy-dom';
 
+declare const afterEach: (fn: () => void) => void;
+declare const require: (id: string) => unknown;
+
 const window = new Window();
 Object.assign(globalThis, {
   window,
@@ -16,4 +19,11 @@ Object.assign(globalThis, {
   requestAnimationFrame: (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0) as unknown as number,
   cancelAnimationFrame: (id: number) => clearTimeout(id),
   matchMedia: () => ({ matches: false, addListener: () => {}, removeListener: () => {} }),
+});
+
+// Dynamic require AFTER globals are set — @testing-library/dom caches document at import time
+const { cleanup } = require('@testing-library/react') as { cleanup: () => void };
+
+afterEach(() => {
+  cleanup();
 });

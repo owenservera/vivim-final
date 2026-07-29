@@ -8,6 +8,7 @@
 
 import { type ReactNode } from 'react';
 import { Icon } from './Icon';
+import { Spinner } from './Spinner';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { AnyComponent } from '@/sdk/canvas/register-slot';
 
@@ -42,7 +43,7 @@ export function SlotNode({ slotId, component: Comp, source, providerSlug, collap
           {headerActions}
         </div>
         {!collapsed && <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }} className="scrollbar-thin">
-          {loading ? <div style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 16, height: 16, border: '2px solid var(--border)', borderTopColor: 'var(--ring)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /></div> : <Comp {...componentProps} />}
+          {loading ? <div style={{ padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spinner size={16} /></div> : <Comp {...componentProps} />}
         </div>}
       </div>
     </ErrorBoundary>

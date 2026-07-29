@@ -2,10 +2,10 @@ import { describe, expect, mock, test } from 'bun:test'
 import { AutomationOrchestrator } from '../../../src/engines/automation/orchestrator.js'
 import { getRecipe } from '../../../src/engines/browser-automation/recipes.js'
 import { SelectorHealer } from '../../../src/engines/browser-automation/selector-healer.js'
+import type { SemanticGroundingEngine } from '../../../src/engines/browser-automation/semantic-grounding.js'
 import type { CDPTransport } from '../../../src/engines/chrome-governor.js'
 import { compileRecipe } from '../../../src/engines/harness/recipe-compiler.js'
 import type { GovernorStore } from '../../../src/storage/contracts/governor-store.js'
-import type { SemanticGroundingEngine } from '../../../src/engines/browser-automation/semantic-grounding.js'
 import type {
   SelectorHealStore,
   SelectorStrategyRow,

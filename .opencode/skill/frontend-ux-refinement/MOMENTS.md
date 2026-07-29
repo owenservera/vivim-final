@@ -28,8 +28,8 @@ moment:
 
 | Moment | Entry | Action | Expected | Error | Test |
 |--------|-------|--------|----------|-------|------|
-| `boot_backend` | `pwsh scripts/start-bg.ps1` | Server starts | `/api/health` returns 200 | Port conflict, DB unreachable | code |
-| `boot_frontend` | `pwsh scripts/start-bg.ps1` | Vite dev server starts | `http://localhost:5173` loads | Build error, missing deps | code |
+| `boot_backend` | `bun run dev` | Server starts | `/api/health` returns 200 | Port conflict, DB unreachable | code |
+| `boot_frontend` | `bun run dev` | Vite dev server starts | `http://localhost:3000` loads | Build error, missing deps | code |
 | `boot_chrome` | `bun run devops runtime-test engage` | Chrome slave launches | Browser navigates to provider | Profile missing, auth expired | visual |
 | `boot_slot_registry` | App mount | `registerDefaults()` runs | All slots resolve to components | Missing slot definition, import error | code |
 
