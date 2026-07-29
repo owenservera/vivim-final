@@ -220,12 +220,9 @@ export class CanvasCommandExecutor {
   private async getCurrentState(): Promise<CanvasState> {
     return new Promise((resolve) => {
       const bus = getCanvasEventBus();
-      const handler = (event: unknown) => {
-        const e = event as { type: string; payload: CanvasState };
-        if (e.type === CanvasEventType.CANVAS_STATE_RESPONSE) {
-          bus.off(CanvasEventType.CANVAS_STATE_RESPONSE, handler);
-          resolve(e.payload);
-        }
+      const handler = (state: unknown) => {
+        bus.off(CanvasEventType.CANVAS_STATE_RESPONSE, handler);
+        resolve(state as CanvasState);
       };
       bus.on(CanvasEventType.CANVAS_STATE_RESPONSE, handler);
       bus.emit(CanvasEventType.CANVAS_GET_STATE, { workspaceId: this.workspaceId, requestId: ulid() });

@@ -47,7 +47,7 @@ export function ObservabilityHUD({
         alignItems: 'center',
         gap: compact ? 4 : 8,
         fontSize: 9,
-        fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+        fontFamily: 'var(--font-mono)',
         color: 'var(--text-subtle)',
       }}
     >

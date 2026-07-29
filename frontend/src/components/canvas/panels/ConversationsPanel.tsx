@@ -9,6 +9,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { Icon } from '../Icon';
+import { EmptyState } from '../EmptyState';
 import { useConversation } from '@/sdk/web/use-conversation';
 import { getProviderTheme } from '@/lib/provider-theme';
 
@@ -32,8 +33,8 @@ export function ConversationsPanel({ onSelect }: { onSelect?: (id: string) => vo
   }, [create, onSelect]);
 
   const handleDelete = useCallback(async (id: string) => {
-    const ok = await remove(id);
-    if (ok && activeId === id) setActiveId(null);
+    const removedId = await remove(id);
+    if (removedId && activeId === id) setActiveId(null);
   }, [remove, activeId]);
 
   const handleSelect = useCallback((id: string) => {
@@ -85,21 +86,13 @@ export function ConversationsPanel({ onSelect }: { onSelect?: (id: string) => vo
 
       {/* Conversation list */}
       <div style={{ flex: 1, overflow: 'auto', padding: 4 }} className="scrollbar-thin">
-        {loading && (
-          <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 11 }}>
-            Loading...
-          </div>
-        )}
+        {loading && <EmptyState>Loading...</EmptyState>}
         {error && (
           <div style={{ padding: 16, textAlign: 'center', color: '#ef4444', fontSize: 11 }}>
             {error}
           </div>
         )}
-        {!loading && conversations.length === 0 && (
-          <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted-foreground)', fontSize: 11 }}>
-            No conversations yet
-          </div>
-        )}
+        {!loading && conversations.length === 0 && <EmptyState>No conversations yet</EmptyState>}
         {filtered.map((conv) => {
           const active = conv.id === activeId;
           const pTheme = getProviderTheme(conv.providerId);

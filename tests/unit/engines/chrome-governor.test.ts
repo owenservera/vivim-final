@@ -246,22 +246,16 @@ const DEFAULT_CONFIG: FleetConfig = {
 describe('ChromeGovernor', () => {
   let mockStore: ReturnType<typeof createMockStore>
   let mockBus: ReturnType<typeof createMockEventBus>
-  let mockTransport: ReturnType<typeof createMockTransport>
+  let _mockTransport: ReturnType<typeof createMockTransport>
   let mockFleetSupervisor: ReturnType<typeof createMockFleetSupervisor>
   let governor: ChromeGovernor
 
   beforeEach(() => {
     mockStore = createMockStore()
     mockBus = createMockEventBus()
-    mockTransport = createMockTransport()
+    _mockTransport = createMockTransport()
     mockFleetSupervisor = createMockFleetSupervisor()
-    governor = new ChromeGovernor(
-      mockStore.store,
-      DEFAULT_CONFIG,
-      mockBus.bus,
-      mockTransport.transport,
-      mockFleetSupervisor.supervisor as FleetSupervisor,
-    )
+    governor = new ChromeGovernor(mockStore.store, DEFAULT_CONFIG)
   })
 
   it('boot() initializes without errors', async () => {

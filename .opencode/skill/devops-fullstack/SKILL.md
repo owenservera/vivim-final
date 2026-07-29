@@ -28,71 +28,36 @@ frontend UI last. Iterate until the goal is met or the budget is exhausted.
 
 ## ANTI-HANGUP RULES (never violate)
 
-These rules exist because the dev loop has repeatedly hung the agent in PowerShell. Follow them
-literally; each one was learned from a concrete failure.
+All startup scripts are pure TypeScript (`scripts/dev.ts`, `scripts/stop.ts`). No PS1 scripts.
 
-1. **NEVER start servers in the bash tool.** Always use the non-blocking PS1 launcher:
-   - `pwsh scripts/start-bg.ps1` (full stack, returns immediately — no wait loop)
-   The bash tool blocks until the command returns; a foreground `bun run serve` never returns and
-   burns the whole tool timeout. `start-bg.ps1` uses `Start-Process` internally and exits at
-   once — the real launcher runs as a child process. After launching, poll until healthy:
-   ```powershell
-   pwsh scripts/start-bg.ps1
-   # returns immediately; poll later:
-   try { Invoke-RestMethod http://localhost:9420/health } catch { sleep 2; retry }
+1. **Start servers with `bun run dev`** (blocking — one foreground process, Ctrl+C stops both):
+   ```bash
+   bun run dev    # kills stale ports → starts backend + frontend → blocks until Ctrl+C
+   ```
+   Or start individually in separate terminals:
+   ```bash
+   bun run dev:backend   # terminal 1
+   bun run dev:frontend  # terminal 2
    ```
 
-2. **NEVER invoke PS1 scripts by pipe, -c, -Command, or call-operator.** These methods set
-   `$PSScriptRoot` to `$null`, which collapses `Split-Path -Parent $PSScriptRoot` to `$null`,
-   making `$projectRoot` empty and breaking ALL downstream paths. Specifically:
-   ```powershell
-   Get-Content scripts/start-all.ps1 | pwsh -           # BROKEN — $PSScriptRoot = $null
-   pwsh -c "scripts/start-all.ps1"                     # BROKEN
-   pwsh -Command ".\scripts\start-all.ps1"             # BROKEN
-   & "scripts/start-all.ps1"                           # BROKEN (call-operator)
-   Start-Process pwsh -ArgumentList "scripts/start-all.ps1"  # BROKEN (nested pwsh)
-   pwsh -File scripts/start-all.ps1                    # BROKEN — -File from wrong CWD
-   ```
-   The ONLY correct invocations are:
-   ```powershell
-   pwsh scripts/start-bg.ps1           # NON-BLOCKING — returns immediately (recommended)
-   pwsh scripts/start-all.ps1          # blocks until services are bound
+2. **Stop with `bun run stop`** — port-scanner kills any process on ports 9420/3000, no PID files:
+   ```bash
+   bun run stop
    ```
 
 3. **NEVER use `bun -e "..."` in PowerShell.** Quoting mangles the JavaScript (PowerShell strips or
    rewrites quotes). Write a `.ts` file and `bun run` it instead.
 
-4. **NEVER use `bun run dev` as a server.** It blocks the tool. Use `start-backend.ps1`.
-
-5. **NEVER hardcode port 9420.** Always resolve the live port via `.runtime/backend.port` →
-   `CAP_STORE_PORT` env → default 9420. The launcher auto-falls back to a free port when 9420 is
-   held by a zombie socket (a dead PID still LISTENING that `Stop-Process` cannot kill). After launch,
-   read `.runtime/backend.port` to learn the real port. The shared resolver is
+4. **NEVER hardcode port 9420.** Resolve the live port via `.runtime/backend.port` →
+   `CAP_STORE_PORT` env → default 9420. The shared resolver is
    `devops/runtime-test/port.ts` (`resolveBackendPort()` / `backendBaseUrl()`); TypeScript clients use
    `getServerPort()` from `src/config.ts`.
 
-6. **NEVER assume the server is on 9420 after launch.** Check `.runtime/backend.port`.
-
-7. **ALWAYS verify before test-driving features:** `bun run devops runtime-test health` (expects
+5. **ALWAYS verify before test-driving features:** `bun run devops runtime-test health` (expects
    `database:OK` and `server:OK`).
 
-8. **ALWAYS tear down with `pwsh scripts/stop-all.ps1`** — never kill processes manually.
-
-9. **If the backend won't bind, check `.runtime/backend-out.log`.** A zombie-held port makes
-   `bun run serve` fail silently; the launcher reports the fallback port in `.runtime/backend.port`.
-
-10. **Never use `-RedirectStandardOutput`/`-RedirectStandardError` in `Start-Process`.**
-    `bun.exe` writing >4KB to a redirected pipe deadlocks the backend launch. Remove the
-    redirect — output goes to the terminal directly.
-
-11. **Use `Write-Output` for Log functions, not `Write-Host`.** `Write-Host` goes to stream 6
-    which `2>&1 | Select-Object` does not capture. Agent-visible log output must use `Write-Output`.
-
-12. **All shared PS1 helpers live in `scripts/_shared.ps1`.** Dot-source it:
-    `. (Join-Path $PSScriptRoot '_shared.ps1')`.
-
-13. **Smoke tests must have client-side timeouts.** `/api/conversations/:id/send` blocks forever
-    waiting for CDP. Wrap `fetch` calls with `AbortController` + timeout.
+6. **Smoke tests must have client-side timeouts.** `/api/conversations/:id/send` blocks forever
+   waiting for CDP. Wrap `fetch` calls with `AbortController` + timeout.
 
 ## The Operating Procedure (playbook)
 
@@ -102,16 +67,7 @@ Run these phases in order. Each phase is an agent action, not an automated step.
    `question` tool to interview: what to build/fix, scope, and mode (autonomous vs. mitm).
    NEVER build without a goal. Never fall back to a hollow placeholder like `hello` — if goal
    interpretation fails, reuse the user's raw goal text or fail loud.
- 1. **Launch the stack (once) — non-blocking.** `pwsh scripts/start-bg.ps1`
-    - Returns immediately (does NOT wait for servers to bind).
-    - Internally calls `start-all.ps1` as a detached child process.
-    - After launch, poll `/health` until green, or run `bun run devops runtime-test health`:
-      ```powershell
-      pwsh scripts/start-bg.ps1
-      # Then poll:
-      bun run devops runtime-test health
-      ```
-    - If health fails, read `.runtime/backend-out.log` and fix before continuing.
+- **Launch the stack (blocking).** `bun run dev` — blocks until Ctrl+C. Output is prefixed with `[backend]` / `[frontend]`. Both services start in one process. Run `bun run stop` to kill orphans.
  2. **Preflight.** `bun run devops runtime-test health`
     - Expects `database:OK` and `server:OK`. If not, debug the launch.
  3. **Ensure provider Chrome is ready (CRITICAL for provider testing).**
@@ -200,7 +156,7 @@ Run these phases in order. Each phase is an agent action, not an automated step.
     **IMPORTANT:** This gate is the ONLY verification pass — do NOT run
     typecheck/lint/tests during earlier build steps. All edits must be
     complete before this step.
-10. **Stop (always).** `bun run devops runtime-test stop` (or `pwsh scripts/stop-all.ps1`) — never
+10. **Stop (always).** `bun run devops runtime-test stop` (or `bun run stop`) — never
     leave orphan processes. Use `status` to confirm teardown; use `report` to recall the last loop
     outcome across turns.
 
@@ -214,12 +170,12 @@ Run these phases in order. Each phase is an agent action, not an automated step.
 
 ## Command Catalog (your hands)
 
-PowerShell launchers (run from repo root):
-- `pwsh scripts/start-bg.ps1`                     — NON-BLOCKING: launch backend+frontend, adopt Chrome, return immediately (poll health after)
-- `pwsh scripts/start-all.ps1`                    — BLOCKING: launch backend+frontend, adopt Chrome, health-wait
-- `pwsh scripts/stop-all.ps1`                     — stop both via PID files + port scan (infallible)
-- `pwsh scripts/health-check.ps1 [-Interval 30] [-Once]`  — health monitor (use `-Once` for single check, safe for agent sessions)
-- `pwsh scripts/test-selectors.ps1`               — provider selector health (optional, needs Chrome)
+Startup (TypeScript scripts, run from repo root):
+- `bun run dev`                     — BLOCKING: launch backend+frontend, prefixes output with `[backend]`/`[frontend]`, Ctrl+C to stop
+- `bun run dev:backend`             — BLOCKING: backend only
+- `bun run dev:frontend`            — BLOCKING: frontend only
+- `bun run stop`                    — port-scanner: kill any process on ports 9420/3000, clean `.runtime/`
+- `pwsh scripts/test-selectors.ps1` — provider selector health (optional, needs Chrome)
 
 CLI harness (`bun run devops runtime-test <subcmd>`):
 - `health`            — DB + server preflight, prints `{ok, checks}`
@@ -291,7 +247,7 @@ Agent-safety guarantees:
   uncaughtException/unhandledRejection always run `stop` before exit. The loop also reaps servers
   in a `finally`. This is the "hook that intercepts context just in case" — no orphan can survive.
 - `migrate` is non-interactive (always `--name`) with a hard spawn timeout — no stdin hang.
-- Launchers write PID files so `stop` / `stop-all.ps1` / `watchdog` can always reclaim processes.
+- `bun run stop` uses port-scanning (netstat) to find and kill processes on 9420/3000, no PID files needed.
 - **Iterative loop** (`--objective`/`--resume`): the LLM is the *implementer*; the loop is the
   *coordinator + evaluator*. A persisted ledger records every step + its real-world test result, so
   a flexible LLM stays on-task and shows progress across cycles and interruptions. Hard `maxCycles`
@@ -671,7 +627,7 @@ const hasAuth = cookieNames.has('SID') || cookieNames.has('HSID') || ...
 ```
 
 ### 7. Windows zombie sockets block port reuse
-After `taskkill /F` or `stop-all.ps1`, Windows can leave a LISTENING socket in zombie state
+After `taskkill /F` or `bun run stop`, Windows can leave a LISTENING socket in zombie state
 with a dead PID. `netstat -ano | Select-String :PORT` shows the old PID but `Get-Process`
 fails to find it. New servers CANNOT bind to the same port until the OS reclaims it.
 **Workaround:** Wait 30-60 seconds. If persistent, reboot or change the port. There is no

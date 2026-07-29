@@ -28,4 +28,4 @@ export type {
   SendMessageResponse,
   SendMessageErrorResponse,
   SendMessageResponseUnion,
-} from '../../mini-services/backend/src/schema/api-types.js'
+} from '@backend/schema/api-types'

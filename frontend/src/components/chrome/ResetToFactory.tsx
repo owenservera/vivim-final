@@ -19,7 +19,8 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
+import { useAsyncOperation } from '@/hooks/useAsyncOperation';
 import { Icon } from '@/components/canvas/Icon';
 
 export interface ResetToFactoryProps {
@@ -39,62 +40,53 @@ export function ResetToFactory({
   variant = 'button',
 }: ResetToFactoryProps) {
   const io = useIO();
-  const [resetting, setResetting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const { loading: resetting, error, setError, run } = useAsyncOperation();
 
   const reset = useCallback(async () => {
-    setResetting(true);
-    setError(null);
     setStatus(null);
-    try {
-      // 1. Fetch the canonical chrome seed.
-      const factoryRes = await io.get<{
-        ok: boolean;
-        surfaces?: FactorySpec[];
-        error?: string;
-      }>('/api/chrome/factory');
-      if (!factoryRes.data?.ok || !factoryRes.data.surfaces) {
-        setError(factoryRes.data?.error ?? 'Failed to load factory seed');
-        return;
-      }
-
-      // 2. Build a mutation plan: one `replace` per chrome surface.
-      const mutations = factoryRes.data.surfaces.map((s) => ({
-        op: 'replace' as const,
-        target: s.id,
-        provenance: 'system' as const,
-        payload: s.spec,
-        reason: 'Reset to factory chrome',
-        idempotencyKey: `factory-reset-${s.id}-${Date.now()}`,
-      }));
-
-      // 3. Apply the plan.
-      const applyRes = await io.post<{ ok: boolean; error?: string }>(
-        '/api/mutation/apply',
-        {
-          plan: {
-            id: `factory-reset-${Date.now()}`,
-            mutations,
-            provenance: 'system',
-            description: 'Reset to factory chrome',
-          },
-        },
-      );
-      if (!applyRes.data?.ok) {
-        setError(applyRes.data?.error ?? 'Reset failed');
-        return;
-      }
-
-      setStatus(`Reset ${mutations.length} chrome surfaces.`);
-      window.dispatchEvent(new CustomEvent('vivim:chrome-reset'));
-      onReset?.();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Network error');
-    } finally {
-      setResetting(false);
+    // 1. Fetch the canonical chrome seed.
+    const factoryRes = await run(() => io.get<{
+      ok: boolean;
+      surfaces?: FactorySpec[];
+      error?: string;
+    }>('/api/chrome/factory'));
+    if (!factoryRes?.data?.ok || !factoryRes.data.surfaces) {
+      setError(factoryRes?.data?.error ?? 'Failed to load factory seed');
+      return;
     }
-  }, [io, onReset]);
+
+    // 2. Build a mutation plan: one `replace` per chrome surface.
+    const mutations = factoryRes.data.surfaces.map((s) => ({
+      op: 'replace' as const,
+      target: s.id,
+      provenance: 'system' as const,
+      payload: s.spec,
+      reason: 'Reset to factory chrome',
+      idempotencyKey: `factory-reset-${s.id}-${Date.now()}`,
+    }));
+
+    // 3. Apply the plan.
+    const applyRes = await run(() => io.post<{ ok: boolean; error?: string }>(
+      '/api/mutation/apply',
+      {
+        plan: {
+          id: `factory-reset-${Date.now()}`,
+          mutations,
+          provenance: 'system',
+          description: 'Reset to factory chrome',
+        },
+      },
+    ));
+    if (!applyRes?.data?.ok) {
+      setError(applyRes?.data?.error ?? 'Reset failed');
+      return;
+    }
+
+    setStatus(`Reset ${mutations.length} chrome surfaces.`);
+    window.dispatchEvent(new CustomEvent('vivim:chrome-reset'));
+    onReset?.();
+  }, [io, onReset, run, setError]);
 
   if (variant === 'menu-item') {
     return (

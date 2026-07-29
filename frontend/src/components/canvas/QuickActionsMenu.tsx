@@ -134,7 +134,7 @@ export function QuickActionsMenu(props: QuickActionsMenuProps) {
                   border: '1px solid var(--border)',
                   borderRadius: 3,
                   fontSize: 9,
-                  fontFamily: 'ui-monospace, monospace',
+                  fontFamily: 'var(--font-mono)',
                   color: 'var(--text-muted)',
                 }}
               >

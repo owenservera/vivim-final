@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { SearchHit, SearchEntityKind } from '../../shared/search';
+import { Truncate } from './Truncate';
 
 const KIND_GROUPS: Array<{ kind: SearchEntityKind; label: string; icon: string }> = [
   { kind: 'command', label: 'Commands', icon: '' },
@@ -27,6 +28,7 @@ const KIND_GROUPS: Array<{ kind: SearchEntityKind; label: string; icon: string }
   { kind: 'agent', label: 'Agents', icon: '' },
   { kind: 'provider', label: 'Providers', icon: '' },
   { kind: 'capability', label: 'Capabilities', icon: '' },
+  { kind: 'panel', label: 'Panels', icon: '' },
 ];
 
 export interface CommandPaletteProps {
@@ -173,7 +175,7 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
               borderRadius: 4,
               fontSize: 10,
               color: 'var(--text-muted)',
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-mono)',
             }}
           >
             ESC
@@ -273,12 +275,12 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
                     >
                       <span style={{ fontSize: 16 }}>{hit.icon}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {hit.title}
+                        <div style={{ fontSize: 13, fontWeight: 500 }}>
+                          <Truncate>{hit.title}</Truncate>
                         </div>
                         {hit.subtitle && (
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {hit.subtitle}
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            <Truncate>{hit.subtitle}</Truncate>
                           </div>
                         )}
                       </div>
@@ -331,5 +333,5 @@ const kbdStyle: React.CSSProperties = {
   border: '1px solid var(--border)',
   borderRadius: 3,
   fontSize: 9,
-  fontFamily: 'ui-monospace, monospace',
+  fontFamily: 'var(--font-mono)',
 };

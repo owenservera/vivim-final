@@ -46,7 +46,7 @@ export interface BrowserStatus {
  *                  Returns ok:false if Chrome is running but for a different provider.
  */
 export async function ensureBrowser(provider?: string): Promise<BrowserStatus> {
-  // 1) VIVIM_ADOPT_PORT (set by start-all.ps1 when a live Chrome is adopted)
+  // 1) VIVIM_ADOPT_PORT (set by the launcher when a live Chrome is adopted)
   const adopt = Number.parseInt(process.env.VIVIM_ADOPT_PORT ?? '', 10)
   if (Number.isFinite(adopt) && adopt > 0 && (await probe(adopt))) {
     if (!provider) return { ok: true, source: 'adopted', port: adopt }

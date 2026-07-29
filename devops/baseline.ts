@@ -59,8 +59,7 @@ export function loadBaseline(): GateBaseline | null {
 
 function gitCommit(): string {
   try {
-    return spawnSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' })
-      .stdout.trim()
+    return spawnSync('git', ['rev-parse', '--short', 'HEAD'], { encoding: 'utf8' }).stdout.trim()
   } catch {
     return 'unknown'
   }
@@ -73,10 +72,14 @@ function runCapture(cmd: string, args: string[]): string {
 }
 
 export function lintFingerprints(): string[] {
-  const res = spawnSync('bun', ['x', '@biomejs/biome', 'check', '--reporter=json', 'src', 'tests', 'seeds'], {
-    encoding: 'utf8',
-    maxBuffer: 32 * 1024 * 1024,
-  })
+  const res = spawnSync(
+    'bun',
+    ['x', '@biomejs/biome', 'check', '--reporter=json', 'src', 'tests', 'seeds'],
+    {
+      encoding: 'utf8',
+      maxBuffer: 32 * 1024 * 1024,
+    },
+  )
   const json = res.stdout ?? ''
   const start = json.indexOf('{')
   if (start === -1) return []

@@ -62,7 +62,7 @@ latency budget, cost, failure modes, permission-denial handling, and crash recov
 - Live model calls flow through AGENT1's `cap:agent:run` → opencode CLI. To test live,
   call `POST /api/capabilities/cap:agent:run/execute` (or `/api/interpret` with NL) with
   `model: 'opencode/hy3-free'` / `'opencode/deepseek-v4-flash-free'`.
-- Server must be up (`scripts/start-backend.ps1`) before any live call; preflight fails
+- Server must be up (`bun run dev:backend`) before any live call; preflight fails
   otherwise.
 - Free-model cold latency per AGENT1: 37–54s. Sandbox timeouts must exceed this.
 - No API keys needed for opencode free models (they are Zen free tier, authenticated via
@@ -72,7 +72,7 @@ latency budget, cost, failure modes, permission-denial handling, and crash recov
 
 ## NEXT STEPS (post-coordination)
 
-1. Start backend: `pwsh scripts/start-backend.ps1`; confirm `bun run devops runtime-test preflight` → server OK.
+1. Start backend: `bun run dev:backend`; confirm `bun run devops runtime-test preflight` → server OK.
 2. Build audit sandbox harness: `tests/e2e/agent-sandbox-audit.test.ts` driving `cap:agent:run`
    for both models with a fixed NL prompt set; capture latency/ok/permissionDenied/sessionId.
 3. Add an offline/unit mode (mocked opencode CLI) so the audit runs without live calls,

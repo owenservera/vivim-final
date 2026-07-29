@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { AGENT_ROLES, getAgentRole } from '../../../src/engines/automation/agents.js'
 import { RECIPES, getRecipe } from '../../../src/engines/browser-automation/recipes.js'
-import type { CapabilityAxis } from '../../../src/engines/browser-automation/types.js'
 import { BrowserCapabilityRegistry } from '../../../src/engines/browser-automation/registry.js'
+import type { CapabilityAxis } from '../../../src/engines/browser-automation/types.js'
 
 function makeGov() {
   return {} as any

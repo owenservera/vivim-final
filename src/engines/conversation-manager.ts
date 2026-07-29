@@ -171,7 +171,7 @@ function buildConversationContext(
     },
     chrome: {
       status: slave.status,
-      circuitState: slave.circuitState,
+      circuitState: slave.circuitState ?? 'closed',
     },
     capabilities: {
       total: resolved.total,

@@ -1,6 +1,7 @@
 'use client';
 
 import type { AddOnProps } from '@/types/api';
+import { Truncate } from '@/components/canvas/Truncate';
 
 export function AttachmentPreview({ context }: AddOnProps) {
   const { attachments, removeAttachment } = context;
@@ -24,9 +25,9 @@ export function AttachmentPreview({ context }: AddOnProps) {
             color: 'var(--text)',
           }}
         >
-          <span style={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <Truncate style={{ maxWidth: 100 }}>
             {a.file.name}
-          </span>
+          </Truncate>
           <button
             type="button"
             onClick={() => removeAttachment(a.id)}

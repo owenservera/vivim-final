@@ -10,10 +10,11 @@ import type {
   QuotedMessage,
   ComposerUserConfig,
 } from '@/types/api';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { useIO } from '@/sdk/web';
 import { classify } from '@/ml/prerouter';
 import { useMlStore } from '@/ml/ml-store';
 import { BUILTIN_ADDONS } from '@/features/composer-addons';
+import { dispatchBehavior } from '../../shared/dispatch-behavior';
 import { TextEntryBox } from './TextEntryBox';
 import { SendButton } from './SendButton';
 
@@ -59,33 +60,6 @@ function saveConfig(instanceId: string, config: ComposerUserConfig): void {
   try {
     localStorage.setItem(`vivim:composer-addons:${instanceId}`, JSON.stringify(config));
   } catch { /* storage full or disabled */ }
-}
-
-// ── Behavior dispatch ────────────────────────────────────────────────────
-
-type BehaviorResult = { ok: boolean; error?: string };
-
-async function dispatchBehavior(
-  behavior: ComposerInstanceScope['behavior'],
-  text: string,
-  conversationId: string | null,
-  io: ReturnType<typeof useIO>,
-): Promise<BehaviorResult> {
-  switch (behavior) {
-    case 'chat': {
-      if (!conversationId) return { ok: false, error: 'No active conversation' };
-      try {
-        const res = await io.post<{ ok?: boolean; error?: string }>(`/api/conversations/${encodeURIComponent(conversationId)}/send`, { content: text });
-        return { ok: res.data?.ok ?? true, error: res.data?.error };
-      } catch {
-        return { ok: false, error: 'Send failed (network error)' };
-      }
-    }
-    default: {
-      console.log(`[ComposerShell] behavior=${behavior} text="${text}" (stub)`);
-      return { ok: true };
-    }
-  }
 }
 
 // ── Props ────────────────────────────────────────────────────────────────

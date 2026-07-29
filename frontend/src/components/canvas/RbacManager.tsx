@@ -170,7 +170,7 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
                 fontSize: 12,
               }}
             >
-              <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, flex: 1 }}>{m.userId}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, flex: 1 }}>{m.userId}</span>
               <select
                 value={m.role}
                 onChange={(e) => updateRole(m.userId, e.target.value as Role)}
@@ -263,7 +263,7 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--text)',
   borderRadius: 4,
   fontSize: 11,
-  fontFamily: 'ui-monospace, monospace',
+  fontFamily: 'var(--font-mono)',
 };
 const selectStyle: React.CSSProperties = {
   ...inputStyle,

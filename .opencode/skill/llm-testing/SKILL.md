@@ -81,7 +81,7 @@ POST /api/capabilities/cap:llm_test:parity/execute
 
 ```bash
 # 1. Start backend
-pwsh scripts/start-backend.ps1
+bun run dev
 
 # 2. Verify Chrome slave is live for this provider
 bun run devops runtime-test status --provider=<slug>

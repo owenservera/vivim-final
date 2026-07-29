@@ -68,7 +68,9 @@ export const config = {
   authToken: process.env.CAP_STORE_AUTH_TOKEN ?? null,
 
   // CORS
-  corsOrigin: (process.env.CAP_STORE_CORS_ORIGIN ?? 'http://localhost:3000,http://localhost:5175').split(','),
+  corsOrigin: (
+    process.env.CAP_STORE_CORS_ORIGIN ?? 'http://localhost:3000,http://localhost:5175'
+  ).split(','),
 
   // Logging
   logLevel: (process.env.CAP_STORE_LOG_LEVEL ?? 'info') as 'debug' | 'info' | 'warn' | 'error',

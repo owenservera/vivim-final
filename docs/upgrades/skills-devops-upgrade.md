@@ -60,16 +60,14 @@
 | `changed.ts` | Changed-file detection | ✅ Working |
 | `deps.ts` | Dependency analysis | ✅ Working |
 
-### `scripts/` PowerShell
+### `scripts/` (TypeScript — replaced old PS1 scripts)
 
 | Script | Purpose | Status |
 |--------|---------|--------|
-| `start-all.ps1` | Start backend + frontend | ✅ Working |
-| `stop-all.ps1` | Stop all services | ✅ Working |
-| `start-backend.ps1` | Start backend only | ✅ Working |
-| `start-frontend.ps1` | Start frontend only | ✅ Working |
-| `health-check.ps1` | Health monitoring | ✅ Working |
-| `test-selectors.ps1` | Selector validation | ✅ Working |
+| `dev.ts` | Start backend + frontend (foreground, Ctrl+C to stop) | ✅ Working |
+| `stop.ts` | Stop all services (port-scanner, no PID files) | ✅ Working |
+| `setup-slaves.ts` | Chrome slave setup | ✅ Working |
+| `test-selectors.ps1` | Selector validation (PS1, only survivor) | ✅ Working |
 
 ---
 

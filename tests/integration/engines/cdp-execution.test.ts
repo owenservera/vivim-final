@@ -186,16 +186,10 @@ describe('CDP action → provider → slave execution', () => {
 
   beforeEach(() => {
     const store = createMockStore()
-    const bus = createMockBus()
-    const transport = createMockTransport()
-    const fleet = createMockFleetSupervisor()
-    governor = new ChromeGovernor(
-      store.store,
-      CONFIG,
-      bus.bus,
-      transport.transport,
-      fleet.supervisor as never,
-    )
+    const _bus = createMockBus()
+    const _transport = createMockTransport()
+    const _fleet = createMockFleetSupervisor()
+    governor = new ChromeGovernor(store.store, CONFIG)
     registry = new UnifiedCapabilityRegistry()
     bindings = []
 

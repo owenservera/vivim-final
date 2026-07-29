@@ -54,7 +54,13 @@ describe('decomposeToContentUnits', () => {
 
   it('decomposes tool-call blocks', () => {
     const blocks: ContentBlock[] = [
-      { type: 'tool-call', toolName: 'bash', input: { cmd: 'ls' }, toolCallId: 'tc1', state: 'input-available' },
+      {
+        type: 'tool-call',
+        toolName: 'bash',
+        input: { cmd: 'ls' },
+        toolCallId: 'tc1',
+        state: 'input-available',
+      },
     ]
     const units = decomposeToContentUnits(blocks, 'c', 'm', idGen)
     expect(units[0]?.unitType).toBe('tool-call')

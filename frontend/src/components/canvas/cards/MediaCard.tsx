@@ -168,7 +168,7 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
         >
           {media.transcript.map((b) => (
             <div key={b.index} style={{ marginBottom: 4 }}>
-              <span style={{ color: '#6b7280', fontFamily: 'ui-monospace, monospace', marginRight: 6 }}>
+              <span style={{ color: '#6b7280', fontFamily: 'var(--font-mono)', marginRight: 6 }}>
                 {formatTime(b.startSec)}–{formatTime(b.endSec)}
               </span>
               {b.speaker && <strong style={{ marginRight: 4 }}>{b.speaker}:</strong>}
