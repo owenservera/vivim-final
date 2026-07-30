@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getWsUrl } from '@/lib/ws-url';
 import { Truncate } from '@/components/canvas/Truncate';
+import { dispatchBehavior } from '@/shared/dispatch-behavior';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 
 type Tab = 'events' | 'inject' | 'latency';
 
@@ -58,6 +60,7 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
   const [injectBusy, setInjectBusy] = useState(false);
   const [latency, setLatency] = useState<LatencySample[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const io = useIO();
 
   // Scroll to bottom on new events
   useEffect(() => {
@@ -118,19 +121,14 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
     setInjectBusy(true);
     setInjectResult('');
     try {
-      const resp = await fetch('/api/interpret', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      const data = await resp.json();
-      setInjectResult(JSON.stringify(data, null, 2));
+      const result = await dispatchBehavior('nl-inject', text, null, io);
+      setInjectResult(JSON.stringify(result, null, 2));
     } catch (err) {
       setInjectResult(`ERROR: ${(err as Error).message}`);
     } finally {
       setInjectBusy(false);
     }
-  }, [injectText]);
+  }, [injectText, io]);
 
   const filtered = useMemo(() => {
     if (!filter.trim()) return events;

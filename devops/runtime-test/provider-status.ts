@@ -128,7 +128,9 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
     const { existsSync, readdirSync, statSync } = await import('node:fs')
     const profileDir = j(process.cwd(), 'chrome-profiles', provider)
     if (existsSync(profileDir)) {
-      const accounts = readdirSync(profileDir, { withFileTypes: true }).filter((e) => e.isDirectory())
+      const accounts = readdirSync(profileDir, { withFileTypes: true }).filter((e) =>
+        e.isDirectory(),
+      )
       profileOnDisk = accounts.length > 0
       for (const acct of accounts) {
         const cookiesPath = j(profileDir, acct.name, 'Default', 'Network', 'Cookies')
@@ -159,9 +161,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
     if (chrome) {
       liveSlave = true
       liveSlavePort = chrome.debugPort
-      verifiedLoggedIn = ctx.accounts.some(
-        (a) => a.providerId === provider && a.hasCookies,
-      )
+      verifiedLoggedIn = ctx.accounts.some((a) => a.providerId === provider && a.hasCookies)
     }
   } catch {
     /* ignore */
@@ -173,13 +173,20 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
   let capabilityStatus: string | undefined
   try {
     const { testCapability } = await import('./test-cap.js')
-    const slugsToTry = ['conversation_send', 'send_message', `cap:conversation:send`, `${provider}_send`]
+    const slugsToTry = [
+      'conversation_send',
+      'send_message',
+      'cap:conversation:send',
+      `${provider}_send`,
+    ]
     for (const slug of slugsToTry) {
       const result = await testCapability(slug, { providerId: provider })
       if (result.registered) {
         capabilityRegistered = true
         capabilitySlug = slug
-        capabilityStatus = result.ok ? 'registered+executed' : `registered (${result.error ?? 'validation error'})`
+        capabilityStatus = result.ok
+          ? 'registered+executed'
+          : `registered (${result.error ?? 'validation error'})`
         break
       }
       capabilityStatus = `Capability ${slug} not found`
@@ -216,7 +223,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
       ...(await getUiTestStatus(provider)),
     }
     // Probe known capabilities for this provider to flag untested ones
-    const knownCaps = capabilityRegistered ? [capabilitySlug!] : []
+    const knownCaps = capabilityRegistered ? [capabilitySlug ?? ''] : []
     if (knownCaps.length > 0) {
       const untested = await getUntestedOrFailed(provider, knownCaps)
       uiTestStatus.untestedCapabilities = untested.untested
@@ -227,12 +234,11 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
   }
 
   // Canonical verdict
-  const verdict: ProviderStatusResult['verdict'] =
-    capabilityRegistered
-      ? 'already-registered'
-      : profileOnDisk || seeded
-        ? 'partial'
-        : 'absent'
+  const verdict: ProviderStatusResult['verdict'] = capabilityRegistered
+    ? 'already-registered'
+    : profileOnDisk || seeded
+      ? 'partial'
+      : 'absent'
 
   // Recommended action
   let recommendedAction = ''

@@ -2,8 +2,8 @@
 // EventStore — append-only event store for distributed state.
 // Phase 9: New FleetEventStream table. Old FleetEventRow becomes a projection.
 
-import type { FleetEvent } from '../events/event-bus.js'
 import { getLogger } from '../../observability/logger.js'
+import type { FleetEvent } from '../events/event-bus.js'
 
 export interface EventStoreEntry {
   id: string
@@ -38,13 +38,17 @@ export class InMemoryEventStore implements EventStoreBackend {
       version,
     }
     this.entries.push(fullEntry)
-    this.logger.debug('Event appended', { id: fullEntry.id, type: entry.type, streamId: entry.streamId })
+    this.logger.debug('Event appended', {
+      id: fullEntry.id,
+      type: entry.type,
+      streamId: entry.streamId,
+    })
     return fullEntry
   }
 
   async getByStream(streamId: string, fromVersion?: number): Promise<EventStoreEntry[]> {
     return this.entries.filter(
-      (e) => e.streamId === streamId && (fromVersion === undefined || e.version >= fromVersion)
+      (e) => e.streamId === streamId && (fromVersion === undefined || e.version >= fromVersion),
     )
   }
 

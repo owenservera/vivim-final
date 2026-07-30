@@ -2,12 +2,12 @@
 // RecoveryOrchestrator — coordinates failure classification and recovery.
 // Phase 9: Subscribes to SlaveCrashed events and applies class-specific strategies.
 
-import type { FailureClass, RecoveryStrategy } from '../actor/messages.js'
-import { classifyFailure } from './classifier.js'
-import { executeRecovery, type RecoveryContext, type StrategyResult } from './strategies.js'
-import type { EventBus, FleetEvent } from '../events/event-bus.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
+import type { FailureClass, RecoveryStrategy } from '../actor/messages.js'
+import type { EventBus, FleetEvent } from '../events/event-bus.js'
+import { classifyFailure } from './classifier.js'
+import { type RecoveryContext, type StrategyResult, executeRecovery } from './strategies.js'
 
 export interface RecoveryAttempt {
   failureClass: FailureClass
@@ -25,7 +25,9 @@ export class RecoveryOrchestrator {
   constructor(
     private eventBus: EventBus,
     private getRecoveryContext: (slaveId: string) => RecoveryContext | undefined,
-    private getProviderConfig: (providerId: string) => { maxRetries: Record<FailureClass, number> } | undefined,
+    private getProviderConfig: (
+      providerId: string,
+    ) => { maxRetries: Record<FailureClass, number> } | undefined,
   ) {}
 
   /**
@@ -33,9 +35,12 @@ export class RecoveryOrchestrator {
    */
   start(): void {
     this.logger.info('Starting recovery orchestrator')
-    this.unsubscribe = this.eventBus.subscribe('SlaveCrashed', async (event: Extract<FleetEvent, { type: 'SlaveCrashed' }>) => {
-      await this.handleCrash(event)
-    })
+    this.unsubscribe = this.eventBus.subscribe(
+      'SlaveCrashed',
+      async (event: Extract<FleetEvent, { type: 'SlaveCrashed' }>) => {
+        await this.handleCrash(event)
+      },
+    )
   }
 
   /**
@@ -73,7 +78,7 @@ export class RecoveryOrchestrator {
     // Check retry count
     const attempts = this.attempts.get(slaveId) ?? []
     const recentAttempts = attempts.filter(
-      (a) => a.failureClass === classification.failureClass && Date.now() - a.ts < 300_000
+      (a) => a.failureClass === classification.failureClass && Date.now() - a.ts < 300_000,
     )
 
     if (recentAttempts.length >= maxRetries) {
@@ -83,7 +88,9 @@ export class RecoveryOrchestrator {
         attempts: recentAttempts.length,
         maxRetries,
       })
-      this.metrics.incCounter('chrome_recovery_exhausted_total', { failureClass: classification.failureClass })
+      this.metrics.incCounter('chrome_recovery_exhausted_total', {
+        failureClass: classification.failureClass,
+      })
       return
     }
 
@@ -111,9 +118,15 @@ export class RecoveryOrchestrator {
         strategy,
         ts: Date.now(),
       })
-      this.metrics.incCounter('chrome_recovery_total', { result: 'success', failureClass: classification.failureClass })
+      this.metrics.incCounter('chrome_recovery_total', {
+        result: 'success',
+        failureClass: classification.failureClass,
+      })
     } else {
-      this.metrics.incCounter('chrome_recovery_total', { result: 'failure', failureClass: classification.failureClass })
+      this.metrics.incCounter('chrome_recovery_total', {
+        result: 'failure',
+        failureClass: classification.failureClass,
+      })
     }
   }
 

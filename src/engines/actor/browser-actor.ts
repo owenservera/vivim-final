@@ -5,12 +5,11 @@
 // each other's BrowserSession.
 
 import type { SlaveLifecycle } from '../../executor/slave-states.js'
-import type { BrowserSession } from '../runtime/browser-runtime.js'
-import { BrowserRuntime } from '../runtime/browser-runtime.js'
-import { Mailbox } from './mailbox.js'
-import type { ActorMsg, FailureClass, RecoveryStrategy } from './messages.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
+import type { BrowserRuntime } from '../runtime/browser-runtime.js'
+import { Mailbox } from './mailbox.js'
+import type { ActorMsg, FailureClass, RecoveryStrategy } from './messages.js'
 
 export class BrowserActor {
   private mailbox: Mailbox<ActorMsg>
@@ -88,7 +87,9 @@ export class BrowserActor {
           const result = await session.cdp.send('Runtime.evaluate', { expression: msg.expr })
           msg.k(result)
         } catch (err) {
-          this.logger.error('Evaluate failed', { error: err instanceof Error ? err.message : String(err) })
+          this.logger.error('Evaluate failed', {
+            error: err instanceof Error ? err.message : String(err),
+          })
           msg.k(null)
         }
         break
@@ -99,7 +100,10 @@ export class BrowserActor {
           const result = await session.cdp.send(msg.method, msg.params)
           msg.k(result)
         } catch (err) {
-          this.logger.error('CDP method failed', { method: msg.method, error: err instanceof Error ? err.message : String(err) })
+          this.logger.error('CDP method failed', {
+            method: msg.method,
+            error: err instanceof Error ? err.message : String(err),
+          })
           msg.k(null)
         }
         break
@@ -110,7 +114,9 @@ export class BrowserActor {
           const result = await session.cdp.captureScreenshot(msg.format)
           msg.k(result)
         } catch (err) {
-          this.logger.error('Screenshot failed', { error: err instanceof Error ? err.message : String(err) })
+          this.logger.error('Screenshot failed', {
+            error: err instanceof Error ? err.message : String(err),
+          })
           msg.k('')
         }
         break
@@ -120,7 +126,7 @@ export class BrowserActor {
           const session = this.runtime.for(this.slaveId)
           const result = await session.health.check(session.cdp)
           msg.k(result.ok)
-        } catch (err) {
+        } catch (_err) {
           msg.k(false)
         }
         break
@@ -150,7 +156,10 @@ export class BrowserActor {
       this.metrics.incCounter('chrome_spawn_total', { result: 'success' })
     } catch (err) {
       this._state = 'error'
-      this.logger.error('Failed to start slave', { slaveId: this.slaveId, error: err instanceof Error ? err.message : String(err) })
+      this.logger.error('Failed to start slave', {
+        slaveId: this.slaveId,
+        error: err instanceof Error ? err.message : String(err),
+      })
       this.metrics.incCounter('chrome_spawn_total', { result: 'failure' })
     }
   }

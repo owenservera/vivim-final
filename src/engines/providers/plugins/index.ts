@@ -15,11 +15,7 @@ import { GeminiPlugin } from './gemini.js'
  * Get all built-in provider plugins.
  */
 export function getBuiltinPlugins(): ProviderPlugin[] {
-  return [
-    new ChatGPTPlugin(),
-    new ClaudePlugin(),
-    new GeminiPlugin(),
-  ]
+  return [new ChatGPTPlugin(), new ClaudePlugin(), new GeminiPlugin()]
 }
 
 /**

@@ -1,215 +1,276 @@
 'use client';
 
 /**
- * components/canvas/OnboardingTour.tsx (#5)
+ * components/canvas/OnboardingTour.tsx (#5) — v2
  * --------------------------------------------------------------------
- * First-run interactive walkthrough. 5 steps:
- *   welcome → workspace-switcher → surface-tabs → shell-card → command-palette
+ * First-run interactive walkthrough. Animated spotlight, keyboard nav,
+ * analytics tracking, rich step content.
  *
- * Dismissible. Persists per-user via /api/onboarding. Re-triggerable
- * from the settings menu.
+ * v2 improvements over v1:
+ *   1. Animated spotlight with CSS clip-path cutout
+ *   2. Smooth step transitions (scale + fade)
+ *   3. Keyboard navigation (arrows, escape, number keys)
+ *   4. Rich step content (media, code blocks, markdown body)
+ *   5. Analytics tracking (timing, drop-off, completion)
+ *   6. Accessibility (ARIA labels, screen reader text)
+ *   7. Responsive (works 320px to 4K)
+ *   8. Pulse animation for attention
+ *   9. Action buttons that dispatch commands
+ *  10. Progress dots with animated width
  */
 
-import { useEffect, useState } from 'react';
-import type { OnboardingStep } from '../../shared/onboarding';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ONBOARDING_STEPS } from '../../shared/onboarding';
-import { SectionLabel } from './SectionLabel';
+import type { OnboardingStep } from '../../shared/onboarding';
+import { SpotlightOverlay, useSpotlightTarget } from '../../features/onboarding/SpotlightOverlay';
+import { StepRenderer } from '../../features/onboarding/StepRenderer';
+import { useKeyboardNavigation } from '../../features/onboarding/useKeyboardNavigation';
+import { useAnalytics } from '../../features/onboarding/useAnalytics';
+import { useIO } from './UnifiedIOProvider';
 
 export interface OnboardingTourProps {
   userId: string;
   onAction?: (command: string) => void;
 }
 
+type TourPhase = 'idle' | 'entering' | 'visible' | 'exiting' | 'completed' | 'dismissed';
+
 export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
-  const [open, setOpen] = useState(false);
+  const [phase, setPhase] = useState<TourPhase>('idle');
   const [stepIdx, setStepIdx] = useState(0);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+  const phaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const io = useIO();
+
+  // Analytics
+  const analytics = useAnalytics({ userId });
+
+  // Current step
+  const step: OnboardingStep = ONBOARDING_STEPS[stepIdx] ?? ONBOARDING_STEPS[0]!;
+
+  // Spotlight target
+  const targetSelector = step.targetSelector ?? null;
+  const targetRect = useSpotlightTarget(phase === 'visible' || phase === 'entering' ? targetSelector : null);
+
+  // ── Phase transitions ────────────────────────────────────────────────────
+
+  const clearPhaseTimer = useCallback(() => {
+    if (phaseTimerRef.current) {
+      clearTimeout(phaseTimerRef.current);
+      phaseTimerRef.current = null;
+    }
+  }, []);
+
+  const enterStep = useCallback((idx: number, _dir: 'forward' | 'backward') => {
+    clearPhaseTimer();
+    setStepIdx(idx);
+    setPhase('entering');
+    analytics.startStep(ONBOARDING_STEPS[idx]!.id);
+
+    // Transition to visible after animation
+    phaseTimerRef.current = setTimeout(() => {
+      if (mountedRef.current) setPhase('visible');
+    }, 300);
+  }, [analytics, clearPhaseTimer]);
+
+  // ── Load saved state ─────────────────────────────────────────────────────
 
   useEffect(() => {
-    fetch(`/api/onboarding/state?userId=${encodeURIComponent(userId)}`)
-      .then((r) => r.json())
-      .then((data: { ok: boolean; state?: { dismissed: boolean; completedSteps: string[] } }) => {
-        if (data.ok && data.state && !data.state.dismissed && data.state.completedSteps.length < ONBOARDING_STEPS.length) {
-          const nextIdx = ONBOARDING_STEPS.findIndex((s) => !data.state!.completedSteps.includes(s.id));
+    mountedRef.current = true;
+
+    io.get<{ ok: boolean; state?: { dismissed: boolean; completedSteps: string[] } }>(`/api/onboarding/state?userId=${encodeURIComponent(userId)}`)
+      .then((res) => {
+        if (!mountedRef.current) return;
+        if (res.data?.ok && res.data.state && !res.data.state.dismissed) {
+          const nextIdx = ONBOARDING_STEPS.findIndex((s) => !res.data!.state!.completedSteps.includes(s.id));
           if (nextIdx >= 0) {
-            setStepIdx(nextIdx);
-            setOpen(true);
+            enterStep(nextIdx, 'forward');
+            analytics.startTour();
           }
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [userId]);
+      .finally(() => { if (mountedRef.current) setLoading(false); });
+
+    return () => {
+      mountedRef.current = false;
+      clearPhaseTimer();
+    };
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Navigation ───────────────────────────────────────────────────────────
+
+  const next = useCallback(async () => {
+    const currentStep = ONBOARDING_STEPS[stepIdx];
+    if (currentStep) {
+      await completeStep(currentStep.id);
+      analytics.completeStep(currentStep.id, stepIdx);
+    }
+
+    if (stepIdx < ONBOARDING_STEPS.length - 1) {
+      enterStep(stepIdx + 1, 'forward');
+    } else {
+      // Tour complete
+      const result = analytics.completeTour();
+      setPhase('exiting');
+      phaseTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          setPhase('completed');
+          // Save completion state
+          io.post('/api/onboarding/complete-tour', {
+            userId,
+            stepTimings: result.stepTimings,
+            totalDurationMs: result.totalDurationMs,
+          }).catch(() => {});
+        }
+      }, 400);
+    }
+  }, [stepIdx, analytics, enterStep, userId]);
+
+  const prev = useCallback(() => {
+    if (stepIdx > 0) {
+      enterStep(stepIdx - 1, 'backward');
+    }
+  }, [stepIdx, enterStep]);
+
+  const dismiss = useCallback(async () => {
+    const result = analytics.dismissTour(stepIdx, ONBOARDING_STEPS[stepIdx]?.id ?? '');
+
+    setPhase('exiting');
+    phaseTimerRef.current = setTimeout(async () => {
+      if (!mountedRef.current) return;
+      setPhase('dismissed');
+
+      await io.post('/api/onboarding/dismiss', {
+        userId,
+        droppedOffAt: result.droppedOffAt,
+        stepTimings: result.stepTimings,
+      }).catch(() => {});
+    }, 300);
+  }, [stepIdx, analytics, userId]);
+
+  const jumpTo = useCallback((idx: number) => {
+    if (idx >= 0 && idx < ONBOARDING_STEPS.length && idx !== stepIdx) {
+      enterStep(idx, idx > stepIdx ? 'forward' : 'backward');
+    }
+  }, [stepIdx, enterStep]);
+
+  // ── Keyboard navigation ──────────────────────────────────────────────────
+
+  useKeyboardNavigation({
+    isOpen: phase === 'visible' || phase === 'entering',
+    currentStepIdx: stepIdx,
+    steps: ONBOARDING_STEPS,
+    onNext: next,
+    onPrev: prev,
+    onDismiss: dismiss,
+    onJumpTo: jumpTo,
+    disabled: phase === 'exiting' || phase === 'completed' || phase === 'dismissed',
+  });
+
+  // ── Complete step API ────────────────────────────────────────────────────
 
   const completeStep = async (stepId: string) => {
-    await fetch('/api/onboarding/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, stepId }),
-    });
+    await io.post('/api/onboarding/complete', { userId, stepId });
   };
 
-  const dismiss = async () => {
-    await fetch('/api/onboarding/dismiss', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
-    });
-    setOpen(false);
-  };
+  // ── Action handler ───────────────────────────────────────────────────────
 
-  const next = async () => {
-    const step = ONBOARDING_STEPS[stepIdx];
-    if (step) {
-      await completeStep(step.id);
-      if (step.actionCommand) onAction?.(step.actionCommand);
+  const handleAction = useCallback((command: string) => {
+    analytics.trackAction(step.id, command);
+    onAction?.(command);
+    // Auto-advance after action (unless step is interactive)
+    if (!step.interactive) {
+      setTimeout(() => next(), 200);
     }
-    if (stepIdx < ONBOARDING_STEPS.length - 1) {
-      setStepIdx(stepIdx + 1);
-    } else {
-      setOpen(false);
-    }
-  };
+  }, [step, analytics, onAction, next]);
 
-  const skip = async () => {
-    await dismiss();
-  };
+  // ── Popover positioning ──────────────────────────────────────────────────
 
-  if (loading || !open) return null;
+  const popoverStyle = useMemo((): React.CSSProperties => {
+    const isCenter = step.placement === 'center' || !step.targetSelector;
 
-  const step: OnboardingStep = ONBOARDING_STEPS[stepIdx] ?? ONBOARDING_STEPS[0]!;
-  const isLast = stepIdx === ONBOARDING_STEPS.length - 1;
-
-  const isCenter = step.placement === 'center' || !step.targetSelector;
-  let targetRect: DOMRect | null = null;
-  if (step.targetSelector) {
-    const el = document.querySelector(step.targetSelector);
-    if (el) targetRect = el.getBoundingClientRect();
-  }
-
-  const popoverStyle: React.CSSProperties = isCenter
-    ? {
+    if (isCenter) {
+      return {
         position: 'fixed',
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-      }
-    : targetRect
-      ? {
-          position: 'fixed',
-          top:
-            step.placement === 'bottom'
-              ? targetRect.bottom + 8
-              : step.placement === 'top'
-                ? targetRect.top - 200
-                : targetRect.top,
-          left:
-            step.placement === 'right'
-              ? targetRect.right + 8
-              : step.placement === 'left'
-                ? targetRect.left - 340
-                : targetRect.left,
-        }
-      : { position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)' };
+      };
+    }
+
+    if (!targetRect) {
+      return {
+        position: 'fixed',
+        top: '20%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+      };
+    }
+
+    const OFFSET = 16;
+    let top = targetRect.top;
+    let left = targetRect.left;
+
+    switch (step.placement) {
+      case 'bottom':
+        top = targetRect.top + targetRect.height + OFFSET;
+        left = targetRect.left + targetRect.width / 2 - 170; // Center on target
+        break;
+      case 'top':
+        top = targetRect.top - 240 - OFFSET;
+        left = targetRect.left + targetRect.width / 2 - 170;
+        break;
+      case 'right':
+        top = targetRect.top + targetRect.height / 2 - 120;
+        left = targetRect.left + targetRect.width + OFFSET;
+        break;
+      case 'left':
+        top = targetRect.top + targetRect.height / 2 - 120;
+        left = targetRect.left - 360 - OFFSET;
+        break;
+    }
+
+    // Clamp to viewport
+    left = Math.max(16, Math.min(left, window.innerWidth - 360));
+    top = Math.max(16, Math.min(top, window.innerHeight - 300));
+
+    return { position: 'fixed', top, left };
+  }, [step.placement, step.targetSelector, targetRect]);
+
+  // ── Don't render if not active ───────────────────────────────────────────
+
+  if (loading || phase === 'idle' || phase === 'completed' || phase === 'dismissed') {
+    return null;
+  }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(2px)',
-        zIndex: 1100,
-        pointerEvents: 'auto',
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) skip();
-      }}
+    <SpotlightOverlay
+      isOpen={true}
+      target={targetRect}
+      pulse={step.pulseSpotlight}
+      onBackdropClick={dismiss}
+      zIndex={1100}
     >
-      {/* Highlight target */}
-      {targetRect && (
-        <div
-          style={{
-            position: 'fixed',
-            top: targetRect.top - 4,
-            left: targetRect.left - 4,
-            width: targetRect.width + 8,
-            height: targetRect.height + 8,
-            border: '2px solid var(--accent)',
-            borderRadius: 8,
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
-            pointerEvents: 'none',
-            zIndex: 1101,
-          }}
-        />
-      )}
-
       <div
         style={{
           ...popoverStyle,
-          width: 320,
-          background: 'var(--bg-elevated)',
-          border: '1px solid var(--border-strong)',
-          borderRadius: 10,
-          boxShadow: 'var(--shadow)',
-          padding: 16,
-          fontFamily: 'ui-sans-serif, system-ui',
-          color: 'var(--text)',
-          zIndex: 1102,
+          opacity: phase === 'exiting' ? 0 : 1,
+          transform: `${popoverStyle.transform ?? ''} ${phase === 'entering' ? 'scale(0.96)' : 'scale(1)'}`.trim(),
+          transition: 'opacity 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+          pointerEvents: phase === 'exiting' ? 'none' : 'auto',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <SectionLabel style={{ marginBottom: 0 }}>
-            Tour · {stepIdx + 1} / {ONBOARDING_STEPS.length}
-          </SectionLabel>
-          <button onClick={skip} style={skipBtnStyle}>Skip</button>
-        </div>
-        <h3 style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 600 }}>{step.title}</h3>
-        <p style={{ margin: '0 0 14px', fontSize: 12, lineHeight: 1.5, color: 'var(--text-muted)' }}>{step.body}</p>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {ONBOARDING_STEPS.map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: i === stepIdx ? 'var(--accent)' : i < stepIdx ? 'var(--accent)' : 'var(--border-strong)',
-                  opacity: i === stepIdx ? 1 : i < stepIdx ? 0.5 : 1,
-                }}
-              />
-            ))}
-          </div>
-          <button
-            onClick={next}
-            style={{
-              padding: '6px 14px',
-              background: 'var(--accent)',
-              color: 'var(--accent-fg)',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 600,
-              fontFamily: 'inherit',
-            }}
-          >
-            {step.actionLabel ?? (isLast ? 'Finish' : 'Next')}
-          </button>
-        </div>
+        <StepRenderer
+          step={step}
+          stepIdx={stepIdx}
+          totalSteps={ONBOARDING_STEPS.length}
+          onNext={next}
+          onAction={handleAction}
+          onDismiss={dismiss}
+        />
       </div>
-    </div>
+    </SpotlightOverlay>
   );
 }
-
-const skipBtnStyle: React.CSSProperties = {
-  padding: '2px 8px',
-  border: '1px solid var(--border)',
-  background: 'transparent',
-  color: 'var(--text-muted)',
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: 10,
-  fontFamily: 'inherit',
-};

@@ -2,7 +2,14 @@
 // Barrel exports for observability subsystem.
 // Phase 1: Every browser action is traceable end-to-end.
 
-export { traceCtx, withSpan, getCurrentContext, childContext, generateTraceId, generateSpanId } from './context.js'
+export {
+  traceCtx,
+  withSpan,
+  getCurrentContext,
+  childContext,
+  generateTraceId,
+  generateSpanId,
+} from './context.js'
 export type { TraceContext } from './context.js'
 
 export {

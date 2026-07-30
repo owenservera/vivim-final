@@ -38,14 +38,11 @@ export class EventBus {
   /**
    * Subscribe to a specific event type.
    */
-  subscribe<T extends FleetEvent>(
-    eventType: T['type'],
-    handler: EventHandler<T>,
-  ): () => void {
+  subscribe<T extends FleetEvent>(eventType: T['type'], handler: EventHandler<T>): () => void {
     if (!this.handlers.has(eventType)) {
       this.handlers.set(eventType, new Set())
     }
-    this.handlers.get(eventType)!.add(handler as EventHandler)
+    this.handlers.get(eventType)?.add(handler as EventHandler)
 
     // Return unsubscribe function
     return () => {
@@ -117,9 +114,7 @@ export class EventBus {
    * Get event history for a specific slave.
    */
   getHistoryBySlave(slaveId: string, limit?: number): FleetEvent[] {
-    const filtered = this.eventHistory.filter(
-      (e) => 'slaveId' in e && e.slaveId === slaveId
-    )
+    const filtered = this.eventHistory.filter((e) => 'slaveId' in e && e.slaveId === slaveId)
     if (limit) {
       return filtered.slice(-limit)
     }

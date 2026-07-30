@@ -42,7 +42,10 @@ export interface LogEntry {
 /**
  * Redact sensitive fields from log data.
  */
-function redactSensitive(method: string | undefined, data: Record<string, unknown>): Record<string, unknown> {
+function redactSensitive(
+  method: string | undefined,
+  data: Record<string, unknown>,
+): Record<string, unknown> {
   const result: Record<string, unknown> = {}
 
   for (const [key, value] of Object.entries(data)) {
@@ -166,5 +169,5 @@ export function getLogger(context: string): StructuredLogger {
     const level = (process.env.CAP_STORE_LOG_LEVEL ?? 'info') as LogLevel
     loggers.set(context, new StructuredLogger(context, level))
   }
-  return loggers.get(context)!
+  return loggers.get(context) ?? new StructuredLogger(context, level)
 }

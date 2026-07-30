@@ -2,7 +2,7 @@
 // Lease — represents a checked-out browser from the pool.
 // Phase 4: Lease lifecycle managed by Domain Layer.
 
-import type { LeaseId, SlaveId, ProviderId, AccountId } from '../../domain/types.js'
+import type { AccountId, LeaseId, ProviderId, SlaveId } from '../../domain/types.js'
 import { createLeaseId } from '../../domain/types.js'
 
 export interface LeaseOptions {

@@ -10,7 +10,7 @@
 // The Bun runtime baseline is ~94 MB on Windows (irreducible).
 // Our app code adds ~3 MB. UPX compression reduces the final binary to ~45 MB.
 
-import { existsSync, mkdirSync, statSync, unlinkSync, copyFileSync, readdirSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
 
 const repoRoot = join(import.meta.dir, '..', '..')
@@ -41,7 +41,7 @@ console.log(`[compile] Strategy: Bundle → Copy Data → Compile → UPX compre
 const startTime = Date.now()
 
 // ── Step 0: Copy database and provider data ─────────────────────────────────
-console.log(`[compile] Step 0: Copying database and provider data...`)
+console.log('[compile] Step 0: Copying database and provider data...')
 
 // Copy database if it exists
 if (existsSync(dbSource)) {
@@ -61,8 +61,8 @@ const providersDir = join(seedsSource, 'providers')
 if (existsSync(providersDir)) {
   const providersDest = join(seedsDest, 'providers')
   if (!existsSync(providersDest)) mkdirSync(providersDest, { recursive: true })
-  
-  const providerFiles = readdirSync(providersDir).filter(f => f.endsWith('.json'))
+
+  const providerFiles = readdirSync(providersDir).filter((f) => f.endsWith('.json'))
   for (const file of providerFiles) {
     copyFileSync(join(providersDir, file), join(providersDest, file))
   }
@@ -74,8 +74,8 @@ const parsersDir = join(seedsSource, 'parsers', 'harvested')
 if (existsSync(parsersDir)) {
   const parsersDest = join(seedsDest, 'parsers')
   if (!existsSync(parsersDest)) mkdirSync(parsersDest, { recursive: true })
-  
-  const parserFiles = readdirSync(parsersDir).filter(f => f.endsWith('.ts'))
+
+  const parserFiles = readdirSync(parsersDir).filter((f) => f.endsWith('.ts'))
   for (const file of parserFiles) {
     copyFileSync(join(parsersDir, file), join(parsersDest, file))
   }
@@ -85,7 +85,7 @@ if (existsSync(parsersDir)) {
 console.log(`[compile] Data directory: ${(statSync(dataDir).size / 1024).toFixed(0)} KB`)
 
 // ── Step 1: Bundle ──────────────────────────────────────────────────────────
-console.log(`[compile] Step 1: Bundling...`)
+console.log('[compile] Step 1: Bundling...')
 
 const bundle = await Bun.build({
   entrypoints: [entry],
@@ -116,7 +116,7 @@ await Bun.write(bundledJs, bundleOutput)
 console.log(`[compile] Bundle: ${(statSync(bundledJs).size / 1024).toFixed(0)} KB`)
 
 // ── Step 2: Compile to standalone exe ───────────────────────────────────────
-console.log(`[compile] Step 2: Compiling standalone exe...`)
+console.log('[compile] Step 2: Compiling standalone exe...')
 
 const compileArgs = [
   'build',
@@ -222,4 +222,4 @@ console.log('')
 console.log(`[compile] Done in ${elapsed}s`)
 console.log(`[compile] Output: ${outFile}`)
 console.log(`[compile] Final size: ${sizeMB} MB`)
-console.log(`[compile] Data included: database + provider manifests + parser files`)
+console.log('[compile] Data included: database + provider manifests + parser files')

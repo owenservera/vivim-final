@@ -37,6 +37,7 @@ import {
   getLayerConfig,
   UpdateNotification,
 } from '@/components/canvas';
+import { HelpWidget } from '@/features/help-system';
 import { getPanelType } from '@/components/canvas/TabConfig';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useConversation } from '@/sdk/web/use-conversation';
@@ -311,6 +312,22 @@ function CanvasApp() {
 
       {/* Onboarding tour */}
       <OnboardingTour userId="user:demo" onAction={() => {}} />
+
+      {/* Help center — floating widget (Ctrl+? or F1 to toggle) */}
+      <HelpWidget
+        userId="user:demo"
+        onAction={async (cmd) => {
+          // Route help actions through UnifiedIO → /api/interpret
+          if (cmd.startsWith('execute:')) {
+            const capability = cmd.slice(8);
+            try {
+              await io.post('/api/interpret', { text: capability });
+            } catch {
+              console.error('[Help] Execute failed:', capability);
+            }
+          }
+        }}
+      />
 
       {/* Dev console (Cmd+`) */}
       {devConsoleOpen && (

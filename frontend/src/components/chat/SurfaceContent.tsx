@@ -29,6 +29,7 @@ import type { DocumentCard as DocumentCardRow } from '@/shared/document';
 import type { MediaCard as MediaCardRow } from '@/shared/media';
 import type { AutomationDefinition } from '@/shared/automation';
 import type { AgentDefinition } from '@/shared/agent';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 
 // Local card components (previously in page.tsx)
 function CardGrid({ children }: { children: React.ReactNode }) {
@@ -125,58 +126,55 @@ export function SurfaceContent({
   const [medias, setMedias] = useState<MediaCardRow[]>([]);
   const [automations, setAutomations] = useState<AutomationDefinition[]>([]);
   const [agents, setAgents] = useState<AgentDefinition[]>([]);
+  const io = useIO();
 
   // Fetch documents
   useEffect(() => {
     if (activeSurface !== 'docs' && activeSurface !== 'editor') return;
     let cancelled = false;
-    fetch('/api/documents')
-      .then((r) => r.json())
-      .then((data: { ok: boolean; documents: DocumentCardRow[] }) => {
-        if (!cancelled && data.ok) setDocs(data.documents);
+    io.get<{ ok: boolean; documents: DocumentCardRow[] }>('/api/documents')
+      .then((res) => {
+        if (!cancelled && res.data?.ok) setDocs(res.data.documents);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [activeSurface]);
+  }, [activeSurface, io]);
 
   // Fetch media
   useEffect(() => {
     if (activeSurface !== 'media') return;
     let cancelled = false;
-    fetch('/api/media')
-      .then((r) => r.json())
-      .then((data: { ok: boolean; media: MediaCardRow[] }) => {
-        if (!cancelled && data.ok) setMedias(data.media);
+    io.get<{ ok: boolean; media: MediaCardRow[] }>('/api/media')
+      .then((res) => {
+        if (!cancelled && res.data?.ok) setMedias(res.data.media);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [activeSurface]);
+  }, [activeSurface, io]);
 
   // Fetch automations
   useEffect(() => {
     if (activeSurface !== 'automation') return;
     let cancelled = false;
-    fetch('/api/automation/list')
-      .then((r) => r.json())
-      .then((data: { ok: boolean; automations: AutomationDefinition[] }) => {
-        if (!cancelled && data.ok) setAutomations(data.automations);
+    io.get<{ ok: boolean; automations: AutomationDefinition[] }>('/api/automation/list')
+      .then((res) => {
+        if (!cancelled && res.data?.ok) setAutomations(res.data.automations);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [activeSurface]);
+  }, [activeSurface, io]);
 
   // Fetch agents
   useEffect(() => {
     if (activeSurface !== 'agents') return;
     let cancelled = false;
-    fetch('/api/agent/list')
-      .then((r) => r.json())
-      .then((data: { ok: boolean; agents: AgentDefinition[] }) => {
-        if (!cancelled && data.ok) setAgents(data.agents);
+    io.get<{ ok: boolean; agents: AgentDefinition[] }>('/api/agent/list')
+      .then((res) => {
+        if (!cancelled && res.data?.ok) setAgents(res.data.agents);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [activeSurface]);
+  }, [activeSurface, io]);
 
   return (
     <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
@@ -211,11 +209,7 @@ export function SurfaceContent({
                 <AutomationCard
                   automation={a}
                   onExecute={async (id) => {
-                    await fetch('/api/automation/execute', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ automationId: id }),
-                    });
+                    await io.post('/api/automation/execute', { automationId: id });
                   }}
                 />
               </CardFrame>
@@ -230,11 +224,7 @@ export function SurfaceContent({
                 <AgentCard
                   agent={a}
                   onInvoke={async (id) => {
-                    await fetch('/api/agent/invoke', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ agentId: id }),
-                    });
+                    await io.post('/api/agent/invoke', { agentId: id });
                   }}
                 />
               </CardFrame>

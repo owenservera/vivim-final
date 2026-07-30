@@ -19,18 +19,14 @@ export const traceCtx = new AsyncLocalStorage<TraceContext>()
  * Generate a random trace ID (hex string).
  */
 export function generateTraceId(): string {
-  return Array.from({ length: 16 }, () =>
-    Math.floor(Math.random() * 16).toString(16),
-  ).join('')
+  return Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
 }
 
 /**
  * Generate a random span ID (hex string).
  */
 export function generateSpanId(): string {
-  return Array.from({ length: 8 }, () =>
-    Math.floor(Math.random() * 16).toString(16),
-  ).join('')
+  return Array.from({ length: 8 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
 }
 
 /**

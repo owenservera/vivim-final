@@ -2,10 +2,10 @@
 // ResourceManager — unified resource management for the fleet.
 // Phase 6: Coordinates PressureFeed, AdaptiveLimiter, and GpuAllocator.
 
-import { PressureFeed } from './pressure-feed.js'
+import { getLogger } from '../../observability/logger.js'
 import { AdaptiveLimiter } from './adaptive-limiter.js'
 import { GpuAllocator } from './gpu-allocator.js'
-import { getLogger } from '../../observability/logger.js'
+import { PressureFeed } from './pressure-feed.js'
 
 export interface ResourceManagerOptions {
   pressure?: Partial<import('./pressure-feed.js').PressureFeedOptions>

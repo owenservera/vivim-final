@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import type { WorkspaceMembership, Role, RoleSpec, PermissionCheck } from '../../shared/rbac';
+import { useIO } from './UnifiedIOProvider';
 
 export function RbacManager({ workspaceId }: { workspaceId: string }) {
   const [roles, setRoles] = useState<RoleSpec[]>([]);
@@ -21,62 +22,44 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
   const [checkCap, setCheckCap] = useState('cap:canvas:shell-command');
   const [grantUserId, setGrantUserId] = useState('');
   const [grantRole, setGrantRole] = useState<Role>('member');
+  const io = useIO();
 
   const fetchRoles = async () => {
-    const res = await fetch('/api/rbac/roles');
-    const data = (await res.json()) as { ok: boolean; roles: RoleSpec[] };
-    if (data.ok) setRoles(data.roles);
+    const res = await io.get<{ ok: boolean; roles: RoleSpec[] }>('/api/rbac/roles');
+    if (res.data?.ok) setRoles(res.data.roles);
   };
 
   const fetchMembers = async () => {
-    const res = await fetch(`/api/rbac/members?workspaceId=${encodeURIComponent(workspaceId)}`);
-    const data = (await res.json()) as { ok: boolean; members: WorkspaceMembership[] };
-    if (data.ok) setMembers(data.members);
+    const res = await io.get<{ ok: boolean; members: WorkspaceMembership[] }>(`/api/rbac/members?workspaceId=${encodeURIComponent(workspaceId)}`);
+    if (res.data?.ok) setMembers(res.data.members);
   };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRoles();
     fetchMembers();
-  }, [workspaceId]);
+  }, [workspaceId, io]);
 
   const grant = async () => {
     if (!grantUserId.trim()) return;
-    await fetch('/api/rbac/grant', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workspaceId, userId: grantUserId, role: grantRole, grantedBy: 'user:demo' }),
-    });
+    await io.post('/api/rbac/grant', { workspaceId, userId: grantUserId, role: grantRole, grantedBy: 'user:demo' });
     setGrantUserId('');
     fetchMembers();
   };
 
   const updateRole = async (userId: string, role: Role) => {
-    await fetch('/api/rbac/update_role', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workspaceId, userId, role }),
-    });
+    await io.post('/api/rbac/update_role', { workspaceId, userId, role });
     fetchMembers();
   };
 
   const revoke = async (userId: string) => {
-    await fetch('/api/rbac/revoke', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workspaceId, userId }),
-    });
+    await io.post('/api/rbac/revoke', { workspaceId, userId });
     fetchMembers();
   };
 
   const check = async () => {
-    const res = await fetch('/api/rbac/check', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ workspaceId, userId: checkUser, capabilityId: checkCap }),
-    });
-    const data = (await res.json()) as { ok: boolean; check: PermissionCheck };
-    if (data.ok) setCheckResult(data.check);
+    const res = await io.post<{ ok: boolean; check: PermissionCheck }>('/api/rbac/check', { workspaceId, userId: checkUser, capabilityId: checkCap });
+    if (res.data?.ok) setCheckResult(res.data.check);
   };
 
   return (

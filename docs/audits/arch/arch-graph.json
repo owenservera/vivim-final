@@ -192,6 +192,7 @@
     "engines/transfer-accelerator",
     "engines/trust-score",
     "engines/unified-registry",
+    "engines/update-engine",
     "engines/user-identity",
     "engines/version-manager",
     "engines/workflow-compiler",
@@ -796,11 +797,7 @@
     },
     {
       "from": "engines/actor",
-      "to": "domain/types"
-    },
-    {
-      "from": "engines/actor",
-      "to": "engines/actor"
+      "to": "observability/logger"
     },
     {
       "from": "engines/actor",
@@ -808,7 +805,7 @@
     },
     {
       "from": "engines/actor",
-      "to": "observability/logger"
+      "to": "engines/actor"
     },
     {
       "from": "engines/actor",
@@ -1520,11 +1517,11 @@
     },
     {
       "from": "engines/events",
-      "to": "engines/events"
+      "to": "observability/logger"
     },
     {
       "from": "engines/events",
-      "to": "observability/logger"
+      "to": "engines/events"
     },
     {
       "from": "engines/eviction-manager",
@@ -2164,15 +2161,15 @@
     },
     {
       "from": "engines/pool",
-      "to": "engines/pool"
-    },
-    {
-      "from": "engines/pool",
       "to": "observability/logger"
     },
     {
       "from": "engines/pool",
       "to": "observability/metrics"
+    },
+    {
+      "from": "engines/pool",
+      "to": "engines/pool"
     },
     {
       "from": "engines/protocol-discovery",
@@ -2368,11 +2365,11 @@
     },
     {
       "from": "engines/reliability",
-      "to": "engines/events"
+      "to": "observability/logger"
     },
     {
       "from": "engines/reliability",
-      "to": "observability/logger"
+      "to": "engines/events"
     },
     {
       "from": "engines/reliability",
@@ -2452,19 +2449,15 @@
     },
     {
       "from": "engines/runtime",
-      "to": "domain/types"
-    },
-    {
-      "from": "engines/runtime",
-      "to": "observability/tracing"
-    },
-    {
-      "from": "engines/runtime",
       "to": "observability/logger"
     },
     {
       "from": "engines/runtime",
       "to": "observability/metrics"
+    },
+    {
+      "from": "engines/runtime",
+      "to": "observability/tracing"
     },
     {
       "from": "engines/runtime",
@@ -2488,15 +2481,15 @@
     },
     {
       "from": "engines/scheduler",
-      "to": "engines/scheduler"
-    },
-    {
-      "from": "engines/scheduler",
       "to": "observability/logger"
     },
     {
       "from": "engines/scheduler",
       "to": "observability/metrics"
+    },
+    {
+      "from": "engines/scheduler",
+      "to": "engines/scheduler"
     },
     {
       "from": "engines/selector-healer",
@@ -2727,6 +2720,18 @@
       "to": "errors"
     },
     {
+      "from": "engines/update-engine",
+      "to": "config"
+    },
+    {
+      "from": "engines/update-engine",
+      "to": "errors"
+    },
+    {
+      "from": "engines/update-engine",
+      "to": "lib/logger"
+    },
+    {
       "from": "engines/user-identity",
       "to": "errors"
     },
@@ -2880,14 +2885,6 @@
     },
     {
       "from": "fleet/fleet-manager",
-      "to": "domain/types"
-    },
-    {
-      "from": "fleet/fleet-manager",
-      "to": "fleet/worker-node"
-    },
-    {
-      "from": "fleet/fleet-manager",
       "to": "engines/events"
     },
     {
@@ -2897,6 +2894,10 @@
     {
       "from": "fleet/fleet-manager",
       "to": "observability/metrics"
+    },
+    {
+      "from": "fleet/fleet-manager",
+      "to": "fleet/worker-node"
     },
     {
       "from": "fleet/index",
@@ -2917,10 +2918,6 @@
     {
       "from": "fleet/remote-cdp",
       "to": "observability/metrics"
-    },
-    {
-      "from": "fleet/worker-node",
-      "to": "domain/types"
     },
     {
       "from": "fleet/worker-node",
@@ -4072,6 +4069,10 @@
     },
     {
       "from": "server/index",
+      "to": "server/routes"
+    },
+    {
+      "from": "server/index",
       "to": "server/setup-router"
     },
     {
@@ -4432,11 +4433,15 @@
     },
     {
       "from": "server/routes",
-      "to": "server/index"
+      "to": "engines/update-engine"
     },
     {
       "from": "server/routes",
       "to": "server/response"
+    },
+    {
+      "from": "server/routes",
+      "to": "server/index"
     },
     {
       "from": "server/setup-router",
@@ -5477,6 +5482,10 @@
       "layer": 3
     },
     {
+      "module": "engines/update-engine",
+      "layer": 3
+    },
+    {
       "module": "engines/user-identity",
       "layer": 3
     },
@@ -6366,7 +6375,7 @@
     },
     {
       "module": "config",
-      "fanIn": 10,
+      "fanIn": 11,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -6406,9 +6415,9 @@
     },
     {
       "module": "domain/types",
-      "fanIn": 7,
+      "fanIn": 3,
       "fanOut": 1,
-      "instability": 0.125,
+      "instability": 0.25,
       "selfDeps": 0,
       "totalDeps": 1,
       "cohesion": 0,
@@ -6417,11 +6426,11 @@
     {
       "module": "engines/actor",
       "fanIn": 3,
-      "fanOut": 6,
-      "instability": 0.6666666666666666,
+      "fanOut": 5,
+      "instability": 0.625,
       "selfDeps": 1,
-      "totalDeps": 6,
-      "cohesion": 0.16666666666666666,
+      "totalDeps": 5,
+      "cohesion": 0.2,
       "files": 5
     },
     {
@@ -7667,11 +7676,11 @@
     {
       "module": "engines/runtime",
       "fanIn": 2,
-      "fanOut": 6,
-      "instability": 0.75,
+      "fanOut": 5,
+      "instability": 0.7142857142857143,
       "selfDeps": 1,
-      "totalDeps": 6,
-      "cohesion": 0.16666666666666666,
+      "totalDeps": 5,
+      "cohesion": 0.2,
       "files": 2
     },
     {
@@ -7975,6 +7984,16 @@
       "files": 1
     },
     {
+      "module": "engines/update-engine",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "engines/user-identity",
       "fanIn": 1,
       "fanOut": 3,
@@ -8036,7 +8055,7 @@
     },
     {
       "module": "errors",
-      "fanIn": 80,
+      "fanIn": 81,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -8237,10 +8256,10 @@
     {
       "module": "fleet/fleet-manager",
       "fanIn": 1,
-      "fanOut": 5,
-      "instability": 0.8333333333333334,
+      "fanOut": 4,
+      "instability": 0.8,
       "selfDeps": 0,
-      "totalDeps": 5,
+      "totalDeps": 4,
       "cohesion": 0,
       "files": 1
     },
@@ -8267,10 +8286,10 @@
     {
       "module": "fleet/worker-node",
       "fanIn": 2,
-      "fanOut": 3,
-      "instability": 0.6,
+      "fanOut": 2,
+      "instability": 0.5,
       "selfDeps": 0,
-      "totalDeps": 3,
+      "totalDeps": 2,
       "cohesion": 0,
       "files": 1
     },
@@ -8386,7 +8405,7 @@
     },
     {
       "module": "lib/logger",
-      "fanIn": 20,
+      "fanIn": 21,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -9077,10 +9096,10 @@
     {
       "module": "server/index",
       "fanIn": 13,
-      "fanOut": 81,
-      "instability": 0.8617021276595744,
+      "fanOut": 82,
+      "instability": 0.8631578947368421,
       "selfDeps": 0,
-      "totalDeps": 81,
+      "totalDeps": 82,
       "cohesion": 0,
       "files": 1
     },
@@ -9216,13 +9235,13 @@
     },
     {
       "module": "server/routes",
-      "fanIn": 0,
-      "fanOut": 2,
-      "instability": 1,
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
       "selfDeps": 0,
-      "totalDeps": 2,
+      "totalDeps": 3,
       "cohesion": 0,
-      "files": 1
+      "files": 2
     },
     {
       "module": "server/service-container",

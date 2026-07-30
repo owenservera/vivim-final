@@ -1,12 +1,7 @@
-// src/fleet/fleet-manager.ts
-// FleetManager — manages distributed worker nodes and global scheduling.
-// Phase 10: Orchestrates multi-machine Chrome fleet deployment.
-
-import type { SlaveId } from '../domain/types.js'
-import { WorkerNode, type WorkerNodeConfig, type WorkerStatus } from './worker-node.js'
 import type { EventBus } from '../engines/events/event-bus.js'
 import { getLogger } from '../observability/logger.js'
 import { getMetrics } from '../observability/metrics.js'
+import { WorkerNode, type WorkerNodeConfig } from './worker-node.js'
 
 export interface FleetConfig {
   /** Minimum workers to maintain */
@@ -62,7 +57,7 @@ export class FleetManager {
     this.logger.info('Starting FleetManager', { config: this.config })
 
     // Subscribe to fleet events
-    this.unsubscribe = this.eventBus.subscribe('SlaveCrashed', async (event) => {
+    this.unsubscribe = this.eventBus.subscribe('SlaveCrashed', async (_event) => {
       this.metrics.incCounter('fleet_slave_crashes_total', {})
     })
 
@@ -142,7 +137,8 @@ export class FleetManager {
       if (info.stats.activeInstances >= info.config.maxConcurrency) continue
 
       // Score: available capacity + tag match
-      let score = (info.config.maxConcurrency - info.stats.activeInstances) / info.config.maxConcurrency
+      let score =
+        (info.config.maxConcurrency - info.stats.activeInstances) / info.config.maxConcurrency
       if (tags && tags.length > 0) {
         const tagMatch = tags.filter((t) => info.config.tags.includes(t)).length
         score += tagMatch * 0.1
@@ -160,7 +156,11 @@ export class FleetManager {
   /**
    * Spawn a Chrome instance on the best available worker.
    */
-  async spawnOnBest(profileDir: string, providerId: string, tags?: string[]): Promise<{ workerId: string; debugPort: number; pid: number } | null> {
+  async spawnOnBest(
+    profileDir: string,
+    providerId: string,
+    tags?: string[],
+  ): Promise<{ workerId: string; debugPort: number; pid: number } | null> {
     const worker = this.getBestWorker(tags)
     if (!worker) {
       this.logger.warn('No available workers for spawn')
@@ -212,7 +212,7 @@ export class FleetManager {
   private async healthCheckAll(): Promise<void> {
     for (const [workerId, worker] of this.workers.entries()) {
       try {
-        const { healthy, stats } = await worker.healthCheck()
+        const { healthy, stats: _stats } = await worker.healthCheck()
         if (!healthy) {
           this.logger.warn('Worker unhealthy', { workerId })
           this.metrics.incCounter('fleet_worker_unhealthy_total', {})

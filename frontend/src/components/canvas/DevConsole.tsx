@@ -9,6 +9,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useIO, useIOEvents } from './UnifiedIOProvider';
+import { dispatchBehavior } from '@/shared/dispatch-behavior';
 import { Icon, type IconName } from './Icon';
 import { Truncate } from './Truncate';
 import { SectionLabel } from './SectionLabel';
@@ -55,7 +56,7 @@ export function DevConsole({ isOpen, onClose }: DevConsoleProps) {
 
   const injectNL = async (text: string) => {
     try {
-      await io.post('/api/interpret', { nl: text });
+      await dispatchBehavior('nl-inject', text, null, io);
     } catch (e) {
       console.error('[DevConsole] NL inject failed:', e);
     }

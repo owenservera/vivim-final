@@ -116,6 +116,10 @@ export class PressureFeed {
     // Update metrics
     this.metrics.setGauge('chrome_resource_pressure', { resource: 'cpu' }, cpuPct)
     this.metrics.setGauge('chrome_resource_pressure', { resource: 'memory' }, memPct)
-    this.metrics.setGauge('chrome_resource_pressure', { resource: 'chrome_rss' }, this.currentPressure.chromeRssTotal)
+    this.metrics.setGauge(
+      'chrome_resource_pressure',
+      { resource: 'chrome_rss' },
+      this.currentPressure.chromeRssTotal,
+    )
   }
 }

@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import type { WorkspaceTaxonomy } from '../../shared/workspace';
+import { useIO } from './UnifiedIOProvider';
 
 export interface WorkspaceSwitcherProps {
   currentWorkspaceId: string;
@@ -29,14 +30,14 @@ export function WorkspaceSwitcher({
 }: WorkspaceSwitcherProps) {
   const [workspaces, setWorkspaces] = useState<WorkspaceTaxonomy[]>([]);
   const [loading, setLoading] = useState(true);
+  const io = useIO();
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/workspace/list')
-      .then((r) => r.json())
-      .then((data: { ok: boolean; workspaces: WorkspaceTaxonomy[] }) => {
-        if (!cancelled && data.ok) {
-          setWorkspaces(data.workspaces);
+    io.get<{ ok: boolean; workspaces: WorkspaceTaxonomy[] }>('/api/workspace/list')
+      .then((res) => {
+        if (!cancelled && res.data?.ok) {
+          setWorkspaces(res.data.workspaces);
         }
       })
       .catch(() => {
@@ -46,7 +47,7 @@ export function WorkspaceSwitcher({
     return () => {
       cancelled = true;
     };
-  }, [currentWorkspaceId]);
+  }, [currentWorkspaceId, io]);
 
   return (
     <div

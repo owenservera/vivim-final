@@ -7,11 +7,11 @@
 // - Authenticated Pool: Pinned 1:1 to (provider, account). No session reuse.
 // - Profile swapping rejected due to fragility (SingletonLock, cookie corruption).
 
-import type { SlaveId, ProviderId, AccountId } from '../../domain/types.js'
-import { createSlaveId, createProviderId, createAccountId } from '../../domain/types.js'
-import { Lease } from './lease.js'
+import type { AccountId, ProviderId, SlaveId } from '../../domain/types.js'
+import { createAccountId, createProviderId, createSlaveId } from '../../domain/types.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
+import { Lease } from './lease.js'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -51,7 +51,10 @@ export class BrowserPool {
   private warmTimer: ReturnType<typeof setInterval> | null = null
 
   constructor(
-    private spawnFn: (providerId?: string, accountId?: string) => Promise<{ slaveId: string; debugPort: number; profileDir: string }>,
+    private spawnFn: (
+      providerId?: string,
+      accountId?: string,
+    ) => Promise<{ slaveId: string; debugPort: number; profileDir: string }>,
     options?: Partial<PoolOptions>,
   ) {
     this.opts = {
@@ -96,7 +99,11 @@ export class BrowserPool {
         this.leases.set(slave.id, lease)
         slave.lastUsed = Date.now()
         slave.leaseCount++
-        this.logger.info('Acquired from authenticated pool', { slaveId: slave.id, providerId, accountId })
+        this.logger.info('Acquired from authenticated pool', {
+          slaveId: slave.id,
+          providerId,
+          accountId,
+        })
         this.metrics.incCounter('chrome_pool_leases_total', { provider: providerId, hit: 'true' })
         return { slaveId: slave.id, debugPort: slave.debugPort, lease }
       }
@@ -104,7 +111,8 @@ export class BrowserPool {
 
     // Try ephemeral pool
     if (this.ephemeralPool.length > 0) {
-      const slave = this.ephemeralPool.pop()!
+      const slave = this.ephemeralPool.pop() ?? null
+      if (!slave) return null
       const lease = new Lease(
         slave.id,
         createProviderId(providerId ?? 'generic'),
@@ -114,13 +122,19 @@ export class BrowserPool {
       slave.lastUsed = Date.now()
       slave.leaseCount++
       this.logger.info('Acquired from ephemeral pool', { slaveId: slave.id })
-      this.metrics.incCounter('chrome_pool_leases_total', { provider: providerId ?? 'generic', hit: 'true' })
+      this.metrics.incCounter('chrome_pool_leases_total', {
+        provider: providerId ?? 'generic',
+        hit: 'true',
+      })
       return { slaveId: slave.id, debugPort: slave.debugPort, lease }
     }
 
     // Pool miss — spawn new
     this.logger.info('Pool miss, spawning new browser', { providerId, accountId })
-    this.metrics.incCounter('chrome_pool_leases_total', { provider: providerId ?? 'generic', hit: 'false' })
+    this.metrics.incCounter('chrome_pool_leases_total', {
+      provider: providerId ?? 'generic',
+      hit: 'false',
+    })
     const result = await this.spawnFn(providerId, accountId)
     const lease = new Lease(
       createSlaveId(result.slaveId),
@@ -210,7 +224,9 @@ export class BrowserPool {
           leaseCount: 0,
         })
       } catch (err) {
-        this.logger.error('Failed to pre-warm pool', { error: err instanceof Error ? err.message : String(err) })
+        this.logger.error('Failed to pre-warm pool', {
+          error: err instanceof Error ? err.message : String(err),
+        })
       }
     }
   }
@@ -231,8 +247,10 @@ export class BrowserPool {
   }
 
   private findSlave(slaveId: string): PoolSlave | undefined {
-    return this.ephemeralPool.find((s) => s.id === slaveId) ??
+    return (
+      this.ephemeralPool.find((s) => s.id === slaveId) ??
       Array.from(this.authenticatedPool.values()).find((s) => s.id === slaveId)
+    )
   }
 
   private removeSlave(slave: PoolSlave): void {

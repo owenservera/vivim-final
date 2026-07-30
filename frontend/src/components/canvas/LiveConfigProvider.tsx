@@ -15,6 +15,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import type { ResolvedSurface, RouteContext, AccountContext } from '../../shared/route-context';
 import { useResolvedNodes } from './use-resolved-nodes';
 import { useCanvasEvents } from './use-canvas-events';
+import { useIO } from './UnifiedIOProvider';
 
 export interface LiveConfigContextValue {
   surface: ResolvedSurface | undefined;
@@ -50,6 +51,7 @@ export function LiveConfigProvider(props: LiveConfigProviderProps) {
   const [accounts, setAccounts] = useState(props.initialAccounts ?? []);
   const [variant, setVariant] = useState(props.initialVariant);
   const userId = props.initialUserId ?? 'user:1';
+  const io = useIO();
 
   const slotIds = props.slotIds ?? props.initialSlotIds ?? [
     'chat.header', 'chat.sidebar', 'chat.thread', 'chat.composer', 'chat.send',
@@ -69,15 +71,11 @@ export function LiveConfigProvider(props: LiveConfigProviderProps) {
 
   const patchDefinition = useCallback(
     async (id: string, patch: Record<string, unknown>) => {
-      await fetch(`/api/canvas/definition/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(patch),
-      });
+      await io.patch(`/api/canvas/definition/${id}`, patch);
       // The backend emits canvas:def:updated; the SSE subscription
       // in useCanvasEvents invalidates the query automatically.
     },
-    [], // no deps — fetch-and-forget; SSE handles invalidation
+    [io], // io dependency for stable reference
   );
 
   const value = useMemo<LiveConfigContextValue>(

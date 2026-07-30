@@ -18,6 +18,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SearchHit, SearchEntityKind } from '../../shared/search';
 import { Truncate } from './Truncate';
+import { dispatchBehavior } from '@/shared/dispatch-behavior';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 
 const KIND_GROUPS: Array<{ kind: SearchEntityKind; label: string; icon: string }> = [
   { kind: 'command', label: 'Commands', icon: '' },
@@ -45,6 +47,7 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const io = useIO();
 
   // Focus input on open.
   useEffect(() => {
@@ -65,13 +68,9 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
     setLoading(true);
     const t = setTimeout(async () => {
       try {
-        const res = await fetch('/api/search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: query, workspaceId, limit: 30 }),
-        });
-        const data = (await res.json()) as { hits: SearchHit[] };
-        setHits(data.hits ?? []);
+        const result = await dispatchBehavior('search', query, null, io, { workspaceId, limit: 30 });
+        const searchData = result.data as { hits?: SearchHit[] } | undefined;
+        setHits(searchData?.hits ?? []);
         setSelectedIndex(0);
       } catch {
         setHits([]);
@@ -80,7 +79,7 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
       }
     }, 120);
     return () => clearTimeout(t);
-  }, [query, open, workspaceId]);
+  }, [query, open, workspaceId, io]);
 
   // Keyboard navigation.
   useEffect(() => {

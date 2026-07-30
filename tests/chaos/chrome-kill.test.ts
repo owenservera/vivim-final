@@ -2,10 +2,9 @@
 // Chaos test: Kill Chrome process mid-operation and verify recovery.
 // Phase 11: Production hardening via chaos engineering.
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { EventBus } from '../../src/engines/events/event-bus.js'
 import { RecoveryOrchestrator } from '../../src/engines/reliability/recovery-orchestrator.js'
-import type { BrowserRuntime } from '../../src/engines/runtime/browser-runtime.js'
 
 describe('Chaos: Chrome Kill Mid-Operation', () => {
   let eventBus: EventBus
@@ -74,7 +73,7 @@ describe('Chaos: Chrome Kill Mid-Operation', () => {
 
     const attempts = recovery.getAttempts('test-slave')
     expect(attempts.length).toBeGreaterThan(0)
-    expect(attempts[0]!.failureClass).toBe('RendererCrash')
+    expect(attempts[0]?.failureClass).toBe('RendererCrash')
   })
 
   it('should classify OOM correctly', async () => {
@@ -91,7 +90,7 @@ describe('Chaos: Chrome Kill Mid-Operation', () => {
 
     const attempts = recovery.getAttempts('test-slave')
     expect(attempts.length).toBeGreaterThan(0)
-    expect(attempts[0]!.failureClass).toBe('OOM')
+    expect(attempts[0]?.failureClass).toBe('OOM')
   })
 
   it('should exhaust retries and stop', async () => {
