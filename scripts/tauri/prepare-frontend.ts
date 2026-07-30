@@ -1,6 +1,6 @@
+import { execSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { execSync } from 'node:child_process'
 
 const root = join(import.meta.dir, '..', '..')
 const frontendDir = join(root, 'frontend')
@@ -32,7 +32,9 @@ const rootFiles = manifest.rootMainFiles ?? []
 const scriptTags = [
   polyfill ? `<script src="/_next/${polyfill}" crossorigin=""></script>` : '',
   ...rootFiles.map((f: string) => `<script src="/_next/${f}" crossorigin=""></script>`),
-].filter(Boolean).join('\n    ')
+]
+  .filter(Boolean)
+  .join('\n    ')
 
 const html = `<!DOCTYPE html>
 <html lang="en">

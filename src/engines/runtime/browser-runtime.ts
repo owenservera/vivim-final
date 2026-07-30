@@ -4,10 +4,9 @@
 // private collaborator of Governor, not a peer.
 
 import type { SlaveLifecycle } from '../../executor/slave-states.js'
-import type { SlaveId, BrowserEndpoint } from '../../domain/types.js'
-import { getTracer } from '../../observability/tracing.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
+import { getTracer } from '../../observability/tracing.js'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -15,7 +14,17 @@ export interface CDPTransport {
   connect?(slaveId: string, debugPort: number): Promise<void>
   isConnected?(slaveId: string): boolean
   send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown>
-  capture(slaveId: string, pattern: RegExp, timeoutMs?: number): Promise<{ body: string; url?: string; headers?: Record<string, string>; status?: number; durationMs?: number }>
+  capture(
+    slaveId: string,
+    pattern: RegExp,
+    timeoutMs?: number,
+  ): Promise<{
+    body: string
+    url?: string
+    headers?: Record<string, string>
+    status?: number
+    durationMs?: number
+  }>
   getPageState(slaveId: string): Promise<{ url: string; title: string; readyState: string }>
   captureScreenshot(slaveId: string, format?: 'png' | 'jpeg'): Promise<string>
 }
@@ -70,20 +79,37 @@ export class CDPProxy {
       const durationMs = Date.now() - start
 
       this.tracer.endSpan(spanId, 'ok')
-      this.metrics.observeHistogram('chrome_slave_cdp_roundtrip_ms', { slaveId: this.slaveId }, durationMs)
+      this.metrics.observeHistogram(
+        'chrome_slave_cdp_roundtrip_ms',
+        { slaveId: this.slaveId },
+        durationMs,
+      )
       this.logger.cdpResponse(this.slaveId, method, durationMs, true)
 
       return result
     } catch (err) {
       const durationMs = Date.now() - start
       this.tracer.endSpan(spanId, 'error')
-      this.metrics.observeHistogram('chrome_slave_cdp_roundtrip_ms', { slaveId: this.slaveId }, durationMs)
+      this.metrics.observeHistogram(
+        'chrome_slave_cdp_roundtrip_ms',
+        { slaveId: this.slaveId },
+        durationMs,
+      )
       this.logger.cdpResponse(this.slaveId, method, durationMs, false)
       throw err
     }
   }
 
-  async capture(pattern: RegExp, timeoutMs?: number): Promise<{ body: string; url?: string; headers?: Record<string, string>; status?: number; durationMs?: number }> {
+  async capture(
+    pattern: RegExp,
+    timeoutMs?: number,
+  ): Promise<{
+    body: string
+    url?: string
+    headers?: Record<string, string>
+    status?: number
+    durationMs?: number
+  }> {
     return this.transport.capture(this.slaveId, pattern, timeoutMs)
   }
 
@@ -141,8 +167,8 @@ export class HealthMonitor {
 
   constructor(
     private slaveId: string,
-    private intervalMs: number = 30_000,
-    private timeoutMs: number = 5_000,
+    private intervalMs = 30_000,
+    private timeoutMs = 5_000,
   ) {}
 
   async check(cdp: CDPProxy): Promise<{ ok: boolean; latencyMs: number; error?: string }> {
@@ -150,7 +176,9 @@ export class HealthMonitor {
     try {
       const result = await Promise.race([
         cdp.send('Browser.getVersion'),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Health probe timeout')), this.timeoutMs)),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Health probe timeout')), this.timeoutMs),
+        ),
       ])
       const latencyMs = Date.now() - start
 
@@ -190,17 +218,16 @@ export class ReconnectManager {
   private logger = getLogger('ReconnectManager')
   private retryCount = 0
 
-  constructor(private policy: ReconnectPolicy = {
-    maxRetries: 3,
-    baseDelayMs: 1_000,
-    maxDelayMs: 30_000,
-    factor: 2,
-  }) {}
+  constructor(
+    private policy: ReconnectPolicy = {
+      maxRetries: 3,
+      baseDelayMs: 1_000,
+      maxDelayMs: 30_000,
+      factor: 2,
+    },
+  ) {}
 
-  async reconnect(
-    slaveId: string,
-    connectFn: () => Promise<void>,
-  ): Promise<void> {
+  async reconnect(slaveId: string, connectFn: () => Promise<void>): Promise<void> {
     while (this.retryCount < this.policy.maxRetries) {
       const delay = Math.min(
         this.policy.baseDelayMs * this.policy.factor ** this.retryCount,

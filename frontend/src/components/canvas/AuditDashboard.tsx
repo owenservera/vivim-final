@@ -13,23 +13,23 @@
 import { useEffect, useState } from 'react';
 import type { AuditEntry, AuditStats } from '../../shared/audit';
 import { SectionLabel } from './SectionLabel';
+import { useIO } from './UnifiedIOProvider';
 
 export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [stats, setStats] = useState<AuditStats | null>(null);
   const [filter, setFilter] = useState<{ engine?: string; ok?: boolean; limit: number }>({ limit: 100 });
+  const io = useIO();
 
   const fetchAudit = async () => {
     const params = new URLSearchParams({ limit: String(filter.limit) });
     if (filter.engine) params.set('engine', filter.engine);
     if (filter.ok !== undefined) params.set('ok', String(filter.ok));
-    const res = await fetch(`/api/audit/list?${params}`);
-    const data = (await res.json()) as { ok: boolean; entries: AuditEntry[] };
-    if (data.ok) setEntries(data.entries);
+    const res = await io.get<{ ok: boolean; entries: AuditEntry[] }>(`/api/audit/list?${params}`);
+    if (res.data?.ok) setEntries(res.data.entries);
 
-    const sRes = await fetch(`/api/audit/stats?${params}`);
-    const sData = (await sRes.json()) as { ok: boolean; stats: AuditStats };
-    if (sData.ok) setStats(sData.stats);
+    const sRes = await io.get<{ ok: boolean; stats: AuditStats }>(`/api/audit/stats?${params}`);
+    if (sRes.data?.ok) setStats(sRes.data.stats);
   };
 
   useEffect(() => {
@@ -37,13 +37,13 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
     fetchAudit();
     const t = setInterval(fetchAudit, 15_000);
     return () => clearInterval(t);
-  }, [filter, workspaceId]);
+  }, [filter, workspaceId, io]);
 
   const exportAudit = async () => {
     const params = new URLSearchParams();
     if (filter.engine) params.set('engine', filter.engine);
-    const res = await fetch(`/api/audit/export?${params}`);
-    const text = await res.text();
+    const res = await io.get<string>(`/api/audit/export?${params}`);
+    const text = res.data ?? '';
     const blob = new Blob([text], { type: 'application/x-ndjson' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

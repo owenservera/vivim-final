@@ -302,14 +302,14 @@ function ConversationsPanel({ workspaceId }: { workspaceId: string }) {
 
 function AgentsPanel({ workspaceId }: { workspaceId: string }) {
   const [agents, setAgents] = useState<Array<{ name: string; status: string; steps: number }>>([]);
+  const io = useIO();
   useEffect(() => {
-    fetch(`/api/agent/list?workspaceId=${encodeURIComponent(workspaceId)}`)
-      .then((r) => r.json())
-      .then((d: { ok: boolean; agents: Array<{ name: string; status: string; steps: unknown[] }> }) => {
-        if (d.ok) setAgents(d.agents.map((a) => ({ name: a.name, status: a.status, steps: a.steps.length })));
+    io.get<{ ok: boolean; agents: Array<{ name: string; status: string; steps: unknown[] }> }>(`/api/agent/list?workspaceId=${encodeURIComponent(workspaceId)}`)
+      .then((res) => {
+        if (res.data?.ok) setAgents(res.data.agents.map((a) => ({ name: a.name, status: a.status, steps: a.steps.length })));
       })
       .catch(() => {});
-  }, [workspaceId]);
+  }, [workspaceId, io]);
   return (
     <div style={{ padding: 8 }}>
       {agents.length === 0 && <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: 8 }}>No agents in this workspace.</div>}
@@ -377,14 +377,14 @@ function HitsTipsPanel() {
 
 function NotificationsPanel() {
   const [items, setItems] = useState<Array<{ title: string; kind: string; createdAt: number }>>([]);
+  const io = useIO();
   useEffect(() => {
-    fetch('/api/notification/list?userId=user:demo&limit=10')
-      .then((r) => r.json())
-      .then((d: { ok: boolean; notifications: Array<{ title: string; kind: string; createdAt: number }> }) => {
-        if (d.ok) setItems(d.notifications);
+    io.get<{ ok: boolean; notifications: Array<{ title: string; kind: string; createdAt: number }> }>('/api/notification/list?userId=user:demo&limit=10')
+      .then((res) => {
+        if (res.data?.ok) setItems(res.data.notifications);
       })
       .catch(() => {});
-  }, []);
+  }, [io]);
   return (
     <div style={{ padding: 8 }}>
       {items.length === 0 && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>No activity.</div>}
@@ -399,14 +399,14 @@ function NotificationsPanel() {
 
 function PresencePanel({ workspaceId }: { workspaceId: string }) {
   const [users, setUsers] = useState<Array<{ displayName: string; avatarEmoji: string; avatarColor: string }>>([]);
+  const io = useIO();
   useEffect(() => {
-    fetch(`/api/presence/list?workspaceId=${encodeURIComponent(workspaceId)}`)
-      .then((r) => r.json())
-      .then((d: { ok: boolean; users: Array<{ displayName: string; avatarEmoji: string; avatarColor: string }> }) => {
-        if (d.ok) setUsers(d.users);
+    io.get<{ ok: boolean; users: Array<{ displayName: string; avatarEmoji: string; avatarColor: string }> }>(`/api/presence/list?workspaceId=${encodeURIComponent(workspaceId)}`)
+      .then((res) => {
+        if (res.data?.ok) setUsers(res.data.users);
       })
       .catch(() => {});
-  }, [workspaceId]);
+  }, [workspaceId, io]);
   return (
     <div style={{ padding: 8 }}>
       {users.map((u, i) => (
@@ -421,14 +421,14 @@ function PresencePanel({ workspaceId }: { workspaceId: string }) {
 
 function AuditPanel() {
   const [entries, setEntries] = useState<Array<{ engine: string; method: string; ok: boolean; durationMs: number }>>([]);
+  const io = useIO();
   useEffect(() => {
-    fetch('/api/audit/list?limit=10')
-      .then((r) => r.json())
-      .then((d: { ok: boolean; entries: Array<{ engine: string; method: string; ok: boolean; durationMs: number }> }) => {
-        if (d.ok) setEntries(d.entries);
+    io.get<{ ok: boolean; entries: Array<{ engine: string; method: string; ok: boolean; durationMs: number }> }>('/api/audit/list?limit=10')
+      .then((res) => {
+        if (res.data?.ok) setEntries(res.data.entries);
       })
       .catch(() => {});
-  }, []);
+  }, [io]);
   return (
     <div style={{ padding: 8 }}>
       {entries.length === 0 && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>No audit events.</div>}

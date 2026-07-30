@@ -2,8 +2,8 @@
 // Recovery strategies for each failure class.
 // Phase 9: Class-specific recovery replaces uniform counter.
 
-import type { FailureClass, RecoveryStrategy } from '../actor/messages.js'
 import { getLogger } from '../../observability/logger.js'
+import type { FailureClass, RecoveryStrategy } from '../actor/messages.js'
 
 export interface StrategyResult {
   success: boolean
@@ -59,7 +59,12 @@ export async function executeRecovery(
       case 'circuit_breaker':
         return { success: true, strategy, durationMs: Date.now() - start }
       default:
-        return { success: false, strategy, durationMs: Date.now() - start, error: 'Unknown strategy' }
+        return {
+          success: false,
+          strategy,
+          durationMs: Date.now() - start,
+          error: 'Unknown strategy',
+        }
     }
   } catch (err) {
     return {
@@ -71,48 +76,61 @@ export async function executeRecovery(
   }
 }
 
-async function killAndRespawn(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function killAndRespawn(_context: RecoveryContext, start: number): Promise<StrategyResult> {
   // Kill Chrome process and respawn with GPU disabled
   // Implementation depends on Chrome process management
   return { success: true, strategy: 'kill_and_respawn', durationMs: Date.now() - start }
 }
 
-async function renavigateOnly(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function renavigateOnly(_context: RecoveryContext, start: number): Promise<StrategyResult> {
   // Re-navigate to the provider URL
   return { success: true, strategy: 'renavigate_only', durationMs: Date.now() - start }
 }
 
-async function ensureRunning(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function ensureRunning(_context: RecoveryContext, start: number): Promise<StrategyResult> {
   // Ensure the slave is running (existing ensureRunning logic)
   return { success: true, strategy: 'ensure_running', durationMs: Date.now() - start }
 }
 
-async function reloadClearCookies(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function reloadClearCookies(
+  _context: RecoveryContext,
+  start: number,
+): Promise<StrategyResult> {
   // Reload page and clear cookies for the domain
   return { success: true, strategy: 'reload_clear_cookies', durationMs: Date.now() - start }
 }
 
-async function reloadReinjectAntidetection(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function reloadReinjectAntidetection(
+  _context: RecoveryContext,
+  start: number,
+): Promise<StrategyResult> {
   // Reload page and re-inject anti-detection scripts
-  return { success: true, strategy: 'reload_reinject_antidetection', durationMs: Date.now() - start }
+  return {
+    success: true,
+    strategy: 'reload_reinject_antidetection',
+    durationMs: Date.now() - start,
+  }
 }
 
-async function visibleRelaunch(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function visibleRelaunch(_context: RecoveryContext, start: number): Promise<StrategyResult> {
   // Launch Chrome in visible mode for manual login
   return { success: true, strategy: 'visible_relaunch', durationMs: Date.now() - start }
 }
 
-async function reallocateProfile(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function reallocateProfile(
+  _context: RecoveryContext,
+  start: number,
+): Promise<StrategyResult> {
   // Clean and re-allocate profile directory
   return { success: true, strategy: 'reallocate_profile', durationMs: Date.now() - start }
 }
 
-async function forceReconnect(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function forceReconnect(_context: RecoveryContext, start: number): Promise<StrategyResult> {
   // Force CDP reconnection
   return { success: true, strategy: 'force_reconnect', durationMs: Date.now() - start }
 }
 
-async function killDisableGpu(context: RecoveryContext, start: number): Promise<StrategyResult> {
+async function killDisableGpu(_context: RecoveryContext, start: number): Promise<StrategyResult> {
   // Kill Chrome and respawn with GPU disabled
   return { success: true, strategy: 'kill_disable_gpu', durationMs: Date.now() - start }
 }

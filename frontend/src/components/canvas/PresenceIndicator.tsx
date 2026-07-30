@@ -10,21 +10,21 @@
 
 import { useEffect, useState } from 'react';
 import type { PresenceUser, PresenceCursor } from '../../shared/presence';
+import { useIO } from './UnifiedIOProvider';
 
 export function PresenceIndicator({ workspaceId }: { workspaceId: string }) {
   const [users, setUsers] = useState<PresenceUser[]>([]);
   const [cursors, setCursors] = useState<PresenceCursor[]>([]);
+  const io = useIO();
 
   useEffect(() => {
     let cancelled = false;
     const fetchPresence = async () => {
       try {
-        const res = await fetch(`/api/presence/list?workspaceId=${encodeURIComponent(workspaceId)}`);
-        const data = (await res.json()) as { ok: boolean; users: PresenceUser[] };
-        if (!cancelled && data.ok) setUsers(data.users);
-        const cRes = await fetch(`/api/presence/cursors?workspaceId=${encodeURIComponent(workspaceId)}`);
-        const cData = (await cRes.json()) as { ok: boolean; cursors: PresenceCursor[] };
-        if (!cancelled && cData.ok) setCursors(cData.cursors);
+        const res = await io.get<{ ok: boolean; users: PresenceUser[] }>(`/api/presence/list?workspaceId=${encodeURIComponent(workspaceId)}`);
+        if (!cancelled && res.data?.ok) setUsers(res.data.users);
+        const cRes = await io.get<{ ok: boolean; cursors: PresenceCursor[] }>(`/api/presence/cursors?workspaceId=${encodeURIComponent(workspaceId)}`);
+        if (!cancelled && cRes.data?.ok) setCursors(cRes.data.cursors);
       } catch {
         // ignore
       }
@@ -35,7 +35,7 @@ export function PresenceIndicator({ workspaceId }: { workspaceId: string }) {
       cancelled = true;
       clearInterval(t);
     };
-  }, [workspaceId]);
+  }, [workspaceId, io]);
 
   const visibleUsers = users.slice(0, 5);
   const overflow = users.length - visibleUsers.length;

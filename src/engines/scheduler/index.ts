@@ -4,7 +4,12 @@
 
 export { BrowserScheduler } from './browser-scheduler.js'
 export { SchedulerPolicy } from './policy.js'
-export { QUEUE_CONFIGS, METHOD_TO_RESOURCE_CLASS, getResourceClass, getQueueConfig } from './queues.js'
+export {
+  QUEUE_CONFIGS,
+  METHOD_TO_RESOURCE_CLASS,
+  getResourceClass,
+  getQueueConfig,
+} from './queues.js'
 export type { QueueName, QueueConfig } from './queues.js'
 export type { Task, TaskResult, SchedulerSnapshot } from './browser-scheduler.js'
 export { SchedulerBackpressureError, TaskTimeoutError } from './browser-scheduler.js'

@@ -2,11 +2,11 @@
 // BrowserScheduler — resource-class-aware task scheduler.
 // Phase 5: Replaces single-mailbox execution with dependency-aware scheduling.
 
-import type { QueueName } from './queues.js'
-import { QUEUE_CONFIGS, getResourceClass } from './queues.js'
-import { SchedulerPolicy } from './policy.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
+import { SchedulerPolicy } from './policy.js'
+import type { QueueName } from './queues.js'
+import { QUEUE_CONFIGS } from './queues.js'
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -97,10 +97,14 @@ export class BrowserScheduler {
       this.oldestWait.set(task.queue, Date.now())
     }
 
-    this.metrics.setGauge('chrome_scheduler_queue_depth', {
-      slaveId: this.slaveId,
-      queue: task.queue,
-    }, queue.length)
+    this.metrics.setGauge(
+      'chrome_scheduler_queue_depth',
+      {
+        slaveId: this.slaveId,
+        queue: task.queue,
+      },
+      queue.length,
+    )
 
     // Wait for execution
     return this.executeWhenReady(task)
@@ -197,13 +201,17 @@ export class BrowserScheduler {
       const result = await Promise.race([
         task.run(),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new TaskTimeoutError(task.id, task.timeoutMs)), task.timeoutMs)
+          setTimeout(() => reject(new TaskTimeoutError(task.id, task.timeoutMs)), task.timeoutMs),
         ),
       ])
 
       const durationMs = Date.now() - start
       this.logger.debug('Task completed', { taskId: task.id, queue: task.queue, durationMs })
-      this.metrics.observeHistogram('chrome_slave_cdp_roundtrip_ms', { slaveId: this.slaveId }, durationMs)
+      this.metrics.observeHistogram(
+        'chrome_slave_cdp_roundtrip_ms',
+        { slaveId: this.slaveId },
+        durationMs,
+      )
 
       return { taskId: task.id, success: true, result, durationMs }
     } catch (err) {

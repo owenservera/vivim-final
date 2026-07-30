@@ -1,8 +1,3 @@
-// src/fleet/worker-node.ts
-// WorkerNode — represents a remote worker that hosts Chrome instances.
-// Phase 10: Scale-out workers for multi-machine fleet deployment.
-
-import type { SlaveId } from '../domain/types.js'
 import { getLogger } from '../observability/logger.js'
 import { getMetrics } from '../observability/metrics.js'
 
@@ -74,7 +69,10 @@ export class WorkerNode {
       this.logger.info('Connected to worker', { workerId: this.config.workerId })
     } catch (err) {
       this.status = 'disconnected'
-      this.logger.error('Failed to connect to worker', { workerId: this.config.workerId, error: err })
+      this.logger.error('Failed to connect to worker', {
+        workerId: this.config.workerId,
+        error: err,
+      })
     }
   }
 
@@ -90,7 +88,10 @@ export class WorkerNode {
   /**
    * Spawn a Chrome instance on this worker.
    */
-  async spawn(profileDir: string, providerId: string): Promise<{ debugPort: number; pid: number } | null> {
+  async spawn(
+    _profileDir: string,
+    providerId: string,
+  ): Promise<{ debugPort: number; pid: number } | null> {
     if (this.status !== 'ready') {
       this.logger.warn('Worker not ready', { workerId: this.config.workerId, status: this.status })
       return null
@@ -114,7 +115,11 @@ export class WorkerNode {
     // For now, simulate a spawn response
     this.stats.totalSpawned++
     this.stats.activeInstances++
-    this.metrics.setGauge('worker_active_instances', { workerId: this.config.workerId }, this.stats.activeInstances)
+    this.metrics.setGauge(
+      'worker_active_instances',
+      { workerId: this.config.workerId },
+      this.stats.activeInstances,
+    )
 
     return { debugPort: 9222 + this.stats.totalSpawned, pid: 1000 + this.stats.totalSpawned }
   }
@@ -132,7 +137,11 @@ export class WorkerNode {
 
     // In production, this would send a kill command
     this.stats.activeInstances = Math.max(0, this.stats.activeInstances - 1)
-    this.metrics.setGauge('worker_active_instances', { workerId: this.config.workerId }, this.stats.activeInstances)
+    this.metrics.setGauge(
+      'worker_active_instances',
+      { workerId: this.config.workerId },
+      this.stats.activeInstances,
+    )
     return true
   }
 

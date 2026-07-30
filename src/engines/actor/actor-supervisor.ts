@@ -1,11 +1,6 @@
-// src/engines/actor/actor-supervisor.ts
-// ActorSupervisor — manages the lifecycle of BrowserActors.
-// Phase 3: Replaces lifecycle management in FleetSupervisor.
-
-import type { SlaveId } from '../../domain/types.js'
-import { BrowserActor } from './browser-actor.js'
-import { BrowserRuntime } from '../runtime/browser-runtime.js'
 import { getLogger } from '../../observability/logger.js'
+import type { BrowserRuntime } from '../runtime/browser-runtime.js'
+import { BrowserActor } from './browser-actor.js'
 
 export class ActorSupervisor {
   private actors = new Map<string, BrowserActor>()

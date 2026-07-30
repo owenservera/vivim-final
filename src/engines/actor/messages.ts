@@ -1,9 +1,3 @@
-// src/engines/actor/messages.ts
-// Actor message types for BrowserActor communication.
-// Phase 3: Each browser becomes an autonomous actor with a mailbox.
-
-import type { SlaveLifecycle } from '../../executor/slave-states.js'
-
 // ── Message Types ───────────────────────────────────────────────────────────
 
 export type ActorMsg =
@@ -45,9 +39,16 @@ export type RecoveryStrategy =
 // ── Helper to check message type ────────────────────────────────────────────
 
 export function isLifecycleMsg(msg: ActorMsg): boolean {
-  return msg.t === 'EnsureRunning' || msg.t === 'Shutdown' || msg.t === 'Crash' || msg.t === 'Recover'
+  return (
+    msg.t === 'EnsureRunning' || msg.t === 'Shutdown' || msg.t === 'Crash' || msg.t === 'Recover'
+  )
 }
 
 export function isCommandMsg(msg: ActorMsg): boolean {
-  return msg.t === 'Evaluate' || msg.t === 'CdpMethod' || msg.t === 'Screenshot' || msg.t === 'HealthProbe'
+  return (
+    msg.t === 'Evaluate' ||
+    msg.t === 'CdpMethod' ||
+    msg.t === 'Screenshot' ||
+    msg.t === 'HealthProbe'
+  )
 }

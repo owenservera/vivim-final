@@ -71,10 +71,7 @@ export class OTLPTraceExporter implements SpanExporter {
   private endpoint: string
   private headers: Record<string, string>
 
-  constructor(
-    endpoint?: string,
-    headers?: Record<string, string>,
-  ) {
+  constructor(endpoint?: string, headers?: Record<string, string>) {
     this.endpoint = endpoint ?? process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318'
     this.headers = headers ?? {}
   }
@@ -181,7 +178,11 @@ export class Tracer {
     this.exporter.export([span]).catch(() => {})
   }
 
-  addEvent(spanId: string, name: string, attributes?: Record<string, string | number | boolean>): void {
+  addEvent(
+    spanId: string,
+    name: string,
+    attributes?: Record<string, string | number | boolean>,
+  ): void {
     const span = this.activeSpans.get(spanId)
     if (!span) return
 

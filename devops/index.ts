@@ -11,8 +11,16 @@
 //   audit-arch <s>   -> architecture audit (surface|standard|deep|full) + --module/--pass
 //   (any unit command accepts --tracker <path> to target a satellite tracker)
 
-import { join } from 'node:path'
 import { spawn } from 'node:child_process'
+import { join } from 'node:path'
+import { generatePreflightContext } from './agentic/context-probe.ts'
+import {
+  type ResumeResult,
+  type StartResult,
+  markTaskDone,
+  resumeLoop,
+  startLoop,
+} from './agentic/engine.ts'
 import { runAuditArch } from './audit-arch/index.ts'
 import { runAuditCode } from './audit-code/index.ts'
 import { audit } from './audit.ts'
@@ -37,7 +45,14 @@ import {
   renderDecisionMarkdown,
   updateAnalysis,
 } from './decision.ts'
-import { fmt } from './fmt.ts'
+import {
+  analyzeFeatureGaps,
+  createFeature,
+  getFeature,
+  getFeatureStatusSummary,
+  listFeatures,
+  updateFeature,
+} from './features.ts'
 import { runGate } from './gate.ts'
 import { gc } from './gc.ts'
 import {
@@ -52,6 +67,8 @@ import { readGoalsFile } from './goals.ts'
 import { checkInvariants, generateInvariantReport } from './invariants.ts'
 import { runLoop } from './loop.ts'
 import { markUnit } from './mark.ts'
+import { formatOutput } from './output-format.ts'
+import { productionBuildCli } from './production-build.ts'
 import { report } from './report.ts'
 import { runResearchCommand } from './roadmap.ts'
 import {
@@ -61,8 +78,8 @@ import {
   discoverBackend,
   discoverCdpProtocol,
   discoverFrontend,
-  ensureBrowser,
   engageBrowser,
+  ensureBrowser,
   generateCatalog,
   installProcessGuard,
   preflight,
@@ -82,26 +99,9 @@ import {
   testCapability,
   verifyFrontend,
 } from './runtime-test/index.ts'
-import { selectNext } from './select.ts'
 import { runStressTests } from './runtime-test/stress/runner.js'
+import { selectNext } from './select.ts'
 import { runTruthCommand } from './truth/cli.ts'
-import { productionBuildCli } from './production-build.ts'
-import {
-  startLoop,
-  resumeLoop,
-  markTaskDone,
-  type StartResult,
-  type ResumeResult,
-} from './agentic/engine.ts'
-import { generatePreflightContext } from './agentic/context-probe.ts'
-import {
-  listFeatures,
-  getFeature,
-  createFeature,
-  updateFeature,
-  analyzeFeatureGaps,
-  getFeatureStatusSummary,
-} from './features.ts'
 
 const [cmd, ...args] = process.argv.slice(2)
 
@@ -125,7 +125,7 @@ async function main() {
   switch (cmd) {
     case 'select': {
       const sel = await selectNext()
-      console.log(sel ? JSON.stringify(sel, null, 2) : 'null')
+      formatOutput(sel ?? { ok: false, message: 'no unit selectable' }, args)
       break
     }
     case 'mark': {
@@ -148,7 +148,7 @@ async function main() {
         process.exit(0)
       }
       gateResult = await runGate(strict, includeIntegration, full ? 'full' : 'regression')
-      console.log(JSON.stringify(gateResult, null, 2))
+      formatOutput(gateResult, args)
       break
     }
     case 'toolkit': {
@@ -211,7 +211,7 @@ async function main() {
       break
     }
     case 'report': {
-      console.log(await report())
+      formatOutput({ report: await report() }, args)
       break
     }
     case 'truth': {
@@ -227,9 +227,9 @@ async function main() {
       const subcmd = args[0] ?? 'check'
       if (subcmd === 'check') {
         const unitId = args.includes('--unit') ? args[args.indexOf('--unit') + 1] : undefined
-      const category = args.includes('--category')
-        ? (args[args.indexOf('--category') + 1] as 'A' | 'B' | 'C' | 'D' | 'E')
-        : undefined
+        const category = args.includes('--category')
+          ? (args[args.indexOf('--category') + 1] as 'A' | 'B' | 'C' | 'D' | 'E')
+          : undefined
         const result = await checkInvariants(unitId, category)
         console.log(JSON.stringify(result, null, 2))
         process.exit(result.pass ? 0 : 1)
@@ -757,7 +757,9 @@ async function main() {
             const inputArg = rest.find((a) => a.startsWith('--input='))
             const input = inputArg ? inputArg.slice('--input='.length) : '{}'
             if (!slug) {
-              console.log(JSON.stringify({ ok: false, error: 'usage: test-cap <slug> [--input=JSON]' }))
+              console.log(
+                JSON.stringify({ ok: false, error: 'usage: test-cap <slug> [--input=JSON]' }),
+              )
               process.exit(1)
             }
             const result = await testCapability(slug, input)
@@ -790,7 +792,9 @@ async function main() {
           {
             // Check if --provider is given → use provider-specific status
             const providerFlag = rest.find((a) => a.startsWith('--provider='))
-            const providerSlug = providerFlag ? providerFlag.split('=')[1] : rest[rest.indexOf('--provider') + 1]
+            const providerSlug = providerFlag
+              ? providerFlag.split('=')[1]
+              : rest[rest.indexOf('--provider') + 1]
             if (providerSlug) {
               const { providerStatus } = await import('./runtime-test/provider-status.js')
               const ps = await providerStatus(providerSlug)
@@ -828,9 +832,13 @@ async function main() {
             const nameArg = rest.find((a) => a.startsWith('--name='))
             const name = nameArg ? nameArg.slice('--name='.length) : ''
             const timeoutArg = rest.find((a) => a.startsWith('--timeout='))
-            const timeout = timeoutArg ? Number.parseInt(timeoutArg.slice('--timeout='.length), 10) : 120_000
+            const timeout = timeoutArg
+              ? Number.parseInt(timeoutArg.slice('--timeout='.length), 10)
+              : 120_000
             if (!name) {
-              console.log(JSON.stringify({ ok: false, error: 'usage: migrate --name=<x> [--timeout=ms]' }))
+              console.log(
+                JSON.stringify({ ok: false, error: 'usage: migrate --name=<x> [--timeout=ms]' }),
+              )
               process.exit(1)
             }
             const result = await runMigrate(name, timeout)
@@ -848,20 +856,19 @@ async function main() {
           }
           break
 
-        case 'watchdog':
-          // Agent-death reaper: poll parent pid, run stop on death (detached bg script).
-          {
-            const pidArg = rest.find((a) => a.startsWith('--pid='))
-            const pid = pidArg ? Number.parseInt(pidArg.slice('--pid='.length), 10) : process.ppid
-            if (!pid) {
-              console.log(JSON.stringify({ ok: false, error: 'no parent pid to watch' }))
-              process.exit(1)
-            }
-            console.log(JSON.stringify({ ok: true, watching: pid }))
-            startWatchdog(pid)
-            // Keep the process alive as a monitor; unref'd so it won't block on its own.
-            break
+        case 'watchdog': // Agent-death reaper: poll parent pid, run stop on death (detached bg script).
+        {
+          const pidArg = rest.find((a) => a.startsWith('--pid='))
+          const pid = pidArg ? Number.parseInt(pidArg.slice('--pid='.length), 10) : process.ppid
+          if (!pid) {
+            console.log(JSON.stringify({ ok: false, error: 'no parent pid to watch' }))
+            process.exit(1)
           }
+          console.log(JSON.stringify({ ok: true, watching: pid }))
+          startWatchdog(pid)
+          // Keep the process alive as a monitor; unref'd so it won't block on its own.
+          break
+        }
 
         case 'guard':
           // Lefthook guard: fail if servers running or migration pending.
@@ -897,7 +904,9 @@ async function main() {
           } else {
             // backend --cap=<slug> emits a makeCapability skeleton via codegen (Unit 1.3)
             const capArg = rest.find((a) => a.startsWith('--cap='))
-            const result = await scaffoldBackend(capArg ? { cap: capArg.slice('--cap='.length) } : undefined)
+            const result = await scaffoldBackend(
+              capArg ? { cap: capArg.slice('--cap='.length) } : undefined,
+            )
             console.log(JSON.stringify(result, null, 2))
             process.exit(result.ok ? 0 : 1)
           }
@@ -1078,11 +1087,7 @@ async function main() {
             'http://localhost:5173'
           const result = await verifyFrontend(url, 0)
           console.log(
-            JSON.stringify(
-              { ok: result.ok, path: result.path, error: result.error },
-              null,
-              2,
-            ),
+            JSON.stringify({ ok: result.ok, path: result.path, error: result.error }, null, 2),
           )
           process.exit(result.ok ? 0 : 1)
           break
@@ -1140,15 +1145,24 @@ async function main() {
           }
 
           // Single-phase dispatch.
-          const PHASES = ['discover', 'infer', 'test-selectors', 'test-parse', 'test-cap', 'test-frontend', 'verify', 'converge']
+          const PHASES = [
+            'discover',
+            'infer',
+            'test-selectors',
+            'test-parse',
+            'test-cap',
+            'test-frontend',
+            'verify',
+            'converge',
+          ]
           if (!PHASES.includes(mode)) {
-            console.error(
-              `unknown onboard mode '${mode}'. Valid: ${PHASES.join(' | ')} | run`,
-            )
+            console.error(`unknown onboard mode '${mode}'. Valid: ${PHASES.join(' | ')} | run`)
             process.exit(1)
           }
           if (!provider) {
-            console.error(`usage: devops runtime-test onboard ${mode} --provider=<slug> [--url=...]`)
+            console.error(
+              `usage: devops runtime-test onboard ${mode} --provider=<slug> [--url=...]`,
+            )
             process.exit(1)
           }
           const result = await dispatchMode(mode as never, { provider, url })
@@ -1168,7 +1182,7 @@ async function main() {
           const accountFlag = rest.find((a) => a.startsWith('--account='))
           const account = accountFlag
             ? accountFlag.split('=')[1]
-            : rest[rest.indexOf('--account') + 1] ?? 'owservera'
+            : (rest[rest.indexOf('--account') + 1] ?? 'owservera')
           if (!provider) {
             console.error(
               'usage: bun run devops runtime-test onboard-provider --provider=<slug> [--url=<url>] [--account=<email>]',
@@ -1198,9 +1212,7 @@ async function main() {
             ? providerFlag.split('=')[1]
             : rest[rest.indexOf('--provider') + 1]
           if (!provider) {
-            console.error(
-              'usage: bun run devops runtime-test onboard-verify --provider=<slug>',
-            )
+            console.error('usage: bun run devops runtime-test onboard-verify --provider=<slug>')
             process.exit(1)
           }
           const { verifyProvider } = await import('./onboard-verify.ts')
@@ -1355,14 +1367,18 @@ async function main() {
         case 'adopt': {
           // Restore a cookie-bearing on-disk profile → launch → verify → complete.
           const providerFlag = rest.find((a) => a.startsWith('--provider='))
-          const provider = providerFlag ? providerFlag.split('=')[1] : rest[rest.indexOf('--provider') + 1]
+          const provider = providerFlag
+            ? providerFlag.split('=')[1]
+            : rest[rest.indexOf('--provider') + 1]
           if (!provider) {
             console.error('usage: devops agentic adopt --provider=<slug> [--account=<email>]')
             process.exit(1)
             break
           }
           const accountFlag = rest.find((a) => a.startsWith('--account='))
-          const account = accountFlag ? accountFlag.split('=')[1] : rest[rest.indexOf('--account') + 1]
+          const account = accountFlag
+            ? accountFlag.split('=')[1]
+            : rest[rest.indexOf('--account') + 1]
           // Delegate to the runtime-test setup wizard (same code path as
           // `runtime-test setup`), which restores-or-launches + registers.
           const { ChromeSetupWizard } = await import('../src/engines/chrome-setup-wizard.js')
@@ -1373,22 +1389,30 @@ async function main() {
           const wizard = new ChromeSetupWizard(db, allocator)
           const prov = await db.prisma.providerDefinition.findFirst({ where: { slug: provider } })
           if (!prov) {
-            console.error(`Provider not found: ${provider}. Seed first: bun run devops seeds providers`)
+            console.error(
+              `Provider not found: ${provider}. Seed first: bun run devops seeds providers`,
+            )
             process.exit(1)
             break
           }
-          const result = await wizard.runSetup(prov.id, provider, account ?? `${provider}_owservera@gmail.com`, {
-            visible: true,
-            onProgress: (msg) => console.log(msg),
-          })
+          const result = await wizard.runSetup(
+            prov.id,
+            provider,
+            account ?? `${provider}_owservera@gmail.com`,
+            {
+              visible: true,
+              onProgress: (msg) => console.log(msg),
+            },
+          )
           console.log(JSON.stringify(result, null, 2))
           process.exit(result.ok ? 0 : 1)
           break
         }
         case 'start': {
-          const objective = rest.find((a) => a.startsWith('--objective='))?.split('=')[1]
-            ?? rest[rest.indexOf('--objective') + 1]
-            ?? 'Implement the next selectable atomic unit'
+          const objective =
+            rest.find((a) => a.startsWith('--objective='))?.split('=')[1] ??
+            rest[rest.indexOf('--objective') + 1] ??
+            'Implement the next selectable atomic unit'
           const result: StartResult = await startLoop(objective)
           console.log(JSON.stringify(result, null, 2))
           process.exit(0)
@@ -1402,8 +1426,8 @@ async function main() {
         }
         case 'done': {
           const taskId = rest[0]
-          const status = (rest.find((a) => a.startsWith('--status='))?.split('=')[1]
-            ?? rest[rest.indexOf('--status') + 1]) as 'done' | 'failed' | 'blocked' | undefined
+          const status = (rest.find((a) => a.startsWith('--status='))?.split('=')[1] ??
+            rest[rest.indexOf('--status') + 1]) as 'done' | 'failed' | 'blocked' | undefined
           if (!taskId) {
             console.error('usage: devops agentic done <taskId> [--status=done|failed|blocked]')
             process.exit(1)
@@ -1430,7 +1454,9 @@ async function main() {
           const dir = join(process.cwd(), '.runtime/agentic')
           try {
             rmSync(dir, { recursive: true, force: true })
-          } catch { /* best-effort */ }
+          } catch {
+            /* best-effort */
+          }
           console.log(JSON.stringify({ ok: true, reset: true, clearedDir: dir }))
           process.exit(0)
           break
@@ -1454,7 +1480,9 @@ async function main() {
             console.log('No features registered.')
             console.log('')
             console.log('Create your first feature:')
-            console.log('  bun run devops features create --id=<id> --name="..." --phase=<n> --skill=<slug>')
+            console.log(
+              '  bun run devops features create --id=<id> --name="..." --phase=<n> --skill=<slug>',
+            )
             break
           }
           console.log('FEATURE REGISTRY')
@@ -1465,7 +1493,9 @@ async function main() {
           for (const f of features) {
             const statusIcon = f.status === 'done' ? '✓' : f.status === 'in_progress' ? '~' : '·'
             console.log(`${f.id}: ${f.name} [${f.status}] ${statusIcon}`)
-            console.log(`  Phase: ${f.phase} | Skill: ${f.owningSkill} | Coverage: ${f.coverage}% | Verified: ${f.lastVerified}`)
+            console.log(
+              `  Phase: ${f.phase} | Skill: ${f.owningSkill} | Coverage: ${f.coverage}% | Verified: ${f.lastVerified}`,
+            )
           }
           break
         }
@@ -1494,22 +1524,27 @@ async function main() {
           break
         }
         case 'create': {
-          const id = rest.find(a => a.startsWith('--id='))?.split('=')[1]
-            ?? rest[rest.indexOf('--id') + 1]
-          const name = rest.find(a => a.startsWith('--name='))?.split('=')[1]
-            ?? rest[rest.indexOf('--name') + 1]
-          const phase = rest.find(a => a.startsWith('--phase='))?.split('=')[1]
-            ?? rest[rest.indexOf('--phase') + 1]
-          const skill = rest.find(a => a.startsWith('--skill='))?.split('=')[1]
-            ?? rest[rest.indexOf('--skill') + 1]
+          const id =
+            rest.find((a) => a.startsWith('--id='))?.split('=')[1] ?? rest[rest.indexOf('--id') + 1]
+          const name =
+            rest.find((a) => a.startsWith('--name='))?.split('=')[1] ??
+            rest[rest.indexOf('--name') + 1]
+          const phase =
+            rest.find((a) => a.startsWith('--phase='))?.split('=')[1] ??
+            rest[rest.indexOf('--phase') + 1]
+          const skill =
+            rest.find((a) => a.startsWith('--skill='))?.split('=')[1] ??
+            rest[rest.indexOf('--skill') + 1]
           if (!id || !name || !phase || !skill) {
-            console.error('usage: devops features create --id=<id> --name="..." --phase=<n> --skill=<slug> [--engines=a.ts,b.ts] [--spec=<path>] [--coverage=<n>] [--notes="..."]')
+            console.error(
+              'usage: devops features create --id=<id> --name="..." --phase=<n> --skill=<slug> [--engines=a.ts,b.ts] [--spec=<path>] [--coverage=<n>] [--notes="..."]',
+            )
             process.exit(1)
           }
-          const enginesArg = rest.find(a => a.startsWith('--engines='))?.split('=')[1]
-          const specArg = rest.find(a => a.startsWith('--spec='))?.split('=')[1]
-          const coverageArg = rest.find(a => a.startsWith('--coverage='))?.split('=')[1]
-          const notesArg = rest.find(a => a.startsWith('--notes='))?.split('=')[1]
+          const enginesArg = rest.find((a) => a.startsWith('--engines='))?.split('=')[1]
+          const specArg = rest.find((a) => a.startsWith('--spec='))?.split('=')[1]
+          const coverageArg = rest.find((a) => a.startsWith('--coverage='))?.split('=')[1]
+          const notesArg = rest.find((a) => a.startsWith('--notes='))?.split('=')[1]
           const record = await createFeature({
             id,
             name,
@@ -1521,21 +1556,25 @@ async function main() {
             notes: notesArg ?? '',
           })
           console.log(`Created feature ${record.id}: ${record.name}`)
-          console.log(`  Phase: ${record.phase} | Status: ${record.status} | Skill: ${record.owningSkill}`)
+          console.log(
+            `  Phase: ${record.phase} | Status: ${record.status} | Skill: ${record.owningSkill}`,
+          )
           break
         }
         case 'update': {
           const id = rest[0]
           if (!id) {
-            console.error('usage: devops features update <id> [--status=X] [--name="..."] [--phase=N] [--skill=X] [--coverage=N] [--verified=YYYY-MM-DD]')
+            console.error(
+              'usage: devops features update <id> [--status=X] [--name="..."] [--phase=N] [--skill=X] [--coverage=N] [--verified=YYYY-MM-DD]',
+            )
             process.exit(1)
           }
-          const status = rest.find(a => a.startsWith('--status='))?.split('=')[1]
-          const name = rest.find(a => a.startsWith('--name='))?.split('=')[1]
-          const phase = rest.find(a => a.startsWith('--phase='))?.split('=')[1]
-          const skill = rest.find(a => a.startsWith('--skill='))?.split('=')[1]
-          const coverage = rest.find(a => a.startsWith('--coverage='))?.split('=')[1]
-          const verified = rest.find(a => a.startsWith('--verified='))?.split('=')[1]
+          const status = rest.find((a) => a.startsWith('--status='))?.split('=')[1]
+          const name = rest.find((a) => a.startsWith('--name='))?.split('=')[1]
+          const phase = rest.find((a) => a.startsWith('--phase='))?.split('=')[1]
+          const skill = rest.find((a) => a.startsWith('--skill='))?.split('=')[1]
+          const coverage = rest.find((a) => a.startsWith('--coverage='))?.split('=')[1]
+          const verified = rest.find((a) => a.startsWith('--verified='))?.split('=')[1]
           const updates: Record<string, unknown> = {}
           if (status) updates.status = status
           if (name) updates.name = name
@@ -1544,12 +1583,16 @@ async function main() {
           if (coverage) updates.coverage = Number(coverage)
           if (verified) updates.lastVerified = verified
           if (Object.keys(updates).length === 0) {
-            console.error('No updates specified. Use --status, --name, --phase, --skill, --coverage, --verified')
+            console.error(
+              'No updates specified. Use --status, --name, --phase, --skill, --coverage, --verified',
+            )
             process.exit(1)
           }
           const record = await updateFeature(id, updates as any)
           console.log(`Updated ${record.id}: ${record.name}`)
-          console.log(`  Status: ${record.status} | Phase: ${record.phase} | Skill: ${record.owningSkill}`)
+          console.log(
+            `  Status: ${record.status} | Phase: ${record.phase} | Skill: ${record.owningSkill}`,
+          )
           break
         }
         case 'status': {
@@ -1564,14 +1607,16 @@ async function main() {
           }
           console.log('')
           console.log('By Phase:')
-          for (const [phase, count] of Object.entries(summary.byPhase).sort(([a], [b]) => Number(a) - Number(b))) {
+          for (const [phase, count] of Object.entries(summary.byPhase).sort(
+            ([a], [b]) => Number(a) - Number(b),
+          )) {
             console.log(`  Phase ${phase}: ${count}`)
           }
           console.log('═══════════════════════════════════════════════════════════════')
           break
         }
         case 'gaps': {
-          const idFlag = rest.find(a => a.startsWith('--id='))?.split('=')[1]
+          const idFlag = rest.find((a) => a.startsWith('--id='))?.split('=')[1]
           const gaps = await analyzeFeatureGaps(idFlag)
           if (gaps.length === 0) {
             console.log('No gaps found. All features are healthy.')
@@ -1589,9 +1634,7 @@ async function main() {
           break
         }
         default: {
-          console.error(
-            'usage: devops features <list|show|create|update|status|gaps> [args]',
-          )
+          console.error('usage: devops features <list|show|create|update|status|gaps> [args]')
           process.exit(1)
         }
       }
@@ -1599,7 +1642,9 @@ async function main() {
     }
     case 'stress-test': {
       const scenarioIdArg = args.find((a) => a.startsWith('--scenario='))
-      const scenarioId = scenarioIdArg ? Number.parseInt(scenarioIdArg.split('=')[1], 10) : undefined
+      const scenarioId = scenarioIdArg
+        ? Number.parseInt(scenarioIdArg.split('=')[1], 10)
+        : undefined
       const result = await runStressTests(scenarioId)
       console.log(JSON.stringify(result, null, 2))
       process.exit(result.ok ? 0 : 1)
@@ -1622,9 +1667,170 @@ async function main() {
       await mainCli(args)
       break
     }
+    case 'output-format': {
+      // Format structured output with --json and --out=<path> flags.
+      //   bun run devops output-format <json-string> [--json] [--out=<path>]
+      const { formatOutput } = await import('./output-format.ts')
+      const input = args.find((a) => !a.startsWith('--'))
+      const data = input ? JSON.parse(input) : { message: 'no input provided' }
+      formatOutput(data, args)
+      break
+    }
+    case 'seed-memory': {
+      // Regenerate .opencode/memory/project.md from real project data.
+      //   bun run devops seed-memory
+      const { seedMemory } = await import('./seed-memory.ts')
+      const { formatOutput } = await import('./output-format.ts')
+      seedMemory()
+      formatOutput({ ok: true, path: '.opencode/memory/project.md' }, args)
+      break
+    }
+    case 'agent-loop': {
+      // Full autonomous loop driving headless kilo workers.
+      //   bun run devops agent-loop [--max-units=N] [--commit] [--strict] [--dry-run] [--timeout=<sec>]
+      const { runAgentLoop } = await import('./agent-loop.ts')
+      const result = await runAgentLoop({
+        maxUnits: args.includes('--max-units')
+          ? Number(args[args.indexOf('--max-units') + 1])
+          : undefined,
+        commit: args.includes('--commit'),
+        strict: args.includes('--strict'),
+        dryRun: args.includes('--dry-run'),
+        timeoutMs: args.includes('--timeout')
+          ? Number(args[args.indexOf('--timeout') + 1]) * 1000
+          : undefined,
+      })
+      const { formatOutput } = await import('./output-format.ts')
+      formatOutput(result, args)
+      process.exit(result.allComplete ? 0 : 1)
+      break
+    }
+    case 'research-bridge': {
+      // Bridge between research briefs and SpecKit research files.
+      //   bun run devops research-bridge <convert-brief|convert-speckit|find|import|stale> [args]
+      const subcmd = args[0]
+      const rest = args.slice(1)
+      const { formatOutput } = await import('./output-format.ts')
+      const {
+        convertBriefToSpecKit,
+        convertSpecKitToBrief,
+        findBriefForTopic,
+        importSpecKitResearch,
+        findStaleSpecKitResearch,
+      } = await import('./research-bridge.ts')
+      switch (subcmd) {
+        case 'convert-brief': {
+          const pathArg = rest.find((a) => a.startsWith('--path='))
+          const path = pathArg ? pathArg.split('=')[1] : undefined
+          if (!path) {
+            console.error('usage: devops research-bridge convert-brief --path=<brief.json>')
+            process.exit(1)
+          }
+          const { readFileSync } = await import('node:fs')
+          const brief = JSON.parse(readFileSync(path, 'utf8'))
+          console.log(convertBriefToSpecKit(brief))
+          break
+        }
+        case 'find': {
+          const topic = rest.find((a) => !a.startsWith('--'))
+          if (!topic) {
+            console.error('usage: devops research-bridge find <topic>')
+            process.exit(1)
+          }
+          const brief = await findBriefForTopic(topic)
+          if (!brief) {
+            formatOutput({ found: false, topic }, args)
+            process.exit(1)
+          }
+          formatOutput({ found: true, topic, brief }, args)
+          break
+        }
+        case 'import': {
+          const dirArg = rest.find((a) => a.startsWith('--dir='))
+          const dir = dirArg ? dirArg.split('=')[1] : undefined
+          if (!dir) {
+            console.error('usage: devops research-bridge import --dir=<feature-dir>')
+            process.exit(1)
+          }
+          const result = await importSpecKitResearch(dir)
+          formatOutput({ ok: !!result, result }, args)
+          process.exit(result ? 0 : 1)
+          break
+        }
+        case 'stale': {
+          const result = await findStaleSpecKitResearch()
+          formatOutput({ stale: result.length, items: result }, args)
+          break
+        }
+        default:
+          console.error(
+            'usage: devops research-bridge <convert-brief|find|import|stale> [--path=...] [--dir=...] [--json]',
+          )
+          process.exit(1)
+      }
+      break
+    }
+    case 'speckit-audit': {
+      // Run SpecKit skill audit (gap analysis).
+      //   bun run devops speckit-audit [--json] [--out=<path>]
+      const { runSkillAudit } = await import('./speckit-audit.ts')
+      const { formatOutput } = await import('./output-format.ts')
+      const report = await runSkillAudit()
+      formatOutput(report, args)
+      break
+    }
+    case 'tracker-speckit-sync': {
+      // Bidirectional sync between atomic tracker and SpecKit features.
+      //   bun run devops tracker-speckit-sync <sync|validate|sync-all> [--dir=...] [--id=...] [--json]
+      const subcmd = args[0]
+      const rest = args.slice(1)
+      const { formatOutput } = await import('./output-format.ts')
+      const { syncFeatureToTracker, syncTrackerToTask, validateConsistency, syncAllFeatures } =
+        await import('./tracker-speckit-sync.ts')
+      switch (subcmd) {
+        case 'sync': {
+          const dirArg = rest.find((a) => a.startsWith('--dir='))
+          const dir = dirArg ? dirArg.split('=')[1] : undefined
+          if (!dir) {
+            console.error('usage: devops tracker-speckit-sync sync --dir=<feature-dir>')
+            process.exit(1)
+          }
+          const result = await syncFeatureToTracker(dir)
+          formatOutput(result, args)
+          break
+        }
+        case 'sync-task': {
+          const idArg = rest.find((a) => !a.startsWith('--'))
+          if (!idArg) {
+            console.error('usage: devops tracker-speckit-sync sync-task <unit-id>')
+            process.exit(1)
+          }
+          const ok = await syncTrackerToTask(idArg)
+          formatOutput({ ok, unitId: idArg }, args)
+          break
+        }
+        case 'validate': {
+          const result = await validateConsistency()
+          formatOutput(result, args)
+          process.exit(result.consistent ? 0 : 1)
+          break
+        }
+        case 'sync-all': {
+          const result = await syncAllFeatures()
+          formatOutput(result, args)
+          break
+        }
+        default:
+          console.error(
+            'usage: devops tracker-speckit-sync <sync|sync-task|validate|sync-all> [--dir=...] [--json]',
+          )
+          process.exit(1)
+      }
+      break
+    }
     default: {
       console.error(
-        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|llm-test|llm-testing-log|stress-test|features|code-index> [--tracker <path>]',
+        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|llm-test|llm-testing-log|stress-test|features|code-index|output-format|seed-memory|agent-loop|research-bridge|speckit-audit|tracker-speckit-sync> [--tracker <path>] [--json] [--out=<path>]',
       )
       process.exit(1)
     }

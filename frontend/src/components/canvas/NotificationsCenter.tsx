@@ -12,6 +12,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { Notification, NotificationKind } from '../../shared/notification';
+import { useIO } from './UnifiedIOProvider';
 
 const KIND_ICON: Record<NotificationKind, string> = {
   mention: '',
@@ -45,29 +46,28 @@ export function NotificationsCenter({ userId }: { userId: string }) {
   const [filter, setFilter] = useState<'all' | NotificationKind>('all');
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const io = useIO();
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const res = await fetch(`/api/notification/list?userId=${encodeURIComponent(userId)}`);
-      const data = (await res.json()) as { ok: boolean; notifications: Notification[] };
-      if (data.ok) {
-        setNotifications(data.notifications);
-        setUnreadCount(data.notifications.filter((n) => !n.read).length);
+      const res = await io.get<{ ok: boolean; notifications: Notification[] }>(`/api/notification/list?userId=${encodeURIComponent(userId)}`);
+      if (res.data?.ok) {
+        setNotifications(res.data.notifications);
+        setUnreadCount(res.data.notifications.filter((n) => !n.read).length);
       }
     } catch {
       // ignore
     }
-  }, [userId]);
+  }, [userId, io]);
 
   const fetchUnread = useCallback(async () => {
     try {
-      const res = await fetch(`/api/notification/stats?userId=${encodeURIComponent(userId)}`);
-      const data = (await res.json()) as { ok: boolean; stats: { unread: number } };
-      if (data.ok) setUnreadCount(data.stats.unread);
+      const res = await io.get<{ ok: boolean; stats: { unread: number } }>(`/api/notification/stats?userId=${encodeURIComponent(userId)}`);
+      if (res.data?.ok) setUnreadCount(res.data.stats.unread);
     } catch {
       // ignore
     }
-  }, [userId]);
+  }, [userId, io]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -82,11 +82,7 @@ export function NotificationsCenter({ userId }: { userId: string }) {
   }, [open, fetchNotifications]);
 
   const markAllRead = async () => {
-    await fetch('/api/notification/mark_all_read', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
-    });
+    await io.post('/api/notification/mark_all_read', { userId });
     fetchNotifications();
   };
 

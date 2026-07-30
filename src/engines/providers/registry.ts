@@ -2,9 +2,9 @@
 // ProviderRegistry — manages provider plugins.
 // Phase 8: Plugins register at boot. Adding a provider = 1 file + 1 DB row.
 
-import type { ProviderPlugin } from './plugin.js'
-import { getBuiltinPlugins, getPluginById } from './plugins/index.js'
 import { getLogger } from '../../observability/logger.js'
+import type { ProviderPlugin } from './plugin.js'
+import { getBuiltinPlugins } from './plugins/index.js'
 
 export class ProviderRegistry {
   private plugins = new Map<string, ProviderPlugin>()

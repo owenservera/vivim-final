@@ -13,38 +13,34 @@
 import { useEffect, useState } from 'react';
 import type { WorkspaceTemplate } from '../../shared/template';
 import { SectionLabel } from './SectionLabel';
+import { useIO } from './UnifiedIOProvider';
 
 export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: string) => void }) {
   const [templates, setTemplates] = useState<WorkspaceTemplate[]>([]);
   const [creating, setCreating] = useState<string | null>(null);
   const [created, setCreated] = useState<Record<string, string>>({}); // templateId  workspaceId
+  const io = useIO();
 
   useEffect(() => {
-    fetch('/api/template/list')
-      .then((r) => r.json())
-      .then((data: { ok: boolean; templates: WorkspaceTemplate[] }) => {
-        if (data.ok) setTemplates(data.templates);
+    io.get<{ ok: boolean; templates: WorkspaceTemplate[] }>('/api/template/list')
+      .then((res) => {
+        if (res.data?.ok) setTemplates(res.data.templates);
       })
       .catch(() => {});
-  }, []);
+  }, [io]);
 
   const create = async (tpl: WorkspaceTemplate) => {
     setCreating(tpl.id);
     try {
-      const res = await fetch('/api/template/instantiate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ templateId: tpl.id, ownerId: 'user:demo' }),
-      });
-      const data = (await res.json()) as {
+      const res = await io.post<{
         ok: boolean;
         workspaceId?: string;
         createdDocs?: number;
         createdMedia?: number;
-      };
-      if (data.ok && data.workspaceId) {
-        setCreated((c) => ({ ...c, [tpl.id]: data.workspaceId! }));
-        onCreated?.(data.workspaceId);
+      }>('/api/template/instantiate', { templateId: tpl.id, ownerId: 'user:demo' });
+      if (res.data?.ok && res.data.workspaceId) {
+        setCreated((c) => ({ ...c, [tpl.id]: res.data!.workspaceId! }));
+        onCreated?.(res.data.workspaceId);
       }
     } finally {
       setCreating(null);

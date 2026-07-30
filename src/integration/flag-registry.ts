@@ -59,13 +59,13 @@ const FLAG_DEPENDENCIES: Record<FlagName, FlagName[]> = {
 // ── Defaults ────────────────────────────────────────────────────────────────
 
 const DEFAULT_FLAGS: IntegrationFlags = {
-  PHASE_1_OBSERVABILITY: true,  // safe, always on
+  PHASE_1_OBSERVABILITY: true, // safe, always on
   PHASE_2_RUNTIME: false,
   PHASE_3_ACTOR: false,
   PHASE_4_POOL: false,
   PHASE_5_SCHEDULER: false,
   PHASE_6_RESOURCE: false,
-  PHASE_7_EVENTS: true,         // safe, additive
+  PHASE_7_EVENTS: true, // safe, additive
   PHASE_8_PROVIDERS: false,
   PHASE_9_RECOVERY: false,
   PHASE_10_FLEET: false,

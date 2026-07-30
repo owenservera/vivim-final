@@ -4,14 +4,17 @@
 
 import type { SlaveLifecycle } from '../executor/slave-states.js'
 import { nextState } from '../executor/slave-states.js'
-import type { SlaveId, Slave } from './types.js'
+import type { Slave, SlaveId } from './types.js'
 
 /**
  * In-memory store for slave state with transition enforcement.
  */
 export class SlaveStateStore {
   private slaves = new Map<SlaveId, Slave>()
-  private transitions = new Map<SlaveId, Array<{ from: SlaveLifecycle; to: SlaveLifecycle; ts: number }>>()
+  private transitions = new Map<
+    SlaveId,
+    Array<{ from: SlaveLifecycle; to: SlaveLifecycle; ts: number }>
+  >()
 
   /**
    * Register a new slave.

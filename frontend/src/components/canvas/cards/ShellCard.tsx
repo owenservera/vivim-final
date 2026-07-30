@@ -13,6 +13,7 @@
  */
 
 import { useState } from 'react';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 
 interface HistoryEntry {
   command: string;
@@ -42,6 +43,7 @@ export function ShellCard({ workspaceId }: { workspaceId: string }) {
     },
   ]);
   const [input, setInput] = useState('');
+  const io = useIO();
 
   const submit = async () => {
     const command = input.trim();
@@ -50,19 +52,15 @@ export function ShellCard({ workspaceId }: { workspaceId: string }) {
     const entry: HistoryEntry = { command, pending: true };
     setHistory((h) => [...h, entry]);
     try {
-      const res = await fetch('/api/canvas/shell', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ command, workspaceId }),
-      });
-      const result = (await res.json()) as {
+      const res = await io.post<{
         ok: boolean;
         exitCode: number;
         stdout: string;
         stderr: string;
         durationMs: number;
         capabilityId?: string;
-      };
+      }>('/api/canvas/shell', { command, workspaceId });
+      const result = res.data;
       setHistory((h) =>
         h.map((e, i) => (i === h.length - 1 ? { ...e, pending: false, result } : e)),
       );

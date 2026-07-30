@@ -40,9 +40,13 @@ export class RemoteCdp {
     // In production, this would establish a WebSocket connection
     // and proxy CDP messages to the remote worker
     this.connected = true
-    this.metrics.setGauge('remote_cdp_connected', {
-      endpoint: this.config.endpoint,
-    }, 1)
+    this.metrics.setGauge(
+      'remote_cdp_connected',
+      {
+        endpoint: this.config.endpoint,
+      },
+      1,
+    )
   }
 
   /**
@@ -58,7 +62,7 @@ export class RemoteCdp {
   /**
    * Execute a CDP command on the remote instance.
    */
-  async sendCommand(method: string, params?: Record<string, unknown>): Promise<unknown> {
+  async sendCommand(method: string, _params?: Record<string, unknown>): Promise<unknown> {
     if (!this.connected) {
       throw new Error('Not connected to remote CDP')
     }

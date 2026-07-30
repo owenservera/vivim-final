@@ -2,8 +2,8 @@
 // DB Subscriber — persists events to the database.
 // Phase 7: Existing FleetEventRow writes converted to bus subscribers.
 
-import type { FleetEvent } from './event-bus.js'
 import { getLogger } from '../../observability/logger.js'
+import type { FleetEvent } from './event-bus.js'
 
 export interface FleetEventRow {
   id: string
