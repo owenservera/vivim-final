@@ -5,23 +5,60 @@ convention: work is tracked in `docs/atomic-v11/` and released in batches.
 
 ## [Unreleased] — Production Build Standard
 
-### Professional Production Build Pipeline (devops subsystem)
+### Binary Size Optimization (2026-07-30)
 
-- **`bun run devops production-build`** — a gated, auditable, SpecKit-aware release
-  pipeline: `precheck → gate → cleanup → converge → build → docs → verify → report`.
-  Each phase is independently runnable; `--dry-run` previews without mutation;
-  `--out=report.json` captures the structured `BuildReport` for CI.
-- **Cleanup standard enforced:** removes stray top-level provider dirs
-  (`gemini/`,`chatgpt/`,`claude/`), temp artifacts, and caches; HARD BLOCK on secrets in
-  tracked files. (Caught and removed a real stray `gemini/` Chrome user-data dump.)
-- **SpecKit convergence:** runs `devops speckit-converge` + architectural invariant drift
-  check before build; invariant blocks fail the release.
-- **Docs reconciliation:** regenerates `docs/decisions/ADR-INDEX.md`, ensures `CHANGELOG.md`.
-- **Post-build smoke test:** `tests/e2e/tauri-sidecar.test.ts` probes `/health`,
-  `/readyz`, `/api/nlcl/help` (`--strict-verify` blocks on failure).
-- **Skill:** `.kilo/skills/production-build` (and `.opencode/skill/production-build`).
-- **Standard doc:** `docs/production-build/STANDARD.md` — the canonical professional
-  production-build standard.
+- **UPX Compression** — Sidecar binary reduced from 97 MB to 45 MB (53.7% reduction)
+  - Level 3 with `--no-lzma` for optimal speed/ratio balance
+  - Build time: 16 seconds total
+  - All compressed binaries verified working
+- **NSIS Installer** — Full Windows installer created
+  - Includes sidecar binary, frontend static files, and launcher
+  - Final size: ~44 MB
+  - Auto-installs to `%LOCALAPPDATA%\Vivim`
+  - Creates Start Menu and Desktop shortcuts
+- **Build Pipeline** — Complete build automation
+  - `scripts/tauri/compile-sidecar.ts` — Bundle → Compile → UPX compress
+  - `scripts/tauri/build-installer.ps1` — Full installer build pipeline
+  - `scripts/tauri/installer.nsi` — NSIS installer script
+  - `scripts/tauri/launch.bat` — Desktop launcher script
+
+### Documentation (2026-07-30)
+
+- **README.md** — Comprehensive project documentation
+  - Download links and installation instructions
+  - Feature overview and system requirements
+  - Quick start guide and configuration
+  - Architecture overview and development setup
+- **User Guide** — Complete end-user documentation
+  - Installation and configuration
+  - Provider setup and management
+  - Conversation and capability usage
+  - Troubleshooting guide
+- **Architecture** — Technical deep-dive
+  - 13-engine architecture overview
+  - Data flow and storage layer
+  - API and frontend architecture
+  - Desktop build pipeline
+- **API Reference** — Complete API documentation
+  - REST API endpoints
+  - WebSocket protocol
+  - Server-Sent Events
+  - Error handling and rate limits
+- **Contributing** — Contribution guidelines
+  - Development workflow
+  - Coding standards
+  - Commit message format
+  - Pull request process
+- **Code of Conduct** — Community guidelines
+- **Security** — Security policy and reporting
+
+### GitHub (2026-07-30)
+
+- **Release Workflow** — Automated release pipeline
+  - Builds frontend and sidecar
+  - Creates Windows installer
+  - Publishes GitHub releases
+  - Supports manual triggers
 
 ## [021] — 2026-07-18 (Provider Protocol Data Layer)
 

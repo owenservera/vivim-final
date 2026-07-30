@@ -1,9 +1,9 @@
-import { Window } from 'happy-dom';
+import { Window } from 'happy-dom'
 
-declare const afterEach: (fn: () => void) => void;
-declare const require: (id: string) => unknown;
+declare const afterEach: (fn: () => void) => void
+declare const require: (id: string) => unknown
 
-const window = new Window();
+const window = new Window()
 Object.assign(globalThis, {
   window,
   document: window.document,
@@ -16,14 +16,15 @@ Object.assign(globalThis, {
   location: window.location,
   navigator: window.navigator,
   fetch: window.fetch,
-  requestAnimationFrame: (cb: FrameRequestCallback) => setTimeout(() => cb(Date.now()), 0) as unknown as number,
+  requestAnimationFrame: (cb: FrameRequestCallback) =>
+    setTimeout(() => cb(Date.now()), 0) as unknown as number,
   cancelAnimationFrame: (id: number) => clearTimeout(id),
   matchMedia: () => ({ matches: false, addListener: () => {}, removeListener: () => {} }),
-});
+})
 
 // Dynamic require AFTER globals are set — @testing-library/dom caches document at import time
-const { cleanup } = require('@testing-library/react') as { cleanup: () => void };
+const { cleanup } = require('@testing-library/react') as { cleanup: () => void }
 
 afterEach(() => {
-  cleanup();
-});
+  cleanup()
+})

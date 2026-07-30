@@ -1,6 +1,6 @@
-import { rm } from 'fs/promises'
-import { join } from 'path'
 import { existsSync } from 'fs'
+import { join } from 'path'
+import { rm } from 'fs/promises'
 
 const ROOT = join(import.meta.dir, '..')
 const RUNTIME = join(ROOT, '.runtime')
@@ -20,8 +20,12 @@ async function findPidOnPort(port: number): Promise<number | null> {
 }
 
 async function kill(pid: number): Promise<void> {
-  try { process.kill(pid) } catch {}
-  try { Bun.spawnSync(['taskkill', '/PID', String(pid), '/F', '/T']) } catch {}
+  try {
+    process.kill(pid)
+  } catch {}
+  try {
+    Bun.spawnSync(['taskkill', '/PID', String(pid), '/F', '/T'])
+  } catch {}
 }
 
 async function main() {

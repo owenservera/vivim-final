@@ -1,5 +1,3 @@
-const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9420';
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
@@ -9,14 +7,6 @@ const nextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
   },
 };
 

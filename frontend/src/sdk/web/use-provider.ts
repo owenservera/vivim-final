@@ -1,36 +1,43 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useIO } from '@/components/canvas/UnifiedIOProvider';
-import type { Provider } from '@/types/api';
+import { useIO } from '@/components/canvas/UnifiedIOProvider'
+import type { Provider } from '@/types/api'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useProvider() {
-  const io = useIO();
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
+  const io = useIO()
+  const [providers, setProviders] = useState<Provider[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const mountedRef = useRef(true)
 
-  useEffect(() => () => { mountedRef.current = false }, []);
+  useEffect(
+    () => () => {
+      mountedRef.current = false
+    },
+    [],
+  )
 
   const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const res = await io.get<unknown>('/api/providers');
-      if (!mountedRef.current) return;
+      const res = await io.get<unknown>('/api/providers')
+      if (!mountedRef.current) return
       // Backend returns either a raw array or { providers: [...] }
-      const raw = res.data;
-      const all: Provider[] = (Array.isArray(raw) ? raw : (raw as { providers?: Provider[] })?.providers ?? [])
+      const raw = res.data
+      const all: Provider[] = (
+        Array.isArray(raw) ? raw : ((raw as { providers?: Provider[] })?.providers ?? [])
+      )
         .filter((p: Provider) => p.id !== 'generic')
         .map((p: Provider) => {
-          let caps: string[] | undefined;
+          let caps: string[] | undefined
           try {
             caps = (p as unknown as { capabilitiesJson?: string }).capabilitiesJson
               ? JSON.parse((p as unknown as { capabilitiesJson: string }).capabilitiesJson)
-              : p.capabilities;
+              : p.capabilities
           } catch {
-            caps = [];
+            caps = []
           }
           return {
             id: p.id,
@@ -38,19 +45,21 @@ export function useProvider() {
             slug: p.slug ?? p.id,
             status: (p as unknown as { protocolStatus?: string }).protocolStatus ?? p.status,
             capabilities: caps,
-          };
-        });
-      setProviders(all);
+          }
+        })
+      setProviders(all)
     } catch (e) {
-      if (!mountedRef.current) return;
-      setError(e instanceof Error ? e.message : 'Failed to load providers');
+      if (!mountedRef.current) return
+      setError(e instanceof Error ? e.message : 'Failed to load providers')
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current) setLoading(false)
     }
-  }, [io]);
+  }, [io])
 
   // R3-06: Auto-fetch on mount
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh()
+  }, [refresh])
 
-  return { providers, loading, error, refresh };
+  return { providers, loading, error, refresh }
 }

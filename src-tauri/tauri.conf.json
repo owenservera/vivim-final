@@ -5,9 +5,9 @@
   "identifier": "com.vivim.desktop",
   "build": {
     "beforeDevCommand": "bun run web:dev",
-    "devUrl": "http://127.0.0.1:5173",
-    "beforeBuildCommand": "bun run web:build",
-    "frontendDist": "../frontend/dist"
+    "devUrl": "http://127.0.0.1:3000",
+    "beforeBuildCommand": "bun run scripts/tauri/prepare-frontend.ts",
+    "frontendDist": "../frontend/out"
   },
   "app": {
     "windows": [
@@ -33,17 +33,13 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["msi", "nsis", "updater"],
+    "targets": ["msi", "nsis"],
     "category": "Productivity",
     "shortDescription": "vivim — local-first AI conversation workspace",
     "longDescription": "vivim is a local-first AI conversation platform. The desktop app bundles the vivim backend (Bun sidecar) and a React frontend; all data stays on your machine.",
     "publisher": "vivim",
     "copyright": "Copyright © 2026 vivim",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png"
-    ],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
     "createUpdaterArtifacts": true,
     "windows": {
       "webviewInstallMode": {

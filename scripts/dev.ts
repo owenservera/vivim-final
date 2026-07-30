@@ -1,7 +1,7 @@
 import { spawn } from 'child_process'
 import { createServer } from 'net'
-import { mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
+import { mkdir, writeFile } from 'fs/promises'
 
 const ROOT = join(import.meta.dir, '..')
 const RUNTIME = join(ROOT, '.runtime')
@@ -14,7 +14,10 @@ function portInUse(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const srv = createServer()
     srv.on('error', () => resolve(true))
-    srv.on('listening', () => { srv.close(); resolve(false) })
+    srv.on('listening', () => {
+      srv.close()
+      resolve(false)
+    })
     srv.listen(port, '127.0.0.1')
   })
 }
@@ -41,8 +44,12 @@ async function findPidOnPort(port: number): Promise<number | null> {
 async function killOnPort(port: number): Promise<void> {
   const pid = await findPidOnPort(port)
   if (!pid) return
-  try { process.kill(pid) } catch {}
-  try { Bun.spawnSync(['taskkill', '/PID', String(pid), '/F', '/T']) } catch {}
+  try {
+    process.kill(pid)
+  } catch {}
+  try {
+    Bun.spawnSync(['taskkill', '/PID', String(pid), '/F', '/T'])
+  } catch {}
   const deadline = Date.now() + 5000
   while (Date.now() < deadline) {
     if (!(await findPidOnPort(port))) return
@@ -111,13 +118,21 @@ async function main() {
     if (exiting) return
     exiting = true
     console.log('\n  shutting down...')
-    try { backend.kill() } catch {}
-    try { frontend.kill() } catch {}
+    try {
+      backend.kill()
+    } catch {}
+    try {
+      frontend.kill()
+    } catch {}
     setTimeout(() => process.exit(0), 2000)
   }
 
-  process.on('SIGINT', () => { shutdown() })
-  process.on('SIGTERM', () => { shutdown() })
+  process.on('SIGINT', () => {
+    shutdown()
+  })
+  process.on('SIGTERM', () => {
+    shutdown()
+  })
 
   backend.on('exit', (code) => {
     if (code !== 0) console.error(`  backend exited with code ${code}`)
