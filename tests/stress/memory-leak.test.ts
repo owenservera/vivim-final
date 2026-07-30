@@ -2,11 +2,11 @@
 // Stress test: Run operations for extended period and monitor memory.
 // Phase 11: Production hardening via stress testing.
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { EventBus } from '../../src/engines/events/event-bus.js'
 import { BrowserPool } from '../../src/engines/pool/browser-pool.js'
-import { FleetManager } from '../../src/fleet/fleet-manager.js'
 import { InMemoryEventStore } from '../../src/engines/reliability/event-store.js'
+import { FleetManager } from '../../src/fleet/fleet-manager.js'
 
 describe('Stress: Memory Leak Detection', () => {
   let eventBus: EventBus
@@ -19,7 +19,7 @@ describe('Stress: Memory Leak Detection', () => {
     eventBus = new EventBus()
     slaveCounter = 0
     pool = new BrowserPool(
-      async (providerId, accountId) => {
+      async (_providerId, _accountId) => {
         slaveCounter++
         return {
           slaveId: `stress-slave-${slaveCounter}`,
@@ -29,7 +29,13 @@ describe('Stress: Memory Leak Detection', () => {
       },
       { minWarm: 0, maxWarm: 2, maxIdleMs: 30_000, maxLeasesPerSlave: 1 },
     )
-    fleet = new FleetManager(eventBus, { minWorkers: 0, maxWorkers: 3, scaleUpThreshold: 0.8, scaleDownThresholdMs: 300_000, globalConcurrency: 50 })
+    fleet = new FleetManager(eventBus, {
+      minWorkers: 0,
+      maxWorkers: 3,
+      scaleUpThreshold: 0.8,
+      scaleDownThresholdMs: 300_000,
+      globalConcurrency: 50,
+    })
     eventStore = new InMemoryEventStore()
   })
 

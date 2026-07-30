@@ -2,10 +2,10 @@
 // Load test: Spawn many concurrent Chrome instances and verify scheduling.
 // Phase 11: Production hardening via load testing.
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { BrowserPool } from '../../src/engines/pool/browser-pool.js'
-import { ResourceManager } from '../../src/engines/resource/resource-manager.js'
 import type { AcquireResult } from '../../src/engines/pool/browser-pool.js'
+import { ResourceManager } from '../../src/engines/resource/resource-manager.js'
 
 describe('Load: Fleet Concurrency', () => {
   let pool: BrowserPool
@@ -17,7 +17,7 @@ describe('Load: Fleet Concurrency', () => {
     resourceManager.start()
     slaveCounter = 0
     pool = new BrowserPool(
-      async (providerId, accountId) => {
+      async (_providerId, _accountId) => {
         slaveCounter++
         return {
           slaveId: `mock-slave-${slaveCounter}`,
@@ -39,9 +39,7 @@ describe('Load: Fleet Concurrency', () => {
     const acquirePromises: Promise<AcquireResult>[] = []
 
     for (let i = 0; i < 10; i++) {
-      acquirePromises.push(
-        pool.acquire('chatgpt', `account-${i}`),
-      )
+      acquirePromises.push(pool.acquire('chatgpt', `account-${i}`))
     }
 
     const results = await Promise.allSettled(acquirePromises)

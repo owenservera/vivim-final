@@ -328,7 +328,7 @@ export class UpdateEngine {
     } else {
       // Direct binary replacement
       const currentBinary = process.execPath
-      const backupBinary = currentBinary + '.bak'
+      const backupBinary = `${currentBinary}.bak`
 
       // Backup current binary
       const { renameSync } = require('node:fs') as typeof import('node:fs')

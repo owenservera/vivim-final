@@ -67,8 +67,7 @@ export function withWriteGuard<T extends PrismaClient>(client: T): T {
             if (WRITE_METHODS.includes(method)) {
               return (...args: unknown[]) => {
                 console.warn(
-                  `[db-guard] WARNING: Frontend writing to backend-owned table "${prop}.${method}()". ` +
-                    `This violates table ownership — use the backend API instead.`,
+                  `[db-guard] WARNING: Frontend writing to backend-owned table "${prop}.${method}()". This violates table ownership — use the backend API instead.`,
                 )
                 return (fn as (...args: unknown[]) => unknown).apply(model, args)
               }
