@@ -13,6 +13,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { ResolvedSurface, RouteContext } from '../../shared/route-context'
+import { useIO } from './UnifiedIOProvider'
 
 export interface ResolveRequest {
   workspaceId: string
@@ -24,6 +25,8 @@ export interface ResolveRequest {
 }
 
 export function useResolvedNodes(req: ResolveRequest) {
+  const io = useIO()
+
   return useQuery<ResolvedSurface>({
     queryKey: [
       'canvas:resolve',
@@ -35,13 +38,8 @@ export function useResolvedNodes(req: ResolveRequest) {
       req.variant,
     ],
     queryFn: async () => {
-      const res = await fetch('/api/canvas/resolve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req),
-      })
-      if (!res.ok) throw new Error(`resolve failed: ${res.status}`)
-      return (await res.json()) as ResolvedSurface
+      const { data } = await io.post<ResolvedSurface>('/api/canvas/resolve', req)
+      return data
     },
     staleTime: 10_000,
     retry: 1,

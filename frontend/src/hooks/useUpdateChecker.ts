@@ -6,6 +6,7 @@
  * - Provider-specific updates
  */
 
+import { useIO } from '@/components/canvas/UnifiedIOProvider'
 import { useCallback, useEffect, useState } from 'react'
 
 interface UpdateInfo {
@@ -70,6 +71,7 @@ interface UseUpdateCheckerReturn {
 }
 
 export function useUpdateChecker(): UseUpdateCheckerReturn {
+  const io = useIO()
   // App update state
   const [currentVersion, setCurrentVersion] = useState<string | null>(null)
   const [updateAvailable, setUpdateAvailable] = useState(false)
@@ -84,13 +86,6 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
   const [providers, setProviders] = useState<ProviderStatus[]>([])
   const [providerUpdates, setProviderUpdates] = useState<Map<string, ProviderUpdate>>(new Map())
 
-  const getBaseUrl = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      return window.location.origin
-    }
-    return 'http://localhost:9420'
-  }, [])
-
   // ── App Updates ────────────────────────────────────────────────────────────
 
   const checkForUpdates = useCallback(async () => {
@@ -98,11 +93,15 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
       setChecking(true)
       setError(null)
 
-      const response = await fetch(`${getBaseUrl()}/api/update/check`)
-      const data = await response.json()
+      const { data } = await io.get<{
+        ok: boolean
+        currentVersion?: string
+        update?: UpdateInfo
+        error?: string
+      }>('/api/update/check')
 
       if (data.ok) {
-        setCurrentVersion(data.currentVersion)
+        setCurrentVersion(data.currentVersion ?? null)
 
         if (data.update?.available) {
           setUpdateAvailable(true)
@@ -119,7 +118,7 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
     } finally {
       setChecking(false)
     }
-  }, [getBaseUrl])
+  }, [io])
 
   const downloadUpdate = useCallback(async () => {
     if (!updateInfo?.downloadUrl) {
@@ -134,16 +133,13 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
 
       const filename = `vivim-update-${updateInfo.latestVersion}.exe`
 
-      const response = await fetch(`${getBaseUrl()}/api/update/download`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data } = await io.post<{ ok: boolean; filePath?: string; error?: string }>(
+        '/api/update/download',
+        {
           url: updateInfo.downloadUrl,
           filename,
-        }),
-      })
-
-      const data = await response.json()
+        },
+      )
 
       if (data.ok) {
         // Download complete, now install
@@ -156,7 +152,7 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
     } finally {
       setDownloading(false)
     }
-  }, [updateInfo, getBaseUrl])
+  }, [updateInfo, io])
 
   const installUpdate = useCallback(
     async (filePath?: string) => {
@@ -164,16 +160,10 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
         setInstalling(true)
         setError(null)
 
-        const response = await fetch(`${getBaseUrl()}/api/update/install`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filePath: filePath ?? updateInfo?.downloadUrl,
-            type: 'app',
-          }),
+        const { data } = await io.post<{ ok: boolean; error?: string }>('/api/update/install', {
+          filePath: filePath ?? updateInfo?.downloadUrl,
+          type: 'app',
         })
-
-        const data = await response.json()
 
         if (!data.ok) {
           setError(data.error || 'Installation failed')
@@ -185,7 +175,7 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
         setInstalling(false)
       }
     },
-    [updateInfo, getBaseUrl],
+    [updateInfo, io],
   )
 
   const applyUpdate = useCallback(async () => {
@@ -194,11 +184,9 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
       setError(null)
       setProgress(null)
 
-      const response = await fetch(`${getBaseUrl()}/api/update/apply`, {
-        method: 'POST',
-      })
-
-      const data = await response.json()
+      const { data } = await io.post<{ ok: boolean; updated?: boolean; error?: string }>(
+        '/api/update/apply',
+      )
 
       if (data.ok) {
         if (data.updated) {
@@ -213,31 +201,34 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
     } finally {
       setDownloading(false)
     }
-  }, [getBaseUrl])
+  }, [io])
 
   // ── Provider Updates ───────────────────────────────────────────────────────
 
   const checkProviderUpdate = useCallback(
     async (slug: string) => {
       try {
-        const response = await fetch(`${getBaseUrl()}/api/update/provider/${slug}`)
-        const data = await response.json()
+        const { data } = await io.get<{ ok: boolean; update?: ProviderUpdate }>(
+          `/api/update/provider/${slug}`,
+        )
 
         if (data.ok && data.update) {
-          setProviderUpdates((prev) => new Map(prev).set(slug, data.update))
+          const update = data.update
+          setProviderUpdates((prev) => new Map(prev).set(slug, update))
         }
       } catch (err) {
         console.error(`Failed to check ${slug} update:`, err)
       }
     },
-    [getBaseUrl],
+    [io],
   )
 
   const checkAllProviderUpdates = useCallback(async () => {
     try {
       // First get list of installed providers
-      const response = await fetch(`${getBaseUrl()}/api/update/providers`)
-      const data = await response.json()
+      const { data } = await io.get<{ ok: boolean; providers?: ProviderStatus[] }>(
+        '/api/update/providers',
+      )
 
       if (data.ok && data.providers) {
         setProviders(data.providers)
@@ -250,23 +241,17 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
     } catch (err) {
       console.error('Failed to check provider updates:', err)
     }
-  }, [getBaseUrl, checkProviderUpdate])
+  }, [io, checkProviderUpdate])
 
   const installProviderUpdate = useCallback(
     async (slug: string, parserCode: string, capabilities: Record<string, unknown>[]) => {
       try {
-        const response = await fetch(`${getBaseUrl()}/api/update/install`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'provider',
-            provider: slug,
-            parserCode,
-            capabilities,
-          }),
+        const { data } = await io.post<{ ok: boolean; error?: string }>('/api/update/install', {
+          type: 'provider',
+          provider: slug,
+          parserCode,
+          capabilities,
         })
-
-        const data = await response.json()
 
         if (data.ok) {
           // Remove from pending updates
@@ -285,7 +270,7 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
         setError(err instanceof Error ? err.message : 'Failed to update provider')
       }
     },
-    [getBaseUrl, checkAllProviderUpdates],
+    [io, checkAllProviderUpdates],
   )
 
   // Check for updates on mount

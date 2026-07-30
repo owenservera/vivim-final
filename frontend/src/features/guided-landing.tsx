@@ -25,6 +25,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ProviderLogo, providerColor } from '@/components/canvas/Brand';
+import { useIO } from '@/components/canvas/UnifiedIOProvider';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -90,17 +91,6 @@ const PROVIDER_NAME_INDEX = new Map(
     [p.name.toLowerCase(), p.id],
   ]),
 );
-
-// ── API helpers ──────────────────────────────────────────────────────────────
-
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const resp = await fetch(path.startsWith('/') ? path : `/${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', 'X-Source': 'frontend', ...init?.headers },
-  });
-  if (!resp.ok) throw new Error(`API ${resp.status}: ${await resp.text().catch(() => resp.statusText)}`);
-  return resp.json().catch(() => ({}) as T);
-}
 
 // ── Typing hook ──────────────────────────────────────────────────────────────
 // Reveals a string character-by-character. Returns the visible substring and a
@@ -427,6 +417,7 @@ interface GuidedLandingProps {
 }
 
 export function GuidedLanding({ isOpen, mode = 'onboarding', onClose, onComplete }: GuidedLandingProps) {
+  const io = useIO();
   const [messages, setMessages] = useState<LandingMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [state, setState] = useState<LandingState>('booting');
@@ -581,13 +572,10 @@ export function GuidedLanding({ isOpen, mode = 'onboarding', onClose, onComplete
     await waitForMessageTyped(launchMsgId);
 
     try {
-      const result = await api<LaunchResult>('/api/setup/launch-visible', {
-        method: 'POST',
-        body: JSON.stringify({
-          providerId: provider.id,
-          accountSlug: 'default',
-          workspace: 'chrome-profiles',
-        }),
+      const { data: result } = await io.post<LaunchResult>('/api/setup/launch-visible', {
+        providerId: provider.id,
+        accountSlug: 'default',
+        workspace: 'chrome-profiles',
       });
       if (!mountedRef.current) return;
       launchResultRef.current = result;
@@ -599,37 +587,29 @@ export function GuidedLanding({ isOpen, mode = 'onboarding', onClose, onComplete
         attempts += 1;
         if (!mountedRef.current || !launchResultRef.current) return;
         try {
-          const v = await api<VerifyResult>('/api/setup/verify', {
-            method: 'POST',
-            body: JSON.stringify({
-              port: launchResultRef.current.debugPort,
-              providerId: provider.id,
-            }),
+          const { data: v } = await io.post<VerifyResult>('/api/setup/verify', {
+            port: launchResultRef.current.debugPort,
+            providerId: provider.id,
           });
           if (!v.loggedIn) return;
           if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
           if (!mountedRef.current) return;
           setState('completing');
           pushAgent('Login detected. Saving your profile…');
-          await api('/api/setup/complete', {
-            method: 'POST',
-            body: JSON.stringify({
-              providerId: provider.id,
-              accountSlug: 'default',
-              workspace: 'chrome-profiles',
-              profileDir: launchResultRef.current.profileDir,
-              debugPort: launchResultRef.current.debugPort,
-            }),
+          await io.post('/api/setup/complete', {
+            providerId: provider.id,
+            accountSlug: 'default',
+            workspace: 'chrome-profiles',
+            profileDir: launchResultRef.current.profileDir,
+            debugPort: launchResultRef.current.debugPort,
           });
-          await api('/api/setup/kill', {
-            method: 'POST',
-            body: JSON.stringify({ port: launchResultRef.current.debugPort }),
+          await io.post('/api/setup/kill', {
+            port: launchResultRef.current.debugPort,
           }).catch(() => {});
           if (!mountedRef.current) return;
           pushAgent('Creating your first conversation…');
-          const conv = await api<Conversation>('/api/conversations', {
-            method: 'POST',
-            body: JSON.stringify({ providerId: provider.id }),
+          const { data: conv } = await io.post<Conversation>('/api/conversations', {
+            providerId: provider.id,
           });
           if (!mountedRef.current) return;
           pushAgent(`${provider.name} is connected. Dropping you into your canvas — say hi to get started.`);
