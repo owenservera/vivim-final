@@ -92,6 +92,13 @@ export class CircuitOpenError extends CapStoreError {
   }
 }
 
+// Updater errors
+export class UpdateError extends CapStoreError {
+  constructor(message: string, details?: unknown) {
+    super('UpdateError', message, details)
+  }
+}
+
 export class CdpConnectionError extends CapStoreError {
   constructor(message: string) {
     super('CdpConnectionError', message)

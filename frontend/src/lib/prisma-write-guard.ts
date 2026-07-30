@@ -24,15 +24,30 @@
 import type { PrismaClient } from '@prisma/client'
 
 const BACKEND_OWNED = new Set([
-  'Conversation', 'Message', 'Provider', 'Account',
-  'Capability', 'CapabilityBinding', 'StreamBlock', 'ProviderAccount',
-  'LoginState', 'TelemetrySpan', 'WebhookConfig', 'AlertRule',
-  'AlertDelivery', 'Version',
+  'Conversation',
+  'Message',
+  'Provider',
+  'Account',
+  'Capability',
+  'CapabilityBinding',
+  'StreamBlock',
+  'ProviderAccount',
+  'LoginState',
+  'TelemetrySpan',
+  'WebhookConfig',
+  'AlertRule',
+  'AlertDelivery',
+  'Version',
 ])
 
 const WRITE_METHODS = [
-  'create', 'update', 'delete', 'upsert',
-  'createMany', 'updateMany', 'deleteMany',
+  'create',
+  'update',
+  'delete',
+  'upsert',
+  'createMany',
+  'updateMany',
+  'deleteMany',
 ]
 
 export function withWriteGuard<T extends PrismaClient>(client: T): T {
@@ -53,7 +68,7 @@ export function withWriteGuard<T extends PrismaClient>(client: T): T {
               return (...args: unknown[]) => {
                 console.warn(
                   `[db-guard] WARNING: Frontend writing to backend-owned table "${prop}.${method}()". ` +
-                  `This violates table ownership — use the backend API instead.`
+                    `This violates table ownership — use the backend API instead.`,
                 )
                 return (fn as (...args: unknown[]) => unknown).apply(model, args)
               }

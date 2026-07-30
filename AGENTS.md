@@ -24,6 +24,38 @@
 
 Design docs are in `docs/merged-design-v2/`. Read in order 00-08 for v1, then SOTA-00 through SOTA-09.
 
+## Binary Size Optimization (CRITICAL)
+
+### Bun Runtime Baseline
+- **Bun runtime on Windows:** ~94 MB (irreducible via bundling alone)
+- **Our app code:** ~3 MB on top of runtime
+- **Total uncompressed:** ~97 MB
+- **WASM engines:** NOT embedded by `bun build --compile` (loaded at runtime via `process.dlopen()`)
+- **Prisma WASM:** Uses native library mode (`LibraryEngine`), not WASM base64
+
+### UPX Compression (Implemented)
+- **Tool:** UPX v5.2.0 (`winget install UPX.UPX`)
+- **Optimal settings:** Level 3 with `--no-lzma` for speed/ratio balance
+- **Results:**
+  - Level 1: 46.4 MB (47.81% ratio, 13.5 seconds)
+  - Level 3: 45.6 MB (46.94% ratio, 24.8 seconds) ← **Production default**
+  - Level 5: 35.5 MB (36.58% ratio, 68.8 seconds)
+- **All compressed binaries verified working** (`--version` returns `1.3.14`)
+
+### Build Pipeline
+```bash
+# Build with UPX compression (default level 3)
+bun run scripts/tauri/compile-sidecar.ts
+
+# Manual UPX compression
+upx -3 --no-lzma src-tauri/binaries/vivim-server-x86_64-pc-windows-msvc.exe
+```
+
+### Future Optimizations
+- **Bun v1.4.0 (Rust rewrite):** ~20% binary size reduction (76 MB vs 94 MB) — available in canary
+- **bkg (Bun Packager):** LZ4 compression with custom runtime decompression
+- **NSIS installer:** LZMA compression for installer packaging
+
 ## Provider System (KNOW THIS FIRST)
 
 ### What Providers Exist

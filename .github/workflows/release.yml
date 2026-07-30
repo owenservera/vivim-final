@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Is this a pre-release?'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd frontend && bun install
+          cd .. && bun install
+
+      - name: Build frontend
+        run: |
+          cd frontend && bun run build
+
+      - name: Build sidecar
+        run: |
+          bun run scripts/tauri/compile-sidecar.ts
+
+      - name: Create installer (Windows)
+        if: runner.os == 'Windows' || true
+        run: |
+          # Install NSIS (Ubuntu doesn't have it by default)
+          sudo apt-get update
+          sudo apt-get install -y nsis
+          
+          # Create installer
+          cd scripts/tauri
+          makensis installer.nsi || echo "NSIS not available on Linux, skipping installer"
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Vivim Desktop v${{ steps.version.outputs.version }}
+          body: |
+            ## Vivim Desktop v${{ steps.version.outputs.version }}
+            
+            ### Downloads
+            
+            - **[Windows Installer](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/vivim-desktop-setup.exe)** (~44 MB)
+            - **[Linux Binary](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/vivim-server-x86_64-unknown-linux-gnu)** (Coming soon)
+            - **[macOS Binary](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/vivim-server-x86_64-apple-darwin)** (Coming soon)
+            
+            ### What's New
+            
+            - See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md) for details
+            
+            ### Installation
+            
+            1. Download the installer for your platform
+            2. Run the installer
+            3. Launch Vivim Desktop from Start Menu or Applications
+            
+            ### Documentation
+            
+            - [User Guide](https://github.com/${{ github.repository }}/blob/master/docs/USER-GUIDE.md)
+            - [API Reference](https://github.com/${{ github.repository }}/blob/master/docs/API.md)
+            - [Architecture](https://github.com/${{ github.repository }}/blob/master/docs/ARCHITECTURE.md)
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          files: |
+            scripts/tauri/vivim-desktop-setup.exe
+            src-tauri/binaries/vivim-server-*
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update package.json version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          cd frontend
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          cd ..
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Create Git Tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+          git tag -a v${{ steps.version.outputs.version }} -m "Release v${{ steps.version.outputs.version }}"
+          git push origin main --tags

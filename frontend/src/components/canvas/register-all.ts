@@ -13,15 +13,15 @@
  * any component's capability.
  */
 
-import { register } from '../../shared/universal-registry';
-import { registerCatalogComponent } from '../../hooks/useSlotOverrides';
-import type { ComponentType } from 'react';
+import type { ComponentType } from 'react'
+import { registerCatalogComponent } from '../../hooks/useSlotOverrides'
+import { register } from '../../shared/universal-registry'
 
 // Lazy imports — these are client components, so we import the module
 // objects and extract the component functions.
-import * as CanvasMods from './index';
+import * as CanvasMods from './index'
 
-const C = CanvasMods as unknown as Record<string, ComponentType<Record<string, unknown>>>;
+const C = CanvasMods as unknown as Record<string, ComponentType<Record<string, unknown>>>
 
 export function registerAllComponents(): void {
   // ── Canvas shells ──────────────────────────────────────────────────
@@ -32,13 +32,19 @@ export function registerAllComponents(): void {
     category: 'chat',
     slot: 'canvas.primary',
     Component: C.LivingCanvas ?? null,
-    capabilities: ['cap:canvas:resolve', 'cap:canvas:spawn', 'cap:canvas:dismiss', 'cap:canvas:layout', 'cap:canvas:zoom'],
+    capabilities: [
+      'cap:canvas:resolve',
+      'cap:canvas:spawn',
+      'cap:canvas:dismiss',
+      'cap:canvas:layout',
+      'cap:canvas:zoom',
+    ],
     version: 1,
     author: 'system',
     tags: ['v6', 'streaming', 'semantic-zoom', 'force-layout'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'canvas.surface',
     label: 'Canvas Surface (legacy)',
@@ -51,7 +57,7 @@ export function registerAllComponents(): void {
     author: 'system',
     tags: ['legacy', 'v5'],
     enabled: false,
-  });
+  })
 
   // ── Cards ──────────────────────────────────────────────────────────
   register({
@@ -67,7 +73,7 @@ export function registerAllComponents(): void {
     tags: ['document'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'card.doc-editor',
     label: 'Document Editor',
@@ -75,13 +81,20 @@ export function registerAllComponents(): void {
     category: 'editor',
     slot: 'editor.primary',
     Component: C.DocEditor ?? null,
-    capabilities: ['cap:document:open', 'cap:document:edit', 'cap:document:save', 'cap:document:undo', 'cap:document:redo', 'cap:document:find_replace'],
+    capabilities: [
+      'cap:document:open',
+      'cap:document:edit',
+      'cap:document:save',
+      'cap:document:undo',
+      'cap:document:redo',
+      'cap:document:find_replace',
+    ],
     version: 1,
     author: 'system',
     tags: ['document', 'editing'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'card.media',
     label: 'Media Card',
@@ -95,7 +108,7 @@ export function registerAllComponents(): void {
     tags: ['media', 'video', 'audio'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'card.automation',
     label: 'Automation Card',
@@ -109,7 +122,7 @@ export function registerAllComponents(): void {
     tags: ['automation'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'card.agent',
     label: 'Agent Card',
@@ -123,7 +136,7 @@ export function registerAllComponents(): void {
     tags: ['agent'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'card.shell',
     label: 'Shell Card',
@@ -137,7 +150,7 @@ export function registerAllComponents(): void {
     tags: ['shell', 'cli'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── Panels ─────────────────────────────────────────────────────────
   register({
@@ -153,7 +166,7 @@ export function registerAllComponents(): void {
     tags: ['z-layer', 'config'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.drawer',
     label: 'Drawer System',
@@ -167,7 +180,7 @@ export function registerAllComponents(): void {
     tags: ['drawer', 'config'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.audit',
     label: 'Audit Dashboard',
@@ -181,7 +194,7 @@ export function registerAllComponents(): void {
     tags: ['audit', 'enterprise'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.rbac',
     label: 'RBAC Manager',
@@ -195,7 +208,7 @@ export function registerAllComponents(): void {
     tags: ['rbac', 'enterprise'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.templates',
     label: 'Templates Gallery',
@@ -209,7 +222,7 @@ export function registerAllComponents(): void {
     tags: ['templates', 'enterprise'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── New canvas-level panels ────────────────────────────────────────
   register({
@@ -225,7 +238,7 @@ export function registerAllComponents(): void {
     tags: ['health', 'monitoring'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.capability-catalog',
     label: 'Capability Catalog',
@@ -239,7 +252,7 @@ export function registerAllComponents(): void {
     tags: ['capabilities'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.search',
     label: 'Search Panel',
@@ -253,7 +266,7 @@ export function registerAllComponents(): void {
     tags: ['search'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.canvas-controls',
     label: 'Mutation Controls',
@@ -267,7 +280,7 @@ export function registerAllComponents(): void {
     tags: ['mutation', 'undo-redo'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.task-manager',
     label: 'Task Manager',
@@ -281,7 +294,7 @@ export function registerAllComponents(): void {
     tags: ['autonomous', 'tasks'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.automation-launcher',
     label: 'Automation Launcher',
@@ -295,7 +308,7 @@ export function registerAllComponents(): void {
     tags: ['automation', 'browser'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.fleet-status',
     label: 'Fleet Status',
@@ -309,7 +322,7 @@ export function registerAllComponents(): void {
     tags: ['fleet', 'providers'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'panel.session-controls',
     label: 'Session Controls',
@@ -323,7 +336,7 @@ export function registerAllComponents(): void {
     tags: ['session', 'auth'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── Overlays ───────────────────────────────────────────────────────
   register({
@@ -339,7 +352,7 @@ export function registerAllComponents(): void {
     tags: ['command-palette', 'search'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'overlay.notifications',
     label: 'Notifications Center',
@@ -353,7 +366,7 @@ export function registerAllComponents(): void {
     tags: ['notifications'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'overlay.onboarding',
     label: 'Onboarding Tour',
@@ -367,7 +380,7 @@ export function registerAllComponents(): void {
     tags: ['onboarding'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'overlay.quick-actions',
     label: 'Quick Actions Menu',
@@ -381,7 +394,7 @@ export function registerAllComponents(): void {
     tags: ['context-menu'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'overlay.agent',
     label: 'Agent Canvas Overlay',
@@ -395,7 +408,7 @@ export function registerAllComponents(): void {
     tags: ['agent', 'v6'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── Controls ───────────────────────────────────────────────────────
   register({
@@ -410,7 +423,7 @@ export function registerAllComponents(): void {
     tags: ['theme'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'control.theme-settings',
     label: 'Theme Settings',
@@ -424,7 +437,7 @@ export function registerAllComponents(): void {
     tags: ['theme'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'control.workspace-switcher',
     label: 'Workspace Switcher',
@@ -438,7 +451,7 @@ export function registerAllComponents(): void {
     tags: ['workspace'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'control.presence',
     label: 'Presence Indicator',
@@ -452,20 +465,26 @@ export function registerAllComponents(): void {
     tags: ['presence', 'multiplayer'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'control.vcard-menu',
     label: 'vCard Menu',
     kind: 'control',
     category: 'vcard',
     Component: C.VCardMenu ?? null,
-    capabilities: ['cap:vcard:collapse', 'cap:vcard:pin', 'cap:vcard:fullscreen', 'cap:vcard:lock', 'cap:vcard:remove'],
+    capabilities: [
+      'cap:vcard:collapse',
+      'cap:vcard:pin',
+      'cap:vcard:fullscreen',
+      'cap:vcard:lock',
+      'cap:vcard:remove',
+    ],
     version: 1,
     author: 'system',
     tags: ['vcard', 'context-menu'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── Primitives ─────────────────────────────────────────────────────
   register({
@@ -480,7 +499,7 @@ export function registerAllComponents(): void {
     tags: ['sandbox', 'iframe', 'csp'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'primitive.connection-layer',
     label: 'Connection Layer',
@@ -493,7 +512,7 @@ export function registerAllComponents(): void {
     tags: ['connection', 'io', 'v6'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'primitive.observability-hud',
     label: 'Observability HUD',
@@ -506,7 +525,7 @@ export function registerAllComponents(): void {
     tags: ['observability', 'v6'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'primitive.unified-io',
     label: 'Unified IO Provider',
@@ -519,7 +538,7 @@ export function registerAllComponents(): void {
     tags: ['io', 'transport'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── Hooks (non-visual) ─────────────────────────────────────────────
   register({
@@ -534,7 +553,7 @@ export function registerAllComponents(): void {
     tags: ['streaming', 'v6'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'hook.resolved-nodes',
     label: 'useResolvedNodes',
@@ -547,7 +566,7 @@ export function registerAllComponents(): void {
     tags: ['resolve'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'hook.canvas-events',
     label: 'useCanvasEvents',
@@ -560,40 +579,40 @@ export function registerAllComponents(): void {
     tags: ['events', 'sse'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── Populate COMPONENT_CATALOG for canvas-level hot-swap overrides ──
   // Chat-level catalog is populated by ml-boot.ts. This covers canvas-level
   // components so useSlotOverrides can resolve them for canvas slots.
-  registerCatalogComponent('LivingCanvas', C.LivingCanvas ?? null as unknown as any);
-  registerCatalogComponent('DocEditor', C.DocEditor ?? null as unknown as any);
-  registerCatalogComponent('MediaCard', C.MediaCard ?? null as unknown as any);
-  registerCatalogComponent('AgentCard', C.AgentCard ?? null as unknown as any);
-  registerCatalogComponent('AgentOverlay', C.AgentOverlay ?? null as unknown as any);
-  registerCatalogComponent('AuditDashboard', C.AuditDashboard ?? null as unknown as any);
-  registerCatalogComponent('TemplatesGallery', C.TemplatesGallery ?? null as unknown as any);
-  registerCatalogComponent('HealthDashboard', C.HealthDashboard ?? null as unknown as any);
-  registerCatalogComponent('CapabilityCatalog', C.CapabilityCatalog ?? null as unknown as any);
-  registerCatalogComponent('NotificationsCenter', C.NotificationsCenter ?? null as unknown as any);
-  registerCatalogComponent('PresenceIndicator', C.PresenceIndicator ?? null as unknown as any);
-  registerCatalogComponent('ZLayerPanel', C.ZLayerPanel ?? null as unknown as any);
-  registerCatalogComponent('WorkspaceSwitcher', C.WorkspaceSwitcher ?? null as unknown as any);
-  registerCatalogComponent('OnboardingTour', C.OnboardingTour ?? null as unknown as any);
-  registerCatalogComponent('CommandPalette', C.CommandPalette ?? null as unknown as any);
-  registerCatalogComponent('DrawerSystem', C.DrawerSystem ?? null as unknown as any);
-  registerCatalogComponent('ShellCard', C.ShellCard ?? null as unknown as any);
-  registerCatalogComponent('AutomationCard', C.AutomationCard ?? null as unknown as any);
-  registerCatalogComponent('RbacManager', C.RbacManager ?? null as unknown as any);
-  registerCatalogComponent('SearchPanel', C.SearchPanel ?? null as unknown as any);
-  registerCatalogComponent('CanvasControlPanel', C.CanvasControlPanel ?? null as unknown as any);
-  registerCatalogComponent('TaskManager', C.TaskManager ?? null as unknown as any);
-  registerCatalogComponent('AutomationLauncher', C.AutomationLauncher ?? null as unknown as any);
-  registerCatalogComponent('FleetStatus', C.FleetStatus ?? null as unknown as any);
-  registerCatalogComponent('SessionControls', C.SessionControls ?? null as unknown as any);
-  registerCatalogComponent('QuickActionsMenu', C.QuickActionsMenu ?? null as unknown as any);
-  registerCatalogComponent('ThemeProvider', C.ThemeProvider ?? null as unknown as any);
-  registerCatalogComponent('ThemeSettings', C.ThemeSettings ?? null as unknown as any);
-  registerCatalogComponent('VCardMenu', C.VCardMenu ?? null as unknown as any);
+  registerCatalogComponent('LivingCanvas', C.LivingCanvas ?? (null as unknown as any))
+  registerCatalogComponent('DocEditor', C.DocEditor ?? (null as unknown as any))
+  registerCatalogComponent('MediaCard', C.MediaCard ?? (null as unknown as any))
+  registerCatalogComponent('AgentCard', C.AgentCard ?? (null as unknown as any))
+  registerCatalogComponent('AgentOverlay', C.AgentOverlay ?? (null as unknown as any))
+  registerCatalogComponent('AuditDashboard', C.AuditDashboard ?? (null as unknown as any))
+  registerCatalogComponent('TemplatesGallery', C.TemplatesGallery ?? (null as unknown as any))
+  registerCatalogComponent('HealthDashboard', C.HealthDashboard ?? (null as unknown as any))
+  registerCatalogComponent('CapabilityCatalog', C.CapabilityCatalog ?? (null as unknown as any))
+  registerCatalogComponent('NotificationsCenter', C.NotificationsCenter ?? (null as unknown as any))
+  registerCatalogComponent('PresenceIndicator', C.PresenceIndicator ?? (null as unknown as any))
+  registerCatalogComponent('ZLayerPanel', C.ZLayerPanel ?? (null as unknown as any))
+  registerCatalogComponent('WorkspaceSwitcher', C.WorkspaceSwitcher ?? (null as unknown as any))
+  registerCatalogComponent('OnboardingTour', C.OnboardingTour ?? (null as unknown as any))
+  registerCatalogComponent('CommandPalette', C.CommandPalette ?? (null as unknown as any))
+  registerCatalogComponent('DrawerSystem', C.DrawerSystem ?? (null as unknown as any))
+  registerCatalogComponent('ShellCard', C.ShellCard ?? (null as unknown as any))
+  registerCatalogComponent('AutomationCard', C.AutomationCard ?? (null as unknown as any))
+  registerCatalogComponent('RbacManager', C.RbacManager ?? (null as unknown as any))
+  registerCatalogComponent('SearchPanel', C.SearchPanel ?? (null as unknown as any))
+  registerCatalogComponent('CanvasControlPanel', C.CanvasControlPanel ?? (null as unknown as any))
+  registerCatalogComponent('TaskManager', C.TaskManager ?? (null as unknown as any))
+  registerCatalogComponent('AutomationLauncher', C.AutomationLauncher ?? (null as unknown as any))
+  registerCatalogComponent('FleetStatus', C.FleetStatus ?? (null as unknown as any))
+  registerCatalogComponent('SessionControls', C.SessionControls ?? (null as unknown as any))
+  registerCatalogComponent('QuickActionsMenu', C.QuickActionsMenu ?? (null as unknown as any))
+  registerCatalogComponent('ThemeProvider', C.ThemeProvider ?? (null as unknown as any))
+  registerCatalogComponent('ThemeSettings', C.ThemeSettings ?? (null as unknown as any))
+  registerCatalogComponent('VCardMenu', C.VCardMenu ?? (null as unknown as any))
 
   // ── SSOA tab components ──────────────────────────────────────────────
   register({
@@ -609,7 +628,7 @@ export function registerAllComponents(): void {
     tags: ['ssoa', 'tabs', 'binder'],
     enabled: true,
     isDefault: true,
-  });
+  })
   register({
     id: 'tab.layer-switcher',
     label: 'Layer Switcher',
@@ -623,7 +642,7 @@ export function registerAllComponents(): void {
     tags: ['ssoa', 'layers'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── Unified entry point ─────────────────────────────────────────────
   register({
@@ -639,7 +658,7 @@ export function registerAllComponents(): void {
     tags: ['ssoa', 'entry', 'composer', 'input'],
     enabled: true,
     isDefault: true,
-  });
+  })
 
   // ── P2-6: SlidePanel (SSOA panel content renderer) ─────────────────
   register({
@@ -655,5 +674,5 @@ export function registerAllComponents(): void {
     tags: ['ssoa', 'panel', 'slide', 'overlay'],
     enabled: true,
     isDefault: true,
-  });
+  })
 }

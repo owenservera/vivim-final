@@ -35,6 +35,7 @@ import {
   TabBar,
   SlidePanel,
   getLayerConfig,
+  UpdateNotification,
 } from '@/components/canvas';
 import { getPanelType } from '@/components/canvas/TabConfig';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -320,6 +321,9 @@ function CanvasApp() {
           />
         </Suspense>
       )}
+
+      {/* Update notification */}
+      <UpdateNotification />
 
     </div>
   );

@@ -33,6 +33,10 @@
     "config/provider-registry",
     "config",
     "desktop/sidecar-entry",
+    "domain/index",
+    "domain/slave-state-store",
+    "domain/types",
+    "engines/actor",
     "engines/adaptive-workspace",
     "engines/agent-builder",
     "engines/agentic-loop",
@@ -86,6 +90,7 @@
     "engines/encryption",
     "engines/error-tracker",
     "engines/event-record-store",
+    "engines/events",
     "engines/eviction-manager",
     "engines/execution-memoizer",
     "engines/execution-policy",
@@ -138,6 +143,7 @@
     "engines/parsers",
     "engines/plugin-hot-reload",
     "engines/plugin-system",
+    "engines/pool",
     "engines/protocol-discovery",
     "engines/protocol-loop-parser",
     "engines/provider-discovery",
@@ -148,12 +154,17 @@
     "engines/provider-registrar",
     "engines/provider-selectors",
     "engines/provider-test-harness",
+    "engines/providers",
     "engines/registration-auditor",
+    "engines/reliability",
     "engines/reprogrammability",
     "engines/request-queue",
+    "engines/resource",
     "engines/retry-engine",
+    "engines/runtime",
     "engines/safe-eval",
     "engines/sandbox-runner",
+    "engines/scheduler",
     "engines/selector-cache",
     "engines/selector-healer",
     "engines/selector-refiner",
@@ -207,6 +218,10 @@
     "executor/slave-states",
     "executor/slave-write",
     "executor/system-pressure",
+    "fleet/fleet-manager",
+    "fleet/index",
+    "fleet/remote-cdp",
+    "fleet/worker-node",
     "framing/adapter",
     "framing/adapters",
     "framing/engine",
@@ -216,12 +231,19 @@
     "framing/__tests__",
     "ids",
     "index",
+    "integration/flag-registry",
+    "integration/index",
     "lib/logger",
     "mcp/discovery-tools",
     "mcp/index",
     "mcp/nlcl-tools",
     "mcp/server",
     "mcp/types",
+    "observability/context",
+    "observability/index",
+    "observability/logger",
+    "observability/metrics",
+    "observability/tracing",
     "reprogrammability/canonical-surfaces",
     "reprogrammability/contract",
     "reprogrammability/dsl",
@@ -753,6 +775,50 @@
       "to": "server/index"
     },
     {
+      "from": "domain/index",
+      "to": "domain/types"
+    },
+    {
+      "from": "domain/index",
+      "to": "domain/slave-state-store"
+    },
+    {
+      "from": "domain/slave-state-store",
+      "to": "executor/slave-states"
+    },
+    {
+      "from": "domain/slave-state-store",
+      "to": "domain/types"
+    },
+    {
+      "from": "domain/types",
+      "to": "executor/slave-states"
+    },
+    {
+      "from": "engines/actor",
+      "to": "domain/types"
+    },
+    {
+      "from": "engines/actor",
+      "to": "engines/actor"
+    },
+    {
+      "from": "engines/actor",
+      "to": "engines/runtime"
+    },
+    {
+      "from": "engines/actor",
+      "to": "observability/logger"
+    },
+    {
+      "from": "engines/actor",
+      "to": "executor/slave-states"
+    },
+    {
+      "from": "engines/actor",
+      "to": "observability/metrics"
+    },
+    {
       "from": "engines/adaptive-workspace",
       "to": "storage/contracts"
     },
@@ -1154,11 +1220,11 @@
     },
     {
       "from": "engines/chrome-governor",
-      "to": "storage/contracts"
+      "to": "lib/logger"
     },
     {
       "from": "engines/chrome-governor",
-      "to": "lib/logger"
+      "to": "storage/contracts"
     },
     {
       "from": "engines/chrome-governor",
@@ -1451,6 +1517,14 @@
     {
       "from": "engines/event-record-store",
       "to": "ids"
+    },
+    {
+      "from": "engines/events",
+      "to": "engines/events"
+    },
+    {
+      "from": "engines/events",
+      "to": "observability/logger"
     },
     {
       "from": "engines/eviction-manager",
@@ -2085,6 +2159,22 @@
       "to": "reprogrammability/registry"
     },
     {
+      "from": "engines/pool",
+      "to": "domain/types"
+    },
+    {
+      "from": "engines/pool",
+      "to": "engines/pool"
+    },
+    {
+      "from": "engines/pool",
+      "to": "observability/logger"
+    },
+    {
+      "from": "engines/pool",
+      "to": "observability/metrics"
+    },
+    {
       "from": "engines/protocol-discovery",
       "to": "errors"
     },
@@ -2249,6 +2339,18 @@
       "to": "engines/chrome-governor"
     },
     {
+      "from": "engines/providers",
+      "to": "engines/providers"
+    },
+    {
+      "from": "engines/providers",
+      "to": "engines/actor"
+    },
+    {
+      "from": "engines/providers",
+      "to": "observability/logger"
+    },
+    {
       "from": "engines/registration-auditor",
       "to": "schema/provider-manifest"
     },
@@ -2259,6 +2361,26 @@
     {
       "from": "engines/registration-auditor",
       "to": "storage/contracts"
+    },
+    {
+      "from": "engines/reliability",
+      "to": "engines/actor"
+    },
+    {
+      "from": "engines/reliability",
+      "to": "engines/events"
+    },
+    {
+      "from": "engines/reliability",
+      "to": "observability/logger"
+    },
+    {
+      "from": "engines/reliability",
+      "to": "engines/reliability"
+    },
+    {
+      "from": "engines/reliability",
+      "to": "observability/metrics"
     },
     {
       "from": "engines/reprogrammability",
@@ -2305,12 +2427,48 @@
       "to": "errors"
     },
     {
+      "from": "engines/resource",
+      "to": "observability/logger"
+    },
+    {
+      "from": "engines/resource",
+      "to": "observability/metrics"
+    },
+    {
+      "from": "engines/resource",
+      "to": "engines/resource"
+    },
+    {
       "from": "engines/retry-engine",
       "to": "errors"
     },
     {
       "from": "engines/retry-engine",
       "to": "lib/logger"
+    },
+    {
+      "from": "engines/runtime",
+      "to": "executor/slave-states"
+    },
+    {
+      "from": "engines/runtime",
+      "to": "domain/types"
+    },
+    {
+      "from": "engines/runtime",
+      "to": "observability/tracing"
+    },
+    {
+      "from": "engines/runtime",
+      "to": "observability/logger"
+    },
+    {
+      "from": "engines/runtime",
+      "to": "observability/metrics"
+    },
+    {
+      "from": "engines/runtime",
+      "to": "engines/runtime"
     },
     {
       "from": "engines/safe-eval",
@@ -2327,6 +2485,18 @@
     {
       "from": "engines/sandbox-runner",
       "to": "storage/contracts"
+    },
+    {
+      "from": "engines/scheduler",
+      "to": "engines/scheduler"
+    },
+    {
+      "from": "engines/scheduler",
+      "to": "observability/logger"
+    },
+    {
+      "from": "engines/scheduler",
+      "to": "observability/metrics"
     },
     {
       "from": "engines/selector-healer",
@@ -2707,6 +2877,58 @@
     {
       "from": "executor/slave-write",
       "to": "executor/cdp"
+    },
+    {
+      "from": "fleet/fleet-manager",
+      "to": "domain/types"
+    },
+    {
+      "from": "fleet/fleet-manager",
+      "to": "fleet/worker-node"
+    },
+    {
+      "from": "fleet/fleet-manager",
+      "to": "engines/events"
+    },
+    {
+      "from": "fleet/fleet-manager",
+      "to": "observability/logger"
+    },
+    {
+      "from": "fleet/fleet-manager",
+      "to": "observability/metrics"
+    },
+    {
+      "from": "fleet/index",
+      "to": "fleet/worker-node"
+    },
+    {
+      "from": "fleet/index",
+      "to": "fleet/fleet-manager"
+    },
+    {
+      "from": "fleet/index",
+      "to": "fleet/remote-cdp"
+    },
+    {
+      "from": "fleet/remote-cdp",
+      "to": "observability/logger"
+    },
+    {
+      "from": "fleet/remote-cdp",
+      "to": "observability/metrics"
+    },
+    {
+      "from": "fleet/worker-node",
+      "to": "domain/types"
+    },
+    {
+      "from": "fleet/worker-node",
+      "to": "observability/logger"
+    },
+    {
+      "from": "fleet/worker-node",
+      "to": "observability/metrics"
     },
     {
       "from": "framing/adapter",
@@ -3141,6 +3363,14 @@
       "to": "schema/repair-metadata"
     },
     {
+      "from": "integration/flag-registry",
+      "to": "observability/logger"
+    },
+    {
+      "from": "integration/index",
+      "to": "integration/flag-registry"
+    },
+    {
       "from": "mcp/discovery-tools",
       "to": "mcp/server"
     },
@@ -3191,6 +3421,26 @@
     {
       "from": "mcp/types",
       "to": "engines/provider-registrar"
+    },
+    {
+      "from": "observability/index",
+      "to": "observability/context"
+    },
+    {
+      "from": "observability/index",
+      "to": "observability/tracing"
+    },
+    {
+      "from": "observability/index",
+      "to": "observability/metrics"
+    },
+    {
+      "from": "observability/index",
+      "to": "observability/logger"
+    },
+    {
+      "from": "observability/tracing",
+      "to": "observability/context"
     },
     {
       "from": "reprogrammability/canonical-surfaces",
@@ -4591,6 +4841,22 @@
       "layer": 3
     },
     {
+      "module": "domain/index",
+      "layer": 3
+    },
+    {
+      "module": "domain/slave-state-store",
+      "layer": 3
+    },
+    {
+      "module": "domain/types",
+      "layer": 3
+    },
+    {
+      "module": "engines/actor",
+      "layer": 3
+    },
+    {
       "module": "engines/adaptive-workspace",
       "layer": 3
     },
@@ -4803,6 +5069,10 @@
       "layer": 3
     },
     {
+      "module": "engines/events",
+      "layer": 3
+    },
+    {
       "module": "engines/eviction-manager",
       "layer": 3
     },
@@ -5011,6 +5281,10 @@
       "layer": 3
     },
     {
+      "module": "engines/pool",
+      "layer": 3
+    },
+    {
       "module": "engines/protocol-discovery",
       "layer": 3
     },
@@ -5051,8 +5325,16 @@
       "layer": 3
     },
     {
+      "module": "engines/providers",
+      "layer": 3
+    },
+    {
       "module": "engines/registration-auditor",
       "layer": 1
+    },
+    {
+      "module": "engines/reliability",
+      "layer": 3
     },
     {
       "module": "engines/reprogrammability",
@@ -5063,7 +5345,15 @@
       "layer": 3
     },
     {
+      "module": "engines/resource",
+      "layer": 3
+    },
+    {
       "module": "engines/retry-engine",
+      "layer": 3
+    },
+    {
+      "module": "engines/runtime",
       "layer": 3
     },
     {
@@ -5072,6 +5362,10 @@
     },
     {
       "module": "engines/sandbox-runner",
+      "layer": 3
+    },
+    {
+      "module": "engines/scheduler",
       "layer": 3
     },
     {
@@ -5287,6 +5581,22 @@
       "layer": 1
     },
     {
+      "module": "fleet/fleet-manager",
+      "layer": 3
+    },
+    {
+      "module": "fleet/index",
+      "layer": 3
+    },
+    {
+      "module": "fleet/remote-cdp",
+      "layer": 3
+    },
+    {
+      "module": "fleet/worker-node",
+      "layer": 3
+    },
+    {
       "module": "framing/adapter",
       "layer": 3
     },
@@ -5323,6 +5633,14 @@
       "layer": 5
     },
     {
+      "module": "integration/flag-registry",
+      "layer": 3
+    },
+    {
+      "module": "integration/index",
+      "layer": 3
+    },
+    {
       "module": "lib/logger",
       "layer": 3
     },
@@ -5345,6 +5663,26 @@
     {
       "module": "mcp/types",
       "layer": 5
+    },
+    {
+      "module": "observability/context",
+      "layer": 3
+    },
+    {
+      "module": "observability/index",
+      "layer": 3
+    },
+    {
+      "module": "observability/logger",
+      "layer": 3
+    },
+    {
+      "module": "observability/metrics",
+      "layer": 3
+    },
+    {
+      "module": "observability/tracing",
+      "layer": 3
     },
     {
       "module": "reprogrammability/canonical-surfaces",
@@ -6047,6 +6385,46 @@
       "files": 1
     },
     {
+      "module": "domain/index",
+      "fanIn": 0,
+      "fanOut": 2,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "domain/slave-state-store",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "domain/types",
+      "fanIn": 7,
+      "fanOut": 1,
+      "instability": 0.125,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "engines/actor",
+      "fanIn": 3,
+      "fanOut": 6,
+      "instability": 0.6666666666666666,
+      "selfDeps": 1,
+      "totalDeps": 6,
+      "cohesion": 0.16666666666666666,
+      "files": 5
+    },
+    {
       "module": "engines/adaptive-workspace",
       "fanIn": 1,
       "fanOut": 1,
@@ -6577,6 +6955,16 @@
       "files": 1
     },
     {
+      "module": "engines/events",
+      "fanIn": 3,
+      "fanOut": 2,
+      "instability": 0.4,
+      "selfDeps": 1,
+      "totalDeps": 2,
+      "cohesion": 0.5,
+      "files": 3
+    },
+    {
       "module": "engines/eviction-manager",
       "fanIn": 0,
       "fanOut": 2,
@@ -7097,6 +7485,16 @@
       "files": 1
     },
     {
+      "module": "engines/pool",
+      "fanIn": 1,
+      "fanOut": 4,
+      "instability": 0.8,
+      "selfDeps": 1,
+      "totalDeps": 4,
+      "cohesion": 0.25,
+      "files": 3
+    },
+    {
       "module": "engines/protocol-discovery",
       "fanIn": 1,
       "fanOut": 1,
@@ -7197,6 +7595,16 @@
       "files": 1
     },
     {
+      "module": "engines/providers",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 1,
+      "totalDeps": 3,
+      "cohesion": 0.3333333333333333,
+      "files": 7
+    },
+    {
       "module": "engines/registration-auditor",
       "fanIn": 1,
       "fanOut": 3,
@@ -7205,6 +7613,16 @@
       "totalDeps": 3,
       "cohesion": 0,
       "files": 1
+    },
+    {
+      "module": "engines/reliability",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 1,
+      "totalDeps": 5,
+      "cohesion": 0.2,
+      "files": 5
     },
     {
       "module": "engines/reprogrammability",
@@ -7227,6 +7645,16 @@
       "files": 1
     },
     {
+      "module": "engines/resource",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 1,
+      "totalDeps": 3,
+      "cohesion": 0.3333333333333333,
+      "files": 5
+    },
+    {
       "module": "engines/retry-engine",
       "fanIn": 1,
       "fanOut": 2,
@@ -7235,6 +7663,16 @@
       "totalDeps": 2,
       "cohesion": 0,
       "files": 1
+    },
+    {
+      "module": "engines/runtime",
+      "fanIn": 2,
+      "fanOut": 6,
+      "instability": 0.75,
+      "selfDeps": 1,
+      "totalDeps": 6,
+      "cohesion": 0.16666666666666666,
+      "files": 2
     },
     {
       "module": "engines/safe-eval",
@@ -7255,6 +7693,16 @@
       "totalDeps": 3,
       "cohesion": 0,
       "files": 1
+    },
+    {
+      "module": "engines/scheduler",
+      "fanIn": 1,
+      "fanOut": 3,
+      "instability": 0.75,
+      "selfDeps": 1,
+      "totalDeps": 3,
+      "cohesion": 0.3333333333333333,
+      "files": 4
     },
     {
       "module": "engines/selector-cache",
@@ -7758,7 +8206,7 @@
     },
     {
       "module": "executor/slave-states",
-      "fanIn": 3,
+      "fanIn": 7,
       "fanOut": 0,
       "instability": 0,
       "selfDeps": 0,
@@ -7784,6 +8232,46 @@
       "selfDeps": 0,
       "totalDeps": 0,
       "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "fleet/fleet-manager",
+      "fanIn": 1,
+      "fanOut": 5,
+      "instability": 0.8333333333333334,
+      "selfDeps": 0,
+      "totalDeps": 5,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "fleet/index",
+      "fanIn": 0,
+      "fanOut": 3,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "fleet/remote-cdp",
+      "fanIn": 1,
+      "fanOut": 2,
+      "instability": 0.6666666666666666,
+      "selfDeps": 0,
+      "totalDeps": 2,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "fleet/worker-node",
+      "fanIn": 2,
+      "fanOut": 3,
+      "instability": 0.6,
+      "selfDeps": 0,
+      "totalDeps": 3,
+      "cohesion": 0,
       "files": 1
     },
     {
@@ -7877,6 +8365,26 @@
       "files": 1
     },
     {
+      "module": "integration/flag-registry",
+      "fanIn": 1,
+      "fanOut": 1,
+      "instability": 0.5,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "integration/index",
+      "fanIn": 0,
+      "fanOut": 1,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 1,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
       "module": "lib/logger",
       "fanIn": 20,
       "fanOut": 0,
@@ -7933,6 +8441,56 @@
       "instability": 0.5,
       "selfDeps": 0,
       "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "observability/context",
+      "fanIn": 2,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "observability/index",
+      "fanIn": 0,
+      "fanOut": 4,
+      "instability": 1,
+      "selfDeps": 0,
+      "totalDeps": 4,
+      "cohesion": 0,
+      "files": 1
+    },
+    {
+      "module": "observability/logger",
+      "fanIn": 13,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "observability/metrics",
+      "fanIn": 10,
+      "fanOut": 0,
+      "instability": 0,
+      "selfDeps": 0,
+      "totalDeps": 0,
+      "cohesion": 1,
+      "files": 1
+    },
+    {
+      "module": "observability/tracing",
+      "fanIn": 2,
+      "fanOut": 1,
+      "instability": 0.3333333333333333,
+      "selfDeps": 0,
+      "totalDeps": 1,
       "cohesion": 0,
       "files": 1
     },
