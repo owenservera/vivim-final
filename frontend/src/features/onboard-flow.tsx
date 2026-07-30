@@ -1,9 +1,10 @@
 // frontend/src/features/onboard-flow.tsx
 // 3-step provider onboarding: Pick → Login → Ready
-// Reuses: PROVIDERS, api(), checkNeedsSetup(), auto-poll verify pattern
+// Reuses: PROVIDERS, checkNeedsSetup(), auto-poll verify pattern
 // from provider-setup-wizard.tsx (simplified, no workspace/restore/account-nickname steps)
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useIO } from '@/components/canvas/UnifiedIOProvider'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,7 @@ interface OnboardFlowProps {
 }
 
 export function OnboardFlow({ onComplete }: OnboardFlowProps) {
+  const io = useIO()
   const [step, setStep] = useState<Step>('pick')
   const [providerId, setProviderId] = useState<string | null>(null)
   const [launchResult, setLaunchResult] = useState<LaunchResult | null>(null)
@@ -101,13 +103,10 @@ export function OnboardFlow({ onComplete }: OnboardFlowProps) {
     setLaunching(true)
     setError(null)
     try {
-      const result = await api<LaunchResult>('/api/setup/launch-visible', {
-        method: 'POST',
-        body: JSON.stringify({
-          providerId: id,
-          accountSlug: 'default',
-          workspace: 'chrome-profiles',
-        }),
+      const { data: result } = await io.post<LaunchResult>('/api/setup/launch-visible', {
+        providerId: id,
+        accountSlug: 'default',
+        workspace: 'chrome-profiles',
       })
       if (!mountedRef.current) return
       setLaunchResult(result)
@@ -125,9 +124,8 @@ export function OnboardFlow({ onComplete }: OnboardFlowProps) {
   const verifyAndComplete = useCallback(async () => {
     if (!launchResult || !providerId || !mountedRef.current) return
     try {
-      const v = await api<VerifyResult>('/api/setup/verify', {
-        method: 'POST',
-        body: JSON.stringify({ port: launchResult.debugPort, providerId }),
+      const { data: v } = await io.post<VerifyResult>('/api/setup/verify', {
+        port: launchResult.debugPort, providerId,
       })
       if (!v.loggedIn || !mountedRef.current) return
 
@@ -138,27 +136,22 @@ export function OnboardFlow({ onComplete }: OnboardFlowProps) {
       }
 
       // Register account in DB
-      await api('/api/setup/complete', {
-        method: 'POST',
-        body: JSON.stringify({
-          providerId,
-          accountSlug: 'default',
-          workspace: 'chrome-profiles',
-          profileDir: launchResult.profileDir,
-          debugPort: launchResult.debugPort,
-        }),
+      await io.post('/api/setup/complete', {
+        providerId,
+        accountSlug: 'default',
+        workspace: 'chrome-profiles',
+        profileDir: launchResult.profileDir,
+        debugPort: launchResult.debugPort,
       })
 
       // Kill Chrome process (profile stays on disk)
-      await api('/api/setup/kill', {
-        method: 'POST',
-        body: JSON.stringify({ port: launchResult.debugPort }),
+      await io.post('/api/setup/kill', {
+        port: launchResult.debugPort,
       }).catch(() => {}) // non-fatal if kill fails
 
       // Create conversation linked to this provider
-      const conv = await api<Conversation>('/api/conversations', {
-        method: 'POST',
-        body: JSON.stringify({ providerId }),
+      const { data: conv } = await io.post<Conversation>('/api/conversations', {
+        providerId,
       })
 
       if (!mountedRef.current) return
@@ -168,7 +161,7 @@ export function OnboardFlow({ onComplete }: OnboardFlowProps) {
     } catch {
       // Polling error — retry on next tick
     }
-  }, [launchResult, providerId, onComplete])
+  }, [launchResult, providerId, onComplete, io])
 
   useEffect(() => {
     if (step !== 'login') return
