@@ -13,7 +13,7 @@
 
 ---
 
-**Total units:** 132 | **Done:** 109 | **Blocked:** 0 | **Pending:** 23
+**Total units:** 144 | **Done:** 80 | **Blocked:** 0 | **Pending:** 32
 
 ## Phase 1: Stabilization & Cleanup (12 units — COMPLETE)
 
@@ -263,6 +263,26 @@
 
 ---
 
+## Phase 15: User Moment KPIs (11 units — 0 done, 0 in_progress, 11 pending)
+
+> **Source:** User experience codification — 10 major user moments + KPI infrastructure.
+> Each unit defines measurable KPIs with thresholds, measurement methods, and test contracts.
+> KPIs tracked via `bun run devops kpi <command>` and surfaced in health dashboard.
+
+- [ ] 15.1 — First Launch: Time-to-first-agent-message → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.1-first-launch.md`
+- [ ] 15.2 — Provider Login: Time-to-auth-confirmed → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.2-provider-login.md`
+- [ ] 15.3 — First Real Message: Time-to-first-token → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.3-first-message.md`
+- [ ] 15.4 — Command Palette: Search-to-execute latency → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.4-command-palette.md`
+- [ ] 15.5 — Provider Switching: Context-transfer time → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.5-provider-switching.md`
+- [ ] 15.6 — Canvas Nodes: TTFT + streaming smoothness → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.6-canvas-nodes.md`
+- [ ] 15.7 — Help System: Time-to-answer + relevance → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.7-help-system.md`
+- [ ] 15.8 — Multi-Surface Execution: Parity score → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.8-multi-surface.md`
+- [ ] 15.9 — Workspace Settings: Health accuracy + relogin rate → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.9-fleet-control.md`
+- [ ] 15.10 — Conversation Search: Search latency + relevance → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.10-conversation-search.md`
+- [ ] 15.11 — KPI Measurement Infrastructure → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.11-kpi-infrastructure.md`
+
+---
+
 ## Summary
 
 | Phase | Name | Units | Done | ~ | Pending | Source |
@@ -281,14 +301,15 @@
 | 12 | Kernel Surfaces | 6 | **3** | 3 | 0 | v5 Phase 16 |
 | 13 | Polish, SDK & Documentation | 8 | **4** | 1 | 3 | v3 Phase 10 |
 | 14 | LLM-as-Human Testing | 6 | **6** | 0 | 0 | Spec 032 |
-| | **Total** | **133** | **80** | **32** | **21** | |
+| 15 | User Moment KPIs | 11 | **0** | 0 | 11 | User Experience |
+| | **Total** | **144** | **80** | **32** | **21** | |
 
 *[~] = code exists that partially implements the unit (counted as Done in total)*
 
 ## Next Unit
 
-**13.8** — v3 release → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.8-v3-release.md`
+**15.11** — KPI Measurement Infrastructure → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.11-kpi-infrastructure.md`
 
 ## Last Updated
 
-2026-07-25
+2026-07-30
