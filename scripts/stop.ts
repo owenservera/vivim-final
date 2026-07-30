@@ -1,6 +1,6 @@
-import { existsSync } from 'fs'
-import { join } from 'path'
-import { rm } from 'fs/promises'
+import { existsSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
+import { join } from 'node:path'
 
 const ROOT = join(import.meta.dir, '..')
 const RUNTIME = join(ROOT, '.runtime')
@@ -47,7 +47,7 @@ async function main() {
 
   if (existsSync(RUNTIME)) {
     await rm(RUNTIME, { recursive: true, force: true })
-    console.log(`  \x1b[90m—\x1b[0m cleaned .runtime`)
+    console.log('  \x1b[90m—\x1b[0m cleaned .runtime')
   }
   console.log()
 }

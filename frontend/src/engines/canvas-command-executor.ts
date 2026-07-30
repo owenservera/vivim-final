@@ -76,7 +76,7 @@ export class CanvasCommandExecutor {
         case 'canvas.getState':
           return await this.handleGetState(command)
         default:
-          return this.error('UNKNOWN_COMMAND', `Unknown command type`)
+          return this.error('UNKNOWN_COMMAND', 'Unknown command type')
       }
     } catch (err) {
       return this.error('EXECUTION_ERROR', err instanceof Error ? err.message : 'Unknown error')
@@ -291,7 +291,7 @@ export class CanvasCommandExecutor {
   }
 
   private async handleGetState(
-    cmd: Extract<AgentCanvasCommand, { type: 'canvas.getState' }>,
+    _cmd: Extract<AgentCanvasCommand, { type: 'canvas.getState' }>,
   ): Promise<AgentCanvasResponse> {
     return { type: 'canvas.state', payload: await this.getCurrentState() }
   }

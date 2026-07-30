@@ -5,7 +5,7 @@
 // and WebSocket bridge. Engine wiring is deferred to the full bootstrap
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { connectCapabilityRegistry } from '../cli/index.js'
 import { config } from '../config.js'
@@ -57,6 +57,7 @@ import { createNLCLRouter } from './nlcl-router.js'
 import { bootOnboardingPipeline } from './onboarding-boot.js'
 import { createPluginBuilderRouter } from './plugin-builder-router.js'
 import { errorResponse, json } from './response.js'
+import { createUpdateRouter } from './routes/update.js'
 import { createSetupRouter } from './setup-router.js'
 import { createSurfaceRouter } from './surface-router.js'
 import { createTemplateRouter } from './template-router.js'
@@ -188,6 +189,7 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   const templateRouter = createTemplateRouter()
   const variantRouter = createVariantRouter()
   const versionRouter = createVersionRouter()
+  const updateRouter = createUpdateRouter()
 
   // bootOnboardingPipeline called after governor is created (see below)
 
@@ -304,6 +306,31 @@ export async function createServer(port = 9420): Promise<ServerContext> {
         // Version routes
         if (url.pathname.startsWith('/api/version/')) {
           return versionRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Update routes
+        if (url.pathname.startsWith('/api/update/')) {
+          return updateRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Static file serving (env-gated: FRONTEND_DIR)
+        const frontendDir = process.env.FRONTEND_DIR
+        if (frontendDir) {
+          try {
+            const filePath = join(frontendDir, url.pathname === '/' ? 'index.html' : url.pathname)
+            if (existsSync(filePath)) {
+              return new Response(Bun.file(filePath))
+            }
+            // SPA fallback: serve index.html for non-file paths
+            if (!url.pathname.includes('.')) {
+              const indexPath = join(frontendDir, 'index.html')
+              if (existsSync(indexPath)) {
+                return new Response(Bun.file(indexPath))
+              }
+            }
+          } catch {
+            // Fall through to conversationRouter
+          }
         }
 
         return conversationRouter(req)
@@ -1492,6 +1519,26 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         // 24.1/24.2 — universal capability transport (execute + introspection)
         if (url.pathname.startsWith('/api/capabilities') && capabilityRouter) {
           return capabilityRouter(req, url)
+        }
+
+        // Static file serving (env-gated: FRONTEND_DIR)
+        const frontendDir = process.env.FRONTEND_DIR
+        if (frontendDir) {
+          try {
+            const filePath = join(frontendDir, url.pathname === '/' ? 'index.html' : url.pathname)
+            if (existsSync(filePath)) {
+              return new Response(Bun.file(filePath))
+            }
+            // SPA fallback: serve index.html for non-file paths
+            if (!url.pathname.includes('.')) {
+              const indexPath = join(frontendDir, 'index.html')
+              if (existsSync(indexPath)) {
+                return new Response(Bun.file(indexPath))
+              }
+            }
+          } catch {
+            // Fall through to conversationRouter
+          }
         }
 
         return conversationRouter(req)
