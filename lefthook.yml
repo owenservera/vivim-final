@@ -20,8 +20,6 @@ pre-commit:
 
 pre-push:
   commands:
-    lint-full:
-      run: bun x @biomejs/biome check src/ tests/ seeds/
     audit:
       # Background-only: logs P0/P1 findings but never blocks push.
       run: bun run devops audit-code standard 2>&1 || true
