@@ -2,8 +2,8 @@
 // Watchdog system for CDP session resilience.
 // Adapted from dao-ai/cdp-browser + browser-use for vivim-final.
 
-import type { CDPTransport } from './chrome-governor.js'
 import { getLogger } from '../lib/logger.js'
+import type { CDPTransport } from './chrome-governor.js'
 
 const log = getLogger('cdp-watchdog')
 

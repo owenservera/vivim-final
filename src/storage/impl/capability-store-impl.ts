@@ -307,7 +307,9 @@ export class CapabilityStoreImpl implements CapabilityStore {
       data: {
         ...(patch.status !== undefined ? { status: patch.status } : {}),
         ...(patch.bestProgramId !== undefined ? { bestProgramId: patch.bestProgramId } : {}),
-        ...(patch.currentProgramId !== undefined ? { currentProgramId: patch.currentProgramId } : {}),
+        ...(patch.currentProgramId !== undefined
+          ? { currentProgramId: patch.currentProgramId }
+          : {}),
         ...(patch.confidence !== undefined ? { confidence: patch.confidence } : {}),
         updatedAt: now,
       },
@@ -391,15 +393,25 @@ export class CapabilityStoreImpl implements CapabilityStore {
         },
       },
     })
-    return rows.map((r: { id: string; globalId: string; providerId: string; status: string; confidence: number; capability: { slug: string }; selectorHealthHistories: { selector: { selectorValue: string } }[] }) => ({
-      id: r.id,
-      globalId: r.globalId,
-      providerId: r.providerId,
-      status: r.status,
-      confidence: r.confidence,
-      capabilitySlug: r.capability.slug,
-      selector: r.selectorHealthHistories[0]?.selector.selectorValue ?? '',
-    }))
+    return rows.map(
+      (r: {
+        id: string
+        globalId: string
+        providerId: string
+        status: string
+        confidence: number
+        capability: { slug: string }
+        selectorHealthHistories: { selector: { selectorValue: string } }[]
+      }) => ({
+        id: r.id,
+        globalId: r.globalId,
+        providerId: r.providerId,
+        status: r.status,
+        confidence: r.confidence,
+        capabilitySlug: r.capability.slug,
+        selector: r.selectorHealthHistories[0]?.selector.selectorValue ?? '',
+      }),
+    )
   }
 
   async recordDrift(input: DriftEventInput): Promise<void> {

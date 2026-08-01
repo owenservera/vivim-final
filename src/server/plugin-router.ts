@@ -81,8 +81,7 @@ async function extractTarGz(archivePath: string, destDir: string): Promise<void>
   if (await tryNativeTar()) return
 
   throw new Error(
-    `Failed to extract ${archivePath}: tar command not available. ` +
-      'On Windows, install Git for Windows (provides tar.exe) or WSL.',
+    `Failed to extract ${archivePath}: tar command not available. On Windows, install Git for Windows (provides tar.exe) or WSL.`,
   )
 }
 

@@ -9,8 +9,8 @@
 // CONTRACT_VERSION: 1
 
 import { z } from 'zod'
-import { SurfaceSpecSchema } from './schema/spec.js'
 import { ProvenanceEnumSchema } from './mutation-schema.js'
+import { SurfaceSpecSchema } from './schema/spec.js'
 
 /**
  * A saved alternative spec for a surface.
@@ -59,6 +59,4 @@ export const UpsertSurfaceVariantInputSchema = z.object({
 
 export type SurfaceVariant = z.infer<typeof SurfaceVariantSchema>
 export type SurfaceVariantSchema = typeof SurfaceVariantSchema
-export type UpsertSurfaceVariantInput = z.infer<
-  typeof UpsertSurfaceVariantInputSchema
->
+export type UpsertSurfaceVariantInput = z.infer<typeof UpsertSurfaceVariantInputSchema>

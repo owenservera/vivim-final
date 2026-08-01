@@ -164,7 +164,7 @@ export class HarnessExecutorEngine implements HarnessExecutor {
     ok: boolean,
     start: number,
     error: string | undefined,
-    traceId: string,
+    _traceId: string,
   ): Promise<void> {
     await this.deps.store.createOutcome({
       capabilityId: `cap:${req.capabilitySlug}`,

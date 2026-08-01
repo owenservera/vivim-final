@@ -2,12 +2,7 @@
 // Phase 3 of ROADMAP-REPROGRAMMABLE-CANVAS.md
 
 import { describe, expect, it } from 'bun:test'
-import {
-  parseMutation,
-  parseMutationList,
-  parseShorthand,
-  DslParseError,
-} from '../parser.js'
+import { DslParseError, parseMutation, parseMutationList, parseShorthand } from '../parser.js'
 
 describe('Phase 3 — Mutation DSL Parser', () => {
   describe('JSON form', () => {
@@ -141,7 +136,9 @@ describe('Phase 3 — Mutation DSL Parser', () => {
 
   describe('shorthand /replace', () => {
     it('parses /replace with JSON payload', () => {
-      const mut = parseShorthand('/replace panel:conversations {"kind":"panel","variant":"default","title":"X","dock":"left"}')
+      const mut = parseShorthand(
+        '/replace panel:conversations {"kind":"panel","variant":"default","title":"X","dock":"left"}',
+      )
       expect(mut.op).toBe('replace')
       expect(mut.target).toBe('panel:conversations')
       expect(mut.payload).toEqual({ kind: 'panel', variant: 'default', title: 'X', dock: 'left' })

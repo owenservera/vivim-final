@@ -6,17 +6,17 @@
 // mutated. This is the smoke test for Phase 1 — it must pass before
 // Phase 2 begins.
 
-import { describe, expect, it, beforeEach } from 'bun:test'
-import {
-  SurfaceRegistry,
-  SurfaceNotFoundError,
-  UnsupportedMutationError,
-  CONTRACT_VERSION,
-} from '../index.js'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import type { ReprogrammableSurface } from '../contract.js'
+import {
+  CONTRACT_VERSION,
+  SurfaceNotFoundError,
+  SurfaceRegistry,
+  UnsupportedMutationError,
+} from '../index.js'
+import type { SurfaceMutation } from '../mutation-schema.js'
 import type { SurfaceSpec } from '../schema/spec.js'
 import type { PanelSpec } from '../schema/spec.js'
-import type { SurfaceMutation } from '../mutation-schema.js'
 
 /** A minimal toy surface that implements the contract. */
 class ToyPanelSurface implements ReprogrammableSurface {
@@ -26,11 +26,7 @@ class ToyPanelSurface implements ReprogrammableSurface {
   readonly slot = 'left'
   readonly capabilities = [] as const
   readonly tags = ['toy', 'test'] as const
-  readonly supportedOps = [
-    'replace',
-    'set_property',
-    'restyle',
-  ] as const
+  readonly supportedOps = ['replace', 'set_property', 'restyle'] as const
 
   private spec: PanelSpec = {
     kind: 'panel',
@@ -47,11 +43,7 @@ class ToyPanelSurface implements ReprogrammableSurface {
   }
 
   async mutate(mutation: SurfaceMutation): Promise<SurfaceSpec> {
-    if (
-      !this.supportedOps.includes(
-        mutation.op as (typeof this.supportedOps)[number],
-      )
-    ) {
+    if (!this.supportedOps.includes(mutation.op as (typeof this.supportedOps)[number])) {
       throw new UnsupportedMutationError(this.id, mutation.op)
     }
 
@@ -172,9 +164,7 @@ describe('Phase 1 — Reprogrammability Contract', () => {
       payload: {},
       provenance: 'manual',
     }
-    await expect(surface.mutate(mutation)).rejects.toBeInstanceOf(
-      UnsupportedMutationError,
-    )
+    await expect(surface.mutate(mutation)).rejects.toBeInstanceOf(UnsupportedMutationError)
   })
 
   it('validates spec via the Zod schema', () => {

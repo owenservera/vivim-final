@@ -23,7 +23,7 @@ export function extractParameters(
   rawInput: string,
   schema: ZodSchema,
   ctx: NLCContext,
-  linker?: DynamicEntityLinker,
+  _linker?: DynamicEntityLinker,
 ): ExtractResult {
   const input: Record<string, unknown> = {}
   const missing: string[] = []
@@ -91,7 +91,7 @@ export async function extractParametersWithLinker(
     const query = typeof existingValue === 'string' ? existingValue : rawInput
     try {
       const result = await linker.resolve(key, query, ctx)
-      if (result && result.entityId) {
+      if (result?.entityId) {
         base.input[key] = result.entityId
         // If the original extraction marked this as missing, clear it.
         const idx = base.missing.indexOf(key)

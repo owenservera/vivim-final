@@ -204,8 +204,7 @@ export const MUTATION_PROVENANCE_WEIGHTS = {
   system: 20,
 } as const
 
-export type MutationProvenanceForTrust =
-  keyof typeof MUTATION_PROVENANCE_WEIGHTS
+export type MutationProvenanceForTrust = keyof typeof MUTATION_PROVENANCE_WEIGHTS
 
 /**
  * Compute a 0-100 trust score for a mutation based on its provenance tag.
@@ -216,11 +215,12 @@ export type MutationProvenanceForTrust =
  * Low-trust mutations (score < 50) get a confirmation prompt even in
  * Builder Mode (per ROADMAP §10).
  */
-export function computeMutationTrustScore(
-  provenance: MutationProvenanceForTrust,
-): { score: number; label: 'high' | 'medium' | 'low'; weight: number } {
+export function computeMutationTrustScore(provenance: MutationProvenanceForTrust): {
+  score: number
+  label: 'high' | 'medium' | 'low'
+  weight: number
+} {
   const weight = MUTATION_PROVENANCE_WEIGHTS[provenance] ?? 50
-  const label: 'high' | 'medium' | 'low' =
-    weight >= 80 ? 'high' : weight >= 50 ? 'medium' : 'low'
+  const label: 'high' | 'medium' | 'low' = weight >= 80 ? 'high' : weight >= 50 ? 'medium' : 'low'
   return { score: weight, label, weight }
 }

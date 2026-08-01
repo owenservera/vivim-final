@@ -9,19 +9,22 @@
 
 import { createServerWithEngines } from '../server/index.js'
 
+// Skip the 'serve' subcommand if present (launch.bat passes it)
+const argv = process.argv.filter((a) => a !== 'serve')
+
 const PORT = Number(
-  (process.env.PORT ?? process.argv.includes('--port'))
+  (process.env.PORT ?? argv.includes('--port'))
     ? (() => {
-        const i = process.argv.indexOf('--port')
-        return i >= 0 ? process.argv[i + 1] : 9421
+        const i = argv.indexOf('--port')
+        return i >= 0 ? Number(argv[i + 1]) || 9421 : 9421
       })()
-    : 9421,
+    : process.env.PORT || 9421,
 )
 
-const HOST = process.argv.includes('--host')
+const HOST = argv.includes('--host')
   ? (() => {
-      const i = process.argv.indexOf('--host')
-      return i >= 0 ? process.argv[i + 1] : '127.0.0.1'
+      const i = argv.indexOf('--host')
+      return i >= 0 ? (argv[i + 1] ?? '127.0.0.1') : '127.0.0.1'
     })()
   : '127.0.0.1'
 

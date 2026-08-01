@@ -1,41 +1,9 @@
-// src/reprogrammability/canonical-surfaces.ts
-// Phase 5 of ROADMAP-REPROGRAMMABLE-CANVAS.md — Reprogram-This Modal.
-//
-// A handful of canonical, in-memory ReprogrammableSurface implementations
-// that register themselves with `surfaceRegistry` at boot. These cover the
-// high-value surfaces users will most often want to reprogram:
-//
-//   - panel:conversations   — the conversations sidebar
-//   - panel:providers       — the providers panel
-//   - panel:settings        — the settings panel
-//   - panel:mutation-diff   — the mutation diff panel (Phase 4)
-//   - panel:mutation-history — the mutation history panel (Phase 4)
-//   - chrome:composer       — the main text input (Phase 9 promotes to a real ChromeSurface)
-//
-// Each surface is a thin adapter that:
-//   - holds a spec in memory
-//   - implements `getSpec()` (returns a deep clone)
-//   - implements `mutate(mutation)` (validates op, applies to spec, returns new spec)
-//   - declares `supportedOps: '*'` (all 8 ops)
-//
-// Phase 8 will replace these with Prisma-backed surfaces. The contract is the
-// same; only the storage layer changes.
-//
-// CONTRACT_VERSION: 1
-
-import { ulid } from 'ulid'
-import { surfaceRegistry } from './registry.js'
-import type {
-  ReprogrammableSurface,
-  MutationOp,
-} from './contract.js'
-import type { SurfaceSpec } from './schema/spec.js'
-import type { SurfaceMutation } from './mutation-schema.js'
-import {
-  UnsupportedMutationError,
-  InvalidMutationPayloadError,
-} from './contract.js'
 import { z } from 'zod'
+import type { MutationOp, ReprogrammableSurface } from './contract.js'
+import { InvalidMutationPayloadError, UnsupportedMutationError } from './contract.js'
+import type { SurfaceMutation } from './mutation-schema.js'
+import { surfaceRegistry } from './registry.js'
+import type { SurfaceSpec } from './schema/spec.js'
 
 // ── Helper: deep clone via structuredClone (Bun + modern Node) ───────────────
 
@@ -86,7 +54,12 @@ export class InMemorySurface implements ReprogrammableSurface {
           const newSpec = mutation.payload as SurfaceSpec
           if (!newSpec || typeof newSpec !== 'object' || typeof newSpec.kind !== 'string') {
             throw new InvalidMutationPayloadError(this.id, mutation.op, [
-              { code: 'custom', path: ['payload'], message: 'payload must be a SurfaceSpec with a string kind', fatal: true } as never,
+              {
+                code: 'custom',
+                path: ['payload'],
+                message: 'payload must be a SurfaceSpec with a string kind',
+                fatal: true,
+              } as never,
             ])
           }
           this.spec = deepClone(newSpec)
@@ -96,7 +69,12 @@ export class InMemorySurface implements ReprogrammableSurface {
           const payload = mutation.payload as { path: string; value: unknown }
           if (!payload || typeof payload.path !== 'string') {
             throw new InvalidMutationPayloadError(this.id, mutation.op, [
-              { code: 'custom', path: ['payload', 'path'], message: 'payload.path is required', fatal: true } as never,
+              {
+                code: 'custom',
+                path: ['payload', 'path'],
+                message: 'payload.path is required',
+                fatal: true,
+              } as never,
             ])
           }
           this.setDeepPath(this.spec, payload.path, payload.value)
@@ -106,10 +84,18 @@ export class InMemorySurface implements ReprogrammableSurface {
           const patch = mutation.payload as Record<string, unknown>
           if (!patch || typeof patch !== 'object') {
             throw new InvalidMutationPayloadError(this.id, mutation.op, [
-              { code: 'custom', path: ['payload'], message: 'payload must be an object', fatal: true } as never,
+              {
+                code: 'custom',
+                path: ['payload'],
+                message: 'payload must be an object',
+                fatal: true,
+              } as never,
             ])
           }
-          const style = ((this.spec as Record<string, unknown>).style ?? {}) as Record<string, unknown>
+          const style = ((this.spec as Record<string, unknown>).style ?? {}) as Record<
+            string,
+            unknown
+          >
           ;(this.spec as Record<string, unknown>).style = { ...style, ...patch }
           break
         }
@@ -117,7 +103,12 @@ export class InMemorySurface implements ReprogrammableSurface {
           const payload = mutation.payload as { slotId: string }
           if (!payload || typeof payload.slotId !== 'string') {
             throw new InvalidMutationPayloadError(this.id, mutation.op, [
-              { code: 'custom', path: ['payload', 'slotId'], message: 'payload.slotId is required', fatal: true } as never,
+              {
+                code: 'custom',
+                path: ['payload', 'slotId'],
+                message: 'payload.slotId is required',
+                fatal: true,
+              } as never,
             ])
           }
           ;(this.spec as Record<string, unknown>).slot = payload.slotId
@@ -142,7 +133,9 @@ export class InMemorySurface implements ReprogrammableSurface {
           // patch on a `custom` shell. Real surfaces (Phase 8+) implement these
           // properly against their own spec shape.
           const priorSpec = this.spec as Record<string, unknown>
-          const patches = (Array.isArray(priorSpec.__patches) ? priorSpec.__patches : []) as unknown[]
+          const patches = (
+            Array.isArray(priorSpec.__patches) ? priorSpec.__patches : []
+          ) as unknown[]
           this.spec = {
             kind: 'custom',
             schemaUrl: 'about:blank',
@@ -373,6 +366,8 @@ export function resetCanonicalSurfacesForTest(): void {
 
 // ── Zod schema for the InMemorySurface spec (loose, accepts anything) ────────
 
-export const InMemorySurfaceSpecSchema = z.object({
-  kind: z.string(),
-}).passthrough()
+export const InMemorySurfaceSpecSchema = z
+  .object({
+    kind: z.string(),
+  })
+  .passthrough()

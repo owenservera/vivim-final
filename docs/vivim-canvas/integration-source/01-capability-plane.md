@@ -27,7 +27,7 @@ The agentic-native spine. Every canvas op (spawn/mutate/observe/define) register
 
 ### `src/engines/unified-registry.ts`
 
-_129 lines_
+_190 lines_
 
 ```typescript
 // src/engines/unified-registry.ts
@@ -59,6 +59,15 @@ export interface UnifiedCapability {
   outputSchema: Record<string, unknown>
   handler: (input: Record<string, unknown>, ctx: CapabilityContext) => Promise<unknown>
   cliCommand?: { name: string; aliases: string[]; examples: string[] }
+  ui?: {
+    component: string
+    position: string
+    group?: string
+    order: number
+    icon?: string
+    shortcut?: string
+    requiresConfirmation?: boolean
+  }
   uiAction?: { component: string; position: string; order: number }
   workflowNodeType?: string
   mcpToolName?: string
@@ -66,6 +75,8 @@ export interface UnifiedCapability {
   isAsync: boolean
   requiresConfirmation: boolean
   tags: string[]
+  isComposite?: boolean
+  compositeId?: string
 }
 
 // ── Validation helpers ────────────────────────────────────────────────────
@@ -86,6 +97,9 @@ function validateCapability(cap: UnifiedCapability): void {
   if (cap.surfaces.includes('api') && !cap.apiEndpoint) {
     throw new EngineError(`Capability ${cap.id} exposed to API must have apiEndpoint`)
   }
+  if (cap.surfaces.includes('ui') && !cap.ui && !cap.uiAction) {
+    throw new EngineError(`Capability ${cap.id} exposed to UI must have ui or uiAction block`)
+  }
 }
 
 // ── UnifiedCapabilityRegistry ─────────────────────────────────────────────
@@ -93,6 +107,12 @@ function validateCapability(cap: UnifiedCapability): void {
 export class UnifiedCapabilityRegistry {
   private capabilities = new Map<string, UnifiedCapability>()
   private slugIndex = new Map<string, UnifiedCapability>()
+  private progResolver?: (slug: string) => Promise<UnifiedCapability | null>
+
+  /** Set a resolver for harness-program capabilities (prog-* slugs). */
+  setProgramResolver(fn: (slug: string) => Promise<UnifiedCapability | null>): void {
+    this.progResolver = fn
+  }
 
   register(capability: UnifiedCapability): void {
     validateCapability(capability)
@@ -121,6 +141,10 @@ export class UnifiedCapabilityRegistry {
     return this.slugIndex.get(slug) ?? null
   }
 
+  async getBySlugAsync(slug: string): Promise<UnifiedCapability | null> {
+    return (await this.progResolver?.(slug)) ?? this.getBySlug(slug)
+  }
+
   list(filter?: {
     surface?: CapabilitySurface
     category?: string
@@ -128,13 +152,13 @@ export class UnifiedCapabilityRegistry {
   }): UnifiedCapability[] {
     let result = Array.from(this.capabilities.values())
     if (filter?.surface) {
-      result = result.filter((c) => c.surfaces.includes(filter.surface!))
+      result = result.filter((c) => c.surfaces.includes(filter.surface as CapabilitySurface))
     }
     if (filter?.category) {
-      result = result.filter((c) => c.category === filter.category)
+      result = result.filter((c) => c.category === (filter.category ?? ''))
     }
     if (filter?.tag) {
-      result = result.filter((c) => c.tags.includes(filter.tag!))
+      result = result.filter((c) => c.tags.includes(filter.tag as string))
     }
     return result
   }
@@ -158,9 +182,15 @@ export class UnifiedCapabilityRegistry {
     return cap.handler(input, ctx)
   }
 
-  exportForCli(): Array<{ name: string; description: string; schema: Record<string, unknown> }> {
+  exportForCli(): Array<{
+    name: string
+    aliases: string[]
+    description: string
+    schema: Record<string, unknown>
+  }> {
     return this.list({ surface: 'cli' }).map((cap) => ({
       name: cap.cliCommand?.name ?? cap.slug,
+      aliases: cap.cliCommand?.aliases ?? [],
       description: cap.description,
       schema: cap.inputSchema,
     }))
@@ -177,25 +207,73 @@ export class UnifiedCapabilityRegistry {
       inputSchema: cap.inputSchema,
     }))
   }
+
+  exportForUi(): Array<{
+    id: string
+    slug: string
+    name: string
+    ui: NonNullable<UnifiedCapability['ui']>
+    inputSchema: Record<string, unknown>
+    apiEndpoint?: { method: string; path: string }
+    requiresConfirmation: boolean
+  }> {
+    return this.list({ surface: 'ui' }).map((cap) => ({
+      id: cap.id,
+      slug: cap.slug,
+      name: cap.name,
+      ui: cap.ui as NonNullable<UnifiedCapability['ui']>,
+      inputSchema: cap.inputSchema,
+      apiEndpoint: cap.apiEndpoint,
+      requiresConfirmation: cap.requiresConfirmation,
+    }))
+  }
+}
+
+/**
+ * Parse a `prog-<capabilitySlug>-<providerId>` slug back to its parts.
+ * Returns null if the slug does not match the harness-program pattern.
+ */
+export function parseProgSlug(slug: string): { capabilitySlug: string; providerId: string } | null {
+  if (!slug.startsWith('prog-')) return null
+  const body = slug.slice(5)
+  const lastDash = body.lastIndexOf('-')
+  if (lastDash <= 0) return null
+  const capabilitySlug = body.slice(0, lastDash)
+  const providerId = body.slice(lastDash + 1)
+  if (!capabilitySlug || !providerId) return null
+  return { capabilitySlug, providerId }
 }
 ```
 
 ### `src/engines/capability-bootstrap.ts`
 
-_487 lines_
+_1451 lines_
 
 ```typescript
 // src/engines/capability-bootstrap.ts
 // Registers the default capabilities every vivim instance ships with.
 // Called once from createServerWithEngines after the UnifiedCapabilityRegistry is built.
 
+import { buildLocalDiscoveryStack, createPageEvalCapturer } from '../cli/discovery-stack.js'
+import type { ProfileAllocator } from '../executor/profile-allocator.js'
 import type { ConversationStore } from '../storage/contracts/conversation-store.js'
+import type { LocalAgentStore } from '../storage/contracts/local-agent-store.js'
 import type { CapStoreDb } from '../storage/db.js'
 import type { ChromeGovernor } from './chrome-governor.js'
+import { type ComposerType, submitMessage, typeMessage } from './composer-typing.js'
 import type { ConversationManager } from './conversation-manager.js'
 import type { CrossConversationSynthesizer } from './cross-conversation-synthesis.js'
+import { DiscoverySessionRunner } from './discovery-session-runner.js'
 import type { KnowledgeIngestionEngine } from './knowledge-ingestion.js'
+import {
+  LOCAL_AGENT_SLUG,
+  type LocalAgentProviderExecutor,
+} from './local-agent/local-agent-executor.js'
 import type { MemoryEngine } from './memory-engine.js'
+import type { NLCLEngine } from './nlcl/nlcl-engine.js'
+import type { NLCContext } from './nlcl/types.js'
+import type { OpenCodeClient } from './opencode/opencode-client.js'
+import type { OpenCodeIngest } from './opencode/opencode-ingest.js'
 import type { SemanticSearchEngine } from './semantic-search.js'
 import type {
   CapabilitySurface,
@@ -208,15 +286,20 @@ export interface BootstrapServices {
   conversationStore: ConversationStore
   governor: ChromeGovernor
   conversationManager: ConversationManager
+  profileAllocator: ProfileAllocator
   memoryEngine?: MemoryEngine
   semanticSearch?: SemanticSearchEngine
   knowledgeIngestion?: KnowledgeIngestionEngine
   synthesizer?: CrossConversationSynthesizer
+  localAgentStore?: LocalAgentStore
+  localAgentExecutor?: LocalAgentProviderExecutor
+  opencodeClient?: OpenCodeClient
+  opencodeIngest?: OpenCodeIngest
 }
 
 const ALL_SURFACES: CapabilitySurface[] = ['cli', 'ui', 'workflow', 'mcp', 'api']
 
-function makeCapability(
+export function makeCapability(
   partial: Omit<
     UnifiedCapability,
     'isAsync' | 'requiresConfirmation' | 'tags' | 'surfaces' | 'handler'
@@ -240,10 +323,10 @@ function makeCapability(
  * Handlers are Option-A closures over `services`; stubs here return safe defaults
  * and are fleshed out by later phases. Called once after the registry is constructed.
  */
-export function registerDefaultCapabilities(
+export async function registerDefaultCapabilities(
   registry: UnifiedCapabilityRegistry,
-  _services: BootstrapServices,
-): void {
+  services: BootstrapServices,
+): Promise<void> {
   const defaults: UnifiedCapability[] = [
     // ── Conversation ──────────────────────────────────────────────
     makeCapability(
@@ -260,11 +343,14 @@ export function registerDefaultCapabilities(
           aliases: ['cls'],
           examples: ['conversations list --provider=claude'],
         },
-        uiAction: { component: 'conversation-list', position: 'sidebar', order: 1 },
+        ui: { component: 'conversation-list', position: 'sidebar', order: 1 },
         mcpToolName: 'conversation_list',
         apiEndpoint: { method: 'GET', path: '/api/conversations' },
       },
-      async () => [],
+      async (input) => {
+        const providerId = input.providerId ? String(input.providerId) : undefined
+        return services.conversationStore.listConversations({ providerId, limit: 100 })
+      },
     ),
     makeCapability(
       {
@@ -284,11 +370,18 @@ export function registerDefaultCapabilities(
           aliases: ['cc'],
           examples: ['conversations create claude'],
         },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 2 },
+        ui: { component: 'action-button', position: 'sidebar', order: 2 },
         mcpToolName: 'conversation_create',
         apiEndpoint: { method: 'POST', path: '/api/conversations' },
       },
-      async () => ({ id: 'pending' }),
+      async (input) => {
+        const conv = await services.conversationStore.createConversation({
+          providerSessionId: String(input.providerId ?? ''),
+          providerId: String(input.providerId ?? ''),
+          title: input.title ? String(input.title) : null,
+        })
+        return { id: conv.id }
+      },
     ),
     makeCapability(
       {
@@ -308,11 +401,17 @@ export function registerDefaultCapabilities(
           aliases: ['cs'],
           examples: ['cs <id> --message "hello"'],
         },
-        uiAction: { component: 'composer', position: 'composer', order: 1 },
+        ui: { component: 'composer', position: 'composer', order: 1 },
         mcpToolName: 'conversation_send',
         apiEndpoint: { method: 'POST', path: '/api/conversations/{id}/send' },
       },
-      async () => ({ ok: true }),
+      async (input) => {
+        const result = await services.conversationManager.send(
+          String(input.conversationId ?? ''),
+          String(input.message ?? ''),
+        )
+        return { ok: result.ok, text: result.text ?? null, error: result.error ?? null }
+      },
     ),
     makeCapability(
       {
@@ -332,114 +431,28 @@ export function registerDefaultCapabilities(
           aliases: ['cd'],
           examples: ['conversations delete <id>'],
         },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 3 },
+        ui: { component: 'action-button', position: 'sidebar', order: 3 },
         mcpToolName: 'conversation_delete',
         apiEndpoint: { method: 'DELETE', path: '/api/conversations/{id}' },
       },
-      async () => ({ ok: true }),
-    ),
-
-    // ── Provider ────────────────────────────────────────────────
-    makeCapability(
-      {
-        id: 'cap:provider:list',
-        slug: 'provider_list',
-        name: 'List Providers',
-        description: 'List all registered providers.',
-        category: 'provider',
-        inputSchema: { type: 'object' },
-        outputSchema: { type: 'array' },
-        cliCommand: { name: 'providers list', aliases: ['pls'], examples: ['providers list'] },
-        uiAction: { component: 'provider-list', position: 'sidebar', order: 4 },
-        mcpToolName: 'provider_list',
-        apiEndpoint: { method: 'GET', path: '/api/providers' },
+      async (input) => {
+        const id = String(input.conversationId ?? '')
+        if (!id) return { ok: false, error: 'conversationId is required' }
+        try {
+          await services.db.prisma.conversation.delete({ where: { id } })
+          return { ok: true }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          if (
+            msg.includes('No record was found') ||
+            msg.includes('Record to delete does not exist')
+          ) {
+            return { ok: false, error: 'Conversation not found' }
+          }
+          throw err
+        }
       },
-      async () => [],
     ),
-    makeCapability(
-      {
-        id: 'cap:provider:get_capabilities',
-        slug: 'provider_capabilities',
-        name: 'Get Provider Capabilities',
-        description: 'Resolve capabilities for a provider + plan tier.',
-        category: 'provider',
-        inputSchema: {
-          type: 'object',
-          properties: { providerId: { type: 'string' } },
-          required: ['providerId'],
-        },
-        outputSchema: { type: 'object' },
-        cliCommand: {
-          name: 'providers capabilities',
-          aliases: ['pcaps'],
-          examples: ['providers capabilities claude'],
-        },
-        uiAction: { component: 'provider-capabilities', position: 'sidebar', order: 5 },
-        mcpToolName: 'provider_capabilities',
-        apiEndpoint: { method: 'GET', path: '/api/providers/{id}/capabilities' },
-      },
-      async () => ({ capabilities: [] }),
-    ),
-
-    // ── Fleet ──────────────────────────────────────────────────
-    makeCapability(
-      {
-        id: 'cap:fleet:status',
-        slug: 'fleet_status',
-        name: 'Fleet Status',
-        description: 'List Chrome slave instances and their status.',
-        category: 'fleet',
-        inputSchema: { type: 'object' },
-        outputSchema: { type: 'array' },
-        cliCommand: { name: 'fleet status', aliases: ['fstat'], examples: ['fleet status'] },
-        uiAction: { component: 'fleet-status', position: 'sidebar', order: 6 },
-        mcpToolName: 'fleet_status',
-        apiEndpoint: { method: 'GET', path: '/api/fleet/status' },
-      },
-      async () => [],
-    ),
-    makeCapability(
-      {
-        id: 'cap:fleet:start',
-        slug: 'fleet_start',
-        name: 'Start Slave',
-        description: 'Spawn a Chrome slave for a provider + account.',
-        category: 'fleet',
-        inputSchema: {
-          type: 'object',
-          properties: { providerId: { type: 'string' }, accountId: { type: 'string' } },
-          required: ['providerId'],
-        },
-        outputSchema: { type: 'object' },
-        cliCommand: { name: 'fleet start', aliases: ['fstart'], examples: ['fleet start claude'] },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 7 },
-        mcpToolName: 'fleet_start',
-        apiEndpoint: { method: 'POST', path: '/api/fleet/start' },
-      },
-      async () => ({ slaveId: 'pending' }),
-    ),
-    makeCapability(
-      {
-        id: 'cap:fleet:stop',
-        slug: 'fleet_stop',
-        name: 'Stop Slave',
-        description: 'Kill a Chrome slave.',
-        category: 'fleet',
-        inputSchema: {
-          type: 'object',
-          properties: { slaveId: { type: 'string' } },
-          required: ['slaveId'],
-        },
-        outputSchema: { type: 'object' },
-        cliCommand: { name: 'fleet stop', aliases: ['fstop'], examples: ['fleet stop <slaveId>'] },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 8 },
-        mcpToolName: 'fleet_stop',
-        apiEndpoint: { method: 'POST', path: '/api/fleet/stop' },
-      },
-      async () => ({ ok: true }),
-    ),
-
-    // ── Knowledge ───────────────────────────────────────────────
     makeCapability(
       {
         id: 'cap:knowledge:search',
@@ -454,7 +467,7 @@ export function registerDefaultCapabilities(
           aliases: ['ksearch'],
           examples: ['knowledge search "pricing"'],
         },
-        uiAction: { component: 'knowledge-search', position: 'sidebar', order: 9 },
+        ui: { component: 'knowledge-search', position: 'sidebar', order: 9 },
         mcpToolName: 'knowledge_search',
         apiEndpoint: { method: 'GET', path: '/api/knowledge/search' },
       },
@@ -478,7 +491,7 @@ export function registerDefaultCapabilities(
           aliases: ['kingest'],
           examples: ['knowledge ingest chatgpt /tmp/export.json'],
         },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 10 },
+        ui: { component: 'action-button', position: 'sidebar', order: 10 },
         mcpToolName: 'knowledge_ingest',
         apiEndpoint: { method: 'POST', path: '/api/knowledge/ingest' },
       },
@@ -502,7 +515,7 @@ export function registerDefaultCapabilities(
           aliases: ['ksynth'],
           examples: ['knowledge synthesize "what did we decide?"'],
         },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 11 },
+        ui: { component: 'action-button', position: 'sidebar', order: 11 },
         mcpToolName: 'knowledge_synthesize',
         apiEndpoint: { method: 'POST', path: '/api/knowledge/synthesize' },
       },
@@ -515,36 +528,51 @@ export function registerDefaultCapabilities(
         id: 'cap:memory:query',
         slug: 'memory_query',
         name: 'Query Memory',
-        description: 'Query episodic/semantic/procedural memory.',
+        description: 'Semantic query over episodic/semantic/procedural memory.',
         category: 'memory',
         inputSchema: {
           type: 'object',
-          properties: { query: { type: 'string' } },
+          properties: {
+            query: { type: 'string' },
+            k: { type: 'number' },
+          },
           required: ['query'],
         },
-        outputSchema: { type: 'object' },
+        outputSchema: { type: 'array' },
         cliCommand: {
           name: 'memory query',
           aliases: ['mq'],
           examples: ['memory query "last deploy"'],
         },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 12 },
+        ui: { component: 'action-button', position: 'sidebar', order: 12 },
         mcpToolName: 'memory_query',
         apiEndpoint: { method: 'GET', path: '/api/memory/query' },
       },
-      async () => ({ results: [] }),
+      async (input) => {
+        if (!services.semanticSearch) return { results: [], error: 'Semantic search not available' }
+        const hits = await services.semanticSearch.search({
+          text: String(input.query),
+          limit: Number(input.k ?? 8),
+        })
+        return { results: hits }
+      },
     ),
     makeCapability(
       {
         id: 'cap:memory:assert',
         slug: 'memory_assert',
         name: 'Assert Fact',
-        description: 'Assert a semantic fact into memory.',
+        description: 'Assert a subject-predicate-object fact immediately.',
         category: 'memory',
         inputSchema: {
           type: 'object',
-          properties: { fact: { type: 'string' } },
-          required: ['fact'],
+          properties: {
+            subject: { type: 'string' },
+            predicate: { type: 'string' },
+            object: { type: 'string' },
+            confidence: { type: 'number' },
+          },
+          required: ['subject', 'predicate', 'object'],
         },
         outputSchema: { type: 'object' },
         cliCommand: {
@@ -552,23 +580,69 @@ export function registerDefaultCapabilities(
           aliases: ['massert'],
           examples: ['memory assert "deploy on fridays"'],
         },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 13 },
+        ui: { component: 'action-button', position: 'sidebar', order: 13 },
         mcpToolName: 'memory_assert',
-        apiEndpoint: { method: 'POST', path: '/api/memory/assert' },
+        apiEndpoint: { method: 'POST', path: '/api/memory/facts' },
       },
-      async () => ({ ok: true }),
+      async (input) => {
+        if (!services.memoryEngine) return { ok: false, error: 'Memory engine not available' }
+        await services.memoryEngine.assertFact({
+          subject: String(input.subject),
+          predicate: String(input.predicate),
+          object: String(input.object),
+          confidence: Number(input.confidence ?? 0.6),
+          source: 'agent',
+        })
+        return { ok: true }
+      },
+    ),
+    makeCapability(
+      {
+        id: 'cap:memory:remember',
+        slug: 'memory_remember',
+        name: 'Remember Episode',
+        description: 'Record an episodic memory.',
+        category: 'memory',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            content: { type: 'string' },
+            topic: { type: 'string' },
+          },
+          required: ['content'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'memory remember',
+          aliases: ['mremember'],
+          examples: ['memory remember "deployed v2.1 to prod"'],
+        },
+        ui: { component: 'action-button', position: 'sidebar', order: 15 },
+        mcpToolName: 'memory_remember',
+        apiEndpoint: { method: 'POST', path: '/api/memory/episodes' },
+      },
+      async (input) => {
+        if (!services.memoryEngine) return { ok: false, error: 'Memory engine not available' }
+        const id = await services.memoryEngine.recordMemory({
+          content: String(input.content),
+          memoryType: 'episodic',
+          category: (input.topic as string) ?? 'general',
+          tags: input.topic ? [String(input.topic)] : [],
+        })
+        return { ok: true, id }
+      },
     ),
     makeCapability(
       {
         id: 'cap:memory:forget',
         slug: 'memory_forget',
         name: 'Forget Fact',
-        description: 'Remove a previously asserted semantic fact from memory.',
+        description: 'Deprecate a fact by id (not hard delete).',
         category: 'memory',
         inputSchema: {
           type: 'object',
-          properties: { factId: { type: 'string' } },
-          required: ['factId'],
+          properties: { id: { type: 'string' } },
+          required: ['id'],
         },
         outputSchema: { type: 'object' },
         cliCommand: {
@@ -576,11 +650,15 @@ export function registerDefaultCapabilities(
           aliases: ['mforget'],
           examples: ['memory forget <factId>'],
         },
-        uiAction: { component: 'action-button', position: 'sidebar', order: 14 },
+        ui: { component: 'action-button', position: 'sidebar', order: 14 },
         mcpToolName: 'memory_forget',
-        apiEndpoint: { method: 'DELETE', path: '/api/memory/{id}' },
+        apiEndpoint: { method: 'DELETE', path: '/api/memory/facts/{id}' },
       },
-      async () => ({ ok: true }),
+      async (input) => {
+        if (!services.memoryEngine) return { ok: false, error: 'Memory engine not available' }
+        await services.memoryEngine.forgetFact(String(input.id))
+        return { ok: true }
+      },
     ),
 
     // ── Admin ──────────────────────────────────────────────────
@@ -594,7 +672,7 @@ export function registerDefaultCapabilities(
         inputSchema: { type: 'object' },
         outputSchema: { type: 'object' },
         cliCommand: { name: 'admin seed', aliases: ['aseed'], examples: ['admin seed'] },
-        uiAction: { component: 'action-button', position: 'admin', order: 1 },
+        ui: { component: 'action-button', position: 'admin', order: 1 },
         mcpToolName: 'admin_seed',
         apiEndpoint: { method: 'POST', path: '/api/admin/seed' },
       },
@@ -614,11 +692,15 @@ export function registerDefaultCapabilities(
           aliases: ['acget'],
           examples: ['admin config get governor'],
         },
-        uiAction: { component: 'action-button', position: 'admin', order: 2 },
+        ui: { component: 'action-button', position: 'admin', order: 2 },
         mcpToolName: 'config_get',
         apiEndpoint: { method: 'GET', path: '/api/admin/config/{engine}' },
       },
-      async () => ({ config: {} }),
+      async (input) => {
+        const engine = String(input.engine ?? '')
+        const config = await services.db.getConfig(engine)
+        return { engine, config: config ?? {} }
+      },
     ),
     makeCapability(
       {
@@ -638,14 +720,31 @@ export function registerDefaultCapabilities(
           aliases: ['acset'],
           examples: ['admin config set governor --patch {...}'],
         },
-        uiAction: { component: 'action-button', position: 'admin', order: 3 },
+        ui: { component: 'action-button', position: 'admin', order: 3 },
         mcpToolName: 'config_set',
         apiEndpoint: { method: 'POST', path: '/api/admin/config/{engine}' },
       },
-      async () => ({ ok: true }),
+      async (input) => {
+        const engine = String(input.engine ?? '')
+        const patch = (input.patch ?? {}) as Record<string, unknown>
+        await services.db.prisma.configEntry.upsert({
+          where: {
+            engineId_scopeType_scopeId: { engineId: engine, scopeType: 'engine', scopeId: '' },
+          },
+          create: {
+            id: `cfg:${engine}`,
+            engineId: engine,
+            scopeType: 'engine',
+            scopeId: '',
+            configJson: JSON.stringify(patch),
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+          update: { configJson: JSON.stringify(patch) },
+        })
+        return { ok: true, engine, config: patch }
+      },
     ),
-
-    // ── System ─────────────────────────────────────────────────
     makeCapability(
       {
         id: 'cap:system:health',
@@ -656,7 +755,7 @@ export function registerDefaultCapabilities(
         inputSchema: { type: 'object' },
         outputSchema: { type: 'object' },
         cliCommand: { name: 'system health', aliases: ['shealth'], examples: ['system health'] },
-        uiAction: { component: 'system-health', position: 'admin', order: 4 },
+        ui: { component: 'system-health', position: 'admin', order: 4 },
         mcpToolName: 'system_health',
         apiEndpoint: { method: 'GET', path: '/api/health' },
       },
@@ -672,17 +771,973 @@ export function registerDefaultCapabilities(
         inputSchema: { type: 'object' },
         outputSchema: { type: 'object' },
         cliCommand: { name: 'system version', aliases: ['sver'], examples: ['system version'] },
-        uiAction: { component: 'system-version', position: 'admin', order: 5 },
+        ui: { component: 'system-version', position: 'admin', order: 5 },
         mcpToolName: 'system_version',
         apiEndpoint: { method: 'GET', path: '/api/version' },
       },
       async () => ({ version: '1.0.0' }),
     ),
+
+    // ── Health (24.4) ───────────────────────────────────────────
+    makeCapability(
+      {
+        id: 'cap:provider:health_get',
+        slug: 'provider_health_get',
+        name: 'Get Provider Health',
+        description: 'Return fleet health snapshot for all running slaves.',
+        category: 'provider',
+        inputSchema: { type: 'object' },
+        outputSchema: { type: 'array' },
+        cliCommand: { name: 'health', aliases: ['h'], examples: ['health'] },
+        ui: { component: 'system-health', position: 'admin', order: 6 },
+        mcpToolName: 'provider_health_get',
+        apiEndpoint: { method: 'GET', path: '/api/telemetry/health' },
+      },
+      async () => {
+        const health = await services.governor.getAllHealth()
+        return Array.from(health.entries()).map(([slaveId, h]) => ({ ...h, slaveId }))
+      },
+    ),
+
+    // ── Config history (24.4) ───────────────────────────────────
+    makeCapability(
+      {
+        id: 'cap:admin:config_history',
+        slug: 'config_history',
+        name: 'Config History',
+        description: 'Show config change history for an engine.',
+        category: 'admin',
+        inputSchema: {
+          type: 'object',
+          properties: { engine: { type: 'string' } },
+          required: ['engine'],
+        },
+        outputSchema: { type: 'array' },
+        cliCommand: {
+          name: 'config history',
+          aliases: ['chist'],
+          examples: ['config history governor'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 4 },
+        mcpToolName: 'config_history',
+        apiEndpoint: { method: 'GET', path: '/api/admin/config/{engine}/history' },
+      },
+      async (input) => {
+        const engine = String(input.engine ?? '')
+        const entry = await services.db.prisma.configEntry.findUnique({
+          where: {
+            engineId_scopeType_scopeId: { engineId: engine, scopeType: 'engine', scopeId: '' },
+          },
+        })
+        return entry ? [{ engineId: engine, configJson: entry.configJson }] : []
+      },
+    ),
+
+    // ── Admin audit (24.4) ──────────────────────────────────────
+    makeCapability(
+      {
+        id: 'cap:admin:audit',
+        slug: 'admin_audit',
+        name: 'Audit Provider',
+        description: 'Run a drift/audit check against a provider (kernel oracle).',
+        category: 'admin',
+        inputSchema: {
+          type: 'object',
+          properties: { providerId: { type: 'string' } },
+          required: ['providerId'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: { name: 'admin audit', aliases: ['aaud'], examples: ['admin audit claude'] },
+        ui: { component: 'action-button', position: 'admin', order: 5 },
+        mcpToolName: 'admin_audit',
+        apiEndpoint: { method: 'GET', path: '/api/admin/audit/{providerId}' },
+      },
+      async (input) => {
+        return {
+          providerId: String(input.providerId),
+          note: 'audit requires kernel oracle — run via /api/capabilities/oracle_* once kernel caps are wired',
+        }
+      },
+    ),
+
+    // ── Admin drift (24.4) ──────────────────────────────────────
+    makeCapability(
+      {
+        id: 'cap:admin:drift',
+        slug: 'admin_drift',
+        name: 'Config Drift',
+        description: 'Report config drift across the system (kernel oracle).',
+        category: 'admin',
+        inputSchema: { type: 'object', properties: { providerId: { type: 'string' } } },
+        outputSchema: { type: 'object' },
+        cliCommand: { name: 'admin drift', aliases: ['adri'], examples: ['admin drift'] },
+        ui: { component: 'action-button', position: 'admin', order: 6 },
+        mcpToolName: 'admin_drift',
+        apiEndpoint: { method: 'GET', path: '/api/admin/drift' },
+      },
+      async (input) => {
+        const providerId = input.providerId ? String(input.providerId) : undefined
+        return {
+          providerId,
+          note: 'drift requires kernel oracle — run via /api/capabilities/oracle_* once kernel caps are wired',
+        }
+      },
+    ),
+
+    // ── Telemetry (24.4) ────────────────────────────────────────
+    makeCapability(
+      {
+        id: 'cap:telemetry:summary',
+        slug: 'telemetry_summary',
+        name: 'Telemetry Summary',
+        description: 'Aggregate telemetry summary for a provider over a date range.',
+        category: 'telemetry',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string' },
+            from: { type: 'string' },
+            to: { type: 'string' },
+          },
+          required: ['providerId', 'from', 'to'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'telemetry summary',
+          aliases: ['tsum'],
+          examples: ['telemetry summary claude --from 2024-01-01 --to 2024-01-31'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 7 },
+        mcpToolName: 'telemetry_summary',
+        apiEndpoint: { method: 'GET', path: '/api/telemetry/{providerId}/summary' },
+      },
+      async (input) => {
+        return {
+          providerId: String(input.providerId),
+          from: String(input.from),
+          to: String(input.to),
+          note: 'telemetry aggregation pending — wire TelemetryEngine store',
+        }
+      },
+    ),
+    makeCapability(
+      {
+        id: 'cap:telemetry:compare',
+        slug: 'telemetry_compare',
+        name: 'Telemetry Compare',
+        description: 'Compare telemetry across two date ranges.',
+        category: 'telemetry',
+        inputSchema: {
+          type: 'object',
+          properties: { from: { type: 'string' }, to: { type: 'string' } },
+          required: ['from', 'to'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'telemetry compare',
+          aliases: ['tcmp'],
+          examples: ['telemetry compare --from 2024-01-01 --to 2024-01-31'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 8 },
+        mcpToolName: 'telemetry_compare',
+        apiEndpoint: { method: 'GET', path: '/api/telemetry/compare' },
+      },
+      async (input) => {
+        return {
+          from: String(input.from),
+          to: String(input.to),
+          note: 'telemetry aggregation pending — wire TelemetryEngine store',
+        }
+      },
+    ),
+    ...(services.localAgentExecutor
+      ? [
+          makeCapability(
+            {
+              id: 'cap:agent:run',
+              slug: 'agent_run',
+              name: 'Run Local Agent Task',
+              description:
+                'Run a one-shot agentic task via the opencode CLI with a verified free model. No API key required.',
+              category: 'agent',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  prompt: { type: 'string' },
+                  model: { type: 'string' },
+                  sessionId: { type: 'string' },
+                  cwd: { type: 'string' },
+                },
+                required: ['prompt'],
+              },
+              outputSchema: { type: 'object', properties: { blocks: { type: 'array' } } },
+              cliCommand: {
+                name: 'agent run',
+                aliases: ['ar'],
+                examples: [
+                  'agent run "summarize this repo" --model opencode/deepseek-v4-flash-free',
+                ],
+              },
+              ui: { component: 'text_input', position: 'composer', order: 1 },
+              mcpToolName: 'agent_run',
+              apiEndpoint: { method: 'POST', path: '/api/agent/run' },
+            },
+            async (input) => {
+              if (typeof input.prompt !== 'string' || input.prompt.trim().length === 0) {
+                return { ok: false, error: 'prompt is required' }
+              }
+              const result = await services.localAgentExecutor?.run({
+                prompt: String(input.prompt),
+                model: input.model ? String(input.model) : undefined,
+                sessionId: input.sessionId ? String(input.sessionId) : undefined,
+                cwd: input.cwd ? String(input.cwd) : undefined,
+              })
+              if (!result) {
+                return { ok: false, error: 'local agent executor returned no result' }
+              }
+              return {
+                ok: result.exitCode === 0 && !result.timedOut && !result.permissionDenied,
+                blocks: result.blocks,
+                model: result.model,
+                sessionId: result.sessionId,
+                cost: result.cost,
+                tokens: result.tokens,
+                timedOut: result.timedOut,
+                permissionDenied: result.permissionDenied,
+              }
+            },
+          ),
+        ]
+      : []),
   ]
+
+  // Seed the local-agent provider manifest (idempotent) so cap:agent:run can dispatch.
+  if (services.localAgentStore && services.localAgentExecutor) {
+    await seedLocalAgentProvider(services.localAgentStore)
+  }
+
+  // ── OpenCode `serve` capabilities (feature 029, env-gated) ────────────────
+  // Handlers lazily read from globalThis.__opencodeServe (set in server/index.ts boot).
+  {
+    const getServe = () =>
+      (globalThis as Record<string, unknown>).__opencodeServe as
+        | { client: OpenCodeClient; ingest: OpenCodeIngest }
+        | undefined
+
+    defaults.push(
+      makeCapability(
+        {
+          id: 'cap:opencode:send',
+          slug: 'opencode_send',
+          name: 'Send to OpenCode',
+          description: 'Send a prompt to a live opencode serve session and return the response.',
+          category: 'agent',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              prompt: { type: 'string' },
+              sessionId: { type: 'string' },
+              model: { type: 'string' },
+            },
+            required: ['prompt'],
+          },
+          outputSchema: { type: 'object', properties: { blocks: { type: 'array' } } },
+          cliCommand: {
+            name: 'opencode send',
+            aliases: ['os'],
+            examples: ['opencode send "refactor the auth module"'],
+          },
+          ui: { component: 'text_input', position: 'composer', order: 2 },
+          mcpToolName: 'opencode_send',
+          apiEndpoint: { method: 'POST', path: '/api/opencode/send' },
+        },
+        async (input) => {
+          const serve = getServe()
+          if (!serve)
+            return { ok: false, error: 'OpenCode serve not enabled (OPENCODE_SERVE_ENABLED=1)' }
+          if (typeof input.prompt !== 'string' || input.prompt.trim().length === 0) {
+            return { ok: false, error: 'prompt is required' }
+          }
+          const { client, ingest } = serve
+
+          // Resolve or create session
+          let sessionId = input.sessionId ? String(input.sessionId) : undefined
+          if (!sessionId) {
+            const { sessionId: newId } = await client.createSession({
+              model: input.model ? String(input.model) : undefined,
+            })
+            sessionId = newId
+          }
+
+          // Start ingest and send
+          await ingest.start(sessionId, { model: input.model ? String(input.model) : undefined })
+          await client.sendPrompt(sessionId, String(input.prompt))
+
+          return {
+            ok: true,
+            sessionId,
+            text: `Prompt sent to session ${sessionId}`,
+          }
+        },
+      ),
+      makeCapability(
+        {
+          id: 'cap:opencode:session.create',
+          slug: 'opencode_session_create',
+          name: 'Create OpenCode Session',
+          description: 'Create a new persistent opencode serve session.',
+          category: 'agent',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              model: { type: 'string' },
+              cwd: { type: 'string' },
+            },
+          },
+          outputSchema: { type: 'object', properties: { sessionId: { type: 'string' } } },
+          cliCommand: {
+            name: 'opencode session create',
+            aliases: ['osc'],
+            examples: ['opencode session create --model opencode/deepseek-v4-flash-free'],
+          },
+          ui: { component: 'action-button', position: 'sidebar', order: 4 },
+          mcpToolName: 'opencode_session_create',
+          apiEndpoint: { method: 'POST', path: '/api/opencode/session' },
+        },
+        async (input) => {
+          const serve = getServe()
+          if (!serve) return { ok: false, error: 'OpenCode serve not enabled' }
+          const { sessionId } = await serve.client.createSession({
+            model: input.model ? String(input.model) : undefined,
+            cwd: input.cwd ? String(input.cwd) : undefined,
+          })
+          return { ok: true, sessionId }
+        },
+      ),
+      makeCapability(
+        {
+          id: 'cap:opencode:session.list',
+          slug: 'opencode_session_list',
+          name: 'List OpenCode Sessions',
+          description: 'List active opencode serve sessions.',
+          category: 'agent',
+          inputSchema: { type: 'object', properties: {} },
+          outputSchema: { type: 'object', properties: { sessions: { type: 'array' } } },
+          cliCommand: {
+            name: 'opencode session list',
+            aliases: ['osl'],
+            examples: ['opencode session list'],
+          },
+          ui: { component: 'action-button', position: 'sidebar', order: 5 },
+          mcpToolName: 'opencode_session_list',
+          apiEndpoint: { method: 'GET', path: '/api/opencode/sessions' },
+        },
+        async () => {
+          const serve = getServe()
+          if (!serve) return { ok: false, error: 'OpenCode serve not enabled' }
+          return { ok: true, sessions: [], text: 'Session listing requires the ingest layer.' }
+        },
+      ),
+      makeCapability(
+        {
+          id: 'cap:opencode:permission.respond',
+          slug: 'opencode_permission_respond',
+          name: 'Respond to OpenCode Permission',
+          description: 'Respond to a pending permission request from opencode.',
+          category: 'agent',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              sessionId: { type: 'string' },
+              permissionId: { type: 'string' },
+              decision: { type: 'string', enum: ['allow', 'deny', 'allow_always'] },
+            },
+            required: ['sessionId', 'permissionId', 'decision'],
+          },
+          outputSchema: { type: 'object' },
+          cliCommand: {
+            name: 'opencode permission',
+            aliases: ['op'],
+            examples: ['opencode permission --session abc --permission def --decision deny'],
+          },
+          ui: { component: 'action-button', position: 'sidebar', order: 6 },
+          mcpToolName: 'opencode_permission_respond',
+          apiEndpoint: { method: 'POST', path: '/api/opencode/permission/:id' },
+        },
+        async (input) => {
+          const serve = getServe()
+          if (!serve) return { ok: false, error: 'OpenCode serve not enabled' }
+          const sessionId = String(input.sessionId)
+          const permissionId = String(input.permissionId)
+          const decision = String(input.decision) as 'allow' | 'deny' | 'allow_always'
+          await serve.client.respondPermission(sessionId, permissionId, decision)
+          return { ok: true, sessionId, permissionId, decision }
+        },
+      ),
+    )
+  }
 
   for (const cap of defaults) {
     registry.register(cap)
   }
+}
+
+/**
+ * Seed the `local-agent` provider (`slug: opencode`) with the 4 verified Zen free
+ * models (opencode v1.17.15, 2026-07-19). Idempotent via the store's upsert.
+ * `nemotron-3-ultra-free` is intentionally excluded (>5 min cold timeout in test).
+ */
+const LOCAL_AGENT_FREE_MODELS: Array<{ slug: string; displayName: string }> = [
+  { slug: 'opencode/deepseek-v4-flash-free', displayName: 'DeepSeek V4 Flash (free)' },
+  { slug: 'opencode/hy3-free', displayName: 'HY3 (free)' },
+  { slug: 'opencode/mimo-v2.5-free', displayName: 'Mimo 2.5 (free)' },
+  { slug: 'opencode/north-mini-code-free', displayName: 'North Mini Code (free)' },
+]
+
+export async function seedLocalAgentProvider(store: LocalAgentStore): Promise<void> {
+  const models = LOCAL_AGENT_FREE_MODELS.map((m, i) => ({
+    slug: m.slug,
+    displayName: m.displayName,
+    isDefault: i === 0,
+  }))
+  await store.upsertAgentProvider(
+    {
+      slug: LOCAL_AGENT_SLUG,
+      displayName: 'OpenCode Local Agent',
+      authType: 'none',
+      models,
+    },
+    {
+      binary: 'opencode',
+      timeoutMs: 180_000,
+      allowedModels: models.map((m) => m.slug),
+      defaultModel: models[0]?.slug ?? '',
+    },
+  )
+}
+
+/**
+ * Unit 24.7 — register NLCL itself as a capability so the universal execute
+ * route can drive natural-language resolution. Called from createServerWithEngines
+ * after the NLCLEngine is constructed (it closes over `nlclEngine`).
+ */
+export function registerNlInterpretCapability(
+  registry: UnifiedCapabilityRegistry,
+  nlclEngine: NLCLEngine,
+): void {
+  const handler: UnifiedCapability['handler'] = async (input, capCtx) => {
+    const text = String(input.text ?? '')
+    const extra =
+      input.ctx && typeof input.ctx === 'object' ? (input.ctx as Record<string, unknown>) : {}
+    const nlCtx: NLCContext = {
+      surface: 'api',
+      providerId: (extra.providerId as string | undefined) ?? capCtx.providerId,
+      accountId: extra.accountId as string | undefined,
+      conversationId: (extra.conversationId as string | undefined) ?? capCtx.conversationId,
+      slaveId: (extra.slaveId as string | undefined) ?? capCtx.slaveId,
+      userId: (extra.userId as string | undefined) ?? capCtx.userId,
+      metadata: { ...(extra.metadata as Record<string, unknown>), ...capCtx.metadata },
+    }
+    return nlclEngine.interpret(text, nlCtx)
+  }
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:nlcl:interpret',
+        slug: 'nl_interpret',
+        name: 'Interpret Natural Language',
+        description:
+          'Resolve natural language to a capability chain (self-referential NL parsing).',
+        category: 'nlcl',
+        inputSchema: {
+          type: 'object',
+          properties: { text: { type: 'string' }, ctx: { type: 'object' } },
+          required: ['text'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: { name: 'nl', aliases: ['interpret'], examples: ['nl "list providers"'] },
+        ui: { component: 'composer', position: 'composer', order: 0 },
+        mcpToolName: 'nl_interpret',
+        apiEndpoint: { method: 'POST', path: '/api/interpret' },
+      },
+      handler,
+    ),
+  )
+}
+
+/**
+ * Unit 24.5 — fold kernel/oracle CLI commands into capabilities.
+ * Called from createServerWithEngines after bootstrapKernel + kernel.start()
+ * (when `kernel.context().oracle` is non-null).
+ */
+export function registerKernelCapabilities(
+  registry: UnifiedCapabilityRegistry,
+  kernel: import('./kernel/kernel-context.js').Kernel,
+): void {
+  const ctx = kernel.context()
+  const oracle = ctx.oracle
+
+  const readSurfaces: import('./unified-registry.js').CapabilitySurface[] = ['cli', 'ui', 'api']
+  const writeSurfaces: import('./unified-registry.js').CapabilitySurface[] = ['cli', 'api']
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:oracle:query',
+        slug: 'oracle_query',
+        name: 'Oracle Query',
+        description: 'Query the kernel oracle (health, topology, capability, config, all).',
+        category: 'kernel',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            op: { type: 'string', enum: ['health', 'topology', 'capability', 'config', 'all'] },
+            filter: { type: 'object' },
+            limit: { type: 'number' },
+          },
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'kernel oracle query',
+          aliases: ['koq'],
+          examples: ['kernel oracle query --op health'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 9 },
+        mcpToolName: 'oracle_query',
+        apiEndpoint: { method: 'POST', path: '/api/oracle/query' },
+        surfaces: readSurfaces,
+      },
+      async (input) => {
+        if (!oracle) return { error: 'Oracle not available' }
+        return oracle.query.query({
+          type: String(input.op ?? 'all') as never,
+          filter: input.filter as Record<string, unknown> | undefined,
+          limit: input.limit as number | undefined,
+        })
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:oracle:heal',
+        slug: 'oracle_heal',
+        name: 'Oracle Heal',
+        description: 'Trigger oracle self-healing for an issue.',
+        category: 'kernel',
+        inputSchema: {
+          type: 'object',
+          properties: { issueId: { type: 'string' } },
+          required: ['issueId'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'kernel oracle heal',
+          aliases: ['koh'],
+          examples: ['kernel oracle heal --issueId issue:123'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 10 },
+        mcpToolName: 'oracle_heal',
+        apiEndpoint: { method: 'POST', path: '/api/oracle/heal' },
+        surfaces: writeSurfaces,
+      },
+      async (input) => {
+        if (!oracle) return { error: 'Actuator not available' }
+        return oracle.actuator.heal(String(input.issueId ?? ''))
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:oracle:scan',
+        slug: 'oracle_scan',
+        name: 'Oracle Scan',
+        description: 'Scan the system for issues.',
+        category: 'kernel',
+        inputSchema: { type: 'object' },
+        outputSchema: { type: 'array' },
+        cliCommand: {
+          name: 'kernel oracle scan',
+          aliases: ['kos'],
+          examples: ['kernel oracle scan'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 11 },
+        mcpToolName: 'oracle_scan',
+        apiEndpoint: { method: 'POST', path: '/api/oracle/scan' },
+        surfaces: readSurfaces,
+      },
+      async () => {
+        if (!oracle) return { error: 'Diagnostic not available' }
+        return oracle.diagnostic.scan()
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:oracle:events',
+        slug: 'oracle_events',
+        name: 'Oracle Events',
+        description: 'Get recent oracle events.',
+        category: 'kernel',
+        inputSchema: { type: 'object', properties: { tail: { type: 'number' } } },
+        outputSchema: { type: 'array' },
+        cliCommand: {
+          name: 'kernel oracle events',
+          aliases: ['koe'],
+          examples: ['kernel oracle events --tail 10'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 12 },
+        mcpToolName: 'oracle_events',
+        apiEndpoint: { method: 'POST', path: '/api/oracle/events' },
+        surfaces: readSurfaces,
+      },
+      async (input) => {
+        if (!oracle) return { error: 'Events not available' }
+        return oracle.events.getRecentEvents(Number(input.tail ?? 50))
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:oracle:visibility',
+        slug: 'oracle_visibility',
+        name: 'Oracle Visibility',
+        description: 'Get oracle visibility snapshot.',
+        category: 'kernel',
+        inputSchema: { type: 'object' },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'kernel oracle visibility',
+          aliases: ['kov'],
+          examples: ['kernel oracle visibility'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 13 },
+        mcpToolName: 'oracle_visibility',
+        apiEndpoint: { method: 'POST', path: '/api/oracle/visibility' },
+        surfaces: readSurfaces,
+      },
+      async () => {
+        if (!oracle) return { error: 'Query not available' }
+        return oracle.query.query({ type: 'all' as never })
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:oracle:manifest',
+        slug: 'oracle_manifest',
+        name: 'Oracle Manifest',
+        description: 'Get canvas manifest from oracle.',
+        category: 'kernel',
+        inputSchema: { type: 'object' },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'kernel oracle manifest',
+          aliases: ['kom'],
+          examples: ['kernel oracle manifest'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 14 },
+        mcpToolName: 'oracle_manifest',
+        apiEndpoint: { method: 'POST', path: '/api/oracle/manifest' },
+        surfaces: readSurfaces,
+      },
+      async () => ({ manifest: ctx.registry.describe() }),
+    ),
+  )
+}
+
+/**
+ * Unit 24.6 — fold discovery CLI commands into capabilities so the frontend can
+ * drive discovery too. Handlers build the local discovery stack server-side via
+ * buildLocalDiscoveryStack (which uses getDb() internally).
+ */
+export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistry): void {
+  const readSurfaces: CapabilitySurface[] = ['cli', 'ui', 'api']
+  const devSurfaces: CapabilitySurface[] = ['cli', 'api']
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:discovery:run',
+        slug: 'discovery_run',
+        name: 'Discovery Run',
+        description: 'Run a logged-in provider discovery session end-to-end.',
+        category: 'discovery',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string' },
+            accountId: { type: 'string' },
+            url: { type: 'string' },
+            profileDir: { type: 'string' },
+            probeMessage: { type: 'string' },
+            composerSelector: { type: 'string' },
+            composerType: { type: 'string' },
+            sendSelector: { type: 'string' },
+            timeoutMs: { type: 'number' },
+          },
+          required: ['providerId', 'url'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'discovery run',
+          aliases: ['drun'],
+          examples: ['discovery run claude --url https://claude.ai'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 15 },
+        mcpToolName: 'discovery_run',
+        apiEndpoint: { method: 'POST', path: '/api/discovery/run' },
+        surfaces: readSurfaces,
+      },
+      async (input) => {
+        const stack = await buildLocalDiscoveryStack({ profileBaseDir: undefined })
+        const runner = new DiscoverySessionRunner({
+          governor: stack.governor,
+          discovery: stack.discovery,
+          streamParser: stack.streamParser,
+          align: stack.align,
+          captureStream: stack.captureStream,
+        })
+        const { session, alignment } = await runner.runSession({
+          providerId: String(input.providerId),
+          accountId: input.accountId ? String(input.accountId) : 'default',
+          url: String(input.url),
+          profileDir: input.profileDir ? String(input.profileDir) : undefined,
+          probeMessage: input.probeMessage ? String(input.probeMessage) : undefined,
+          composerSelector: input.composerSelector ? String(input.composerSelector) : undefined,
+          composerType: (input.composerType as ComposerType | undefined) ?? 'textarea',
+          sendSelector: input.sendSelector ? String(input.sendSelector) : undefined,
+          timeoutMs: input.timeoutMs ? Number(input.timeoutMs) : 20_000,
+        })
+        return {
+          sessionId: session.id,
+          url: session.url,
+          shapeId: session.shapeId,
+          confidence: session.confidence,
+          detectedCapabilities: session.detectedCapabilities,
+          alignment: {
+            inferredFormat: alignment.inferredFormat,
+            parserName: alignment.parserName,
+            confidence: alignment.confidence,
+            ok: alignment.ok,
+          },
+          manifestDraft: session.manifestDraft,
+        }
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:discovery:interact',
+        slug: 'discovery_interact',
+        name: 'Discovery Interact',
+        description: 'Interact with a provider in a discovery session.',
+        category: 'discovery',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string' },
+            accountId: { type: 'string' },
+            url: { type: 'string' },
+            message: { type: 'string' },
+            profileDir: { type: 'string' },
+            composer: { type: 'string' },
+            send: { type: 'string' },
+            timeoutMs: { type: 'number' },
+          },
+          required: ['providerId'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'discovery interact',
+          aliases: ['dint'],
+          examples: ['discovery interact chatgpt --message "hello"'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 16 },
+        mcpToolName: 'discovery_interact',
+        apiEndpoint: { method: 'POST', path: '/api/discovery/interact' },
+        surfaces: readSurfaces,
+      },
+      async (input) => {
+        const slug = String(input.providerId)
+        const message = input.message ? String(input.message) : 'Hello'
+        const url = input.url ? String(input.url) : `https://${slug}.ai`
+        const stack = await buildLocalDiscoveryStack()
+        const slave = await stack.governor.ensureRunningForAccount(
+          slug,
+          input.accountId ? String(input.accountId) : 'default',
+          {
+            profileDir: input.profileDir ? String(input.profileDir) : undefined,
+          },
+        )
+        const capturer = createPageEvalCapturer(stack.governor)
+        const session = await stack.discovery.createSession(url, { providerNameHint: slug })
+        await stack.governor.cdp.send(slave.slaveId, 'Page.navigate', { url })
+        const composer = input.composer
+          ? String(input.composer)
+          : 'textarea, [role="textbox"], [contenteditable]'
+        const timeoutMs = Number(input.timeoutMs ?? 20_000)
+        await capturer.arm(slave.slaveId, { urlPattern: new URL(url).hostname, timeoutMs })
+        await typeMessage(stack.governor.cdp, slave.slaveId, composer, message, 'textarea')
+        await submitMessage(
+          stack.governor.cdp,
+          slave.slaveId,
+          input.send ? String(input.send) : undefined,
+        )
+        const bodies = await capturer.collect(slave.slaveId, {
+          urlPattern: new URL(url).hostname,
+          timeoutMs,
+        })
+        return { sessionId: session.id, capturedSamples: bodies.length, raw: bodies }
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:discovery:align',
+        slug: 'discovery_align',
+        name: 'Discovery Align',
+        description: 'Align captured stream bodies against the DB parser.',
+        category: 'discovery',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            provider: { type: 'string' },
+            slug: { type: 'string' },
+            file: { type: 'string' },
+            format: { type: 'string' },
+          },
+          required: ['provider', 'file'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'discovery align',
+          aliases: ['dali'],
+          examples: ['discovery align claude --file captured.txt'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 17 },
+        mcpToolName: 'discovery_align',
+        apiEndpoint: { method: 'POST', path: '/api/discovery/align' },
+        surfaces: devSurfaces,
+      },
+      async (input) => {
+        const slug = String(input.provider ?? input.slug ?? '')
+        const text = await Bun.file(String(input.file)).text()
+        const bodies = text
+          .split(/\n\n+/)
+          .map((b) => b.trim())
+          .filter(Boolean)
+        const stack = await buildLocalDiscoveryStack()
+        const configured = input.format ? (String(input.format) as never) : null
+        const report = await stack.align.alignCaptured(bodies, slug, configured)
+        await stack.discovery.persistParserFindings(slug, report)
+        return report
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:discovery:list',
+        slug: 'discovery_list',
+        name: 'Discovery List',
+        description: 'List discovery sessions.',
+        category: 'discovery',
+        inputSchema: { type: 'object', properties: { limit: { type: 'number' } } },
+        outputSchema: { type: 'array' },
+        cliCommand: { name: 'discovery list', aliases: ['dls'], examples: ['discovery list'] },
+        ui: { component: 'action-button', position: 'admin', order: 18 },
+        mcpToolName: 'discovery_list',
+        apiEndpoint: { method: 'POST', path: '/api/discovery/list' },
+        surfaces: readSurfaces,
+      },
+      async (input) => {
+        const stack = await buildLocalDiscoveryStack()
+        const sessions = await stack.discovery.listSessions({ limit: Number(input.limit ?? 50) })
+        return sessions.map((s) => ({
+          id: s.id,
+          url: s.url,
+          status: s.status,
+          shapeId: s.shapeId,
+          confidence: s.confidence,
+        }))
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:discovery:show',
+        slug: 'discovery_show',
+        name: 'Discovery Show',
+        description: 'Show a discovery session.',
+        category: 'discovery',
+        inputSchema: {
+          type: 'object',
+          properties: { sessionId: { type: 'string' } },
+          required: ['sessionId'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: { name: 'discovery show', aliases: ['dsh'], examples: ['discovery show <id>'] },
+        ui: { component: 'action-button', position: 'admin', order: 19 },
+        mcpToolName: 'discovery_show',
+        apiEndpoint: { method: 'POST', path: '/api/discovery/show' },
+        surfaces: readSurfaces,
+      },
+      async (input) => {
+        const stack = await buildLocalDiscoveryStack()
+        return stack.discovery.getSession(String(input.sessionId ?? '')) ?? { error: 'not found' }
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:discovery:manifest',
+        slug: 'discovery_manifest',
+        name: 'Discovery Manifest',
+        description: 'Show the manifest draft for a discovery session.',
+        category: 'discovery',
+        inputSchema: {
+          type: 'object',
+          properties: { sessionId: { type: 'string' } },
+          required: ['sessionId'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'discovery manifest',
+          aliases: ['dman'],
+          examples: ['discovery manifest <id>'],
+        },
+        ui: { component: 'action-button', position: 'admin', order: 20 },
+        mcpToolName: 'discovery_manifest',
+        apiEndpoint: { method: 'POST', path: '/api/discovery/manifest' },
+        surfaces: readSurfaces,
+      },
+      async (input) => {
+        const stack = await buildLocalDiscoveryStack()
+        const session = await stack.discovery.getSession(String(input.sessionId ?? ''))
+        return session?.manifestDraft ?? { error: 'no manifest draft' }
+      },
+    ),
+  )
 }
 ```
 
@@ -694,7 +1749,7 @@ How capabilities are defined, resolved per provider/context, and bound. Canvas b
 
 ### `src/engines/capability.ts`
 
-_237 lines_
+_236 lines_
 
 ```typescript
 // src/engines/capability.ts
@@ -826,19 +1881,19 @@ export class CapabilityEngine {
       capabilityId: cap.id,
       bindingId: binding.id,
       providerId,
-      accountId,
-      ok,
-      latencyMs,
+      ok: ok ? 1 : 0,
+      durationMs: latencyMs,
       error: ok ? null : 'all recovery strategies exhausted',
-      outputJson: JSON.stringify(output ?? {}),
-      traceId,
+      confidence: null,
+      selectorUsed: null,
+      selectorHit: null,
+      ts: Date.now(),
     })
     await this.store.updateSelectorHealth(primary.id, ok)
 
     if (ok) {
       await this.store.updateBindingHealth(binding.id, {
         status: 'healthy',
-        lastSuccessAt: Date.now(),
       })
       this.eventBus?.emit({
         type: 'capability:executed',
@@ -852,7 +1907,6 @@ export class CapabilityEngine {
     } else {
       await this.store.updateBindingHealth(binding.id, {
         status: 'broken',
-        lastFailureAt: Date.now(),
       })
       this.eventBus?.emit({
         type: 'capability:failed',
@@ -967,7 +2021,7 @@ export class CapabilityEngine {
 
 ### `src/engines/capability-resolution.ts`
 
-_309 lines_
+_337 lines_
 
 ```typescript
 // src/engines/capability-resolution.ts
@@ -1034,6 +2088,9 @@ export interface ResolvedCapability {
   maxResultSize: number
   resultComponent: string
   resultLayout: string
+  // Hot-swap slot overrides (per-slot component key + sandbox whitelist),
+  // sourced from provider_capability.ui_component_override (FRONTEND=BACKEND, H6).
+  uiSlots: Record<string, { component?: string; sandbox?: string[] }>
   searchHints: string[]
   aliases: string[]
   availability: AvailabilityGating
@@ -1086,6 +2143,31 @@ function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
 
 function toOverrideSource(v: string | null | undefined): OverrideSource {
   return v === 'provider' || v === 'tier' ? v : 'global'
+}
+
+/**
+ * Parse provider_capability.ui_component_override into a per-slot override map.
+ * The stored JSON has the shape: { "<slotId>": { "component"?: string, "sandbox"?: string[] } }.
+ * A legacy plain-string value is ignored (treated as no overrides).
+ */
+function parseUiSlots(
+  raw: string | null | undefined,
+): Record<string, { component?: string; sandbox?: string[] }> {
+  if (!raw || raw === '') return {}
+  try {
+    const parsed = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const out: Record<string, { component?: string; sandbox?: string[] }> = {}
+      for (const [slot, val] of Object.entries(parsed)) {
+        if (val && typeof val === 'object')
+          out[slot] = val as { component?: string; sandbox?: string[] }
+      }
+      return out
+    }
+  } catch {
+    return {}
+  }
+  return {}
 }
 
 const UI_POSITIONS = ['composer', 'header', 'message', 'sidebar', 'inline'] as const
@@ -1211,6 +2293,7 @@ export class CapabilityResolutionEngine {
       maxResultSize: row.max_result_size,
       resultComponent: row.result_component,
       resultLayout: row.result_layout,
+      uiSlots: parseUiSlots(row.ui_component_override),
       searchHints: safeJsonParse<string[]>(row.search_hints_json, []),
       aliases: safeJsonParse<string[]>(row.aliases_json, []),
       availability: safeJsonParse<AvailabilityGating>(row.availability_json, {}),
@@ -1324,7 +2407,7 @@ export class CapabilityResolutionEngine {
 
 ### `src/storage/contracts/capability-store.ts`
 
-_82 lines_
+_171 lines_
 
 ```typescript
 // src/storage/contracts/capability-store.ts
@@ -1332,23 +2415,54 @@ _82 lines_
 
 export interface CapabilityTaxonomyRow {
   id: string
-  slug: string
   name: string
+  slug: string
+  category: string
   description: string | null
-  kind: string
+  inputType: string
+  uiComponent: string
+  uiLabel: string | null
+  uiIcon: string | null
+  uiPosition: string
+  uiOrder: number
+  uiLayerDepth: number
+  parentCapabilityId: string | null
+  uiGroup: string
+  uiPriority: string
+  interactionMode: string
+  uiStatesJson: string
+  uiVisibilityRule: string | null
+  existentialRule: string | null
+  uiInputSchema: string
+  mutationEffectsJson: string
+  recoveryBehavior: string
+  statePersistence: string
+  dataFlow: string
+  minPlanTier: string
+  dependsOnJson: string
+  concurrencySafe: number
+  opClassification: string | null
+  requiresUserConfirmation: number
+  maxResultSize: number
+  resultComponent: string
+  resultLayout: string
+  searchHintsJson: string
+  aliasesJson: string
+  availabilityJson: string
+  prefetch: number
   createdAt: number
   updatedAt: number
 }
 
 export interface CapabilityBindingRow {
   id: string
-  capabilityId: string
+  globalId: string
   providerId: string
-  selectorStrategyId: string | null
   status: string
-  healthScore: number
-  lastSuccessAt: number | null
-  lastFailureAt: number | null
+  bestProgramId: string | null
+  currentProgramId: string | null
+  promotionHistoryJson: string
+  confidence: number
   createdAt: number
   updatedAt: number
 }
@@ -1357,6 +2471,9 @@ export interface CapabilityProgramRow {
   id: string
   bindingId: string
   version: number
+  name: string | null
+  supersededById: string | null
+  isActive: number
   status: string
   configJson: string
   createdAt: number
@@ -1368,10 +2485,10 @@ export interface SelectorStrategyRow {
   name: string
   capabilityId: string
   providerId: string
-  strategyType: 'css' | 'xpath' | 'text' | 'aria' | 'data' | 'regex' | 'composite'
+  strategyType: string
   selectorValue: string
   priority: number
-  isActive: boolean
+  isActive: number
   hitCount: number
   missCount: number
   lastUsedAt: number | null
@@ -1384,25 +2501,70 @@ export interface OutcomeRow {
   capabilityId: string
   bindingId: string | null
   providerId: string
-  accountId: string
-  ok: boolean
-  latencyMs: number
+  programId: string | null
+  selectorStrategyId: string | null
+  ok: number
   error: string | null
-  outputJson: string
-  traceId: string
-  createdAt: number
+  durationMs: number | null
+  confidence: number | null
+  selectorUsed: string | null
+  selectorHit: number | null
+  ts: number
 }
 
 export interface OutcomeInput {
   capabilityId: string
   bindingId: string | null
   providerId: string
-  accountId: string
-  ok: boolean
-  latencyMs: number
+  programId?: string | null
+  selectorStrategyId?: string | null
+  ok: number
   error?: string | null
-  outputJson?: string
-  traceId: string
+  durationMs?: number | null
+  confidence?: number | null
+  selectorUsed?: string | null
+  selectorHit?: number | null
+  ts: number
+}
+
+/** Bulk snapshot row for the boot loader (binding → taxonomy → best program). */
+export interface SnapshotRow {
+  globalId: string
+  slug: string
+  providerId: string
+  category: string
+  status: string
+  confidence: number
+  programId: string | null
+  configJson: string | null
+  uiComponent: string
+  uiPosition: string
+  uiInputSchema: string
+}
+
+export interface CapabilityBindingMatrixRow {
+  id: string
+  globalId: string
+  providerId: string
+  status: string
+  confidence: number
+  capabilitySlug: string
+  selector: string
+}
+
+export interface DriftEventInput {
+  id: string
+  providerId: string
+  capabilitySlug: string
+  selector: string
+  status: string
+}
+
+export interface SelectorDriftRow {
+  id: string
+  providerId: string
+  capabilitySlug: string
+  selector: string
 }
 
 export interface CapabilityStore {
@@ -1415,6 +2577,20 @@ export interface CapabilityStore {
   createOutcome(outcome: OutcomeInput): Promise<OutcomeRow>
   updateBindingHealth(bindingId: string, patch: Partial<CapabilityBindingRow>): Promise<void>
   updateSelectorHealth(selectorId: string, hit: boolean): Promise<void>
+  /** Resolve the best seeded program for a (capabilitySlug, provider). v14 harness. */
+  getBestProgramByCapability(
+    capabilitySlug: string,
+    providerId: string,
+  ): Promise<CapabilityProgramRow | null>
+  /**
+   * Boot snapshot loader (019). One bulk query: active bindings for the given
+   * providers, joined to taxonomy + best program. No per-request DB hits.
+   */
+  loadSnapshot(providerIds: string[]): Promise<SnapshotRow[]>
+  /** Provider test harness — list capability bindings for testing. (Unit 6.10) */
+  listBindings(providers?: string[]): Promise<CapabilityBindingMatrixRow[]>
+  /** Provider test harness — record selector drift. (Unit 6.10) */
+  recordDrift(input: DriftEventInput): Promise<void>
 }
 ```
 
@@ -1426,12 +2602,18 @@ Typed pub/sub the canvas shell uses as its event bus (Principle P2). Layers subs
 
 ### `src/engines/capability-event-bus.ts`
 
-_244 lines_
+_289 lines_
 
 ```typescript
 // src/engines/capability-event-bus.ts
 // CapabilityEventBus — typed in-process pub/sub for all inter-engine communication.
 // Transient events, no DB persistence. Singleton per process.
+//
+// Extended (agentic backbone) to ALSO mirror every emitted event into the durable
+// EventRecord outbox when a EventRecordStore is attached — so cross-surface replay
+// (OpenCode ingest, browser fleet, capability layer) has a single source of truth.
+
+import type { EventRecordStore } from './event-record-store.js'
 
 // ── Event types (v1) ──────────────────────────────────────────────────────
 
@@ -1535,6 +2717,20 @@ export type CapabilityEvent =
       rowsWritten: number
       durationMs: number
     }
+  | {
+      type: 'intent:clarify'
+      clarification: {
+        goal: string
+        question: string
+        options: Array<{
+          label: string
+          capabilitySlug: string
+          inputMapping: Record<string, unknown>
+        }>
+        timeoutMs: number
+      }
+      ts: number
+    }
 
 export type GenericEvent = { type: string; [key: string]: unknown }
 
@@ -1555,6 +2751,9 @@ export class CapabilityEventBus {
   private onceHandlers = new Map<string, Set<EventHandler>>()
   private wsSubscriptions = new Map<WsLike, Map<string, Set<string>>>()
   private recent: EngineEvent[] = []
+  // Optional durable mirror (agentic backbone). When set, every emit is also
+  // appended to the EventRecord outbox for cross-surface replay.
+  private durable: EventRecordStore | null = null
 
   static getInstance(): CapabilityEventBus {
     if (!CapabilityEventBus.instance) {
@@ -1568,10 +2767,26 @@ export class CapabilityEventBus {
     CapabilityEventBus.instance = null
   }
 
+  /** Attach a durable EventRecord outbox so emits are persisted too. */
+  setDurableStore(store: EventRecordStore): void {
+    this.durable = store
+  }
+
   // ── Emit ───────────────────────────────────────────────────────────────
 
   emit<T extends EngineEvent>(event: T): void {
     const type = event.type
+
+    // Mirror into the durable outbox (best-effort; never blocks the bus).
+    if (this.durable) {
+      this.durable
+        .append({
+          source: 'capability',
+          type,
+          payload: event as unknown,
+        })
+        .catch(() => {})
+    }
 
     // Fire regular handlers
     const handlers = this.handlers.get(type)
@@ -1597,6 +2812,15 @@ export class CapabilityEventBus {
     // Deliver to WebSocket subscribers
     for (const [ws, entityMap] of this.wsSubscriptions) {
       for (const [entityType, entityIds] of entityMap) {
+        // Dev firehose: a single `*` wildcard entity id forwards EVERY event.
+        if (entityIds.has('*')) {
+          try {
+            ws.send(JSON.stringify(event))
+          } catch {
+            // WebSocket may be closed — ignore
+          }
+          continue
+        }
         // Check if event has a matching entity field
         const eventAny = event as Record<string, unknown>
         const idFields: Record<string, string> = {

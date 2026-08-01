@@ -84,7 +84,10 @@ export function createCanvasRouter(ctx: ServerContext) {
       try {
         const traceId = req.headers.get('x-trace-id') ?? `canvas:resolve:${Date.now()}`
         // If conceptual model is wired, delegate to it; otherwise return empty surface.
-        if (conceptualModel && typeof (conceptualModel as { resolveSurface?: unknown }).resolveSurface === 'function') {
+        if (
+          conceptualModel &&
+          typeof (conceptualModel as { resolveSurface?: unknown }).resolveSurface === 'function'
+        ) {
           const body = (await req.json()) as {
             workspaceId?: string
             userId?: string
@@ -93,9 +96,17 @@ export function createCanvasRouter(ctx: ServerContext) {
             variant?: string
           }
           const providerId = body.providerIds?.[0] ?? 'generic'
-          const family = await (conceptualModel as { resolveFamilyForProvider: (pid: string) => Promise<{ id: string } | null> }).resolveFamilyForProvider(providerId)
+          const family = await (
+            conceptualModel as {
+              resolveFamilyForProvider: (pid: string) => Promise<{ id: string } | null>
+            }
+          ).resolveFamilyForProvider(providerId)
           if (family) {
-            const slots = await (conceptualModel as { resolveSurface: (pid: string, fid: string, slotIds?: string[]) => Promise<unknown[]> }).resolveSurface(providerId, family.id, body.slotIds)
+            const slots = await (
+              conceptualModel as {
+                resolveSurface: (pid: string, fid: string, slotIds?: string[]) => Promise<unknown[]>
+              }
+            ).resolveSurface(providerId, family.id, body.slotIds)
             return json({
               traceId,
               workspaceId: body.workspaceId ?? 'ws:global',
@@ -106,7 +117,7 @@ export function createCanvasRouter(ctx: ServerContext) {
           }
         }
         return json(emptySurface(traceId))
-      } catch (e) {
+      } catch (_e) {
         return json(emptySurface(`resolve:error:${Date.now()}`))
       }
     }
@@ -120,7 +131,11 @@ export function createCanvasRouter(ctx: ServerContext) {
       let interval: ReturnType<typeof setInterval> | null = null
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode(`event: connected\ndata: {"type":"connected","workspaceId":"${workspaceId}","timestamp":${Date.now()}}\n\n`))
+          controller.enqueue(
+            encoder.encode(
+              `event: connected\ndata: {"type":"connected","workspaceId":"${workspaceId}","timestamp":${Date.now()}}\n\n`,
+            ),
+          )
           interval = setInterval(() => {
             controller.enqueue(encoder.encode(`:keepalive ${Date.now()}\n\n`))
           }, 15_000)

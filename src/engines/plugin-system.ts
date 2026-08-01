@@ -5,11 +5,11 @@
 // optional `surfaces` and `mutationHandlers` so plugins can register
 // ReprogrammableSurface implementations + custom mutation handlers.
 
-import type { ContentBlock } from '../schema/streaming.js'
-import type { CapabilityEventBus } from './capability-event-bus.js'
-import type { ReprogrammableSurface, MutationOp } from '../reprogrammability/contract.js'
+import type { ReprogrammableSurface } from '../reprogrammability/contract.js'
 import type { SurfaceMutation } from '../reprogrammability/mutation-schema.js'
 import type { SurfaceSpec } from '../reprogrammability/schema/spec.js'
+import type { ContentBlock } from '../schema/streaming.js'
+import type { CapabilityEventBus } from './capability-event-bus.js'
 
 export interface ProviderPlugin {
   providerId: string

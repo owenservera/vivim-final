@@ -19,8 +19,8 @@
 // reference the same version; the Phase 10 check script enforces this.
 
 import type { z } from 'zod'
-import type { SurfaceSpec } from './schema/spec.js'
 import type { SurfaceMutation } from './mutation-schema.js'
+import type { SurfaceSpec } from './schema/spec.js'
 
 /** Semver-ish contract version. Bump on breaking changes. */
 export const CONTRACT_VERSION = 1 as const
@@ -39,14 +39,7 @@ export const CONTRACT_VERSION = 1 as const
  *                   `{ schemaUrl: string, data: unknown }`. Phase 10 audit
  *                   flags `custom` surfaces for promotion to a first-class kind.
  */
-export type SurfaceKind =
-  | 'card'
-  | 'panel'
-  | 'layer'
-  | 'primitive'
-  | 'chrome'
-  | 'slot'
-  | 'custom'
+export type SurfaceKind = 'card' | 'panel' | 'layer' | 'primitive' | 'chrome' | 'slot' | 'custom'
 
 /**
  * Provenance tag for any mutation. Drives trust scoring (Phase 8).
@@ -61,13 +54,7 @@ export type SurfaceKind =
  * - `system`      — internal: boot, migration, backup restore. Highest
  *                   privilege, lowest trust — always logs + may notify user.
  */
-export type MutationProvenance =
-  | 'manual'
-  | 'nlcl'
-  | 'prefix'
-  | 'plugin'
-  | 'llm-harness'
-  | 'system'
+export type MutationProvenance = 'manual' | 'nlcl' | 'prefix' | 'plugin' | 'llm-harness' | 'system'
 
 /**
  * The 8 mutation operations. No escape hatch; novel ops require a contract
@@ -175,11 +162,7 @@ export class InvalidMutationPayloadError extends Error {
   readonly surfaceId: string
   readonly op: MutationOp
   readonly issues: readonly z.ZodIssue[]
-  constructor(
-    surfaceId: string,
-    op: MutationOp,
-    issues: readonly z.ZodIssue[],
-  ) {
+  constructor(surfaceId: string, op: MutationOp, issues: readonly z.ZodIssue[]) {
     super(
       `Mutation '${op}' on ${surfaceId} failed validation: ${issues
         .map((i) => i.message)

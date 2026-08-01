@@ -1,13 +1,13 @@
 // src/reprogrammability/dsl/__tests__/executor.test.ts
 // Phase 3 of ROADMAP-REPROGRAMMABLE-CANVAS.md
 
-import { describe, expect, it, beforeEach } from 'bun:test'
-import { MutationExecutor } from '../executor.js'
-import { SurfaceRegistry, UnsupportedMutationError, SurfaceNotFoundError } from '../../index.js'
-import type { ReprogrammableSurface } from '../../contract.js'
-import type { SurfaceMutation, SurfaceMutationPlan } from '../../mutation-schema.js'
-import type { SurfaceSpec, PanelSpec } from '../../schema/spec.js'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { ulid } from 'ulid'
+import type { ReprogrammableSurface } from '../../contract.js'
+import { SurfaceNotFoundError, SurfaceRegistry, UnsupportedMutationError } from '../../index.js'
+import type { SurfaceMutation, SurfaceMutationPlan } from '../../mutation-schema.js'
+import type { PanelSpec, SurfaceSpec } from '../../schema/spec.js'
+import { MutationExecutor } from '../executor.js'
 
 class ToyPanelSurface implements ReprogrammableSurface {
   readonly id: string

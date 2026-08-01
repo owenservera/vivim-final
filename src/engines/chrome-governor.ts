@@ -906,7 +906,7 @@ export class ChromeGovernor {
   deriveProfile(providerId: string, accountId: string): string {
     // Use the configured profile root (Windows-safe) — must match the layout
     // ProfileAllocator uses so ChromeGovernor.spawn reuses the same session.
-    const base = this.config.profileBaseDir ?? `chrome-profiles`
+    const base = this.config.profileBaseDir ?? 'chrome-profiles'
     return join(base, providerId, accountId)
   }
 

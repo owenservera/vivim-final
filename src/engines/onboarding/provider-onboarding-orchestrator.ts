@@ -517,7 +517,7 @@ export class ProviderOnboardingOrchestrator {
             kind: 'parser',
             id: sessionId,
             providerId,
-            test: async () => ({ passed: inducedShape!.confidence >= 0.8 }),
+            test: async () => ({ passed: inducedShape?.confidence >= 0.8 }),
           }
           const result = await this.gate.run(handle, parserTestable)
           if (result.promoted) activatedCount++

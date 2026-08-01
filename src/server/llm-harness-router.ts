@@ -17,18 +17,14 @@
 // CONTRACT_VERSION: 1
 
 import { z } from 'zod'
-import { ulid } from 'ulid'
-import { getLogger } from '../lib/logger.js'
-import { json, errorResponse } from './response.js'
 import {
-  SurfaceMutationPlanSchema,
-  type SurfaceMutationPlan,
-} from '../reprogrammability/mutation-schema.js'
-import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
-import {
-  InMemoryConfirmationStore,
   type ConfirmationStore,
+  InMemoryConfirmationStore,
 } from '../engines/nlcl/confirmation-store.js'
+import { getLogger } from '../lib/logger.js'
+import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
+import { SurfaceMutationPlanSchema } from '../reprogrammability/mutation-schema.js'
+import { errorResponse, json } from './response.js'
 
 const log = getLogger('llm-harness-router')
 
@@ -105,10 +101,7 @@ const ApplyInputSchema = z.object({
 // ── Router ───────────────────────────────────────────────────────────────────
 
 export function createLlmHarnessRouter() {
-  return async function llmHarnessRouter(
-    req: Request,
-    url: URL,
-  ): Promise<Response | null> {
+  return async function llmHarnessRouter(req: Request, url: URL): Promise<Response | null> {
     const path = url.pathname
 
     // ── POST /api/llm-harness/plan ──────────────────────────────────────────
@@ -200,11 +193,7 @@ export function createLlmHarnessRouter() {
       const store = getConfirmationStore()
       const confirmed = store.consume(parsed.data.confirmationToken)
       if (!confirmed) {
-        return errorResponse(
-          'Invalid or expired confirmation token',
-          'CONFIRMATION_INVALID',
-          403,
-        )
+        return errorResponse('Invalid or expired confirmation token', 'CONFIRMATION_INVALID', 403)
       }
 
       // Verify the plan id matches.
@@ -226,11 +215,7 @@ export function createLlmHarnessRouter() {
         )
         return json({ ok: result.ok, result })
       } catch (err) {
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'APPLY_FAILED',
-          500,
-        )
+        return errorResponse(err instanceof Error ? err.message : String(err), 'APPLY_FAILED', 500)
       }
     }
 
@@ -262,19 +247,12 @@ export function createLlmHarnessRouter() {
 
       const a = getAgent()
       if (!a) {
-        return errorResponse(
-          'LLM harness agent is not configured',
-          'AGENT_NOT_CONFIGURED',
-          503,
-        )
+        return errorResponse('LLM harness agent is not configured', 'AGENT_NOT_CONFIGURED', 503)
       }
 
       const result = await a.producePlan(parsed.data.userRequest)
       if (!result.ok || !result.plan) {
-        return json(
-          { ok: false, error: result.error, retries: result.retries },
-          500,
-        )
+        return json({ ok: false, error: result.error, retries: result.retries }, 500)
       }
 
       // Mint confirmation.

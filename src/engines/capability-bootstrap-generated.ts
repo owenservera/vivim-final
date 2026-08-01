@@ -115,7 +115,10 @@ function createHandlerMap(
         return { ok: true }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        if (msg.includes('No record was found') || msg.includes('Record to delete does not exist')) {
+        if (
+          msg.includes('No record was found') ||
+          msg.includes('Record to delete does not exist')
+        ) {
           return { ok: false, error: 'Conversation not found' }
         }
         throw err

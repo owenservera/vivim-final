@@ -12,14 +12,9 @@
 //
 // FRAME_VERSION: 1
 
-import type {
-  FramingAdapter,
-  FramedRequest,
-  ParseContext,
-  HealthCheckResult,
-} from '../adapter.js'
-import type { NormalizedRequest } from '../schemas.js'
 import type { ContentPart } from '../../schema/streaming.js'
+import type { FramedRequest, FramingAdapter, HealthCheckResult, ParseContext } from '../adapter.js'
+import type { NormalizedRequest } from '../schemas.js'
 
 /**
  * Stub ChatGPT adapter. Shows the pattern; real implementation will
@@ -33,17 +28,18 @@ export class StubChatGptFramingAdapter implements FramingAdapter {
     // In a real adapter, look up the composer selector from ProviderRegistry.
     const composerSelector = 'textarea#prompt-textarea, div[contenteditable="true"]#prompt-textarea'
     const lastUserMessage = req.input.messages.findLast((m) => m.role === 'user')
-    const text = (lastUserMessage?.content ?? [])
-      .filter((c: unknown): c is { type: 'text'; text: string } => {
-        return (
-          typeof c === 'object' &&
-          c !== null &&
-          (c as { type?: unknown }).type === 'text' &&
-          typeof (c as { text?: unknown }).text === 'string'
-        )
-      })
-      .map((c) => c.text)
-      .join('\n') ?? ''
+    const text =
+      (lastUserMessage?.content ?? [])
+        .filter((c: unknown): c is { type: 'text'; text: string } => {
+          return (
+            typeof c === 'object' &&
+            c !== null &&
+            (c as { type?: unknown }).type === 'text' &&
+            typeof (c as { text?: unknown }).text === 'string'
+          )
+        })
+        .map((c) => c.text)
+        .join('\n') ?? ''
 
     // Minimal 2-node recipe DAG — same shape as conversation-manager.ts:478.
     // Real adapter will build this from seeds/adapters/chatgpt.ts.
@@ -89,7 +85,9 @@ export class StubChatGptFramingAdapter implements FramingAdapter {
       if (!trimmed.startsWith('data:')) continue
       const payload = trimmed.slice(5).trim()
       if (payload === '[DONE]') {
-        yield { type: 'text', text: '', state: 'done', isFinal: true } as ContentPart & { isFinal: true }
+        yield { type: 'text', text: '', state: 'done', isFinal: true } as ContentPart & {
+          isFinal: true
+        }
         return
       }
       try {

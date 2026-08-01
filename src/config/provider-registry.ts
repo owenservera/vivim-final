@@ -6,11 +6,11 @@
 // into a static file at seed/gen time. This registry consumes that file so engines
 // never hit the DB on the hot path. Toggle via PROVIDER_PROTOCOL_SOURCE=generated|dev.
 
+import { config } from '../config.js'
 import {
   loadProviderProtocol,
   normalizeProtocolSource,
 } from '../engines/provider-protocol-loader.js'
-import { config } from '../config.js'
 import type { CapStoreDb } from '../storage/db.js'
 
 export interface ProviderEndpointInfo {

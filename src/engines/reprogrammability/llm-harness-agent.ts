@@ -23,17 +23,14 @@
 
 import { ulid } from 'ulid'
 import { getLogger } from '../../lib/logger.js'
-import type { ProviderLLMAdapter } from '../nlcl/llm-slave-resolver.js'
 import {
-  SurfaceMutationPlanSchema,
-  type SurfaceMutationPlan,
   type SurfaceMutation,
+  type SurfaceMutationPlan,
+  SurfaceMutationPlanSchema,
 } from '../../reprogrammability/mutation-schema.js'
 import { surfaceRegistry } from '../../reprogrammability/registry.js'
-import {
-  buildLlmHarnessPrompt,
-  type LlmPromptInput,
-} from './llm-prompt.js'
+import type { ProviderLLMAdapter } from '../nlcl/llm-slave-resolver.js'
+import { type LlmPromptInput, buildLlmHarnessPrompt } from './llm-prompt.js'
 
 const log = getLogger('llm-harness-agent')
 
@@ -99,11 +96,7 @@ export class LlmHarnessAgent {
 
     const capabilities = this.deps.capabilities
       ? this.deps.capabilities()
-      : Array.from(
-          new Set(
-            allSurfaces.flatMap((s) => Array.from(s.capabilities ?? [])),
-          ),
-        )
+      : Array.from(new Set(allSurfaces.flatMap((s) => Array.from(s.capabilities ?? []))))
 
     // ── 2. Build the prompt ─────────────────────────────────────────────────
     const { prompt, systemPrompt } = buildLlmHarnessPrompt({
@@ -132,10 +125,7 @@ export class LlmHarnessAgent {
         lastRawOutput = rawOutput
       } catch (err) {
         lastError = err instanceof Error ? err.message : String(err)
-        log.warn(
-          { attempt, err: lastError },
-          '[llm-harness-agent] LLM call failed; retrying',
-        )
+        log.warn({ attempt, err: lastError }, '[llm-harness-agent] LLM call failed; retrying')
         continue
       }
 
@@ -165,12 +155,14 @@ export class LlmHarnessAgent {
       const sanitizedPlan: SurfaceMutationPlan = {
         ...plan,
         provenance: 'llm-harness',
-        mutations: plan.mutations.map((m): SurfaceMutation => ({
-          ...m,
-          provenance: 'llm-harness',
-          // Ensure idempotencyKey is set (the LLM may omit it).
-          idempotencyKey: m.idempotencyKey ?? `llm-${ulid()}`,
-        })),
+        mutations: plan.mutations.map(
+          (m): SurfaceMutation => ({
+            ...m,
+            provenance: 'llm-harness',
+            // Ensure idempotencyKey is set (the LLM may omit it).
+            idempotencyKey: m.idempotencyKey ?? `llm-${ulid()}`,
+          }),
+        ),
       }
 
       log.info(
@@ -189,9 +181,7 @@ export class LlmHarnessAgent {
     // ── 6. All retries exhausted — return an error plan (NOT an exception) ──
     return {
       ok: false,
-      error:
-        lastError ??
-        'LLM harness agent could not produce a valid plan after retries.',
+      error: lastError ?? 'LLM harness agent could not produce a valid plan after retries.',
       retries: maxRetries,
       rawOutput: lastRawOutput,
     }

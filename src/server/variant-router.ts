@@ -1,35 +1,13 @@
-// src/server/variant-router.ts
-// Phase 5 of ROADMAP-REPROGRAMMABLE-CANVAS.md — Reprogram-This Modal.
-//
-// HTTP routes for SurfaceVariant CRUD + activation. Backed by the in-memory
-// `surfaceRegistry` (Phase 1); Phase 8 adds Prisma persistence.
-//
-// Routes:
-//   GET    /api/variant?surfaceId=…         — list variants for a surface
-//   GET    /api/variant/:id                 — get a single variant
-//   POST   /api/variant                     — create a variant
-//   PUT    /api/variant/:id                 — update a variant
-//   DELETE /api/variant/:id                 — delete a variant
-//   POST   /api/variant/:id/activate        — set as active variant
-//   GET    /api/variant/_active?surfaceId=… — get the active variant
-//
-// All writes are Zod-validated against `UpsertSurfaceVariantInputSchema`.
-// Activation produces a `replace` mutation through `mutationExecutor` so the
-// change rides the standard provenance + undo/redo pipeline.
-//
-// CONTRACT_VERSION: 1
-
-import { z } from 'zod'
 import { ulid } from 'ulid'
 import { getLogger } from '../lib/logger.js'
-import { json, errorResponse } from './response.js'
+import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
+import { surfaceRegistry } from '../reprogrammability/registry.js'
 import {
   SurfaceVariantSchema,
   UpsertSurfaceVariantInputSchema,
 } from '../reprogrammability/variant-schema.js'
-import { surfaceRegistry } from '../reprogrammability/registry.js'
-import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
 import type { SurfaceVariant } from '../reprogrammability/variant-schema.js'
+import { errorResponse, json } from './response.js'
 
 const log = getLogger('variant-router')
 
@@ -56,21 +34,14 @@ function findVariantById(
  * is exported as a factory to match the pattern of mutation-router.
  */
 export function createVariantRouter() {
-  return async function variantRouter(
-    req: Request,
-    url: URL,
-  ): Promise<Response | null> {
+  return async function variantRouter(req: Request, url: URL): Promise<Response | null> {
     const path = url.pathname
 
     // ── GET /api/variant?surfaceId=… ─────────────────────────────────────
     if (path === '/api/variant' && req.method === 'GET') {
       const surfaceId = url.searchParams.get('surfaceId')
       if (!surfaceId) {
-        return errorResponse(
-          'Missing required query param: surfaceId',
-          'VALIDATION_ERROR',
-          400,
-        )
+        return errorResponse('Missing required query param: surfaceId', 'VALIDATION_ERROR', 400)
       }
       const variants = surfaceRegistry.listVariants(surfaceId)
       return json({ ok: true, surfaceId, variants, count: variants.length })
@@ -80,11 +51,7 @@ export function createVariantRouter() {
     if (path === '/api/variant/_active' && req.method === 'GET') {
       const surfaceId = url.searchParams.get('surfaceId')
       if (!surfaceId) {
-        return errorResponse(
-          'Missing required query param: surfaceId',
-          'VALIDATION_ERROR',
-          400,
-        )
+        return errorResponse('Missing required query param: surfaceId', 'VALIDATION_ERROR', 400)
       }
       const active = surfaceRegistry.getActiveVariant(surfaceId)
       return json({ ok: true, surfaceId, active: active ?? null })
@@ -147,18 +114,10 @@ export function createVariantRouter() {
       const variantId = putMatch[1]!
       const existing = findVariantById(variantId)
       if (!existing) {
-        return errorResponse(
-          `Variant not found: ${variantId}`,
-          'NOT_FOUND',
-          404,
-        )
+        return errorResponse(`Variant not found: ${variantId}`, 'NOT_FOUND', 404)
       }
       if (existing.variant.isLocked) {
-        return errorResponse(
-          `Cannot edit locked variant: ${variantId}`,
-          'LOCKED',
-          423,
-        )
+        return errorResponse(`Cannot edit locked variant: ${variantId}`, 'LOCKED', 423)
       }
 
       let body: unknown
@@ -195,10 +154,7 @@ export function createVariantRouter() {
       }
 
       surfaceRegistry.saveVariant(existing.surfaceId, updatedParsed.data)
-      log.info(
-        { surfaceId: existing.surfaceId, variantId },
-        '[variant-router] variant updated',
-      )
+      log.info({ surfaceId: existing.surfaceId, variantId }, '[variant-router] variant updated')
       return json({ ok: true, variant: updatedParsed.data })
     }
 
@@ -208,32 +164,17 @@ export function createVariantRouter() {
       const variantId = delMatch[1]!
       const existing = findVariantById(variantId)
       if (!existing) {
-        return errorResponse(
-          `Variant not found: ${variantId}`,
-          'NOT_FOUND',
-          404,
-        )
+        return errorResponse(`Variant not found: ${variantId}`, 'NOT_FOUND', 404)
       }
       if (existing.variant.isLocked) {
-        return errorResponse(
-          `Cannot delete locked variant: ${variantId}`,
-          'LOCKED',
-          423,
-        )
+        return errorResponse(`Cannot delete locked variant: ${variantId}`, 'LOCKED', 423)
       }
       try {
         surfaceRegistry.deleteVariant(existing.surfaceId, variantId)
       } catch (err) {
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'LOCKED',
-          423,
-        )
+        return errorResponse(err instanceof Error ? err.message : String(err), 'LOCKED', 423)
       }
-      log.info(
-        { surfaceId: existing.surfaceId, variantId },
-        '[variant-router] variant deleted',
-      )
+      log.info({ surfaceId: existing.surfaceId, variantId }, '[variant-router] variant deleted')
       return json({ ok: true, deleted: variantId })
     }
 
@@ -243,11 +184,7 @@ export function createVariantRouter() {
       const variantId = actMatch[1]!
       const existing = findVariantById(variantId)
       if (!existing) {
-        return errorResponse(
-          `Variant not found: ${variantId}`,
-          'NOT_FOUND',
-          404,
-        )
+        return errorResponse(`Variant not found: ${variantId}`, 'NOT_FOUND', 404)
       }
 
       // Mark active in registry first.
@@ -275,11 +212,7 @@ export function createVariantRouter() {
           { err, surfaceId: existing.surfaceId, variantId },
           '[variant-router] activation apply failed',
         )
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'APPLY_FAILED',
-          500,
-        )
+        return errorResponse(err instanceof Error ? err.message : String(err), 'APPLY_FAILED', 500)
       }
     }
 
@@ -289,11 +222,7 @@ export function createVariantRouter() {
       const variantId = getMatch[1]!
       const existing = findVariantById(variantId)
       if (!existing) {
-        return errorResponse(
-          `Variant not found: ${variantId}`,
-          'NOT_FOUND',
-          404,
-        )
+        return errorResponse(`Variant not found: ${variantId}`, 'NOT_FOUND', 404)
       }
       return json({ ok: true, variant: existing.variant })
     }

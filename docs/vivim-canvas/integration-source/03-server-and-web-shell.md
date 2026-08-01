@@ -26,7 +26,7 @@ Bun server entry, WebSocket bridge, and the conversation router. The canvas WS (
 
 ### `src/server/index.ts`
 
-_691 lines_
+_1465 lines_
 
 ```typescript
 // src/server/index.ts
@@ -36,35 +36,71 @@ _691 lines_
 // and WebSocket bridge. Engine wiring is deferred to the full bootstrap
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { connectCapabilityRegistry } from '../cli/index.js'
+import { config } from '../config.js'
+import { registerGeneratedCapabilities } from '../engines/capability-bootstrap-generated.js'
 import { registerDefaultCapabilities } from '../engines/capability-bootstrap.js'
+import { registerNlInterpretCapability } from '../engines/capability-bootstrap.js'
 import { CapabilityEventBus } from '../engines/capability-event-bus.js'
 import type { CapabilityResolutionEngine } from '../engines/capability-resolution.js'
+import {
+  type CdpBindingStore,
+  registerDiscoveredCdpMethods,
+} from '../engines/cdp-capability-registrar.js'
+import { CDP_PROTOCOL_CATALOG } from '../engines/cdp-discovery.js'
 import type { ChromeGovernor } from '../engines/chrome-governor.js'
+import type { ConceptualModelService } from '../engines/conceptual-model-service.js'
 import type { ConversationManager } from '../engines/conversation-manager.js'
 import type { CostOptimizer } from '../engines/cost-optimizer.js'
 import type { CrossConversationSynthesizer } from '../engines/cross-conversation-synthesis.js'
 import type { ExportEngine } from '../engines/export.js'
+import { InMemoryGenerativeTaskStore } from '../engines/generative/generative-task-store.js'
 import type { IdempotencyGuard } from '../engines/idempotency-guard.js'
 import { bootstrapKernel } from '../engines/kernel/kernel-bootstrap.js'
 import type { Kernel } from '../engines/kernel/kernel-context.js'
 import type { KnowledgeIngestionEngine } from '../engines/knowledge-ingestion.js'
 import type { LockManager } from '../engines/lock-manager.js'
-import type { ProviderHealthKernel } from '../engines/provider-health.js'
 import { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
+import type { ProviderHealthKernel } from '../engines/provider-health.js'
 import type { ProviderMuxEngine } from '../engines/provider-mux.js'
 import type { RetryEngine } from '../engines/retry-engine.js'
-import type { SemanticSearchEngine } from '../engines/semantic-search.js'
+import type { EmbeddingProvider, SemanticSearchEngine } from '../engines/semantic-search.js'
 import { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import type { UserIdentityEngine } from '../engines/user-identity.js'
+import { getLogger } from '../lib/logger.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { createAuthMiddleware } from './auth-gate.js'
+import { createAutomationRouter } from './automation-router.js'
 import { createAutonomousRouter } from './autonomous-router.js'
+import { createCapabilityRouter } from './capability-router.js'
+import { createChromeRouter } from './chrome-router.js'
 import { createConversationRouter } from './conversation-router.js'
+import { createGenerativeRouter } from './generative-router.js'
+import { createInterpretRouter } from './interpret-router.js'
 import { createKnowledgeRouter } from './knowledge-router.js'
+import { createLlmHarnessRouter } from './llm-harness-router.js'
+import { createMemoryVizRouter } from './memory-viz-router.js'
+import { createMutationRouter } from './mutation-router.js'
 import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
+import { bootOnboardingPipeline } from './onboarding-boot.js'
+import { createPluginBuilderRouter } from './plugin-builder-router.js'
 import { errorResponse, json } from './response.js'
+import { createUpdateRouter } from './routes/update.js'
 import { createSetupRouter } from './setup-router.js'
-import { handleWebSocket, registerConversationForwarder, setCanvasWsHandler } from './websocket.js'
+import { createSurfaceRouter } from './surface-router.js'
+import { createTemplateRouter } from './template-router.js'
+import { createVariantRouter } from './variant-router.js'
+import { createVersionRouter } from './version-router.js'
+import {
+  handleWebSocket,
+  registerCanvasMutationForwarder,
+  registerConversationForwarder,
+  registerNodeEventForwarder,
+  setCanvasWsHandler,
+} from './websocket.js'
 
 export interface ServerContext {
   port: number
@@ -83,12 +119,20 @@ export interface ServerContext {
   registry?: UnifiedCapabilityRegistry
   costOptimizer?: CostOptimizer
   nlclEngine?: NLCLEngine
+  automationOrchestrator?: import('../engines/automation/orchestrator.js').AutomationOrchestrator
   kernel?: Kernel
   healthKernel?: ProviderHealthKernel
   lockManager?: LockManager
   idempotencyGuard?: IdempotencyGuard
   retryEngine?: RetryEngine
+  conceptualModel?: ConceptualModelService
+  userIdentity?: UserIdentityEngine
+  memoryFabric?: import('../engines/memory/memory-fabric.js').MemoryFabric
+  agentBuilder?: import('../engines/agent-builder.js').AgentBuilderEngine
+  memoryEngine?: import('../engines/memory-engine.js').MemoryEngine
 }
+
+const log = getLogger('server')
 
 /** Shutdown hooks registered during server lifetime */
 const shutdownHooks: Array<() => Promise<void>> = []
@@ -101,18 +145,54 @@ export function onShutdown(hook: () => Promise<void>): void {
 async function gracefulShutdown(signal: string): Promise<void> {
   if (isShuttingDown) return
   isShuttingDown = true
-  console.log(`\n${signal} received — shutting down gracefully...`)
+  log.info({ signal }, 'Shutting down gracefully...')
 
   for (const hook of shutdownHooks) {
     try {
       await hook()
     } catch (err) {
-      console.error('Shutdown hook error:', err)
+      log.error({ err }, 'Shutdown hook error')
     }
   }
 
-  console.log('Shutdown complete.')
+  log.info('Shutdown complete.')
   process.exit(0)
+}
+
+/**
+ * Try to bind Bun.serve on `port`. If EADDRINUSE, walk up to the next free
+ * port (up to +200). Writes the actual port to `.runtime/backend.port` so
+ * downstream clients (PS1 scripts, frontend, CLI) discover it.
+ */
+function startOnFreePort(
+  opts: Parameters<typeof Bun.serve>[0],
+  preferredPort: number,
+): { server: ReturnType<typeof Bun.serve>; boundPort: number } {
+  const maxScan = preferredPort + 200
+  let port = preferredPort
+  while (port < maxScan) {
+    try {
+      const server = Bun.serve({ ...opts, port } as Parameters<typeof Bun.serve>[0])
+      // Write actual port so PS1 scripts + frontend can discover it
+      try {
+        const runtimeDir = join(process.cwd(), '.runtime')
+        mkdirSync(runtimeDir, { recursive: true })
+        writeFileSync(join(runtimeDir, 'backend.port'), String(port), 'utf-8')
+      } catch {
+        /* best-effort */
+      }
+      return { server, boundPort: port }
+    } catch (err: unknown) {
+      const code = (err as NodeJS.ErrnoException).code
+      if (code === 'EADDRINUSE') {
+        log.warn({ port, nextPort: port + 1 }, 'Port in use, trying next port')
+        port++
+        continue
+      }
+      throw err
+    }
+  }
+  throw new Error(`No free port found in range ${preferredPort}–${maxScan - 1}`)
 }
 
 export async function createServer(port = 9420): Promise<ServerContext> {
@@ -130,77 +210,217 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   const setupRouter = createSetupRouter(ctx)
   const muxRouter = createMuxRouter(ctx)
   const nlclRouter = createNLCLRouter(nlclEngine)
+  const chromeRouter = createChromeRouter()
+  const generativeStore = new InMemoryGenerativeTaskStore()
+  const generativeRouter = createGenerativeRouter(generativeStore)
+  const llmHarnessRouter = createLlmHarnessRouter()
+  const mutationRouter = createMutationRouter()
+  const pluginBuilderRouter = createPluginBuilderRouter()
+  const surfaceRouter = createSurfaceRouter()
+  const templateRouter = createTemplateRouter()
+  const variantRouter = createVariantRouter()
+  const versionRouter = createVersionRouter()
+  const updateRouter = createUpdateRouter()
+
+  // bootOnboardingPipeline called after governor is created (see below)
 
   // Track readiness — becomes true after server boots
   let ready = false
 
-  Bun.serve({
-    port,
-    fetch(req, server) {
-      const url = new URL(req.url)
+  const { boundPort } = startOnFreePort(
+    {
+      fetch(req, server) {
+        const url = new URL(req.url)
 
-      // Liveness — always 200 if process is running (no auth)
-      if (url.pathname === '/health') {
-        return json({ status: 'ok', version: '1.0.0' })
-      }
-
-      // Readiness — 200 only when server is ready to accept traffic (no auth)
-      if (url.pathname === '/readyz') {
-        if (!ready) {
-          return json({ status: 'not_ready', reason: 'server still starting' }, 503)
+        // CORS preflight — allow all origins, methods, headers
+        if (req.method === 'OPTIONS') {
+          return new Response(null, {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
+              'Access-Control-Allow-Headers':
+                'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
+              'Access-Control-Max-Age': '86400',
+            },
+          })
         }
-        return json({ status: 'ready', uptime: process.uptime() })
-      }
 
-      // Setup routes — no auth (workspace/profile setup is first-run experience)
-      if (url.pathname.startsWith('/api/setup/')) {
-        return setupRouter(req)
-      }
+        if (url.pathname === '/health') {
+          return json({ status: 'ok', version: '1.0.0' })
+        }
 
-      // WebSocket upgrade
-      if (url.pathname === '/ws') {
-        const ok = server.upgrade(req)
-        return ok ? undefined : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
-      }
+        // Readiness — 200 only when server is ready to accept traffic (no auth)
+        if (url.pathname === '/readyz') {
+          if (!ready) {
+            return json({ status: 'not_ready', reason: 'server still starting' }, 503)
+          }
+          return json({ status: 'ready', uptime: process.uptime() })
+        }
 
-      // Reject requests during shutdown
-      if (isShuttingDown) {
-        return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
-      }
+        // OpenAPI spec — no auth, machine-readable API documentation
+        if (url.pathname === '/api/openapi.json') {
+          try {
+            const specPath = join(process.cwd(), 'docs/api/v11-universal-api.yaml')
+            if (existsSync(specPath)) {
+              const yaml = readFileSync(specPath, 'utf8')
+              return new Response(yaml, {
+                headers: { 'Content-Type': 'application/yaml; charset=utf-8' },
+              })
+            }
+            return json({ error: 'OpenAPI spec not found', code: 'NotFound' }, 404)
+          } catch {
+            return json({ error: 'Failed to load OpenAPI spec', code: 'InternalError' }, 500)
+          }
+        }
 
-      // Auth gate
-      const authResult = auth(req)
-      if (authResult) return authResult
+        // Swagger UI — no auth, interactive API documentation
+        if (url.pathname === '/docs') {
+          const specUrl = `${url.origin}/api/openapi.json`
+          const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>vivim API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({ url: '${specUrl}', dom_id: '#swagger-ui', deepLinking: true });
+  </script>
+</body>
+</html>`
+          return new Response(html, {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          })
+        }
 
-      // Mux routes
-      if (url.pathname.startsWith('/api/route/')) {
-        return muxRouter(req)
-      }
+        // Setup routes — no auth (workspace/profile setup is first-run experience)
+        if (url.pathname.startsWith('/api/setup/')) {
+          return setupRouter(req)
+        }
 
-      // NLCL — Natural Language Command Layer routes (available in minimal mode)
-      if (url.pathname.startsWith('/api/nlcl/')) {
-        return nlclRouter(req)
-      }
+        // WebSocket upgrade
+        if (url.pathname === '/ws') {
+          const ok = server.upgrade(req, { data: {} })
+          return ok
+            ? new Response(null, { status: 101 })
+            : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+        }
 
-      // Knowledge routes
-      if (url.pathname.startsWith('/api/knowledge/')) {
-        return knowledgeRouter(req)
-      }
+        // Reject requests during shutdown
+        if (isShuttingDown) {
+          return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
+        }
 
-      return conversationRouter(req)
+        // Auth gate
+        const authResult = auth(req)
+        if (authResult) return authResult
+
+        // Mux routes
+        if (url.pathname.startsWith('/api/route/')) {
+          return muxRouter(req)
+        }
+
+        // NLCL — Natural Language Command Layer routes (available in minimal mode)
+        if (url.pathname.startsWith('/api/nlcl/')) {
+          return nlclRouter(req)
+        }
+
+        // Knowledge routes
+        if (url.pathname.startsWith('/api/knowledge/')) {
+          return knowledgeRouter(req)
+        }
+
+        // Chrome automation routes
+        if (url.pathname.startsWith('/api/chrome/')) {
+          return chromeRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Generative engine routes
+        if (url.pathname.startsWith('/api/generative/')) {
+          return generativeRouter(req)
+        }
+
+        // LLM harness routes
+        if (url.pathname.startsWith('/api/harness/')) {
+          return llmHarnessRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Mutation routes
+        if (url.pathname.startsWith('/api/mutation/')) {
+          return mutationRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Plugin builder routes
+        if (url.pathname.startsWith('/api/plugins/')) {
+          return pluginBuilderRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Surface routes
+        if (url.pathname.startsWith('/api/surface/')) {
+          return surfaceRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Template routes
+        if (url.pathname.startsWith('/api/template/')) {
+          return templateRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Variant routes
+        if (url.pathname.startsWith('/api/variant/')) {
+          return variantRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Version routes
+        if (url.pathname.startsWith('/api/version/')) {
+          return versionRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Update routes
+        if (url.pathname.startsWith('/api/update/')) {
+          return updateRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // Static file serving (env-gated: FRONTEND_DIR)
+        const frontendDir = process.env.FRONTEND_DIR
+        if (frontendDir) {
+          try {
+            const filePath = join(frontendDir, url.pathname === '/' ? 'index.html' : url.pathname)
+            if (existsSync(filePath)) {
+              return new Response(Bun.file(filePath))
+            }
+            // SPA fallback: serve index.html for non-file paths
+            if (!url.pathname.includes('.')) {
+              const indexPath = join(frontendDir, 'index.html')
+              if (existsSync(indexPath)) {
+                return new Response(Bun.file(indexPath))
+              }
+            }
+          } catch {
+            // Fall through to conversationRouter
+          }
+        }
+
+        return conversationRouter(req)
+      },
+      websocket: {
+        open(ws) {
+          handleWebSocket.open(ws)
+        },
+        message(ws, message) {
+          handleWebSocket.message(ws, message, eventBus)
+        },
+        close(ws) {
+          handleWebSocket.close(ws, eventBus)
+        },
+      },
     },
-    websocket: {
-      open(ws) {
-        handleWebSocket.open(ws)
-      },
-      message(ws, message) {
-        handleWebSocket.message(ws, message, eventBus)
-      },
-      close(ws) {
-        handleWebSocket.close(ws, eventBus)
-      },
-    },
-  })
+    port,
+  )
+
+  ctx.port = boundPort
 
   // Mark server as ready after Bun.serve succeeds
   ready = true
@@ -225,7 +445,10 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const { CapabilityResolutionEngine } = await import('../engines/capability-resolution.js')
   const { ChromeGovernor } = await import('../engines/chrome-governor.js')
   const { StreamParserEngine } = await import('../engines/stream-parser.js')
+  const { SandboxRunner } = await import('../engines/sandbox-runner.js')
+  const { SandboxAuditStoreImpl } = await import('../storage/impl/sandbox-audit-store-impl.js')
   const { StreamBlockStore } = await import('../engines/stream-block-store.js')
+  const { NodeStoreImpl } = await import('../storage/impl/node-store-impl.js')
   const { ExecutionMemoizer } = await import('../engines/execution-memoizer.js')
   const { MemoryEngine } = await import('../engines/memory-engine.js')
   const { ConversationStoreImpl } = await import('../storage/impl/conversation-store-impl.js')
@@ -234,38 +457,114 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     '../storage/impl/capability-resolution-store-impl.js'
   )
   const { ParserStoreImpl } = await import('../storage/impl/parser-store-impl.js')
+  const { ParserExecutionLogStoreImpl } = await import(
+    '../storage/impl/parser-execution-log-store-impl.js'
+  )
+  const { ContentUnitStoreImpl } = await import('../storage/impl/content-unit-store-impl.js')
+  const { CapabilityStoreImpl } = await import('../storage/impl/capability-store-impl.js')
+  const { CapabilitySnapshot } = await import('../engines/capability-snapshot.js')
   const { EpisodicMemoryStoreImpl } = await import('../storage/impl/episodic-memory-store-impl.js')
   const { SemanticMemoryStoreImpl } = await import('../storage/impl/semantic-memory-store-impl.js')
   const { ProceduralMemoryStoreImpl } = await import(
     '../storage/impl/procedural-memory-store-impl.js'
   )
 
-  // Seed providers at boot (idempotent upserts)
+  // ── Boot seeds (skip if already seeded; FORCE_SEED env to re-run) ────
   const { ProviderStoreImpl } = await import('../storage/impl/provider-store-impl.js')
   const { ProviderRegistrar } = await import('../engines/provider-registrar.js')
   const providerStore = new ProviderStoreImpl(db)
   const registrar = new ProviderRegistrar(providerStore, undefined, eventBus)
-  const seedResult = await registrar.seedAll()
-  console.log(
-    `[boot] Seeded ${seedResult.seeded.length} providers, ${seedResult.errors.length} errors`,
-  )
-  if (seedResult.errors.length > 0) {
-    console.warn('[boot] Seed errors:', seedResult.errors)
+
+  const needsSeed = process.env.FORCE_SEED
+    ? true
+    : (await db.prisma.providerDefinition.count()) === 0
+
+  if (needsSeed) {
+    const seedResult = await registrar.seedAll()
+    log.info(
+      { count: seedResult.seeded.length, errors: seedResult.errors.length },
+      'Seeded providers',
+    )
+
+    try {
+      const { seedHarvestedParsers } = await import('../../seeds/parsers/harvest.seed.js')
+      const harvested = await seedHarvestedParsers(providerStore)
+      log.info({ count: harvested }, 'Harvested parser variants into DB')
+    } catch (err) {
+      log.warn({ err }, 'Parser harvest seed skipped')
+    }
+
+    try {
+      const { seedAutomation } = await import('../../seeds/automation/automation.seed.js')
+      const autoCount = await seedAutomation(db)
+      log.info({ count: autoCount }, 'Seeded browser-automation records')
+    } catch (err) {
+      log.warn({ err }, 'Automation seed skipped')
+    }
+
+    try {
+      const { ensureTaxonomySeeded } = await import('../../seeds/taxonomy/taxonomy-seed.js')
+      const tax = await ensureTaxonomySeeded(db.prisma)
+      if (tax.upserted > 0) {
+        log.info({ count: tax.upserted }, 'Seeded capability-taxonomy rows')
+      }
+    } catch (err) {
+      log.warn({ err }, 'Taxonomy seed skipped')
+    }
+
+    try {
+      const { seedHarnessCommands } = await import('../../seeds/harness/commands.seed.js')
+      const harnessCount = await seedHarnessCommands(db)
+      log.info({ count: harnessCount }, 'Seeded harness commands')
+    } catch (err) {
+      log.warn({ err }, 'Harness command seed skipped')
+    }
+  } else {
+    log.info('DB already seeded — skipping boot seeds (set FORCE_SEED=true to re-run)')
   }
+
+  // Initialize provider registry cache (loads all provider data from DB)
+  const { createProviderRegistry } = await import('../config/provider-registry.js')
+  const providerRegistry = createProviderRegistry(db)
+  await providerRegistry.initialize()
+  log.info({ count: providerRegistry.getProviderList().length }, 'Provider registry initialized')
 
   // Store instances
   const convStore = new ConversationStoreImpl(db)
   const govStore = new GovernorStoreImpl(db)
   const resStore = new CapabilityResolutionStoreImpl(db.prisma as any)
   const parserStore = new ParserStoreImpl(db)
+  const parserExecLogStore = new ParserExecutionLogStoreImpl(db.prisma as never)
+  const contentUnitStore = new ContentUnitStoreImpl(db.prisma as never)
+  const capabilityStore = new CapabilityStoreImpl(db)
   const episodicStore = new EpisodicMemoryStoreImpl(db)
   const semanticStore = new SemanticMemoryStoreImpl(db)
   const proceduralStore = new ProceduralMemoryStoreImpl(db)
 
   // Engine instances
   const resolutionEngine = new CapabilityResolutionEngine(resStore)
-  const parserEngine = new StreamParserEngine(parserStore)
+  const sandboxRunner = new SandboxRunner(new SandboxAuditStoreImpl(db))
+  const parserEngine = new StreamParserEngine(
+    parserStore,
+    undefined,
+    sandboxRunner,
+    parserExecLogStore,
+  )
   const streamBlocks = new StreamBlockStore(db)
+
+  // Prime parser cache from the generated protocol so the hot parse path does
+  // ZERO DB reads. Falls back to the DB resolver chain if a module is missing.
+  try {
+    const { loadProviderProtocol, normalizeProtocolSource } = await import(
+      '../engines/provider-protocol-loader.js'
+    )
+    const source = normalizeProtocolSource(config.providerProtocolSource)
+    const { protocol } = await loadProviderProtocol(source)
+    await parserEngine.primeFromProtocol(protocol)
+    log.info({ source }, 'Stream parser cache primed from protocol')
+  } catch (err) {
+    log.warn({ err }, 'Protocol parser priming skipped')
+  }
   const memoizer = new ExecutionMemoizer({
     emit: (event: string, data: unknown) => {
       eventBus.emit({ type: event, ...(data as Record<string, unknown>) } as any)
@@ -290,6 +589,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     profileBaseDir: workspaceHint,
   })
 
+  let memoryFabric: import('../engines/memory/memory-fabric.js').MemoryFabric | undefined
+  let agentBuilder: import('../engines/agent-builder.js').AgentBuilderEngine | undefined
+
   const conversationManager = new ConversationManager(
     governor,
     resolutionEngine,
@@ -299,6 +601,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     eventBus,
     memoizer,
     memoryEngine,
+    undefined,
+    undefined,
+    new NodeStoreImpl(db.prisma as never),
+    contentUnitStore,
+    memoryFabric,
   )
 
   // Wire CDP transport, trace log, and health monitor into governor
@@ -316,6 +623,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
   // Boot governor (seeds accounts, starts fleet)
   await governor.boot()
+
+  // Boot onboarding pipeline (non-blocking, attaches to service container)
+  bootOnboardingPipeline(governor, db).catch((err: unknown) => {
+    log.warn({ err }, 'Onboarding pipeline boot failed (non-fatal)')
+  })
 
   // Knowledge engines (optional — wired if stores are available)
   let knowledgeIngestion:
@@ -362,13 +674,19 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       '../storage/impl/semantic-search-store-impl.js'
     )
     const ssStore = new SemanticSearchStoreImpl(db)
-    const noopEmbedding = {
-      name: 'noop',
-      dimensions: 384,
-      embed: async (_t: string) => new Array(384).fill(0),
-      embedBatch: async (ts: string[]) => ts.map(() => new Array(384).fill(0)),
+
+    let embedding: EmbeddingProvider
+    try {
+      const { OllamaEmbeddingProvider } = await import('../engines/embedding-ollama.js')
+      const provider = new OllamaEmbeddingProvider()
+      await provider.embed('ping')
+      embedding = provider
+    } catch {
+      const { MiniLmEmbeddingProvider } = await import('../engines/embedding-minilm.js')
+      embedding = new MiniLmEmbeddingProvider()
     }
-    semanticSearch = new SemanticSearchEngine(ssStore, noopEmbedding)
+
+    semanticSearch = new SemanticSearchEngine(ssStore, embedding)
   } catch {
     /* semantic search not available */
   }
@@ -415,7 +733,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
           id: r.id,
           role: r.role,
           content: r.content ?? '',
-          ts: r.createdAt,
+          ts: Number(r.createdAt),
         }))
       },
       async listMemory() {
@@ -491,8 +809,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
           if (!convId) {
             // Create a transient conversation for this mux response
+            const session = await convStore.ensureProviderSession({ providerId })
             const conv = await convStore.createConversation({
-              providerSessionId: `mux_${providerId}_${Date.now()}`,
+              providerSessionId: session.id,
               providerId,
               title: `Mux: ${message.slice(0, 50)}`,
             })
@@ -527,7 +846,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       },
     }
 
-    async function estimateCost(providerId: string, latencyMs: number): Promise<number> {
+    async function estimateCost(providerId: string, _latencyMs: number): Promise<number> {
       if (costOptimizer) {
         return costOptimizer.estimateCost(providerId, 1000) // rough: 1000-char message
       }
@@ -553,19 +872,297 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     const { ExecutionPolicyEngine } = await import('../engines/execution-policy.js')
     const { AutonomousStoreImpl } = await import('../storage/impl/autonomous-store-impl.js')
     const { PolicyStoreImpl } = await import('../storage/impl/policy-store-impl.js')
+    const { ProfileAllocator } = await import('../executor/profile-allocator.js')
     const autonomousStore = new AutonomousStoreImpl()
     const pStore = new PolicyStoreImpl()
+    const profileAllocator = new ProfileAllocator()
     registry = new UnifiedCapabilityRegistry()
+    const { LocalAgentStoreImpl } = await import('../storage/impl/local-agent-store-impl.js')
+    const { LocalAgentProviderExecutor } = await import(
+      '../engines/local-agent/local-agent-executor.js'
+    )
+    const localAgentStore = new LocalAgentStoreImpl(db)
+    const localAgentExecutor = new LocalAgentProviderExecutor(localAgentStore, eventBus)
+
     registerDefaultCapabilities(registry, {
       db,
       conversationStore: convStore,
       governor,
       conversationManager,
+      profileAllocator,
+      memoryEngine,
+      semanticSearch,
+      knowledgeIngestion,
+      synthesizer,
+      localAgentStore,
+      localAgentExecutor,
+    })
+
+    // ── Phase 2.3 harness program resolver ──────────────────────────────────
+    // Allow harness DB programs (prog-* capabilities) to be executed through
+    // the One Entry Point without pre-registration. Lazy-resolved on first
+    // request and cached in the registry for subsequent calls.
+    {
+      const { ProgramStoreImpl } = await import('../storage/impl/program-store-impl.js')
+      const { composeHarness } = await import('../engines/harness/index.js')
+      const { configToProgram } = await import('../engines/harness/program-schema.js')
+      const { programToCapability } = await import('../engines/cdp-capability-registrar.js')
+      const { createGovernorSlaveResolver } = await import(
+        '../engines/harness/fleet-lifecycle-adapter.js'
+      )
+
+      const programStore = new ProgramStoreImpl(db)
+      const _slaveResolver = createGovernorSlaveResolver(governor)
+      const harness = composeHarness({
+        governor,
+        programStore,
+        capabilityStore,
+        blockStore: streamBlocks,
+        eventBus,
+        parser: parserEngine,
+        registry,
+        defaultTimeoutMs: 30_000,
+      })
+
+      registry.setProgramResolver(async (slug) => {
+        const body = slug.startsWith('prog-') ? slug.slice(5) : slug
+        const lastDash = body.lastIndexOf('-')
+        if (lastDash <= 0) return null
+        const capabilitySlug = body.slice(0, lastDash)
+        const providerId = body.slice(lastDash + 1)
+        const program = await programStore.getBestProgramByCapability(capabilitySlug, providerId)
+        if (!program) return null
+        const _recipe = configToProgram(program.configJson).recipe
+        const cap = programToCapability(program, { executor: harness.executor })
+        ;(registry as UnifiedCapabilityRegistry).register(cap)
+        return cap
+      })
+    }
+
+    // ── Spec 032: LLM-as-Human testing as a single UnifiedCapability ──────
+    // Collapses `llm-test` into the One Entry Point — no parallel CLI command
+    // tree, the orchestrator runs through the registry handler.
+    {
+      const { registerLlmTestCapabilities } = await import(
+        '../../devops/llm-testing/capabilities.js'
+      )
+      registerLlmTestCapabilities(registry, {
+        db,
+        conversationStore: convStore,
+        governor,
+        conversationManager,
+        profileAllocator,
+        memoryEngine,
+        semanticSearch,
+        knowledgeIngestion,
+        synthesizer,
+        localAgentStore,
+        localAgentExecutor,
+      })
+    }
+
+    // Register generated capabilities from the taxonomy pool (196 caps)
+    registerGeneratedCapabilities(registry, {
+      db,
+      conversationStore: convStore,
+      governor,
+      conversationManager,
+      profileAllocator,
       memoryEngine,
       semanticSearch,
       knowledgeIngestion,
       synthesizer,
     })
+
+    // ── MCP server (Spec 032 cross-surface) ─────────────────────────────────
+    // Expose every mcp-surface capability as a live MCP tool over WebSocket so
+    // the llm-testing mcp adapter can actually discover + invoke them. Without
+    // this the mcp surface silently yields 0 tests and parity is meaningless.
+    try {
+      const { McpServerAdapter } = await import('../engines/mcp-server-adapter.js')
+      const mcpServer = new McpServerAdapter(governor, registry)
+      const mcpStartPort = config.mcpPort ?? port + 1
+      let mcpPort = mcpStartPort
+      for (let attempt = 0; attempt < 20; attempt++) {
+        try {
+          await mcpServer.start({ port: mcpPort, hostname: '127.0.0.1' })
+          break
+        } catch {
+          if (attempt === 19) throw new Error(`MCP port ${mcpStartPort} and next 19 ports in use`)
+          mcpPort++
+        }
+      }
+      ;(globalThis as Record<string, unknown>).__mcpServer = mcpServer
+      log.info({ port: mcpPort, tools: mcpServer.getTools().length }, 'MCP server listening')
+    } catch (err) {
+      log.warn({ err }, 'MCP server skipped')
+    }
+
+    // ── Federated per-agent memory (spec 024) ───────────────────────────────
+    // Construct the MemoryFabric once and wire it into AgentBuilderEngine so
+    // every spawned agent auto-provisions a per-agent memory subsystem
+    // (MemoryOracle + MemoryWarden). Capabilities are registered into `registry`.
+    try {
+      const { BeliefStore } = await import('../engines/belief-store.js')
+      const { MemoryFabric } = await import('../engines/memory/memory-fabric.js')
+      const { AgentBuilderEngine } = await import('../engines/agent-builder.js')
+      const { AgenticStoreImpl } = await import('../storage/impl/agentic-store-impl.js')
+      const { EventRecordStore } = await import('../engines/event-record-store.js')
+      const { KnowledgeExtractorStoreImpl } = await import(
+        '../storage/impl/knowledge-extractor-store-impl.js'
+      )
+      const { SemanticSearchStoreImpl } = await import(
+        '../storage/impl/semantic-search-store-impl.js'
+      )
+      const nodeStoreImpl = new NodeStoreImpl(db.prisma as never)
+      const agenticStoreImpl = new AgenticStoreImpl(nodeStoreImpl, db.prisma as never)
+      const eventStore = new EventRecordStore(db.prisma as never)
+      // Expose memory stores globally so the LLM-testing orchestrator (Spec 032)
+      // can project provider test results into agent memory (T16) without a
+      // BootstrapServices change — the supervisor may not be enabled at boot.
+      ;(globalThis as Record<string, unknown>).__capStoreMemory = {
+        agenticStore: agenticStoreImpl,
+        eventRecordStore: eventStore,
+      }
+      const kexStoreImpl = new KnowledgeExtractorStoreImpl(db)
+      const ssStoreImpl = new SemanticSearchStoreImpl(db)
+      const beliefStore = new BeliefStore(agenticStoreImpl)
+      memoryFabric = new MemoryFabric({
+        agenticStore: agenticStoreImpl,
+        registry,
+        nodeStore: nodeStoreImpl,
+        extractorStore: kexStoreImpl,
+        semanticStore: ssStoreImpl,
+        beliefStore,
+      })
+      agentBuilder = new AgentBuilderEngine(agenticStoreImpl, memoryFabric)
+      // Provision the host/system agent so a mem:* capability is live at boot
+      // (verifiable via devops verify-cross-surface). Per-agent subsystems for
+      // spawned agents are provisioned on spawn (FR-001/FR-002).
+      await memoryFabric
+        .provisionAgentMemory('system', 'system-run')
+        .catch((e) => log.warn({ err: e }, 'System memory subsystem provision skipped'))
+      log.info('MemoryFabric + AgentBuilderEngine wired (per-agent memory enabled)')
+
+      // ── OpenCode `serve` supervisor (feature 027, ADDITIVE, OFF by default) ──
+      // Peer provider 'opencode'. Supervises a local `opencode serve` subprocess and
+      // ingests its sessions into AgentSession/EventRecord. Local-first: only starts
+      // when OPENCODE_SERVE_ENABLED=1. Never blocks other providers' boot.
+      // Nested inside memory-fabric block — requires agenticStoreImpl in scope.
+      if (config.opencodeServeEnabled) {
+        try {
+          const { OpenCodeSupervisor } = await import('../engines/opencode/opencode-supervisor.js')
+          const { OpenCodeClient } = await import('../engines/opencode/opencode-client.js')
+          const { OpenCodeIngest } = await import('../engines/opencode/opencode-ingest.js')
+          const supervisor = new OpenCodeSupervisor({
+            port: config.opencodeServePort,
+            password: config.opencodeServerPassword,
+          })
+          const { port } = await supervisor.start()
+          const client = new OpenCodeClient({
+            port,
+            password: config.opencodeServerPassword,
+            username: config.opencodeServerUsername,
+          })
+          const ingest = new OpenCodeIngest({
+            client,
+            agenticStore: agenticStoreImpl,
+            eventRecordStore: eventStore,
+          })
+          ;(globalThis as Record<string, unknown>).__opencodeServe = { supervisor, client, ingest }
+          log.info({ port }, 'OpenCode serve supervisor started')
+        } catch (err) {
+          log.warn({ err }, 'OpenCode serve supervisor skipped')
+        }
+      }
+    } catch (err) {
+      log.warn({ err }, 'Memory fabric wiring skipped')
+    }
+
+    // ── G1/G2: Register discovered CDP methods as live capabilities ──────────
+    // Every CDP command becomes a `cap:cdp:*` capability backed by the governor's
+    // mediated transport. At boot we register the full offline protocol catalog
+    // (96+ commands) and persist a CapabilityBinding row per command against the
+    // `generic` provider (the automation backbone) with status `prospect` (D2
+    // light gate — not yet live-verified). When a real provider slave attaches,
+    // executeCdp re-registers with that providerId + `active` status.
+    const cdpBindingStore: CdpBindingStore = {
+      async ensureCdpBinding(args) {
+        const now = Date.now()
+        // Relaxed persistence: ensure the canonical taxonomy row exists, then upsert the binding.
+        await db.prisma.capabilityTaxonomy
+          .upsert({
+            where: { id: args.capabilityId },
+            create: {
+              id: args.capabilityId,
+              slug: args.capabilityId.replace(/:/g, '-'),
+              name: args.capabilityId,
+              category: 'cdp',
+              description: `Discovered CDP capability ${args.capabilityId}`,
+              createdAt: now,
+              updatedAt: now,
+            },
+            update: { updatedAt: now },
+          })
+          .catch(() => {})
+        await db.prisma.capabilityBinding
+          .upsert({
+            where: {
+              globalId_providerId: { globalId: args.capabilityId, providerId: args.providerId },
+            },
+            create: {
+              id: `bind:${args.providerId}:${args.capabilityId}`,
+              globalId: args.capabilityId,
+              providerId: args.providerId,
+              status: args.status,
+              confidence: args.confidence,
+              promotionHistoryJson: JSON.stringify([
+                { ts: now, from: 'none', to: args.status, reason: args.reason ?? 'boot' },
+              ]),
+              createdAt: now,
+              updatedAt: now,
+            },
+            update: {
+              status: args.status,
+              confidence: args.confidence,
+              promotionHistoryJson: JSON.stringify([
+                { ts: now, from: 'prospect', to: args.status, reason: args.reason ?? 'boot' },
+              ]),
+              updatedAt: now,
+            },
+          })
+          .catch(() => {})
+      },
+    }
+
+    const cdpResult = registerDiscoveredCdpMethods(registry, CDP_PROTOCOL_CATALOG, {
+      executeCdp: (method, params, ctx) => {
+        const ref = ctx?.conversationId ?? ctx?.providerId ?? 'generic'
+        return governor.executeCdpMethod(ref, method, params)
+      },
+      providerId: 'generic',
+      bindingStore: cdpBindingStore,
+      // Boot registration is unverified → prospect (D2 light gate pending).
+    })
+    log.info(
+      `[boot] CDP capabilities: registered=${cdpResult.registered.length} bound=${cdpResult.bound.length} skipped=${cdpResult.skipped.length}`,
+    )
+
+    // ── 019: DB-driven capability snapshot ──────────────────────────────────
+    // Load active bindings for registered (active) providers into an in-memory
+    // map at boot. Runtime resolution reads from the snapshot (no DB hit).
+    const registeredProviders = (await providerStore.listDefinitions({ isActive: true })).map(
+      (d) => d.id,
+    )
+    const capabilitySnapshot = new CapabilitySnapshot(capabilityStore)
+    const snapshotCount = await capabilitySnapshot.load(registeredProviders)
+    governor.setCapabilitySnapshot(capabilitySnapshot)
+    log.info(
+      `[boot] Capability snapshot: loaded=${snapshotCount} for ${registeredProviders.length} providers`,
+    )
+
+    // Bridge: sync all cli-surface capabilities to the CLI CommandRegistry
+    connectCapabilityRegistry(registry)
     policyEngine = new ExecutionPolicyEngine(pStore)
     await policyEngine.initialize()
     autonomousEngine = new AutonomousExecutionEngine(
@@ -582,21 +1179,42 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   // NLCL — Natural Language Command Layer (the "comms system")
   // Deterministic parser by default; pluggable local LLM / provider LLM for fallback.
   // Available on all surfaces: REST API, CLI, MCP, frontend.
+  const automationOrchestrator = new (
+    await import('../engines/automation/orchestrator.js')
+  ).AutomationOrchestrator(governor)
   const nlclEngine = new NLCLEngine({
     governor,
+    automationOrchestrator,
     conversationManager,
     conversationStore: convStore,
     registry,
     db,
+    opencodeClient: (globalThis as Record<string, unknown>).__opencodeServe
+      ? (
+          (globalThis as Record<string, unknown>).__opencodeServe as {
+            client: import('../engines/opencode/opencode-client.js').OpenCodeClient
+          }
+        ).client
+      : undefined,
+    opencodeIngest: (globalThis as Record<string, unknown>).__opencodeServe
+      ? (
+          (globalThis as Record<string, unknown>).__opencodeServe as {
+            ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+          }
+        ).ingest
+      : undefined,
   })
-  console.log(`[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`)
+  log.info(`[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`)
+
+  // 24.7 — register NLCL itself as a capability on the unified registry
+  if (registry) {
+    registerNlInterpretCapability(registry, nlclEngine)
+  }
 
   // ── vivim-canvas (v7) — native composable layer system ────────────────
   // Attaches to the existing server host; every canvas op is a capability
   // (P5). Local-first store by default; primitives + oracle read from db.
-  let canvasRouter:
-    | ((req: Request, url: URL) => Promise<Response>)
-    | null = null
+  let canvasRouter: ((req: Request, url: URL) => Promise<Response>) | null = null
   try {
     const { CanvasEngine } = await import('../canvas/canvas-engine.js')
     const { InMemoryCanvasStore } = await import('../canvas/in-memory-store.js')
@@ -623,10 +1241,21 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       engine.registerCapabilities(registry)
       canvasRouter = createCanvasRouter({ registry } as unknown as ServerContext)
       setCanvasWsHandler(attachCanvasWs(engine))
-      console.log('[boot] vivim-canvas engine wired (store: in-memory, local-first)')
+      log.info('[boot] vivim-canvas engine wired (store: in-memory, local-first)')
     }
   } catch (err) {
-    console.warn('[boot] vivim-canvas not available:', err)
+    log.warn({ err }, '[boot] vivim-canvas not available')
+  }
+
+  // ── agent-canvas (P4) — agent ↔ canvas command bridge ─────────────────
+  let agentCanvasRouter: ((req: Request, url: URL) => Promise<Response | null>) | null = null
+  try {
+    const { createAgentCanvasRouter } = await import('./agent-canvas-router.js')
+    log.info('[boot] agent-canvas-router module loaded, creating router...')
+    agentCanvasRouter = createAgentCanvasRouter({ registry, db } as unknown as ServerContext)
+    log.info('[boot] agent-canvas router wired')
+  } catch (err) {
+    log.warn({ err }, '[boot] agent-canvas router not available')
   }
 
   // ── Kernel bootstrap ──────────────────────────────────────────────────
@@ -669,7 +1298,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     intervalMs: 30_000,
   })
   healthKernel.start()
-  onShutdown(async () => { healthKernel.stop() })
+  onShutdown(async () => {
+    healthKernel.stop()
+  })
 
   // ── Phase 7: Reliability engines ──────────────────────────────────────
   const { LockManager } = await import('../engines/lock-manager.js')
@@ -701,11 +1332,15 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     policyEngine,
     registry,
     nlclEngine,
+    automationOrchestrator,
     kernel,
     healthKernel,
     lockManager,
     idempotencyGuard,
     retryEngine,
+    memoryFabric,
+    agentBuilder,
+    memoryEngine,
   }
 
   const auth = createAuthMiddleware()
@@ -718,83 +1353,282 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       ? createAutonomousRouter({ autonomousEngine, policyEngine })
       : null
   const nlclRouter = createNLCLRouter(nlclEngine)
+  const interpretRouter = createInterpretRouter(nlclEngine)
+  const capabilityRouter = ctx.registry ? createCapabilityRouter(ctx) : null
+  const automationRouter = createAutomationRouter({ orchestrator: automationOrchestrator })
+  const memoryRouter = ctx.memoryEngine ? createMemoryVizRouter(ctx.memoryEngine) : null
 
   // Unit 2.7 — forward conversation events to subscribed WebSocket frontends
   registerConversationForwarder(eventBus)
+  // Canvas mutation + node-level event forwarders (v8 canvas UI)
+  registerCanvasMutationForwarder(eventBus)
+  registerNodeEventForwarder(eventBus)
 
   let ready = false
 
-  Bun.serve({
-    port,
-    fetch(req, server) {
-      const url = new URL(req.url)
+  // ── OpenCode `serve` routes (feature 029) ──────────────────────────────
+  async function handleOpenCodeRoutes(
+    req: Request,
+    url: URL,
+    serve: {
+      client: import('../engines/opencode/opencode-client.js').OpenCodeClient
+      ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+    },
+  ): Promise<Response> {
+    const { client, ingest } = serve
+    const path = url.pathname
 
-      if (url.pathname === '/health') {
-        return json({ status: 'ok', version: '1.0.0' })
+    // POST /api/opencode/send
+    if (path === '/api/opencode/send' && req.method === 'POST') {
+      const body = (await req.json()) as { prompt?: string; sessionId?: string; model?: string }
+      if (!body.prompt?.trim()) {
+        return json({ error: 'prompt is required' }, 400)
       }
-
-      if (url.pathname === '/readyz') {
-        if (!ready) {
-          return json({ status: 'not_ready', reason: 'server still starting' }, 503)
+      try {
+        let sessionId = body.sessionId
+        if (!sessionId) {
+          const created = await client.createSession({ model: body.model })
+          sessionId = created.sessionId
         }
-        return json({ status: 'ready', uptime: process.uptime() })
+        await ingest.start(sessionId, { model: body.model })
+        await client.sendPrompt(sessionId, body.prompt)
+        return json({ ok: true, sessionId, text: `Prompt sent to session ${sessionId}` })
+      } catch (err) {
+        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
       }
+    }
 
-      if (url.pathname.startsWith('/api/setup/')) {
-        return setupRouter(req)
+    // POST /api/opencode/session
+    if (path === '/api/opencode/session' && req.method === 'POST') {
+      const body = (await req.json()) as { model?: string; cwd?: string }
+      try {
+        const { sessionId } = await client.createSession({ model: body.model, cwd: body.cwd })
+        return json({ ok: true, sessionId })
+      } catch (err) {
+        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
       }
+    }
 
-      if (url.pathname === '/ws') {
-        const ok = server.upgrade(req)
-        return ok ? undefined : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+    // GET /api/opencode/sessions
+    if (path === '/api/opencode/sessions' && req.method === 'GET') {
+      return json({ ok: true, sessions: [], text: 'Session listing requires the ingest layer.' })
+    }
+
+    // POST /api/opencode/permission/:id
+    if (path.startsWith('/api/opencode/permission/') && req.method === 'POST') {
+      const permissionId = path.split('/').pop()
+      const body = (await req.json()) as { sessionId?: string; decision?: string }
+      if (!body.sessionId || !permissionId || !body.decision) {
+        return json({ error: 'sessionId, permissionId, and decision are required' }, 400)
       }
-
-      if (isShuttingDown) {
-        return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
+      try {
+        await client.respondPermission(
+          body.sessionId,
+          permissionId,
+          body.decision as 'allow' | 'deny' | 'allow_always',
+        )
+        return json({ ok: true, sessionId: body.sessionId, permissionId, decision: body.decision })
+      } catch (err) {
+        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
       }
+    }
 
-      const authResult = auth(req)
-      if (authResult) return authResult
+    return json({ error: 'Not found', code: 'NotFound' }, 404)
+  }
 
-      // Mux routes
-      if (url.pathname.startsWith('/api/route/')) {
-        return muxRouter(req)
-      }
+  const { boundPort } = startOnFreePort(
+    {
+      async fetch(req, server) {
+        const url = new URL(req.url)
 
-      // Autonomous execution routes
-      if (url.pathname.startsWith('/api/autonomous/') && autonomousRouter) {
-        return autonomousRouter(req, url).then((r) => r ?? conversationRouter(req))
-      }
+        // CORS preflight — allow all origins, methods, headers
+        if (req.method === 'OPTIONS') {
+          return new Response(null, {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
+              'Access-Control-Allow-Headers':
+                'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
+              'Access-Control-Max-Age': '86400',
+            },
+          })
+        }
 
-      // NLCL — Natural Language Command Layer routes
-      if (url.pathname.startsWith('/api/nlcl/')) {
-        return nlclRouter(req)
-      }
+        if (url.pathname === '/health') {
+          return json({ status: 'ok', version: '1.0.0' })
+        }
 
-      if (url.pathname.startsWith('/api/knowledge/')) {
-        return knowledgeRouter(req)
-      }
+        if (url.pathname === '/readyz') {
+          if (!ready) {
+            return json({ status: 'not_ready', reason: 'server still starting' }, 503)
+          }
+          return json({ status: 'ready', uptime: process.uptime() })
+        }
 
-      // vivim-canvas routes (v7.12) — capability plane over HTTP
-      if (url.pathname.startsWith('/api/canvas/') && canvasRouter) {
-        return canvasRouter(req, url)
-      }
+        if (url.pathname.startsWith('/api/setup/')) {
+          return setupRouter(req)
+        }
 
-      return conversationRouter(req)
+        if (url.pathname === '/ws') {
+          const ok = server.upgrade(req, { data: {} })
+          return ok
+            ? new Response(null, { status: 101 })
+            : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+        }
+
+        if (isShuttingDown) {
+          return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
+        }
+
+        const authResult = auth(req)
+        if (authResult) return authResult
+
+        // Mux routes
+        if (url.pathname.startsWith('/api/route/')) {
+          return muxRouter(req)
+        }
+
+        // Autonomous execution routes
+        if (url.pathname.startsWith('/api/autonomous/') && autonomousRouter) {
+          return autonomousRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        // NLCL — Natural Language Command Layer routes
+        if (url.pathname.startsWith('/api/nlcl/')) {
+          return nlclRouter(req)
+        }
+
+        // Interpret — NLCL interpret + execute (frontend DevConsole)
+        if (url.pathname === '/api/interpret' && req.method === 'POST') {
+          return interpretRouter(req)
+        }
+
+        // OpenCode `serve` capability routes (feature 029)
+        if (url.pathname.startsWith('/api/opencode/')) {
+          const serve = (globalThis as Record<string, unknown>).__opencodeServe as
+            | {
+                client: import('../engines/opencode/opencode-client.js').OpenCodeClient
+                ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+              }
+            | undefined
+          if (!serve) {
+            return json({ error: 'OpenCode serve not enabled', code: 'OPENCODE_DISABLED' }, 503)
+          }
+          return handleOpenCodeRoutes(req, url, serve)
+        }
+
+        // Automation — governor-mediated browser automation (B9 / L7)
+        if (url.pathname.startsWith('/api/automate/')) {
+          return automationRouter(req, url).then((r) => r ?? conversationRouter(req))
+        }
+
+        if (url.pathname.startsWith('/api/knowledge/')) {
+          return knowledgeRouter(req)
+        }
+
+        if (url.pathname.startsWith('/api/memory/') && memoryRouter) {
+          const bodyText = req.method === 'GET' ? undefined : await req.text()
+          return memoryRouter({ url: req.url, method: req.method, body: bodyText }).then(
+            (r) =>
+              new Response(JSON.stringify(r.body), {
+                status: r.status,
+                headers: { 'Content-Type': 'application/json' },
+              }),
+          )
+        }
+
+        // vivim-canvas routes (v7.12) — capability plane over HTTP
+        if (url.pathname.startsWith('/api/canvas/') && canvasRouter) {
+          return canvasRouter(req, url)
+        }
+
+        // agent-canvas routes (P4) — agent ↔ canvas command bridge
+        if (url.pathname.startsWith('/api/agent/canvas/') && agentCanvasRouter) {
+          log.debug({ pathname: url.pathname }, '[server] routing to agentCanvasRouter')
+          const result = await agentCanvasRouter(req, url)
+          log.debug({ result: result ? 'Response' : 'null' }, '[server] agentCanvasRouter result')
+          if (result) return result
+        }
+
+        // ── System admin routes (provider snapshot refresh) ────────────────
+        if (url.pathname === '/api/system/refresh-provider-snapshot' && req.method === 'POST') {
+          try {
+            const { ProviderStoreImpl } = await import('../storage/impl/provider-store-impl.js')
+            const { CapabilitySnapshot: CapSnapshot } = await import(
+              '../engines/capability-snapshot.js'
+            )
+            const pStore = new ProviderStoreImpl(db)
+            const registeredProviders = (await pStore.listDefinitions({ isActive: true })).map(
+              (d) => d.id,
+            )
+            const newSnapshot = new CapSnapshot(
+              await import('../storage/impl/capability-store-impl.js').then(
+                (m) => new m.CapabilityStoreImpl(db),
+              ),
+            )
+            const count = await newSnapshot.load(registeredProviders)
+            if (governor) {
+              governor.setCapabilitySnapshot(newSnapshot)
+            }
+            log.info(
+              { providers: registeredProviders.length, entries: count },
+              '[system] Provider snapshot refreshed',
+            )
+            return json({
+              ok: true,
+              providers: registeredProviders.length,
+              entries: count,
+              providerIds: registeredProviders,
+            })
+          } catch (err) {
+            log.error({ err }, '[system] Failed to refresh provider snapshot')
+            return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+          }
+        }
+
+        // 24.1/24.2 — universal capability transport (execute + introspection)
+        if (url.pathname.startsWith('/api/capabilities') && capabilityRouter) {
+          return capabilityRouter(req, url)
+        }
+
+        // Static file serving (env-gated: FRONTEND_DIR)
+        const frontendDir = process.env.FRONTEND_DIR
+        if (frontendDir) {
+          try {
+            const filePath = join(frontendDir, url.pathname === '/' ? 'index.html' : url.pathname)
+            if (existsSync(filePath)) {
+              return new Response(Bun.file(filePath))
+            }
+            // SPA fallback: serve index.html for non-file paths
+            if (!url.pathname.includes('.')) {
+              const indexPath = join(frontendDir, 'index.html')
+              if (existsSync(indexPath)) {
+                return new Response(Bun.file(indexPath))
+              }
+            }
+          } catch {
+            // Fall through to conversationRouter
+          }
+        }
+
+        return conversationRouter(req)
+      },
+      websocket: {
+        open(ws) {
+          handleWebSocket.open(ws)
+        },
+        message(ws, message) {
+          handleWebSocket.message(ws, message, eventBus)
+        },
+        close(ws) {
+          handleWebSocket.close(ws, eventBus)
+        },
+      },
     },
-    websocket: {
-      open(ws) {
-        handleWebSocket.open(ws)
-      },
-      message(ws, message) {
-        handleWebSocket.message(ws, message, eventBus)
-      },
-      close(ws) {
-        handleWebSocket.close(ws, eventBus)
-      },
-    },
-  })
+    port,
+  )
 
+  ctx.port = boundPort
   ready = true
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
   process.on('SIGINT', () => gracefulShutdown('SIGINT'))
@@ -803,7 +1637,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 }
 
 if (import.meta.main) {
-  const port = Number(process.env.PORT ?? 9420)
+  const port = config.port
   const ctx = await createServerWithEngines(port)
   console.log(`vivim server listening on :${ctx.port}`)
 }
@@ -811,13 +1645,13 @@ if (import.meta.main) {
 
 ### `src/server/websocket.ts`
 
-_164 lines_
+_265 lines_
 
 ```typescript
 // src/server/websocket.ts
 // WebSocket ↔ EventBus bridge + Agent Command Router
 
-import type { CapabilityEventBus } from '../engines/capability-event-bus.js'
+import type { CapabilityEventBus, EngineEvent } from '../engines/capability-event-bus.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 
 export interface WsLike {
@@ -849,12 +1683,51 @@ const wsToSession = new WeakMap<WsLike, WsSession>()
 export const wsSessions = sessions
 
 /**
+ * Forward `config:changed` events to WebSocket frontends (v9.9).
+ * Frontends subscribe with `subscribe` + `topic: config:changed`.
+ */
+export function registerConfigEventForwarder(eventBus: CapabilityEventBus): void {
+  const forward = (event: { type: string; [key: string]: unknown }) => {
+    for (const session of wsSessions.values()) {
+      if (session.subscriptions.has('config:changed')) {
+        try {
+          session.ws.send(JSON.stringify(event))
+        } catch {
+          // Drop if a socket is mid-close
+        }
+      }
+    }
+  }
+  eventBus.on('config:changed', forward)
+}
+
+/**
+ * Forward `kernel:oracle` events to WebSocket frontends (v9.9).
+ * Frontends subscribe with `subscribe` + `topic: kernel:oracle`.
+ */
+export function registerOracleEventForwarder(eventBus: CapabilityEventBus): void {
+  const forward = (event: { type: string; [key: string]: unknown }) => {
+    if (event.type !== 'kernel:oracle') return
+    for (const session of wsSessions.values()) {
+      if (session.subscriptions.has('kernel:oracle')) {
+        try {
+          session.ws.send(JSON.stringify(event))
+        } catch {
+          // Drop if a socket is mid-close
+        }
+      }
+    }
+  }
+  eventBus.on('kernel:oracle', forward)
+}
+
+/**
  * Forward `conversation:*` events from the event bus to subscribed WebSocket
  * frontends. Frontends subscribe with `subscribe` + a topic like
  * `conversation:<id>`. This bridges engine emissions to live UI updates.
  */
 export function registerConversationForwarder(eventBus: CapabilityEventBus): void {
-  const forward = (event: unknown) => {
+  const forward = (event: EngineEvent) => {
     const e = event as { conversationId?: string }
     if (!e?.conversationId) return
     const topic = `conversation:${e.conversationId}`
@@ -873,6 +1746,56 @@ export function registerConversationForwarder(eventBus: CapabilityEventBus): voi
   eventBus.on('conversation:error', forward)
 }
 
+/**
+ * Forward `canvas:mutated` events to WebSocket frontends.
+ * Frontends subscribe with `subscribe` + `topic: canvas` or a specific instance.
+ */
+export function registerCanvasMutationForwarder(eventBus: CapabilityEventBus): void {
+  const forward = (event: EngineEvent) => {
+    const e = event as { instanceId?: string; regionId?: string; state?: unknown }
+    if (!e?.instanceId) return
+    for (const session of wsSessions.values()) {
+      if (
+        session.subscriptions.has('canvas') ||
+        session.subscriptions.has(`canvas:${e.instanceId}`)
+      ) {
+        try {
+          session.ws.send(JSON.stringify(event))
+        } catch {
+          // Drop if a socket is mid-close
+        }
+      }
+    }
+  }
+  eventBus.on('canvas:mutated', forward)
+}
+
+/**
+ * Forward `canvas:node` events to WebSocket frontends (node-level SSE).
+ * Frontends subscribe with `subscribe` + `topic: canvas:node:<nodeId>` for
+ * a specific node, or `topic: canvas:node` for all node events.
+ * This enables per-node live updates (mutation, state change, error).
+ */
+export function registerNodeEventForwarder(eventBus: CapabilityEventBus): void {
+  const forward = (event: EngineEvent) => {
+    const e = event as { nodeId?: string; instanceId?: string }
+    for (const session of wsSessions.values()) {
+      if (
+        session.subscriptions.has('canvas:node') ||
+        (e.nodeId && session.subscriptions.has(`canvas:node:${e.nodeId}`)) ||
+        (e.instanceId && session.subscriptions.has(`canvas:${e.instanceId}`))
+      ) {
+        try {
+          session.ws.send(JSON.stringify(event))
+        } catch {
+          // Drop if a socket is mid-close
+        }
+      }
+    }
+  }
+  eventBus.on('canvas:node', forward)
+}
+
 export const handleWebSocket = {
   open(ws: WsLike) {
     // Register session placeholder - session id set on hello
@@ -884,7 +1807,7 @@ export const handleWebSocket = {
     ws: WsLike,
     raw: string | Buffer,
     eventBus: CapabilityEventBus,
-    registry?: UnifiedCapabilityRegistry,
+    _registry?: UnifiedCapabilityRegistry,
   ) {
     try {
       const msg = JSON.parse(typeof raw === 'string' ? raw : raw.toString())
@@ -975,10 +1898,27 @@ export const handleWebSocket = {
         eventBus.unsubscribe(ws as unknown as WebSocket, msg.entityType, msg.entityId)
       }
 
-      // ── vivim-canvas protocol (v7.12) ─────────────────────────────────
+      // Dev firehose: subscribe to EVERY emitted event (SOTA live dev console).
+      // Backend acks so the console knows the pipe is open.
+      if (msg.type === 'dev:subscribe') {
+        eventBus.subscribe(ws as unknown as WebSocket, 'dev', '*')
+        ws.send(JSON.stringify({ type: 'dev:subscribed', ok: true, at: Date.now() }))
+        return
+      }
+      if (msg.type === 'dev:unsubscribe') {
+        eventBus.unsubscribe(ws as unknown as WebSocket, 'dev', '*')
+        return
+      }
+
+      // ── vivim-canvas protocol (v7.12) ─────────────────────────────
       // Canvas frames (canvas:* and bridge:*) are owned by the CanvasEngine's
       // sandbox bridge. Hand off before the generic subscribe/unsubscribe path.
-      if (canvasWsHandler && msg.type && (String(msg.type).startsWith('canvas:') || String(msg.type).startsWith('bridge:'))) {
+      const msgType = msg.type as string | undefined
+      if (
+        canvasWsHandler &&
+        msgType &&
+        (msgType.startsWith('canvas:') || msgType.startsWith('bridge:'))
+      ) {
         const rawStr = typeof raw === 'string' ? raw : raw.toString()
         canvasWsHandler(ws, rawStr)
         return
@@ -1000,12 +1940,13 @@ export const handleWebSocket = {
 
 ### `src/server/conversation-router.ts`
 
-_240 lines_
+_338 lines_
 
 ```typescript
 // src/server/conversation-router.ts
 // REST API router — core endpoints
 
+import { config } from '../config.js'
 import type {
   PlanTier,
   ResolvedCapabilities,
@@ -1105,13 +2046,35 @@ export function createConversationRouter(ctx: ServerContext) {
         // delegate through the engine that owns the capability and surface a
         // `dispatched` result so progress can still stream over WS.
         const governor = ctx.governor as
-          | { executeCapability?: (cid: string, s: string) => Promise<unknown> }
+          | {
+              executeCapability?: (
+                ref: string,
+                slug: string,
+                opts?: {
+                  resolver?: { getConversationProviderId?: (id: string) => Promise<string | null> }
+                  capabilityLookup?: (
+                    slug: string,
+                  ) => { id: string; inputSchema?: { properties?: Record<string, unknown> } } | null
+                  params?: Record<string, unknown>
+                },
+              ) => Promise<unknown>
+            }
           | undefined
         let executed: unknown
         let ok = true
         if (governor?.executeCapability) {
           try {
-            executed = await governor.executeCapability(conversationId, slug)
+            const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
+            executed = await governor.executeCapability(conversationId, slug, {
+              resolver: {
+                getConversationProviderId: async (id) => {
+                  const conv = await ctx.db.getConversation(id)
+                  return conv ? (conv as { providerId: string }).providerId : null
+                },
+              },
+              capabilityLookup: (s) => ctx.registry?.getBySlug(s) ?? null,
+              params: body ?? {},
+            })
           } catch (err) {
             ok = false
             executed = { error: err instanceof Error ? err.message : 'execution failed' }
@@ -1150,6 +2113,20 @@ export function createConversationRouter(ctx: ServerContext) {
         return json([])
       }
 
+      // DELETE /api/fleet/:id — kill a Chrome slave
+      const fleetDelMatch = pathname.match(/^\/api\/fleet\/([^/]+)$/)
+      if (fleetDelMatch && method === 'DELETE') {
+        const slaveId = fleetDelMatch[1]
+        if (!slaveId) return errorResponse('Invalid fleet id', 'ValidationError', 400)
+        if (!ctx.governor) return json({ ok: true })
+        try {
+          await ctx.governor.kill(slaveId)
+        } catch {
+          // best-effort kill; return success
+        }
+        return json({ ok: true })
+      }
+
       // POST /api/fleet/start — delegate to ChromeGovernor.spawn()
       if (pathname === '/api/fleet/start' && method === 'POST') {
         if (!ctx.governor) return errorResponse('Engine not wired', 'InternalError', 500)
@@ -1166,10 +2143,18 @@ export function createConversationRouter(ctx: ServerContext) {
       }
 
       if (pathname === '/api/conversations' && method === 'POST') {
-        const body = (await req.json()) as { providerId: string; title?: string }
+        const body = (await req.json()) as {
+          providerId: string
+          accountId?: string
+          title?: string
+        }
+        const session = await ctx.db.ensureProviderSession({
+          providerId: body.providerId,
+          accountId: body.accountId,
+        })
         const conv = await ctx.db.createConversation({
           id: crypto.randomUUID(),
-          providerSessionId: 'default',
+          providerSessionId: session.id,
           providerId: body.providerId,
           title: body.title,
         })
@@ -1183,7 +2168,24 @@ export function createConversationRouter(ctx: ServerContext) {
         if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
         if (!ctx.conversationManager) return errorResponse('Engine not wired', 'InternalError', 500)
         const body = (await req.json()) as { message: string }
-        const result = await ctx.conversationManager.send(conversationId, body.message)
+        // 30s timeout — prevents hanging when no Chrome slave is connected.
+        const SEND_TIMEOUT_MS = 30_000
+        const result = await Promise.race([
+          ctx.conversationManager.send(conversationId, body.message),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error('Send timed out — no Chrome slave connected')),
+              SEND_TIMEOUT_MS,
+            ),
+          ),
+        ]).catch((err) => ({
+          ok: false as const,
+          messageId: '',
+          blocks: [] as never[],
+          text: '',
+          latencyMs: SEND_TIMEOUT_MS,
+          error: err instanceof Error ? err.message : String(err),
+        }))
         return json(result)
       }
 
@@ -1197,6 +2199,42 @@ export function createConversationRouter(ctx: ServerContext) {
         return json(messages)
       }
 
+      // DELETE /api/conversations/:id — delegate to ConversationStore.deleteConversation()
+      const delMatch = pathname.match(/^\/api\/conversations\/([^/]+)$/)
+      if (delMatch && method === 'DELETE') {
+        const conversationId = delMatch[1]
+        if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
+        await ctx.db.prisma.conversation.delete({ where: { id: conversationId } })
+        return json({ ok: true })
+      }
+
+      // GET /api/health — general liveness (local-first, single-user)
+      if (pathname === '/api/health' && method === 'GET') {
+        return json({ status: 'ok' })
+      }
+
+      // Session — local-first stub (no real auth; returns success for login)
+      if (pathname === '/api/session') {
+        if (method === 'GET') {
+          return json({ authenticated: false, userId: null, email: null })
+        }
+        if (method === 'POST') {
+          const body = (await req.json().catch(() => ({}))) as {
+            email?: string
+            action?: string
+          }
+          if (body.action === 'logout') {
+            return json({ authenticated: false })
+          }
+          // Local-first: login always succeeds
+          return json({
+            authenticated: true,
+            userId: body.email ?? 'user:local',
+            email: body.email ?? null,
+          })
+        }
+      }
+
       // Admin
       if (pathname === '/api/admin/seed' && method === 'POST') {
         return json({ status: 'ok' })
@@ -1204,7 +2242,9 @@ export function createConversationRouter(ctx: ServerContext) {
 
       // Health providers endpoint (4.5)
       if (pathname === '/api/health/providers' && method === 'GET') {
-        const healthKernel = (ctx as { healthKernel?: import('../engines/provider-health.js').ProviderHealthKernel }).healthKernel
+        const healthKernel = (
+          ctx as { healthKernel?: import('../engines/provider-health.js').ProviderHealthKernel }
+        ).healthKernel
         if (!healthKernel) {
           return json({})
         }
@@ -1221,7 +2261,8 @@ export function createConversationRouter(ctx: ServerContext) {
       if (mirrorMatch && method === 'GET') {
         const convId = mirrorMatch[1]
         if (!convId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
-        const mirror = (ctx as { mirror?: import('../engines/mirror-engine.js').MirrorEngine }).mirror
+        const mirror = (ctx as { mirror?: import('../engines/mirror-engine.js').MirrorEngine })
+          .mirror
         if (!mirror) return json({ chrome: {}, ui: {}, lastSyncAt: 0, pendingUpdates: 0 })
         const state = await mirror.projectState(convId)
         return json(state)
@@ -1238,7 +2279,8 @@ export function createConversationRouter(ctx: ServerContext) {
 
       // GET /api/config/governor — governor config
       if (pathname === '/api/config/governor' && method === 'GET') {
-        const govConfig = (ctx.governor as { config?: Record<string, unknown> })?.config ?? {}
+        const govConfig =
+          (ctx.governor as unknown as { config?: Record<string, unknown> })?.config ?? {}
         return json({
           fleetConfig: {
             portRange: govConfig.portRange ?? [9300, 9400],
@@ -1249,7 +2291,7 @@ export function createConversationRouter(ctx: ServerContext) {
             circuitBreakerResetMs: govConfig.circuitBreakerResetMs ?? 60_000,
           },
           chromeConfig: {
-            path: process.env.CHROME_PATH ?? null,
+            path: config.chromePath,
             extraArgs: [],
             disableGpu: false,
           },
@@ -1278,308 +2320,13 @@ export function createConversationRouter(ctx: ServerContext) {
 
 The existing React action registry + agent bridge + UI registry. The pure-HTML canvas shell replaces/absorbs this attach surface (P2).
 
-### `web/ui/src/index.ts`
+### `web/ui/src/index.ts` — MISSING
 
-_6 lines_
+### `web/ui/src/actions/registry.ts` — MISSING
 
-```typescript
-export { ActionRegistry } from './actions/registry.js'
-export type { ActionSpec } from './actions/registry.js'
-export { AgentBridge } from './actions/agent-bridge.js'
-export { ProviderSetupWizard } from './features/provider-setup-wizard.js'
-export { CapabilityRegistry } from './registry/index.js'
-export type { CapabilityRenderer, CapabilityRenderProps } from './registry/index.js'
-```
+### `web/ui/src/actions/agent-bridge.ts` — MISSING
 
-### `web/ui/src/actions/registry.ts`
-
-_42 lines_
-
-```typescript
-import { z } from 'zod'
-
-export interface ActionSpec<TParams extends z.ZodSchema = z.ZodSchema> {
-  description: string
-  params: TParams
-  run: (params: z.infer<TParams>) => Promise<void> | void
-}
-
-interface RegisteredAction {
-  id: string
-  spec: ActionSpec
-}
-
-const actions = new Map<string, RegisteredAction>()
-
-export const ActionRegistry = {
-  register<TParams extends z.ZodSchema>(
-    id: string,
-    spec: ActionSpec<TParams>
-  ): void {
-    if (actions.has(id)) {
-      throw new Error(`Action ${id} already registered`)
-    }
-    actions.set(id, { id, spec: spec as unknown as ActionSpec })
-  },
-
-  dispatch<T>(id: string, params: T): Promise<void> {
-    const action = actions.get(id)
-    if (!action) {
-      throw new Error(`Action ${id} not found. Available actions: ${ActionRegistry.list().join(', ')}`)
-    }
-    const validated = action.spec.params.parse(params)
-    return Promise.resolve(action.spec.run(validated))
-  },
-
-  getAction(id: string): RegisteredAction | undefined {
-    return actions.get(id)
-  },
-
-  list(): string[] {
-    return [...actions.keys()]
-  },
-
-  listWithMetadata(): Array<{ id: string; description: string }> {
-    return [...actions.entries()].map(([id, action]) => ({
-      id,
-      description: action.spec.description,
-    }))
-  },
-}
-```
-
-### `web/ui/src/actions/agent-bridge.ts`
-
-_147 lines_
-
-```typescript
-// web/ui/src/actions/agent-bridge.ts
-// Unit 6.2 — AgentBridge: WebSocket command routing + result relay with timeout.
-
-import { ActionRegistry } from './registry.js'
-
-export interface AgentCommand {
-  type: 'agent:command'
-  actionId: string
-  params: Record<string, unknown>
-  correlationId: string
-  targetSessionId?: string
-}
-
-export interface AgentResult {
-  type: 'agent:result'
-  correlationId: string
-  ok: boolean
-  data?: unknown
-  error?: string
-}
-
-interface PendingRequest {
-  resolve: (value: unknown) => void
-  reject: (reason: Error) => void
-  timer: ReturnType<typeof setTimeout>
-}
-
-const DEFAULT_TIMEOUT = 30_000
-
-class AgentBridgeImpl {
-  private ws: WebSocket | null = null
-  private sessionId: string | null = null
-  private pending = new Map<string, PendingRequest>()
-  private eventListeners = new Set<(event: Record<string, unknown>) => void>()
-
-  initialize(websocket: WebSocket, sessionId: string): void {
-    this.ws = websocket
-    this.sessionId = sessionId
-
-    websocket.onopen = () => {
-      websocket.send(
-        JSON.stringify({
-          type: 'hello',
-          role: 'frontend',
-          sessionId,
-        }),
-      )
-    }
-
-    websocket.onmessage = (ev: MessageEvent) => {
-      this.handleMessage(ev.data as string)
-    }
-
-    websocket.onclose = () => {
-      for (const [, req] of this.pending) {
-        clearTimeout(req.timer)
-        req.reject(new Error('WebSocket closed'))
-      }
-      this.pending.clear()
-    }
-  }
-
-  async sendCommand(
-    targetSessionId: string,
-    actionId: string,
-    params: Record<string, unknown>,
-    timeoutMs = DEFAULT_TIMEOUT,
-  ): Promise<unknown> {
-    if (!this.ws) throw new Error('AgentBridge not initialized')
-
-    const correlationId = `corr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(correlationId)
-        reject(new Error(`Command timed out after ${timeoutMs}ms`))
-      }, timeoutMs)
-
-      this.pending.set(correlationId, { resolve, reject, timer })
-
-      this.ws!.send(
-        JSON.stringify({
-          type: 'agent:command',
-          targetSessionId,
-          actionId,
-          params,
-          correlationId,
-        }),
-      )
-    })
-  }
-
-  private handleMessage(raw: string): void {
-    try {
-      const msg = JSON.parse(raw)
-
-      switch (msg.type) {
-        case 'agent:command':
-          this.handleCommand(msg)
-          break
-        case 'agent:result':
-          this.handleResult(msg)
-          break
-        case 'agent:discover':
-          this.handleDiscover(msg)
-          break
-        case 'conversation:block':
-        case 'conversation:complete':
-        case 'conversation:error':
-          this.eventListeners.forEach((fn) => fn(msg))
-          break
-      }
-    } catch (err) {
-      console.error('[AgentBridge] Parse error:', err)
-    }
-  }
-
-  private async handleCommand(msg: AgentCommand): Promise<void> {
-    try {
-      const result = await ActionRegistry.dispatch(msg.actionId, msg.params)
-      this.sendResult({ ok: true, data: result }, msg.correlationId)
-    } catch (err) {
-      this.sendResult(
-        {
-          ok: false,
-          error: err instanceof Error ? err.message : String(err),
-        },
-        msg.correlationId,
-      )
-    }
-  }
-
-  private handleResult(msg: AgentResult): void {
-    const pending = this.pending.get(msg.correlationId)
-    if (!pending) return
-
-    clearTimeout(pending.timer)
-    this.pending.delete(msg.correlationId)
-
-    if (msg.ok) {
-      pending.resolve(msg.data)
-    } else {
-      pending.reject(new Error(msg.error ?? 'Unknown error'))
-    }
-  }
-
-  private handleDiscover(msg: { correlationId: string }): void {
-    const catalog = ActionRegistry.listWithMetadata()
-    this.sendResult({ ok: true, data: catalog }, msg.correlationId)
-  }
-
-  private sendResult(
-    result: Omit<AgentResult, 'type' | 'correlationId'>,
-    correlationId: string,
-  ): void {
-    if (!this.ws) return
-    this.ws.send(
-      JSON.stringify({
-        type: 'agent:result',
-        correlationId,
-        ...result,
-      }),
-    )
-  }
-
-  onEvent(fn: (event: Record<string, unknown>) => void): () => void {
-    this.eventListeners.add(fn)
-    return () => this.eventListeners.delete(fn)
-  }
-}
-
-export const AgentBridge = new AgentBridgeImpl()
-```
-
-### `web/ui/src/registry/index.ts`
-
-_39 lines_
-
-```typescript
-// web/ui/src/registry/index.ts
-// CapabilityRegistry — promotes proven sandbox harnesses to shared, reusable
-// renderers. Each entry binds a capability slug to a renderer component and a
-// best-practice note. Prod renderers consult this ledger to choose bespoke
-// (registered) vs generic (contract-driven) rendering.
-
-import type { ComponentType } from 'react'
-
-/** Props passed to a capability renderer. */
-export interface CapabilityRenderProps {
-  slug: string
-  /** The 21-field resolved capability contract. */
-  contract: Record<string, unknown>
-  /** Dispatch a UI action by id (B8 — all actions go through ActionRegistry). */
-  onAction?: (actionId: string, params: Record<string, unknown>) => void
-}
-
-export interface CapabilityRenderer {
-  slug: string
-  /** Best-practice note captured from sandbox iteration. */
-  bestPracticeNote?: string
-  /** Bespoke renderer for this capability; absent → generic renderer used. */
-  component?: ComponentType<CapabilityRenderProps>
-}
-
-const renderers = new Map<string, CapabilityRenderer>()
-
-export const CapabilityRegistry = {
-  register(slug: string, renderer: CapabilityRenderer): void {
-    if (!slug) throw new Error('CapabilityRegistry.register requires a slug')
-    const { slug: _ignored, ...rest } = renderer
-    renderers.set(slug, { slug, ...rest })
-  },
-
-  get(slug: string): CapabilityRenderer | undefined {
-    return renderers.get(slug)
-  },
-
-  list(): CapabilityRenderer[] {
-    return [...renderers.values()]
-  },
-
-  /** True when a bespoke renderer exists for the slug. */
-  hasBespoke(slug: string): boolean {
-    return renderers.get(slug)?.component !== undefined
-  },
-}
-```
+### `web/ui/src/registry/index.ts` — MISSING
 
 ---
 
@@ -1587,162 +2334,9 @@ export const CapabilityRegistry = {
 
 Typed API client and the sandbox capability store — how a frontend talks to the capability plane today.
 
-### `web/api-client/src/index.ts`
+### `web/api-client/src/index.ts` — MISSING
 
-_59 lines_
-
-```typescript
-import { z } from 'zod'
-
-export const CapabilityUIContractSchema = z.object({
-  slug: z.string(),
-  name: z.string(),
-  description: z.string(),
-  ui_component: z.string(),
-  ui_position: z.string(),
-  ui_group: z.string(),
-  ui_order: z.number(),
-  ui_state: z.string(),
-  ui_states: z.record(z.unknown()),
-  dependencies: z.array(z.string()),
-  plan_tier: z.string(),
-})
-
-export type CapabilityUIContract = z.infer<typeof CapabilityUIContractSchema>
-
-export const ResolvedCapabilitiesSchema = z.object({
-  capabilities: z.array(CapabilityUIContractSchema),
-  providerId: z.string(),
-  planTier: z.string(),
-})
-
-export type ResolvedCapabilities = z.infer<typeof ResolvedCapabilitiesSchema>
-
-export const ProviderSummarySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  slug: z.string(),
-  isActive: z.boolean(),
-})
-
-export type ProviderSummary = z.infer<typeof ProviderSummarySchema>
-
-const API_BASE = '/api'
-
-export const ApiClient = {
-  async listProviders(): Promise<ProviderSummary[]> {
-    const res = await fetch(`${API_BASE}/providers`)
-    return ProviderSummarySchema.array().parse(await res.json())
-  },
-
-  async listCapabilities(providerId: string, planTier = 'free'): Promise<ResolvedCapabilities> {
-    const res = await fetch(`${API_BASE}/providers/${providerId}/capabilities?planTier=${planTier}`)
-    return ResolvedCapabilitiesSchema.parse(await res.json())
-  },
-
-  async conversationCapabilities(conversationId: string, planTier = 'free'): Promise<ResolvedCapabilities> {
-    const res = await fetch(`${API_BASE}/conversations/${conversationId}/capabilities?planTier=${planTier}`)
-    return ResolvedCapabilitiesSchema.parse(await res.json())
-  },
-
-  async createConversation(providerId: string, title?: string): Promise<{ id: string }> {
-    const res = await fetch(`${API_BASE}/conversations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ providerId, title }),
-    })
-    return res.json()
-  },
-
-  async sendMessage(conversationId: string, message: string): Promise<{ ok: boolean }> {
-    const res = await fetch(`${API_BASE}/conversations/${conversationId}/send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
-    })
-    return res.json()
-  },
-}
-```
-
-### `web/sandbox/src/store/capability-store.ts`
-
-_65 lines_
-
-```typescript
-import { create } from 'zustand'
-import { z } from 'zod'
-
-export interface CapabilityUIContract {
-  slug: string
-  name: string
-  description: string
-  ui_component: string
-  ui_position: string
-  ui_group: string
-  ui_order: number
-  ui_state: string
-  ui_states: Record<string, unknown>
-  dependencies: string[]
-  plan_tier: string
-}
-
-interface CapabilityState {
-  capabilities: CapabilityUIContract[]
-  selectedCapability: string | null
-  loading: boolean
-  error: string | null
-  loadCapabilities: () => Promise<void>
-  selectCapability: (slug: string | null) => void
-  executeCapability: (slug: string) => Promise<void>
-}
-
-export const useCapabilityStore = create<CapabilityState>()((set, get) => ({
-  capabilities: [],
-  selectedCapability: null,
-  loading: false,
-  error: null,
-
-  loadCapabilities: async () => {
-    set({ loading: true, error: null })
-    try {
-      const response = await fetch('/api/providers')
-      const providers = await response.json()
-      if (providers.length > 0) {
-        const capsResponse = await fetch(`/api/providers/${providers[0].id}/capabilities?planTier=free`)
-        const resolved = await capsResponse.json()
-        const capabilities = resolved.capabilities || []
-        set({ capabilities })
-      }
-    } catch (err) {
-      set({ error: err instanceof Error ? err.message : 'Unknown error' })
-    } finally {
-      set({ loading: false })
-    }
-  },
-
-  selectCapability: (slug) => set({ selectedCapability: slug }),
-
-  executeCapability: async (slug: string) => {
-    const { capabilities } = get()
-    const capability = capabilities.find((c) => c.slug === slug)
-    if (!capability) return
-
-    try {
-      // Will be wired to ActionRegistry.dispatch in Phase 1.5
-      const response = await fetch(`/api/conversations/1/capabilities/${slug}/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      })
-      const result = await response.json()
-      console.log('Capability executed:', result)
-    } catch (err) {
-      console.error('Execute failed:', err)
-    }
-  },
-}))
-```
+### `web/sandbox/src/store/capability-store.ts` — MISSING
 
 ---
 

@@ -1611,4 +1611,3 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 // that stole the DB lock before the sidecar's own server could start.
 // The sidecar entry (src/desktop/sidecar-entry.ts) is the true entry point
 // for the compiled binary and handles port/host configuration.
-

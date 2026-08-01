@@ -6,9 +6,9 @@
 //
 // FRAME_VERSION: 1
 
-import type { NormalizedRequest, NormalizedResponse } from './schemas.js'
-import type { FrameTransport } from './frame-version.js'
 import type { ContentPart } from '../schema/streaming.js'
+import type { FrameTransport } from './frame-version.js'
+import type { NormalizedRequest } from './schemas.js'
 
 /**
  * A framed request — the per-transport native representation.
@@ -104,10 +104,7 @@ export interface FramingAdapter {
    *   - Yield `{ type: 'error', message }` (a ContentPart) on failure.
    *   - Set `isFinal: true` on the last block when the stream ends.
    */
-  parseResponse(
-    chunk: unknown,
-    ctx: ParseContext,
-  ): AsyncGenerator<ContentPart, void, unknown>
+  parseResponse(chunk: unknown, ctx: ParseContext): AsyncGenerator<ContentPart, void, unknown>
 
   /**
    * Validate that the adapter is correctly configured.

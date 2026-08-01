@@ -657,11 +657,11 @@
     },
     {
       "from": "cli/commands",
-      "to": "server/service-container"
+      "to": "engines/onboarding"
     },
     {
       "from": "cli/commands",
-      "to": "engines/onboarding"
+      "to": "server/service-container"
     },
     {
       "from": "cli/commands",
@@ -717,11 +717,11 @@
     },
     {
       "from": "cli/index",
-      "to": "engines/unified-registry"
+      "to": "config"
     },
     {
       "from": "cli/index",
-      "to": "config"
+      "to": "engines/unified-registry"
     },
     {
       "from": "cli/index",
@@ -761,11 +761,11 @@
     },
     {
       "from": "config/provider-registry",
-      "to": "engines/provider-protocol-loader"
+      "to": "config"
     },
     {
       "from": "config/provider-registry",
-      "to": "config"
+      "to": "engines/provider-protocol-loader"
     },
     {
       "from": "config/provider-registry",
@@ -833,6 +833,10 @@
     },
     {
       "from": "engines/agentic-loop",
+      "to": "lib/logger"
+    },
+    {
+      "from": "engines/agentic-loop",
       "to": "engines/mirror-engine"
     },
     {
@@ -842,10 +846,6 @@
     {
       "from": "engines/agentic-loop",
       "to": "engines/unified-registry"
-    },
-    {
-      "from": "engines/agentic-loop",
-      "to": "lib/logger"
     },
     {
       "from": "engines/agentic-loop",
@@ -1197,11 +1197,11 @@
     },
     {
       "from": "engines/cdp-watchdog",
-      "to": "engines/chrome-governor"
+      "to": "lib/logger"
     },
     {
       "from": "engines/cdp-watchdog",
-      "to": "lib/logger"
+      "to": "engines/chrome-governor"
     },
     {
       "from": "engines/chrome-governor",
@@ -2133,14 +2133,6 @@
     },
     {
       "from": "engines/plugin-system",
-      "to": "schema/streaming"
-    },
-    {
-      "from": "engines/plugin-system",
-      "to": "engines/capability-event-bus"
-    },
-    {
-      "from": "engines/plugin-system",
       "to": "reprogrammability/contract"
     },
     {
@@ -2150,6 +2142,14 @@
     {
       "from": "engines/plugin-system",
       "to": "reprogrammability/schema"
+    },
+    {
+      "from": "engines/plugin-system",
+      "to": "schema/streaming"
+    },
+    {
+      "from": "engines/plugin-system",
+      "to": "engines/capability-event-bus"
     },
     {
       "from": "engines/plugin-system",
@@ -2385,15 +2385,15 @@
     },
     {
       "from": "engines/reprogrammability",
-      "to": "engines/nlcl"
-    },
-    {
-      "from": "engines/reprogrammability",
       "to": "reprogrammability/mutation-schema"
     },
     {
       "from": "engines/reprogrammability",
       "to": "reprogrammability/registry"
+    },
+    {
+      "from": "engines/reprogrammability",
+      "to": "engines/nlcl"
     },
     {
       "from": "engines/reprogrammability",
@@ -2405,11 +2405,11 @@
     },
     {
       "from": "engines/reprogrammability",
-      "to": "engines/plugin-system"
+      "to": "reprogrammability/canonical-surfaces"
     },
     {
       "from": "engines/reprogrammability",
-      "to": "reprogrammability/canonical-surfaces"
+      "to": "engines/plugin-system"
     },
     {
       "from": "engines/reprogrammability",
@@ -2929,7 +2929,7 @@
     },
     {
       "from": "framing/adapter",
-      "to": "framing/schemas"
+      "to": "schema/streaming"
     },
     {
       "from": "framing/adapter",
@@ -2937,6 +2937,10 @@
     },
     {
       "from": "framing/adapter",
+      "to": "framing/schemas"
+    },
+    {
+      "from": "framing/adapters",
       "to": "schema/streaming"
     },
     {
@@ -2948,7 +2952,7 @@
       "to": "framing/schemas"
     },
     {
-      "from": "framing/adapters",
+      "from": "framing/engine",
       "to": "schema/streaming"
     },
     {
@@ -2958,10 +2962,6 @@
     {
       "from": "framing/engine",
       "to": "framing/schemas"
-    },
-    {
-      "from": "framing/engine",
-      "to": "schema/streaming"
     },
     {
       "from": "framing/index",
@@ -3441,22 +3441,18 @@
     },
     {
       "from": "reprogrammability/canonical-surfaces",
-      "to": "reprogrammability/registry"
-    },
-    {
-      "from": "reprogrammability/canonical-surfaces",
       "to": "reprogrammability/contract"
-    },
-    {
-      "from": "reprogrammability/canonical-surfaces",
-      "to": "reprogrammability/schema"
     },
     {
       "from": "reprogrammability/canonical-surfaces",
       "to": "reprogrammability/mutation-schema"
     },
     {
-      "from": "reprogrammability/contract",
+      "from": "reprogrammability/canonical-surfaces",
+      "to": "reprogrammability/registry"
+    },
+    {
+      "from": "reprogrammability/canonical-surfaces",
       "to": "reprogrammability/schema"
     },
     {
@@ -3464,8 +3460,12 @@
       "to": "reprogrammability/mutation-schema"
     },
     {
+      "from": "reprogrammability/contract",
+      "to": "reprogrammability/schema"
+    },
+    {
       "from": "reprogrammability/dsl",
-      "to": "reprogrammability/registry"
+      "to": "reprogrammability/contract"
     },
     {
       "from": "reprogrammability/dsl",
@@ -3473,11 +3473,11 @@
     },
     {
       "from": "reprogrammability/dsl",
-      "to": "reprogrammability/schema"
+      "to": "reprogrammability/registry"
     },
     {
       "from": "reprogrammability/dsl",
-      "to": "reprogrammability/contract"
+      "to": "reprogrammability/schema"
     },
     {
       "from": "reprogrammability/dsl",
@@ -3521,15 +3521,11 @@
     },
     {
       "from": "reprogrammability/variant-schema",
-      "to": "reprogrammability/schema"
-    },
-    {
-      "from": "reprogrammability/variant-schema",
       "to": "reprogrammability/mutation-schema"
     },
     {
-      "from": "reprogrammability/__tests__",
-      "to": "reprogrammability/index"
+      "from": "reprogrammability/variant-schema",
+      "to": "reprogrammability/schema"
     },
     {
       "from": "reprogrammability/__tests__",
@@ -3537,7 +3533,7 @@
     },
     {
       "from": "reprogrammability/__tests__",
-      "to": "reprogrammability/schema"
+      "to": "reprogrammability/index"
     },
     {
       "from": "reprogrammability/__tests__",
@@ -3545,11 +3541,7 @@
     },
     {
       "from": "reprogrammability/__tests__",
-      "to": "reprogrammability/registry"
-    },
-    {
-      "from": "reprogrammability/__tests__",
-      "to": "reprogrammability/dsl"
+      "to": "reprogrammability/schema"
     },
     {
       "from": "reprogrammability/__tests__",
@@ -3558,6 +3550,14 @@
     {
       "from": "reprogrammability/__tests__",
       "to": "reprogrammability/canonical-surfaces"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "reprogrammability/__tests__",
+      "to": "reprogrammability/registry"
     },
     {
       "from": "router/index",
@@ -3725,11 +3725,11 @@
     },
     {
       "from": "server/agent-canvas-router",
-      "to": "shared/agent-canvas"
+      "to": "lib/logger"
     },
     {
       "from": "server/agent-canvas-router",
-      "to": "lib/logger"
+      "to": "shared/agent-canvas"
     },
     {
       "from": "server/agent-canvas-router",
@@ -3833,15 +3833,15 @@
     },
     {
       "from": "server/chrome-router",
-      "to": "server/response"
-    },
-    {
-      "from": "server/chrome-router",
       "to": "reprogrammability/dsl"
     },
     {
       "from": "server/chrome-router",
       "to": "reprogrammability/schema"
+    },
+    {
+      "from": "server/chrome-router",
+      "to": "server/response"
     },
     {
       "from": "server/conceptual-router",
@@ -3853,11 +3853,11 @@
     },
     {
       "from": "server/conversation-router",
-      "to": "engines/capability-resolution"
+      "to": "config"
     },
     {
       "from": "server/conversation-router",
-      "to": "config"
+      "to": "engines/capability-resolution"
     },
     {
       "from": "server/conversation-router",
@@ -4261,15 +4261,11 @@
     },
     {
       "from": "server/llm-harness-router",
+      "to": "engines/nlcl"
+    },
+    {
+      "from": "server/llm-harness-router",
       "to": "lib/logger"
-    },
-    {
-      "from": "server/llm-harness-router",
-      "to": "server/response"
-    },
-    {
-      "from": "server/llm-harness-router",
-      "to": "reprogrammability/mutation-schema"
     },
     {
       "from": "server/llm-harness-router",
@@ -4277,7 +4273,11 @@
     },
     {
       "from": "server/llm-harness-router",
-      "to": "engines/nlcl"
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "server/llm-harness-router",
+      "to": "server/response"
     },
     {
       "from": "server/llm-harness-router",
@@ -4317,11 +4317,7 @@
     },
     {
       "from": "server/mutation-router",
-      "to": "server/response"
-    },
-    {
-      "from": "server/mutation-router",
-      "to": "reprogrammability/mutation-schema"
+      "to": "reprogrammability/contract"
     },
     {
       "from": "server/mutation-router",
@@ -4329,11 +4325,15 @@
     },
     {
       "from": "server/mutation-router",
+      "to": "reprogrammability/mutation-schema"
+    },
+    {
+      "from": "server/mutation-router",
       "to": "reprogrammability/registry"
     },
     {
       "from": "server/mutation-router",
-      "to": "reprogrammability/contract"
+      "to": "server/response"
     },
     {
       "from": "server/mux-router",
@@ -4393,11 +4393,11 @@
     },
     {
       "from": "server/plugin-builder-router",
-      "to": "server/response"
+      "to": "engines/reprogrammability"
     },
     {
       "from": "server/plugin-builder-router",
-      "to": "engines/reprogrammability"
+      "to": "server/response"
     },
     {
       "from": "server/plugin-router",
@@ -4469,7 +4469,7 @@
     },
     {
       "from": "server/surface-router",
-      "to": "server/response"
+      "to": "reprogrammability/contract"
     },
     {
       "from": "server/surface-router",
@@ -4477,10 +4477,6 @@
     },
     {
       "from": "server/surface-router",
-      "to": "reprogrammability/contract"
-    },
-    {
-      "from": "server/template-router",
       "to": "server/response"
     },
     {
@@ -4492,16 +4488,16 @@
       "to": "reprogrammability/mutation-schema"
     },
     {
+      "from": "server/template-router",
+      "to": "server/response"
+    },
+    {
       "from": "server/variant-router",
       "to": "lib/logger"
     },
     {
       "from": "server/variant-router",
-      "to": "server/response"
-    },
-    {
-      "from": "server/variant-router",
-      "to": "reprogrammability/variant-schema"
+      "to": "reprogrammability/dsl"
     },
     {
       "from": "server/variant-router",
@@ -4509,10 +4505,10 @@
     },
     {
       "from": "server/variant-router",
-      "to": "reprogrammability/dsl"
+      "to": "reprogrammability/variant-schema"
     },
     {
-      "from": "server/version-router",
+      "from": "server/variant-router",
       "to": "server/response"
     },
     {
@@ -4522,6 +4518,10 @@
     {
       "from": "server/version-router",
       "to": "reprogrammability/dsl"
+    },
+    {
+      "from": "server/version-router",
+      "to": "server/response"
     },
     {
       "from": "server/webhook-router",

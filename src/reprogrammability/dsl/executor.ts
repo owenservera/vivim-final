@@ -14,15 +14,12 @@
 // CONTRACT_VERSION: 1
 // FRAME_VERSION: 1
 
+import type { MutationOp } from '../contract.js'
+import { UnsupportedMutationError } from '../contract.js'
+import type { SurfaceMutation, SurfaceMutationPlan } from '../mutation-schema.js'
 import type { SurfaceRegistry } from '../registry.js'
 import { SurfaceNotFoundError } from '../registry.js'
-import type {
-  SurfaceMutation,
-  SurfaceMutationPlan,
-} from '../mutation-schema.js'
 import type { SurfaceSpec } from '../schema/spec.js'
-import type { ReprogrammableSurface, MutationOp } from '../contract.js'
-import { UnsupportedMutationError } from '../contract.js'
 
 export interface AppliedMutationRecord {
   /** Ulid for the apply record. */
@@ -99,10 +96,7 @@ export class MutationExecutor {
     }
 
     // Check supported ops.
-    if (
-      surface.supportedOps !== '*' &&
-      !surface.supportedOps.includes(mutation.op as MutationOp)
-    ) {
+    if (surface.supportedOps !== '*' && !surface.supportedOps.includes(mutation.op as MutationOp)) {
       throw new UnsupportedMutationError(surface.id, mutation.op)
     }
 
@@ -183,9 +177,7 @@ export class MutationExecutor {
 
       if (!record.ok) {
         // Roll back.
-        await this.rollbackRecords(
-          records.filter((r) => r.ok && r.id !== record.id),
-        )
+        await this.rollbackRecords(records.filter((r) => r.ok && r.id !== record.id))
         return {
           ok: false,
           records,
@@ -206,10 +198,20 @@ export class MutationExecutor {
    * Preview a plan — run it against shadow clones of the surfaces, return
    * the diff (before/after per mutation). Does NOT modify live state.
    */
-  async previewPlan(
-    plan: SurfaceMutationPlan,
-  ): Promise<Array<{ mutation: SurfaceMutation; beforeSpec?: SurfaceSpec; afterSpec?: SurfaceSpec; error?: string }>> {
-    const out: Array<{ mutation: SurfaceMutation; beforeSpec?: SurfaceSpec; afterSpec?: SurfaceSpec; error?: string }> = []
+  async previewPlan(plan: SurfaceMutationPlan): Promise<
+    Array<{
+      mutation: SurfaceMutation
+      beforeSpec?: SurfaceSpec
+      afterSpec?: SurfaceSpec
+      error?: string
+    }>
+  > {
+    const out: Array<{
+      mutation: SurfaceMutation
+      beforeSpec?: SurfaceSpec
+      afterSpec?: SurfaceSpec
+      error?: string
+    }> = []
 
     for (const mutation of plan.mutations) {
       const surface = this.registry.getOrNull(mutation.target.split('/')[0]!)
@@ -325,9 +327,7 @@ export class MutationExecutor {
     // Reverse order.
     for (let i = records.length - 1; i >= 0; i--) {
       const record = records[i]!
-      const surface = this.registry.getOrNull(
-        record.mutation.target.split('/')[0]!,
-      )
+      const surface = this.registry.getOrNull(record.mutation.target.split('/')[0]!)
       if (!surface) continue
       try {
         await surface.mutate({
@@ -338,10 +338,7 @@ export class MutationExecutor {
         })
       } catch (err) {
         // Best-effort rollback; log and continue.
-        console.error(
-          `[MutationExecutor] rollback failed for ${record.mutation.target}:`,
-          err,
-        )
+        console.error(`[MutationExecutor] rollback failed for ${record.mutation.target}:`, err)
       }
       // Remove from undo stack.
       const idx = this.undoStack.indexOf(record)

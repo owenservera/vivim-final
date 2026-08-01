@@ -79,9 +79,7 @@ export async function ensureTaxonomySeeded(
   }
 
   const rootDir = join(import.meta.dir, '..', '..')
-  const pool = loadJson<TaxonomyPool>(
-    join(rootDir, 'seeds', 'taxonomy', 'pool.taxonomy.json'),
-  )
+  const pool = loadJson<TaxonomyPool>(join(rootDir, 'seeds', 'taxonomy', 'pool.taxonomy.json'))
 
   // Filter to capability nodes only
   const capabilityNodes = pool.nodes.filter((n) => n.kind === 'capability')
@@ -182,7 +180,9 @@ async function main() {
   // Load pool for node/edge stats
   const pool = loadJson<TaxonomyPool>(join(rootDir, 'seeds', 'taxonomy', 'pool.taxonomy.json'))
   const capabilityCount = pool.nodes.filter((n) => n.kind === 'capability').length
-  console.log(`[seed] Pool: ${pool.nodes.length} nodes (${capabilityCount} capabilities), ${pool.edges.length} edges`)
+  console.log(
+    `[seed] Pool: ${pool.nodes.length} nodes (${capabilityCount} capabilities), ${pool.edges.length} edges`,
+  )
 
   // Seed capability taxonomy (idempotent — force to overwrite existing rows)
   const { upserted } = await ensureTaxonomySeeded(prisma, true)

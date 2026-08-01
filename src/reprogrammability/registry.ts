@@ -114,9 +114,7 @@ export class SurfaceRegistry {
 
   /** List surfaces filtered by capability id. */
   listByCapability(capabilityId: string): ReprogrammableSurface[] {
-    return this.list().filter((s) =>
-      s.capabilities?.includes(capabilityId),
-    )
+    return this.list().filter((s) => s.capabilities?.includes(capabilityId))
   }
 
   /**
@@ -145,9 +143,7 @@ export class SurfaceRegistry {
    * Get the active variant for a surface, if any.
    */
   getActiveVariant(surfaceId: string): SurfaceVariant | undefined {
-    return this.variants
-      .get(surfaceId)
-      ?.find((v) => v.isActive)
+    return this.variants.get(surfaceId)?.find((v) => v.isActive)
   }
 
   /**
@@ -207,10 +203,7 @@ export class SurfaceRegistry {
         kind: s.kind,
         label: s.label,
       })),
-      variantCount: Array.from(this.variants.values()).reduce(
-        (acc, v) => acc + v.length,
-        0,
-      ),
+      variantCount: Array.from(this.variants.values()).reduce((acc, v) => acc + v.length, 0),
     }
   }
 

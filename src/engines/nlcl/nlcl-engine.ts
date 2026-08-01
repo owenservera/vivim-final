@@ -97,7 +97,10 @@ export interface NLCLEngineDeps {
    * SurfaceMutationPlan; the engine wraps it into a CommandResult for the
    * existing /api/nlcl/interpret response surface.
    */
-  llmHarnessEscalator?: (input: string, ctx: NLCContext) => Promise<{
+  llmHarnessEscalator?: (
+    input: string,
+    ctx: NLCContext,
+  ) => Promise<{
     ok: boolean
     plan?: unknown
     confirmationToken?: string
@@ -174,7 +177,7 @@ export class NLCLEngine {
     if (this.deps.llmHarnessEscalator) {
       const agentMatch = rawInput.match(/^\/agent\s+(.+)$/i)
       if (agentMatch) {
-        const escalatorInput = agentMatch[1]!.trim()
+        const escalatorInput = agentMatch[1]?.trim()
         try {
           const escalation = await this.deps.llmHarnessEscalator(escalatorInput, ctx)
           if (escalation.ok) {

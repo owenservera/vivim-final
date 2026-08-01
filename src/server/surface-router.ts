@@ -14,15 +14,12 @@
 //
 // CONTRACT_VERSION: 1
 
-import { json, errorResponse } from './response.js'
-import { surfaceRegistry, SurfaceNotFoundError } from '../reprogrammability/registry.js'
 import type { SurfaceKind } from '../reprogrammability/contract.js'
+import { SurfaceNotFoundError, surfaceRegistry } from '../reprogrammability/registry.js'
+import { errorResponse, json } from './response.js'
 
 export function createSurfaceRouter() {
-  return async function surfaceRouter(
-    req: Request,
-    url: URL,
-  ): Promise<Response | null> {
+  return async function surfaceRouter(req: Request, url: URL): Promise<Response | null> {
     const path = url.pathname
 
     // ── GET /api/surface?kind=…&slot=…&capability=… ──────────────────────

@@ -4,23 +4,26 @@
 // Verifies the framing engine: adapter registration, frame/parse round-trip,
 // health check, error handling.
 
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import {
-  HarnessFramingEngine,
-  NoopFramingAdapter,
-  StubChatGptFramingAdapter,
   AdapterNotRegisteredError,
   FRAME_VERSION,
-  type NormalizedRequest,
-  type FramingAdapter,
   type FramedRequest,
+  type FramingAdapter,
+  HarnessFramingEngine,
   type HealthCheckResult,
+  NoopFramingAdapter,
+  type NormalizedRequest,
+  StubChatGptFramingAdapter,
 } from '../index.js'
 
-function buildRequest(providerId: string, transport: 'webapp' | 'api' | 'local'): NormalizedRequest {
+function buildRequest(
+  providerId: string,
+  transport: 'webapp' | 'api' | 'local',
+): NormalizedRequest {
   return {
     frameVersion: 1,
-    requestId: 'req_test_' + Math.random().toString(36).slice(2),
+    requestId: `req_test_${Math.random().toString(36).slice(2)}`,
     conversationId: 'conv_test',
     providerId,
     transport,
