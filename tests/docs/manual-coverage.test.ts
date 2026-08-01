@@ -23,12 +23,11 @@ describe('user-manual coverage', () => {
     }
   })
 
-  it('references atomic files that exist', () => {
-    const fileRefs = ['scripts/start-backend.ps1', 'scripts/start-frontend.ps1']
+  it('references modern start commands', () => {
+    const commands = ['bun run dev', 'bun run dev:backend']
 
-    for (const ref of fileRefs) {
-      expect(manual).toContain(ref)
-      expect(manual).toMatch(new RegExp(ref.replace(/./g, '\\.')))
+    for (const cmd of commands) {
+      expect(manual).toContain(cmd)
     }
   })
 
