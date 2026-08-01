@@ -19,7 +19,4 @@ pre-commit:
       run: bun run typecheck 2>&1 || true
 
 pre-push:
-  commands:
-    audit:
-      # Background-only: logs P0/P1 findings but never blocks push.
-      run: bun run devops audit-code standard 2>&1 || true
+  commands: {}
