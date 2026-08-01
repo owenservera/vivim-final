@@ -4,8 +4,8 @@
 //   1. In-process — after connectCapabilityRegistry() during server boot
 //   2. Thin-client — fetches capabilities from a running server via HTTP
 
-import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import { config } from '../config.js'
+import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import { CommandRegistry } from './command-registry.js'
 import { registerBuiltinCommands } from './commands/builtins.js'
 import { syncCliFromUnified } from './commands/registry-bridge.js'
@@ -15,7 +15,7 @@ import { OutputFormatter, type OutputMode } from './output-formatter.js'
 const registry = new CommandRegistry()
 const formatter = new OutputFormatter()
 
-const DEFAULT_PORT = 9420
+const _DEFAULT_PORT = 9420
 
 // Registry for capability-bridged commands
 export let capabilityRegistry: UnifiedCapabilityRegistry | null = null
@@ -28,12 +28,24 @@ function parseArgs(argv: string[]): {
   const tokens: string[] = []
   const flags: Record<string, string> = {}
 
-  for (const arg of raw) {
+  for (let i = 0; i < raw.length; i++) {
+    const arg = raw[i]
     if (!arg) continue
     if (arg.startsWith('--')) {
-      const [key, ...rest] = arg.slice(2).split('=')
-      if (key) {
-        flags[key] = rest.length > 0 ? rest.join('=') : ''
+      const eqIdx = arg.indexOf('=')
+      if (eqIdx > 0) {
+        // --key=value
+        flags[arg.slice(2, eqIdx)] = arg.slice(eqIdx + 1)
+      } else {
+        // --key value (next arg is the value)
+        const key = arg.slice(2)
+        const next = raw[i + 1]
+        if (key && next && !next.startsWith('--')) {
+          flags[key] = next
+          i++ // skip the value
+        } else if (key) {
+          flags[key] = ''
+        }
       }
     } else {
       tokens.push(arg)
@@ -108,7 +120,7 @@ async function main(): Promise<void> {
 
   if (tokens[0] === 'serve') {
     const { createServerWithEngines } = await import('../server/index.js')
-    const port = config.port
+    const port = Number(flags.port) || config.port
     const ctx = await createServerWithEngines(port)
     console.log(`vivim server listening on :${ctx.port}`)
     return

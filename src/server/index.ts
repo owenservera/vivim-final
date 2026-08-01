@@ -1605,8 +1605,10 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   return ctx
 }
 
-if (import.meta.main) {
-  const port = config.port
-  const ctx = await createServerWithEngines(port)
-  console.log(`vivim server listening on :${ctx.port}`)
-}
+// NOTE: The `import.meta.main` block was removed because `bun build --compile`
+// causes it to fire even when the module is imported as a dependency (e.g. from
+// src/desktop/sidecar-entry.ts). This created a duplicate server on config.port
+// that stole the DB lock before the sidecar's own server could start.
+// The sidecar entry (src/desktop/sidecar-entry.ts) is the true entry point
+// for the compiled binary and handles port/host configuration.
+
