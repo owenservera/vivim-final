@@ -13,7 +13,7 @@
 
 ---
 
-**Total units:** 144 | **Done:** 80 | **Blocked:** 0 | **Pending:** 32
+**Total units:** 144 | **Done:** 93 | **Blocked:** 0 | **Pending:** 19
 
 ## Phase 1: Stabilization & Cleanup (12 units — COMPLETE)
 
@@ -151,18 +151,18 @@
 
 ---
 
-## Phase 8: Autonomous Orchestration (12 units — 1 done, 5 partial, 6 pending)
+## Phase 8: Autonomous Orchestration (12 units — 4 done, 5 partial, 3 pending)
 
 > **Source:** v3 Phase 7 (`docs/atomic-v3-fork-canon/phase-08-autonomous-orch/`)
 
 - [x] 8.1 (v3:7.1) — LLM-backed planner → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.1-llm-planner.md`
 - [~] 8.2 (v3:7.2) — Step reflection + adaptation → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.2-step-reflection.md` — EXISTS: `src/engines/agentic-loop.ts` has `reflect()`/`adapt()` methods for rule confidence updates
 - [x] 8.3 (v3:7.3) — HITL v2 proactive clarification → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.3-hitl-clarify.md`
-- [ ] 8.4 (v3:7.4) — HITL v2 pause/resume → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.4-hitl-pause.md`
-- [ ] 8.5 (v3:7.5) — Replay with branching → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.5-replay-branch.md`
+- [x] 8.4 (v3:7.4) — HITL v2 pause/resume → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.4-hitl-pause.md` — DONE: `autonomous-execution.ts` has `pause()`/`resume()` with `paused_state_json` persistence + world-state validation + `task:paused`/`task:resumed` events; test at `tests/unit/engines/autonomous-pause.test.ts`
+- [x] 8.5 (v3:7.5) — Replay with branching → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.5-replay-branch.md` — DONE: Unified `replay(taskId, ReplayOptions)` interface; `branch:true` clones prefix + provenance edge; `branch:false` re-executes in-place; 7 tests passing
 - [x] 8.6 (v3:7.6) — Per-task budgets → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.6-task-budgets.md` — EXISTS: `context-assembly.ts` has task-type budget enforcement
 - [x] 8.7 (v3:7.7) — Selector healing v2 → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.7-healer-v2.md`
-- [ ] 8.8 (v3:7.8) — Provider failover mid-task → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.8-provider-failover.md`
+- [x] 8.8 (v3:7.8) — Provider failover mid-task → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.8-provider-failover.md` — DONE: `executeStepWithFailover()` consults `FailoverRouter.fallbacksFor()`, opens `option` clarification gate, re-executes against chosen fallback with adapted input; 2 tests passing
 - [x] 8.9 (v3:7.9) — Composite step execution → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.9-composite-step.md` — EXISTS via `canvas/capability-bridge.ts` composite execution
 - [x] 8.10 (v3:7.10) — Task templates → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.10-task-templates.md` — EXISTS: `src/engines/workflow-templates/newsletter.ts` (Phase 28.2 newsletter template)
 - [x] 8.11 (v3:7.11) — Task search + history → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.11-task-search.md` — EXISTS in `agentic-loop.ts` + `nlcl/intent-resolver.ts` history
@@ -170,7 +170,7 @@
 
 ---
 
-## Phase 9: Observability & Audit (8 units — 2 done, 5 partial, 1 pending)
+## Phase 9: Observability & Audit (8 units — 3 done, 5 partial, 0 pending)
 
 > **Source:** v3 Phase 8 (`docs/atomic-v3-fork-canon/phase-09-observability/`)
 
@@ -181,22 +181,22 @@
 - [x] 9.5 (v3:8.5) — Audit report generator v2 → `docs/atomic-v3-fork-canon/phase-09-observability/8.5-audit-report.md`
 - [~] 9.6 (v3:8.6) — Cost + token tracking → `docs/atomic-v3-fork-canon/phase-09-observability/8.6-cost-tracking.md` — EXISTS via `cost-optimizer.ts` + telemetry aggregator
 - [~] 9.7 (v3:8.7) — Latency budget enforcement → `docs/atomic-v3-fork-canon/phase-09-observability/8.7-latency-budget.md` — EXISTS: `canvas-mirror.ts` has per-stage latency budgets
-- [ ] 9.8 (v3:8.8) — System health daily digest → `docs/atomic-v3-fork-canon/phase-09-observability/8.8-health-digest.md`
+- [x] 9.8 (v3:8.8) — System health daily digest → `docs/atomic-v3-fork-canon/phase-09-observability/8.8-health-digest.md` — DONE: `health-digest.ts` + `workflow-templates/daily-digest.ts` + `health-report.ts`; tests passing
 
 ---
 
-## Phase 10: Sovereign Data & Local-First (9 units — 3 done, 2 partial, 4 pending)
+## Phase 10: Sovereign Data & Local-First (9 units — 6 done, 3 partial, 0 pending)
 
 > **Source:** v3 Phase 9 (`docs/atomic-v3-fork-canon/phase-10-sovereign-data/`)
 
 - [x] 10.1 (v3:9.1) — Encryption-at-rest for sensitive columns → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.1-field-encryption.md`
-- [ ] 10.2 (v3:9.2) — Database-level encryption option → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.2-db-encryption.md`
+- [x] 10.2 (v3:9.2) — Database-level encryption option → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.2-db-encryption.md` — DONE: `db-encryption.ts` (whole-DB envelope encryption with AES-256-GCM + PBKDF2)
 - [x] 10.3 (v3:9.3) — Multi-device sync v2 → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.3-multi-device-sync.md`
 - [x] 10.4 (v3:9.4) — Airgap-by-default → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.4-airgap-default.md`
-- [ ] 10.5 (v3:9.5) — Offline-capable autonomous execution → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.5-offline-autonomous.md`
+- [x] 10.5 (v3:9.5) — Offline-capable autonomous execution → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.5-offline-autonomous.md` — DONE: `autonomous-execution.ts` has `airgap` flag, `resolvePlanner()` enforces local-first, `planStepsLocally()` offline planner
 - [~] 10.6 (v3:9.6) — Encrypted export v2 → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.6-encrypted-export.md` — EXISTS via `export.ts`, needs encryption layer
-- [ ] 10.7 (v3:9.7) — Backup scheduling → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.7-backup-schedule.md`
-- [ ] 10.8 (v3:9.8) — Device pairing UX → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.8-device-pairing.md`
+- [x] 10.7 (v3:9.7) — Backup scheduling → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.7-backup-schedule.md` — DONE: `backup-scheduler.ts` (encrypted rotating backups with retention, restore); 3 tests passing
+- [x] 10.8 (v3:9.8) — Device pairing UX → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.8-device-pairing.md` — DONE: `sync.ts` has `pair()` + `confirmPair()` with pairing code flow
 - [~] 10.9 (v3:9.9) — Telemetry audit zero-cloud proof → `docs/atomic-v3-fork-canon/phase-10-sovereign-data/9.9-zero-cloud-proof.md` — EXISTS via `telemetry-audit.ts` local-only patterns
 
 ---
@@ -229,7 +229,7 @@
 
 ---
 
-## Phase 13: Polish, SDK & Documentation (8 units — 0 done, 2 exists, 6 pending)
+## Phase 13: Polish, SDK & Documentation (8 units — 3 done, 4 exists, 1 pending)
 
 > **Source:** v3 Phase 10 (`docs/atomic-v3-fork-canon/phase-13-polish-sdk/`)
 >
@@ -240,8 +240,8 @@
 - [x] 13.3 (v3:10.3) — Onboarding flow → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.3-onboarding-flow.md` — DONE: `web/ui/src/features/onboarding/onboarding-wizard.tsx` 5-step wizard mounted in `page.tsx`
 - [x] 13.4 (v3:10.4) — Performance tuning + benchmarks → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.4-performance-tuning.md` — DONE: build verified clean; skeleton loaders in ConversationList; retry/error UI in Composer; responsive sidebar via `useIsMobile`; slot defaults modularized in `web/ui/src/ui/defaults/`
 - [~] 13.5 (v3:10.5) — ADR sweep → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.5-adr-sweep.md` — EXISTS: 13 ADR files in `docs/decisions/ADR-001.md` through `ADR-013.md`
-- [ ] 13.6 (v3:10.6) — API documentation (OpenAPI) → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.6-api-documentation.md`
-- [ ] 13.7 (v3:10.7) — User manual → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.7-user-manual.md`
+- [x] 13.6 (v3:10.6) — API documentation (OpenAPI) → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.6-api-documentation.md` — DONE: `docs/api/v11-universal-api.yaml` (248 lines, 109 capabilities); `/api/openapi.json` serves YAML spec; `/docs` serves Swagger UI; `scripts/openapi-gen.ts` regenerates from registry
+- [x] 13.7 (v3:10.7) — User manual → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.7-user-manual.md` — DONE: `docs/user-manual.md` (134 lines, 7 sections covering onboarding, navigation, providers, chat, capabilities, dev tools, troubleshooting)
 - [ ] 13.8 (v3:10.8) — v3 release → `docs/atomic-v3-fork-canon/phase-13-polish-sdk/10.8-v3-release.md`
 
 ---
@@ -263,23 +263,24 @@
 
 ---
 
-## Phase 15: User Moment KPIs (11 units — 0 done, 0 in_progress, 11 pending)
+## Phase 15: User Moment KPIs (11 units — 11 done, 0 partial, 0 pending)
 
 > **Source:** User experience codification — 10 major user moments + KPI infrastructure.
 > Each unit defines measurable KPIs with thresholds, measurement methods, and test contracts.
 > KPIs tracked via `bun run devops kpi <command>` and surfaced in health dashboard.
+> **Committed:** `8276809` — all 11 KPI spec files + threshold definitions + test contracts.
 
-- [ ] 15.1 — First Launch: Time-to-first-agent-message → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.1-first-launch.md`
-- [ ] 15.2 — Provider Login: Time-to-auth-confirmed → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.2-provider-login.md`
-- [ ] 15.3 — First Real Message: Time-to-first-token → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.3-first-message.md`
-- [ ] 15.4 — Command Palette: Search-to-execute latency → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.4-command-palette.md`
-- [ ] 15.5 — Provider Switching: Context-transfer time → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.5-provider-switching.md`
-- [ ] 15.6 — Canvas Nodes: TTFT + streaming smoothness → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.6-canvas-nodes.md`
-- [ ] 15.7 — Help System: Time-to-answer + relevance → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.7-help-system.md`
-- [ ] 15.8 — Multi-Surface Execution: Parity score → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.8-multi-surface.md`
-- [ ] 15.9 — Workspace Settings: Health accuracy + relogin rate → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.9-fleet-control.md`
-- [ ] 15.10 — Conversation Search: Search latency + relevance → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.10-conversation-search.md`
-- [ ] 15.11 — KPI Measurement Infrastructure → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.11-kpi-infrastructure.md`
+- [x] 15.1 — First Launch: Time-to-first-agent-message → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.1-first-launch.md` — DONE: KPI spec with thresholds (<3s P50, <10s P95), measurement via conversation created→first assistant message latency
+- [x] 15.2 — Provider Login: Time-to-auth-confirmed → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.2-provider-login.md` — DONE: KPI spec with thresholds (<5s P50, <15s P95), measures auth cookie detection→profile confirmation
+- [x] 15.3 — First Real Message: Time-to-first-token → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.3-first-message.md` — DONE: KPI spec with thresholds (<2s P50, <5s P95), measures send→first streaming token
+- [x] 15.4 — Command Palette: Search-to-execute latency → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.4-command-palette.md` — DONE: KPI spec with thresholds (<200ms search, <500ms execute), measures NL→capability resolution
+- [x] 15.5 — Provider Switching: Context-transfer time → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.5-provider-switching.md` — DONE: KPI spec with thresholds (<1s switch, <5% context loss), measures provider swap latency
+- [x] 15.6 — Canvas Nodes: TTFT + streaming smoothness → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.6-canvas-nodes.md` — DONE: KPI spec with thresholds (<3s TTFT, >30fps streaming), measures node render performance
+- [x] 15.7 — Help System: Time-to-answer + relevance → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.7-help-system.md` — DONE: KPI spec with thresholds (<1s search, >0.7 relevance score), measures NLCL resolution quality
+- [x] 15.8 — Multi-Surface Execution: Parity score → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.8-multi-surface.md` — DONE: KPI spec with thresholds (100% parity cli=ui=api=mcp), measures cross-surface capability equivalence
+- [x] 15.9 — Workspace Settings: Health accuracy + relogin rate → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.9-fleet-control.md` — DONE: KPI spec with thresholds (>95% health accuracy, <5% relogin rate), measures provider health detection
+- [x] 15.10 — Conversation Search: Search latency + relevance → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.10-conversation-search.md` — DONE: KPI spec with thresholds (<300ms search, >0.8 relevance), measures fuzzy search quality
+- [x] 15.11 — KPI Measurement Infrastructure → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.11-kpi-infrastructure.md` — DONE: Prisma `KpiMeasurement` schema, `bun run devops kpi` CLI, dashboard cards in HealthDashboard
 
 ---
 
@@ -294,21 +295,21 @@
 | 5 | Workspace & Agent UI | 11 | **11** | 0 | 0 | v3 Phase 4 |
 | 6 | Provider & Capability Expansion | 10 | **5** | 4 | 1 | v3 Phase 5 |
 | 7 | Memory & Knowledge Graph | 10 | **1** | 6 | 3 | v3 Phase 6 |
-| 8 | Autonomous Orchestration | 12 | **1** | 5 | 6 | v3 Phase 7 |
+| 8 | Autonomous Orchestration | 12 | **4** | 5 | 3 | v3 Phase 7 |
 | 9 | Observability & Audit | 8 | **2** | 5 | 1 | v3 Phase 8 |
 | 10 | Sovereign Data & Local-First | 9 | **3** | 2 | 4 | v3 Phase 9 |
 | 11 | Kernel Oracle | 4 | **4** | 0 | 0 | v5 Phase 15 |
 | 12 | Kernel Surfaces | 6 | **3** | 3 | 0 | v5 Phase 16 |
 | 13 | Polish, SDK & Documentation | 8 | **4** | 1 | 3 | v3 Phase 10 |
 | 14 | LLM-as-Human Testing | 6 | **6** | 0 | 0 | Spec 032 |
-| 15 | User Moment KPIs | 11 | **0** | 0 | 11 | User Experience |
-| | **Total** | **144** | **80** | **32** | **21** | |
+| 15 | User Moment KPIs | 11 | **11** | 0 | 0 | User Experience |
+| | **Total** | **144** | **93** | **32** | **19** | |
 
 *[~] = code exists that partially implements the unit (counted as Done in total)*
 
 ## Next Unit
 
-**15.11** — KPI Measurement Infrastructure → `docs/atomic-v3-fork-canon/phase-15-user-moment-kpis/15.11-kpi-infrastructure.md`
+**8.8** — Provider failover mid-task → `docs/atomic-v3-fork-canon/phase-08-autonomous-orch/7.8-provider-failover.md`
 
 ## Last Updated
 

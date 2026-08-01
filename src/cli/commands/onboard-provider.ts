@@ -13,6 +13,7 @@
 // in-process orchestrator).
 
 import { z } from 'zod'
+import type { ProviderOnboardingOrchestrator } from '../../engines/onboarding/provider-onboarding-orchestrator.js'
 import { serviceContainer } from '../../server/service-container.js'
 import type { CliCommand, CommandRegistry } from '../command-registry.js'
 
@@ -79,9 +80,8 @@ export function registerOnboardCommand(registry: CommandRegistry): void {
         }
       }
 
-      const orchestrator = serviceContainer.resolve<
-        import('../../engines/onboarding/provider-onboarding-orchestrator.js').ProviderOnboardingOrchestrator
-      >('onboardingOrchestrator')
+      const orchestrator =
+        serviceContainer.resolve<ProviderOnboardingOrchestrator>('onboardingOrchestrator')
 
       const result = await orchestrator.onboard({
         slaveId: slave,

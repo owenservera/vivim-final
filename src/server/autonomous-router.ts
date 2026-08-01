@@ -85,9 +85,13 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     // POST /api/autonomous/:id/replay
     const replayMatch = path.match(/^\/api\/autonomous\/([^/]+)\/replay$/)
     if (replayMatch && req.method === 'POST') {
-      const body = (await req.json().catch(() => ({}))) as { fromStep?: string }
-      const task = await autonomousEngine.replay(replayMatch[1] ?? '', body.fromStep)
-      return json({ taskId: task.id, status: task.status })
+      const body = (await req.json().catch(() => ({}))) as { fromStep?: number }
+      const taskId = await autonomousEngine.replay(replayMatch[1] ?? '', {
+        fromStep: body.fromStep ?? 0,
+        branch: false,
+      })
+      const task = await autonomousEngine.getStatus(taskId)
+      return json({ taskId, status: task?.status ?? 'unknown' })
     }
 
     // GET /api/autonomous/:id/trace
@@ -112,9 +116,13 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     // GET /api/autonomous/search?q=<text>&status=<s>&from=<ts>&to=<ts>
     if (path === '/api/autonomous/search' && req.method === 'GET') {
       const q = url.searchParams.get('q') ?? ''
-      const status = url.searchParams.get('status') as import('../engines/task-history.js').TaskStatus | undefined
-      const from = url.searchParams.get('from') ? Number.parseInt(url.searchParams.get('from')!, 10) : undefined
-      const to = url.searchParams.get('to') ? Number.parseInt(url.searchParams.get('to')!, 10) : undefined
+      const status = url.searchParams.get('status') as
+        | import('../engines/task-history.js').TaskStatus
+        | undefined
+      const fromStr = url.searchParams.get('from')
+      const from = fromStr ? Number.parseInt(fromStr, 10) : undefined
+      const toStr = url.searchParams.get('to')
+      const to = toStr ? Number.parseInt(toStr, 10) : undefined
       const { TaskHistoryService } = await import('../engines/task-history.js')
       const historyService = new TaskHistoryService(autonomousEngine.getStore())
       const results = await historyService.search(q, { status, from, to })
