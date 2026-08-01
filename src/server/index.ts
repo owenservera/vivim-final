@@ -5,7 +5,7 @@
 // and WebSocket bridge. Engine wiring is deferred to the full bootstrap
 // (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
 
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { connectCapabilityRegistry } from '../cli/index.js'
 import { config } from '../config.js'
@@ -224,6 +224,45 @@ export async function createServer(port = 9420): Promise<ServerContext> {
             return json({ status: 'not_ready', reason: 'server still starting' }, 503)
           }
           return json({ status: 'ready', uptime: process.uptime() })
+        }
+
+        // OpenAPI spec — no auth, machine-readable API documentation
+        if (url.pathname === '/api/openapi.json') {
+          try {
+            const specPath = join(process.cwd(), 'docs/api/v11-universal-api.yaml')
+            if (existsSync(specPath)) {
+              const yaml = readFileSync(specPath, 'utf8')
+              return new Response(yaml, {
+                headers: { 'Content-Type': 'application/yaml; charset=utf-8' },
+              })
+            }
+            return json({ error: 'OpenAPI spec not found', code: 'NotFound' }, 404)
+          } catch {
+            return json({ error: 'Failed to load OpenAPI spec', code: 'InternalError' }, 500)
+          }
+        }
+
+        // Swagger UI — no auth, interactive API documentation
+        if (url.pathname === '/docs') {
+          const specUrl = `${url.origin}/api/openapi.json`
+          const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>vivim API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({ url: '${specUrl}', dom_id: '#swagger-ui', deepLinking: true });
+  </script>
+</body>
+</html>`
+          return new Response(html, {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          })
         }
 
         // Setup routes — no auth (workspace/profile setup is first-run experience)
