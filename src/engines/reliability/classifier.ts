@@ -29,19 +29,20 @@ export function classifyFailure(
   const errorMessage = error instanceof Error ? error.message : String(error)
   const signals: string[] = []
 
-  // OOM: high RSS + process exit
+  // OOM: high RSS + process exit or explicit MEMORY_EXCESS error message
   if (
-    context?.currentRssMb &&
-    context?.rssThresholdMb &&
-    context.currentRssMb > context.rssThresholdMb &&
-    (context.exitCode === 137 || errorMessage.includes('MEMORY_EXCESS'))
+    errorMessage.includes('MEMORY_EXCESS') ||
+    (context?.currentRssMb &&
+      context?.rssThresholdMb &&
+      context.currentRssMb > context.rssThresholdMb &&
+      context.exitCode === 137)
   ) {
-    signals.push('high_rss', 'exit_code_137')
+    signals.push('high_rss_or_memory_excess')
     return { failureClass: 'OOM', confidence: 0.9, signals }
   }
 
-  // RendererCrash: CDP Inspector.targetCrashed event before browser exit
-  if (context?.hasTargetCrashed) {
+  // RendererCrash: CDP Inspector.targetCrashed event before browser exit or matching cause string
+  if (context?.hasTargetCrashed || errorMessage.includes('targetCrashed')) {
     signals.push('target_crashed')
     return { failureClass: 'RendererCrash', confidence: 0.95, signals }
   }

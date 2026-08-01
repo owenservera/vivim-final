@@ -39,7 +39,7 @@ describe('ApiProviderAdapter', () => {
 
     const adapter = new ApiProviderAdapter({
       baseUrl: 'https://example.com/api',
-      apiKey: 'set_by_env',
+      apiKey: 'sk-test-123',
       providerId: 'test',
     })
     const tokens: string[] = []
@@ -54,11 +54,9 @@ describe('ApiProviderAdapter', () => {
   })
 
   it('missing env key → throws EngineError', async () => {
-    // biome-ignore lint/performance/noDelete: test cleanup removing env/global stubs
-    delete process.env.MISSING_KEY
     const adapter = new ApiProviderAdapter({
       baseUrl: 'https://example.com/api',
-      apiKey: 'will_be_deleted',
+      apiKey: '',
       providerId: 'test',
     })
     await expect(adapter.send('hey', 'model', () => {})).rejects.toThrow(/Missing API key/)

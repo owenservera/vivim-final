@@ -115,6 +115,7 @@ dev-poc/
 # Tauri desktop build artifacts (MVP target - ADR-016)
 src-tauri/target/
 src-tauri/binaries/
+scripts/tauri/vivim-desktop-setup.exe
 .runtime/tauri-db/
 .runtime/capout.txt
 .runtime/caperr.txt

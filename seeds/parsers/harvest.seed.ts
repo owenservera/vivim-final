@@ -7,6 +7,7 @@ import { StreamAlignmentEngine } from '../../src/engines/stream-align.js'
 import type { ProviderStore } from '../../src/storage/contracts/provider-store.js'
 import { LOGIC_CODE as CHATGPT } from './harvested/chatgpt-openai-delta.js'
 import { LOGIC_CODE as CLAUDE } from './harvested/claude-streaming-sse.js'
+import { LOGIC_CODE as DEEPSEEK } from './harvested/deepseek-reasoning-sse.js'
 import { LOGIC_CODE as GEMINI } from './harvested/gemini-batchexecute.js'
 import { LOGIC_CODE as GENERIC } from './harvested/generic-format-agnostic.js'
 import { LOGIC_CODE as STUDIO } from './harvested/google-ai-studio.js'
@@ -34,6 +35,13 @@ const DEFS: HarvestDef[] = [
     providerId: 'chatgpt',
     version: 1,
     logicCode: CHATGPT,
+    fallback: 'generic/001_format_agnostic',
+  },
+  {
+    name: 'deepseek/001_reasoning_sse',
+    providerId: 'deepseek',
+    version: 1,
+    logicCode: DEEPSEEK,
     fallback: 'generic/001_format_agnostic',
   },
   {
