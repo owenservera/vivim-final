@@ -46,28 +46,44 @@ const DEFAULT_STREAM_PATTERNS: RegExp[] = [
   /\/api\/chat\/completions/,
   /\/batchexecute/,
   /\/chat\/_\/BbswiieKhotGQuraeT1pUvQ:/, // Gemini batchexecute RPC
-  /\/v1\/messages/,                       // Anthropic API
-  /\/v1\/chat\/completions/,              // OpenAI-compatible
-  /\/mmt\/v1\//,                          // Mistral
-  /sse\/|stream/i,                        // Generic SSE hints
+  /\/v1\/messages/, // Anthropic API
+  /\/v1\/chat\/completions/, // OpenAI-compatible
+  /\/mmt\/v1\//, // Mistral
+  /sse\/|stream/i, // Generic SSE hints
 ]
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-const COMPLETION_MARKERS = ['[DONE]', '"finish_reason"', '"done":true', 'message_stop', 'message_delta']
+const COMPLETION_MARKERS = [
+  '[DONE]',
+  '"finish_reason"',
+  '"done":true',
+  'message_stop',
+  'message_delta',
+]
 
 function detectFormatFromBody(body: string): StreamTransport | 'json_stream' {
   const trimmed = body.trim()
   if (/^(event|data):/m.test(trimmed) || trimmed.includes('\ndata:')) return 'sse'
   if (trimmed.startsWith(')]}\n')) return 'batchexecute'
   if (/^\{[\s\S]*\}$/.test(trimmed)) {
-    try { JSON.parse(trimmed); return 'websocket' } catch { /* fall through */ }
+    try {
+      JSON.parse(trimmed)
+      return 'websocket'
+    } catch {
+      /* fall through */
+    }
   }
   const lines = trimmed.split('\n').filter(Boolean)
   if (lines.length > 1) {
     let allJson = true
     for (const l of lines.slice(0, 5)) {
-      try { JSON.parse(l) } catch { allJson = false; break }
+      try {
+        JSON.parse(l)
+      } catch {
+        allJson = false
+        break
+      }
     }
     if (allJson) return 'json_stream'
   }
@@ -216,7 +232,7 @@ export class LiveCaptureEngine {
 
   private async typeIntoComposer(message: string, selector: string): Promise<void> {
     // Probe the element to determine input type
-    const probeResult = await this.client.send(
+    const probeResult = (await this.client.send(
       'Runtime.evaluate',
       {
         expression: `(() => {
@@ -231,11 +247,14 @@ export class LiveCaptureEngine {
         returnByValue: true,
       },
       { sessionId: this.sessionId },
-    ) as { result?: { value?: string } }
+    )) as { result?: { value?: string } }
 
     const probe = JSON.parse(probeResult.result?.value ?? '{}')
     if (probe.error) {
-      throw new EngineError('LiveCaptureError', `Composer not found: ${probe.error} (selector: ${probe.selector})`)
+      throw new EngineError(
+        'LiveCaptureError',
+        `Composer not found: ${probe.error} (selector: ${probe.selector})`,
+      )
     }
 
     let setExpression: string
@@ -282,11 +301,15 @@ export class LiveCaptureEngine {
       })()`
     }
 
-    await this.client.send('Runtime.evaluate', { expression: setExpression }, { sessionId: this.sessionId })
+    await this.client.send(
+      'Runtime.evaluate',
+      { expression: setExpression },
+      { sessionId: this.sessionId },
+    )
   }
 
   private async clickSendButton(selector: string): Promise<void> {
-    const result = await this.client.send(
+    const result = (await this.client.send(
       'Runtime.evaluate',
       {
         expression: `(() => {
@@ -298,7 +321,7 @@ export class LiveCaptureEngine {
         returnByValue: true,
       },
       { sessionId: this.sessionId },
-    ) as { result?: { value?: string } }
+    )) as { result?: { value?: string } }
 
     const res = JSON.parse(result.result?.value ?? '{}')
     if (res.error) {

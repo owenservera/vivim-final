@@ -1,21 +1,18 @@
 // src/engines/reprogrammability/__tests__/llm-harness-agent.test.ts
 // Phase 7 of ROADMAP-REPROGRAMMABLE-CANVAS.md — LLM Harness Escalation.
 
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
 import { ulid } from 'ulid'
-import {
-  LlmHarnessAgent,
-  type LlmHarnessAgentDeps,
-} from '../llm-harness-agent.js'
-import type { ProviderLLMAdapter } from '../../nlcl/llm-slave-resolver.js'
-import { surfaceRegistry } from '../../../reprogrammability/registry.js'
 import { resetCanonicalSurfacesForTest } from '../../../reprogrammability/canonical-surfaces.js'
 import type { SurfaceMutationPlan } from '../../../reprogrammability/mutation-schema.js'
+import { surfaceRegistry } from '../../../reprogrammability/registry.js'
+import type { ProviderLLMAdapter } from '../../nlcl/llm-slave-resolver.js'
+import { LlmHarnessAgent } from '../llm-harness-agent.js'
 
 class FakeLLM implements ProviderLLMAdapter {
   constructor(private responses: string[]) {}
   private i = 0
-  async query(prompt: string): Promise<string> {
+  async query(_prompt: string): Promise<string> {
     if (this.i >= this.responses.length) {
       throw new Error('FakeLLM: out of responses')
     }
@@ -52,11 +49,11 @@ describe('LlmHarnessAgent', () => {
 
     expect(result.ok).toBe(true)
     expect(result.plan).toBeDefined()
-    expect(result.plan!.mutations).toHaveLength(1)
-    expect(result.plan!.mutations[0]!.op).toBe('restyle')
-    expect(result.plan!.mutations[0]!.target).toBe('panel:conversations')
-    expect(result.plan!.mutations[0]!.provenance).toBe('llm-harness')
-    expect(result.plan!.provenance).toBe('llm-harness')
+    expect(result.plan?.mutations).toHaveLength(1)
+    expect(result.plan?.mutations[0]?.op).toBe('restyle')
+    expect(result.plan?.mutations[0]?.target).toBe('panel:conversations')
+    expect(result.plan?.mutations[0]?.provenance).toBe('llm-harness')
+    expect(result.plan?.provenance).toBe('llm-harness')
     expect(result.retries).toBe(0)
   })
 
@@ -76,10 +73,7 @@ describe('LlmHarnessAgent', () => {
       provenance: 'llm-harness',
       description: 'Rename',
     }
-    const fakeLlm = new FakeLLM([
-      'this is not JSON',
-      JSON.stringify(validPlan),
-    ])
+    const fakeLlm = new FakeLLM(['this is not JSON', JSON.stringify(validPlan)])
     const agent = new LlmHarnessAgent({ providerLLM: fakeLlm })
 
     const result = await agent.producePlan('rename the conversations panel')
@@ -115,10 +109,7 @@ describe('LlmHarnessAgent', () => {
       ],
       provenance: 'llm-harness',
     }
-    const fakeLlm = new FakeLLM([
-      JSON.stringify(invalidPlan),
-      JSON.stringify(validPlan),
-    ])
+    const fakeLlm = new FakeLLM([JSON.stringify(invalidPlan), JSON.stringify(validPlan)])
     const agent = new LlmHarnessAgent({ providerLLM: fakeLlm })
 
     const result = await agent.producePlan('rename')
@@ -128,11 +119,7 @@ describe('LlmHarnessAgent', () => {
   })
 
   test('returns error after MAX_RETRIES exhausted', async () => {
-    const fakeLlm = new FakeLLM([
-      'invalid',
-      'still invalid',
-      'also invalid',
-    ])
+    const fakeLlm = new FakeLLM(['invalid', 'still invalid', 'also invalid'])
     const agent = new LlmHarnessAgent({ providerLLM: fakeLlm, maxRetries: 2 })
 
     const result = await agent.producePlan('anything')
@@ -156,14 +143,14 @@ describe('LlmHarnessAgent', () => {
       ],
       provenance: 'llm-harness',
     }
-    const fenced = '```json\n' + JSON.stringify(plan) + '\n```'
+    const fenced = `\`\`\`json\n${JSON.stringify(plan)}\n\`\`\``
     const fakeLlm = new FakeLLM([fenced])
     const agent = new LlmHarnessAgent({ providerLLM: fakeLlm })
 
     const result = await agent.producePlan('make it blue')
 
     expect(result.ok).toBe(true)
-    expect(result.plan!.mutations[0]!.op).toBe('restyle')
+    expect(result.plan?.mutations[0]?.op).toBe('restyle')
   })
 
   test('forces provenance to llm-harness even if LLM lies', async () => {
@@ -186,8 +173,8 @@ describe('LlmHarnessAgent', () => {
     const result = await agent.producePlan('make it green')
 
     expect(result.ok).toBe(true)
-    expect(result.plan!.provenance).toBe('llm-harness')
-    expect(result.plan!.mutations[0]!.provenance).toBe('llm-harness')
+    expect(result.plan?.provenance).toBe('llm-harness')
+    expect(result.plan?.mutations[0]?.provenance).toBe('llm-harness')
   })
 
   test('synthesizes idempotencyKey if LLM omits it', async () => {
@@ -210,7 +197,7 @@ describe('LlmHarnessAgent', () => {
     const result = await agent.producePlan('make it yellow')
 
     expect(result.ok).toBe(true)
-    expect(result.plan!.mutations[0]!.idempotencyKey).toBeDefined()
-    expect(result.plan!.mutations[0]!.idempotencyKey).toMatch(/^llm-/)
+    expect(result.plan?.mutations[0]?.idempotencyKey).toBeDefined()
+    expect(result.plan?.mutations[0]?.idempotencyKey).toMatch(/^llm-/)
   })
 })

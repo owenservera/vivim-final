@@ -16,11 +16,11 @@
 //
 // CONTRACT_VERSION: 1
 
-import { z } from 'zod'
 import { ulid } from 'ulid'
-import { json, errorResponse } from './response.js'
+import { z } from 'zod'
 import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
 import type { SurfaceMutation, SurfaceMutationPlan } from '../reprogrammability/mutation-schema.js'
+import { errorResponse, json } from './response.js'
 
 // ── In-memory store (Phase 6; Phase 8 promotes to Prisma) ────────────────────
 
@@ -57,10 +57,7 @@ const FromGraphInputSchema = z.object({
 // ── Router ───────────────────────────────────────────────────────────────────
 
 export function createTemplateRouter() {
-  return async function templateRouter(
-    req: Request,
-    url: URL,
-  ): Promise<Response | null> {
+  return async function templateRouter(req: Request, url: URL): Promise<Response | null> {
     const path = url.pathname
 
     // ── POST /api/template/from-graph ────────────────────────────────────────
@@ -146,13 +143,8 @@ export function createTemplateRouter() {
         const fromNode = nodes.find((n) => n.id === edge.from.nodeId)
         const toNode = nodes.find((n) => n.id === edge.to.nodeId)
         const capNode =
-          fromNode?.type === 'capability'
-            ? fromNode
-            : toNode?.type === 'capability'
-              ? toNode
-              : null
-        const capId =
-          (capNode?.capabilityId as string | undefined) ?? 'unknown'
+          fromNode?.type === 'capability' ? fromNode : toNode?.type === 'capability' ? toNode : null
+        const capId = (capNode?.capabilityId as string | undefined) ?? 'unknown'
 
         mutations.push({
           op: 'rebind', // Phase 6 only emits rebind edges from graph templates.

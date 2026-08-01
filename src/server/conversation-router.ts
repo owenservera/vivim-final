@@ -1,12 +1,12 @@
 // src/server/conversation-router.ts
 // REST API router — core endpoints
 
+import { config } from '../config.js'
 import type {
   PlanTier,
   ResolvedCapabilities,
   ResolvedCapability,
 } from '../engines/capability-resolution.js'
-import { config } from '../config.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
 

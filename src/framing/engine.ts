@@ -20,14 +20,11 @@
 //
 // FRAME_VERSION: 1
 
+import type { ContentPart } from '../schema/streaming.js'
 import type { FramingAdapter, HealthCheckResult } from './adapter.js'
 import { AdapterNotRegisteredError } from './adapter.js'
-import type {
-  NormalizedRequest,
-  NormalizedResponse,
-} from './schemas.js'
+import type { NormalizedRequest, NormalizedResponse } from './schemas.js'
 import { emptyResponse, errorResponse } from './schemas.js'
-import type { ContentPart } from '../schema/streaming.js'
 
 export interface FramingEngineListener {
   onAdapterRegistered?(adapter: FramingAdapter): void
@@ -94,7 +91,7 @@ export class HarnessFramingEngine {
     const adapter = this.getAdapter(req.providerId)
     try {
       return await adapter.frameRequest(req)
-    } catch (err) {
+    } catch (_err) {
       throw new AdapterNotRegisteredError(req.providerId)
     }
   }
@@ -152,9 +149,7 @@ export class HarnessFramingEngine {
       return errorResponse(req, {
         kind: 'protocol',
         message:
-          err instanceof Error
-            ? err.message
-            : `Failed to parse response from ${req.providerId}`,
+          err instanceof Error ? err.message : `Failed to parse response from ${req.providerId}`,
         retryable: false,
       })
     }
@@ -167,9 +162,7 @@ export class HarnessFramingEngine {
    * Run a health check for a provider (or all providers if omitted).
    */
   async checkHealth(providerId?: string): Promise<HealthCheckResult[]> {
-    const targets = providerId
-      ? [this.getAdapter(providerId)]
-      : this.listAdapters()
+    const targets = providerId ? [this.getAdapter(providerId)] : this.listAdapters()
     const results: HealthCheckResult[] = []
     for (const adapter of targets) {
       try {

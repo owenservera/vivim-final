@@ -14,8 +14,8 @@
 // CONTRACT_VERSION: 1
 
 import { z } from 'zod'
-import { json, errorResponse } from './response.js'
 import { pluginBuilder } from '../engines/reprogrammability/plugin-builder.js'
+import { errorResponse, json } from './response.js'
 
 const BuildInputSchema = z.object({
   description: z.string().min(1).max(2000),
@@ -31,10 +31,7 @@ const SEED_PROMPTS = [
 ]
 
 export function createPluginBuilderRouter() {
-  return async function pluginBuilderRouter(
-    req: Request,
-    url: URL,
-  ): Promise<Response | null> {
+  return async function pluginBuilderRouter(req: Request, url: URL): Promise<Response | null> {
     const path = url.pathname
 
     // ── POST /api/plugin-builder/build ───────────────────────────────────────
@@ -57,10 +54,7 @@ export function createPluginBuilderRouter() {
 
       const result = await pluginBuilder.build(parsed.data)
       if (!result.ok || !result.plugin || !result.manifest) {
-        return json(
-          { ok: false, error: result.error ?? 'Build failed' },
-          500,
-        )
+        return json({ ok: false, error: result.error ?? 'Build failed' }, 500)
       }
 
       return json(

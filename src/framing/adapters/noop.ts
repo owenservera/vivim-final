@@ -7,14 +7,9 @@
 //
 // FRAME_VERSION: 1
 
-import type {
-  FramingAdapter,
-  FramedRequest,
-  ParseContext,
-  HealthCheckResult,
-} from '../adapter.js'
-import type { NormalizedRequest } from '../schemas.js'
 import type { ContentPart } from '../../schema/streaming.js'
+import type { FramedRequest, FramingAdapter, HealthCheckResult, ParseContext } from '../adapter.js'
+import type { NormalizedRequest } from '../schemas.js'
 
 export class NoopFramingAdapter implements FramingAdapter {
   readonly providerId: string
@@ -37,10 +32,7 @@ export class NoopFramingAdapter implements FramingAdapter {
     ctx: ParseContext,
   ): AsyncGenerator<ContentPart, void, unknown> {
     // Echo the chunk as a text block.
-    const text =
-      typeof chunk === 'string'
-        ? chunk
-        : JSON.stringify(chunk) ?? ''
+    const text = typeof chunk === 'string' ? chunk : (JSON.stringify(chunk) ?? '')
     yield {
       type: 'text',
       text,

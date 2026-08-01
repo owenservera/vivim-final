@@ -174,7 +174,7 @@ export class HealthMonitor {
   async check(cdp: CDPProxy): Promise<{ ok: boolean; latencyMs: number; error?: string }> {
     const start = Date.now()
     try {
-      const result = await Promise.race([
+      const _result = await Promise.race([
         cdp.send('Browser.getVersion'),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Health probe timeout')), this.timeoutMs),
@@ -345,7 +345,7 @@ export class BrowserRuntime {
    * Health probe all sessions.
    */
   async tick(): Promise<void> {
-    const results = await Promise.allSettled(
+    const _results = await Promise.allSettled(
       Array.from(this.sessions.entries()).map(async ([slaveId, session]) => {
         const result = await session.health.check(session.cdp)
         if (!result.ok) {

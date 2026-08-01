@@ -28,12 +28,7 @@ export type { ContentPart }
 
 // ── NormalizedMessage ───────────────────────────────────────────────────────
 
-export const NormalizedRoleSchema = z.enum([
-  'system',
-  'user',
-  'assistant',
-  'tool',
-])
+export const NormalizedRoleSchema = z.enum(['system', 'user', 'assistant', 'tool'])
 export type NormalizedRole = z.infer<typeof NormalizedRoleSchema>
 
 /**
@@ -68,14 +63,7 @@ export const NormalizedAttachmentSchema = z.object({
 export type NormalizedAttachment = z.infer<typeof NormalizedAttachmentSchema>
 
 export const FrameProvenanceSchema = z.object({
-  source: z.enum([
-    'composer',
-    'nlcl',
-    'llm-harness',
-    'workflow',
-    'plugin',
-    'system',
-  ]),
+  source: z.enum(['composer', 'nlcl', 'llm-harness', 'workflow', 'plugin', 'system']),
   traceId: z.string().min(1),
   /** Optional parent request id (for chained calls). */
   parentRequestId: z.string().optional(),
@@ -88,9 +76,7 @@ export const FramingMetadataSchema = z.object({
   /** DOM selector for the composer input (WebApp transport). */
   composerSelector: z.string().optional(),
   /** DOM capture pattern (WebApp transport). */
-  capturePattern: z
-    .enum(['sse', 'ws', 'chunked-fetch', 'xhr-poll', 'dom-mutation'])
-    .optional(),
+  capturePattern: z.enum(['sse', 'ws', 'chunked-fetch', 'xhr-poll', 'dom-mutation']).optional(),
   /** Whether to stream the response. */
   stream: z.boolean().default(true),
   /** Optional model override (provider-specific). */
@@ -149,9 +135,7 @@ export const ProviderMetadataSchema = z.object({
       costUsd: z.number().nonnegative().optional(),
     })
     .optional(),
-  finishReason: z
-    .enum(['stop', 'length', 'tool_call', 'error', 'filtered'])
-    .optional(),
+  finishReason: z.enum(['stop', 'length', 'tool_call', 'error', 'filtered']).optional(),
   rawResponseSize: z.number().int().nonnegative().optional(),
   /** Provider-specific metadata bag (debugging only, NOT for business logic). */
   raw: z.record(z.string(), z.unknown()).optional(),

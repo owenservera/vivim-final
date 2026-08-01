@@ -4,7 +4,7 @@
 
 // ── Base Response Types ──────────────────────────────────────────────────────
 
-export interface ApiResponse<T = unknown> {
+export interface ApiResponse<_T = unknown> {
   ok: boolean
   error?: string
   code?: string

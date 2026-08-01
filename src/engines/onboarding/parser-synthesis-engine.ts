@@ -126,7 +126,7 @@ export class ParserSynthesisEngine {
       (s): s is Record<string, unknown> => typeof s === 'object' && s !== null && !Array.isArray(s),
     )
     if (objectSamples.length === 0) {
-      fieldMap['content'] = { role: 'content_delta', type: 'string', required: true }
+      fieldMap.content = { role: 'content_delta', type: 'string', required: true }
       return fieldMap
     }
 

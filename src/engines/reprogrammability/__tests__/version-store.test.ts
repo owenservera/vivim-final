@@ -1,14 +1,14 @@
 // src/engines/reprogrammability/__tests__/version-store.test.ts
 // Phase 8 of ROADMAP-REPROGRAMMABLE-CANVAS.md — Provenance & Versioning.
 
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
+import type { SurfaceSpec } from '../../../reprogrammability/schema/spec.js'
 import {
-  versionStore,
-  provenanceWeight,
   PROVENANCE_WEIGHTS,
   type VersionStore,
+  provenanceWeight,
+  versionStore,
 } from '../version-store.js'
-import type { SurfaceSpec } from '../../../reprogrammability/schema/spec.js'
 
 function panelSpec(title: string): SurfaceSpec {
   return {
@@ -49,11 +49,11 @@ describe('VersionStore', () => {
 
     const list = store.listVersions('panel:conversations')
     expect(list).toHaveLength(3)
-    expect(list[0]!.version).toBe(1)
-    expect(list[1]!.version).toBe(2)
-    expect(list[2]!.version).toBe(3)
-    expect((list[0]!.spec as { title: string }).title).toBe('V1')
-    expect((list[2]!.spec as { title: string }).title).toBe('V3')
+    expect(list[0]?.version).toBe(1)
+    expect(list[1]?.version).toBe(2)
+    expect(list[2]?.version).toBe(3)
+    expect((list[0]?.spec as { title: string }).title).toBe('V1')
+    expect((list[2]?.spec as { title: string }).title).toBe('V3')
   })
 
   test('listVersions limit returns most recent N', () => {
@@ -66,8 +66,8 @@ describe('VersionStore', () => {
     }
     const list = store.listVersions('panel:conversations', 2)
     expect(list).toHaveLength(2)
-    expect(list[0]!.version).toBe(4)
-    expect(list[1]!.version).toBe(5)
+    expect(list[0]?.version).toBe(4)
+    expect(list[1]?.version).toBe(5)
   })
 
   test('getVersionByNumber returns the right version', () => {
@@ -84,7 +84,7 @@ describe('VersionStore', () => {
 
     const v2 = store.getVersionByNumber('panel:conversations', 2)
     expect(v2).not.toBeNull()
-    expect((v2!.spec as { title: string }).title).toBe('V2')
+    expect((v2?.spec as { title: string }).title).toBe('V2')
   })
 
   test('getRestoreSpec returns the version spec', () => {
@@ -94,7 +94,7 @@ describe('VersionStore', () => {
       provenance: 'manual',
     })
     const list = store.listVersions('panel:conversations')
-    const spec = store.getRestoreSpec(list[0]!.id)
+    const spec = store.getRestoreSpec(list[0]?.id)
     expect(spec).not.toBeNull()
     expect((spec as { title: string }).title).toBe('Original')
   })
@@ -111,12 +111,12 @@ describe('VersionStore', () => {
       provenance: 'manual',
     })
     const list = store.listVersions('panel:conversations')
-    const diff = store.diffVersions(list[0]!.id, list[1]!.id)
+    const diff = store.diffVersions(list[0]?.id, list[1]?.id)
     expect(diff).not.toBeNull()
-    expect(diff!.versionA).toBe(1)
-    expect(diff!.versionB).toBe(2)
-    expect(diff!.jsonDiff).toContain('V1')
-    expect(diff!.jsonDiff).toContain('V2')
+    expect(diff?.versionA).toBe(1)
+    expect(diff?.versionB).toBe(2)
+    expect(diff?.jsonDiff).toContain('V1')
+    expect(diff?.jsonDiff).toContain('V2')
   })
 
   test('diffVersions returns null for different surfaces', () => {
@@ -155,8 +155,8 @@ describe('VersionStore', () => {
     const list = store.listBackups()
     expect(list).toHaveLength(3)
     // Most recent first (later createdAt = first).
-    expect(list[0]!.source).toBe('manual')
-    expect(list[2]!.source).toBe('manual')
+    expect(list[0]?.source).toBe('manual')
+    expect(list[2]?.source).toBe('manual')
   })
 
   test('provenanceWeight returns the expected order', () => {
@@ -190,7 +190,7 @@ describe('VersionStore', () => {
     const list = store.listVersions('panel:conversations')
     expect(list).toHaveLength(100)
     // Oldest 5 dropped — list[0] should be V6.
-    expect(list[0]!.version).toBe(6)
-    expect(list[99]!.version).toBe(105)
+    expect(list[0]?.version).toBe(6)
+    expect(list[99]?.version).toBe(105)
   })
 })

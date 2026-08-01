@@ -232,7 +232,7 @@ JSON:`
 
   private questionFor(_goal: string, options: ClarificationOption[]): string {
     if (options.length === 0) return 'What did you mean?'
-    if (options.length === 1) return `Did you mean "${options[0]!.label}"?`
+    if (options.length === 1) return `Did you mean "${options[0]?.label}"?`
     return `What did you mean? Options: ${options.map((o) => o.label).join(' | ')}`
   }
 

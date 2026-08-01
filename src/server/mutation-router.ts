@@ -17,12 +17,15 @@
 
 import { z } from 'zod'
 import { getLogger } from '../lib/logger.js'
-import { json, errorResponse } from './response.js'
-import { SurfaceMutationSchema, SurfaceMutationPlanSchema } from '../reprogrammability/mutation-schema.js'
-import { parseMutation, parseMutationList, DslParseError } from '../reprogrammability/dsl/parser.js'
-import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
-import { SurfaceNotFoundError } from '../reprogrammability/registry.js'
 import { UnsupportedMutationError } from '../reprogrammability/contract.js'
+import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
+import { DslParseError, parseMutation, parseMutationList } from '../reprogrammability/dsl/parser.js'
+import {
+  SurfaceMutationPlanSchema,
+  SurfaceMutationSchema,
+} from '../reprogrammability/mutation-schema.js'
+import { SurfaceNotFoundError } from '../reprogrammability/registry.js'
+import { errorResponse, json } from './response.js'
 
 const log = getLogger('mutation-router')
 
@@ -149,7 +152,9 @@ export function createMutationRouter() {
     // GET /api/mutation/history
     if (url.pathname === '/api/mutation/history' && req.method === 'GET') {
       const limitParam = url.searchParams.get('limit')
-      const limit = limitParam ? Math.min(100, Math.max(1, parseInt(limitParam, 10) || 50)) : 50
+      const limit = limitParam
+        ? Math.min(100, Math.max(1, Number.parseInt(limitParam, 10) || 50))
+        : 50
       const history = mutationExecutor.history(limit)
       return json({ ok: true, history, count: history.length })
     }

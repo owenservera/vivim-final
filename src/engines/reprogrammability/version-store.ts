@@ -93,7 +93,7 @@ export class VersionStore {
     // Version number is monotonically increasing — read from the last entry,
     // not from `existing.length`, so capping at maxVersionsPerSurface doesn't
     // restart the counter.
-    const version = existing.length > 0 ? existing[existing.length - 1]!.version + 1 : 1
+    const version = existing.length > 0 ? existing[existing.length - 1]?.version + 1 : 1
     const specJson = JSON.stringify(input.spec)
     const v: SurfaceVersion = {
       id: ulid(),
@@ -165,7 +165,10 @@ export class VersionStore {
   /**
    * Diff two versions of the same surface. Returns a structured diff.
    */
-  diffVersions(versionIdA: string, versionIdB: string): {
+  diffVersions(
+    versionIdA: string,
+    versionIdB: string,
+  ): {
     surfaceId: string
     versionA: number
     versionB: number
@@ -190,10 +193,7 @@ export class VersionStore {
   /**
    * Create a workspace backup snapshot. Returns the backup id.
    */
-  createBackup(
-    snapshot: unknown,
-    source: WorkspaceBackup['source'] = 'manual',
-  ): WorkspaceBackup {
+  createBackup(snapshot: unknown, source: WorkspaceBackup['source'] = 'manual'): WorkspaceBackup {
     const snapshotJson = JSON.stringify(snapshot)
     const backup: WorkspaceBackup = {
       id: ulid(),
@@ -213,9 +213,7 @@ export class VersionStore {
    * List backups (most recent first).
    */
   listBackups(limit?: number): WorkspaceBackup[] {
-    const all = Array.from(this.backups.values()).sort(
-      (a, b) => b.createdAt - a.createdAt,
-    )
+    const all = Array.from(this.backups.values()).sort((a, b) => b.createdAt - a.createdAt)
     if (limit && limit > 0) return all.slice(0, limit)
     return all
   }

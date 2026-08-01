@@ -129,6 +129,14 @@ export interface TaskTemplate {
   updatedAt: number
 }
 
+// Unit 8.5: replay with branching options
+export interface ReplayOptions {
+  /** Step index to replay from (0-based). Steps before this are copied verbatim. */
+  fromStep: number
+  /** If true, create a new branch task (original untouched). If false, re-execute in-place. */
+  branch: boolean
+}
+
 // ── Classification priority (lower = more restrictive) ──────────────────
 
 const CLASSIFICATION_PRIORITY: Record<ActionClassification, number> = {
@@ -180,6 +188,17 @@ export class AutonomousExecutionEngine {
     private readonly consentCheck: () => boolean | Promise<boolean> = () => false,
     // Unit 8.9: optional composer for composite step resolution
     private readonly composer?: CapabilityComposer,
+    // Unit 8.5: optional provenance tracker for replay-branch causal links
+    private readonly provenance?: {
+      record(node: {
+        traceId: string
+        parentId: string | null
+        kind: string
+        engineId: string
+        label: string
+        metaJson: string
+      }): Promise<string>
+    },
   ) {}
 
   // Unit 8.6: per-task budget enforcement — checks cost/tokens/iterations
@@ -810,34 +829,124 @@ export class AutonomousExecutionEngine {
     return resolved?.response ?? null
   }
 
-  async replay(taskId: string, fromStep?: string): Promise<AutonomousTask> {
-    const prev = await this.getStatus(taskId)
-    if (!prev) throw new EngineError(`Task not found: ${taskId}`)
+  // Unit 8.5: Replay with branching — unified interface.
+  // branch:false → re-execute the original task from fromStep (mutates it).
+  // branch:true → clone prefix 0..fromStep into a new task, leave original untouched.
+  // Returns the task id (original for in-place, new for branch).
+  async replay(taskId: string, opts: ReplayOptions): Promise<string> {
+    const original = this.activeTasks.get(taskId) ?? (await this.getStatus(taskId))
+    if (!original) throw new EngineError(`No task ${taskId}`)
 
-    const newTask = await this.execute(prev.goal)
-
-    if (fromStep) {
-      const skipIdx = prev.steps.findIndex((s) => s.id === fromStep)
-      if (skipIdx > 0) {
-        for (let i = 0; i < skipIdx; i++) {
-          const oldStep = prev.steps[i]
-          const newStep = newTask.steps[i]
-          if (oldStep?.status === 'complete' && newStep) {
-            newStep.result = oldStep.result
-            newStep.status = 'complete'
-            await this.store.updateStep(newStep.id, {
-              status: 'complete',
-              resultJson: JSON.stringify(oldStep.result),
-            })
-          }
+    if (!opts.branch) {
+      // In-place re-execution from fromStep. Mark steps after fromStep as pending
+      // so runTask picks them up.
+      for (let i = opts.fromStep; i < original.steps.length; i++) {
+        const s = original.steps[i]
+        if (s && s.status !== 'complete' && s.status !== 'skipped') {
+          s.status = 'pending'
+          s.result = null
+          s.error = null
+          s.startedAt = null
+          s.completedAt = null
+          await this.store.updateStep(s.id, {
+            status: 'pending',
+            resultJson: null,
+            error: null,
+            startedAt: null,
+            completedAt: null,
+          })
         }
       }
+      original.status = 'executing'
+      original.completedAt = null
+      original.result = null
+      original.error = null
+      await this.store.updateTask(taskId, {
+        status: 'executing',
+        completedAt: null,
+        resultJson: null,
+        error: null,
+      })
+      this.activeTasks.set(taskId, original)
+      await this.runTask(original)
+      return original.id
     }
 
-    return newTask
+    // Branch: clone prefix 0..fromStep, create new task, untouched original.
+    const branchId = newId()
+    const branchSteps: AutonomousStep[] = original.steps
+      .slice(0, opts.fromStep + 1)
+      .map((s, i) => ({
+        ...s,
+        id: newId(),
+        taskId: branchId,
+        stepIndex: i,
+        status: s.status === 'complete' ? ('complete' as StepStatus) : ('pending' as StepStatus),
+        result: s.status === 'complete' ? s.result : null,
+        error: null,
+        startedAt: s.status === 'complete' ? s.startedAt : null,
+        completedAt: s.status === 'complete' ? s.completedAt : null,
+      }))
+
+    const branchTask: AutonomousTask = {
+      id: branchId,
+      goal: { ...original.goal },
+      status: 'running',
+      steps: branchSteps,
+      startedAt: Date.now(),
+      completedAt: null,
+      result: null,
+      error: null,
+    }
+
+    await this.store.createTask({
+      id: branchId,
+      goalJson: JSON.stringify(branchTask.goal),
+      status: 'running',
+      startedAt: branchTask.startedAt,
+    })
+    for (const step of branchSteps) {
+      await this.store.createStep({
+        id: step.id,
+        taskId: branchId,
+        stepIndex: step.stepIndex,
+        description: step.description,
+        action: step.action,
+        actionInputJson: JSON.stringify(step.actionInput),
+        classification: step.classification,
+        status: step.status,
+        resultJson: step.result != null ? JSON.stringify(step.result) : null,
+        requiresHumanApproval: step.requiresHumanApproval ? 1 : 0,
+      })
+    }
+
+    this.activeTasks.set(branchId, branchTask)
+    this.eventBus.emit({
+      type: 'autonomous:branch_created',
+      branchId,
+      sourceTaskId: taskId,
+      fromStep: opts.fromStep,
+    })
+
+    // Record provenance: branch → origin causal link
+    if (this.provenance) {
+      const traceId = `replay-branch:${branchId}`
+      await this.provenance.record({
+        traceId,
+        parentId: original.steps[0]?.id ?? taskId,
+        kind: 'replay-branch',
+        engineId: 'autonomous-execution',
+        label: `Branch from step ${opts.fromStep} of task ${taskId}`,
+        metaJson: JSON.stringify({ sourceTaskId: taskId, fromStep: opts.fromStep }),
+      })
+    }
+
+    // Continue execution from the step after fromStep
+    await this.runTask(branchTask)
+    return branchId
   }
 
-  // Replay a finished task with branching (Unit 34.4). Delegates to
+  // Replay a finished task with branching (backward compat). Delegates to
   // ReplayController; the branch re-executes capability steps via the
   // capability registry, leaving the original timeline untouched.
   async replayBranch(

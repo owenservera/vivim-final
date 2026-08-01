@@ -50,8 +50,8 @@ export class WebGlSpoofModule implements StealthModule {
 
     const script = `
       (function() {
-        var vendor = ${JSON.stringify(gpu!.vendor)};
-        var renderer = ${JSON.stringify(gpu!.renderer)};
+        var vendor = ${JSON.stringify(gpu?.vendor)};
+        var renderer = ${JSON.stringify(gpu?.renderer)};
 
         var getParameter = WebGLRenderingContext.prototype.getParameter;
         WebGLRenderingContext.prototype.getParameter = function(param) {

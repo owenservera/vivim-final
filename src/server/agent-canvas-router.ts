@@ -17,12 +17,9 @@
  */
 
 import { ulid } from 'ulid'
-import type {
-  AgentCanvasCommand,
-  AgentCanvasPolicy,
-} from '../shared/agent-canvas.js'
-import { DEFAULT_POLICY } from '../shared/agent-canvas.js'
 import { getLogger } from '../lib/logger.js'
+import type { AgentCanvasCommand, AgentCanvasPolicy } from '../shared/agent-canvas.js'
+import { DEFAULT_POLICY } from '../shared/agent-canvas.js'
 import type { ServerContext } from './index.js'
 
 const log = getLogger('agent-canvas-router')
@@ -69,12 +66,14 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
         try {
           // The EventBus is on the ServerContext.
           // Different eventBus shapes exist in the codebase; emit defensively.
-          const eb = (ctx as unknown as {
-            eventBus?: {
-              emit?: (event: string, payload: unknown) => void | Promise<void>
-              publish?: (event: string, payload: unknown) => void | Promise<void>
+          const eb = (
+            ctx as unknown as {
+              eventBus?: {
+                emit?: (event: string, payload: unknown) => void | Promise<void>
+                publish?: (event: string, payload: unknown) => void | Promise<void>
+              }
             }
-          }).eventBus
+          ).eventBus
           if (eb) {
             const emit = eb.emit ?? eb.publish
             if (emit) {
@@ -82,7 +81,10 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
             }
           }
         } catch (emitErr) {
-          log.warn({ err: emitErr, traceId }, '[AgentCanvasRouter] EventBus emit failed; continuing')
+          log.warn(
+            { err: emitErr, traceId },
+            '[AgentCanvasRouter] EventBus emit failed; continuing',
+          )
         }
 
         // Always return 200 with the traceId so the client can correlate.
@@ -91,8 +93,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
         return json({
           ok: true,
           traceId,
-          message:
-            'Command dispatched to frontend canvas executor via canvas:command event.',
+          message: 'Command dispatched to frontend canvas executor via canvas:command event.',
           executed: false,
           executionLocation: 'frontend',
         })
@@ -164,11 +165,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
         // translation from CommandResult.output → SurfaceMutation[].
         const nlcl = ctx.nlclEngine
         if (!nlcl) {
-          return errorResponse(
-            'NLCL engine not initialized on server',
-            'NLCL_UNAVAILABLE',
-            500,
-          )
+          return errorResponse('NLCL engine not initialized on server', 'NLCL_UNAVAILABLE', 500)
         }
 
         const traceId = ulid()
@@ -187,10 +184,8 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
         // Phase 2 minimal translation: if NLCL produced an output that looks
         // like a mutation array, pass it through; otherwise return an empty
         // plan with the NLCL result attached for the caller to inspect.
-        const mutations: unknown[] = Array.isArray(
-          (nlclResult as { output?: unknown }).output,
-        )
-          ? ((nlclResult as { output: unknown[] }).output)
+        const mutations: unknown[] = Array.isArray((nlclResult as { output?: unknown }).output)
+          ? (nlclResult as { output: unknown[] }).output
           : []
 
         const plan = {

@@ -46,7 +46,7 @@ export function classifyTransport(
     const cadence = inferCadence(wsFrames.map((f) => f.ts))
     return {
       transportClass: 'websocket',
-      endpointPattern: normalizeEndpoint(wsFrames[0]!.url),
+      endpointPattern: normalizeEndpoint(wsFrames[0]?.url),
       sampleHeaders: null,
       cadenceMs: cadence,
       confidence: 0.9,
@@ -131,8 +131,6 @@ export function unwrapPayload(transportClass: TransportClass, rawFrame: string):
       }
       return [parsed]
     }
-    case 'xhr_poll':
-    case 'dom_mutation_only':
     default:
       // XHR-poll typically returns a JSON array of new messages; DOM-mutation-only
       // is plain text. Just try JSON.parse, fall back to raw string.

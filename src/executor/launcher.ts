@@ -3,7 +3,7 @@
 // SingletonLock cleanup. Config-driven via ChromeInstanceProfile.
 // Matches the proven pattern from vivim-app-og cap-store.
 
-import { rmSync, existsSync } from 'node:fs'
+import { rmSync } from 'node:fs'
 import {
   type ChromeChannel,
   type ChromeInstanceProfile,

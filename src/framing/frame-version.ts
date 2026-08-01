@@ -22,8 +22,4 @@ export const FRAME_VERSION = 1 as const
  */
 export type FrameTransport = 'webapp' | 'api' | 'local'
 
-export const FRAME_TRANSPORTS: readonly FrameTransport[] = [
-  'webapp',
-  'api',
-  'local',
-] as const
+export const FRAME_TRANSPORTS: readonly FrameTransport[] = ['webapp', 'api', 'local'] as const

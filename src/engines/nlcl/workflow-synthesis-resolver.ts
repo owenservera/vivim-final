@@ -210,7 +210,10 @@ JSON:`
    * Returns null if any step references an unregistered capability or has
    * invalid input (audit ❌-13 fix).
    */
-  private async parseAndValidate(response: string, rawInput: string): Promise<WorkflowSpec | null> {
+  private async parseAndValidate(
+    response: string,
+    _rawInput: string,
+  ): Promise<WorkflowSpec | null> {
     const jsonMatch = response.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return null
     const rawJson = jsonMatch[0]

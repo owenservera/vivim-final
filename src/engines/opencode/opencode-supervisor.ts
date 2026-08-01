@@ -59,7 +59,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
       password: opts.password ?? config.opencodeServerPassword,
       cwd: opts.cwd ?? process.cwd(),
       enabled: opts.enabled ?? config.opencodeServeEnabled,
-      port: opts.port && opts.port > 0 ? opts.port : config.opencodeServePort ?? 0,
+      port: opts.port && opts.port > 0 ? opts.port : (config.opencodeServePort ?? 0),
       healthUrl: opts.healthUrl,
     }
   }

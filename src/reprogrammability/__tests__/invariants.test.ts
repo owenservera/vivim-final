@@ -7,18 +7,18 @@
 //
 // CONTRACT_VERSION: 1
 
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, test } from 'bun:test'
+import { PROVENANCE_WEIGHTS, versionStore } from '../../engines/reprogrammability/version-store.js'
+import { resetCanonicalSurfacesForTest } from '../canonical-surfaces.js'
+import { CONTRACT_VERSION } from '../contract.js'
+import { mutationExecutor } from '../dsl/executor.js'
 import {
   MUTATION_OPS,
   PROVENANCE_TAGS,
-  SurfaceMutationSchema,
   SurfaceMutationPlanSchema,
+  SurfaceMutationSchema,
 } from '../mutation-schema.js'
 import { surfaceRegistry } from '../registry.js'
-import { mutationExecutor } from '../dsl/executor.js'
-import { CONTRACT_VERSION } from '../contract.js'
-import { versionStore, PROVENANCE_WEIGHTS } from '../../engines/reprogrammability/version-store.js'
-import { resetCanonicalSurfacesForTest } from '../canonical-surfaces.js'
 
 // ── Invariant 1: Every visible element is a ReprogrammableSurface ────────────
 //
@@ -54,7 +54,16 @@ describe('Invariant 2: Every mutation is one of the 8 ops', () => {
   })
 
   test('MUTATION_OPS contains the canonical 8', () => {
-    const expected = ['replace', 'insert', 'remove', 'reorder', 'restyle', 'rebind', 'set_property', 'set_slot']
+    const expected = [
+      'replace',
+      'insert',
+      'remove',
+      'reorder',
+      'restyle',
+      'rebind',
+      'set_property',
+      'set_slot',
+    ]
     expect([...MUTATION_OPS].sort() as string[]).toEqual([...expected].sort())
   })
 
@@ -253,7 +262,7 @@ describe('Invariant 6: The chrome is reprogrammable + safe-mode keybind', () => 
   test('chrome:composer is registered + can be reprogrammed', async () => {
     const surface = surfaceRegistry.getOrNull('chrome:composer')
     expect(surface).not.toBeNull()
-    expect(surface!.kind).toBe('chrome')
+    expect(surface?.kind).toBe('chrome')
 
     // Apply a reprogram mutation.
     const record = await mutationExecutor.apply({
@@ -271,7 +280,7 @@ describe('Invariant 6: The chrome is reprogrammable + safe-mode keybind', () => 
     expect(record.ok).toBe(true)
 
     // Verify the spec changed.
-    const newSpec = surface!.getSpec() as { strings?: { placeholder?: string } }
+    const newSpec = surface?.getSpec() as { strings?: { placeholder?: string } }
     expect(newSpec.strings?.placeholder).toBe('Describe a change to your canvas…')
   })
 })

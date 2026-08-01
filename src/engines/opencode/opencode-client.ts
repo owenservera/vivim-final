@@ -88,7 +88,9 @@ export class OpenCodeClient {
     const data: unknown = await res.json()
     const blocks: ContentBlock[] = Array.isArray(data)
       ? data
-      : ((data as Record<string, unknown>)?.blocks ?? (data as Record<string, unknown>)?.content ?? []) as ContentBlock[]
+      : (((data as Record<string, unknown>)?.blocks ??
+          (data as Record<string, unknown>)?.content ??
+          []) as ContentBlock[])
     return { blocks }
   }
 

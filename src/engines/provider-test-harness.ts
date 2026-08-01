@@ -4,7 +4,10 @@
 // against the live site or an API mock.
 
 import { newId } from '../ids.js'
-import type { CapabilityBindingMatrixRow, CapabilityStore } from '../storage/contracts/capability-store.js'
+import type {
+  CapabilityBindingMatrixRow,
+  CapabilityStore,
+} from '../storage/contracts/capability-store.js'
 import { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 
@@ -37,7 +40,11 @@ export class ProviderTestHarness {
           selector: b.selector,
           status: 'open',
         })
-        this.bus.emit({ type: 'provider:drift_detected', providerId: b.providerId, capabilitySlug: b.capabilitySlug })
+        this.bus.emit({
+          type: 'provider:drift_detected',
+          providerId: b.providerId,
+          capabilitySlug: b.capabilitySlug,
+        })
       }
     }
     return outcomes

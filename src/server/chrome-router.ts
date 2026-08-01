@@ -13,12 +13,12 @@
 //
 // CONTRACT_VERSION: 1
 
-import { json, errorResponse } from './response.js'
 import { readFileSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
 import type { SurfaceSpec } from '../reprogrammability/schema/spec.js'
+import { errorResponse, json } from './response.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -44,10 +44,7 @@ function loadSeed(): FactorySeed {
 }
 
 export function createChromeRouter() {
-  return async function chromeRouter(
-    req: Request,
-    url: URL,
-  ): Promise<Response | null> {
+  return async function chromeRouter(req: Request, url: URL): Promise<Response | null> {
     const path = url.pathname
 
     // ── GET /api/chrome/factory ──────────────────────────────────────────────

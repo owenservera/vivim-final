@@ -14,9 +14,9 @@
 
 import { ulid } from 'ulid'
 import { getLogger } from '../../lib/logger.js'
-import type { ProviderPlugin } from '../plugin-system.js'
-import { surfaceRegistry } from '../../reprogrammability/registry.js'
 import { InMemorySurface } from '../../reprogrammability/canonical-surfaces.js'
+import { surfaceRegistry } from '../../reprogrammability/registry.js'
+import type { ProviderPlugin } from '../plugin-system.js'
 
 const log = getLogger('plugin-builder')
 
@@ -61,12 +61,13 @@ export class PluginBuilder {
 
     // Parse the trigger command from the description. Look for "/word" patterns.
     const triggerMatch = description.match(/\/(\w+)/)
-    const triggerCommand = triggerMatch ? `/${triggerMatch[1]}` : `/plugin-${ulid().slice(0, 6).toLowerCase()}`
+    const triggerCommand = triggerMatch
+      ? `/${triggerMatch[1]}`
+      : `/plugin-${ulid().slice(0, 6).toLowerCase()}`
 
     // Generate a stable id from the trigger command.
     const pluginId =
-      input.pluginId ??
-      `plugin:${triggerCommand.slice(1)}:${ulid().slice(0, 6).toLowerCase()}`
+      input.pluginId ?? `plugin:${triggerCommand.slice(1)}:${ulid().slice(0, 6).toLowerCase()}`
     const providerId = input.providerId ?? pluginId
 
     // Surface id = plugin:<trigger>:card
@@ -152,10 +153,7 @@ export class PluginBuilder {
       },
     }
 
-    log.info(
-      { pluginId, triggerCommand, surfaceId },
-      '[plugin-builder] plugin scaffold built',
-    )
+    log.info({ pluginId, triggerCommand, surfaceId }, '[plugin-builder] plugin scaffold built')
 
     return { ok: true, plugin, manifest }
   }

@@ -1,31 +1,12 @@
-// src/reprogrammability/dsl/parser.ts
-// Phase 3 of ROADMAP-REPROGRAMMABLE-CANVAS.md — The Mutation DSL.
-//
-// Parses two syntaxes into SurfaceMutation:
-//   1. JSON — the canonical form (already covered by SurfaceMutationSchema).
-//   2. Slash shorthand — a compact, human-friendly form for the Composer.
-//
-// Shorthand grammar (regex-driven; intentionally limited):
-//   /hide panel:conversations
-//   /show panel:conversations
-//   /restyle panel:conversations background=black
-//   /rebind card:doc:abc capability=cap:send-message
-//   /move panel:conversations to right
-//   /rename panel:conversations "My Panel"
-//
-// The shorthand maps to exactly ONE of the 8 mutation ops. For anything
-// more complex, the user writes JSON (or asks the LLM harness, Phase 7).
-//
-// CONTRACT_VERSION: 1
-
-import { z } from 'zod'
-import { SurfaceMutationSchema, type SurfaceMutation } from '../mutation-schema.js'
+import { type SurfaceMutation, SurfaceMutationSchema } from '../mutation-schema.js'
 
 export class DslParseError extends Error {
   readonly input: string
   readonly position?: number
   constructor(input: string, message: string, position?: number) {
-    super(`DSL parse error: ${message}${position !== undefined ? ` at position ${position}` : ''}\n  input: ${input.slice(0, 200)}`)
+    super(
+      `DSL parse error: ${message}${position !== undefined ? ` at position ${position}` : ''}\n  input: ${input.slice(0, 200)}`,
+    )
     this.name = 'DslParseError'
     this.input = input
     this.position = position
@@ -116,7 +97,10 @@ export function parseMutationList(input: string): SurfaceMutation[] {
   }
 
   // One-per-line.
-  const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean)
+  const lines = trimmed
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
   return lines.map((line, i) => {
     try {
       return parseMutation(line)
@@ -235,7 +219,7 @@ export function parseShorthand(line: string): SurfaceMutation {
       const target = parts[0]!
       const style: Record<string, unknown> = {}
       for (let i = 1; i < parts.length; i++) {
-        const kv = parts[i]!.split('=')
+        const kv = parts[i]?.split('=')
         if (kv.length !== 2) {
           throw new DslParseError(line, `invalid key=value: ${parts[i]}`)
         }
@@ -266,7 +250,7 @@ export function parseShorthand(line: string): SurfaceMutation {
       let capabilityId: string | undefined
       let slot: string | undefined
       for (let i = 1; i < parts.length; i++) {
-        const kv = parts[i]!.split('=')
+        const kv = parts[i]?.split('=')
         if (kv.length !== 2) {
           throw new DslParseError(line, `invalid key=value: ${parts[i]}`)
         }
@@ -293,7 +277,7 @@ export function parseShorthand(line: string): SurfaceMutation {
       const target = parts[0]!
       let capabilityId: string | undefined
       for (let i = 1; i < parts.length; i++) {
-        const kv = parts[i]!.split('=')
+        const kv = parts[i]?.split('=')
         if (kv[0] === 'capability') capabilityId = kv[1]
       }
       if (!capabilityId) {
@@ -344,7 +328,10 @@ export function parseShorthand(line: string): SurfaceMutation {
       const m = args.match(/^(\S+)\s+(.+)$/)
       if (!m) throw new DslParseError(line, '/reorder requires: <target> id1,id2,...')
       const target = m[1]!
-      const ids = m[2]!.split(',').map((s) => s.trim()).filter(Boolean)
+      const ids = m[2]
+        ?.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
       if (ids.length === 0) {
         throw new DslParseError(line, '/reorder requires at least one id')
       }

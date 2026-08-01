@@ -123,7 +123,7 @@ function continuedFractionBeta(x: number, a: number, b: number): number {
     if (Math.abs(del - 1) < 1e-12) break
   }
   // h = I_x(a,b) * exp(logBeta(a,b)) / x^a / (1-x)^b
-  return (h * Math.pow(x, a) * Math.pow(1 - x, b)) / a
+  return (h * x ** a * (1 - x) ** b) / a
 }
 
 function logBeta(a: number, b: number): number {
