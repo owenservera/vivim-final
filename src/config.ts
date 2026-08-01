@@ -2,7 +2,7 @@
 // Centralized configuration — reads from environment variables.
 // All engines read config through this module; no scattered process.env reads.
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 // ── Platform detection ──────────────────────────────────────────────────────
@@ -44,13 +44,22 @@ export function writeServerPortFile(port: number): void {
 }
 
 function defaultDataDir(): string {
+  let dir: string
   if (isWin) {
     const local = process.env.LOCALAPPDATA ?? process.env.APPDATA ?? ''
-    return local ? `${local}\\vivim\\cap-store` : '.'
+    dir = local ? `${local}\\vivim\\cap-store` : '.'
+  } else {
+    const home = process.env.HOME ?? process.env.XDG_DATA_HOME ?? ''
+    if (home.includes('.local')) dir = `${home}/share/vivim/cap-store`
+    else dir = home ? `${home}/.local/share/vivim/cap-store` : '.'
   }
-  const home = process.env.HOME ?? process.env.XDG_DATA_HOME ?? ''
-  if (home.includes('.local')) return `${home}/share/vivim/cap-store`
-  return home ? `${home}/.local/share/vivim/cap-store` : '.'
+  // Ensure the data directory exists (safe on repeated calls).
+  try {
+    if (dir !== '.') mkdirSync(dir, { recursive: true })
+  } catch {
+    // best-effort — callers may still fail with EACCES if dir is read-only
+  }
+  return dir
 }
 
 // ── Config values ───────────────────────────────────────────────────────────
@@ -128,6 +137,16 @@ export const config = {
   // Debug
   debug: process.env.DEBUG === 'true',
 } as const
+
+// ── Ensure data directories exist on startup ──────────────────────────────
+// Safely creates dataDir and profileBaseDir so engines don't crash on first
+// boot in the Tauri sidecar or fresh install.
+try {
+  mkdirSync(config.dataDir, { recursive: true })
+  mkdirSync(config.profileBaseDir, { recursive: true })
+} catch {
+  // best-effort — sidecar-entry.ts has its own fallback path creation
+}
 
 /**
  * Resolve OTEL sink configuration through the centralized config layer.

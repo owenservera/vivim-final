@@ -35,6 +35,14 @@ import type {
 } from '../../shared/unified-io';
 import { IOError } from '../../shared/unified-io';
 import { ulid } from '../../lib/ulid';
+import { getApiBase } from '../../lib/ws-url';
+
+function resolveApiBase(explicit?: string): string {
+  if (explicit) return explicit;
+  const envBase = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (envBase) return envBase;
+  return getApiBase();
+}
 
 class BrowserUnifiedIO implements UnifiedIO {
   private listeners = new Set<IOEventListener>();
@@ -44,7 +52,7 @@ class BrowserUnifiedIO implements UnifiedIO {
   private apiBase: string;
 
   constructor(apiBase?: string) {
-    this.apiBase = apiBase ?? '';
+    this.apiBase = resolveApiBase(apiBase);
     // Hydrate auth token from localStorage on construction
     try {
       this.authToken = localStorage.getItem('vivim:auth:token');
@@ -234,12 +242,13 @@ class BrowserUnifiedIO implements UnifiedIO {
 
   subscribeSSE(url: string, onEvent: (data: unknown) => void, onError?: (err: Error) => void): SSESubscription {
     const traceId = this.newTraceId();
-    const es = new EventSource(url);
-    this.emit({ type: 'sse:open', traceId, url, timestamp: Date.now() });
+    const fullUrl = this.buildUrl(url);
+    const es = new EventSource(fullUrl);
+    this.emit({ type: 'sse:open', traceId, url: fullUrl, timestamp: Date.now() });
     es.onmessage = (msg) => {
       try {
         const data = JSON.parse(msg.data) as unknown;
-        this.emit({ type: 'sse:event', traceId, url, data, timestamp: Date.now() });
+        this.emit({ type: 'sse:event', traceId, url: fullUrl, data, timestamp: Date.now() });
         onEvent(data);
       } catch {
         // ignore malformed events
@@ -247,15 +256,15 @@ class BrowserUnifiedIO implements UnifiedIO {
     };
     es.onerror = () => {
       const err = new Error('SSE connection error');
-      this.emit({ type: 'sse:error', traceId, url, error: err.message, timestamp: Date.now() });
+      this.emit({ type: 'sse:error', traceId, url: fullUrl, error: err.message, timestamp: Date.now() });
       onError?.(err);
     };
     return {
-      url,
+      url: fullUrl,
       traceId,
       close: () => {
         es.close();
-        this.emit({ type: 'sse:close', traceId, url, timestamp: Date.now() });
+        this.emit({ type: 'sse:close', traceId, url: fullUrl, timestamp: Date.now() });
       },
     };
   }
@@ -300,9 +309,7 @@ const IOContext = createContext<UnifiedIO | null>(null);
 
 export function UnifiedIOProvider({ children }: { children: ReactNode }) {
   // Create the IO instance once (lazy singleton per provider).
-  const [io] = useState(() => new BrowserUnifiedIO(
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? '',
-  ));
+  const [io] = useState(() => new BrowserUnifiedIO());
   return <IOContext.Provider value={io}>{children}</IOContext.Provider>;
 }
 
@@ -310,7 +317,7 @@ export function useIO(): UnifiedIO {
   const io = useContext(IOContext);
   if (!io) {
     // Fallback: create a temporary instance (for SSR or outside provider).
-    return new BrowserUnifiedIO(process.env.NEXT_PUBLIC_API_BASE_URL ?? '');
+    return new BrowserUnifiedIO();
   }
   return io;
 }

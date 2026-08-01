@@ -3,9 +3,11 @@
 // Provides typed access to all tables via Prisma ORM.
 // 20.2: WAL mode + busy_timeout + cache_size + foreign_keys for performance
 
-import { join, resolve } from 'node:path'
+import { existsSync, mkdirSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { env } from 'node:process'
 import { PrismaClient } from '@prisma/client'
+import { config } from '../config.js'
 import { getLogger } from '../lib/logger.js'
 
 const log = getLogger('prisma')
@@ -37,7 +39,12 @@ export async function initPrismaWal(prisma?: PrismaClient): Promise<void> {
 
 export function getPrisma(): PrismaClient {
   if (!client) {
-    let url = env.DATABASE_URL ?? 'file:./dev.db'
+    let url = env.DATABASE_URL
+    if (!url || url.startsWith('file:./') || url.startsWith('file:../')) {
+      // In Tauri sidecar or dev, fall back to the centralized config.dbPath
+      // which resolves to %LOCALAPPDATA%/vivim/cap-store/cap-store.sqlite.
+      url = `file:${config.dbPath}`
+    }
     if (url.startsWith('file:.')) {
       // Resolve relative DATABASE_URL the same way prisma migrate does:
       // relative to the prisma/ directory (where schema.prisma lives).
@@ -45,6 +52,16 @@ export function getPrisma(): PrismaClient {
       const schemaDir = join(import.meta.dir, '..', '..', 'prisma')
       const absPath = resolve(schemaDir, relPath)
       url = `file:${absPath}`
+    }
+    // Ensure the parent directory of the DB file exists (Tauri sidecar, fresh install).
+    if (url.startsWith('file:')) {
+      try {
+        const dbFile = url.slice(5)
+        const dir = dirname(dbFile)
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+      } catch {
+        // best-effort — Prisma will throw a clearer error if directory is truly missing
+      }
     }
     client = new PrismaClient({
       log: env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
