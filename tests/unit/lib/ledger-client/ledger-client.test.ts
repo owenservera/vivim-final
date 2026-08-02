@@ -1,7 +1,7 @@
 // tests/unit/lib/ledger-client/ledger-client.test.ts
 // LedgerClient — signup, sync, mint tunnel JWT
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { LedgerClient } from '../../../../src/lib/ledger-client/ledger-client.js'
 import type { LedgerClientConfig } from '../../../../src/lib/ledger-client/types.js'
 
@@ -28,12 +28,15 @@ describe('LedgerClient', () => {
   describe('signup', () => {
     it('calls POST /api/v1/beta/signup with email', async () => {
       fetchMock.mockResolvedValueOnce(
-        new Response(JSON.stringify({
-          userId: 'u1',
-          token: 'tok_abc',
-          subdomain: 'user-test',
-          entitledProviderCount: 6,
-        }), { status: 200, headers: { 'content-type': 'application/json' } }),
+        new Response(
+          JSON.stringify({
+            userId: 'u1',
+            token: 'tok_abc',
+            subdomain: 'user-test',
+            entitledProviderCount: 6,
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
       )
 
       const client = new LedgerClient(makeConfig())
@@ -50,12 +53,15 @@ describe('LedgerClient', () => {
 
     it('stores credentials after signup', async () => {
       fetchMock.mockResolvedValueOnce(
-        new Response(JSON.stringify({
-          userId: 'u2',
-          token: 'tok_xyz',
-          subdomain: 'user-xyz',
-          entitledProviderCount: 3,
-        }), { status: 200 }),
+        new Response(
+          JSON.stringify({
+            userId: 'u2',
+            token: 'tok_xyz',
+            subdomain: 'user-xyz',
+            entitledProviderCount: 3,
+          }),
+          { status: 200 },
+        ),
       )
 
       const config = makeConfig()
@@ -68,9 +74,7 @@ describe('LedgerClient', () => {
     })
 
     it('throws on HTTP error', async () => {
-      fetchMock.mockResolvedValueOnce(
-        new Response('Bad Request', { status: 400 }),
-      )
+      fetchMock.mockResolvedValueOnce(new Response('Bad Request', { status: 400 }))
 
       const client = new LedgerClient(makeConfig())
       await expect(client.signup('bad')).rejects.toThrow('HTTP 400')
@@ -80,13 +84,16 @@ describe('LedgerClient', () => {
   describe('mintTunnelToken', () => {
     it('calls POST /api/v1/tunnel/token with auth header', async () => {
       fetchMock.mockResolvedValueOnce(
-        new Response(JSON.stringify({
-          token: 'jwt_abc',
-          subdomain: 'user-test',
-          publicUrl: 'https://user-test.vivim.live/',
-          connectUrl: 'wss://tunnel.vivim.live/connect',
-          expiresIn: 3600,
-        }), { status: 200 }),
+        new Response(
+          JSON.stringify({
+            token: 'jwt_abc',
+            subdomain: 'user-test',
+            publicUrl: 'https://user-test.vivim.live/',
+            connectUrl: 'wss://tunnel.vivim.live/connect',
+            expiresIn: 3600,
+          }),
+          { status: 200 },
+        ),
       )
 
       const client = new LedgerClient(makeConfig({ userToken: 'existing_token' }))
@@ -108,11 +115,14 @@ describe('LedgerClient', () => {
   describe('sync', () => {
     it('calls GET /api/v1/ledger/sync with auth header', async () => {
       fetchMock.mockResolvedValueOnce(
-        new Response(JSON.stringify({
-          entries: [],
-          hasMore: false,
-          newSyncCursor: null,
-        }), { status: 200 }),
+        new Response(
+          JSON.stringify({
+            entries: [],
+            hasMore: false,
+            newSyncCursor: null,
+          }),
+          { status: 200 },
+        ),
       )
 
       const client = new LedgerClient(makeConfig({ userToken: 'tok' }))
@@ -133,11 +143,14 @@ describe('LedgerClient', () => {
   describe('health', () => {
     it('calls GET /api/v1/health', async () => {
       fetchMock.mockResolvedValueOnce(
-        new Response(JSON.stringify({
-          chainLength: 42,
-          lastHash: 'abc123',
-          publicKey: 'deadbeef',
-        }), { status: 200 }),
+        new Response(
+          JSON.stringify({
+            chainLength: 42,
+            lastHash: 'abc123',
+            publicKey: 'deadbeef',
+          }),
+          { status: 200 },
+        ),
       )
 
       const client = new LedgerClient(makeConfig())
@@ -156,11 +169,13 @@ describe('LedgerClient', () => {
     })
 
     it('reports hasCredentials when all fields present', () => {
-      const client = new LedgerClient(makeConfig({
-        userToken: 'tok',
-        subdomain: 'sub',
-        userId: 'uid',
-      }))
+      const client = new LedgerClient(
+        makeConfig({
+          userToken: 'tok',
+          subdomain: 'sub',
+          userId: 'uid',
+        }),
+      )
       expect(client.hasCredentials()).toBe(true)
     })
   })

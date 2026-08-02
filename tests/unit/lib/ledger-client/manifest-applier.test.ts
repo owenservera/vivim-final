@@ -1,7 +1,7 @@
 // tests/unit/lib/ledger-client/manifest-applier.test.ts
 // ManifestApplier — cloud entries → local Prisma DB upserts
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { describe, expect, it, mock } from 'bun:test'
 import { applyManifestEntries } from '../../../../src/lib/ledger-client/manifest-applier.js'
 import type { LedgerEntry } from '../../../../src/lib/ledger-client/types.js'
 
@@ -15,7 +15,7 @@ function makeMockDb() {
     capabilityTaxonomy: [],
   }
 
-  const upsert = mock(async (table: string, _opts: unknown) => {
+  const _upsert = mock(async (table: string, _opts: unknown) => {
     const id = (_opts as Record<string, unknown>).where?.id ?? 'new-id'
     store[table] = [...(store[table] ?? []), { id }]
     return { id }
@@ -64,15 +64,17 @@ describe('manifest-applier', () => {
 
   it('upserts provider_definition entries', async () => {
     const db = makeMockDb() as never
-    const entry = makeEntry(JSON.stringify({
-      type: 'provider_definition',
-      id: 'prov-1',
-      slug: 'gemini',
-      name: 'Gemini',
-      description: 'Google Gemini',
-      homepage: 'https://gemini.google.com',
-      category: 'ai',
-    }))
+    const entry = makeEntry(
+      JSON.stringify({
+        type: 'provider_definition',
+        id: 'prov-1',
+        slug: 'gemini',
+        name: 'Gemini',
+        description: 'Google Gemini',
+        homepage: 'https://gemini.google.com',
+        category: 'ai',
+      }),
+    )
 
     const result = await applyManifestEntries(db, [entry])
     expect(result.upserted).toBe(1)
@@ -81,14 +83,16 @@ describe('manifest-applier', () => {
 
   it('upserts provider_endpoint entries', async () => {
     const db = makeMockDb() as never
-    const entry = makeEntry(JSON.stringify({
-      type: 'provider_endpoint',
-      id: 'ep-1',
-      providerId: 'prov-1',
-      endpointType: 'chat',
-      url: 'https://gemini.google.com/app',
-      method: 'POST',
-    }))
+    const entry = makeEntry(
+      JSON.stringify({
+        type: 'provider_endpoint',
+        id: 'ep-1',
+        providerId: 'prov-1',
+        endpointType: 'chat',
+        url: 'https://gemini.google.com/app',
+        method: 'POST',
+      }),
+    )
 
     const result = await applyManifestEntries(db, [entry])
     expect(result.upserted).toBe(1)
@@ -97,15 +101,17 @@ describe('manifest-applier', () => {
 
   it('upserts provider_parser entries', async () => {
     const db = makeMockDb() as never
-    const entry = makeEntry(JSON.stringify({
-      type: 'provider_parser',
-      id: 'parser-1',
-      providerId: 'prov-1',
-      parserName: 'gemini-batchexecute',
-      parserVersion: 1,
-      logicCode: 'exports.default = { parse(raw) { return [] } }',
-      logicType: 'inline',
-    }))
+    const entry = makeEntry(
+      JSON.stringify({
+        type: 'provider_parser',
+        id: 'parser-1',
+        providerId: 'prov-1',
+        parserName: 'gemini-batchexecute',
+        parserVersion: 1,
+        logicCode: 'exports.default = { parse(raw) { return [] } }',
+        logicType: 'inline',
+      }),
+    )
 
     const result = await applyManifestEntries(db, [entry])
     expect(result.upserted).toBe(1)
@@ -114,15 +120,17 @@ describe('manifest-applier', () => {
 
   it('upserts provider_capability entries', async () => {
     const db = makeMockDb() as never
-    const entry = makeEntry(JSON.stringify({
-      type: 'provider_capability',
-      id: 'cap-1',
-      providerId: 'prov-1',
-      capabilitySlug: 'send_message',
-      capabilityType: 'action',
-      authScope: 'session',
-      description: 'Send a message',
-    }))
+    const entry = makeEntry(
+      JSON.stringify({
+        type: 'provider_capability',
+        id: 'cap-1',
+        providerId: 'prov-1',
+        capabilitySlug: 'send_message',
+        capabilityType: 'action',
+        authScope: 'session',
+        description: 'Send a message',
+      }),
+    )
 
     const result = await applyManifestEntries(db, [entry])
     expect(result.upserted).toBe(1)
@@ -131,13 +139,15 @@ describe('manifest-applier', () => {
 
   it('upserts capability_binding entries', async () => {
     const db = makeMockDb() as never
-    const entry = makeEntry(JSON.stringify({
-      type: 'capability_binding',
-      id: 'bind-1',
-      providerId: 'prov-1',
-      capabilityId: 'global-cap-1',
-      bindingConfig: '{}',
-    }))
+    const entry = makeEntry(
+      JSON.stringify({
+        type: 'capability_binding',
+        id: 'bind-1',
+        providerId: 'prov-1',
+        capabilityId: 'global-cap-1',
+        bindingConfig: '{}',
+      }),
+    )
 
     const result = await applyManifestEntries(db, [entry])
     expect(result.upserted).toBe(1)
@@ -146,22 +156,24 @@ describe('manifest-applier', () => {
 
   it('upserts capability_taxonomy entries', async () => {
     const db = makeMockDb() as never
-    const entry = makeEntry(JSON.stringify({
-      type: 'capability_taxonomy',
-      id: 'tax-1',
-      providerId: 'prov-1',
-      platformCategory: 'chat',
-      interactionPattern: 'streaming',
-      messageTypesJson: '["text"]',
-      capabilitiesJson: '[]',
-      constraintsJson: '{}',
-      authRequirementsJson: '{}',
-      discoveryHintsJson: '[]',
-      nlpEntityTypesJson: '[]',
-      nlpIntentPatternsJson: '[]',
-      entityHierarchyJson: '{}',
-      syncCapabilitiesJson: '[]',
-    }))
+    const entry = makeEntry(
+      JSON.stringify({
+        type: 'capability_taxonomy',
+        id: 'tax-1',
+        providerId: 'prov-1',
+        platformCategory: 'chat',
+        interactionPattern: 'streaming',
+        messageTypesJson: '["text"]',
+        capabilitiesJson: '[]',
+        constraintsJson: '{}',
+        authRequirementsJson: '{}',
+        discoveryHintsJson: '[]',
+        nlpEntityTypesJson: '[]',
+        nlpIntentPatternsJson: '[]',
+        entityHierarchyJson: '{}',
+        syncCapabilitiesJson: '[]',
+      }),
+    )
 
     const result = await applyManifestEntries(db, [entry])
     expect(result.upserted).toBe(1)
@@ -188,9 +200,32 @@ describe('manifest-applier', () => {
   it('processes mixed entry types in one batch', async () => {
     const db = makeMockDb() as never
     const entries = [
-      makeEntry(JSON.stringify({ type: 'provider_definition', id: 'p1', slug: 'a', name: 'A' }), { id: 'e1' }),
-      makeEntry(JSON.stringify({ type: 'provider_endpoint', id: 'ep1', providerId: 'p1', endpointType: 'chat', url: 'http://a', method: 'GET' }), { id: 'e2' }),
-      makeEntry(JSON.stringify({ type: 'provider_parser', id: 'pr1', providerId: 'p1', parserName: 'p', parserVersion: 1, logicCode: '//', logicType: 'inline' }), { id: 'e3' }),
+      makeEntry(JSON.stringify({ type: 'provider_definition', id: 'p1', slug: 'a', name: 'A' }), {
+        id: 'e1',
+      }),
+      makeEntry(
+        JSON.stringify({
+          type: 'provider_endpoint',
+          id: 'ep1',
+          providerId: 'p1',
+          endpointType: 'chat',
+          url: 'http://a',
+          method: 'GET',
+        }),
+        { id: 'e2' },
+      ),
+      makeEntry(
+        JSON.stringify({
+          type: 'provider_parser',
+          id: 'pr1',
+          providerId: 'p1',
+          parserName: 'p',
+          parserVersion: 1,
+          logicCode: '//',
+          logicType: 'inline',
+        }),
+        { id: 'e3' },
+      ),
     ]
 
     const result = await applyManifestEntries(db, entries)

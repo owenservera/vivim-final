@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
   "files": {
-    "ignore": ["seeds/taxonomy/*.json"]
+    "include": ["src/", "tests/", "seeds/", "frontend/src/"]
   },
   "linter": {
     "enabled": true,

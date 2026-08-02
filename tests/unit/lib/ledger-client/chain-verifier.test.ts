@@ -2,12 +2,16 @@
 // Ed25519 chain verification — byte-for-byte with vivim-page crypto.ts
 
 import { describe, expect, it } from 'bun:test'
-import { computeEntryHash, verifyEntry, verifyBatch } from '../../../../src/lib/ledger-client/chain-verifier.js'
+import {
+  computeEntryHash,
+  verifyBatch,
+  verifyEntry,
+} from '../../../../src/lib/ledger-client/chain-verifier.js'
 
 // Test keypair (NOT for production — test only)
 // Public key: 902b24e44284d3b156c47c10ea3e89f46c6e58ea70be23cf4d0a7f5bf25810e5
 const TEST_PUBLIC_KEY = '902b24e44284d3b156c47c10ea3e89f46c6e58ea70be23cf4d0a7f5bf25810e5'
-const WRONG_PUBLIC_KEY = '0000000000000000000000000000000000000000000000000000000000000000'
+const _WRONG_PUBLIC_KEY = '0000000000000000000000000000000000000000000000000000000000000000'
 
 describe('chain-verifier', () => {
   describe('computeEntryHash', () => {

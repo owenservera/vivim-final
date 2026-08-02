@@ -9,23 +9,19 @@
  * Hash chain: sha256_hex( (prevHash ?? "") + "\n" + contentJson )
  * Signature:  Ed25519 over utf8( (prevHash ?? "") + "\n" + entryHash )
  */
-import { createHash } from "node:crypto";
-import * as ed from "@noble/ed25519";
-import { sha512 } from "@noble/hashes/sha2.js";
+import { createHash } from 'node:crypto'
+import * as ed from '@noble/ed25519'
+import { sha512 } from '@noble/hashes/sha2.js'
 
 // Wire SHA-512 into @noble/ed25519 (must be done once at module load)
-ed.hashes.sha512 = sha512;
-
-function bytesToHex(bytes: Uint8Array): string {
-  return Buffer.from(bytes).toString("hex");
-}
+ed.hashes.sha512 = sha512
 
 function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
+  const bytes = new Uint8Array(hex.length / 2)
   for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    bytes[i / 2] = Number.parseInt(hex.substring(i, i + 2), 16)
   }
-  return bytes;
+  return bytes
 }
 
 /**
@@ -36,9 +32,9 @@ function hexToBytes(hex: string): Uint8Array {
  * string as stored, not over JSON.parse(contentJson) re-stringified.
  */
 export function computeEntryHash(prevHash: string | null, contentJson: string): string {
-  return createHash("sha256")
-    .update(`${prevHash ?? ""}\n${contentJson}`, "utf8")
-    .digest("hex");
+  return createHash('sha256')
+    .update(`${prevHash ?? ''}\n${contentJson}`, 'utf8')
+    .digest('hex')
 }
 
 /**
@@ -53,15 +49,11 @@ export async function verifyEntrySignature(
   signatureHex: string,
   publicKeyHex: string,
 ): Promise<boolean> {
-  const message = new TextEncoder().encode(`${prevHash ?? ""}\n${entryHash}`);
+  const message = new TextEncoder().encode(`${prevHash ?? ''}\n${entryHash}`)
   try {
-    return await ed.verifyAsync(
-      hexToBytes(signatureHex),
-      message,
-      hexToBytes(publicKeyHex),
-    );
+    return await ed.verifyAsync(hexToBytes(signatureHex), message, hexToBytes(publicKeyHex))
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -77,10 +69,10 @@ export async function verifyEntrySignature(
  */
 export async function verifyEntry(
   entry: {
-    prevHash: string | null;
-    hash: string;
-    signature: string;
-    contentJson: string;
+    prevHash: string | null
+    hash: string
+    signature: string
+    contentJson: string
   },
   expectedPrevHash: string | null,
   publicKeyHex: string,
@@ -88,30 +80,24 @@ export async function verifyEntry(
   // 1. Chain linkage
   if (entry.prevHash !== expectedPrevHash) {
     throw new Error(
-      `chain break: expected prevHash=${expectedPrevHash ?? "null"}, got ${entry.prevHash ?? "null"}`,
-    );
+      `chain break: expected prevHash=${expectedPrevHash ?? 'null'}, got ${entry.prevHash ?? 'null'}`,
+    )
   }
 
   // 2. Content hash
-  const recomputedHash = computeEntryHash(entry.prevHash, entry.contentJson);
+  const recomputedHash = computeEntryHash(entry.prevHash, entry.contentJson)
   if (recomputedHash !== entry.hash) {
-    throw new Error(
-      `content hash mismatch: expected ${entry.hash}, recomputed ${recomputedHash}`,
-    );
+    throw new Error(`content hash mismatch: expected ${entry.hash}, recomputed ${recomputedHash}`)
   }
 
   // 3. Signature
-  const message = new TextEncoder().encode(`${entry.prevHash ?? ""}\n${entry.hash}`);
-  const valid = await ed.verifyAsync(
-    hexToBytes(entry.signature),
-    message,
-    hexToBytes(publicKeyHex),
-  );
+  const message = new TextEncoder().encode(`${entry.prevHash ?? ''}\n${entry.hash}`)
+  const valid = await ed.verifyAsync(hexToBytes(entry.signature), message, hexToBytes(publicKeyHex))
   if (!valid) {
-    throw new Error("invalid Ed25519 signature");
+    throw new Error('invalid Ed25519 signature')
   }
 
-  return entry.hash;
+  return entry.hash
 }
 
 /**
@@ -121,22 +107,22 @@ export async function verifyEntry(
  */
 export async function verifyBatch(
   entries: Array<{
-    prevHash: string | null;
-    hash: string;
-    signature: string;
-    contentJson: string;
+    prevHash: string | null
+    hash: string
+    signature: string
+    contentJson: string
   }>,
   startPrevHash: string | null,
   publicKeyHex: string,
 ): Promise<{ verified: typeof entries; lastHash: string | null }> {
-  let currentPrevHash = startPrevHash;
-  const verified: typeof entries = [];
+  let currentPrevHash = startPrevHash
+  const verified: typeof entries = []
 
   for (const entry of entries) {
-    const hash = await verifyEntry(entry, currentPrevHash, publicKeyHex);
-    verified.push(entry);
-    currentPrevHash = hash;
+    const hash = await verifyEntry(entry, currentPrevHash, publicKeyHex)
+    verified.push(entry)
+    currentPrevHash = hash
   }
 
-  return { verified, lastHash: currentPrevHash };
+  return { verified, lastHash: currentPrevHash }
 }

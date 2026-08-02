@@ -5,32 +5,32 @@
  * If no pong is received within the timeout, triggers reconnection.
  */
 
-import { TUNNEL_DEFAULTS } from "../tunnel-shared/constants.js";
-import { getLogger } from "../tunnel-shared/logger.js";
-import { createPingFrame, encodeFrame } from "./frame-protocol.js";
-import type { TunnelMetrics } from "./types.js";
+import { TUNNEL_DEFAULTS } from '../tunnel-shared/constants.js'
+import { getLogger } from '../tunnel-shared/logger.js'
+import { createPingFrame, encodeFrame } from './frame-protocol.js'
+import type { TunnelMetrics } from './types.js'
 
-const log = getLogger("heartbeat");
+const log = getLogger('heartbeat')
 
 export interface HeartbeatConfig {
-  intervalMs: number;
-  timeoutMs: number;
+  intervalMs: number
+  timeoutMs: number
 }
 
 const DEFAULT_CONFIG: HeartbeatConfig = {
   intervalMs: TUNNEL_DEFAULTS.HEARTBEAT_INTERVAL_MS,
   timeoutMs: TUNNEL_DEFAULTS.HEARTBEAT_TIMEOUT_MS,
-};
+}
 
 export class Heartbeat {
-  private config: HeartbeatConfig;
-  private intervalTimer: ReturnType<typeof setInterval> | null = null;
-  private timeoutTimer: ReturnType<typeof setTimeout> | null = null;
-  private lastPongTime: number = 0;
-  private pendingPing: boolean = false;
-  private sendFn: (data: string) => void;
-  private onTimeout: () => void;
-  private metrics: TunnelMetrics;
+  private config: HeartbeatConfig
+  private intervalTimer: ReturnType<typeof setInterval> | null = null
+  private timeoutTimer: ReturnType<typeof setTimeout> | null = null
+  private lastPongTime = 0
+  private pendingPing = false
+  private sendFn: (data: string) => void
+  private onTimeout: () => void
+  private metrics: TunnelMetrics
 
   constructor(
     sendFn: (data: string) => void,
@@ -38,78 +38,75 @@ export class Heartbeat {
     metrics: TunnelMetrics,
     config?: Partial<HeartbeatConfig>,
   ) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.sendFn = sendFn;
-    this.onTimeout = onTimeout;
-    this.metrics = metrics;
+    this.config = { ...DEFAULT_CONFIG, ...config }
+    this.sendFn = sendFn
+    this.onTimeout = onTimeout
+    this.metrics = metrics
   }
 
   start(): void {
-    this.stop();
-    log.debug({ intervalMs: this.config.intervalMs }, "Starting heartbeat");
+    this.stop()
+    log.debug({ intervalMs: this.config.intervalMs }, 'Starting heartbeat')
 
     this.intervalTimer = setInterval(() => {
-      this.sendPing();
-    }, this.config.intervalMs);
+      this.sendPing()
+    }, this.config.intervalMs)
 
     // Send first ping immediately
-    this.sendPing();
+    this.sendPing()
   }
 
   stop(): void {
     if (this.intervalTimer) {
-      clearInterval(this.intervalTimer);
-      this.intervalTimer = null;
+      clearInterval(this.intervalTimer)
+      this.intervalTimer = null
     }
     if (this.timeoutTimer) {
-      clearTimeout(this.timeoutTimer);
-      this.timeoutTimer = null;
+      clearTimeout(this.timeoutTimer)
+      this.timeoutTimer = null
     }
-    this.pendingPing = false;
+    this.pendingPing = false
   }
 
   onPong(): void {
-    this.lastPongTime = Date.now();
-    this.pendingPing = false;
+    this.lastPongTime = Date.now()
+    this.pendingPing = false
 
     if (this.timeoutTimer) {
-      clearTimeout(this.timeoutTimer);
-      this.timeoutTimer = null;
+      clearTimeout(this.timeoutTimer)
+      this.timeoutTimer = null
     }
 
-    log.trace("Pong received");
+    log.trace('Pong received')
   }
 
   private sendPing(): void {
     if (this.pendingPing) {
-      log.warn("Ping already pending, skipping");
-      return;
+      log.warn('Ping already pending, skipping')
+      return
     }
 
-    const latencyHint = this.metrics.lastPingLatencyMs ?? undefined;
-    const frame = createPingFrame(latencyHint);
-    const encoded = encodeFrame(frame);
+    const latencyHint = this.metrics.lastPingLatencyMs ?? undefined
+    const frame = createPingFrame(latencyHint)
+    const encoded = encodeFrame(frame)
 
     try {
-      this.sendFn(encoded);
-      this.pendingPing = true;
+      this.sendFn(encoded)
+      this.pendingPing = true
 
       // Start timeout
       this.timeoutTimer = setTimeout(() => {
-        log.warn(
-          { timeoutMs: this.config.timeoutMs },
-          "Heartbeat timeout — no pong received",
-        );
-        this.pendingPing = false;
-        this.onTimeout();
-      }, this.config.timeoutMs);
+        log.warn({ timeoutMs: this.config.timeoutMs }, 'Heartbeat timeout — no pong received')
+        this.pendingPing = false
+        this.onTimeout()
+      }, this.config.timeoutMs)
     } catch (err) {
-      log.error({ err }, "Failed to send ping");
-      this.pendingPing = false;
+      log.error({ err }, 'Failed to send ping')
+      this.pendingPing = false
     }
   }
 
   getLastPongTime(): number {
-    return this.lastPongTime;
+    return this.lastPongTime
   }
 }
