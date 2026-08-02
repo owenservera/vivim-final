@@ -514,6 +514,40 @@ PowerShell's `Select-Object`/`Out-File` pipeline.**
 - Integration tests should use in-memory or test database
 - **ALWAYS** use PowerShell-compatible commands
 
+### Maintenance Testing (Phase 3 Upgrade)
+
+After upgrading from vivim-page source files, run the full maintenance test suite:
+
+```bash
+# All ledger-client tests (chain verifier, client, manifest applier)
+bun test tests/unit/lib/ledger-client/
+
+# All tunnel-client tests (frame protocol, connection, heartbeat, reconnection, request handler)
+bun test tests/unit/lib/tunnel-client/
+
+# All orchestrator tests (service manager, health monitor, config)
+bun test tests/unit/lib/orchestrator/
+
+# All shared/tunnel tests (constants, errors)
+bun test tests/unit/lib/tunnel-shared/
+
+# P2P and local server tests
+bun test tests/unit/lib/p2p-node/ tests/unit/lib/local-server/
+
+# Integration tests (sync pipeline, crypto verification)
+bun test tests/integration/lib/
+
+# Full gate (all new tests)
+bun test tests/unit/lib/ledger-client/ tests/unit/lib/tunnel-client/ tests/unit/lib/orchestrator/ tests/unit/lib/tunnel-shared/ tests/unit/lib/p2p-node/ tests/unit/lib/local-server/ tests/integration/lib/
+```
+
+**Coverage targets:**
+- ledger-client/*: 100% of public functions
+- tunnel-client/*: 100% of public functions
+- orchestrator/*: 100% of public functions
+- tunnel-shared/*: Constants + error hierarchy
+- Integration: Full pipeline (signup → sync → verify → apply → mint)
+
 ## Git Conventions
 
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
