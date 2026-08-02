@@ -117,3 +117,42 @@ tracker is authoritative; if file state disagrees, trust the tracker.
 
 Every pass and block is appended to `docs/atomic-v3-fork-canon/PROGRESS.md`:
 `[timestamp] <id> <name> -> <done|blocked> [sha] <gate summary>`.
+
+## Maintenance Testing (Post-Upgrade)
+
+After any upgrade package (Phase 0A/0B/Phase 1) or integration work, run the maintenance
+test suite to verify no regressions in upgraded code.
+
+### Test Matrix
+
+| Area | Test Command | What It Verifies |
+|------|-------------|-----------------|
+| **Ledger client** | `bun test tests/unit/lib/ledger-client/` | Ed25519 verification, client lifecycle, manifest application |
+| **Tunnel client** | `bun test tests/unit/lib/tunnel-client/` | Auth headers, frame protocol, query-from-path, heartbeat, reconnection, request handler |
+| **Orchestrator** | `bun test tests/unit/lib/orchestrator/` | Service manager lifecycle, health monitor, config loader |
+| **Tunnel shared** | `bun test tests/unit/lib/tunnel-shared/` | Protocol versions, constants, error hierarchy |
+| **P2P node** | `bun test tests/unit/lib/p2p-node/` | CRDTDocument, file sync progress, node manager lifecycle |
+| **Local server** | `bun test tests/unit/lib/local-server/` | Constructor, lifecycle, request count |
+| **Phase 0A patches** | `bun test tests/unit/engines/memory-engine-record.test.ts tests/unit/engines/harness-condition.test.ts tests/unit/lib/export-import.test.ts` | memory-recordMemory, export-importDataToDb, harness-evaluateCondition |
+| **Integration pipeline** | `bun test tests/integration/lib/` | Full cloud ↔ desktop sync pipeline + real Ed25519 crypto |
+| **All lib tests** | `bun test tests/unit/lib/` | Combined ledger + tunnel + orchestrator + p2p + local-server tests |
+
+### Maintenance Gate
+
+```bash
+# Full maintenance test pass (all upgraded code — 146 tests, 296 assertions)
+bun test tests/unit/lib/ledger-client/ tests/unit/lib/tunnel-client/ tests/unit/lib/orchestrator/ tests/unit/lib/tunnel-shared/ tests/unit/lib/p2p-node/ tests/unit/lib/local-server/ tests/integration/lib/
+
+# Typecheck gate (must pass with zero new errors in src/lib/)
+bunx tsc --noEmit
+```
+
+Both commands must pass before marking any upgrade unit as done.
+
+### When to Run
+
+- After completing any upgrade phase (0A, 0B, Phase 1)
+- After any integration wiring (connection-manager, frame-protocol, service-manager, chain-verifier)
+- Before `devops gate` on any upgrade-related unit
+- As a regression check after modifying any `src/lib/` module
+- When porting new files from vivim-page
