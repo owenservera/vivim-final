@@ -1,7 +1,7 @@
 // tests/unit/lib/orchestrator/service-manager.test.ts
 // ServiceManager — orchestrator lifecycle (structural tests)
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { describe, expect, it, mock } from 'bun:test'
 
 // Mock dependencies before importing ServiceManager
 mock.module('../../../../src/lib/tunnel-client/index.js', () => ({
@@ -62,9 +62,34 @@ function makeConfig(ledgerEnabled = false) {
       requestTimeoutMs: 30_000,
       authToken: null,
     },
-    p2p: { enabled: true, bootstrapNodes: [], mdnsEnabled: false, mdnsInterval: 0, dhtEnabled: false, relayEnabled: false, maxPeers: 10, maxConcurrentTransfers: 3, maxFileSize: 104857600, identityPath: '' },
-    localServer: { enabled: true, host: '127.0.0.1', port: 8080, corsEnabled: false, corsOrigins: [], rateLimitPerMinute: 60, maxRequestBodyBytes: 1048576, staticDir: '' },
-    orchestrator: { healthCheckIntervalMs: 30_000, restartDelayMs: 1_000, maxRestartAttempts: 3, statusReportIntervalMs: 60_000 },
+    p2p: {
+      enabled: true,
+      bootstrapNodes: [],
+      mdnsEnabled: false,
+      mdnsInterval: 0,
+      dhtEnabled: false,
+      relayEnabled: false,
+      maxPeers: 10,
+      maxConcurrentTransfers: 3,
+      maxFileSize: 104857600,
+      identityPath: '',
+    },
+    localServer: {
+      enabled: true,
+      host: '127.0.0.1',
+      port: 8080,
+      corsEnabled: false,
+      corsOrigins: [],
+      rateLimitPerMinute: 60,
+      maxRequestBodyBytes: 1048576,
+      staticDir: '',
+    },
+    orchestrator: {
+      healthCheckIntervalMs: 30_000,
+      restartDelayMs: 1_000,
+      maxRestartAttempts: 3,
+      statusReportIntervalMs: 60_000,
+    },
     logging: { level: 'info' as const, pretty: false, logDir: null },
     ledger: {
       enabled: ledgerEnabled,

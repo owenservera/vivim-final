@@ -2,9 +2,9 @@
 // Integration test: full cloud ↔ desktop sync pipeline
 // signup → sync → verify → apply → mint JWT
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { LedgerClient } from '../../../src/lib/ledger-client/ledger-client.js'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { computeEntryHash } from '../../../src/lib/ledger-client/chain-verifier.js'
+import { LedgerClient } from '../../../src/lib/ledger-client/ledger-client.js'
 import { applyManifestEntries } from '../../../src/lib/ledger-client/manifest-applier.js'
 
 // Mock Prisma for integration test
@@ -82,12 +82,15 @@ describe('sync-pipeline (integration)', () => {
   it('full pipeline: signup → sync → verify → apply → mint', async () => {
     // Step 1: Signup
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({
-        userId: 'user-1',
-        token: 'tok_abc',
-        subdomain: 'user-test',
-        entitledProviderCount: 6,
-      }), { status: 200 }),
+      new Response(
+        JSON.stringify({
+          userId: 'user-1',
+          token: 'tok_abc',
+          subdomain: 'user-test',
+          entitledProviderCount: 6,
+        }),
+        { status: 200 },
+      ),
     )
 
     const config = {
@@ -116,25 +119,30 @@ describe('sync-pipeline (integration)', () => {
     const entryHash = computeEntryHash(null, contentJson)
 
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({
-        entries: [{
-          id: 'entry-1',
-          providerId: 'prov-1',
-          manifestFile: 'provider.json',
-          version: 1,
-          hash: entryHash,
-          prevHash: null,
-          signature: 'valid-sig',
-          status: 'verified',
-          contentJson,
-          changeSummary: null,
-          actor: 'system',
-          contributorId: null,
-          createdAt: Date.now(),
-        }],
-        hasMore: false,
-        newSyncCursor: entryHash,
-      }), { status: 200 }),
+      new Response(
+        JSON.stringify({
+          entries: [
+            {
+              id: 'entry-1',
+              providerId: 'prov-1',
+              manifestFile: 'provider.json',
+              version: 1,
+              hash: entryHash,
+              prevHash: null,
+              signature: 'valid-sig',
+              status: 'verified',
+              contentJson,
+              changeSummary: null,
+              actor: 'system',
+              contributorId: null,
+              createdAt: Date.now(),
+            },
+          ],
+          hasMore: false,
+          newSyncCursor: entryHash,
+        }),
+        { status: 200 },
+      ),
     )
 
     // Note: sync will fail signature verification with wrong key, but we test the pipeline flow
@@ -146,21 +154,23 @@ describe('sync-pipeline (integration)', () => {
     }
 
     // Step 3: Apply manifests manually (simulating what service-manager does)
-    const entries = [{
-      id: 'entry-1',
-      providerId: 'prov-1',
-      manifestFile: 'provider.json',
-      version: 1,
-      hash: entryHash,
-      prevHash: null,
-      signature: 'valid-sig',
-      status: 'verified' as const,
-      contentJson,
-      changeSummary: null,
-      actor: 'system',
-      contributorId: null,
-      createdAt: Date.now(),
-    }]
+    const entries = [
+      {
+        id: 'entry-1',
+        providerId: 'prov-1',
+        manifestFile: 'provider.json',
+        version: 1,
+        hash: entryHash,
+        prevHash: null,
+        signature: 'valid-sig',
+        status: 'verified' as const,
+        contentJson,
+        changeSummary: null,
+        actor: 'system',
+        contributorId: null,
+        createdAt: Date.now(),
+      },
+    ]
 
     const applyResult = await applyManifestEntries(mockDb as never, entries)
     expect(applyResult.upserted).toBe(1)
@@ -169,13 +179,16 @@ describe('sync-pipeline (integration)', () => {
 
     // Step 4: Mint tunnel JWT
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify({
-        token: 'jwt_xyz',
-        subdomain: 'user-test',
-        publicUrl: 'https://user-test.vivim.live/',
-        connectUrl: 'wss://tunnel.vivim.live/connect',
-        expiresIn: 3600,
-      }), { status: 200 }),
+      new Response(
+        JSON.stringify({
+          token: 'jwt_xyz',
+          subdomain: 'user-test',
+          publicUrl: 'https://user-test.vivim.live/',
+          connectUrl: 'wss://tunnel.vivim.live/connect',
+          expiresIn: 3600,
+        }),
+        { status: 200 },
+      ),
     )
 
     const tunnelResult = await client.mintTunnelToken()
@@ -186,40 +199,143 @@ describe('sync-pipeline (integration)', () => {
   it('applyManifestEntries handles all 6 content types', async () => {
     const entries = [
       {
-        id: 'e1', providerId: 'p1', manifestFile: 'provider.json', version: 1,
-        hash: 'h1', prevHash: null, signature: 's', status: 'verified' as const,
-        contentJson: JSON.stringify({ type: 'provider_definition', id: 'p1', slug: 'a', name: 'A' }),
-        changeSummary: null, actor: 'system', contributorId: null, createdAt: Date.now(),
+        id: 'e1',
+        providerId: 'p1',
+        manifestFile: 'provider.json',
+        version: 1,
+        hash: 'h1',
+        prevHash: null,
+        signature: 's',
+        status: 'verified' as const,
+        contentJson: JSON.stringify({
+          type: 'provider_definition',
+          id: 'p1',
+          slug: 'a',
+          name: 'A',
+        }),
+        changeSummary: null,
+        actor: 'system',
+        contributorId: null,
+        createdAt: Date.now(),
       },
       {
-        id: 'e2', providerId: 'p1', manifestFile: 'endpoint.json', version: 1,
-        hash: 'h2', prevHash: 'h1', signature: 's', status: 'verified' as const,
-        contentJson: JSON.stringify({ type: 'provider_endpoint', id: 'ep1', providerId: 'p1', endpointType: 'chat', url: 'http://a', method: 'GET' }),
-        changeSummary: null, actor: 'system', contributorId: null, createdAt: Date.now(),
+        id: 'e2',
+        providerId: 'p1',
+        manifestFile: 'endpoint.json',
+        version: 1,
+        hash: 'h2',
+        prevHash: 'h1',
+        signature: 's',
+        status: 'verified' as const,
+        contentJson: JSON.stringify({
+          type: 'provider_endpoint',
+          id: 'ep1',
+          providerId: 'p1',
+          endpointType: 'chat',
+          url: 'http://a',
+          method: 'GET',
+        }),
+        changeSummary: null,
+        actor: 'system',
+        contributorId: null,
+        createdAt: Date.now(),
       },
       {
-        id: 'e3', providerId: 'p1', manifestFile: 'parser.json', version: 1,
-        hash: 'h3', prevHash: 'h2', signature: 's', status: 'verified' as const,
-        contentJson: JSON.stringify({ type: 'provider_parser', id: 'pr1', providerId: 'p1', parserName: 'test', parserVersion: 1, logicCode: '//', logicType: 'inline' }),
-        changeSummary: null, actor: 'system', contributorId: null, createdAt: Date.now(),
+        id: 'e3',
+        providerId: 'p1',
+        manifestFile: 'parser.json',
+        version: 1,
+        hash: 'h3',
+        prevHash: 'h2',
+        signature: 's',
+        status: 'verified' as const,
+        contentJson: JSON.stringify({
+          type: 'provider_parser',
+          id: 'pr1',
+          providerId: 'p1',
+          parserName: 'test',
+          parserVersion: 1,
+          logicCode: '//',
+          logicType: 'inline',
+        }),
+        changeSummary: null,
+        actor: 'system',
+        contributorId: null,
+        createdAt: Date.now(),
       },
       {
-        id: 'e4', providerId: 'p1', manifestFile: 'capability.json', version: 1,
-        hash: 'h4', prevHash: 'h3', signature: 's', status: 'verified' as const,
-        contentJson: JSON.stringify({ type: 'provider_capability', id: 'pc1', providerId: 'p1', capabilitySlug: 'send', capabilityType: 'action', authScope: 'session', description: 'Send' }),
-        changeSummary: null, actor: 'system', contributorId: null, createdAt: Date.now(),
+        id: 'e4',
+        providerId: 'p1',
+        manifestFile: 'capability.json',
+        version: 1,
+        hash: 'h4',
+        prevHash: 'h3',
+        signature: 's',
+        status: 'verified' as const,
+        contentJson: JSON.stringify({
+          type: 'provider_capability',
+          id: 'pc1',
+          providerId: 'p1',
+          capabilitySlug: 'send',
+          capabilityType: 'action',
+          authScope: 'session',
+          description: 'Send',
+        }),
+        changeSummary: null,
+        actor: 'system',
+        contributorId: null,
+        createdAt: Date.now(),
       },
       {
-        id: 'e5', providerId: 'p1', manifestFile: 'binding.json', version: 1,
-        hash: 'h5', prevHash: 'h4', signature: 's', status: 'verified' as const,
-        contentJson: JSON.stringify({ type: 'capability_binding', id: 'b1', providerId: 'p1', capabilityId: 'gc1', bindingConfig: '{}' }),
-        changeSummary: null, actor: 'system', contributorId: null, createdAt: Date.now(),
+        id: 'e5',
+        providerId: 'p1',
+        manifestFile: 'binding.json',
+        version: 1,
+        hash: 'h5',
+        prevHash: 'h4',
+        signature: 's',
+        status: 'verified' as const,
+        contentJson: JSON.stringify({
+          type: 'capability_binding',
+          id: 'b1',
+          providerId: 'p1',
+          capabilityId: 'gc1',
+          bindingConfig: '{}',
+        }),
+        changeSummary: null,
+        actor: 'system',
+        contributorId: null,
+        createdAt: Date.now(),
       },
       {
-        id: 'e6', providerId: 'p1', manifestFile: 'taxonomy.json', version: 1,
-        hash: 'h6', prevHash: 'h5', signature: 's', status: 'verified' as const,
-        contentJson: JSON.stringify({ type: 'capability_taxonomy', id: 't1', providerId: 'p1', platformCategory: 'chat', interactionPattern: 'streaming', messageTypesJson: '[]', capabilitiesJson: '[]', constraintsJson: '{}', authRequirementsJson: '{}', discoveryHintsJson: '[]', nlpEntityTypesJson: '[]', nlpIntentPatternsJson: '[]', entityHierarchyJson: '{}', syncCapabilitiesJson: '[]' }),
-        changeSummary: null, actor: 'system', contributorId: null, createdAt: Date.now(),
+        id: 'e6',
+        providerId: 'p1',
+        manifestFile: 'taxonomy.json',
+        version: 1,
+        hash: 'h6',
+        prevHash: 'h5',
+        signature: 's',
+        status: 'verified' as const,
+        contentJson: JSON.stringify({
+          type: 'capability_taxonomy',
+          id: 't1',
+          providerId: 'p1',
+          platformCategory: 'chat',
+          interactionPattern: 'streaming',
+          messageTypesJson: '[]',
+          capabilitiesJson: '[]',
+          constraintsJson: '{}',
+          authRequirementsJson: '{}',
+          discoveryHintsJson: '[]',
+          nlpEntityTypesJson: '[]',
+          nlpIntentPatternsJson: '[]',
+          entityHierarchyJson: '{}',
+          syncCapabilitiesJson: '[]',
+        }),
+        changeSummary: null,
+        actor: 'system',
+        contributorId: null,
+        createdAt: Date.now(),
       },
     ]
 

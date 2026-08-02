@@ -1,25 +1,28 @@
 // tests/unit/lib/p2p-node/file-sync.test.ts
 // FileSyncHandler — progress events, transfer tracking, active transfers
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
-import { EventEmitter } from 'events'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 
 // Mock libp2p node
 function createMockNode() {
   return {
     handle: mock(() => {}),
-    dialProtocol: mock(() => Promise.resolve({
-      source: {
-        [Symbol.asyncIterator]: async function* () {
-          yield new TextEncoder().encode(JSON.stringify({
-            type: 'accept',
-            requestId: 'file_test',
-            chunkSize: 1024,
-          }))
+    dialProtocol: mock(() =>
+      Promise.resolve({
+        source: {
+          [Symbol.asyncIterator]: async function* () {
+            yield new TextEncoder().encode(
+              JSON.stringify({
+                type: 'accept',
+                requestId: 'file_test',
+                chunkSize: 1024,
+              }),
+            )
+          },
         },
-      },
-      sink: mock(() => Promise.resolve()),
-    })),
+        sink: mock(() => Promise.resolve()),
+      }),
+    ),
   }
 }
 

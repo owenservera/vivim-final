@@ -1,7 +1,7 @@
 // tests/unit/lib/tunnel-client/reconnection.test.ts
 // ReconnectionManager — exponential backoff
 
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 
 const { ReconnectionManager } = await import('../../../../src/lib/tunnel-client/reconnection.js')
 

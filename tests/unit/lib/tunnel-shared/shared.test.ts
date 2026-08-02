@@ -150,7 +150,9 @@ describe('tunnel-shared errors', () => {
   })
 
   it('LocalServerError extends VivimError', async () => {
-    const { LocalServerError, VivimError } = await import('../../../../src/lib/tunnel-shared/errors.js')
+    const { LocalServerError, VivimError } = await import(
+      '../../../../src/lib/tunnel-shared/errors.js'
+    )
     const err = new LocalServerError('server err', 'LS_CODE')
     expect(err).toBeInstanceOf(LocalServerError)
     expect(err).toBeInstanceOf(VivimError)
@@ -164,7 +166,9 @@ describe('tunnel-shared errors', () => {
   })
 
   it('OrchestratorError extends VivimError', async () => {
-    const { OrchestratorError, VivimError } = await import('../../../../src/lib/tunnel-shared/errors.js')
+    const { OrchestratorError, VivimError } = await import(
+      '../../../../src/lib/tunnel-shared/errors.js'
+    )
     const err = new OrchestratorError('orch err', 'ORCH_CODE')
     expect(err).toBeInstanceOf(OrchestratorError)
     expect(err).toBeInstanceOf(VivimError)

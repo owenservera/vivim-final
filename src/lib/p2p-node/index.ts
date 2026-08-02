@@ -5,95 +5,100 @@
  * Wraps NodeManager, FileSyncHandler, and CRDTSyncHandler.
  */
 
-import { NodeManager } from "./node-manager.js";
-import { FileSyncHandler } from "./file-sync.js";
-import { CRDTSyncHandler } from "./crdt-sync.js";
-import { getLogger } from "../tunnel-shared/logger.js";
-import type { VivimConfig, P2PPeerInfo, FileTransferProgress, P2PMetrics } from "../tunnel-shared/types.js";
-import type { P2PNodeState } from "./types.js";
+import { getLogger } from '../tunnel-shared/logger.js'
+import type {
+  FileTransferProgress,
+  P2PMetrics,
+  P2PPeerInfo,
+  VivimConfig,
+} from '../tunnel-shared/types.js'
+import { CRDTSyncHandler } from './crdt-sync.js'
+import { FileSyncHandler } from './file-sync.js'
+import { NodeManager } from './node-manager.js'
+import type { P2PNodeState } from './types.js'
 
-const log = getLogger("p2p-node");
+const log = getLogger('p2p-node')
 
-export type { P2PNodeState, P2PPeerInfo, FileTransferProgress, P2PMetrics };
+export type { P2PNodeState, P2PPeerInfo, FileTransferProgress, P2PMetrics }
 
 export class P2PNode {
-  private nodeManager: NodeManager;
-  private fileSync: FileSyncHandler | null = null;
-  private crdtSync: CRDTSyncHandler | null = null;
-  private config: VivimConfig;
+  private nodeManager: NodeManager
+  private fileSync: FileSyncHandler | null = null
+  private crdtSync: CRDTSyncHandler | null = null
+  private config: VivimConfig
 
   constructor(config: VivimConfig) {
-    this.config = config;
-    this.nodeManager = new NodeManager(config);
+    this.config = config
+    this.nodeManager = new NodeManager(config)
 
     // Forward events
-    this.nodeManager.on("peer:discovered", (peerId: string) => {
-      log.debug({ peerId }, "Peer discovered");
-    });
+    this.nodeManager.on('peer:discovered', (peerId: string) => {
+      log.debug({ peerId }, 'Peer discovered')
+    })
 
-    this.nodeManager.on("peer:connected", (peerId: string) => {
-      log.info({ peerId }, "Peer connected");
-    });
+    this.nodeManager.on('peer:connected', (peerId: string) => {
+      log.info({ peerId }, 'Peer connected')
+    })
 
-    this.nodeManager.on("peer:disconnected", (peerId: string) => {
-      log.info({ peerId }, "Peer disconnected");
-    });
+    this.nodeManager.on('peer:disconnected', (peerId: string) => {
+      log.info({ peerId }, 'Peer disconnected')
+    })
   }
 
   async start(): Promise<void> {
     if (!this.config.p2p.enabled) {
-      log.info("P2P node disabled in config");
-      return;
+      log.info('P2P node disabled in config')
+      return
     }
 
-    log.info("Starting P2P node");
+    log.info('Starting P2P node')
 
-    await this.nodeManager.start();
+    await this.nodeManager.start()
 
     // Register protocol handlers
-    const node = this.nodeManager.getNode();
+    const node = this.nodeManager.getNode()
     if (node) {
-      const metrics = this.nodeManager.getMetrics();
-      this.fileSync = new FileSyncHandler(node, metrics);
-      this.fileSync.registerHandler();
+      const metrics = this.nodeManager.getMetrics()
+      this.fileSync = new FileSyncHandler(node, metrics)
+      this.fileSync.registerHandler()
 
-      this.crdtSync = new CRDTSyncHandler(node, metrics);
-      this.crdtSync.registerHandler();
+      this.crdtSync = new CRDTSyncHandler(node, metrics)
+      this.crdtSync.registerHandler()
     }
   }
 
   async stop(): Promise<void> {
-    log.info("Stopping P2P node");
-    await this.nodeManager.stop();
-    this.fileSync = null;
-    this.crdtSync = null;
+    log.info('Stopping P2P node')
+    await this.nodeManager.stop()
+    this.fileSync = null
+    this.crdtSync = null
   }
 
   getState(): P2PNodeState {
-    return this.nodeManager.getState();
+    return this.nodeManager.getState()
   }
 
   getPeerId(): string | null {
-    return this.nodeManager.getPeerId();
+    return this.nodeManager.getPeerId()
   }
 
   getPeers(): P2PPeerInfo[] {
-    return this.nodeManager.getPeers();
+    return this.nodeManager.getPeers()
   }
 
   getMetrics(): P2PMetrics {
-    return this.nodeManager.getMetrics();
+    return this.nodeManager.getMetrics()
   }
 
   getFileSync(): FileSyncHandler | null {
-    return this.fileSync;
+    return this.fileSync
   }
 
   getCRDTSync(): CRDTSyncHandler | null {
-    return this.crdtSync;
+    return this.crdtSync
   }
 
   isRunning(): boolean {
-    return this.nodeManager.getState() === "running";
+    return this.nodeManager.getState() === 'running'
   }
 }

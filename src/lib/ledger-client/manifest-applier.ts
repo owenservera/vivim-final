@@ -9,17 +9,17 @@
  */
 
 import { newId } from '../../ids.js'
-import { getLogger } from '../logger.js'
 import type { CapStoreDb } from '../../storage/db.js'
+import { getLogger } from '../logger.js'
 import type {
+  CapabilityBindingContent,
+  CapabilityTaxonomyContent,
   LedgerEntry,
   ManifestContent,
+  ProviderCapabilityContent,
   ProviderDefinitionContent,
   ProviderEndpointContent,
   ProviderParserContent,
-  ProviderCapabilityContent,
-  CapabilityBindingContent,
-  CapabilityTaxonomyContent,
 } from './types.js'
 
 const log = getLogger('manifest-applier')

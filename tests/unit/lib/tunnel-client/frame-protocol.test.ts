@@ -3,13 +3,12 @@
 
 import { describe, expect, it } from 'bun:test'
 import {
-  encodeFrame,
-  decodeFrame,
-  createHttpResponseFrame,
-  createHttpChunkFrame,
   createHttpAbortFrame,
+  createHttpResponseFrame,
   createPingFrame,
   createStatusFrame,
+  decodeFrame,
+  encodeFrame,
 } from '../../../../src/lib/tunnel-client/frame-protocol.js'
 
 describe('frame-protocol', () => {
@@ -142,9 +141,9 @@ describe('frame-protocol', () => {
     })
 
     it('throws on missing id', () => {
-      expect(() => decodeFrame(JSON.stringify({ type: 'ping', timestamp: 1, version: '1.0' }))).toThrow(
-        'Missing required fields',
-      )
+      expect(() =>
+        decodeFrame(JSON.stringify({ type: 'ping', timestamp: 1, version: '1.0' })),
+      ).toThrow('Missing required fields')
     })
 
     it('throws on missing type', () => {

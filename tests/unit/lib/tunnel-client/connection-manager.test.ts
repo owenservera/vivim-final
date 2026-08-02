@@ -1,7 +1,7 @@
 // tests/unit/lib/tunnel-client/connection-manager.test.ts
 // ConnectionManager — auth headers on WebSocket connect
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 
 // Mock WebSocket before importing connection-manager
 let lastConnectOptions: { headers?: Record<string, string> } = {}
@@ -11,7 +11,7 @@ class MockWebSocket {
   readyState = 1
   url: string
   options: { headers?: Record<string, string> }
-  listeners: Record<string, Function[]> = {}
+  listeners: Record<string, ((...args: unknown[]) => void)[]> = {}
 
   constructor(url: string, options?: { headers?: Record<string, string> }) {
     this.url = url
@@ -21,7 +21,7 @@ class MockWebSocket {
     setTimeout(() => this.emit('open'), 0)
   }
 
-  addEventListener(event: string, fn: Function) {
+  addEventListener(event: string, fn: (...args: unknown[]) => void) {
     if (!this.listeners[event]) this.listeners[event] = []
     this.listeners[event].push(fn)
   }
@@ -33,11 +33,12 @@ class MockWebSocket {
     for (const fn of this.listeners[event] ?? []) fn(...args)
   }
 }
-
 ;(globalThis as any).WebSocket = MockWebSocket
 
 // Now import after mock
-const { ConnectionManager } = await import('../../../../src/lib/tunnel-client/connection-manager.js')
+const { ConnectionManager } = await import(
+  '../../../../src/lib/tunnel-client/connection-manager.js'
+)
 
 describe('ConnectionManager', () => {
   beforeEach(() => {
@@ -70,7 +71,7 @@ describe('ConnectionManager', () => {
     await cm.connect()
 
     expect(lastConnectOptions.headers).toBeDefined()
-    expect(lastConnectOptions.headers!['Authorization']).toBe('Bearer my-jwt-token')
+    expect(lastConnectOptions.headers?.Authorization).toBe('Bearer my-jwt-token')
   })
 
   it('sends X-Subdomain header when subdomain is set', async () => {
@@ -98,7 +99,7 @@ describe('ConnectionManager', () => {
 
     await cm.connect()
 
-    expect(lastConnectOptions.headers!['X-Subdomain']).toBe('user-test')
+    expect(lastConnectOptions.headers?.['X-Subdomain']).toBe('user-test')
   })
 
   it('omits Authorization when authToken is null', async () => {
@@ -126,7 +127,7 @@ describe('ConnectionManager', () => {
 
     await cm.connect()
 
-    expect(lastConnectOptions.headers!['Authorization']).toBeUndefined()
+    expect(lastConnectOptions.headers?.Authorization).toBeUndefined()
   })
 
   it('omits X-Subdomain when subdomain is empty', async () => {
@@ -154,6 +155,6 @@ describe('ConnectionManager', () => {
 
     await cm.connect()
 
-    expect(lastConnectOptions.headers!['X-Subdomain']).toBeUndefined()
+    expect(lastConnectOptions.headers?.['X-Subdomain']).toBeUndefined()
   })
 })

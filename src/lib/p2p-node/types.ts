@@ -3,19 +3,19 @@
  */
 
 import type {
-  FileSyncRequest,
-  FileSyncAccept,
-  FileSyncReject,
-  FileComplete,
-  FileVerify,
+  CRDTOperation,
+  CRDTSyncAck,
   CRDTSyncRequest,
   CRDTSyncResponse,
-  CRDTSyncAck,
-  CRDTOperation,
-  PresenceUpdate,
-  PresenceAck,
+  FileComplete,
+  FileSyncAccept,
+  FileSyncReject,
+  FileSyncRequest,
+  FileVerify,
   P2PConfig,
-} from "../tunnel-shared/types.js";
+  PresenceAck,
+  PresenceUpdate,
+} from '../tunnel-shared/types.js'
 
 export type {
   FileSyncRequest,
@@ -30,37 +30,37 @@ export type {
   PresenceUpdate,
   PresenceAck,
   P2PConfig,
-};
+}
 
-export type P2PNodeState = "stopped" | "starting" | "running" | "stopping" | "error";
+export type P2PNodeState = 'stopped' | 'starting' | 'running' | 'stopping' | 'error'
 
 export interface P2PPeerInfo {
-  peerId: string;
-  multiaddrs: string[];
-  connectedAt: number | null;
-  protocols: string[];
-  isRelayed: boolean;
-  latencyMs: number | null;
+  peerId: string
+  multiaddrs: string[]
+  connectedAt: number | null
+  protocols: string[]
+  isRelayed: boolean
+  latencyMs: number | null
 }
 
 export interface FileTransferProgress {
-  fileId: string;
-  fileName: string;
-  peerId: string;
-  direction: "sending" | "receiving";
-  bytesTransferred: number;
-  totalBytes: number;
-  percentage: number;
-  speedBytesPerSec: number;
+  fileId: string
+  fileName: string
+  peerId: string
+  direction: 'sending' | 'receiving'
+  bytesTransferred: number
+  totalBytes: number
+  percentage: number
+  speedBytesPerSec: number
 }
 
 export interface P2PMetrics {
-  peerCount: number;
-  relayedConnections: number;
-  directConnections: number;
-  totalBytesIn: number;
-  totalBytesOut: number;
-  fileTransfersCompleted: number;
-  crdtSyncsCompleted: number;
-  uptimeSeconds: number;
+  peerCount: number
+  relayedConnections: number
+  directConnections: number
+  totalBytesIn: number
+  totalBytesOut: number
+  fileTransfersCompleted: number
+  crdtSyncsCompleted: number
+  uptimeSeconds: number
 }

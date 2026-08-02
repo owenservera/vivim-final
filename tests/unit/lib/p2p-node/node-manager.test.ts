@@ -1,7 +1,7 @@
 // tests/unit/lib/p2p-node/node-manager.test.ts
 // NodeManager — lifecycle, state transitions, metrics
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 
 // Mock libp2p — must be before import
 const mockNode = {
@@ -109,10 +109,12 @@ describe('NodeManager', () => {
   })
 
   it('getPeers returns peer info from connections', async () => {
-    mockNode.getConnections.mockReturnValue([{
-      remotePeer: { toString: () => 'peer-abc' },
-      remoteAddr: { toString: () => '/ip4/127.0.0.1/tcp/4001/p2p/peer-abc' },
-    }])
+    mockNode.getConnections.mockReturnValue([
+      {
+        remotePeer: { toString: () => 'peer-abc' },
+        remoteAddr: { toString: () => '/ip4/127.0.0.1/tcp/4001/p2p/peer-abc' },
+      },
+    ])
 
     await manager.start()
     const peers = manager.getPeers()
@@ -122,10 +124,12 @@ describe('NodeManager', () => {
   })
 
   it('getPeers detects relayed connections', async () => {
-    mockNode.getConnections.mockReturnValue([{
-      remotePeer: { toString: () => 'peer-relay' },
-      remoteAddr: { toString: () => '/p2p-circuit/p2p/peer-relay' },
-    }])
+    mockNode.getConnections.mockReturnValue([
+      {
+        remotePeer: { toString: () => 'peer-relay' },
+        remoteAddr: { toString: () => '/p2p-circuit/p2p/peer-relay' },
+      },
+    ])
 
     await manager.start()
     const peers = manager.getPeers()
