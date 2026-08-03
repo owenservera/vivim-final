@@ -42,9 +42,22 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-undef": "off",
     "no-unreachable": "off",
     "no-useless-escape": "off",
+
+    // Storage provider enforcement
+    "no-restricted-imports": ["error", {
+      patterns: [{
+        group: ["**/storage/impl/*"],
+        message: "Use StorageProvider (from \"@/storage/provider\") instead of importing impls directly. Exception: files inside storage/provider/ and lib/canvas-engine-bootstrap.ts may import impls.",
+      }],
+    }],
   },
 }, {
   ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills"]
+}, {
+  files: ["src/storage/provider/**", "src/lib/canvas-engine-bootstrap.ts"],
+  rules: {
+    "no-restricted-imports": "off",
+  },
 }];
 
 export default eslintConfig;
