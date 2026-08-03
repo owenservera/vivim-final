@@ -48,17 +48,26 @@ import { createChromeRouter } from './chrome-router.js'
 import { createConversationRouter } from './conversation-router.js'
 import { createGenerativeRouter } from './generative-router.js'
 import { createInterpretRouter } from './interpret-router.js'
-import { createKnowledgeRouter } from './knowledge-router.js'
 import { createLlmHarnessRouter } from './llm-harness-router.js'
 import { createMemoryVizRouter } from './memory-viz-router.js'
 import { createMutationRouter } from './mutation-router.js'
 import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
+import { createNodeRouter } from './node-router.js'
 import { bootOnboardingPipeline } from './onboarding-boot.js'
 import { createPluginBuilderRouter } from './plugin-builder-router.js'
 import { errorResponse, json } from './response.js'
+import { createContactsRouter } from './routes/contacts.js'
+import { createContainersRouter } from './routes/containers.js'
+import { createContentRouter } from './routes/content.js'
+import { createKnowledgeRouter } from './routes/knowledge.js'
+import { createMediaRouter } from './routes/media.js'
+import { createNotificationsRouter } from './routes/notifications.js'
+import { createSyncRouter } from './routes/sync.js'
+import { createTunnelRouter } from './routes/tunnel.js'
 import { createUpdateRouter } from './routes/update.js'
 import { createSetupRouter } from './setup-router.js'
+import { createStorageRouter } from './storage-router.js'
 import { createSurfaceRouter } from './surface-router.js'
 import { createTemplateRouter } from './template-router.js'
 import { createVariantRouter } from './variant-router.js'
@@ -99,6 +108,13 @@ export interface ServerContext {
   memoryFabric?: import('../engines/memory/memory-fabric.js').MemoryFabric
   agentBuilder?: import('../engines/agent-builder.js').AgentBuilderEngine
   memoryEngine?: import('../engines/memory-engine.js').MemoryEngine
+  nodeStore?: import('../storage/contracts/node-store.js').NodeStoreContract
+  containerStore?: import('../storage/impl/entity-container-store-impl.js').EntityContainerStoreImpl
+  contentStore?: import('../storage/impl/content-item-store-impl.js').ContentItemStoreImpl
+  notificationStore?: import('../storage/impl/notification-store-impl.js').NotificationStoreImpl
+  contactStore?: import('../storage/impl/contact-store-impl.js').ContactStoreImpl
+  syncStore?: import('../storage/impl/sync-store-impl.js').SyncStoreImpl
+  mediaStore?: import('../storage/impl/media-store-impl.js').MediaStoreImpl
 }
 
 const log = getLogger('server')
@@ -173,6 +189,22 @@ export async function createServer(port = 9420): Promise<ServerContext> {
 
   const ctx: ServerContext = { port, db, eventBus, nlclEngine }
 
+  // Phase 1 stores — entity containers, content, notifications, contacts, sync, media
+  const { EntityContainerStoreImpl } = await import(
+    '../storage/impl/entity-container-store-impl.js'
+  )
+  const { ContentItemStoreImpl } = await import('../storage/impl/content-item-store-impl.js')
+  const { NotificationStoreImpl } = await import('../storage/impl/notification-store-impl.js')
+  const { ContactStoreImpl } = await import('../storage/impl/contact-store-impl.js')
+  const { SyncStoreImpl } = await import('../storage/impl/sync-store-impl.js')
+  const { MediaStoreImpl } = await import('../storage/impl/media-store-impl.js')
+  ctx.containerStore = new EntityContainerStoreImpl(db)
+  ctx.contentStore = new ContentItemStoreImpl(db)
+  ctx.notificationStore = new NotificationStoreImpl(db)
+  ctx.contactStore = new ContactStoreImpl(db)
+  ctx.syncStore = new SyncStoreImpl(db)
+  ctx.mediaStore = new MediaStoreImpl(db)
+
   const auth = createAuthMiddleware()
   const conversationRouter = createConversationRouter(ctx)
   const knowledgeRouter = createKnowledgeRouter(ctx)
@@ -190,6 +222,19 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   const variantRouter = createVariantRouter()
   const versionRouter = createVersionRouter()
   const updateRouter = createUpdateRouter()
+  const tunnelRouter = createTunnelRouter(ctx)
+  const containersRouter = createContainersRouter(ctx)
+  const contentRouter = createContentRouter(ctx)
+  const notificationsRouter = createNotificationsRouter(ctx)
+  const contactsRouter = createContactsRouter(ctx)
+  const syncRouter = createSyncRouter(ctx)
+  const mediaRouter = createMediaRouter(ctx)
+
+  // NodeStoreImpl for the minimal server context (node graph queries)
+  const nodeStoreMinimal = new (await import('../storage/impl/node-store-impl.js')).NodeStoreImpl(
+    db.prisma as never,
+  )
+  const nodeRouter = createNodeRouter({ ...ctx, nodeStore: nodeStoreMinimal })
 
   // bootOnboardingPipeline called after governor is created (see below)
 
@@ -302,6 +347,36 @@ export async function createServer(port = 9420): Promise<ServerContext> {
           return knowledgeRouter(req)
         }
 
+        // Tunnel + P2P subsystem routes (minimal bootstrap)
+        if (url.pathname.startsWith('/api/tunnel/')) {
+          return tunnelRouter(req)
+        }
+
+        // Next Tranche routes — containers, content, notifications, contacts, sync, media
+        if (url.pathname.startsWith('/api/containers/')) {
+          return containersRouter(req)
+        }
+        if (url.pathname.startsWith('/api/content/')) {
+          return contentRouter(req)
+        }
+        if (url.pathname.startsWith('/api/notifications/')) {
+          return notificationsRouter(req)
+        }
+        if (url.pathname.startsWith('/api/contacts/')) {
+          return contactsRouter(req)
+        }
+        if (url.pathname.startsWith('/api/sync/')) {
+          return syncRouter(req)
+        }
+        if (url.pathname.startsWith('/api/media/')) {
+          return mediaRouter(req)
+        }
+
+        // Node graph query routes (universal node layer)
+        if (url.pathname.startsWith('/api/nodes/')) {
+          return nodeRouter(req)
+        }
+
         // Chrome automation routes
         if (url.pathname.startsWith('/api/chrome/')) {
           return chromeRouter(req, url).then((r) => r ?? conversationRouter(req))
@@ -402,6 +477,61 @@ export async function createServer(port = 9420): Promise<ServerContext> {
 }
 
 /**
+ * Run individual seed functions (providers, parsers, automation, taxonomy, harness).
+ * Extracted from boot flow for reuse by snapshot auto-restore fallback.
+ */
+async function runIndividualSeeds(
+  db: CapStoreDb,
+  registrar: any,
+  providerStore: any,
+  log: ReturnType<typeof getLogger>,
+): Promise<void> {
+  const seedResult = await registrar.seedAll()
+  log.info(
+    { count: seedResult.seeded.length, errors: seedResult.errors.length },
+    'Seeded providers',
+  )
+
+  try {
+    const { seedHarvestedParsers, seedStreamConfigs } = await import(
+      '../../seeds/parsers/harvest.seed.js'
+    )
+    const harvested = await seedHarvestedParsers(providerStore)
+    log.info({ count: harvested }, 'Harvested parser variants into DB')
+    const streamConfigs = await seedStreamConfigs(providerStore)
+    log.info({ count: streamConfigs }, 'Seeded provider stream configs')
+  } catch (err) {
+    log.warn({ err }, 'Parser harvest seed skipped')
+  }
+
+  try {
+    const { seedAutomation } = await import('../../seeds/automation/automation.seed.js')
+    const autoCount = await seedAutomation(db)
+    log.info({ count: autoCount }, 'Seeded browser-automation records')
+  } catch (err) {
+    log.warn({ err }, 'Automation seed skipped')
+  }
+
+  try {
+    const { ensureTaxonomySeeded } = await import('../../seeds/taxonomy/taxonomy-seed.js')
+    const tax = await ensureTaxonomySeeded(db.prisma)
+    if (tax.upserted > 0) {
+      log.info({ count: tax.upserted }, 'Seeded capability-taxonomy rows')
+    }
+  } catch (err) {
+    log.warn({ err }, 'Taxonomy seed skipped')
+  }
+
+  try {
+    const { seedHarnessCommands } = await import('../../seeds/harness/commands.seed.js')
+    const harnessCount = await seedHarnessCommands(db)
+    log.info({ count: harnessCount }, 'Seeded harness commands')
+  } catch (err) {
+    log.warn({ err }, 'Harness command seed skipped')
+  }
+}
+
+/**
  * Full bootstrap — wires all engines into the server context.
  * Call this when you need a working server with real engine backing.
  */
@@ -449,44 +579,39 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     : (await db.prisma.providerDefinition.count()) === 0
 
   if (needsSeed) {
-    const seedResult = await registrar.seedAll()
-    log.info(
-      { count: seedResult.seeded.length, errors: seedResult.errors.length },
-      'Seeded providers',
-    )
-
-    try {
-      const { seedHarvestedParsers } = await import('../../seeds/parsers/harvest.seed.js')
-      const harvested = await seedHarvestedParsers(providerStore)
-      log.info({ count: harvested }, 'Harvested parser variants into DB')
-    } catch (err) {
-      log.warn({ err }, 'Parser harvest seed skipped')
-    }
-
-    try {
-      const { seedAutomation } = await import('../../seeds/automation/automation.seed.js')
-      const autoCount = await seedAutomation(db)
-      log.info({ count: autoCount }, 'Seeded browser-automation records')
-    } catch (err) {
-      log.warn({ err }, 'Automation seed skipped')
-    }
-
-    try {
-      const { ensureTaxonomySeeded } = await import('../../seeds/taxonomy/taxonomy-seed.js')
-      const tax = await ensureTaxonomySeeded(db.prisma)
-      if (tax.upserted > 0) {
-        log.info({ count: tax.upserted }, 'Seeded capability-taxonomy rows')
+    // ── Snapshot auto-restore: if snapshot exists and FORCE_SEED is not set,
+    //    copy snapshot → dev.db instead of running individual seeds ──────────
+    const forceSeed = !!process.env.FORCE_SEED
+    if (!forceSeed) {
+      const { existsSync, copyFileSync } = await import('node:fs')
+      const { join } = await import('node:path')
+      const snapshotPath = join(process.cwd(), 'seeds', 'seed-snapshot.db')
+      if (existsSync(snapshotPath)) {
+        const { closePrisma } = await import('../storage/prisma.js')
+        const dbPath = join(process.cwd(), 'prisma', 'dev.db')
+        log.info('Restoring from seed snapshot — closing DB...')
+        await closePrisma()
+        copyFileSync(snapshotPath, dbPath)
+        log.info('Snapshot copied — reopening DB...')
+        // Reopen DB: clear singleton and re-get
+        const { setDb } = await import('../storage/db.js')
+        setDb(null as any)
+        const freshDb = getDb()
+        // Re-initialize provider store with fresh DB connection
+        const freshProviderStore = new ProviderStoreImpl(freshDb)
+        const freshRegistrar = new ProviderRegistrar(freshProviderStore, undefined, eventBus)
+        // Update local references for downstream use
+        Object.assign(providerStore, freshProviderStore)
+        Object.assign(registrar, freshRegistrar)
+        // Update the db variable's prisma reference
+        ;(db as any).prisma = freshDb.prisma
+        log.info('DB restored from seed snapshot')
+        // Skip individual seeds — snapshot is fully seeded
+      } else {
+        await runIndividualSeeds(db, registrar, providerStore, log)
       }
-    } catch (err) {
-      log.warn({ err }, 'Taxonomy seed skipped')
-    }
-
-    try {
-      const { seedHarnessCommands } = await import('../../seeds/harness/commands.seed.js')
-      const harnessCount = await seedHarnessCommands(db)
-      log.info({ count: harnessCount }, 'Seeded harness commands')
-    } catch (err) {
-      log.warn({ err }, 'Harness command seed skipped')
+    } else {
+      await runIndividualSeeds(db, registrar, providerStore, log)
     }
   } else {
     log.info('DB already seeded — skipping boot seeds (set FORCE_SEED=true to re-run)')
@@ -543,6 +668,13 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     },
   })
   const memoryEngine = new MemoryEngine(episodicStore, semanticStore, proceduralStore, eventBus)
+
+  // Wire up the Memory Intelligence store for entity/topic/project/preference tracking
+  const { MemoryIntelligenceStoreImpl } = await import(
+    '../storage/impl/memory-intelligence-store-impl.js'
+  )
+  const memoryIntelStore = new MemoryIntelligenceStoreImpl(db)
+  memoryEngine.setIntelligenceStore(memoryIntelStore)
 
   // Read workspace hint for profile base directory (set by setup wizard)
   const workspaceHint = (await db.getWorkspaceHint()) ?? 'chrome-profiles'
@@ -655,7 +787,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       embedding = new MiniLmEmbeddingProvider()
     }
 
-    semanticSearch = new SemanticSearchEngine(ssStore, embedding)
+    semanticSearch = new SemanticSearchEngine(ssStore, embedding, db)
   } catch {
     /* semantic search not available */
   }
@@ -835,6 +967,9 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     | undefined
   let policyEngine: import('../engines/execution-policy.js').ExecutionPolicyEngine | undefined
   let registry: UnifiedCapabilityRegistry | undefined
+  let relocationEngine:
+    | import('../engines/storage-relocation-engine.js').StorageRelocationEngine
+    | undefined
 
   try {
     const { AutonomousExecutionEngine } = await import('../engines/autonomous-execution.js')
@@ -853,6 +988,125 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     const localAgentStore = new LocalAgentStoreImpl(db)
     const localAgentExecutor = new LocalAgentProviderExecutor(localAgentStore, eventBus)
 
+    // ── Storage Relocation Engine ──────────────────────────────────────────
+    const { StorageRelocationEngine } = await import('../engines/storage-relocation-engine.js')
+    const relocationStore: import('../engines/storage-relocation-engine.js').RelocationStore = {
+      async getStorageConfig() {
+        const row = await db.prisma.configEntry.findUnique({
+          where: {
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+          },
+        })
+        if (!row) return null
+        const parsed = JSON.parse(row.configJson) as Record<string, unknown>
+        return {
+          dataDir: (parsed.dataDir as string) ?? null,
+          dbPath: (parsed.dbPath as string) ?? null,
+          retainOldDays: (parsed.retainOldDays as number) ?? 7,
+        }
+      },
+      async setStorageConfig(config) {
+        const now = Date.now()
+        await db.prisma.configEntry.upsert({
+          where: {
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+          },
+          create: {
+            id: 'storage:global',
+            engineId: 'storage',
+            scopeType: 'global',
+            scopeId: null,
+            configJson: JSON.stringify(config),
+            schemaVersion: 1,
+            createdAt: now,
+            updatedAt: now,
+          },
+          update: {
+            configJson: JSON.stringify(config),
+            updatedAt: now,
+          },
+        })
+      },
+      async getArchivedLocations() {
+        const row = await db.prisma.configEntry.findUnique({
+          where: {
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+          },
+        })
+        if (!row) return []
+        const parsed = JSON.parse(row.configJson) as Record<string, unknown>
+        const archived =
+          (parsed.archivedLocations as Array<{
+            path: string
+            archivedAt: number
+            sizeBytes: number
+          }>) ?? []
+        return archived
+      },
+      async markArchived(path, archivedAt, sizeBytes) {
+        const row = await db.prisma.configEntry.findUnique({
+          where: {
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+          },
+        })
+        const parsed = row ? (JSON.parse(row.configJson) as Record<string, unknown>) : {}
+        const archived =
+          (parsed.archivedLocations as Array<{
+            path: string
+            archivedAt: number
+            sizeBytes: number
+          }>) ?? []
+        archived.push({ path, archivedAt, sizeBytes })
+        parsed.archivedLocations = archived
+        const now = Date.now()
+        await db.prisma.configEntry.upsert({
+          where: {
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+          },
+          create: {
+            id: 'storage:global',
+            engineId: 'storage',
+            scopeType: 'global',
+            scopeId: null,
+            configJson: JSON.stringify(parsed),
+            schemaVersion: 1,
+            createdAt: now,
+            updatedAt: now,
+          },
+          update: { configJson: JSON.stringify(parsed), updatedAt: now },
+        })
+      },
+      async removeArchived(path) {
+        const row = await db.prisma.configEntry.findUnique({
+          where: {
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+          },
+        })
+        if (!row) return
+        const parsed = JSON.parse(row.configJson) as Record<string, unknown>
+        const archived =
+          (parsed.archivedLocations as Array<{
+            path: string
+            archivedAt: number
+            sizeBytes: number
+          }>) ?? []
+        parsed.archivedLocations = archived.filter((a) => a.path !== path)
+        const now = Date.now()
+        await db.prisma.configEntry.update({
+          where: {
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+          },
+          data: { configJson: JSON.stringify(parsed), updatedAt: now },
+        })
+      },
+    }
+    relocationEngine = new StorageRelocationEngine(relocationStore)
+
+    // Check for crash recovery on boot
+    relocationEngine.checkCrashRecovery().catch((err: unknown) => {
+      log.warn({ err }, 'Storage crash recovery check failed (non-fatal)')
+    })
+
     registerDefaultCapabilities(registry, {
       db,
       conversationStore: convStore,
@@ -865,7 +1119,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       synthesizer,
       localAgentStore,
       localAgentExecutor,
+      relocationEngine,
     })
+
+    const { registerProviderCapabilities } = await import('../engines/provider-caps.js')
+    registerProviderCapabilities(registry)
 
     // ── Phase 2.3 harness program resolver ──────────────────────────────────
     // Allow harness DB programs (prog-* capabilities) to be executed through
@@ -1312,9 +1570,34 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     memoryEngine,
   }
 
+  // NodeStoreImpl — lightweight Prisma wrapper for the Universal Node Layer.
+  // Instantiated here so the node-router can serve graph queries independently
+  // of the memory-fabric boot sequence (which also creates its own instance).
+  const nodeStoreForRouter = new (await import('../storage/impl/node-store-impl.js')).NodeStoreImpl(
+    db.prisma as never,
+  )
+  ctx.nodeStore = nodeStoreForRouter
+
+  // Phase 1 stores — entity containers, content, notifications, contacts, sync, media
+  const { EntityContainerStoreImpl: ECS } = await import(
+    '../storage/impl/entity-container-store-impl.js'
+  )
+  const { ContentItemStoreImpl: CIS } = await import('../storage/impl/content-item-store-impl.js')
+  const { NotificationStoreImpl: NS } = await import('../storage/impl/notification-store-impl.js')
+  const { ContactStoreImpl: CS } = await import('../storage/impl/contact-store-impl.js')
+  const { SyncStoreImpl: SS } = await import('../storage/impl/sync-store-impl.js')
+  const { MediaStoreImpl: MS } = await import('../storage/impl/media-store-impl.js')
+  ctx.containerStore = new ECS(db)
+  ctx.contentStore = new CIS(db)
+  ctx.notificationStore = new NS(db)
+  ctx.contactStore = new CS(db)
+  ctx.syncStore = new SS(db)
+  ctx.mediaStore = new MS(db)
+
   const auth = createAuthMiddleware()
   const conversationRouter = createConversationRouter(ctx)
   const knowledgeRouter = createKnowledgeRouter(ctx)
+  const tunnelRouter = createTunnelRouter(ctx)
   const setupRouter = createSetupRouter(ctx)
   const muxRouter = createMuxRouter(ctx)
   const autonomousRouter =
@@ -1326,6 +1609,15 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const capabilityRouter = ctx.registry ? createCapabilityRouter(ctx) : null
   const automationRouter = createAutomationRouter({ orchestrator: automationOrchestrator })
   const memoryRouter = ctx.memoryEngine ? createMemoryVizRouter(ctx.memoryEngine) : null
+  const nodeRouter = createNodeRouter(ctx)
+  const storageRouter = relocationEngine ? createStorageRouter({ relocationEngine }) : null
+
+  const containersRouter = createContainersRouter(ctx)
+  const contentRouter = createContentRouter(ctx)
+  const notificationsRouter = createNotificationsRouter(ctx)
+  const contactsRouter = createContactsRouter(ctx)
+  const syncRouter = createSyncRouter(ctx)
+  const mediaRouter = createMediaRouter(ctx)
 
   // Unit 2.7 — forward conversation events to subscribed WebSocket frontends
   registerConversationForwarder(eventBus)
@@ -1493,6 +1785,41 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
         if (url.pathname.startsWith('/api/knowledge/')) {
           return knowledgeRouter(req)
+        }
+
+        // Tunnel + P2P subsystem routes
+        if (url.pathname.startsWith('/api/tunnel/')) {
+          return tunnelRouter(req)
+        }
+
+        // Next Tranche routes — containers, content, notifications, contacts, sync, media
+        if (url.pathname.startsWith('/api/containers/')) {
+          return containersRouter(req)
+        }
+        if (url.pathname.startsWith('/api/content/')) {
+          return contentRouter(req)
+        }
+        if (url.pathname.startsWith('/api/notifications/')) {
+          return notificationsRouter(req)
+        }
+        if (url.pathname.startsWith('/api/contacts/')) {
+          return contactsRouter(req)
+        }
+        if (url.pathname.startsWith('/api/sync/')) {
+          return syncRouter(req)
+        }
+        if (url.pathname.startsWith('/api/media/')) {
+          return mediaRouter(req)
+        }
+
+        // Node graph query routes (universal node layer)
+        if (url.pathname.startsWith('/api/nodes/')) {
+          return nodeRouter(req)
+        }
+
+        // Storage management routes
+        if (url.pathname.startsWith('/api/storage/') && storageRouter) {
+          return storageRouter(req)
         }
 
         if (url.pathname.startsWith('/api/memory/') && memoryRouter) {
