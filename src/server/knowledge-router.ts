@@ -4,6 +4,8 @@
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
 
+import type { ImportSource } from '../engines/knowledge-ingestion.js'
+import type { ExportScope } from '../engines/export.js'
 import { newId } from '../ids.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
@@ -31,7 +33,7 @@ export function createKnowledgeRouter(ctx: ServerContext) {
           return errorResponse('source and filePath required', 'ValidationError', 400)
         }
         const result = await ctx.knowledgeIngestion?.ingest({
-          source: body.source as any,
+          source: body.source as ImportSource,
           filePath: body.filePath,
           deduplicate: body.deduplicate ?? true,
           extractEntities: body.extractEntities ?? true,
@@ -73,7 +75,7 @@ export function createKnowledgeRouter(ctx: ServerContext) {
       // GET /api/knowledge/export?format=json&scope=full
       if (pathname === '/api/knowledge/export' && method === 'GET') {
         const format = (url.searchParams.get('format') ?? 'json') as 'json' | 'csv'
-        const scope = (url.searchParams.get('scope') ?? 'full') as any
+        const scope = (url.searchParams.get('scope') ?? 'full') as ExportScope
         const result = await ctx.exportEngine?.export({
           format,
           scope,

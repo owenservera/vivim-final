@@ -171,8 +171,8 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
         // Update local references for downstream use
         Object.assign(providerStore, freshProviderStore)
         Object.assign(registrar, freshRegistrar)
-        // Update the db variable's prisma reference
-        ;(db as any).prisma = freshDb.prisma
+        // Update the db variable's prisma reference (readonly property override)
+        Object.defineProperty(db, 'prisma', { value: freshDb.prisma, writable: false })
         log.info('DB restored from seed snapshot')
         // Skip individual seeds — snapshot is fully seeded
       } else {
@@ -230,12 +230,7 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
   }
 
   const memoizer = new ExecutionMemoizer()
-  const memoryEngine = new MemoryEngine(
-    episodicStore,
-    semanticStore,
-    proceduralStore,
-    eventBus,
-  )
+  const memoryEngine = new MemoryEngine(episodicStore, semanticStore, proceduralStore, eventBus)
 
   // ── Stealth store (unified) ───────────────────────────────────────────
   const { PrismaStealthStore } = await import('../storage/impl/stealth-store-impl.js')
@@ -1069,7 +1064,7 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
     costOptimizer,
     autonomousEngine,
     policyEngine,
-    registry: registry!,
+    registry: registry ?? new UnifiedCapabilityRegistry(),
     nlclEngine,
     automationOrchestrator,
     kernel,
