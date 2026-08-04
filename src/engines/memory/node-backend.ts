@@ -9,6 +9,7 @@
 //   - acuType = 'cap-store.memory'
 
 import { newId } from '../../ids.js'
+import { CapStoreError } from '../../errors.js'
 import { createNode } from '../../schema/node.js'
 import type { KnowledgeExtractorStore } from '../../storage/contracts/knowledge-extractor-store.js'
 import type { MemoryCuratedStore } from '../../storage/contracts/memory-curated-store.js'
@@ -124,7 +125,7 @@ export class NodeBackend implements MemoryBackend {
   }
 
   handleToolCall(_name: string, _args: Record<string, unknown>): never {
-    throw new Error('NodeBackend exposes no tools')
+    throw new CapStoreError('ToolError', 'NodeBackend exposes no tools')
   }
 
   onMemoryWrite(

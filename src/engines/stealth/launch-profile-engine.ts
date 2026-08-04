@@ -51,8 +51,9 @@ export class LaunchProfileEngine {
 
   async resolve(providerId: string): Promise<LaunchProfile> {
     const policy = await this.store.getPolicy()
-    const overrideId = policy?.providerOverrides?.[providerId]
-    const profileId = overrideId ?? policy?.defaultProfileId ?? 'default'
+    const overrides = policy?.providerOverridesJson ? JSON.parse(policy.providerOverridesJson) as Record<string, string> : {}
+    const overrideId = overrides[providerId]
+    const profileId = overrideId ?? policy?.defaultLaunchProfileId ?? 'default'
     const profile = this.profiles.get(profileId)
     if (!profile) return this.getDefaultProfile()
     return profile
@@ -129,7 +130,8 @@ export class LaunchProfileEngine {
 
   async registerProfile(profile: LaunchProfile): Promise<void> {
     this.profiles.set(profile.id, profile)
-    await this.store.upsertLaunchProfile(this.toRow(profile))
+    const row = this.toRow(profile)
+    await this.store.upsertLaunchProfile(row.id, row)
   }
 
   async updateProfile(id: string, patch: Partial<LaunchProfile>): Promise<void> {
@@ -137,7 +139,8 @@ export class LaunchProfileEngine {
     if (!existing) throw new EngineError(`Profile not found: ${id}`)
     const updated = { ...existing, ...patch }
     this.profiles.set(id, updated)
-    await this.store.upsertLaunchProfile(this.toRow(updated))
+    const row = this.toRow(updated)
+    await this.store.upsertLaunchProfile(row.id, row)
   }
 
   async deleteProfile(id: string): Promise<void> {

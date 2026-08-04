@@ -342,7 +342,7 @@ describe('CDPProxy', () => {
     mockTransport = createMockTransport()
     slaves = new Map()
     mutexes = new Map()
-    proxy = new CDPProxy(slaves, mutexes, mockTransport.transport, mockBus.bus)
+    proxy = new CDPProxy(() => slaves, mutexes, mockTransport.transport, mockBus.bus)
   })
 
   it('send() dispatches CDP command through transport', async () => {
@@ -475,7 +475,7 @@ describe('CDPProxy', () => {
         return ''
       },
     }
-    const p = new CDPProxy(slaves, mutexes, slowTransport)
+    const p = new CDPProxy(() => slaves, mutexes, slowTransport)
     await Promise.all([p.send('s1', 'A'), p.send('s1', 'B')])
     expect(concurrent).toBe(false)
   })
@@ -665,7 +665,7 @@ describe('HealthMonitor', () => {
       },
     }
 
-    const proxy = new CDPProxy(slaves, mutexes, transport, bus)
+    const proxy = new CDPProxy(() => slaves, mutexes, transport, bus)
     const monitor = new HealthMonitor(store, slaves, circuitBreakers, proxy, defaultConfig, bus)
 
     return {
@@ -693,7 +693,7 @@ describe('HealthMonitor', () => {
   it('probe() returns false and records failure for unreachable Chrome', async () => {
     const { store, slaves, circuitBreakers } = setup()
     // Replace transport with failing one
-    const failingProxy = new CDPProxy(slaves, new Map(), {
+    const failingProxy = new CDPProxy(() => slaves, new Map(), {
       async send() {
         throw new Error('ECONNREFUSED')
       },
@@ -730,7 +730,7 @@ describe('HealthMonitor', () => {
   it('emits fleet:crash_detected after threshold failures', async () => {
     const { store, slaves, circuitBreakers } = setup()
     const { bus, events } = createMockEventBus()
-    const failingProxy = new CDPProxy(slaves, new Map(), {
+    const failingProxy = new CDPProxy(() => slaves, new Map(), {
       async send() {
         throw new Error('fail')
       },

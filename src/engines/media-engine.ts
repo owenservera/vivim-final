@@ -2,6 +2,7 @@
 // MediaEngine — media attachment management with download tracking
 
 import { newId } from '../ids.js'
+import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -83,7 +84,7 @@ export class MediaEngine {
 
   async getMedia(id: string): Promise<MediaAttachment> {
     const media = await this.store.getMediaById(id)
-    if (!media) throw new Error(`Media attachment not found: ${id}`)
+    if (!media) throw new NotFoundError(`Media attachment not found: ${id}`)
     return media
   }
 

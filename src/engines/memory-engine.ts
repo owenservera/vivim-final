@@ -4,7 +4,7 @@
 import { NotFoundError } from '../errors.js'
 import { newId } from '../ids.js'
 import type { NodeStoreContract } from '../storage/contracts/node-store.js'
-import type { MemoryIntelligenceStoreImpl } from '../storage/impl/memory-intelligence-store-impl.js'
+import type { MemoryIntelligenceStore } from '../storage/contracts/memory-intelligence-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -153,19 +153,19 @@ export interface ProceduralMemoryStore {
 
 export class MemoryEngine {
   private consolidationTimer?: ReturnType<typeof setInterval>
-  private intelligenceStore?: MemoryIntelligenceStoreImpl
+  private intelligenceStore?: MemoryIntelligenceStore
 
   constructor(
     private readonly episodic: EpisodicMemoryStore,
     private readonly semantic: SemanticMemoryStore,
     private readonly procedural: ProceduralMemoryStore,
     private readonly eventBus: CapabilityEventBus,
-    intelligenceStore?: MemoryIntelligenceStoreImpl,
+    intelligenceStore?: MemoryIntelligenceStore,
   ) {
     this.intelligenceStore = intelligenceStore
   }
 
-  setIntelligenceStore(store: MemoryIntelligenceStoreImpl): void {
+  setIntelligenceStore(store: MemoryIntelligenceStore): void {
     this.intelligenceStore = store
   }
 

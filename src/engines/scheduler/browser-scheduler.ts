@@ -4,6 +4,7 @@
 
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
+import { ValidationError } from '../../errors.js'
 import { SchedulerPolicy } from './policy.js'
 import type { QueueName } from './queues.js'
 import { QUEUE_CONFIGS } from './queues.js'
@@ -79,7 +80,7 @@ export class BrowserScheduler {
    */
   async enqueue(task: Task): Promise<TaskResult> {
     const config = QUEUE_CONFIGS[task.queue]
-    if (!config) throw new Error(`Unknown queue: ${task.queue}`)
+    if (!config) throw new ValidationError(`Unknown queue: ${task.queue}`)
 
     // Check backpressure
     const totalInFlight = this.getTotalInFlight()
@@ -160,7 +161,7 @@ export class BrowserScheduler {
     const start = Date.now()
 
     while (this.policy.isBackpressured(this.getTotalInFlight())) {
-      if (signal.aborted) throw new Error('Task aborted')
+      if (signal.aborted) throw new ValidationError('Task aborted')
       if (Date.now() - start > timeoutMs) {
         throw new SchedulerBackpressureError(timeoutMs)
       }

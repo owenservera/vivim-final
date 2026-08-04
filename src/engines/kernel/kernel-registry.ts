@@ -31,7 +31,7 @@ export class KernelRegistry {
     for (const cb of this.registerCallbacks) {
       try {
         cb(entry)
-      } catch {}
+      } catch { /* callback error should not prevent registration */ }
     }
   }
 
@@ -155,7 +155,7 @@ export class KernelRegistry {
     for (const cb of this.statusChangeCallbacks) {
       try {
         cb(id, from, to)
-      } catch {}
+      } catch { /* callback error should not prevent status update */ }
     }
   }
 }

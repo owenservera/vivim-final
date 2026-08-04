@@ -13,12 +13,23 @@ export interface LaunchProfileRow {
   extensionId: string | null
   windowSizeJson: string
   extraArgsJson: string
+  createdAt: number
+  updatedAt: number
 }
 
 export interface ModuleProfileRow {
   id: string
   name: string
   modulesJson: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface StealthPolicyRow {
+  id: string
+  defaultLaunchProfileId: string | null
+  defaultModuleProfileId: string | null
+  providerOverridesJson: string
 }
 
 export interface StealthPolicy {
@@ -28,18 +39,18 @@ export interface StealthPolicy {
 
 export interface StealthProfileStore {
   // Launch profiles
-  getAllLaunchProfiles(): Promise<LaunchProfileRow[]>
   getLaunchProfile(id: string): Promise<LaunchProfileRow | null>
-  upsertLaunchProfile(profile: LaunchProfileRow): Promise<void>
+  getAllLaunchProfiles(): Promise<LaunchProfileRow[]>
+  upsertLaunchProfile(id: string, data: Partial<LaunchProfileRow>): Promise<void>
   deleteLaunchProfile(id: string): Promise<void>
 
   // Module profiles
-  getAllModuleProfiles(): Promise<ModuleProfileRow[]>
   getModuleProfile(id: string): Promise<ModuleProfileRow | null>
-  upsertModuleProfile(profile: ModuleProfileRow): Promise<void>
+  getAllModuleProfiles(): Promise<ModuleProfileRow[]>
+  upsertModuleProfile(id: string, data: Partial<ModuleProfileRow>): Promise<void>
   deleteModuleProfile(id: string): Promise<void>
 
   // Policy
-  getPolicy(): Promise<StealthPolicy | null>
-  setPolicy(policy: StealthPolicy): Promise<void>
+  getPolicy(): Promise<StealthPolicyRow | null>
+  upsertPolicy(data: Partial<StealthPolicyRow>): Promise<void>
 }

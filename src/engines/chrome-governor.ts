@@ -13,12 +13,40 @@ import type {
   TraceEntryInput,
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
+import type { StealthProfileStore } from './stealth/stealth-profile-store.js'
 import { injectAntiDetection } from './anti-detection.js'
 import type { BrowserHarnessActions } from './browser-automation/harness-actions.js'
 import type { CapabilitySnapshot, CapabilitySnapshotEntry } from './capability-snapshot.js'
 import { type CdpWatchdog, setupWatchdog } from './cdp-watchdog.js'
 import { submitMessage, typeMessage } from './composer-typing.js'
 import { configToProgram } from './harness/program-schema.js'
+import { registerDefaultStealthModules } from './stealth/register-defaults.js'
+import { StealthModuleEngine } from './stealth/stealth-module-engine.js'
+import type {
+  LaunchProfileRow,
+  ModuleProfileRow,
+  StealthPolicyRow,
+} from './stealth/stealth-profile-store.js'
+
+// ── In-memory stealth store fallback (test/dev only) ───────────────────────
+
+function createInMemoryStealthStore(): StealthProfileStore {
+  const launches = new Map<string, LaunchProfileRow>()
+  const modules = new Map<string, ModuleProfileRow>()
+  let policy: StealthPolicyRow | null = null
+  return {
+    async getLaunchProfile(id) { return launches.get(id) ?? null },
+    async getAllLaunchProfiles() { return [...launches.values()] },
+    async upsertLaunchProfile(id, data) { launches.set(id, { ...launches.get(id), ...data, id } as LaunchProfileRow) },
+    async deleteLaunchProfile(id) { launches.delete(id) },
+    async getModuleProfile(id) { return modules.get(id) ?? null },
+    async getAllModuleProfiles() { return [...modules.values()] },
+    async upsertModuleProfile(id, data) { modules.set(id, { ...modules.get(id), ...data, id } as ModuleProfileRow) },
+    async deleteModuleProfile(id) { modules.delete(id) },
+    async getPolicy() { return policy },
+    async upsertPolicy(data) { policy = { ...policy, ...data } as StealthPolicyRow },
+  }
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -189,12 +217,17 @@ export class CDPProxy {
   private watchdogs = new Map<string, CdpWatchdog>()
 
   constructor(
-    private slaves: Map<string, ChromeSlave>,
+    private slaveGetter: () => Map<string, ChromeSlave>,
     private mutexes: Map<string, AsyncMutex>,
     private transport?: CDPTransport,
     private eventBus?: GovernorEventBus,
     private browserHarness?: BrowserHarnessActions,
   ) {}
+
+  /** Live slaves map — always reads fresh data from FleetSupervisor. */
+  private get slaves(): Map<string, ChromeSlave> {
+    return this.slaveGetter()
+  }
 
   /** 019 — in-memory snapshot of DB-backed capabilities, loaded at boot. */
   private capabilitySnapshot?: CapabilitySnapshot
@@ -763,9 +796,8 @@ export class HealthMonitor {
   }
 
   private async probeAll(): Promise<void> {
-    for (const slaveId of this.slaves.keys()) {
-      await this.probe(slaveId)
-    }
+    const slaveIds = [...this.slaves.keys()]
+    await Promise.allSettled(slaveIds.map((id) => this.probe(id)))
   }
 
   private getOrCreateCircuit(slaveId: string): CircuitBreaker {
@@ -800,9 +832,14 @@ export class ChromeGovernor {
   private _genericSlaveId: string | null = null
   /** Extended browser-automation recipe actions (set by bootstrap). */
   browserHarness?: import('./browser-automation/harness-actions.js').BrowserHarnessActions
-
   /** 019 — in-memory snapshot of DB-backed capabilities, loaded at boot. */
   private capabilitySnapshot?: CapabilitySnapshot
+  /** 11.2 — stealth module engine (applies CDP patches on first connection). */
+  private stealthEngine: StealthModuleEngine
+  /** Track which slaves have already had stealth applied. */
+  private appliedStealth = new Set<string>()
+  /** Next port to allocate from the port range. */
+  private nextPort: number
 
   /** Wire the boot-loaded capability snapshot (source of truth for execution). */
   setCapabilitySnapshot(snapshot: CapabilitySnapshot): void {
@@ -815,8 +852,14 @@ export class ChromeGovernor {
     private eventBus?: GovernorEventBus,
     transport?: CDPTransport,
     fleetSupervisor?: FleetSupervisorContract,
+    stealthStore?: StealthProfileStore,
   ) {
     this.cdpTransport = transport ?? null
+    this.nextPort = config.portRange[0]
+    this.stealthEngine = new StealthModuleEngine(
+      stealthStore ?? createInMemoryStealthStore(),
+    )
+    registerDefaultStealthModules(this.stealthEngine)
 
     // Use injected fleetSupervisor or create real one
     this.fleetSupervisor = (fleetSupervisor ??
@@ -870,10 +913,12 @@ export class ChromeGovernor {
   }
 
   async kill(slaveId: string): Promise<void> {
+    this.appliedStealth.delete(slaveId)
     await this.fleetSupervisor.kill(slaveId)
   }
 
   async killAll(): Promise<void> {
+    this.appliedStealth.clear()
     await this.fleetSupervisor.killAll()
     this._genericSlaveId = null
   }
@@ -882,6 +927,18 @@ export class ChromeGovernor {
     await this.fleetSupervisor.ensureRunning(slaveId)
     const result = this.fleetSupervisor.getInstance(slaveId)
     if (!result) throw new EngineError(`Slave not found: ${slaveId}`)
+    // 11.2 — apply stealth modules on first connection (replaces ad-hoc cdpWatch patches)
+    if (!this.appliedStealth.has(slaveId) && this.cdpTransport) {
+      try {
+        await this.stealthEngine.applyProfile(slaveId, 'default', {
+          cdp: this.cdpTransport,
+          slaveId,
+        })
+        this.appliedStealth.add(slaveId)
+      } catch (err) {
+        getLogger('ChromeGovernor').warn(`Stealth apply failed for ${slaveId}: ${err}`)
+      }
+    }
     return this.toChromeSlave(result)
   }
 
@@ -933,7 +990,8 @@ export class ChromeGovernor {
 
       // Provider-specific authenticated DOM markers
       const markers: Record<string, string> = {
-        gemini: 'document.querySelector("[data-test-id]") !== null || document.title.includes("Gemini")',
+        gemini:
+          'document.querySelector("[data-test-id]") !== null || document.title.includes("Gemini")',
         chatgpt:
           'document.querySelector("#prompt-textarea") !== null || document.querySelector("[data-testid]") !== null',
         claude:
@@ -955,7 +1013,9 @@ export class ChromeGovernor {
       const authenticated = result?.result?.value === true
       return {
         authenticated,
-        reason: authenticated ? 'DOM marker found' : 'DOM marker not found — session may be expired',
+        reason: authenticated
+          ? 'DOM marker found'
+          : 'DOM marker not found — session may be expired',
       }
     } catch (err) {
       return {
@@ -973,8 +1033,12 @@ export class ChromeGovernor {
   }
 
   allocatePort(): number {
-    // Return first available port from range
-    return this.config.portRange[0]
+    const port = this.nextPort
+    if (port > this.config.portRange[1]) {
+      throw new EngineError(`Port range exhausted: ${this.config.portRange[0]}-${this.config.portRange[1]}`)
+    }
+    this.nextPort++
+    return port
   }
 
   async seedAccounts(): Promise<void> {
@@ -1058,18 +1122,16 @@ export class ChromeGovernor {
     if (!this.cdpTransport) {
       throw new EngineError('CDP transport not configured. Call setCdpTransport() first.')
     }
-    // Rebuild each access: `this.slaves` is a live getter (re-derived from the
-    // FleetSupervisor instance map on every call), so a cached CDPProxy would
-    // freeze a stale snapshot and a freshly-spawned slave (e.g. a chatgpt send)
-    // would 404 as "Slave not found". Mutexes + transport are shared by
-    // reference, so rebuilding the thin proxy wrapper is cheap and safe.
-    this._cdpProxy = new CDPProxy(
-      this.slaves,
-      this.mutexes,
-      this.cdpTransport,
-      this.eventBus,
-      this.browserHarness,
-    )
+    // Lazy-init: proxy reads slaves via getter, so no rebuild needed.
+    if (!this._cdpProxy) {
+      this._cdpProxy = new CDPProxy(
+        () => this.slaves,
+        this.mutexes,
+        this.cdpTransport,
+        this.eventBus,
+        this.browserHarness,
+      )
+    }
     return this._cdpProxy
   }
 

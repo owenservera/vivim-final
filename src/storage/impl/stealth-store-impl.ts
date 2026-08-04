@@ -7,14 +7,14 @@
 import type {
   LaunchProfileRow,
   ModuleProfileRow,
-  StealthPolicy,
+  StealthPolicyRow,
   StealthProfileStore,
 } from '../contracts/stealth-store.js'
 
 export class InMemoryStealthStore implements StealthProfileStore {
   private launch = new Map<string, LaunchProfileRow>()
   private module = new Map<string, ModuleProfileRow>()
-  private policy: StealthPolicy | null = null
+  private policy: StealthPolicyRow | null = null
 
   async getAllLaunchProfiles(): Promise<LaunchProfileRow[]> {
     return [...this.launch.values()]
@@ -22,8 +22,9 @@ export class InMemoryStealthStore implements StealthProfileStore {
   async getLaunchProfile(id: string): Promise<LaunchProfileRow | null> {
     return this.launch.get(id) ?? null
   }
-  async upsertLaunchProfile(profile: LaunchProfileRow): Promise<void> {
-    this.launch.set(profile.id, profile)
+  async upsertLaunchProfile(id: string, data: Partial<LaunchProfileRow>): Promise<void> {
+    const existing = this.launch.get(id)
+    this.launch.set(id, { ...(existing ?? {} as LaunchProfileRow), id, ...data } as LaunchProfileRow)
   }
   async deleteLaunchProfile(id: string): Promise<void> {
     this.launch.delete(id)
@@ -35,18 +36,19 @@ export class InMemoryStealthStore implements StealthProfileStore {
   async getModuleProfile(id: string): Promise<ModuleProfileRow | null> {
     return this.module.get(id) ?? null
   }
-  async upsertModuleProfile(profile: ModuleProfileRow): Promise<void> {
-    this.module.set(profile.id, profile)
+  async upsertModuleProfile(id: string, data: Partial<ModuleProfileRow>): Promise<void> {
+    const existing = this.module.get(id)
+    this.module.set(id, { ...(existing ?? {} as ModuleProfileRow), id, ...data } as ModuleProfileRow)
   }
   async deleteModuleProfile(id: string): Promise<void> {
     this.module.delete(id)
   }
 
-  async getPolicy(): Promise<StealthPolicy | null> {
+  async getPolicy(): Promise<StealthPolicyRow | null> {
     return this.policy
   }
-  async setPolicy(policy: StealthPolicy): Promise<void> {
-    this.policy = policy
+  async upsertPolicy(data: Partial<StealthPolicyRow>): Promise<void> {
+    this.policy = { ...(this.policy ?? { id: 'default', defaultLaunchProfileId: null, defaultModuleProfileId: null, providerOverridesJson: '{}' }), ...data } as StealthPolicyRow
   }
 }
 
@@ -99,12 +101,12 @@ export class PrismaStealthStore implements StealthProfileStore {
     > | null
     return row ? mapLaunchRow(row) : null
   }
-  async upsertLaunchProfile(profile: LaunchProfileRow): Promise<void> {
+  async upsertLaunchProfile(id: string, data: Partial<LaunchProfileRow>): Promise<void> {
     const now = Date.now()
     await this.prisma.stealthLaunchProfile.upsert({
-      where: { id: profile.id },
-      create: { ...profile, createdAt: now, updatedAt: now },
-      update: { ...profile, updatedAt: now },
+      where: { id },
+      create: { id, ...data, createdAt: now, updatedAt: now } as Record<string, unknown>,
+      update: { ...data, updatedAt: now },
     })
   }
   async deleteLaunchProfile(id: string): Promise<void> {
@@ -119,6 +121,8 @@ export class PrismaStealthStore implements StealthProfileStore {
       id: String(r.id),
       name: String(r.name),
       modulesJson: String(r.modulesJson),
+      createdAt: (r.createdAt as number) ?? 0,
+      updatedAt: (r.updatedAt as number) ?? 0,
     }))
   }
   async getModuleProfile(id: string): Promise<ModuleProfileRow | null> {
@@ -127,43 +131,45 @@ export class PrismaStealthStore implements StealthProfileStore {
       unknown
     > | null
     return row
-      ? { id: String(row.id), name: String(row.name), modulesJson: String(row.modulesJson) }
+      ? { id: String(row.id), name: String(row.name), modulesJson: String(row.modulesJson), createdAt: (row.createdAt as number) ?? 0, updatedAt: (row.updatedAt as number) ?? 0 }
       : null
   }
-  async upsertModuleProfile(profile: ModuleProfileRow): Promise<void> {
+  async upsertModuleProfile(id: string, data: Partial<ModuleProfileRow>): Promise<void> {
     const now = Date.now()
     await this.prisma.stealthModuleProfile.upsert({
-      where: { id: profile.id },
-      create: { ...profile, createdAt: now, updatedAt: now },
-      update: { ...profile, updatedAt: now },
+      where: { id },
+      create: { id, ...data, createdAt: now, updatedAt: now } as Record<string, unknown>,
+      update: { ...data, updatedAt: now },
     })
   }
   async deleteModuleProfile(id: string): Promise<void> {
     await this.prisma.stealthModuleProfile.delete({ where: { id } })
   }
 
-  async getPolicy(): Promise<StealthPolicy | null> {
+  async getPolicy(): Promise<StealthPolicyRow | null> {
     const row = (await this.prisma.stealthPolicy.findUnique({
       where: { id: 'default' },
     })) as Record<string, unknown> | null
     if (!row) return null
     return {
-      defaultProfileId: (row.defaultLaunchProfileId as string | null) ?? null,
-      providerOverrides: parseJson(row.providerOverridesJson, {}) as Record<string, string>,
+      id: String(row.id),
+      defaultLaunchProfileId: (row.defaultLaunchProfileId as string | null) ?? null,
+      defaultModuleProfileId: (row.defaultModuleProfileId as string | null) ?? null,
+      providerOverridesJson: String(row.providerOverridesJson ?? '{}'),
     }
   }
-  async setPolicy(policy: StealthPolicy): Promise<void> {
+  async upsertPolicy(data: Partial<StealthPolicyRow>): Promise<void> {
+    const existing = await this.getPolicy()
     await this.prisma.stealthPolicy.upsert({
       where: { id: 'default' },
       create: {
         id: 'default',
-        defaultLaunchProfileId: policy.defaultProfileId,
-        defaultModuleProfileId: null,
-        providerOverridesJson: JSON.stringify(policy.providerOverrides ?? {}),
+        defaultLaunchProfileId: data.defaultLaunchProfileId ?? null,
+        defaultModuleProfileId: data.defaultModuleProfileId ?? null,
+        providerOverridesJson: data.providerOverridesJson ?? '{}',
       },
       update: {
-        defaultLaunchProfileId: policy.defaultProfileId,
-        providerOverridesJson: JSON.stringify(policy.providerOverrides ?? {}),
+        ...(data as Record<string, unknown>),
       },
     })
   }
@@ -179,6 +185,8 @@ function mapLaunchRow(row: Record<string, unknown>): LaunchProfileRow {
     extensionId: (row.extensionId as string | null) ?? null,
     windowSizeJson: String(row.windowSizeJson ?? '{"width":1280,"height":720}'),
     extraArgsJson: String(row.extraArgsJson ?? '[]'),
+    createdAt: (row.createdAt as number) ?? 0,
+    updatedAt: (row.updatedAt as number) ?? 0,
   }
 }
 
