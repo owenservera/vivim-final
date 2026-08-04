@@ -14,6 +14,7 @@
 import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes, scryptSync } from 'node:crypto'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { EngineError } from '../errors.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 
 const ALGO = 'aes-256-gcm'
 const SALT_LEN = 32
@@ -128,7 +129,7 @@ function deserializeBlob(path: string): EncryptedDbBlob {
   const buf = readFileSync(path)
   const len = buf.readUInt32BE(0)
   const json = buf.subarray(4, 4 + len).toString('utf8')
-  return JSON.parse(json) as EncryptedDbBlob
+  return safeJsonParse(json, {} as EncryptedDbBlob) as EncryptedDbBlob
 }
 
 // Re-export for parity with EncryptionEngine's pbkdf2 style key derivation if

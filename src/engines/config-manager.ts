@@ -3,6 +3,7 @@
 // Handles schema registration, scoped config read/write, audit trail, and event emission.
 
 import type { z } from 'zod'
+import { safeJsonParse } from '../lib/safe-json.js'
 import { EngineError } from '../errors.js'
 import type { ConfigScope, ConfigStore } from '../storage/contracts/config-store.js'
 
@@ -122,7 +123,7 @@ export class ConfigManager {
 
     const entry = await this.store.getConfigEntry(engineId, scopeType, scopeId)
     if (entry) {
-      const parsed = JSON.parse(entry.configJson) as Record<string, unknown>
+      const parsed = safeJsonParse(entry.configJson, {}) as Record<string, unknown>
       this.cache.set(cacheKey, parsed)
       return parsed as T
     }

@@ -3,6 +3,7 @@
 
 import { BudgetExceededError, ConsentViolationError, EngineError } from '../errors.js'
 import { newId } from '../ids.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
 import { ReplayController } from './autonomous-replay.js'
 import type { ReplayResult } from './autonomous-replay.js'
@@ -277,7 +278,7 @@ export class AutonomousExecutionEngine {
   ): Promise<AutonomousTask> {
     const row = await this.store.getTaskTemplate(templateId)
     if (!row) throw new EngineError(`Template not found: ${templateId}`)
-    const params: string[] = JSON.parse(row.paramsJson as string)
+    const params: string[] = safeJsonParse(row.paramsJson as string, [])
     const description = this.bindParams(row.planJson as string, params, bindings)
     const goal: AutonomousGoal = {
       description,
@@ -558,7 +559,7 @@ export class AutonomousExecutionEngine {
     const pausedStateJson = pausedRow?.pausedStateJson as string | null
     let worldMatches = true
     if (pausedStateJson) {
-      const snapshot = JSON.parse(pausedStateJson) as {
+      const snapshot = safeJsonParse(pausedStateJson, { cursor: 0, plan: [], provenanceRoot: null }) as {
         cursor: number
         plan: Array<{ id: string; stepIndex: number; status: string }>
         provenanceRoot: string | null
@@ -634,7 +635,7 @@ export class AutonomousExecutionEngine {
     const steps = await this.store.getSteps(taskId)
     return {
       id: row.id as string,
-      goal: JSON.parse(row.goalJson as string),
+      goal: safeJsonParse(row.goalJson as string, {} as AutonomousGoal),
       status: row.status as TaskStatus,
       steps: steps.map((s) => ({
         id: s.id as string,
@@ -642,10 +643,10 @@ export class AutonomousExecutionEngine {
         stepIndex: s.stepIndex as number,
         description: s.description as string,
         action: s.action as string,
-        actionInput: JSON.parse(s.actionInputJson as string),
+        actionInput: safeJsonParse(s.actionInputJson as string, {}),
         classification: s.classification as ActionClassification,
         status: s.status as StepStatus,
-        result: s.resultJson ? JSON.parse(s.resultJson as string) : null,
+        result: safeJsonParse(s.resultJson as string, null),
         error: s.error as string | null,
         startedAt: s.startedAt as number | null,
         completedAt: s.completedAt as number | null,
@@ -655,7 +656,7 @@ export class AutonomousExecutionEngine {
       })),
       startedAt: row.startedAt as number,
       completedAt: row.completedAt as number | null,
-      result: row.resultJson ? JSON.parse(row.resultJson as string) : null,
+      result: safeJsonParse(row.resultJson as string, null),
       error: row.error as string | null,
     }
   }
@@ -672,7 +673,7 @@ export class AutonomousExecutionEngine {
       const steps = await this.store.getSteps(row.id as string)
       tasks.push({
         id: row.id as string,
-        goal: JSON.parse(row.goalJson as string),
+        goal: safeJsonParse(row.goalJson as string, {} as AutonomousGoal),
         status: row.status as TaskStatus,
         steps: steps.map((s) => ({
           id: s.id as string,
@@ -680,10 +681,10 @@ export class AutonomousExecutionEngine {
           stepIndex: s.stepIndex as number,
           description: s.description as string,
           action: s.action as string,
-          actionInput: JSON.parse(s.actionInputJson as string),
+          actionInput: safeJsonParse(s.actionInputJson as string, {}),
           classification: s.classification as ActionClassification,
           status: s.status as StepStatus,
-          result: s.resultJson ? JSON.parse(s.resultJson as string) : null,
+          result: safeJsonParse(s.resultJson as string, null),
           error: s.error as string | null,
           startedAt: s.startedAt as number | null,
           completedAt: s.completedAt as number | null,
@@ -693,7 +694,7 @@ export class AutonomousExecutionEngine {
         })),
         startedAt: row.startedAt as number,
         completedAt: row.completedAt as number | null,
-        result: row.resultJson ? JSON.parse(row.resultJson as string) : null,
+        result: safeJsonParse(row.resultJson as string, null),
         error: row.error as string | null,
       })
     }
@@ -747,7 +748,7 @@ export class AutonomousExecutionEngine {
         stepId: gateRow.stepId as string,
         gateType: gateRow.gateType as GateType,
         prompt: gateRow.prompt as string,
-        options: JSON.parse(gateRow.optionsJson as string),
+        options: safeJsonParse(gateRow.optionsJson as string, [] as string[]),
         defaultValue: gateRow.defaultValue as string | null,
         status: gateStatus,
         resolvedBy,
@@ -769,7 +770,7 @@ export class AutonomousExecutionEngine {
       stepId: r.stepId as string,
       gateType: r.gateType as GateType,
       prompt: r.prompt as string,
-      options: JSON.parse(r.optionsJson as string),
+      options: safeJsonParse(r.optionsJson as string, [] as string[]),
       defaultValue: r.defaultValue as string | null,
       status: r.status as GateStatus,
       resolvedBy: r.resolvedBy as string | null,
@@ -1339,7 +1340,7 @@ export class AutonomousExecutionEngine {
               stepId: gate.stepId as string,
               gateType: gate.gateType as GateType,
               prompt: gate.prompt as string,
-              options: JSON.parse(gate.optionsJson as string),
+              options: safeJsonParse(gate.optionsJson as string, [] as string[]),
               defaultValue: gate.defaultValue as string | null,
               status: gate.status as GateStatus,
               resolvedBy: gate.resolvedBy as string | null,
