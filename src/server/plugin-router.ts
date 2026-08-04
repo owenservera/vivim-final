@@ -13,6 +13,7 @@ import { parseMigrationScript } from '../engines/safe-expression.js'
 import { newId } from '../ids.js'
 import { UiComponentInputSchema } from '../schema/conceptual-model.js'
 import type { ServerContext } from './index.js'
+import { z } from 'zod'
 import { errorResponse, json } from './response.js'
 
 interface PluginInstallRequest {
@@ -116,12 +117,11 @@ export function createPluginRouter(ctx: ServerContext) {
     try {
       // POST /api/plugins/install
       if (pathname === '/api/plugins/install' && method === 'POST') {
-        const body = (await req.json()) as PluginInstallRequest
-        if (!body.filePath) {
-          return errorResponse('filePath is required', 'MissingParam', 400)
-        }
+        const schema = z.object({ filePath: z.string().min(1, 'filePath is required') })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
 
-        const archivePath = body.filePath
+        const archivePath = parsed.data.filePath
         let _archiveStat: Awaited<ReturnType<typeof stat>>
         try {
           _archiveStat = await stat(archivePath)
@@ -448,12 +448,11 @@ export function createPluginRouter(ctx: ServerContext) {
           return errorResponse(`Plugin not found: ${pluginId}`, 'NotFound', 404)
         }
 
-        const body = (await req.json()) as PluginUpgradeRequest
-        if (!body.filePath) {
-          return errorResponse('filePath is required', 'MissingParam', 400)
-        }
+        const schema = z.object({ filePath: z.string().min(1, 'filePath is required'), migrationScript: z.string().optional() })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
 
-        const archivePath = body.filePath
+        const archivePath = parsed.data.filePath
         const newIntegrityHash = await computeFileHash(archivePath)
         const extractDir = join(stagingDir, `upgrade-${pluginId}-${newId()}`)
         await extractTarGz(archivePath, extractDir)
@@ -470,9 +469,9 @@ export function createPluginRouter(ctx: ServerContext) {
         const manifest = JSON.parse(manifestRaw)
         const newVersion = (manifest.version as string) ?? '0.1.0'
 
-        if (body.migrationScript) {
+        if (parsed.data.migrationScript) {
           try {
-            const steps = parseMigrationScript(body.migrationScript)
+            const steps = parseMigrationScript(parsed.data.migrationScript)
             for (const step of steps) {
               if (step.action === 'addColumn' && step.table && step.column && step.type) {
                 // Safe: structured migration step, not arbitrary SQL

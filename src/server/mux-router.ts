@@ -4,6 +4,7 @@
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
 
+import { z } from 'zod'
 import type { CostOptimizer } from '../engines/cost-optimizer.js'
 import type { MuxStrategy, ProviderMuxEngine } from '../engines/provider-mux.js'
 import { errorResponse, json } from './response.js'
@@ -27,15 +28,14 @@ export function createMuxRouter(ctx: MuxRouterContext) {
         if (!ctx.providerMux) {
           return errorResponse('ProviderMuxEngine not wired', 'InternalError', 500)
         }
-        const body = (await req.json()) as {
-          message: string
-          conversationId?: string
-          capabilityId?: string
-        }
-        if (!body.message) {
-          return errorResponse('message required', 'ValidationError', 400)
-        }
-        const result = await ctx.providerMux.autoRoute(body.message, body.capabilityId)
+        const schema = z.object({
+          message: z.string().min(1, 'message is required'),
+          conversationId: z.string().optional(),
+          capabilityId: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const result = await ctx.providerMux.autoRoute(parsed.data.message, parsed.data.capabilityId)
         return json(result)
       }
 
@@ -44,30 +44,24 @@ export function createMuxRouter(ctx: MuxRouterContext) {
         if (!ctx.providerMux) {
           return errorResponse('ProviderMuxEngine not wired', 'InternalError', 500)
         }
-        const body = (await req.json()) as {
-          message: string
-          strategy?: MuxStrategy
-          targetProviderIds?: string[]
-          maxProviders?: number
-          synthesisEnabled?: boolean
-          costBudgetCents?: number
-          timeoutMs?: number
-          conversationId?: string
-          capabilityId?: string
-        }
-        if (!body.message) {
-          return errorResponse('message required', 'ValidationError', 400)
-        }
+        const schema = z.object({
+          message: z.string().min(1, 'message is required'),
+          strategy: z.enum(['fan_out', 'round_robin', 'priority', 'cost_optimized', 'learned']).optional(),
+          targetProviderIds: z.array(z.string()).optional(),
+          maxProviders: z.number().int().positive().optional(),
+          synthesisEnabled: z.boolean().optional(),
+          costBudgetCents: z.number().int().nonnegative().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
         const result = await ctx.providerMux.mux({
-          message: body.message,
-          strategy: body.strategy ?? 'fan_out',
-          targetProviderIds: body.targetProviderIds,
-          maxProviders: body.maxProviders ?? 3,
-          synthesisEnabled: body.synthesisEnabled ?? false,
-          costBudgetCents: body.costBudgetCents,
-          timeoutMs: body.timeoutMs ?? 30_000,
-          conversationId: body.conversationId,
-          capabilityId: body.capabilityId,
+          message: parsed.data.message,
+          strategy: parsed.data.strategy ?? 'fan_out',
+          targetProviderIds: parsed.data.targetProviderIds,
+          maxProviders: parsed.data.maxProviders ?? 3,
+          synthesisEnabled: parsed.data.synthesisEnabled ?? false,
+          costBudgetCents: parsed.data.costBudgetCents,
+          timeoutMs: 30_000,
         })
         return json(result)
       }
@@ -77,22 +71,21 @@ export function createMuxRouter(ctx: MuxRouterContext) {
         if (!ctx.providerMux) {
           return errorResponse('ProviderMuxEngine not wired', 'InternalError', 500)
         }
-        const body = (await req.json()) as {
-          message: string
-          providerIds: string[]
-          timeoutMs?: number
-          synthesisEnabled?: boolean
-        }
-        if (!body.message || !body.providerIds?.length) {
-          return errorResponse('message and providerIds required', 'ValidationError', 400)
-        }
+        const schema = z.object({
+          message: z.string().min(1, 'message is required'),
+          providerIds: z.array(z.string()).min(1, 'providerIds is required'),
+          timeoutMs: z.number().int().positive().optional(),
+          synthesisEnabled: z.boolean().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
         const result = await ctx.providerMux.mux({
-          message: body.message,
+          message: parsed.data.message,
           strategy: 'fan_out',
-          targetProviderIds: body.providerIds,
-          maxProviders: body.providerIds.length,
-          synthesisEnabled: body.synthesisEnabled ?? false,
-          timeoutMs: body.timeoutMs ?? 30_000,
+          targetProviderIds: parsed.data.providerIds,
+          maxProviders: parsed.data.providerIds.length,
+          synthesisEnabled: parsed.data.synthesisEnabled ?? false,
+          timeoutMs: parsed.data.timeoutMs ?? 30_000,
         })
         return json(result)
       }

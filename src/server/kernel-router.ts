@@ -8,6 +8,7 @@
 import type { ConfigUniversalSurface } from '../engines/config-universal-surface.js'
 import type { ServerContext } from './index.js'
 import { extractSource } from './source-middleware.js'
+import { z } from 'zod'
 
 export interface KernelRouterDeps {
   kernel: ServerContext['kernel']
@@ -70,16 +71,19 @@ export function createKernelRouter(
 
     // Oracle query endpoint
     if (url.pathname === '/api/kernel/oracle/query' && req.method === 'POST') {
-      const body = await req.json().catch(() => ({}))
-      const {
-        op = 'all',
-        filter,
-        limit,
-      } = body as {
-        op?: string
-        filter?: Record<string, unknown>
-        limit?: number
+      const schema = z.object({
+        op: z.string().optional().default('all'),
+        filter: z.record(z.unknown()).optional(),
+        limit: z.number().int().positive().optional(),
+      })
+      const parsed = schema.safeParse(await req.json().catch(() => ({})))
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: parsed.error.message }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        })
       }
+      const { op, filter, limit } = parsed.data
 
       if (!kernel?.context()?.oracle?.query) {
         return new Response(JSON.stringify({ error: 'Oracle not available' }), {
@@ -101,11 +105,10 @@ export function createKernelRouter(
 
     // Oracle heal endpoint
     if (url.pathname === '/api/kernel/oracle/heal' && req.method === 'POST') {
-      const body = await req.json().catch(() => ({}))
-      const { issueId } = body as { issueId?: string }
-
-      if (!issueId) {
-        return new Response(JSON.stringify({ error: 'issueId required' }), {
+      const schema = z.object({ issueId: z.string().min(1, 'issueId is required') })
+      const parsed = schema.safeParse(await req.json().catch(() => ({})))
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: parsed.error.message }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
         })
@@ -118,7 +121,7 @@ export function createKernelRouter(
         })
       }
 
-      const result = await kernel.context()?.oracle?.actuator?.heal(issueId)
+      const result = await kernel.context()?.oracle?.actuator?.heal(parsed.data.issueId)
       return new Response(JSON.stringify(result), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -194,8 +197,20 @@ export function createKernelRouter(
       }
 
       if (req.method === 'PUT') {
-        const body = await req.json().catch(() => ({}))
-        return new Response(JSON.stringify(body as AutoHealPolicy), {
+        const schema = z.object({
+          enabled: z.boolean().optional(),
+          maxRetries: z.number().int().nonnegative().optional(),
+          backoffMs: z.number().int().nonnegative().optional(),
+          scope: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json().catch(() => ({})))
+        if (!parsed.success) {
+          return new Response(JSON.stringify({ error: parsed.error.message }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+        return new Response(JSON.stringify(parsed.data as AutoHealPolicy), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         })
@@ -244,8 +259,14 @@ export function createKernelRouter(
       const parts = url.pathname.split('/').filter(Boolean)
       const scope = parts[2]
       const key = parts[3]
-      const body = await req.json().catch(() => ({}))
-      const { value } = body as { value?: unknown }
+      const schema = z.object({ value: z.unknown() })
+      const parsed = schema.safeParse(await req.json().catch(() => ({})))
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: parsed.error.message }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
 
       if (!scope || !key) {
         return new Response(JSON.stringify({ error: 'scope.key required' }), {
@@ -255,7 +276,7 @@ export function createKernelRouter(
       }
 
       try {
-        const result = configSurface.set(scope, key, value as unknown)
+        const result = configSurface.set(scope, key, parsed.data.value as unknown)
         return new Response(JSON.stringify(result), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
@@ -279,17 +300,16 @@ export function createKernelRouter(
 
     // Config rollback endpoint
     if (configSurface && url.pathname === '/api/kernel/config/rollback' && req.method === 'POST') {
-      const body = await req.json().catch(() => ({}))
-      const { id } = body as { id?: string }
-
-      if (!id) {
-        return new Response(JSON.stringify({ error: 'id required' }), {
+      const schema = z.object({ id: z.string().min(1, 'id is required') })
+      const parsed = schema.safeParse(await req.json().catch(() => ({})))
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: parsed.error.message }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
         })
       }
 
-      configSurface.rollback(id)
+      configSurface.rollback(parsed.data.id)
       return new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
