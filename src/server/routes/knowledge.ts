@@ -4,6 +4,7 @@
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
 import type { MemoryIntelligenceStoreImpl } from '../../storage/impl/memory-intelligence-store-impl.js'
+import { z } from 'zod'
 
 export function createKnowledgeRouter(ctx: ServerContext) {
   return async function knowledgeRouter(req: Request): Promise<Response | undefined> {
@@ -40,22 +41,14 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // POST /api/knowledge/entities
       if (req.method === 'POST' && path === '/api/knowledge/entities') {
-        const body = (await req.json()) as {
-          name?: string
-          type?: string
-          description?: string
-        }
-        if (!body.name || typeof body.name !== 'string') {
-          return errorResponse('name is required', 'ValidationError', 400)
-        }
-        if (!body.type || typeof body.type !== 'string') {
-          return errorResponse('type is required', 'ValidationError', 400)
-        }
-        const entity = await store.createEntity({
-          name: body.name,
-          type: body.type,
-          description: body.description,
+        const schema = z.object({
+          name: z.string().min(1, 'name is required'),
+          type: z.string().min(1, 'type is required'),
+          description: z.string().optional(),
         })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const entity = await store.createEntity(parsed.data)
         return json({ entity }, 201)
       }
 
@@ -69,13 +62,15 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // PUT /api/knowledge/entities/:id
       if (req.method === 'PUT' && entityMatch && entityMatch[1]) {
-        const body = (await req.json()) as {
-          name?: string
-          type?: string
-          description?: string
-          confidence?: number
-        }
-        const entity = await store.updateEntity(entityMatch[1], body)
+        const schema = z.object({
+          name: z.string().optional(),
+          type: z.string().optional(),
+          description: z.string().optional(),
+          confidence: z.number().min(0).max(1).optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const entity = await store.updateEntity(entityMatch[1], parsed.data)
         return json({ entity })
       }
 
