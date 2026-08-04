@@ -6,7 +6,7 @@
 
 import { z } from 'zod'
 import type { CostOptimizer } from '../engines/cost-optimizer.js'
-import type { MuxStrategy, ProviderMuxEngine } from '../engines/provider-mux.js'
+import type { ProviderMuxEngine } from '../engines/provider-mux.js'
 import { errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
@@ -35,7 +35,10 @@ export function createMuxRouter(ctx: MuxRouterContext) {
         })
         const parsed = schema.safeParse(await req.json())
         if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
-        const result = await ctx.providerMux.autoRoute(parsed.data.message, parsed.data.capabilityId)
+        const result = await ctx.providerMux.autoRoute(
+          parsed.data.message,
+          parsed.data.capabilityId,
+        )
         return json(result)
       }
 
@@ -46,7 +49,9 @@ export function createMuxRouter(ctx: MuxRouterContext) {
         }
         const schema = z.object({
           message: z.string().min(1, 'message is required'),
-          strategy: z.enum(['fan_out', 'round_robin', 'priority', 'cost_optimized', 'learned']).optional(),
+          strategy: z
+            .enum(['fan_out', 'round_robin', 'priority', 'cost_optimized', 'learned'])
+            .optional(),
           targetProviderIds: z.array(z.string()).optional(),
           maxProviders: z.number().int().positive().optional(),
           synthesisEnabled: z.boolean().optional(),

@@ -4,6 +4,7 @@
 
 import type { StorageRelocationEngine } from '../engines/storage-relocation-engine.js'
 import { errorResponse, json } from './response.js'
+import { z } from 'zod'
 
 export interface StorageRouterDeps {
   relocationEngine: StorageRelocationEngine
@@ -45,11 +46,10 @@ export function createStorageRouter(deps: StorageRouterDeps) {
     // POST /api/storage/move
     if (url.pathname === '/api/storage/move' && req.method === 'POST') {
       try {
-        const body = (await req.json()) as { targetDir?: string }
-        if (!body.targetDir) {
-          return errorResponse('targetDir is required', 'ValidationError', 400)
-        }
-        const result = await relocationEngine.relocate(body.targetDir)
+        const schema = z.object({ targetDir: z.string().min(1, 'targetDir is required') })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const result = await relocationEngine.relocate(parsed.data.targetDir)
         return json(result, result.ok ? 200 : 500)
       } catch (err) {
         return errorResponse(
