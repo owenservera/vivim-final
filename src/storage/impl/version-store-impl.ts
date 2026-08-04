@@ -15,7 +15,7 @@ import type { CapStoreDb } from '../db.js'
 // Loosely-typed Prisma handle. The generated client types are verbose and add
 // no safety at the call site, so we keep the public API typed but the internal
 // Prisma access loosely typed via a permissive structural alias.
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 // ── Prisma row shapes ────────────────────────────────────────────────────────
 
 interface PrismaTaxonomyVersion {
@@ -136,7 +136,7 @@ export class VersionStoreImpl implements VersionStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   // Contained escape hatch: the generated Prisma client types are verbose and

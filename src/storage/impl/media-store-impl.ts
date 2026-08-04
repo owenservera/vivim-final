@@ -46,7 +46,7 @@ export class MediaStoreImpl {
       where: { contentItemId },
       orderBy: { createdAt: 'desc' },
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async getMediaByType(mediaType: string): Promise<MediaAttachmentRow[]> {
@@ -55,7 +55,7 @@ export class MediaStoreImpl {
       orderBy: { createdAt: 'desc' },
       take: 50,
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async getUndownloaded(): Promise<MediaAttachmentRow[]> {
@@ -64,7 +64,7 @@ export class MediaStoreImpl {
       orderBy: { createdAt: 'asc' },
       take: 100,
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async createMedia(input: {
@@ -117,9 +117,19 @@ export class MediaStoreImpl {
   async updateMedia(id: string, updates: Record<string, unknown>): Promise<MediaAttachmentRow> {
     const now = Date.now()
     const allowed = [
-      'filename', 'localPath', 'thumbnailUrl', 'thumbnailLocalPath',
-      'sizeBytes', 'width', 'height', 'durationSeconds', 'isDownloaded',
-      'isEncrypted', 'encryptionKeyRef', 'downloadProgress', 'metadataJson',
+      'filename',
+      'localPath',
+      'thumbnailUrl',
+      'thumbnailLocalPath',
+      'sizeBytes',
+      'width',
+      'height',
+      'durationSeconds',
+      'isDownloaded',
+      'isEncrypted',
+      'encryptionKeyRef',
+      'downloadProgress',
+      'metadataJson',
     ]
     const data: Record<string, unknown> = { updatedAt: now }
     for (const key of allowed) {
@@ -153,7 +163,7 @@ export class MediaStoreImpl {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: Record<string, unknown>): MediaAttachmentRow {
+  private toRow(r: any): MediaAttachmentRow {
     return {
       id: r.id,
       providerId: r.providerId,

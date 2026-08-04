@@ -55,7 +55,7 @@ export class NotificationStoreImpl {
       orderBy: { createdAt: 'desc' },
       take: query.limit ?? 50,
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async createNotification(input: {
@@ -104,8 +104,17 @@ export class NotificationStoreImpl {
   async updateNotification(id: string, updates: Record<string, unknown>): Promise<NotificationRow> {
     const now = Date.now()
     const allowed = [
-      'title', 'bodyText', 'iconUrl', 'actionUrl', 'senderName', 'senderAvatarUrl',
-      'isRead', 'isActioned', 'priority', 'expiresAt', 'metadataJson',
+      'title',
+      'bodyText',
+      'iconUrl',
+      'actionUrl',
+      'senderName',
+      'senderAvatarUrl',
+      'isRead',
+      'isActioned',
+      'priority',
+      'expiresAt',
+      'metadataJson',
     ]
     const data: Record<string, unknown> = { updatedAt: now }
     for (const key of allowed) {
@@ -144,7 +153,7 @@ export class NotificationStoreImpl {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: Record<string, unknown>): NotificationRow {
+  private toRow(r: any): NotificationRow {
     return {
       id: r.id,
       providerId: r.providerId,

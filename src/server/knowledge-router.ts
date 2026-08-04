@@ -4,8 +4,8 @@
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
 
-import type { ImportSource } from '../engines/knowledge-ingestion.js'
 import type { ExportScope } from '../engines/export.js'
+import type { ImportSource } from '../engines/knowledge-ingestion.js'
 import { newId } from '../ids.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'

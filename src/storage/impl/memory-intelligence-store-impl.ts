@@ -245,7 +245,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toEntityRow(r: Record<string, unknown>): EntityRow {
+  private toEntityRow(r: any): EntityRow {
     return {
       id: r.id as string,
       name: r.name as string,
@@ -312,7 +312,7 @@ export class MemoryIntelligenceStoreImpl {
     return this.listEntityMentions({ conversationId, limit: 200 })
   }
 
-  private toEntityMentionRow(r: Record<string, unknown>): EntityMentionRow {
+  private toEntityMentionRow(r: any): EntityMentionRow {
     return {
       id: r.id as string,
       entityId: r.entityId as string,
@@ -397,7 +397,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toDecisionRecordRow(r: Record<string, unknown>): DecisionRecordRow {
+  private toDecisionRecordRow(r: any): DecisionRecordRow {
     return {
       id: r.id as string,
       conversationId: r.conversationId as string,
@@ -490,7 +490,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toPatternExtractRow(r: Record<string, unknown>): PatternExtractRow {
+  private toPatternExtractRow(r: any): PatternExtractRow {
     return {
       id: r.id as string,
       name: r.name as string,
@@ -575,7 +575,7 @@ export class MemoryIntelligenceStoreImpl {
     conversationId: string,
     topicId: string,
     assignmentType: 'auto' | 'manual' = 'auto',
-    confidence: number = 0.5,
+    confidence = 0.5,
   ): Promise<void> {
     const now = Date.now()
     await this.db.prisma.conversationTopic.upsert({
@@ -605,7 +605,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toTopicRow(r: Record<string, unknown>): TopicRow {
+  private toTopicRow(r: any): TopicRow {
     return {
       id: r.id as string,
       name: r.name as string,
@@ -681,7 +681,7 @@ export class MemoryIntelligenceStoreImpl {
     return this.listProjects()
   }
 
-  private toProjectRow(r: Record<string, unknown>): ProjectRow {
+  private toProjectRow(r: any): ProjectRow {
     return {
       id: r.id as string,
       name: r.name as string,
@@ -763,8 +763,8 @@ export class MemoryIntelligenceStoreImpl {
     userId: string,
     key: string,
     value: string,
-    source: string = 'auto',
-    confidence: number = 0.5,
+    _source = 'auto',
+    confidence = 0.5,
   ): Promise<UserPreferenceRow> {
     const now = Date.now()
     const row = await this.db.prisma.userPreference.upsert({
@@ -788,7 +788,7 @@ export class MemoryIntelligenceStoreImpl {
     return this.toUserPreferenceRow(row)
   }
 
-  private toUserPreferenceRow(r: Record<string, unknown>): UserPreferenceRow {
+  private toUserPreferenceRow(r: any): UserPreferenceRow {
     return {
       id: r.id as string,
       userId: r.userId as string,
@@ -856,7 +856,7 @@ export class MemoryIntelligenceStoreImpl {
     return this.toImportJobRow(row)
   }
 
-  private toImportJobRow(r: Record<string, unknown>): ImportJobRow {
+  private toImportJobRow(r: any): ImportJobRow {
     return {
       id: r.id as string,
       source: r.source as string,
@@ -874,21 +874,26 @@ export class MemoryIntelligenceStoreImpl {
   // MemoryEmbedding
   // ═══════════════════════════════════════════════════════════════════════
 
-  async findEmbeddingByEntity(entityType: string, entityId: string): Promise<MemoryEmbeddingRow | null> {
+  async findEmbeddingByEntity(
+    entityType: string,
+    entityId: string,
+  ): Promise<MemoryEmbeddingRow | null> {
     const row = await this.db.prisma.memoryEmbedding.findUnique({
       where: { entityType_entityId: { entityType, entityId } },
     })
     return row ? this.toMemoryEmbeddingRow(row) : null
   }
 
-  async batchCreate(embeddings: Array<{
-    entityType: string
-    entityId: string
-    embedding: string
-    model: string
-    dimensions: number
-    contentHash: string
-  }>): Promise<number> {
+  async batchCreate(
+    embeddings: Array<{
+      entityType: string
+      entityId: string
+      embedding: string
+      model: string
+      dimensions: number
+      contentHash: string
+    }>,
+  ): Promise<number> {
     let created = 0
     for (const emb of embeddings) {
       await this.db.prisma.memoryEmbedding.upsert({
@@ -924,7 +929,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toMemoryEmbeddingRow(r: Record<string, unknown>): MemoryEmbeddingRow {
+  private toMemoryEmbeddingRow(r: any): MemoryEmbeddingRow {
     return {
       id: r.id as string,
       entityType: r.entityType as string,

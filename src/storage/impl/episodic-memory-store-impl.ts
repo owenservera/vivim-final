@@ -8,13 +8,13 @@ import type {
 } from '../../engines/memory-engine.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 export class EpisodicMemoryStoreImpl implements EpisodicMemoryStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {

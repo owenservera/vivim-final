@@ -10,11 +10,10 @@ import { type PrismaClient, closePrisma, getPrisma } from './prisma.js'
 const log = getLogger('db')
 
 /**
- * Loose type for Prisma model delegates — eliminates `as any` casts in store impls.
- * Covers the common CRUD methods (findUnique, findMany, create, update, delete,
- * upsert, count,findFirst, findFirstOrThrow, updateMany, deleteMany).
+ * Loose type for Prisma model delegates — eliminates per-file `as any` casts.
+ * Centralizes all dynamic Prisma access to this single getter.
  */
-export type PrismaLoose = Record<string, (...args: unknown[]) => Promise<unknown>>
+export type PrismaLoose = any // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export class CapStoreDb {
   public readonly prisma: PrismaClient

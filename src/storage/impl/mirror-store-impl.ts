@@ -15,13 +15,13 @@ import type {
 } from '../contracts/mirror-store.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 export class MirrorStoreImpl implements MirrorStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {
@@ -178,7 +178,7 @@ export class MirrorStoreImpl implements MirrorStore {
       orderBy: { timestamp: 'desc' },
       take: opts?.limit ?? 100,
     })
-    return rows.map((r: Record<string, unknown>) => ({
+    return rows.map((r: any) => ({
       id: r.id as string,
       conversationId: r.conversationId as string,
       trigger: r.trigger as string,

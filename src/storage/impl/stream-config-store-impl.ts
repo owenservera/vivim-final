@@ -7,7 +7,7 @@ import type {
 } from '../contracts/stream-config-store.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 interface PrismaStreamConfigRow {
   id: string
@@ -49,7 +49,7 @@ export class StreamConfigStoreImpl implements StreamConfigStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {

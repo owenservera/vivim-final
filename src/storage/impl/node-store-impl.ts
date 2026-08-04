@@ -40,12 +40,14 @@ function toRow(n: NodeBase): NodeRow {
     validUntil: n.validUntil ?? null,
     parentVersion: n.parentVersion ?? null,
     // ACU fields
-    acuType: (n as Record<string, unknown>).acuType ?? null,
-    lineageKind: (n as Record<string, unknown>).lineageKind ?? null,
-    extractorVersion: (n as Record<string, unknown>).extractorVersion ?? null,
-    parserVersion: (n as Record<string, unknown>).parserVersion ?? null,
-    valueScore: (n as Record<string, unknown>).valueScore ?? null,
-    isHighValue: (n as Record<string, unknown>).isHighValue ? 1 : 0,
+    acuType: ((n as unknown as Record<string, unknown>).acuType as string | null) ?? null,
+    lineageKind: ((n as unknown as Record<string, unknown>).lineageKind as string | null) ?? null,
+    extractorVersion:
+      ((n as unknown as Record<string, unknown>).extractorVersion as string | null) ?? null,
+    parserVersion:
+      ((n as unknown as Record<string, unknown>).parserVersion as string | null) ?? null,
+    valueScore: ((n as unknown as Record<string, unknown>).valueScore as number | null) ?? null,
+    isHighValue: (n as unknown as Record<string, unknown>).isHighValue ? 1 : 0,
     createdAt: n.createdAt,
     updatedAt: n.updatedAt,
   }
@@ -185,7 +187,7 @@ export class NodeStoreImpl implements NodeStoreContract {
 
   async getOutgoingEdges(sourceId: string): Promise<Edge[]> {
     const rows = await this.prisma.nodeEdge.findMany({ where: { sourceId } })
-    return rows.map((r: Record<string, unknown>) => ({
+    return rows.map((r: any) => ({
       type: r.edgeType,
       targetId: r.targetId,
       label: r.label ?? undefined,
@@ -195,7 +197,7 @@ export class NodeStoreImpl implements NodeStoreContract {
 
   async getIncomingEdges(targetId: string): Promise<Edge[]> {
     const rows = await this.prisma.nodeEdge.findMany({ where: { targetId } })
-    return rows.map((r: Record<string, unknown>) => ({
+    return rows.map((r: any) => ({
       type: r.edgeType,
       targetId: r.sourceId,
       label: r.label ?? undefined,

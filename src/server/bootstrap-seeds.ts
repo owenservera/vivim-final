@@ -1,8 +1,8 @@
 // src/server/bootstrap-seeds.ts
 // Seed logic extracted from index.ts for reuse by snapshot auto-restore fallback.
 
-import type { CapStoreDb } from '../storage/db.js'
 import type { getLogger } from '../lib/logger.js'
+import type { CapStoreDb } from '../storage/db.js'
 
 /**
  * Run individual seed functions (providers, parsers, automation, taxonomy, harness).
