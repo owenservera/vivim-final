@@ -201,3 +201,127 @@ describe('findExisting', () => {
     expect(found?.path).toBe(dir)
   })
 })
+
+describe('isLiveSlave', () => {
+  it('returns false when SingletonLock does not exist', async () => {
+    const alloc = new ProfileAllocator(base)
+    const dir = join(base, 'gemini', 'nolock')
+    await mkdir(dir, { recursive: true })
+    expect(await alloc.isLiveSlave(dir)).toBe(false)
+  })
+
+  it('returns false when SingletonLock is a stale regular file (Unix)', async () => {
+    // On Unix, a stale SingletonLock is a regular file (not a symlink).
+    // This test only applies on non-Windows platforms.
+    if (process.platform === 'win32') return
+
+    const alloc = new ProfileAllocator(base)
+    const dir = join(base, 'gemini', 'stalelock')
+    await mkdir(dir, { recursive: true })
+    // Create a regular file (not a symlink) — simulates stale lock after crash
+    await writeFile(join(dir, 'SingletonLock'), 'stale')
+    expect(await alloc.isLiveSlave(dir)).toBe(false)
+  })
+
+  it('returns true when SingletonLock is a symlink (Unix, live process)', async () => {
+    // On Unix, Chrome creates SingletonLock as a symlink when alive.
+    if (process.platform === 'win32') return
+
+    const alloc = new ProfileAllocator(base)
+    const dir = join(base, 'gemini', 'livelock')
+    await mkdir(dir, { recursive: true })
+    // Create a symlink — simulates live Chrome holding the lock
+    const { symlinkSync } = await import('node:fs')
+    symlinkSync(dir, join(dir, 'SingletonLock'))
+    // On Unix, isLockHeldByProcess returns true for symlinks
+    expect(await alloc.isLiveSlave(dir)).toBe(true)
+  })
+})
+
+describe('recordCrash and recordAuthVerified', () => {
+  it('increments crashCount on recordCrash', async () => {
+    const alloc = new ProfileAllocator(base)
+    const dir = join(base, 'gemini', 'crashy')
+    await mkdir(dir, { recursive: true })
+    // Create a meta file
+    await writeFile(
+      join(dir, '.profile-meta.json'),
+      JSON.stringify({
+        providerSlug: 'gemini',
+        accountId: 'crashy',
+        allocatedAt: new Date().toISOString(),
+        lastUsed: new Date().toISOString(),
+        crashCount: 0,
+      }),
+    )
+
+    await alloc.recordCrash('gemini', 'crashy')
+    const raw = await import('node:fs/promises').then((fs) =>
+      fs.readFile(join(dir, '.profile-meta.json'), 'utf-8'),
+    )
+    const meta = JSON.parse(raw)
+    expect(meta.crashCount).toBe(1)
+
+    await alloc.recordCrash('gemini', 'crashy')
+    const raw2 = await import('node:fs/promises').then((fs) =>
+      fs.readFile(join(dir, '.profile-meta.json'), 'utf-8'),
+    )
+    const meta2 = JSON.parse(raw2)
+    expect(meta2.crashCount).toBe(2)
+  })
+
+  it('sets lastAuthVerifiedAt on recordAuthVerified', async () => {
+    const alloc = new ProfileAllocator(base)
+    const dir = join(base, 'gemini', 'authcheck')
+    await mkdir(dir, { recursive: true })
+    await writeFile(
+      join(dir, '.profile-meta.json'),
+      JSON.stringify({
+        providerSlug: 'gemini',
+        accountId: 'authcheck',
+        allocatedAt: new Date().toISOString(),
+        lastUsed: new Date().toISOString(),
+      }),
+    )
+
+    const before = Date.now()
+    await alloc.recordAuthVerified('gemini', 'authcheck')
+    const after = Date.now()
+
+    const raw = await import('node:fs/promises').then((fs) =>
+      fs.readFile(join(dir, '.profile-meta.json'), 'utf-8'),
+    )
+    const meta = JSON.parse(raw)
+    expect(meta.lastAuthVerifiedAt).toBeDefined()
+    const verified = new Date(meta.lastAuthVerifiedAt).getTime()
+    expect(verified).toBeGreaterThanOrEqual(before)
+    expect(verified).toBeLessThanOrEqual(after)
+  })
+})
+
+describe('list (extended meta)', () => {
+  it('returns crashCount, diskSizeBytes, lastAuthVerifiedAt from profile meta', async () => {
+    const alloc = new ProfileAllocator(base)
+    const dir = join(base, 'gemini', 'extended')
+    await mkdir(dir, { recursive: true })
+    await writeFile(
+      join(dir, '.profile-meta.json'),
+      JSON.stringify({
+        providerSlug: 'gemini',
+        accountId: 'extended',
+        allocatedAt: new Date().toISOString(),
+        lastUsed: new Date().toISOString(),
+        crashCount: 3,
+        diskSizeBytes: 1024000,
+        lastAuthVerifiedAt: '2026-01-15T10:00:00.000Z',
+      }),
+    )
+
+    const profiles = await alloc.list()
+    const found = profiles.find((p) => p.accountId === 'extended')
+    expect(found).toBeDefined()
+    expect(found?.crashCount).toBe(3)
+    expect(found?.diskSizeBytes).toBe(1024000)
+    expect(found?.lastAuthVerifiedAt).toEqual(new Date('2026-01-15T10:00:00.000Z'))
+  })
+})

@@ -36,16 +36,16 @@ export function AutomationCard({ automation, onExecute }: AutomationCardProps) {
         flexDirection: 'column',
         height: '100%',
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-        background: 'white',
+        background: 'var(--bg)',
       }}
     >
       <header
         style={{
           padding: '6px 10px',
-          borderBottom: '1px solid #e5e7eb',
-          background: '#f9fafb',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--bg-subtle)',
           fontSize: 11,
-          color: '#374151',
+          color: 'var(--text)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -54,8 +54,8 @@ export function AutomationCard({ automation, onExecute }: AutomationCardProps) {
             style={{
               padding: '1px 6px',
               borderRadius: 4,
-              background: '#fce7f3',
-              color: '#831843',
+              background: 'var(--color-pink-surface, var(--bg-subtle))',
+              color: 'var(--color-pink)',
               fontSize: 10,
               fontWeight: 600,
             }}
@@ -101,7 +101,7 @@ export function AutomationCard({ automation, onExecute }: AutomationCardProps) {
               refY="4"
               orient="auto"
             >
-              <path d="M0,0 L8,4 L0,8 Z" fill="#9ca3af" />
+              <path d="M0,0 L8,4 L0,8 Z" fill="var(--text-muted)" />
             </marker>
           </defs>
         </svg>
@@ -118,19 +118,19 @@ export function AutomationCard({ automation, onExecute }: AutomationCardProps) {
               borderRadius: 4,
               background:
                 node.kind === 'trigger'
-                  ? '#fef3c7'
+                  ? 'var(--color-warning-surface)'
                   : node.kind === 'hitl'
-                    ? '#fee2e2'
+                    ? 'var(--color-error-surface)'
                     : node.kind === 'output'
-                      ? '#d1fae5'
-                      : 'white',
-              border: '1px solid #d1d5db',
+                      ? 'var(--color-success-surface)'
+                      : 'var(--bg)',
+              border: '1px solid var(--border)',
               fontSize: 10,
               textAlign: 'center',
             }}
           >
-            <div style={{ fontWeight: 600, color: '#374151' }}>{node.kind}</div>
-            <div style={{ color: '#6b7280', fontSize: 9 }}>{node.label}</div>
+            <div style={{ fontWeight: 600, color: 'var(--text)' }}>{node.kind}</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 9 }}>{node.label}</div>
           </div>
         ))}
       </div>
@@ -138,13 +138,13 @@ export function AutomationCard({ automation, onExecute }: AutomationCardProps) {
       <footer
         style={{
           padding: '4px 10px',
-          borderTop: '1px solid #e5e7eb',
-          background: '#f9fafb',
+          borderTop: '1px solid var(--border)',
+          background: 'var(--bg-subtle)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: 10,
-          color: '#6b7280',
+          color: 'var(--text-muted)',
         }}
       >
         <span>
@@ -155,8 +155,8 @@ export function AutomationCard({ automation, onExecute }: AutomationCardProps) {
           disabled={running}
           style={{
             padding: '2px 10px',
-            border: '1px solid #d1d5db',
-            background: running ? '#f3f4f6' : 'white',
+            border: '1px solid var(--border)',
+            background: running ? 'var(--bg-subtle)' : 'var(--bg)',
             borderRadius: 3,
             fontSize: 10,
             cursor: running ? 'not-allowed' : 'pointer',

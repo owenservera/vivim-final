@@ -156,7 +156,7 @@ export function AgentOverlay({
             onClick={onAcceptAll}
             style={{
               padding: '4px 12px',
-              background: '#10b981',
+              background: 'var(--color-success)',
               color: 'white',
               border: 'none',
               borderRadius: 4,
@@ -173,8 +173,8 @@ export function AgentOverlay({
             style={{
               padding: '4px 12px',
               background: 'transparent',
-              color: '#ef4444',
-              border: '1px solid #ef4444',
+              color: 'var(--color-error)',
+              border: '1px solid var(--color-error)',
               borderRadius: 4,
               cursor: 'pointer',
               fontSize: 11,

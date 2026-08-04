@@ -5,6 +5,7 @@ import { StreamAlignmentEngine } from '../../src/engines/stream-align.js'
 //
 // Governor Canon: this module only writes ProviderParserRow data; it never touches CDP.
 import type { ProviderStore } from '../../src/storage/contracts/provider-store.js'
+import type { ProviderStreamConfigRow } from '../../src/schema/types.js'
 import { LOGIC_CODE as CHATGPT } from './harvested/chatgpt-openai-delta.js'
 import { LOGIC_CODE as CLAUDE } from './harvested/claude-streaming-sse.js'
 import { LOGIC_CODE as DEEPSEEK } from './harvested/deepseek-reasoning-sse.js'
@@ -109,4 +110,70 @@ export async function seedHarvestedParsers(store: ProviderStore): Promise<number
   return DEFS.length
 }
 
-export { DEFS }
+// ── Provider Stream Configs ──────────────────────────────────────────────
+// Explicit stream transport registrations so the parser engine doesn't fall
+// back to generic detection for known providers.
+
+const STREAM_CONFIGS: ProviderStreamConfigRow[] = [
+  {
+    id: 'psc-gemini-batchexecute',
+    provider_id: 'gemini',
+    stream_transport: 'batchexecute',
+    stream_terminal_json: JSON.stringify([['e']]),
+    sse_format: null,
+    delta_path_json: JSON.stringify(['4', '0', '1']),
+    content_type: null,
+    completion_detectors_json: JSON.stringify(['[["e"', '"isTerminal":true']),
+    harness_js: null,
+    is_active: 1,
+    version: 1,
+    superseded_by: null,
+    created_at: Date.now(),
+    updated_at: Date.now(),
+  },
+  {
+    id: 'psc-claude-sse',
+    provider_id: 'claude',
+    stream_transport: 'sse',
+    stream_terminal_json: JSON.stringify(['[DONE]']),
+    sse_format: 'anthropic',
+    delta_path_json: JSON.stringify(['delta', 'text']),
+    content_type: 'text/event-stream',
+    completion_detectors_json: JSON.stringify(['message_stop', '[DONE]']),
+    harness_js: null,
+    is_active: 1,
+    version: 1,
+    superseded_by: null,
+    created_at: Date.now(),
+    updated_at: Date.now(),
+  },
+  {
+    id: 'psc-chatgpt-sse',
+    provider_id: 'chatgpt',
+    stream_transport: 'sse',
+    stream_terminal_json: JSON.stringify(['[DONE]']),
+    sse_format: 'openai',
+    delta_path_json: JSON.stringify(['choices', '0', 'delta', 'content']),
+    content_type: 'text/event-stream',
+    completion_detectors_json: JSON.stringify(['[DONE]', '"finish_reason"']),
+    harness_js: null,
+    is_active: 1,
+    version: 1,
+    superseded_by: null,
+    created_at: Date.now(),
+    updated_at: Date.now(),
+  },
+]
+
+/**
+ * Upsert provider stream configs for the three default providers.
+ * Returns the count of configs seeded.
+ */
+export async function seedStreamConfigs(store: ProviderStore): Promise<number> {
+  for (const config of STREAM_CONFIGS) {
+    await store.upsertStreamConfig(config)
+  }
+  return STREAM_CONFIGS.length
+}
+
+export { DEFS, STREAM_CONFIGS }

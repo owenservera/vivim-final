@@ -40,18 +40,18 @@ export interface MutationHistoryPanelProps {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const OP_COLORS: Record<string, string> = {
-  replace: '#3b82f6',
-  insert: '#22c55e',
-  remove: '#ef4444',
-  reorder: '#a855f7',
-  restyle: '#f59e0b',
-  rebind: '#06b6d4',
-  set_property: '#6366f1',
-  set_slot: '#ec4899',
+  replace: 'var(--color-info)',
+  insert: 'var(--color-success)',
+  remove: 'var(--color-error)',
+  reorder: 'var(--color-purple)',
+  restyle: 'var(--color-warning)',
+  rebind: 'var(--color-cyan)',
+  set_property: 'var(--color-indigo)',
+  set_slot: 'var(--color-pink)',
 };
 
 function opColor(op: string): string {
-  return OP_COLORS[op] ?? '#64748b';
+  return OP_COLORS[op] ?? 'var(--text-muted)';
 }
 
 function relativeTime(ms: number): string {

@@ -176,9 +176,9 @@ export function DevConsole({ isOpen, onClose }: DevConsoleProps) {
                         background: e.type?.startsWith('request:error') || e.type?.startsWith('sse:error') ? 'rgba(239,68,68,0.15)' :
                           e.type?.startsWith('request:success') ? 'rgba(34,197,94,0.15)' :
                           e.type?.startsWith('sse:') ? 'rgba(59,130,246,0.15)' : 'var(--muted)',
-                        color: e.type?.startsWith('request:error') || e.type?.startsWith('sse:error') ? '#ef4444' :
-                          e.type?.startsWith('request:success') ? '#22c55e' :
-                          e.type?.startsWith('sse:') ? '#3b82f6' : 'var(--muted-foreground)',
+                        color: e.type?.startsWith('request:error') || e.type?.startsWith('sse:error') ? 'var(--color-error)' :
+                          e.type?.startsWith('request:success') ? 'var(--color-success)' :
+                          e.type?.startsWith('sse:') ? 'var(--color-info)' : 'var(--muted-foreground)',
                       }}>
                         {e.type}
                       </span>
@@ -191,7 +191,7 @@ export function DevConsole({ isOpen, onClose }: DevConsoleProps) {
                     </td>
                     <td style={{ padding: '2px 6px', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
                       {e.status !== undefined ? (
-                        <span style={{ color: e.status >= 400 ? '#ef4444' : '#22c55e' }}>{e.status}</span>
+                        <span style={{ color: e.status >= 400 ? 'var(--color-error)' : 'var(--color-success)' }}>{e.status}</span>
                       ) : '—'}
                     </td>
                   </tr>
@@ -224,7 +224,7 @@ export function DevConsole({ isOpen, onClose }: DevConsoleProps) {
                   flex: 1,
                   height: `${Math.max(4, (d.duration / 2000) * 50)}px`,
                   minHeight: 4,
-                  background: d.duration > 1000 ? '#ef4444' : d.duration > 500 ? '#f59e0b' : '#22c55e',
+                  background: d.duration > 1000 ? 'var(--color-error)' : d.duration > 500 ? 'var(--color-warning)' : 'var(--color-success)',
                   borderRadius: '1px 1px 0 0',
                   opacity: 0.8,
                 }}

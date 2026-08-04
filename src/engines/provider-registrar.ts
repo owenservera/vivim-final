@@ -88,6 +88,9 @@ export class ProviderRegistrar {
     const providerId = manifest.provider.slug
 
     // [1] Upsert provider_definition
+    const accessTier = manifest.provider.accessTier ?? 'free'
+    const isActive = accessTier === 'free' ? 1 : 0
+    const protocolStatus = accessTier === 'free' ? 'Active' : 'Locked'
     const defRow: ProviderDefinitionRow = {
       id: providerId,
       slug: manifest.provider.slug,
@@ -95,7 +98,8 @@ export class ProviderRegistrar {
       description: manifest.provider.description ?? null,
       category: manifest.provider.category,
       provider_type: manifest.provider.provider_type,
-      is_active: 1,
+      is_active: isActive,
+      protocol_status: protocolStatus,
       website_url: manifest.provider.website_url ?? null,
       documentation_url: manifest.provider.documentation_url ?? null,
       auth_type: manifest.provider.auth_type,

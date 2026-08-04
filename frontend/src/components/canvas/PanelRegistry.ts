@@ -65,6 +65,18 @@ const panelLoaders: Record<string, PanelLoader> = {
     const m = await import('./TaskManager')
     return { default: m.TaskManager }
   },
+  documents: async () => {
+    const m = await import('./panels/DocumentsPanel')
+    return { default: m.DocumentsPanel }
+  },
+  media: async () => {
+    const m = await import('./panels/MediaPanel')
+    return { default: m.MediaPanel }
+  },
+  agents: async () => {
+    const m = await import('./panels/AgentsPanel')
+    return { default: m.AgentsPanel }
+  },
 }
 
 export function getPanelLoader(panelId: string): PanelLoader | undefined {

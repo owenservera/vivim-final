@@ -87,6 +87,9 @@ function createMockStore(): ProviderStore & {
     async listCapabilities() {
       return [{ id: 'cap-1', slug: 'test-cap', title: 'Test Cap' }]
     },
+    async getCapabilityOverride() {
+      return null
+    },
   }
 }
 
@@ -251,6 +254,18 @@ describe('ProviderRegistrar', () => {
     expect(result.providers.every((p) => p.status === 'ok')).toBe(true)
   })
 
+  it('accessTier: free providers get isActive=1, premium get isActive=0', async () => {
+    await registrar.seedAll()
+
+    const chatgpt = store.defs.get('chatgpt')
+    const deepseek = store.defs.get('deepseek')
+
+    expect(chatgpt?.is_active).toBe(1)
+    expect(chatgpt?.protocol_status).toBe('Active')
+    expect(deepseek?.is_active).toBe(0)
+    expect(deepseek?.protocol_status).toBe('Locked')
+  })
+
   it('reloadFromSeeds() re-seeds all without duplicates', async () => {
     await registrar.seedAll()
     const result = await registrar.reloadFromSeeds()
@@ -263,8 +278,8 @@ describe('ProviderRegistrar', () => {
   it('seedAll() reads from in-repo manifests (no disk dependency)', async () => {
     const result = await registrar.seedAll()
 
-    // All 13 canonical manifests are seeded regardless of any seedsDir on disk.
-    expect(result.seeded.length).toBe(13)
+    // All 16 canonical manifests are seeded regardless of any seedsDir on disk.
+    expect(result.seeded.length).toBe(16)
     expect(result.errors.length).toBe(0)
   })
 

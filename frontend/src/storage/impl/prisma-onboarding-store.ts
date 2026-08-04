@@ -6,19 +6,19 @@
  * server restarts. BigInt ↔ Number conversion handled in deserialize().
  */
 
-import type { OnboardingStore } from '../contracts/onboarding-store';
-import type { OnboardingState } from '../../shared/onboarding';
+import type { OnboardingState } from '../../shared/onboarding'
+import type { OnboardingStore } from '../contracts/onboarding-store'
 
 interface UserOnboardingRow {
-  id: string;
-  userId: string;
-  completedSteps: string;
-  dismissed: boolean;
-  lastShownAt: bigint | null;
-  lastCompletedAt: bigint | null;
-  tourTimings: string | null;
-  createdAt: bigint;
-  updatedAt: bigint;
+  id: string
+  userId: string
+  completedSteps: string
+  dismissed: boolean
+  lastShownAt: bigint | null
+  lastCompletedAt: bigint | null
+  tourTimings: string | null
+  createdAt: bigint
+  updatedAt: bigint
 }
 
 /**
@@ -26,33 +26,33 @@ interface UserOnboardingRow {
  * The real PrismaClient satisfies this shape.
  */
 interface PrismaDelegate {
-  findUnique(args: { where: { userId: string } }): Promise<UserOnboardingRow | null>;
+  findUnique(args: { where: { userId: string } }): Promise<UserOnboardingRow | null>
   upsert(args: {
-    where: { userId: string };
-    create: Record<string, unknown>;
-    update: Record<string, unknown>;
-  }): Promise<UserOnboardingRow>;
+    where: { userId: string }
+    create: Record<string, unknown>
+    update: Record<string, unknown>
+  }): Promise<UserOnboardingRow>
 }
 
 interface PrismaLike {
-  userOnboarding: PrismaDelegate;
+  userOnboarding: PrismaDelegate
 }
 
 export class PrismaOnboardingStore implements OnboardingStore {
   constructor(private prisma: PrismaLike) {}
 
   async get(userId: string): Promise<OnboardingState | null> {
-    const row = await this.prisma.userOnboarding.findUnique({ where: { userId } });
-    return row ? this.deserialize(row) : null;
+    const row = await this.prisma.userOnboarding.findUnique({ where: { userId } })
+    return row ? this.deserialize(row) : null
   }
 
   async completeStep(userId: string, stepId: string): Promise<OnboardingState> {
-    const existing = await this.prisma.userOnboarding.findUnique({ where: { userId } });
-    const completedSteps: string[] = existing ? JSON.parse(existing.completedSteps) : [];
+    const existing = await this.prisma.userOnboarding.findUnique({ where: { userId } })
+    const completedSteps: string[] = existing ? JSON.parse(existing.completedSteps) : []
     if (!completedSteps.includes(stepId)) {
-      completedSteps.push(stepId);
+      completedSteps.push(stepId)
     }
-    const now = Date.now();
+    const now = Date.now()
     const row = await this.prisma.userOnboarding.upsert({
       where: { userId },
       create: {
@@ -70,16 +70,19 @@ export class PrismaOnboardingStore implements OnboardingStore {
         lastCompletedAt: BigInt(now),
         updatedAt: BigInt(now),
       },
-    });
-    return this.deserialize(row);
+    })
+    return this.deserialize(row)
   }
 
-  async completeTour(userId: string, meta: { totalDurationMs: number; stepTimings: Record<string, number> }): Promise<OnboardingState> {
-    const now = Date.now();
-    const existing = await this.prisma.userOnboarding.findUnique({ where: { userId } });
-    const completedSteps: string[] = existing ? JSON.parse(existing.completedSteps) : [];
+  async completeTour(
+    userId: string,
+    meta: { totalDurationMs: number; stepTimings: Record<string, number> },
+  ): Promise<OnboardingState> {
+    const now = Date.now()
+    const existing = await this.prisma.userOnboarding.findUnique({ where: { userId } })
+    const completedSteps: string[] = existing ? JSON.parse(existing.completedSteps) : []
     for (const stepId of Object.keys(meta.stepTimings)) {
-      if (!completedSteps.includes(stepId)) completedSteps.push(stepId);
+      if (!completedSteps.includes(stepId)) completedSteps.push(stepId)
     }
     const row = await this.prisma.userOnboarding.upsert({
       where: { userId },
@@ -100,12 +103,12 @@ export class PrismaOnboardingStore implements OnboardingStore {
         tourTimings: JSON.stringify(meta.stepTimings),
         updatedAt: BigInt(now),
       },
-    });
-    return this.deserialize(row);
+    })
+    return this.deserialize(row)
   }
 
   async dismiss(userId: string): Promise<OnboardingState> {
-    const now = Date.now();
+    const now = Date.now()
     const row = await this.prisma.userOnboarding.upsert({
       where: { userId },
       create: {
@@ -119,12 +122,12 @@ export class PrismaOnboardingStore implements OnboardingStore {
         dismissed: true,
         updatedAt: BigInt(now),
       },
-    });
-    return this.deserialize(row);
+    })
+    return this.deserialize(row)
   }
 
   async reset(userId: string): Promise<OnboardingState> {
-    const now = Date.now();
+    const now = Date.now()
     const row = await this.prisma.userOnboarding.upsert({
       where: { userId },
       create: {
@@ -142,8 +145,8 @@ export class PrismaOnboardingStore implements OnboardingStore {
         tourTimings: null,
         updatedAt: BigInt(now),
       },
-    });
-    return this.deserialize(row);
+    })
+    return this.deserialize(row)
   }
 
   private deserialize(row: UserOnboardingRow): OnboardingState {
@@ -153,9 +156,11 @@ export class PrismaOnboardingStore implements OnboardingStore {
       dismissed: row.dismissed,
       lastShownAt: row.lastShownAt !== null ? Number(row.lastShownAt) : undefined,
       lastCompletedAt: row.lastCompletedAt !== null ? Number(row.lastCompletedAt) : undefined,
-      tourTimings: row.tourTimings ? JSON.parse(row.tourTimings) as Record<string, number> : undefined,
+      tourTimings: row.tourTimings
+        ? (JSON.parse(row.tourTimings) as Record<string, number>)
+        : undefined,
       createdAt: Number(row.createdAt),
       updatedAt: Number(row.updatedAt),
-    };
+    }
   }
 }

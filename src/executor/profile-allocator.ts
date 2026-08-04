@@ -5,11 +5,38 @@
 // profile directory exists under chrome-profiles/<provider>/<account>, and it
 // is the authenticated one. See specs/033-profile-cleanup/.
 
-import { existsSync } from 'node:fs'
+import { existsSync, lstatSync } from 'node:fs'
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
 export const DEFAULT_PROFILE_BASE = 'chrome-profiles'
+
+/**
+ * Calculate the total size of a directory in bytes (best-effort, async).
+ * Skips files that cannot be read (permissions, etc.).
+ */
+async function calcDirSize(dir: string): Promise<number> {
+  let total = 0
+  try {
+    const entries = await readdir(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        total += await calcDirSize(full)
+      } else {
+        try {
+          const s = await stat(full)
+          total += s.size
+        } catch {
+          // skip unreadable files
+        }
+      }
+    }
+  } catch {
+    // skip unreadable directories
+  }
+  return total
+}
 
 // Legacy / stray roots that may exist at repo root outside the canonical base.
 // Mirrors scripts/cleanup-credentials.ps1 sweep list (the "stray" class in
@@ -23,11 +50,14 @@ const LEGACY_ROOTS = [
   'data/chrome-profiles',
 ]
 
-interface ProfileMeta {
+export interface ProfileMeta {
   providerSlug: string
   accountId: string
   allocatedAt: string
   lastUsed: string
+  crashCount?: number
+  diskSizeBytes?: number
+  lastAuthVerifiedAt?: string
 }
 
 export interface ProfileRecord {
@@ -142,14 +172,59 @@ export class ProfileAllocator {
     }
   }
 
+  /**
+   * Record a crash event for this profile and update disk footprint.
+   * Called by FleetSupervisor when a slave transitions to 'crashed' status.
+   */
+  async recordCrash(providerSlug: string, accountId: string): Promise<void> {
+    const dir = this.getPath(providerSlug, accountId)
+    const metaPath = join(dir, '.profile-meta.json')
+
+    if (existsSync(metaPath)) {
+      const raw = await readFile(metaPath, 'utf-8')
+      const meta: ProfileMeta = JSON.parse(raw)
+      meta.crashCount = (meta.crashCount ?? 0) + 1
+      meta.diskSizeBytes = await calcDirSize(dir)
+      await writeFile(metaPath, JSON.stringify(meta, null, 2))
+    }
+  }
+
+  /**
+   * Update the profile's disk footprint and last auth verification timestamp.
+   * Called after successful CDP session verification.
+   */
+  async recordAuthVerified(providerSlug: string, accountId: string): Promise<void> {
+    const dir = this.getPath(providerSlug, accountId)
+    const metaPath = join(dir, '.profile-meta.json')
+
+    if (existsSync(metaPath)) {
+      const raw = await readFile(metaPath, 'utf-8')
+      const meta: ProfileMeta = JSON.parse(raw)
+      meta.lastAuthVerifiedAt = new Date().toISOString()
+      meta.diskSizeBytes = await calcDirSize(dir)
+      await writeFile(metaPath, JSON.stringify(meta, null, 2))
+    }
+  }
+
   async list(): Promise<
-    Array<{ providerSlug: string; accountId: string; path: string; lastUsed: Date }>
+    Array<{
+      providerSlug: string
+      accountId: string
+      path: string
+      lastUsed: Date
+      crashCount: number
+      diskSizeBytes: number
+      lastAuthVerifiedAt: Date | null
+    }>
   > {
     const results: Array<{
       providerSlug: string
       accountId: string
       path: string
       lastUsed: Date
+      crashCount: number
+      diskSizeBytes: number
+      lastAuthVerifiedAt: Date | null
     }> = []
 
     if (!existsSync(this.baseDir)) return results
@@ -166,14 +241,20 @@ export class ProfileAllocator {
         const dir = join(accountsDir, account.name)
         const metaPath = join(dir, '.profile-meta.json')
         let lastUsed = new Date(0)
+        let crashCount = 0
+        let diskSizeBytes = 0
+        let lastAuthVerifiedAt: Date | null = null
 
         if (existsSync(metaPath)) {
           try {
             const raw = await readFile(metaPath, 'utf-8')
             const meta: ProfileMeta = JSON.parse(raw)
             lastUsed = new Date(meta.lastUsed)
+            crashCount = meta.crashCount ?? 0
+            diskSizeBytes = meta.diskSizeBytes ?? 0
+            lastAuthVerifiedAt = meta.lastAuthVerifiedAt ? new Date(meta.lastAuthVerifiedAt) : null
           } catch {
-            // corrupted meta, use epoch
+            // corrupted meta, use defaults
           }
         }
 
@@ -182,6 +263,9 @@ export class ProfileAllocator {
           accountId: account.name,
           path: dir,
           lastUsed,
+          crashCount,
+          diskSizeBytes,
+          lastAuthVerifiedAt,
         })
       }
     }
@@ -256,13 +340,65 @@ export class ProfileAllocator {
 
   /**
    * Heuristic: a running Chrome holds `SingletonLock` in its profile dir.
+   * Enhanced with liveness verification:
+   * - Unix: SingletonLock is a symlink when Chrome is alive; stale regular file after crash.
+   * - Windows: SingletonLock is a regular file; verified via process PID check.
    * Used as a defense-in-depth guard against deleting a live slave.
    */
   async isLiveSlave(profileDir: string): Promise<boolean> {
+    const lockPath = join(profileDir, 'SingletonLock')
     try {
-      return existsSync(join(profileDir, 'SingletonLock'))
+      if (!existsSync(lockPath)) return false
+
+      // On Unix, Chrome creates SingletonLock as a symlink to the profile dir.
+      // After a crash, it remains as a regular file (stale).
+      if (process.platform !== 'win32') {
+        try {
+          const stats = lstatSync(lockPath)
+          if (!stats.isSymbolicLink()) return false // stale lock from crashed process
+        } catch {
+          return false
+        }
+      }
+
+      // Verify the lock isn't orphaned by checking for a live Chrome process
+      // holding this profile. Best-effort: if we can't verify, assume live.
+      return await this.isLockHeldByProcess(profileDir)
     } catch {
       return false
+    }
+  }
+
+  /**
+   * Check if a Chrome process is actively holding the profile's SingletonLock.
+   * On Windows: checks if any chrome.exe process has this profile dir in its command line.
+   * On Unix: checks if the lock symlink target is still valid.
+   */
+  private async isLockHeldByProcess(profileDir: string): Promise<boolean> {
+    try {
+      if (process.platform === 'win32') {
+        // Use Get-CimInstance to find Chrome processes with this profile dir
+        const proc = Bun.spawnSync(
+          [
+            'powershell',
+            '-NoProfile',
+            '-Command',
+            `Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" | Select-Object -ExpandProperty CommandLine`,
+          ],
+          { stdout: 'pipe', stderr: 'pipe' },
+        )
+        const output = proc.stdout.toString().trim()
+        if (!output) return false
+        const profileNorm = profileDir.replace(/\\/g, '/').toLowerCase()
+        return (
+          output.toLowerCase().includes(profileNorm) ||
+          output.toLowerCase().includes(profileNorm.replace(/\//g, '\\'))
+        )
+      }
+      // Unix: lock symlink exists and is valid — assume live
+      return true
+    } catch {
+      return true // best-effort: assume live if check fails
     }
   }
 

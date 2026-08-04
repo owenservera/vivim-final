@@ -76,7 +76,7 @@ export function UpdateNotification({ onDismiss }: UpdateNotificationProps) {
         bottom: '20px',
         right: '20px',
         background: 'var(--bg)',
-        border: '1px solid #ff5252',
+        border: '1px solid var(--color-error)',
         borderRadius: '8px',
         padding: '16px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
@@ -85,7 +85,7 @@ export function UpdateNotification({ onDismiss }: UpdateNotificationProps) {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontWeight: 600, color: '#ff5252' }}>Update Error</div>
+            <div style={{ fontWeight: 600, color: 'var(--color-error)' }}>Update Error</div>
             <div style={{ fontSize: '12px', color: 'var(--textDim)', marginTop: '4px' }}>
               {error}
             </div>

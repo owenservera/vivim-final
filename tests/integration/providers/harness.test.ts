@@ -64,6 +64,13 @@ class InMemoryProviderStore implements ProviderStore {
   > {
     return []
   }
+  async getCapabilityOverride(
+    _providerId: string,
+    _capabilityId: string,
+    _overrideType: string,
+  ): Promise<{ overrideJson: string } | null> {
+    return null
+  }
 }
 
 describe('provider harness (Unit 32.1)', () => {

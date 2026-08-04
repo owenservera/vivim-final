@@ -32,6 +32,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         'rename_chat',
         'browse_with_bing',
       ],
+      accessTier: 'free',
     },
     endpoints: [
       {
@@ -170,6 +171,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         'rename_chat',
         'deep_research',
       ],
+      accessTier: 'free',
     },
     endpoints: [
       {
@@ -318,6 +320,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         'delete_chat',
         'rename_chat',
       ],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -413,6 +416,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         extra_args: ['--no-first-run'],
       },
       capabilities: ['channel_add', 'channel_connect', 'message_send', 'message_receive'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -459,6 +463,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         'delete_chat',
         'rename_chat',
       ],
+      accessTier: 'free',
     },
     endpoints: [
       {
@@ -567,6 +572,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       profile_strategy: 'none',
       fleet_config: {},
       capabilities: [],
+      accessTier: 'free',
     },
     endpoints: [],
     models: [],
@@ -590,6 +596,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         port_range: [9372, 9400],
       },
       capabilities: ['send_message', 'select_model', 'create_new_chat', 'navigate_chat'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -691,6 +698,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         extra_args: [],
       },
       capabilities: ['channel_add', 'channel_connect', 'message_send', 'message_receive'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -726,6 +734,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         port_range: [9342, 9370],
       },
       capabilities: ['send_message', 'select_model', 'create_new_chat', 'navigate_chat'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -819,6 +828,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       has_multi_account: false,
       profile_strategy: 'shared',
       capabilities: [],
+      accessTier: 'free',
     },
     endpoints: [],
     models: [],
@@ -842,6 +852,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         extra_args: [],
       },
       capabilities: ['channel_add', 'channel_connect', 'message_send', 'message_receive'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -877,6 +888,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         extra_args: ['--no-first-run'],
       },
       capabilities: ['channel_add', 'channel_connect', 'message_send', 'message_receive'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -908,6 +920,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       has_multi_account: false,
       profile_strategy: 'shared',
       capabilities: ['send_message', 'select_model'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -970,6 +983,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
       has_multi_account: false,
       profile_strategy: 'single',
       capabilities: ['agent_run'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -1056,6 +1070,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         port_range: [9412, 9440],
       },
       capabilities: ['send_message', 'create_new_chat', 'navigate_chat', 'delete_chat'],
+      accessTier: 'premium',
     },
     endpoints: [
       {
@@ -1139,6 +1154,7 @@ export const PROVIDER_MANIFESTS: unknown[] = [
         'navigate_chat',
         'delete_chat',
       ],
+      accessTier: 'premium',
     },
     endpoints: [
       {

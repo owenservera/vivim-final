@@ -15,7 +15,7 @@ export interface ContentBlock {
 }
 
 // R3-15: Memoize to prevent re-render per streaming chunk
-export const MessageBlock = memo(function MessageBlock({ block }: { block: ContentBlock }) {
+export const MessageBlock = memo(function MessageBlock({ block, onCopy, onRetry, onEdit }: { block: ContentBlock; onCopy?: (text: string) => void; onRetry?: (text: string) => void; onEdit?: (text: string) => void }) {
   const kind = block.kind ?? 'text'
   switch (kind) {
     case 'code':
@@ -165,7 +165,7 @@ export const MessageBlock = memo(function MessageBlock({ block }: { block: Conte
   }
 });
 
-export function RenderBlocks({ blocks }: { blocks: ContentBlock[] }) {
+export function RenderBlocks({ blocks, onCopy, onRetry, onEdit }: { blocks: ContentBlock[]; onCopy?: (text: string) => void; onRetry?: (text: string) => void; onEdit?: (text: string) => void }) {
   const merged: ContentBlock[] = [];
   for (const block of blocks) {
     const last = merged[merged.length - 1];
@@ -179,7 +179,7 @@ export function RenderBlocks({ blocks }: { blocks: ContentBlock[] }) {
   return (
     <>
       {merged.map((block) => (
-        <MessageBlock key={`${block.kind}-${block.index}`} block={block} />
+        <MessageBlock key={`${block.kind}-${block.index}`} block={block} onCopy={onCopy} onRetry={onRetry} onEdit={onEdit} />
       ))}
     </>
   );

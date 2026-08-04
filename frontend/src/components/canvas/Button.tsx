@@ -32,8 +32,8 @@ const variantStyles: Record<NonNullable<ButtonProps['variant']>, React.CSSProper
   danger: {
     padding: '6px 12px',
     background: 'transparent',
-    border: '1px solid #ef4444',
-    color: '#ef4444',
+    border: '1px solid var(--color-error)',
+    color: 'var(--color-error)',
     borderRadius: 6,
     cursor: 'pointer',
     fontSize: 12,

@@ -299,7 +299,7 @@ export function UnifiedEntry({
             padding: '4px 10px',
             borderRadius: 6,
             background: 'var(--destructive, #ef4444)',
-            color: '#fff',
+            color: 'var(--bg)',
             fontSize: 11,
             whiteSpace: 'nowrap',
             boxShadow: '0 2px 8px rgba(0,0,0,0.16)',

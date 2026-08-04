@@ -26,12 +26,12 @@ export interface MinimapNodeProps {
 }
 
 const NODE_COLORS: Record<string, string> = {
-  doc: '#3b82f6',
-  media: '#8b5cf6',
-  automation: '#10b981',
-  agent: '#f59e0b',
-  shell: '#ef4444',
-  default: '#6b7280',
+  doc: 'var(--color-info)',
+  media: 'var(--color-purple)',
+  automation: 'var(--color-success)',
+  agent: 'var(--color-warning)',
+  shell: 'var(--color-error)',
+  default: 'var(--text-muted)',
 }
 
 export function MinimapNode({
@@ -63,7 +63,7 @@ export function MinimapNode({
       rx={1}
       fill={color}
       fillOpacity={selected ? 0.9 : 0.5}
-      stroke={selected ? '#fff' : 'none'}
+      stroke={selected ? 'var(--bg)' : 'none'}
       strokeWidth={selected ? 1 : 0}
       style={{ cursor: onSelect ? 'pointer' : 'default' }}
       onClick={handleClick}

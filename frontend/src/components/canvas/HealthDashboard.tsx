@@ -30,9 +30,9 @@ export function HealthDashboard() {
   }, [check, refreshProviders]);
 
   const statusColor = (s?: string) => {
-    if (s === 'ok' || s === 'healthy') return '#10b981';
-    if (s === 'error' || s === 'unhealthy') return '#ef4444';
-    return '#f59e0b';
+    if (s === 'ok' || s === 'healthy') return 'var(--color-success)';
+    if (s === 'error' || s === 'unhealthy') return 'var(--color-error)';
+    return 'var(--color-warning)';
   };
 
   return (
@@ -44,7 +44,7 @@ export function HealthDashboard() {
 
       {/* Health error */}
       {healthError && (
-        <div style={{ padding: 12, background: 'color-mix(in oklch, #ef4444 12%, var(--bg-elevated))', border: '1px solid #ef4444', borderRadius: 8, color: '#ef4444', fontSize: 12, marginBottom: 12 }}>
+        <div style={{ padding: 12, background: 'var(--color-error-surface)', border: '1px solid var(--color-error)', borderRadius: 8, color: 'var(--color-error)', fontSize: 12, marginBottom: 12 }}>
           {healthError}
         </div>
       )}
@@ -55,7 +55,7 @@ export function HealthDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor(health.status) }} />
             <span style={{ fontSize: 14, fontWeight: 600 }}>Backend</span>
-            <span style={{ padding: '1px 8px', background: statusColor(health.status), color: '#fff', borderRadius: 4, fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>
+            <span style={{ padding: '1px 8px', background: statusColor(health.status), color: 'var(--bg)', borderRadius: 4, fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>
               {health.status}
             </span>
           </div>

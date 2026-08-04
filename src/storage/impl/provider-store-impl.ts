@@ -39,6 +39,7 @@ export class ProviderStoreImpl {
         category: def.category,
         providerType: def.provider_type,
         isActive: def.is_active,
+        protocolStatus: def.protocol_status ?? 'Active',
         websiteUrl: def.website_url,
         documentationUrl: def.documentation_url,
         authType: def.auth_type,
@@ -57,6 +58,7 @@ export class ProviderStoreImpl {
         category: def.category,
         providerType: def.provider_type,
         isActive: def.is_active,
+        protocolStatus: def.protocol_status ?? 'Active',
         websiteUrl: def.website_url,
         documentationUrl: def.documentation_url,
         authType: def.auth_type,
@@ -81,6 +83,7 @@ export class ProviderStoreImpl {
       category: r.category,
       provider_type: r.providerType,
       is_active: r.isActive,
+      protocol_status: r.protocolStatus,
       website_url: r.websiteUrl,
       documentation_url: r.documentationUrl,
       auth_type: r.authType,
@@ -105,6 +108,7 @@ export class ProviderStoreImpl {
       category: r.category,
       provider_type: r.providerType,
       is_active: r.isActive,
+      protocol_status: r.protocolStatus,
       website_url: r.websiteUrl,
       documentation_url: r.documentationUrl,
       auth_type: r.authType,
@@ -561,5 +565,25 @@ export class ProviderStoreImpl {
         description: b.capability.description ?? undefined,
       }),
     )
+  }
+
+  // ── Selector heal persistence ───────────────────────────────────────────
+
+  async getCapabilityOverride(
+    providerId: string,
+    capabilityId: string,
+    overrideType: string,
+  ): Promise<{ overrideJson: string } | null> {
+    const row = await this.p.providerOverride.findUnique({
+      where: {
+        providerId_capabilityId_overrideType: {
+          providerId,
+          capabilityId,
+          overrideType,
+        },
+      },
+    })
+    if (!row) return null
+    return { overrideJson: row.overrideJson as string }
   }
 }

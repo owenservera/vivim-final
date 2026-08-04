@@ -1,17 +1,19 @@
 // scripts/tauri/compile-sidecar.ts
-// Production sidecar compilation with UPX compression.
+// Production sidecar compilation.
 //
 // Strategy:
-// 1. Bundle TypeScript to JavaScript
+// 1. Bundle TypeScript to JavaScript (with NODE_ENV=production define)
 // 2. Copy database and provider data
 // 3. Compile to standalone Bun executable (~97 MB on Windows)
-// 4. Apply UPX compression (--no-lzma for speed) → ~45 MB (47% reduction)
+// 4. UPX compress to ~45 MB (level 3 with --no-lzma for speed/ratio balance)
 //
-// The Bun runtime baseline is ~94 MB on Windows (irreducible).
-// Our app code adds ~3 MB. UPX compression reduces the final binary to ~45 MB.
+// UPX v5.2.0 level 3 with --no-lzma is the production standard (46.94% ratio).
+// Verified working: compressed binaries pass --version check.
+// Install: winget install UPX.UPX
 
 import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import { readDesktopVersion } from './version.ts'
 
 const repoRoot = join(import.meta.dir, '..', '..')
 const entry = join(repoRoot, 'src', 'desktop', 'sidecar-entry.ts')
@@ -26,19 +28,17 @@ const dataDir = join(repoRoot, 'src-tauri', 'data')
 const dbSource = join(repoRoot, 'prisma', 'cap-store.db')
 const seedsSource = join(repoRoot, 'seeds')
 
-// UPX configuration: level 3 with --no-lzma for optimal speed/ratio
-const UPX_LEVEL = 3
-const UPX_FLAGS = ['--no-lzma']
-
 if (!existsSync(binDir)) mkdirSync(binDir, { recursive: true })
 if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true })
 
 console.log(`[compile] Entry: ${entry}`)
 console.log(`[compile] Target: ${triple}`)
 console.log(`[compile] Output: ${outFile}`)
-console.log(`[compile] Strategy: Bundle → Copy Data → Compile → UPX compress (level ${UPX_LEVEL})`)
+console.log('[compile] Strategy: Bundle → Copy Data → Compile → UPX level 3')
 
 const startTime = Date.now()
+const desktopVersion = readDesktopVersion()
+console.log(`[compile] Desktop version: ${desktopVersion}`)
 
 // ── Step 0: Copy database and provider data ─────────────────────────────────
 console.log('[compile] Step 0: Copying database and provider data...')
@@ -83,6 +83,16 @@ if (existsSync(parsersDir)) {
 }
 
 console.log(`[compile] Data directory: ${(statSync(dataDir).size / 1024).toFixed(0)} KB`)
+
+// Copy seed-snapshot.db for first-boot DB bootstrap
+const snapshotSrc = join(repoRoot, 'seeds', 'seed-snapshot.db')
+const snapshotDest = join(dataDir, 'seed-snapshot.db')
+if (existsSync(snapshotSrc)) {
+  copyFileSync(snapshotSrc, snapshotDest)
+  console.log(`[compile] Copied seed snapshot: ${(statSync(snapshotDest).size / 1024).toFixed(0)} KB`)
+} else {
+  console.warn(`[compile] ⚠ seeds/seed-snapshot.db not found — sidecar will not bootstrap DB on first boot`)
+}
 
 // ── Step 1: Bundle ──────────────────────────────────────────────────────────
 console.log('[compile] Step 1: Bundling...')
@@ -132,7 +142,7 @@ const compileArgs = [
   `--windows-icon=${join(repoRoot, 'src-tauri', 'icons', 'icon.ico')}`,
   '--windows-title=vivim',
   '--windows-publisher=vivim',
-  '--windows-version=0.1.0',
+  `--windows-version=${desktopVersion}`,
   '--windows-description=vivim desktop backend',
   '--outfile',
   outFile,
@@ -163,54 +173,27 @@ try {
 const preCompressSize = statSync(outFile).size
 console.log(`[compile] Compiled: ${(preCompressSize / 1024 / 1024).toFixed(1)} MB`)
 
-// ── Step 3: UPX compress ────────────────────────────────────────────────────
-console.log(`[compile] Step 3: UPX compression (level ${UPX_LEVEL})...`)
+// ── Step 3: UPX compress ──────────────────────────────────────────────────────
+// UPX level 3 with --no-lzma balances compression ratio and speed.
+// Production standard per AGENTS.md: 46.94% ratio, ~45.6 MB from ~97 MB.
+console.log('[compile] Step 3: UPX compressing (level 3, --no-lzma)...')
 
-// Find UPX executable
-const upxPaths = [
-  join(repoRoot, 'tools', 'upx.exe'),
-  'C:\\Program Files\\upx\\upx.exe',
-  'C:\\Program Files (x86)\\upx\\upx.exe',
-  `${process.env.LOCALAPPDATA}\\Microsoft\\WinGet\\Packages\\UPX.UPX_Microsoft.Winget.Source_8wekyb3d8bbwe\\upx-5.2.0-win64\\upx.exe`,
-  `${process.env.LOCALAPPDATA}\\Microsoft\\WinGet\\Links\\upx.exe`,
-]
+const upxProc = Bun.spawn([
+  'upx', '-3', '--no-lzma', outFile,
+], {
+  cwd: repoRoot,
+  stdout: 'pipe',
+  stderr: 'pipe',
+})
 
-let upxExe: string | null = null
-for (const p of upxPaths) {
-  if (existsSync(p)) {
-    upxExe = p
-    break
-  }
-}
-
-if (!upxExe) {
-  console.warn('[compile] WARNING: UPX not found, skipping compression')
-  console.warn('[compile] Install UPX: winget install UPX.UPX')
+const upxDone = await upxProc.exited
+if (upxDone !== 0) {
+  const [upxOut, upxErr] = await Promise.all([upxProc.stdout.text(), upxProc.stderr.text()])
+  console.warn(`[compile] UPX failed (exit ${upxDone}), keeping uncompressed binary:`)
+  if (upxErr) console.warn(upxErr.trim())
+  if (upxOut) console.warn(upxOut.trim())
 } else {
-  console.log(`[compile] UPX: ${upxExe}`)
-
-  const upxArgs = [`-${UPX_LEVEL}`, ...UPX_FLAGS, outFile]
-  const upxProc = Bun.spawn([upxExe, ...upxArgs], {
-    cwd: repoRoot,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  })
-
-  const [upxStdout, upxStderr] = await Promise.all([upxProc.stdout.text(), upxProc.stderr.text()])
-  const upxExitCode = await upxProc.exited
-
-  if (upxExitCode !== 0) {
-    console.error('[compile] UPX compression failed:')
-    if (upxStdout) console.error(upxStdout)
-    if (upxStderr) console.error(upxStderr)
-    console.warn('[compile] WARNING: Continuing without compression')
-  } else {
-    const postCompressSize = statSync(outFile).size
-    const ratio = ((1 - postCompressSize / preCompressSize) * 100).toFixed(1)
-    console.log(
-      `[compile] Compressed: ${(postCompressSize / 1024 / 1024).toFixed(1)} MB (-${ratio}%)`,
-    )
-  }
+  console.log('[compile] UPX compression complete')
 }
 
 // ── Report ──────────────────────────────────────────────────────────────────

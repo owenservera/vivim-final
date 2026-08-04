@@ -165,8 +165,8 @@ export class StructuredLogger {
 const loggers = new Map<string, StructuredLogger>()
 
 export function getLogger(context: string): StructuredLogger {
+  const level = (process.env.CAP_STORE_LOG_LEVEL ?? 'info') as LogLevel
   if (!loggers.has(context)) {
-    const level = (process.env.CAP_STORE_LOG_LEVEL ?? 'info') as LogLevel
     loggers.set(context, new StructuredLogger(context, level))
   }
   return loggers.get(context) ?? new StructuredLogger(context, level)

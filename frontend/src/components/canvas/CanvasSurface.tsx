@@ -184,7 +184,7 @@ export function CanvasSurface({
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'ui-sans-serif, system-ui',
-          color: '#888',
+          color: 'var(--text-muted)',
         }}
       >
         <div>Resolving canvas…</div>
@@ -202,7 +202,7 @@ export function CanvasSurface({
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'ui-sans-serif, system-ui',
-          color: '#b91c1c',
+          color: 'var(--color-error)',
         }}
       >
         <div>Canvas error: {String(error)}</div>
@@ -219,8 +219,8 @@ export function CanvasSurface({
         position: 'absolute',
         inset: 0,
         overflow: 'hidden',
-        background:
-          'radial-gradient(circle at 50% 50%, #fafafa 0%, #f0f0f0 100%)',
+          background:
+            'radial-gradient(circle at 50% 50%, var(--bg) 0%, var(--bg-subtle) 100%)',
         cursor: 'default',
       }}
     >
@@ -264,7 +264,7 @@ export function CanvasSurface({
           border: '1px solid rgba(0,0,0,0.08)',
           fontFamily: 'ui-sans-serif, system-ui',
           fontSize: 11,
-          color: '#444',
+          color: 'var(--text-muted)',
           pointerEvents: 'none',
         }}
       >

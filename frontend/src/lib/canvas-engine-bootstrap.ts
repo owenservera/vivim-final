@@ -3,7 +3,7 @@
  * --------------------------------------------------------------------
  * Server-side singleton wiring. Builds one bag of in-memory stores +
  * engines and reuses it across API route handlers. Production swaps the
- * memory impls for Prisma impls (still via the same contracts).
+ * memory impls for Prisma impls via StorageProvider (env-driven).
  *
  * Phase 2 adds: workspace/document/media/automation/agent stores +
  * engines, MediaBridge, ShellCommandStore + Engine, routeSyncWorkspace.
@@ -19,7 +19,7 @@ import { buildRouteSyncDeps } from '../engines/conceptual-model-service';
 import { DocumentEngine } from '../engines/document-engine';
 import { MediaEngine } from '../engines/media-engine';
 import { MemoryMediaBridge } from '../engines/media-bridge';
-import { AnnotationEngine, type AnnotationStore } from '../engines/annotation-engine';
+import { AnnotationEngine } from '../engines/annotation-engine';
 import { WorkspaceEngine } from '../engines/workspace-engine';
 import { AutomationBuilder } from '../engines/automation-builder';
 import { AgentsBuilder } from '../engines/agents-builder';
@@ -34,101 +34,70 @@ import { DocumentEditorEngine } from '../engines/document-editor-engine';
 import { ZLayerEngine } from '../engines/z-layer-engine';
 import { DrawerEngine } from '../engines/drawer-engine';
 import { UIEngine } from '../engines/ui-engine';
-import {
-  MemoryAccountStore,
-  MemoryAgentStore,
-  MemoryAutomationStore,
-  MemoryCanvasDefinitionStore,
-  MemoryCapabilityTierStore,
-  MemoryDocumentStore,
-  MemoryHitlGateStore,
-  MemoryMediaStore,
-  MemoryPolicyRuleStore,
-  MemoryPrimitiveStore,
-  MemoryProviderStore,
-  MemoryProviderTypeStore,
-  MemoryShellCommandStore,
-  MemoryUiComponentStore,
-  MemoryUserLayoutStore,
-  MemoryWorkspaceStore,
-  // Phase 3
-  MemoryNotificationStore,
-  MemoryAuditStore,
-  MemoryRbacStore,
-  MemoryWorkspaceTemplateStore,
-  MemoryPresenceStore,
-  MemorySearchIndex,
-  MemoryOnboardingStore,
-  // Phase 4
-  MemoryDocumentEditStore,
-  MemoryZLayerStore,
-  MemoryDrawerStore,
-} from '../storage/impl';
+import { getStorageProvider, type StorageProvider } from '../storage/provider';
+import type {
+  UiComponentStore,
+  ProviderTypeStore,
+  PrimitiveStore,
+  ProviderStore,
+  AccountStore,
+  CapabilityTierStore,
+  UserLayoutStore,
+  CanvasDefinitionStore,
+  WorkspaceStore,
+  DocumentStore,
+  MediaStore,
+  AutomationStore,
+  AgentStore,
+  HitlGateStore,
+  PolicyRuleStore,
+  AnnotationStore,
+  ShellCommandStore,
+  NotificationStore,
+  AuditStore,
+  RbacStore,
+  WorkspaceTemplateStore,
+  PresenceStore,
+  SearchIndex,
+  OnboardingStore,
+  DocumentEditStore,
+  ZLayerStore,
+  DrawerStore,
+} from '../storage/contracts';
 import { registerDefaultCommands } from '../cli/commands/shell';
 import { ulid } from './ulid';
 
-/** Simple in-memory AnnotationStore (lives inside the bootstrap bag). */
-class MemoryAnnotationStore implements AnnotationStore {
-  private rows = new Map<string, import('../engines/annotation-engine').Annotation>();
-  async get(id: string) {
-    return this.rows.get(id) ?? null;
-  }
-  async list(filter?: { targetKind?: string; targetId?: string }) {
-    const all = [...this.rows.values()];
-    return all.filter((r) => {
-      if (filter?.targetKind && r.targetKind !== filter.targetKind) return false;
-      if (filter?.targetId && r.targetId !== filter.targetId) return false;
-      return true;
-    });
-  }
-  async create(input: Omit<import('../engines/annotation-engine').Annotation, 'id' | 'createdAt' | 'updatedAt'>) {
-    const now = Date.now();
-    const id = `ann:${input.slug}:${now.toString(36)}`;
-    const row = { ...input, id, createdAt: now, updatedAt: now };
-    this.rows.set(id, row);
-    return row;
-  }
-  async update(id: string, patch: Partial<import('../engines/annotation-engine').Annotation>) {
-    const existing = this.rows.get(id);
-    if (!existing) throw new Error(`Annotation not found: ${id}`);
-    const updated = { ...existing, ...patch, id, updatedAt: Date.now() };
-    this.rows.set(id, updated);
-    return updated;
-  }
-  async remove(id: string) {
-    return this.rows.delete(id);
-  }
-}
-
 export interface CanvasEngineBag {
-  // Phase 1
+  storage: StorageProvider;
+
+  // Phase 1 — core canvas
   eventBus: CapabilityEventBus;
   logger: StructuredLogger;
   traceStore: TraceStore;
-  uiComponentStore: MemoryUiComponentStore;
-  providerTypeStore: MemoryProviderTypeStore;
-  primitiveStore: MemoryPrimitiveStore;
-  providerStore: MemoryProviderStore;
-  accountStore: MemoryAccountStore;
-  capabilityTierStore: MemoryCapabilityTierStore;
-  userLayoutStore: MemoryUserLayoutStore;
-  canvasDefinitionStore: MemoryCanvasDefinitionStore;
+  readonly uiComponentStore: UiComponentStore;
+  readonly providerTypeStore: ProviderTypeStore;
+  readonly primitiveStore: PrimitiveStore;
+  readonly providerStore: ProviderStore;
+  readonly accountStore: AccountStore;
+  readonly capabilityTierStore: CapabilityTierStore;
+  readonly userLayoutStore: UserLayoutStore;
+  readonly canvasDefinitionStore: CanvasDefinitionStore;
   canvasRegistry: CanvasRegistry;
   layerMounter: CanvasLayerMounter;
   hotReload: PluginHotReload;
   workspace: AdaptiveWorkspace;
   routeSyncDeps: ReturnType<typeof buildRouteSyncDeps>;
 
-  // Phase 2 — workspace OS expansion
-  workspaceStore: MemoryWorkspaceStore;
-  documentStore: MemoryDocumentStore;
-  mediaStore: MemoryMediaStore;
-  automationStore: MemoryAutomationStore;
-  agentStore: MemoryAgentStore;
-  hitlGateStore: MemoryHitlGateStore;
-  policyRuleStore: MemoryPolicyRuleStore;
-  annotationStore: MemoryAnnotationStore;
-  shellCommandStore: MemoryShellCommandStore;
+  // Phase 2 — workspace OS
+  readonly workspaceStore: WorkspaceStore;
+  readonly documentStore: DocumentStore;
+  readonly mediaStore: MediaStore;
+  readonly automationStore: AutomationStore;
+  readonly agentStore: AgentStore;
+  readonly hitlGateStore: HitlGateStore;
+  readonly policyRuleStore: PolicyRuleStore;
+  readonly annotationStore: AnnotationStore;
+  readonly shellCommandStore: ShellCommandStore;
 
   documentEngine: DocumentEngine;
   mediaEngine: MediaEngine;
@@ -139,14 +108,14 @@ export interface CanvasEngineBag {
   agentsBuilder: AgentsBuilder;
   shellCommandEngine: ShellCommandEngine;
 
-  // Phase 3 — UX enhancement engines + stores
-  notificationStore: MemoryNotificationStore;
-  auditStore: MemoryAuditStore;
-  rbacStore: MemoryRbacStore;
-  templateStore: MemoryWorkspaceTemplateStore;
-  presenceStore: MemoryPresenceStore;
-  searchIndex: MemorySearchIndex;
-  onboardingStore: MemoryOnboardingStore;
+  // Phase 3 — UX enhancement
+  readonly notificationStore: NotificationStore;
+  readonly auditStore: AuditStore;
+  readonly rbacStore: RbacStore;
+  readonly templateStore: WorkspaceTemplateStore;
+  readonly presenceStore: PresenceStore;
+  readonly searchIndex: SearchIndex;
+  readonly onboardingStore: OnboardingStore;
   notificationEngine: NotificationEngine;
   searchEngine: SearchEngine;
   presenceEngine: PresenceEngine;
@@ -154,10 +123,10 @@ export interface CanvasEngineBag {
   rbacEngine: RbacEngine;
   templateEngine: TemplateEngine;
 
-  // Phase 4 — doc suite, z-layers, drawers
-  documentEditStore: MemoryDocumentEditStore;
-  zLayerStore: MemoryZLayerStore;
-  drawerStore: MemoryDrawerStore;
+  // Phase 4 — doc suite
+  readonly documentEditStore: DocumentEditStore;
+  readonly zLayerStore: ZLayerStore;
+  readonly drawerStore: DrawerStore;
   documentEditorEngine: DocumentEditorEngine;
   zLayerEngine: ZLayerEngine;
   drawerEngine: DrawerEngine;
@@ -190,94 +159,66 @@ export function getEngineBag(): CanvasEngineBag {
     }
   });
 
-  // Phase 1 stores
-  const uiComponentStore = new MemoryUiComponentStore();
-  const providerTypeStore = new MemoryProviderTypeStore();
-  const primitiveStore = new MemoryPrimitiveStore();
-  const providerStore = new MemoryProviderStore();
-  const accountStore = new MemoryAccountStore();
-  const capabilityTierStore = new MemoryCapabilityTierStore();
-  const userLayoutStore = new MemoryUserLayoutStore();
-  const canvasDefinitionStore = new MemoryCanvasDefinitionStore();
-
-  // Phase 2 stores
-  const workspaceStore = new MemoryWorkspaceStore();
-  const documentStore = new MemoryDocumentStore();
-  const mediaStore = new MemoryMediaStore();
-  const automationStore = new MemoryAutomationStore();
-  const agentStore = new MemoryAgentStore();
-  const hitlGateStore = new MemoryHitlGateStore();
-  const policyRuleStore = new MemoryPolicyRuleStore();
-  const annotationStore = new MemoryAnnotationStore();
-  const shellCommandStore = new MemoryShellCommandStore();
+  const storage = getStorageProvider();
 
   // Phase 1 engines
-  const canvasRegistry = new CanvasRegistry(canvasDefinitionStore, eventBus);
+  const canvasRegistry = new CanvasRegistry(storage.canvasDefinitionStore, eventBus);
   const layerMounter = new CanvasLayerMounter(eventBus);
   const hotReload = new PluginHotReload();
   const routeSyncDeps = buildRouteSyncDeps({
     eventBus,
     logger,
-    uiComponentStore,
-    providerTypeStore,
-    primitiveStore,
-    providerStore,
-    accountStore,
-    capabilityTierStore,
+    uiComponentStore: storage.uiComponentStore,
+    providerTypeStore: storage.providerTypeStore,
+    primitiveStore: storage.primitiveStore,
+    providerStore: storage.providerStore,
+    accountStore: storage.accountStore,
+    capabilityTierStore: storage.capabilityTierStore,
   });
   const workspace = new AdaptiveWorkspace(routeSyncDeps, eventBus, logger);
 
   // Phase 2 engines
   const mediaBridge = new MemoryMediaBridge();
-  const documentEngine = new DocumentEngine({ documentStore, eventBus, logger });
-  const mediaEngine = new MediaEngine({ mediaStore, eventBus, logger, bridge: mediaBridge });
-  const annotationEngine = new AnnotationEngine({ annotationStore, eventBus, logger });
-  const workspaceEngine = new WorkspaceEngine({ workspaceStore, eventBus, logger });
-  const automationBuilder = new AutomationBuilder({ automationStore, eventBus, logger });
+  const documentEngine = new DocumentEngine({ documentStore: storage.documentStore, eventBus, logger });
+  const mediaEngine = new MediaEngine({ mediaStore: storage.mediaStore, eventBus, logger, bridge: mediaBridge });
+  const annotationEngine = new AnnotationEngine({ annotationStore: storage.annotationStore, eventBus, logger });
+  const workspaceEngine = new WorkspaceEngine({ workspaceStore: storage.workspaceStore, eventBus, logger });
+  const automationBuilder = new AutomationBuilder({ automationStore: storage.automationStore, eventBus, logger });
   const agentsBuilder = new AgentsBuilder({
-    agentStore,
-    hitlGateStore,
-    policyRuleStore,
+    agentStore: storage.agentStore,
+    hitlGateStore: storage.hitlGateStore,
+    policyRuleStore: storage.policyRuleStore,
     eventBus,
     logger,
   });
-  const shellCommandEngine = new ShellCommandEngine({ commandStore: shellCommandStore, eventBus, logger });
+  const shellCommandEngine = new ShellCommandEngine({ commandStore: storage.shellCommandStore, eventBus, logger });
 
   // Register the default CLI command catalog (FRONTEND=BACKEND two-way).
-  registerDefaultCommands(shellCommandStore);
-
-  // Phase 3 stores
-  const notificationStore = new MemoryNotificationStore();
-  const auditStore = new MemoryAuditStore();
-  const rbacStore = new MemoryRbacStore();
-  const templateStore = new MemoryWorkspaceTemplateStore();
-  const presenceStore = new MemoryPresenceStore();
-  const searchIndex = new MemorySearchIndex();
-  const onboardingStore = new MemoryOnboardingStore();
+  registerDefaultCommands(storage.shellCommandStore);
 
   // Phase 3 engines
-  const notificationEngine = new NotificationEngine({ notificationStore, eventBus, logger });
+  const notificationEngine = new NotificationEngine({ notificationStore: storage.notificationStore, eventBus, logger });
   const searchEngine = new SearchEngine({
-    searchIndex,
-    shellCommandStore,
-    documentStore,
-    mediaStore,
-    automationStore,
-    agentStore,
-    workspaceStore,
-    providerStore,
+    searchIndex: storage.searchIndex,
+    shellCommandStore: storage.shellCommandStore,
+    documentStore: storage.documentStore,
+    mediaStore: storage.mediaStore,
+    automationStore: storage.automationStore,
+    agentStore: storage.agentStore,
+    workspaceStore: storage.workspaceStore,
+    providerStore: storage.providerStore,
     logger,
   });
-  const presenceEngine = new PresenceEngine({ presenceStore, eventBus, logger });
-  const auditEngine = new AuditEngine({ auditStore, eventBus, logger });
-  const rbacEngine = new RbacEngine({ rbacStore, eventBus, logger });
+  const presenceEngine = new PresenceEngine({ presenceStore: storage.presenceStore, eventBus, logger });
+  const auditEngine = new AuditEngine({ auditStore: storage.auditStore, eventBus, logger });
+  const rbacEngine = new RbacEngine({ rbacStore: storage.rbacStore, eventBus, logger });
   const templateEngine = new TemplateEngine({
-    templateStore,
-    workspaceStore,
-    documentStore,
-    mediaStore,
-    automationStore,
-    agentStore,
+    templateStore: storage.templateStore,
+    workspaceStore: storage.workspaceStore,
+    documentStore: storage.documentStore,
+    mediaStore: storage.mediaStore,
+    automationStore: storage.automationStore,
+    agentStore: storage.agentStore,
     eventBus,
     logger,
   });
@@ -286,45 +227,24 @@ export function getEngineBag(): CanvasEngineBag {
   notificationEngine.start();
   auditEngine.start();
 
-  // Phase 4 stores + engines
-  const documentEditStore = new MemoryDocumentEditStore(documentStore);
-  const zLayerStore = new MemoryZLayerStore();
-  const drawerStore = new MemoryDrawerStore();
-  const documentEditorEngine = new DocumentEditorEngine({ editStore: documentEditStore, eventBus, logger });
-  const zLayerEngine = new ZLayerEngine({ zLayerStore, eventBus, logger });
-  const drawerEngine = new DrawerEngine({ drawerStore, eventBus, logger });
+  // Phase 4 engines
+  const documentEditorEngine = new DocumentEditorEngine({ editStore: storage.documentEditStore, eventBus, logger });
+  const zLayerEngine = new ZLayerEngine({ zLayerStore: storage.zLayerStore, eventBus, logger });
+  const drawerEngine = new DrawerEngine({ drawerStore: storage.drawerStore, eventBus, logger });
 
   // V8 — UI Engine
   const uiEngine = new UIEngine({ eventBus, logger });
 
   _bag = {
+    storage,
     eventBus,
     logger,
     traceStore,
-    uiComponentStore,
-    providerTypeStore,
-    primitiveStore,
-    providerStore,
-    accountStore,
-    capabilityTierStore,
-    userLayoutStore,
-    canvasDefinitionStore,
     canvasRegistry,
     layerMounter,
     hotReload,
     workspace,
     routeSyncDeps,
-
-    // Phase 2
-    workspaceStore,
-    documentStore,
-    mediaStore,
-    automationStore,
-    agentStore,
-    hitlGateStore,
-    policyRuleStore,
-    annotationStore,
-    shellCommandStore,
 
     documentEngine,
     mediaEngine,
@@ -335,14 +255,6 @@ export function getEngineBag(): CanvasEngineBag {
     agentsBuilder,
     shellCommandEngine,
 
-    // Phase 3
-    notificationStore,
-    auditStore,
-    rbacStore,
-    templateStore,
-    presenceStore,
-    searchIndex,
-    onboardingStore,
     notificationEngine,
     searchEngine,
     presenceEngine,
@@ -350,17 +262,41 @@ export function getEngineBag(): CanvasEngineBag {
     rbacEngine,
     templateEngine,
 
-    // Phase 4
-    documentEditStore,
-    zLayerStore,
-    drawerStore,
     documentEditorEngine,
     zLayerEngine,
     drawerEngine,
 
-    // V8
     uiEngine,
-  };
+
+    // Back-compat store getters — DO NOT add new ones; use `bag.storage.X` instead.
+    get uiComponentStore() { return storage.uiComponentStore; },
+    get providerTypeStore() { return storage.providerTypeStore; },
+    get primitiveStore() { return storage.primitiveStore; },
+    get providerStore() { return storage.providerStore; },
+    get accountStore() { return storage.accountStore; },
+    get capabilityTierStore() { return storage.capabilityTierStore; },
+    get userLayoutStore() { return storage.userLayoutStore; },
+    get canvasDefinitionStore() { return storage.canvasDefinitionStore; },
+    get workspaceStore() { return storage.workspaceStore; },
+    get documentStore() { return storage.documentStore; },
+    get mediaStore() { return storage.mediaStore; },
+    get automationStore() { return storage.automationStore; },
+    get agentStore() { return storage.agentStore; },
+    get hitlGateStore() { return storage.hitlGateStore; },
+    get policyRuleStore() { return storage.policyRuleStore; },
+    get annotationStore() { return storage.annotationStore; },
+    get shellCommandStore() { return storage.shellCommandStore; },
+    get notificationStore() { return storage.notificationStore; },
+    get auditStore() { return storage.auditStore; },
+    get rbacStore() { return storage.rbacStore; },
+    get templateStore() { return storage.templateStore; },
+    get presenceStore() { return storage.presenceStore; },
+    get searchIndex() { return storage.searchIndex; },
+    get onboardingStore() { return storage.onboardingStore; },
+    get documentEditStore() { return storage.documentEditStore; },
+    get zLayerStore() { return storage.zLayerStore; },
+    get drawerStore() { return storage.drawerStore; },
+  } as CanvasEngineBag;
   return _bag;
 }
 
@@ -370,6 +306,11 @@ export function isSeeded(): boolean {
 }
 export function markSeeded(): void {
   _seeded = true;
+}
+
+/** Test-only: reset the bag singleton so the next getEngineBag() creates a fresh bag. */
+export function __resetEngineBagForTests(): void {
+  _bag = null;
 }
 
 export function newTraceId(): string {

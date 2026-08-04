@@ -34,6 +34,20 @@ function parse(rawBody) {
           const last = blocks[blocks.length - 1];
           if (last && last.type === 'reasoning') last.text += delta.thinking;
           else blocks.push({ type: 'reasoning', text: delta.thinking });
+        } else if (typeof delta.signature === 'string') {
+          const last = blocks[blocks.length - 1];
+          if (last && last.type === 'reasoning') last.signature = delta.signature;
+          else blocks.push({ type: 'meta', key: 'thinking_signature', value: delta.signature });
+        }
+      }
+      if (json.type === 'content_block_stop' && json.index !== undefined) {
+        const last = blocks[blocks.length - 1];
+        if (last && last.type === 'text' && last.text.indexOf('<antArtifact') !== -1) {
+          const match = last.text.match(/<antArtifact[^>]*identifier="([^"]*)"[^>]*type="([^"]*)"[^>]*title="([^"]*)"[^>]*>\\n?([\\s\\S]*?)\\n?<\\/antArtifact>/);
+          if (match) {
+            blocks.pop();
+            blocks.push({ type: 'file', url: 'artifact://' + match[1], mediaType: match[2], filename: match[3], text: match[4] });
+          }
         }
       }
       if (json.type === 'message_start' && json.message) blocks.push({ type: 'meta', key: 'message_id', value: json.message.id });
@@ -57,5 +71,5 @@ function getConfidence(rawBody) {
   if (!hasContent) return b.includes('message_stop') ? 0.7 : 0.3;
   return 1;
 }
-module.exports.default = { name: 'claude/001_streaming_sse', version: 1, providerId: 'claude', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+module.exports.default = { name: 'claude/001_streaming_sse', version: 2, providerId: 'claude', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
 `

@@ -34,16 +34,35 @@ Download the latest installer from [GitHub Releases](https://github.com/owenserv
 git clone https://github.com/owenservera/vivim-final.git
 cd vivim-final
 
-# Install dependencies
+# Install root dependencies
 bun install
 
-# Set up database
+# Install frontend dependencies
+cd frontend
+bun install
+cd ..
+
+# Copy env example and configure if needed (defaults work for dev)
+cp .env.example .env
+
+# Generate Prisma client
 bun run prisma:generate
+
+# Apply schema to the database (REQUIRED — creates tables)
+bun x prisma db push
+
+# Seed the database (boots server once, runs all seeds)
 bun run seed
 
 # Start development server
 bun run dev
 ```
+
+This starts:
+- **Backend** at `http://localhost:9420` (REST API + WebSocket)
+- **Frontend** at `http://localhost:3000` (Next.js dev server)
+
+Open `http://localhost:3000` in your browser. The Next.js frontend proxies `/api/*` requests to the backend on `:9420`.
 
 ---
 
@@ -54,7 +73,7 @@ bun run dev
 1. **Install** the Windows installer or clone the repository
 2. **Configure** your API keys in `.env` (see [Configuration](#configuration))
 3. **Launch** Vivim Desktop from Start Menu or run `bun run dev`
-4. **Access** the web interface at `http://localhost:9420`
+4. **Access** the web interface at `http://localhost:3000`
 
 ### User Guide
 

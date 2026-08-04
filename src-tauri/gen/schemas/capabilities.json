@@ -1,17 +1,1 @@
-{
-  "default": {
-    "identifier": "default",
-    "description": "Capabilities for the main vivim window + backend sidecar",
-    "local": true,
-    "windows": ["main"],
-    "permissions": [
-      "core:default",
-      "updater:default",
-      "shell:allow-open",
-      {
-        "identifier": "shell:allow-execute",
-        "allow": [{ "name": "binaries/vivim-server", "sidecar": true }]
-      }
-    ]
-  }
-}
+{"default":{"identifier":"default","description":"Capabilities for the main vivim window + backend sidecar","local":true,"windows":["main"],"permissions":["core:default","updater:default","shell:allow-open",{"identifier":"shell:allow-execute","allow":[{"name":"binaries/vivim-server","sidecar":true}]}]}}

@@ -11,6 +11,7 @@ import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { ExecutionPolicyEngine, PolicyDecision } from './execution-policy.js'
 import type { IntentResolver, NLCContext, ParsedIntent } from './nlcl/types.js'
+import type { SelectorHealer } from './selector-healer.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -199,6 +200,10 @@ export class AutonomousExecutionEngine {
         metaJson: string
       }): Promise<string>
     },
+    // Self-healing: optional injected SelectorHealer. When present, selector
+    // repair uses the injected instance (testable, no dynamic import overhead).
+    // When absent, falls back to a dynamic import for lazy loading.
+    private readonly injectedHealer?: SelectorHealer,
   ) {}
 
   // Unit 8.6: per-task budget enforcement — checks cost/tokens/iterations
@@ -891,7 +896,7 @@ export class AutonomousExecutionEngine {
     const branchTask: AutonomousTask = {
       id: branchId,
       goal: { ...original.goal },
-      status: 'running',
+      status: 'executing',
       steps: branchSteps,
       startedAt: Date.now(),
       completedAt: null,
@@ -1229,14 +1234,22 @@ export class AutonomousExecutionEngine {
 
   private async healSelector(failedSelector: string, task: AutonomousTask): Promise<string | null> {
     try {
-      const { SelectorHealer } = await import('./selector-healer.js')
-      const { SemanticGroundingEngine } = await import('./semantic-grounding.js')
-      // Create a minimal CDP transport proxy for selector healing
       const slave = await this.governor.ensureRunning('default')
       const transport = this.governor.getTransport()
       if (!transport) return null
-      const grounding = new SemanticGroundingEngine(transport)
-      const healer = new SelectorHealer(grounding)
+
+      // Prefer injected healer (testable, no dynamic import overhead).
+      // Fall back to dynamic import for lazy loading when not injected.
+      let healer: SelectorHealer
+      if (this.injectedHealer) {
+        healer = this.injectedHealer
+      } else {
+        const { SelectorHealer } = await import('./selector-healer.js')
+        const { SemanticGroundingEngine } = await import('./semantic-grounding.js')
+        const grounding = new SemanticGroundingEngine(transport)
+        healer = new SelectorHealer(grounding)
+      }
+
       const result = await healer.heal({
         slaveId: slave.slaveId,
         failedSelector: { type: 'css', selector: failedSelector },

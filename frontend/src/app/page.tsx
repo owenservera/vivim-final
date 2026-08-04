@@ -19,6 +19,7 @@
 
 import { useEffect, useMemo, useRef, useState, Suspense, lazy } from 'react';
 import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { dispatchBehavior } from '@/shared/dispatch-behavior';
 import { GuidedLanding, checkNeedsSetup } from '@/features/guided-landing';
 import {
   LivingCanvas,
@@ -34,6 +35,7 @@ import {
   useSessionState,
   TabBar,
   SlidePanel,
+  PanelPalette,
   getLayerConfig,
   UpdateNotification,
 } from '@/components/canvas';
@@ -74,12 +76,14 @@ function CanvasApp() {
 
   // UI state
   const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
+  const [guidedComplete, setGuidedComplete] = useState(false);
   const [guidedOpen, setGuidedOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
-  const [devConsoleOpen, setDevConsoleOpen] = useState(false);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+   const [devConsoleOpen, setDevConsoleOpen] = useState(false);
+   const [panelPaletteOpen, setPanelPaletteOpen] = useState(false);
+   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
   // SSOA session state
@@ -90,8 +94,12 @@ function CanvasApp() {
   // P0-1 fix: ref to avoid stale closure in keyboard handler
   const sessionRef = useRef(sessionState);
   const dispatchRef = useRef(dispatch);
+  const createConversationRef = useRef(createConversation);
+  const setActiveConversationIdRef = useRef(setActiveConversationId);
   useEffect(() => { sessionRef.current = sessionState; });
   useEffect(() => { dispatchRef.current = dispatch; });
+  useEffect(() => { createConversationRef.current = createConversation; });
+  useEffect(() => { setActiveConversationIdRef.current = setActiveConversationId; });
 
   // Check if onboarding needed — auto-open guided assistant for first run
   useEffect(() => {
@@ -100,7 +108,9 @@ function CanvasApp() {
       if (!mountedRef.current) return;
       setNeedsSetup(needs);
       if (needs) setGuidedOpen(true);
-    }).catch(() => { if (mountedRef.current) setNeedsSetup(false); });
+      // Returning user — no GuidedLanding needed, OnboardingTour can mount immediately
+      if (!needs) setGuidedComplete(true);
+    }).catch(() => { if (mountedRef.current) { setNeedsSetup(false); setGuidedComplete(true); } });
     return () => { mountedRef.current = false; };
   }, []);
 
@@ -181,11 +191,26 @@ function CanvasApp() {
         e.preventDefault();
         dispatch({ type: 'PANEL_TOGGLE', layerId: ss.activeLayer, panelId: 'search' });
       }
+      // Cmd+Shift+P → panel palette
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'p') {
+        e.preventDefault();
+        setPanelPaletteOpen(true);
+      }
       // Escape: Close all panels (but not guided — it handles its own Escape)
       if (e.key === 'Escape') {
         setPaletteOpen(false);
         setMenuOpen(false);
         setThemeOpen(false);
+        setPanelPaletteOpen(false);
+      }
+      // Ctrl+N: New conversation
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        const doCreate = async () => {
+          const conv = await createConversationRef.current();
+          if (conv) setActiveConversationIdRef.current(conv.id);
+        };
+        doCreate();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -235,6 +260,7 @@ function CanvasApp() {
         onComplete={(convId) => {
           setGuidedOpen(false);
           setNeedsSetup(false);
+          setGuidedComplete(true);
           refreshConversations();
           refreshProviders();
         }}
@@ -310,8 +336,22 @@ function CanvasApp() {
       {/* Theme settings */}
       {themeOpen && <ThemeSettings onClose={() => setThemeOpen(false)} />}
 
-      {/* Onboarding tour */}
-      <OnboardingTour userId="user:demo" onAction={() => {}} />
+      {/* Onboarding tour — only mount after GuidedLanding completes (first run) or immediately (returning user) */}
+      {guidedComplete && <OnboardingTour userId="user:demo" onAction={async (cmd) => {
+        if (cmd === 'switch-workspace') {
+          dispatch({ type: 'LAYER_SWITCH', layerId: sessionState.activeLayer });
+        } else if (cmd.startsWith('switch-surface:')) {
+          const surface = cmd.split(':')[1];
+          if (surface === 'shell') {
+            dispatch({ type: 'PANEL_TOGGLE', layerId: sessionState.activeLayer, panelId: 'terminal' });
+          }
+        } else if (cmd === 'open-command-palette') {
+          setPaletteOpen(true);
+        } else if (cmd.startsWith('execute:')) {
+          const capability = cmd.slice('execute:'.length);
+          await dispatchBehavior('execute', capability, null, io);
+        }
+      }} />}
 
       {/* Help center — floating widget (Ctrl+? or F1 to toggle) */}
       <HelpWidget
@@ -341,6 +381,26 @@ function CanvasApp() {
 
       {/* Update notification */}
       <UpdateNotification />
+
+      {/* Panel palette (Cmd+Shift+P) */}
+      <PanelPalette
+        open={panelPaletteOpen}
+        onOpenChange={setPanelPaletteOpen}
+        onSelect={(panelId) => {
+          const ss = sessionRef.current;
+          const layerId = ss.activeLayer;
+          const layer = ss.layers[layerId];
+          if (layer) {
+            if (layer.openPanels.includes(panelId)) {
+              // If already open, just focus/blur close — here we just close it
+              // In a full impl, this would focus the panel
+            } else {
+              // Open the panel on the active layer
+            }
+          }
+          setPanelPaletteOpen(false);
+        }}
+      />
 
     </div>
   );

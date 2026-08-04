@@ -63,7 +63,7 @@ export function WorkspaceSwitcher({
         style={{
           fontSize: 10,
           fontWeight: 600,
-          color: '#6b7280',
+          color: 'var(--text-muted)',
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
           marginBottom: 4,
@@ -71,7 +71,7 @@ export function WorkspaceSwitcher({
       >
         Workspaces
       </div>
-      {loading && <div style={{ color: '#9ca3af' }}>Loading…</div>}
+      {loading && <div style={{ color: 'var(--text-subtle)' }}>Loading…</div>}
       {workspaces.map((ws) => {
         const isCurrent = ws.id === currentWorkspaceId;
         return (
@@ -81,23 +81,23 @@ export function WorkspaceSwitcher({
             style={{
               padding: '4px 8px',
               border: '1px solid',
-              borderColor: isCurrent ? '#fbbf24' : '#e5e7eb',
-              background: isCurrent ? '#fffbeb' : 'white',
+              borderColor: isCurrent ? 'var(--color-warning)' : 'var(--border)',
+              background: isCurrent ? 'var(--color-warning-surface)' : 'var(--bg)',
               borderRadius: 4,
               textAlign: 'left',
               cursor: 'pointer',
               fontSize: 11,
               fontFamily: 'inherit',
-              color: '#374151',
+              color: 'var(--text)',
             }}
           >
             <div style={{ fontWeight: isCurrent ? 600 : 400 }}>
               {ws.displayName}
               {ws.kind === 'global' && (
-                <span style={{ color: '#9ca3af', marginLeft: 4 }}>(global)</span>
+                <span style={{ color: 'var(--text-subtle)', marginLeft: 4 }}>(global)</span>
               )}
             </div>
-            <div style={{ fontSize: 9, color: '#9ca3af' }}>
+            <div style={{ fontSize: 9, color: 'var(--text-subtle)' }}>
               z={ws.zDepth} · {ws.surfaces.length} surfaces
             </div>
           </button>
@@ -108,14 +108,14 @@ export function WorkspaceSwitcher({
           onClick={onCreate}
           style={{
             padding: '4px 8px',
-            border: '1px dashed #d1d5db',
+            border: '1px dashed var(--border)',
             background: 'transparent',
             borderRadius: 4,
             textAlign: 'left',
             cursor: 'pointer',
             fontSize: 11,
             fontFamily: 'inherit',
-            color: '#6b7280',
+            color: 'var(--text-muted)',
           }}
         >
           + New workspace

@@ -40,8 +40,8 @@ export async function initPrismaWal(prisma?: PrismaClient): Promise<void> {
 export function getPrisma(): PrismaClient {
   if (!client) {
     let url = env.DATABASE_URL
-    if (!url || url.startsWith('file:./') || url.startsWith('file:../')) {
-      // In Tauri sidecar or dev, fall back to the centralized config.dbPath
+    if (!url) {
+      // No DATABASE_URL set — fall back to the centralized config.dbPath
       // which resolves to %LOCALAPPDATA%/vivim/cap-store/cap-store.sqlite.
       url = `file:${config.dbPath}`
     }

@@ -7,75 +7,75 @@
  * VIVIM_STORAGE_PROVIDER=memory (or unset).
  */
 
-import type { StorageProvider } from './storage-provider';
 import {
-  MemoryUiComponentStore,
-  MemoryProviderTypeStore,
+  MemoryAccountStore,
+  MemoryAgentStore,
+  MemoryAnnotationStore,
+  MemoryAuditStore,
+  MemoryAutomationStore,
+  MemoryCanvasDefinitionStore,
+  MemoryCapabilityTierStore,
+  MemoryDocumentEditStore,
+  MemoryDocumentStore,
+  MemoryDrawerStore,
+  MemoryHitlGateStore,
+  MemoryMediaStore,
+  MemoryNotificationStore,
+  MemoryOnboardingStore,
+  MemoryPolicyRuleStore,
+  MemoryPresenceStore,
   MemoryPrimitiveStore,
   MemoryProviderStore,
-  MemoryAccountStore,
-  MemoryCapabilityTierStore,
-  MemoryUserLayoutStore,
-  MemoryCanvasDefinitionStore,
-  MemoryWorkspaceStore,
-  MemoryDocumentStore,
-  MemoryMediaStore,
-  MemoryAutomationStore,
-  MemoryAgentStore,
-  MemoryHitlGateStore,
-  MemoryPolicyRuleStore,
-  MemoryAnnotationStore,
-  MemoryShellCommandStore,
-  MemoryNotificationStore,
-  MemoryAuditStore,
+  MemoryProviderTypeStore,
   MemoryRbacStore,
-  MemoryWorkspaceTemplateStore,
-  MemoryPresenceStore,
   MemorySearchIndex,
-  MemoryOnboardingStore,
-  MemoryDocumentEditStore,
+  MemoryShellCommandStore,
+  MemoryUiComponentStore,
+  MemoryUserLayoutStore,
+  MemoryWorkspaceStore,
+  MemoryWorkspaceTemplateStore,
   MemoryZLayerStore,
-  MemoryDrawerStore,
-} from '../impl';
+} from '../impl'
+import type { StorageProvider } from './storage-provider'
 
 export class MemoryStorageProvider implements StorageProvider {
-  readonly name = 'memory' as const;
+  readonly name = 'memory' as const
 
   // Phase 1 — core canvas
-  readonly uiComponentStore = new MemoryUiComponentStore();
-  readonly providerTypeStore = new MemoryProviderTypeStore();
-  readonly primitiveStore = new MemoryPrimitiveStore();
-  readonly providerStore = new MemoryProviderStore();
-  readonly accountStore = new MemoryAccountStore();
-  readonly capabilityTierStore = new MemoryCapabilityTierStore();
-  readonly userLayoutStore = new MemoryUserLayoutStore();
-  readonly canvasDefinitionStore = new MemoryCanvasDefinitionStore();
+  readonly uiComponentStore = new MemoryUiComponentStore()
+  readonly providerTypeStore = new MemoryProviderTypeStore()
+  readonly primitiveStore = new MemoryPrimitiveStore()
+  readonly providerStore = new MemoryProviderStore()
+  readonly accountStore = new MemoryAccountStore()
+  readonly capabilityTierStore = new MemoryCapabilityTierStore()
+  readonly userLayoutStore = new MemoryUserLayoutStore()
+  readonly canvasDefinitionStore = new MemoryCanvasDefinitionStore()
 
   // Phase 2 — workspace OS
-  readonly workspaceStore = new MemoryWorkspaceStore();
-  readonly documentStore = new MemoryDocumentStore();
-  readonly mediaStore = new MemoryMediaStore();
-  readonly automationStore = new MemoryAutomationStore();
-  readonly agentStore = new MemoryAgentStore();
-  readonly hitlGateStore = new MemoryHitlGateStore();
-  readonly policyRuleStore = new MemoryPolicyRuleStore();
-  readonly annotationStore = new MemoryAnnotationStore();
-  readonly shellCommandStore = new MemoryShellCommandStore();
+  readonly workspaceStore = new MemoryWorkspaceStore()
+  readonly documentStore = new MemoryDocumentStore()
+  readonly mediaStore = new MemoryMediaStore()
+  readonly automationStore = new MemoryAutomationStore()
+  readonly agentStore = new MemoryAgentStore()
+  readonly hitlGateStore = new MemoryHitlGateStore()
+  readonly policyRuleStore = new MemoryPolicyRuleStore()
+  readonly annotationStore = new MemoryAnnotationStore()
+  readonly shellCommandStore = new MemoryShellCommandStore()
 
   // Phase 3 — UX enhancement
-  readonly notificationStore = new MemoryNotificationStore();
-  readonly auditStore = new MemoryAuditStore();
-  readonly rbacStore = new MemoryRbacStore();
-  readonly templateStore = new MemoryWorkspaceTemplateStore();
-  readonly presenceStore = new MemoryPresenceStore();
-  readonly searchIndex = new MemorySearchIndex();
-  readonly onboardingStore = new MemoryOnboardingStore();
+  readonly notificationStore = new MemoryNotificationStore()
+  readonly auditStore = new MemoryAuditStore()
+  readonly rbacStore = new MemoryRbacStore()
+  readonly templateStore = new MemoryWorkspaceTemplateStore()
+  readonly presenceStore = new MemoryPresenceStore()
+  readonly searchIndex = new MemorySearchIndex()
+  readonly onboardingStore = new MemoryOnboardingStore()
 
   // Phase 4 — doc suite
   // NOTE: MemoryDocumentEditStore takes a documentStore argument.
   // Field initializers run in declaration order, so `this.documentStore`
   // IS available here because it's declared above (Phase 2).
-  readonly documentEditStore = new MemoryDocumentEditStore(this.documentStore);
-  readonly zLayerStore = new MemoryZLayerStore();
-  readonly drawerStore = new MemoryDrawerStore();
+  readonly documentEditStore = new MemoryDocumentEditStore(this.documentStore)
+  readonly zLayerStore = new MemoryZLayerStore()
+  readonly drawerStore = new MemoryDrawerStore()
 }

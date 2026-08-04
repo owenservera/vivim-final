@@ -44,10 +44,13 @@ Design docs are in `docs/merged-design-v2/`. Read in order 00-08 for v1, then SO
 
 ### Build Pipeline
 ```bash
-# Build with UPX compression (default level 3)
-bun run scripts/tauri/compile-sidecar.ts
+# Full desktop build (sidecar + frontend static export + cargo tauri NSIS installer)
+pwsh scripts/tauri/build.ps1
 
-# Manual UPX compression
+# Sidecar-only build (bun compile + UPX level 3 compression)
+pwsh scripts/tauri/build-sidecar.ps1
+
+# Manual UPX compression (if needed)
 upx -3 --no-lzma src-tauri/binaries/vivim-server-x86_64-pc-windows-msvc.exe
 ```
 
@@ -55,6 +58,133 @@ upx -3 --no-lzma src-tauri/binaries/vivim-server-x86_64-pc-windows-msvc.exe
 - **Bun v1.4.0 (Rust rewrite):** ~20% binary size reduction (76 MB vs 94 MB) — available in canary
 - **bkg (Bun Packager):** LZ4 compression with custom runtime decompression
 - **NSIS installer:** LZMA compression for installer packaging
+
+## Desktop Build Testing (CRITICAL)
+
+> **When working on Tauri builds, NSIS installers, or desktop packaging — use the devops/desktop toolkit first.** The `devops/desktop/` toolkit (driven by `bun run devops desktop-loop <action>`) provides a 15-action CLI with hash-gated rebuild detection, a 5-gate orchestrator (Build → Install → Launch+Render → Capture → Report), and structured diagnostics.
+>
+> **Quick start:** `bun run devops desktop-loop run --version <x.y.z>` runs the full 5-gate pipeline end-to-end. For individual checks, use granular actions (`status`, `build`, `install`, `kill`, `launch`, `test smoke`, etc.). All artifacts are stored in `dist/debug/<version>/cycle-N/`.
+>
+> **Core workflow:** The toolkit wraps the raw Tauri build scripts (`scripts/tauri/build.ps1`, `build-sidecar.ps1`) with verification, process management, port-owner checks, screenshot capture, and structured reporting. It does NOT replace the build scripts — it orchestrates them and validates the *installed* binary.
+>
+> **Hash-gated rebuilds:** `build.ts` fingerprints source directories (`src/`, `src-tauri/src/`, `frontend/src/`) using sorted mtime+size SHA-256 hashes, version-scoped per stage (`sidecar`, `tauri-rust`, `tauri-frontend`). Unchanged stages skip rebuilds. Cache lives in `dist/build-hashes.json`.
+>
+> **Test batteries:** `test smoke` (process → readyz → window → screenshot → probe) is the fastest CI gate. `test boot` kills+relaunches fresh. `test http` probes `/readyz`, `/health`, `/api/openapi.json`. `test window` checks window + screenshot. `test process` checks window info. `test all` runs everything.
+>
+> **Version management:** `scripts/tauri/version.ts` is the single source of truth — reads/writes `tauri.conf.json` + `Cargo.toml` + derives exe metadata at compile time. Always pass `--version` to scope state correctly.
+
+### Desktop DevOps CLI
+
+Full 15-action toolkit at `devops/desktop/` driven by `bun run devops desktop-loop <action>`.
+
+| Action | What It Does | Key Flags |
+|--------|-------------|-----------|
+| `status` | Check installed exe, processes, port owner, registry key | `--version` |
+| `build` | Hash-gated check: sidecar/tauri/frontend changed → skip if unchanged | `--version` (required) |
+| `install` | Kill stale → uninstall prior → install NSIS silently (`/S`) | `--version` (required) |
+| `uninstall` | Kill stale → uninstall via NSIS QuietUninstallString | |
+| `kill` | Kill vivim-desktop.exe + vivim-server.exe | |
+| `launch` | Start installed exe → poll /readyz with owner PID verification → wait for window | `--port`, `--timeout`, `--wait-window` |
+| `readyz` | Poll /readyz, verify owner PID matches launched process | `--port`, `--timeout` |
+| `probe` | HTTP probe a specific path (default `/readyz`) | `--expect`, `--contains`, `--method`, `--body` |
+| `screenshot` | Focus window → capture full-screen → assert non-blank via ImageMagick | `--out`, `--focus`, `--verify` |
+| `window` | Get window title/handle/responding for vivim-desktop + vivim-server | |
+| `process` | Port owner PID + window info for both processes | |
+| `logs` | Tail vivim-server.log + vivim-supervisor.log from `%LOCALAPPDATA%\vivim\` | `--tail` |
+| `test <battery>` | Run test batteries: smoke, boot, http, window, process, all | battery (positional) |
+| `report` | Generate markdown report from last gate cycle | `--version` |
+| `reset` | Clear ledger + runtime state | |
+
+### Gate Orchestrator (`run` action)
+
+`bun run devops desktop-loop run --version <x.y.z>` runs a 5-gate pipeline:
+
+```
+G1 Build → G2 Install → G3 Launch+Render → G4 Capture (on fail) → G5 Report
+```
+
+- **G1 Build:** Hash-gated sidecar + tauri rebuilds. Fingerprints `src/`, `src-tauri/src/`, `frontend/src/` by sorted mtime+size; version-scoped cache at `dist/build-hashes.json`. Skips stages with no changes.
+- **G2 Install:** Kill stale processes → uninstall prior via NSIS QuietUninstallString → install with `installer /S`.
+- **G3 Launch+Render:** Launch installed exe → poll `/readyz` with owner-PID verification (kills stale servers) → screenshot → `assertNonBlank` via ImageMagick.
+- **G4 Capture:** On failure, copy `vivim-server.log` + `vivim-supervisor.log` from `%LOCALAPPDATA%\vivim\` into cycle dir.
+- **G5 Report:** Write `report.json` + `report.md` to cycle dir; on success, stage installer to `dist/debug/<version>/`.
+
+**Artifacts:** All cycle outputs go to `dist/debug/<version>/cycle-N/` (`.log` files, screenshots, `report.json`, `report.md`, copied logs).
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `devops/desktop/index.ts` | CLI entry + 5-gate orchestrator (`runDesktopLoop`). Gates: G1 Build → G2 Install → G3 Launch+Render → G4 Capture (on fail) → G5 Report. |
+| `devops/desktop/cli.ts` | Arg parsing (`parseArgs`), action dispatch (`dispatchAction`), per-invocation log tee (`teeConsoleToLog`). All actions return `ActionResult`. |
+| `devops/desktop/actions.ts` | 15 action handlers: `status`, `build`, `install`, `uninstall`, `kill`, `launch`, `readyz`, `probe`, `screenshot`, `window`, `process`, `logs`, `test` (batteries: smoke, boot, http, window, process, all), `report`, `reset`. |
+| `devops/desktop/spawn.ts` | Streaming output capture (`spawnStreaming`), process management (`killVivimProcesses`, `launchInstalled`), NSIS install/uninstall helpers (`installNsis`, `uninstallNsis`, `getUninstallRegistryKey`). |
+| `devops/desktop/verify.ts` | Pure decision logic (`parseNetstat`, `assessReady`, `checkNonBlank`) + PowerShell wrappers (`ownerPidForPort`, `scanPortForPid`, `pollReady`, `windowInfo`, `focusWindow`, `captureScreenshot`, `assertNonBlank`). |
+| `devops/desktop/build.ts` | Hash-gated rebuilds (`needsBuild`, `markBuilt`, `dirFingerprint`). Fingerprint = sorted mtime+size SHA-256 over source files. Cache at `dist/build-hashes.json`, version-scoped per stage. |
+| `devops/desktop/state.ts` | Ledger (cycle history at `dist/loop-state.json`) + runtime (per-install state at `dist/desktop-runtime.json`). `DesktopRuntime` stores port/PID/readyMs as defaults for granular actions. |
+| `scripts/tauri/version.ts` | Single source of truth for desktop version — reads/writes `tauri.conf.json` + `Cargo.toml`. `ensureDesktopVersion(v)` bumps stored copies. `nsisPathFor(v)` derives installer path. |
+| `scripts/tauri/compile-sidecar.ts` | Sidecar compilation with UPX compression (Level 3, `--no-lzma`). |
+| `scripts/tauri/prepare-frontend.ts` | Next.js build + `out/` generation for Tauri (patches `next.config.mjs` to `output: 'export'`, builds, restores). |
+
+### Tauri V2 Build Config (Post-Upgrade)
+
+The Tauri V2 upgrade removed `tauri-plugin-updater` and WIX/MSi targets entirely.
+The current `src-tauri/tauri.conf.json` uses:
+- `"targets": ["nsis"]` (NSIS only, no WIX)
+- `"createUpdaterArtifacts": false` (no updater artifacts)
+- `"plugins": { "shell": { "open": true } }` (no updater plugin)
+- `"visible": false` in the window config (window shows on `backend-ready` event)
+- CSP includes `'unsafe-eval'` and `'unsafe-inline'` for static JS
+
+### Debugging App Crashes
+
+1. **Run from command line** to capture stderr:
+   ```powershell
+   & "$env:LOCALAPPDATA\vivim\vivim-desktop.exe" 2>&1
+   ```
+2. **Check logs** at `%LOCALAPPDATA%\vivim\`:
+   - `vivim-supervisor.log` — sidecar spawn/restart events
+   - `vivim-server.log` — server boot/port/errors
+3. **Use desktop-loop actions** for structured diagnostics:
+   ```bash
+   bun run devops desktop-loop status     # installed state
+   bun run devops desktop-loop logs       # tail app logs
+   bun run devops desktop-loop screenshot  # capture window
+   bun run devops desktop-loop test smoke  # full smoke battery
+   ```
+
+### Desktop Debug Gotchas
+
+#### PowerShell Object-Pipeline Read Bug (CRITICAL)
+**`Invoke-RestMethod | Select-Object -ExpandProperty <x> | Out-File` produces EMPTY files / empty output even when the API returns data.** The PowerShell object pipeline drops the deserialized JSON payload before it reaches `Out-File`/`Get-Content`.
+
+**ALWAYS read API/JSON data through a BUN SCRIPT, never through the PowerShell object pipeline:**
+```bash
+# WRONG — silently yields empty output:
+Invoke-RestMethod "http://localhost:$port/api/capabilities?surface=cli" |
+  Select-Object -ExpandProperty slug | Out-File -Encoding utf8 file.txt
+# CORRECT — write a .ts file and bun run it:
+bun run .runtime/list-data.ts   # reads fetch, writes .txt via fs
+```
+
+#### `Bun.spawn` exitCode is null
+`proc.exitCode` returns `null` until `await proc.exited` resolves. Always await the promise before reading exit code.
+
+#### Smoke tests must have client-side timeouts
+Endpoints like `/api/conversations/:id/send` block forever waiting for a CDP browser that isn't attached. Always wrap `fetch` calls with `AbortController` + timeout so the test completes.
+
+### Desktop Dev Workflow Quick Reference
+
+| Task | Command |
+|------|---------|
+| Full clean build + install + test | `bun run devops desktop-loop run --version <x.y.z>` |
+| Check if rebuild needed (no rebuild) | `bun run devops desktop-loop build --version <x.y.z>` |
+| Install latest installer silently | `bun run devops desktop-loop install --version <x.y.z>` |
+| Launch + verify readyz | `bun run devops desktop-loop launch --version <x.y.z>` |
+| Full smoke test (process+window+render) | `bun run devops desktop-loop test smoke` |
+| Kill all vivim processes | `bun run devops desktop-loop kill` |
+| Tail server+supervisor logs | `bun run devops desktop-loop logs --tail 100` |
+| Capture + verify non-blank screenshot | `bun run devops desktop-loop screenshot --verify` |
 
 ## Provider System (KNOW THIS FIRST)
 

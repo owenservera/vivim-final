@@ -42,16 +42,16 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
         flexDirection: 'column',
         height: '100%',
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-        background: 'white',
+        background: 'var(--bg)',
       }}
     >
       <header
         style={{
           padding: '6px 10px',
-          borderBottom: '1px solid #e5e7eb',
-          background: '#f9fafb',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--bg-subtle)',
           fontSize: 11,
-          color: '#374151',
+          color: 'var(--text)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -62,11 +62,11 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
               borderRadius: 4,
               background:
                 media.engine === 'vlc'
-                  ? '#fef3c7'
+                  ? 'var(--color-warning-surface)'
                   : media.engine === 'html5'
-                    ? '#d1fae5'
-                    : '#e5e7eb',
-              color: '#374151',
+                    ? 'var(--color-success-surface)'
+                    : 'var(--bg-subtle)',
+              color: 'var(--text)',
               fontSize: 10,
               fontWeight: 600,
             }}
@@ -74,7 +74,7 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
             {media.engine}
           </span>
         </div>
-        <div style={{ marginTop: 2, fontSize: 10, color: '#6b7280' }}>
+        <div style={{ marginTop: 2, fontSize: 10, color: 'var(--text-muted)' }}>
           {media.kind} · {media.mimeType}
           {media.durationSec ? ` · ${Math.round(media.durationSec)}s` : ''}
         </div>
@@ -110,7 +110,7 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
           <img src={media.sourceUrl} alt={media.title} style={{ width: '100%', borderRadius: 4 }} />
         )}
         {media.kind === 'stream' && (
-          <div style={{ padding: 24, textAlign: 'center', color: '#6b7280' }}>
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}></div>
             <div>Live stream</div>
             <div style={{ fontSize: 11 }}>{media.sourceUrl}</div>
@@ -160,15 +160,15 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
             maxHeight: 140,
             overflowY: 'auto',
             padding: '6px 10px',
-            borderTop: '1px solid #e5e7eb',
-            background: '#fefce8',
+            borderTop: '1px solid var(--border)',
+            background: 'var(--color-warning-surface, var(--bg-subtle))',
             fontSize: 11,
             lineHeight: 1.5,
           }}
         >
           {media.transcript.map((b) => (
             <div key={b.index} style={{ marginBottom: 4 }}>
-              <span style={{ color: '#6b7280', fontFamily: 'var(--font-mono)', marginRight: 6 }}>
+              <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginRight: 6 }}>
                 {formatTime(b.startSec)}–{formatTime(b.endSec)}
               </span>
               {b.speaker && <strong style={{ marginRight: 4 }}>{b.speaker}:</strong>}
@@ -181,13 +181,13 @@ export function MediaCard({ media, onPlay, onPause, onSeek, onTranscribe }: Medi
       <footer
         style={{
           padding: '4px 10px',
-          borderTop: '1px solid #e5e7eb',
-          background: '#f9fafb',
+          borderTop: '1px solid var(--border)',
+          background: 'var(--bg-subtle)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: 10,
-          color: '#6b7280',
+          color: 'var(--text-muted)',
         }}
       >
         <span>
@@ -218,8 +218,8 @@ function formatTime(sec: number): string {
 
 const btnStyle: React.CSSProperties = {
   padding: '2px 8px',
-  border: '1px solid #d1d5db',
-  background: 'white',
+  border: '1px solid var(--border)',
+  background: 'var(--bg)',
   borderRadius: 3,
   fontSize: 10,
   cursor: 'pointer',

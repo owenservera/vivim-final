@@ -14,6 +14,7 @@ export { scaffoldCapability, type CodegenResult } from './capability-codegen.js'
 export { runOrchestrationCycle, verifyFrontend } from './orchestration.js'
 export { stopServices, type StopResult } from './stop.js'
 export { serverStatus, type StatusResult } from './status.js'
+export { profileStatus, type ProfileHealthEntry } from './status.js'
 export { testCapability, type TestCapResult } from './test-cap.js'
 export { saveLoopReport, readLoopReport } from './report.js'
 export {

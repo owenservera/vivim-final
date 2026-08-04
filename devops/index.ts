@@ -1705,6 +1705,17 @@ async function main() {
       process.exit(result.allComplete ? 0 : 1)
       break
     }
+    case 'desktop-loop': {
+      // Agentic desktop test toolkit — granular actions or full loop.
+      //   bun run devops desktop-loop --version <x.y.z>          # full run
+      //   bun run devops desktop-loop --version <x.y.z> --resume  # continue
+      //   bun run devops desktop-loop --reset                     # clear ledger
+      //   bun run devops desktop-loop status|build|install|launch|readyz|probe|screenshot|window|process|logs|test|report|reset
+      const { runDesktopCli } = await import('./desktop/index.ts')
+      const code = await runDesktopCli(args)
+      process.exit(code)
+      break
+    }
     case 'research-bridge': {
       // Bridge between research briefs and SpecKit research files.
       //   bun run devops research-bridge <convert-brief|convert-speckit|find|import|stale> [args]

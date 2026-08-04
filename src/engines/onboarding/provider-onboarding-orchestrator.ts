@@ -459,6 +459,7 @@ export class ProviderOnboardingOrchestrator {
           category: 'auto_onboarded',
           provider_type: 'webapp',
           is_active: 1,
+          protocol_status: 'Active',
           website_url: input.targetOrigin,
           documentation_url: null,
           auth_type: 'browser',

@@ -13,6 +13,7 @@ export * from './user-layout-store';
 export * from './canvas-definition-store';
 
 // Phase 2
+export * from './annotation-store';
 export * from './workspace-store';
 export * from './document-store';
 export * from './media-store';

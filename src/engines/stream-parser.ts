@@ -14,6 +14,7 @@ const log = getLogger('stream-parser')
 import type { ContentPart } from '../schema/streaming.js'
 import type { ParserExecutionLogStore } from '../storage/contracts/parser-execution-log-store.js'
 import type { ParserStore, ProviderParserRow } from '../storage/contracts/parser-store.js'
+import { repairLowConfidenceParser } from './parser-repair.js'
 import { SandboxRunner } from './sandbox-runner.js'
 import type { SandboxPermissions } from './sandbox-runner.js'
 
@@ -287,6 +288,28 @@ export class StreamParserEngine {
       rawSizeBytes: rawBody.length,
     }
     this.logParseResult(result, providerId)
+
+    // Auto-repair: when confidence drops below threshold or the system fallback
+    // was used, asynchronously regenerate an inline parser and persist it to DB.
+    // The fire-and-forget pattern avoids blocking the parse path; the next parse
+    // call will pick up the repaired parser via the cache or fallback chain.
+    const threshold = this.config?.confidenceMinThreshold ?? 0.7
+    if (result.confidence < threshold && this.store) {
+      void repairLowConfidenceParser(this, this.store, providerId, rawBody, {
+        minConfidence: threshold,
+      })
+        .then((report) => {
+          if (report.repaired) {
+            log.info(
+              `[stream-parser] auto-repaired parser for ${providerId}: ${report.beforeConfidence.toFixed(3)} → ${report.afterConfidence.toFixed(3)}`,
+            )
+          }
+        })
+        .catch((err: unknown) => {
+          log.warn(`[stream-parser] auto-repair failed for ${providerId}: ${String(err)}`)
+        })
+    }
+
     return result
   }
 

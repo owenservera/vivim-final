@@ -7,6 +7,8 @@ import { z } from 'zod'
 import type { CliCommand, CommandRegistry } from '../command-registry.js'
 import { runAutomate } from './automate.js'
 import { runMoments } from './moments.js'
+import { runSeed } from './seed.js'
+import { runMigrate } from './migrate.js'
 
 /**
  * Register the hand-written builtin commands. Called from src/cli/index.ts
@@ -46,6 +48,34 @@ export function registerBuiltinCommands(registry: CommandRegistry): void {
     },
   }
 
+  const seed: CliCommand = {
+    name: 'seed',
+    description: 'Seed the database with initial data',
+    subsystem: 'backend',
+    schema: z.object({ args: z.array(z.string()).optional() }).passthrough(),
+    examples: ['seed all'],
+    handler: async (args: unknown) => {
+      const a = (args ?? {}) as { args?: string[] }
+      await runSeed(a.args ?? [])
+      return { data: null }
+    },
+  }
+
+  const migrate: CliCommand = {
+    name: 'migrate',
+    description: 'Run database migrations',
+    subsystem: 'backend',
+    schema: z.object({ args: z.array(z.string()).optional() }).passthrough(),
+    examples: ['migrate all'],
+    handler: async (args: unknown) => {
+      const a = (args ?? {}) as { args?: string[] }
+      await runMigrate(a.args ?? [])
+      return { data: null }
+    },
+  }
+
   registry.register(automate)
   registry.register(moments)
+  registry.register(seed)
+  registry.register(migrate)
 }

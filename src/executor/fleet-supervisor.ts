@@ -147,6 +147,8 @@ export class FleetSupervisor {
     string,
     { state: CircuitState; failures: number; openedAt: number | null }
   >()
+  /** Per-profile spawn mutex: serializes concurrent spawn requests for the same (provider, account). */
+  private profileSpawnLocks = new Map<string, Promise<FleetInstance>>()
   private healthTimer: ReturnType<typeof setInterval> | null = null
   private nextPort: number
   private profileAllocator: ProfileAllocator
@@ -242,8 +244,8 @@ export class FleetSupervisor {
           : ['pgrep', '-f', 'chrome'],
         { stdout: 'pipe', stderr: 'pipe' },
       )
-      // On Windows, scan wmic for command line containing the profile dir
-      const wmic = Bun.spawnSync(
+      // On Windows, scan Chrome processes for command line containing the profile dir
+      const psResult = Bun.spawnSync(
         process.platform === 'win32'
           ? [
               'powershell',
@@ -254,7 +256,7 @@ export class FleetSupervisor {
           : ['echo', ''],
         { stdout: 'pipe', stderr: 'pipe' },
       )
-      const out = wmic.stdout.toString().trim()
+      const out = psResult.stdout.toString().trim()
       if (!out || out === '""') return
       const procs = JSON.parse(out)
       const list = Array.isArray(procs) ? procs : [procs]
@@ -291,7 +293,14 @@ export class FleetSupervisor {
     accountId: string,
     opts?: Partial<FleetSpawnOptions>,
   ): Promise<FleetInstance> {
-    const id = `${providerSlug}_${accountId}_${Date.now()}_${++this.spawnCounter}`
+    const profileKey = `${providerSlug}:${accountId}`
+
+    // Per-profile mutex: if a spawn is already in progress for this profile,
+    // wait for it and return the result instead of spawning a duplicate.
+    const existingLock = this.profileSpawnLocks.get(profileKey)
+    if (existingLock) {
+      return existingLock
+    }
 
     // Guard: return existing running instance for this provider+account
     const existing = [...this.instances.values()].find(
@@ -304,141 +313,160 @@ export class FleetSupervisor {
     )
     if (existing) return existing
 
-    // Check if account has a persisted profile from setup wizard
-    const existingAccounts = await this.store.getAccountsByProvider(providerSlug)
-    const existingAccount = existingAccounts.find((a) => a.accountSlug === accountId) ?? null
-    const profileDir =
-      existingAccount?.profileDir ?? (await this.profileAllocator.allocate(providerSlug, accountId))
-
-    // Kill any existing Chrome holding this profile's SingletonLock
-    await this.killExistingChromeForProfile(profileDir)
-
-    // Probe persisted port — if something is listening, don't reuse (could be stale)
-    const persistedPort = existingAccount?.debugPort
-    let reusePort: number | null = null
-    if (persistedPort && !opts?.debugPort) {
+    // Wrap spawn logic in a per-profile promise lock to serialize concurrent
+    // spawn requests for the same (providerSlug, accountId).
+    const spawnPromise = (async (): Promise<FleetInstance> => {
+      const id = `${providerSlug}_${accountId}_${Date.now()}_${++this.spawnCounter}`
       try {
-        await fetch(`http://127.0.0.1:${persistedPort}/json/version`, {
-          signal: AbortSignal.timeout(500),
-        })
-        // fetch returned a response = port is occupied, don't reuse
-      } catch {
-        // fetch threw = nothing listening, safe to reuse
-        reusePort = persistedPort
-      }
-    }
-    const debugPort = opts?.debugPort ?? reusePort ?? this.allocatePort()
+        // Check if account has a persisted profile from setup wizard
+        const existingAccounts = await this.store.getAccountsByProvider(providerSlug)
+        const existingAccount = existingAccounts.find((a) => a.accountSlug === accountId) ?? null
+        const profileDir =
+          existingAccount?.profileDir ??
+          (await this.profileAllocator.allocate(providerSlug, accountId))
 
-    const instance: FleetInstance = {
-      id,
-      providerSlug,
-      accountId,
-      debugPort,
-      profileDir,
-      status: 'starting',
-      pid: null,
-      consecutiveFailures: 0,
-      lastHealthCheck: Date.now(),
-      createdAt: Date.now(),
-    }
+        // Kill any existing Chrome holding this profile's SingletonLock
+        await this.killExistingChromeForProfile(profileDir)
 
-    this.instances.set(id, instance)
-
-    // ── pre-spawn pressure gate (SOTA cascade: check host load before spending a Chrome) ──
-    const pressure = readSystemPressure()
-    if (pressure.cpuPct > this.opts.cpuOverloadPct || pressure.memPct > this.opts.memOverloadPct) {
-      instance.status = 'error'
-      await this.store.createFleetEvent({
-        slaveId: id,
-        providerId: providerSlug,
-        eventType: 'spawn_rejected_pressure',
-        detailJson: JSON.stringify({ cpuPct: pressure.cpuPct, memPct: pressure.memPct }),
-      })
-      throw new FleetPressureOverloadError(pressure)
-    }
-
-    // ── admission control (bounded concurrency + queue + timeout) ──
-    try {
-      await this.limiter.acquire()
-    } catch (err) {
-      instance.status = 'error'
-      const eventType = err instanceof FleetQueueTimeoutError ? 'queue_timeout' : 'queue_full'
-      await this.store.createFleetEvent({
-        slaveId: id,
-        providerId: providerSlug,
-        eventType,
-        detailJson: JSON.stringify({ error: String(err) }),
-      })
-      throw err
-    }
-
-    try {
-      // ── launch-time retry-on-crash (SOTA: puppeteer-cluster) ──
-      const retryLimit = this.opts.spawnRetryLimit
-      let lastErr: unknown
-      for (let attempt = 0; attempt <= retryLimit; attempt++) {
-        try {
-          const launchOpts: ChromeLaunchOptions = {
-            visible: opts?.visible ?? false,
-            debugPort,
-            profileDir,
-            extraArgs: opts?.extraArgs ?? [],
-          }
-          const result: LaunchResult = await launchChrome(launchOpts)
-          instance.pid = result.pid
-          instance.debugPort = result.debugPort
-          instance.status = 'running'
-          instance.consecutiveFailures = 0
-
-          this.portReaper.trackPid(result.debugPort, result.pid)
-
-          // Navigate the headless slave to the provider surface so the session
-          // lands on the expected page (honors the profile-reuse invariant).
-          const loginUrl = PROVIDER_URLS[providerSlug] ?? `https://${providerSlug}.com`
+        // Probe persisted port — if something is listening, don't reuse (could be stale)
+        const persistedPort = existingAccount?.debugPort
+        let reusePort: number | null = null
+        if (persistedPort && !opts?.debugPort) {
           try {
-            const navCdp = new BunCdpClient(`ws://127.0.0.1:${result.debugPort}/devtools/browser`)
-            await navCdp.connect()
-            await navCdp.send('Target.createTarget', { url: loginUrl })
-            await navCdp.disconnect()
+            await fetch(`http://127.0.0.1:${persistedPort}/json/version`, {
+              signal: AbortSignal.timeout(500),
+            })
+            // fetch returned a response = port is occupied, don't reuse
           } catch {
-            // Navigation is best-effort — profile reuse is the invariant that matters
+            // fetch threw = nothing listening, safe to reuse
+            reusePort = persistedPort
           }
+        }
+        const debugPort = opts?.debugPort ?? reusePort ?? this.allocatePort()
 
+        const instance: FleetInstance = {
+          id,
+          providerSlug,
+          accountId,
+          debugPort,
+          profileDir,
+          status: 'starting',
+          pid: null,
+          consecutiveFailures: 0,
+          lastHealthCheck: Date.now(),
+          createdAt: Date.now(),
+        }
+
+        this.instances.set(id, instance)
+
+        // ── pre-spawn pressure gate (SOTA cascade: check host load before spending a Chrome) ──
+        const pressure = readSystemPressure()
+        if (
+          pressure.cpuPct > this.opts.cpuOverloadPct ||
+          pressure.memPct > this.opts.memOverloadPct
+        ) {
+          instance.status = 'error'
           await this.store.createFleetEvent({
             slaveId: id,
             providerId: providerSlug,
-            eventType: 'spawned',
-            detailJson: JSON.stringify({ pid: result.pid, port: result.debugPort }),
+            eventType: 'spawn_rejected_pressure',
+            detailJson: JSON.stringify({ cpuPct: pressure.cpuPct, memPct: pressure.memPct }),
           })
-          return instance
-        } catch (err) {
-          lastErr = err
-          instance.consecutiveFailures++
-          // Emit a retry event only when a follow-up attempt will occur;
-          // the final failure is reported via spawn_failed below.
-          if (attempt < retryLimit) {
-            await this.store.createFleetEvent({
-              slaveId: id,
-              providerId: providerSlug,
-              eventType: 'spawn_retry',
-              detailJson: JSON.stringify({ attempt, error: String(err) }),
-            })
-            await Bun.sleep(this.opts.spawnRetryDelayMs * 2 ** attempt) // exp backoff
-          }
+          throw new FleetPressureOverloadError(pressure)
         }
-      }
-      instance.status = 'error'
-      await this.store.createFleetEvent({
-        slaveId: id,
-        providerId: providerSlug,
-        eventType: 'spawn_failed',
-        detailJson: JSON.stringify({ error: String(lastErr) }),
-      })
-    } finally {
-      this.limiter.release()
-    }
 
-    return instance
+        // ── admission control (bounded concurrency + queue + timeout) ──
+        try {
+          await this.limiter.acquire()
+        } catch (err) {
+          instance.status = 'error'
+          const eventType = err instanceof FleetQueueTimeoutError ? 'queue_timeout' : 'queue_full'
+          await this.store.createFleetEvent({
+            slaveId: id,
+            providerId: providerSlug,
+            eventType,
+            detailJson: JSON.stringify({ error: String(err) }),
+          })
+          throw err
+        }
+
+        try {
+          // ── launch-time retry-on-crash (SOTA: puppeteer-cluster) ──
+          const retryLimit = this.opts.spawnRetryLimit
+          let lastErr: unknown
+          for (let attempt = 0; attempt <= retryLimit; attempt++) {
+            try {
+              const launchOpts: ChromeLaunchOptions = {
+                visible: opts?.visible ?? false,
+                debugPort,
+                profileDir,
+                extraArgs: opts?.extraArgs ?? [],
+              }
+              const result: LaunchResult = await launchChrome(launchOpts)
+              instance.pid = result.pid
+              instance.debugPort = result.debugPort
+              instance.status = 'running'
+              instance.consecutiveFailures = 0
+
+              this.portReaper.trackPid(result.debugPort, result.pid)
+
+              // Navigate the headless slave to the provider surface so the session
+              // lands on the expected page (honors the profile-reuse invariant).
+              const loginUrl = PROVIDER_URLS[providerSlug] ?? `https://${providerSlug}.com`
+              try {
+                const navCdp = new BunCdpClient(
+                  `ws://127.0.0.1:${result.debugPort}/devtools/browser`,
+                )
+                await navCdp.connect()
+                await navCdp.send('Target.createTarget', { url: loginUrl })
+                await navCdp.disconnect()
+              } catch {
+                // Navigation is best-effort — profile reuse is the invariant that matters
+              }
+
+              await this.store.createFleetEvent({
+                slaveId: id,
+                providerId: providerSlug,
+                eventType: 'spawned',
+                detailJson: JSON.stringify({ pid: result.pid, port: result.debugPort }),
+              })
+              return instance
+            } catch (err) {
+              lastErr = err
+              instance.consecutiveFailures++
+              // Emit a retry event only when a follow-up attempt will occur;
+              // the final failure is reported via spawn_failed below.
+              if (attempt < retryLimit) {
+                await this.store.createFleetEvent({
+                  slaveId: id,
+                  providerId: providerSlug,
+                  eventType: 'spawn_retry',
+                  detailJson: JSON.stringify({ attempt, error: String(err) }),
+                })
+                await Bun.sleep(this.opts.spawnRetryDelayMs * 2 ** attempt) // exp backoff
+              }
+            }
+          }
+          instance.status = 'error'
+          await this.store.createFleetEvent({
+            slaveId: id,
+            providerId: providerSlug,
+            eventType: 'spawn_failed',
+            detailJson: JSON.stringify({ error: String(lastErr) }),
+          })
+        } finally {
+          this.limiter.release()
+        }
+
+        return instance
+      } finally {
+        // Release the per-profile lock so subsequent spawns can proceed
+        this.profileSpawnLocks.delete(profileKey)
+      }
+    })()
+
+    this.profileSpawnLocks.set(profileKey, spawnPromise)
+    return spawnPromise
   }
 
   async kill(instanceId: string): Promise<void> {

@@ -4,6 +4,7 @@
 // AGENT-SAFE: bounded fetch timeouts. Never hangs.
 
 import { existsSync, readFileSync } from 'node:fs'
+import { ProfileAllocator } from '../../src/executor/profile-allocator.js'
 import { backendBaseUrl } from './port.js'
 
 const FETCH_TIMEOUT_MS = 3_000
@@ -15,6 +16,14 @@ async function health(url: string): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+/** Format bytes to human-readable string. */
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`
 }
 
 export interface StatusResult {
@@ -44,4 +53,34 @@ export async function serverStatus(): Promise<StatusResult> {
     backend: { pid: backendPid, healthy: backendHealthy },
     frontend: { pid: frontendPid, healthy: frontendHealthy },
   }
+}
+
+export interface ProfileHealthEntry {
+  providerSlug: string
+  accountId: string
+  path: string
+  lastUsed: Date
+  crashCount: number
+  diskSize: string
+  lastAuthVerified: string
+}
+
+/**
+ * Surface profile health metrics for a specific provider (or all providers).
+ * Returns crash counts, disk footprint, and last auth verification timestamps.
+ */
+export async function profileStatus(provider?: string): Promise<ProfileHealthEntry[]> {
+  const allocator = new ProfileAllocator('chrome-profiles')
+  const profiles = await allocator.list()
+  const filtered = provider ? profiles.filter((p) => p.providerSlug === provider) : profiles
+
+  return filtered.map((p) => ({
+    providerSlug: p.providerSlug,
+    accountId: p.accountId,
+    path: p.path,
+    lastUsed: p.lastUsed,
+    crashCount: p.crashCount,
+    diskSize: formatBytes(p.diskSizeBytes),
+    lastAuthVerified: p.lastAuthVerifiedAt ? p.lastAuthVerifiedAt.toISOString() : 'never',
+  }))
 }

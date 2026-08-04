@@ -8,6 +8,12 @@ import { EmptyState } from './EmptyState';
 import { RenderBlocks, type ContentBlock } from './MessageBlock';
 import { LatencyBreakdown, type TimingInfo } from './LatencyBreakdown';
 import { ComposerShell, defaultChatScope } from './ComposerShell';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { TypingIndicator } from './TypingIndicator';
+import { Copy, RefreshCw, Pencil } from 'lucide-react';
+import { useConversation } from '@/sdk/web/use-conversation';
+import { useToast } from '@/hooks/useToast';
+import { Toast } from '@/components/canvas/Toast';
 
 interface Message {
   id: string;
@@ -22,6 +28,7 @@ interface ComposerProps {
   conversationId: string | null;
   wsStatus: ReturnType<typeof useWebSocket>['status'];
   wsMessage?: WsMessage | null;
+  onRetryMessage?: (text: string) => void;
 }
 
 interface PendingBlock {
@@ -44,7 +51,23 @@ function normalizeKind(raw: string | undefined): string {
   return map[raw ?? ''] ?? 'text'
 }
 
-export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps) {
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text;
+  const escaped = escapeRegex(query);
+  const regex = new RegExp(`(${escaped})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    part.toLowerCase() === query.toLowerCase()
+      ? <mark key={i} style={{ background: 'var(--color-warning)', color: 'black', borderRadius: 2, padding: '0 2px' }}>{part}</mark>
+      : part
+  );
+}
+
+export function Composer({ conversationId, wsStatus, wsMessage, onRetryMessage }: ComposerProps) {
   const io = useIO();
   const [messages, setMessages] = useState<Message[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -57,6 +80,13 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
   const pendingBlocksRef = useRef<PendingBlock[]>([]);
   const pendingTimingRef = useRef<TimingInfo | null>(null);
   const rafRef = useRef<number | null>(null);
+
+  const { create: createConversationLocal } = useConversation();
+  const { copied, copy: copyToClipboard } = useCopyToClipboard();
+  const { toast, showToast } = useToast();
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const conversationIdRef = useRef(conversationId);
   useEffect(() => { conversationIdRef.current = conversationId; });
@@ -147,6 +177,18 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
     // scheduleFlush is intentionally excluded to avoid re-running on every render
   }, [wsMessage]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        setSearchOpen((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, streamingBlocks]);
@@ -166,8 +208,41 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
     }
   }, []);
 
+  const handleRetry = useCallback((text: string) => {
+    onRetryMessage?.(text);
+  }, [onRetryMessage]);
+
+  const handleCopy = useCallback(async (text: string) => {
+    await copyToClipboard(text);
+    showToast('ok', 'Copied!');
+  }, [copyToClipboard, showToast]);
+
+  const getMessageText = useCallback((m: Message): string => {
+    return [
+      m.content,
+      ...(m.blocks?.map(b => b.content) ?? []),
+    ].join(' ');
+  }, []);
+
+  const filteredMessages = searchOpen && searchQuery.trim()
+    ? messages.filter(m => getMessageText(m).toLowerCase().includes(searchQuery.toLowerCase()))
+    : messages;
+
+  const roleBadge = (role: string) => {
+    switch (role) {
+      case 'user':
+        return <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>U</span>;
+      case 'assistant':
+        return <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>AI</span>;
+      case 'system':
+        return <span style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>S</span>;
+      default:
+        return null;
+    }
+  };
+
   if (!conversationId) {
-    return <EmptyState />;
+    return <EmptyState onCreateConversation={createConversationLocal} />;
   }
 
   return (
@@ -193,39 +268,182 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
           gap: 8,
         }}
       >
-        {messages.map((m) => (
-          <div key={m.id}>
-            <div
+        {toast && <Toast kind={toast.kind} message={toast.msg} autoDismiss={1500} />}
+        {/* Search overlay */}
+        {searchOpen && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '6px 10px',
+              borderBottom: '1px solid var(--border)',
+              background: 'var(--bg-elevated)',
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+            }}
+          >
+            <input
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search messages..."
               style={{
-                alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '80%',
-                padding: '8px 12px',
-                borderRadius: 10,
-                background:
-                  m.role === 'user' ? 'var(--accent)' : 'var(--bg-elevated)',
-                color:
-                  m.role === 'user'
-                    ? 'var(--accent-foreground, #fff)'
-                    : 'var(--text)',
+                flex: 1,
                 border: '1px solid var(--border)',
-                fontSize: 13,
-                whiteSpace: 'pre-wrap',
+                borderRadius: 4,
+                padding: '4px 8px',
+                background: 'var(--bg)',
+                color: 'var(--text)',
+                fontSize: 12,
+                outline: 'none',
+              }}
+            />
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+              {filteredMessages.length}/{messages.length}
+            </span>
+            <button
+              onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+              style={{ border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 18, padding: 2 }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {filteredMessages.map((m, i) => {
+          const prev = i > 0 ? filteredMessages[i - 1] : null;
+          const sameRole = prev?.role === m.role;
+          const isHovered = hoveredMessageId === m.id;
+
+          return (
+            <div
+              key={m.id}
+              onMouseEnter={() => setHoveredMessageId(m.id)}
+              onMouseLeave={() => setHoveredMessageId(null)}
+              style={{
+                position: 'relative',
+                marginTop: sameRole ? 2 : 8,
+                transition: 'margin-top 0.2s ease',
               }}
             >
-              {m.blocks && m.blocks.length > 0 ? (
-                <RenderBlocks blocks={m.blocks} />
-              ) : (
-                m.content
+              {/* Role badge */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  left: m.role === 'user' ? 'auto' : 4,
+                  right: m.role === 'user' ? 4 : 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                }}
+              >
+                {roleBadge(m.role)}
+              </div>
+
+              {/* Hover action bar */}
+              {isHovered && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: -22,
+                    right: 4,
+                    display: 'flex',
+                    gap: 2,
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 4,
+                    padding: '2px',
+                    zIndex: 10,
+                  }}
+                >
+                  <button
+                    onClick={() => handleCopy(m.content)}
+                    title="Copy"
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      borderRadius: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Copy size={12} />
+                  </button>
+                  <button
+                    onClick={() => handleRetry(m.content)}
+                    title="Retry"
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      borderRadius: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <RefreshCw size={12} />
+                  </button>
+                  <button
+                    title="Edit (coming soon)"
+                    disabled
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'var(--text-muted)',
+                      cursor: 'not-allowed',
+                      padding: '2px 4px',
+                      borderRadius: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      opacity: 0.5,
+                    }}
+                  >
+                    <Pencil size={12} />
+                  </button>
+                </div>
+              )}
+
+              <div
+                style={{
+                  alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '80%',
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  background: m.role === 'user' ? 'var(--accent)' : 'var(--bg-elevated)',
+                  color: m.role === 'user' ? 'var(--accent-foreground, #fff)' : 'var(--text)',
+                  border: '1px solid var(--border)',
+                  fontSize: 13,
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {m.blocks && m.blocks.length > 0 ? (
+                  <RenderBlocks blocks={m.blocks} />
+                ) : (
+                  searchOpen && searchQuery.trim()
+                    ? highlightText(m.content, searchQuery)
+                    : m.content
+                )}
+              </div>
+              {m.role === 'assistant' && m.timing && (
+                <LatencyBreakdown timing={m.timing} />
               )}
             </div>
-            {m.role === 'assistant' && m.timing && (
-              <LatencyBreakdown timing={m.timing} />
-            )}
-          </div>
-        ))}
+          );
+        })}
+
         {streaming && (
           <div>
+            {streamingBlocks.length === 0 && <TypingIndicator delay={500} />}
             <div
+              className={streamingBlocks.length > 0 ? 'streaming-reveal' : ''}
               style={{
                 alignSelf: 'flex-start',
                 maxWidth: '80%',
@@ -240,7 +458,7 @@ export function Composer({ conversationId, wsStatus, wsMessage }: ComposerProps)
               {streamingBlocks.length > 0 ? (
                 <RenderBlocks blocks={streamingBlocks} />
               ) : (
-                <span style={{ opacity: 0.5 }}>▍</span>
+                <span className="streaming-cursor" />
               )}
             </div>
             {streamingTiming && <LatencyBreakdown timing={streamingTiming} />}

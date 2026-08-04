@@ -93,47 +93,47 @@ export function ShellCard({ workspaceId }: { workspaceId: string }) {
         height: '100%',
         fontFamily: 'var(--font-mono)',
         background: '#0f172a',
-        color: '#e2e8f0',
+        color: 'var(--text)',
         fontSize: 12,
       }}
     >
       <header
         style={{
           padding: '4px 10px',
-          borderBottom: '1px solid #1e293b',
+          borderBottom: '1px solid var(--border)',
           background: '#1e293b',
-          color: '#94a3b8',
+          color: 'var(--text-muted)',
           fontSize: 10,
           display: 'flex',
           justifyContent: 'space-between',
         }}
       >
         <span>
-          shell · <code style={{ color: '#cbd5e1' }}>{workspaceId}</code>
+          shell · <code style={{ color: 'var(--text-muted)' }}>{workspaceId}</code>
         </span>
-        <span style={{ color: '#64748b' }}>cap:canvas:shell-command</span>
+        <span style={{ color: 'var(--text-subtle)' }}>cap:canvas:shell-command</span>
       </header>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
         {history.map((entry, i) => (
           <div key={i} style={{ marginBottom: 8 }}>
-            <div style={{ color: '#22d3ee' }}>
-              <span style={{ color: '#64748b' }}>$</span> {entry.command}
+            <div style={{ color: 'var(--accent)' }}>
+              <span style={{ color: 'var(--text-subtle)' }}>$</span> {entry.command}
             </div>
-            {entry.pending && <div style={{ color: '#94a3b8' }}>…</div>}
+            {entry.pending && <div style={{ color: 'var(--text-muted)' }}>…</div>}
             {entry.result && (
               <div style={{ marginTop: 2 }}>
                 {entry.result.stdout && (
-                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: '#e2e8f0' }}>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: 'var(--text)' }}>
                     {entry.result.stdout}
                   </pre>
                 )}
                 {entry.result.stderr && (
-                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: '#fca5a5' }}>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: 'var(--color-error)' }}>
                     {entry.result.stderr}
                   </pre>
                 )}
-                <div style={{ color: '#64748b', fontSize: 10, marginTop: 2 }}>
+                <div style={{ color: 'var(--text-subtle)', fontSize: 10, marginTop: 2 }}>
                   exit={entry.result.exitCode} · {entry.result.durationMs}ms
                   {entry.result.capabilityId ? ` · ${entry.result.capabilityId}` : ''}
                 </div>
@@ -146,13 +146,13 @@ export function ShellCard({ workspaceId }: { workspaceId: string }) {
       <div
         style={{
           padding: '6px 8px',
-          borderTop: '1px solid #1e293b',
+          borderTop: '1px solid var(--border)',
           background: '#1e293b',
           display: 'flex',
           gap: 6,
         }}
       >
-        <span style={{ color: '#22d3ee' }}>$</span>
+        <span style={{ color: 'var(--accent)' }}>$</span>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -165,7 +165,7 @@ export function ShellCard({ workspaceId }: { workspaceId: string }) {
             background: 'transparent',
             border: 'none',
             outline: 'none',
-            color: '#e2e8f0',
+            color: 'var(--text)',
             fontFamily: 'inherit',
             fontSize: 12,
           }}

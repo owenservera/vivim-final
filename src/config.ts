@@ -62,108 +62,12 @@ function defaultDataDir(): string {
   return dir
 }
 
-// ── Config values ───────────────────────────────────────────────────────────
-
-export const config = {
-  // Server
-  host: process.env.CAP_STORE_HOST ?? '127.0.0.1',
-  port: Number.parseInt(process.env.CAP_STORE_PORT ?? '9420', 10),
-
-  // Data
-  dataDir: process.env.CAP_STORE_DATA_DIR ?? defaultDataDir(),
-  dbPath: process.env.CAP_STORE_DB_PATH ?? `${defaultDataDir()}/cap-store.sqlite`,
-
-  // Auth
-  authToken: process.env.CAP_STORE_AUTH_TOKEN ?? null,
-
-  // CORS
-  corsOrigin: (
-    process.env.CAP_STORE_CORS_ORIGIN ?? 'http://localhost:3000,http://localhost:5175'
-  ).split(','),
-
-  // Logging
-  logLevel: (process.env.CAP_STORE_LOG_LEVEL ?? 'info') as 'debug' | 'info' | 'warn' | 'error',
-
-  // Fleet
-  autoStartFleet: process.env.CAP_STORE_AUTO_START_FLEET === 'true',
-  chromePath: process.env.CAP_STORE_CHROME_PATH ?? null,
-  // Chrome profile root — single source of truth for where slave profiles live.
-  // Frontend will later write this via config_entry; env overrides for now.
-  // Defaults to <dataDir>/chrome-profiles so profiles survive across runs and
-  // are not lost in a Unix-only /tmp path.
-  profileBaseDir:
-    process.env.CAP_STORE_PROFILE_DIR ??
-    (isWin ? `${defaultDataDir()}\\chrome-profiles` : `${defaultDataDir()}/chrome-profiles`),
-  fleetPortRangeStart: Number.parseInt(process.env.CAP_STORE_FLEET_PORT_START ?? '9222', 10),
-  fleetPortRangeEnd: Number.parseInt(process.env.CAP_STORE_FLEET_PORT_END ?? '9250', 10),
-
-  // Health
-  healthProbeIntervalMs: Number.parseInt(process.env.CAP_STORE_HEALTH_PROBE_MS ?? '30000', 10),
-
-  // Circuit breaker
-  circuitBreakerThreshold: Number.parseInt(process.env.CAP_STORE_CIRCUIT_THRESHOLD ?? '5', 10),
-  circuitBreakerResetMs: Number.parseInt(process.env.CAP_STORE_CIRCUIT_RESET_MS ?? '30000', 10),
-
-  // HPE retention
-  hpeRetentionDays: Number.parseInt(process.env.CAP_STORE_HPE_RETENTION_DAYS ?? '30', 10),
-
-  // Storage hardening (Unit 36.1)
-  storage: {
-    encryptDb: process.env.CAP_STORE_ENCRYPT_DB === 'true',
-  },
-
-  // OpenTelemetry (centralized so engines don't read process.env directly — B5)
-  otel: {
-    endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? null,
-    serviceName: process.env.OTEL_SERVICE_NAME ?? 'vivim-final',
-  },
-
-  // Protocol source (dev/ prod)
-  providerProtocolSource: process.env.PROVIDER_PROTOCOL_SOURCE ?? 'prod',
-
-  // OpenCode server
-  opencodeServeEnabled: process.env.OPENCODE_SERVE_ENABLED === '1',
-  opencodeServePort: Number.parseInt(process.env.OPENCODE_SERVE_PORT ?? '0', 10) || undefined,
-  opencodeServerPassword: process.env.OPENCODE_SERVER_PASSWORD ?? '',
-  opencodeServerUsername: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
-
-  // MCP
-  mcpPort: Number.parseInt(process.env.MCP_PORT ?? '0', 10) || undefined,
-
-  // CLI / moments
-  vivimApiUrl: process.env.VIVIM_API_URL ?? null,
-  vivimWorkspace: process.env.VIVIM_WORKSPACE ?? null,
-
-  // Debug
-  debug: process.env.DEBUG === 'true',
-} as const
-
-// ── Ensure data directories exist on startup ──────────────────────────────
-// Safely creates dataDir and profileBaseDir so engines don't crash on first
-// boot in the Tauri sidecar or fresh install.
-try {
-  mkdirSync(config.dataDir, { recursive: true })
-  mkdirSync(config.profileBaseDir, { recursive: true })
-} catch {
-  // best-effort — sidecar-entry.ts has its own fallback path creation
-}
-
-/**
- * Resolve OTEL sink configuration through the centralized config layer.
- * Returns null endpoint when OTEL_EXPORTER_OTLP_ENDPOINT is unset (no-op mode).
- */
-export function getOtelConfig(): { endpoint: string | null; serviceName: string } {
-  return { endpoint: config.otel.endpoint, serviceName: config.otel.serviceName }
-}
-
 // ── Runtime tunables registry (devops-toolkit configurable layer) ──────────
 //
-// Engines read static `config` from env above. `tunables` is the runtime-
-// reconfigurable layer: any value here can be overridden at runtime via
-// `bun run devops toolkit config set <key> <value>` and persisted to
-// `.runtime/config.tunables.json`, then hot-read by the running server.
-// This is the "configurability" axis of the devops toolkit — additive, does
-// not change existing engine reads of `config`.
+// `tunables` is the runtime-reconfigurable layer: any value here can be
+// overridden at runtime via `bun run devops toolkit config set <key> <value>`
+// and persisted to `.runtime/config.tunables.json`, then hot-read by the
+// running server. This is the "configurability" axis of the devops toolkit.
 
 export interface TunableMeta {
   key: string
@@ -172,53 +76,58 @@ export interface TunableMeta {
   description: string
 }
 
+// Tunable defaults reference the static config values below via lazy getters.
+// We use a placeholder approach: defaults are resolved at first access after
+// config is constructed, not at schema definition time.
+const _TUNABLE_DEFAULTS: Record<string, unknown> = {}
+
 export const TUNABLE_SCHEMA: TunableMeta[] = [
   {
     key: 'server.port',
     type: 'number',
-    default: config.port,
+    default: 9420,
     description: 'HTTP port for the cap-store server',
   },
   {
     key: 'server.host',
     type: 'string',
-    default: config.host,
+    default: '127.0.0.1',
     description: 'Bind host for the cap-store server',
   },
   {
     key: 'server.corsOrigin',
     type: 'string[]',
-    default: config.corsOrigin,
+    default: ['http://localhost:3000', 'http://localhost:5175'],
     description: 'Allowed CORS origins (comma-separated)',
   },
   {
     key: 'log.level',
     type: 'string',
-    default: config.logLevel,
+    default: 'info',
     description: 'Logging verbosity (debug|info|warn|error)',
   },
   {
     key: 'fleet.autoStart',
     type: 'boolean',
-    default: config.autoStartFleet,
+    default: false,
     description: 'Auto-launch Chrome slave fleet on boot',
   },
   {
     key: 'fleet.portStart',
     type: 'number',
-    default: config.fleetPortRangeStart,
+    default: 9222,
     description: 'First port in CDP fleet range',
   },
   {
     key: 'fleet.portEnd',
     type: 'number',
-    default: config.fleetPortRangeEnd,
+    default: 9250,
     description: 'Last port in CDP fleet range',
   },
   {
     key: 'health.probeIntervalMs',
     type: 'number',
-    default: config.healthProbeIntervalMs,
+    default: 30000,
     description: 'Health probe cadence',
   },
   {
@@ -232,6 +141,25 @@ export const TUNABLE_SCHEMA: TunableMeta[] = [
     type: 'boolean',
     default: true,
     description: 'Fail boot if a capability is out of cross-surface parity',
+  },
+  // ── Storage tunables (runtime-mutable via setStoragePaths) ───────────────
+  {
+    key: 'storage.dataDir',
+    type: 'string',
+    default: defaultDataDir(),
+    description: 'Data directory for DB, profiles, cache, and logs',
+  },
+  {
+    key: 'storage.dbPath',
+    type: 'string',
+    default: `${defaultDataDir()}/cap-store.sqlite`,
+    description: 'Absolute path to the SQLite database file',
+  },
+  {
+    key: 'storage.retainOldDays',
+    type: 'number',
+    default: 7,
+    description: 'Days to keep archived old location after relocation',
   },
 ]
 
@@ -295,6 +223,195 @@ export function listTunables(): { key: string; value: unknown; source: 'override
     value: t.key in tunableOverrides ? coerce(t, tunableOverrides[t.key]) : t.default,
     source: t.key in tunableOverrides ? 'override' : 'default',
   }))
+}
+
+// ── Runtime-mutable storage paths ───────────────────────────────────────────
+//
+// These resolve from tunable overrides first, then env, then the platform
+// default. The migration engine calls setStoragePaths() to update them
+// atomically during Phase 4 (SWITCH).
+
+function resolveDataDir(): string {
+  const tunableKey = 'storage.dataDir'
+  if (tunableKey in tunableOverrides) {
+    return String(tunableOverrides[tunableKey])
+  }
+  return process.env.CAP_STORE_DATA_DIR ?? defaultDataDir()
+}
+
+function resolveDbPath(): string {
+  const tunableKey = 'storage.dbPath'
+  if (tunableKey in tunableOverrides) {
+    return String(tunableOverrides[tunableKey])
+  }
+  return process.env.CAP_STORE_DB_PATH ?? `${resolveDataDir()}/cap-store.sqlite`
+}
+
+// ── Config values ───────────────────────────────────────────────────────────
+
+export const config = {
+  // Server
+  host: process.env.CAP_STORE_HOST ?? '127.0.0.1',
+  port: Number.parseInt(process.env.CAP_STORE_PORT ?? '9420', 10),
+
+  // Data — runtime-mutable via setStoragePaths()
+  dataDir: resolveDataDir(),
+  dbPath: resolveDbPath(),
+
+  // Auth
+  authToken: process.env.CAP_STORE_AUTH_TOKEN ?? null,
+
+  // CORS
+  corsOrigin: (
+    process.env.CAP_STORE_CORS_ORIGIN ?? 'http://localhost:3000,http://localhost:5175'
+  ).split(','),
+
+  // Logging
+  logLevel: (process.env.CAP_STORE_LOG_LEVEL ?? 'info') as 'debug' | 'info' | 'warn' | 'error',
+
+  // Fleet
+  autoStartFleet: process.env.CAP_STORE_AUTO_START_FLEET === 'true',
+  chromePath: process.env.CAP_STORE_CHROME_PATH ?? null,
+  // Chrome profile root — single source of truth for where slave profiles live.
+  // Defaults to <dataDir>/chrome-profiles so profiles survive across runs.
+  profileBaseDir:
+    process.env.CAP_STORE_PROFILE_DIR ??
+    (isWin ? `${resolveDataDir()}\\chrome-profiles` : `${resolveDataDir()}/chrome-profiles`),
+  fleetPortRangeStart: Number.parseInt(process.env.CAP_STORE_FLEET_PORT_START ?? '9222', 10),
+  fleetPortRangeEnd: Number.parseInt(process.env.CAP_STORE_FLEET_PORT_END ?? '9250', 10),
+
+  // Health
+  healthProbeIntervalMs: Number.parseInt(process.env.CAP_STORE_HEALTH_PROBE_MS ?? '30000', 10),
+
+  // Circuit breaker
+  circuitBreakerThreshold: Number.parseInt(process.env.CAP_STORE_CIRCUIT_THRESHOLD ?? '5', 10),
+  circuitBreakerResetMs: Number.parseInt(process.env.CAP_STORE_CIRCUIT_RESET_MS ?? '30000', 10),
+
+  // HPE retention
+  hpeRetentionDays: Number.parseInt(process.env.CAP_STORE_HPE_RETENTION_DAYS ?? '30', 10),
+
+  // Storage hardening (Unit 36.1)
+  storage: {
+    encryptDb: process.env.CAP_STORE_ENCRYPT_DB === 'true',
+  },
+
+  // OpenTelemetry (centralized so engines don't read process.env directly — B5)
+  otel: {
+    endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? null,
+    serviceName: process.env.OTEL_SERVICE_NAME ?? 'vivim-final',
+  },
+
+  // Protocol source (dev/ prod)
+  providerProtocolSource: process.env.PROVIDER_PROTOCOL_SOURCE ?? 'prod',
+
+  // OpenCode server
+  opencodeServeEnabled: process.env.OPENCODE_SERVE_ENABLED === '1',
+  opencodeServePort: Number.parseInt(process.env.OPENCODE_SERVE_PORT ?? '0', 10) || undefined,
+  opencodeServerPassword: process.env.OPENCODE_SERVER_PASSWORD ?? '',
+  opencodeServerUsername: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
+
+  // MCP
+  mcpPort: Number.parseInt(process.env.MCP_PORT ?? '0', 10) || undefined,
+
+  // Tunnel + P2P
+  tunnel: {
+    enabled: process.env.VIVIM_TUNNEL_ENABLED !== 'false',
+    serverUrl: process.env.VIVIM_TUNNEL_URL ?? 'wss://tunnel.vivim.live/connect',
+    subdomain: process.env.VIVIM_SUBDOMAIN ?? '',
+    authToken: process.env.VIVIM_TUNNEL_TOKEN ?? null,
+    heartbeatIntervalMs: Number.parseInt(process.env.VIVIM_TUNNEL_HEARTBEAT_MS ?? '30000', 10),
+    heartbeatTimeoutMs: Number.parseInt(process.env.VIVIM_TUNNEL_HEARTBEAT_TIMEOUT_MS ?? '10000', 10),
+    reconnectInitialDelayMs: Number.parseInt(process.env.VIVIM_TUNNEL_RECONNECT_INITIAL_MS ?? '1000', 10),
+    reconnectMaxDelayMs: Number.parseInt(process.env.VIVIM_TUNNEL_RECONNECT_MAX_MS ?? '30000', 10),
+    reconnectJitterFactor: Number.parseFloat(process.env.VIVIM_TUNNEL_RECONNECT_JITTER ?? '0.3'),
+    maxConcurrentRequests: Number.parseInt(process.env.VIVIM_TUNNEL_MAX_REQUESTS ?? '50', 10),
+    requestTimeoutMs: Number.parseInt(process.env.VIVIM_TUNNEL_REQUEST_TIMEOUT_MS ?? '60000', 10),
+  },
+  p2p: {
+    enabled: process.env.VIVIM_P2P_ENABLED !== 'false',
+    bootstrapNodes: (process.env.VIVIM_P2P_BOOTSTRAP ?? '').split(',').filter(Boolean),
+    mdnsEnabled: process.env.VIVIM_P2P_MDNS !== 'false',
+    mdnsInterval: Number.parseInt(process.env.VIVIM_P2P_MDNS_INTERVAL_MS ?? '300000', 10),
+    dhtEnabled: process.env.VIVIM_P2P_DHT !== 'false',
+    relayEnabled: process.env.VIVIM_P2P_RELAY !== 'false',
+    maxPeers: Number.parseInt(process.env.VIVIM_P2P_MAX_PEERS ?? '50', 10),
+    maxConcurrentTransfers: Number.parseInt(process.env.VIVIM_P2P_MAX_TRANSFERS ?? '5', 10),
+    maxFileSize: Number.parseInt(process.env.VIVIM_P2P_MAX_FILE_SIZE ?? '104857600', 10),
+    identityPath: process.env.VIVIM_P2P_IDENTITY_PATH ?? '',
+  },
+  localServer: {
+    enabled: process.env.VIVIM_LOCAL_SERVER_ENABLED !== 'false',
+    host: process.env.VIVIM_LOCAL_SERVER_HOST ?? '127.0.0.1',
+    port: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_PORT ?? '8080', 10),
+    corsEnabled: process.env.VIVIM_LOCAL_SERVER_CORS !== 'false',
+    corsOrigins: (process.env.VIVIM_LOCAL_SERVER_CORS_ORIGINS ?? 'http://localhost:3000').split(','),
+    rateLimitPerMinute: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_RATE_LIMIT ?? '60', 10),
+    maxRequestBodyBytes: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_MAX_BODY ?? '10485760', 10),
+    staticDir: process.env.VIVIM_LOCAL_SERVER_STATIC_DIR ?? './workspace-ui',
+  },
+  orchestrator: {
+    healthCheckIntervalMs: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_HEALTH_MS ?? '30000', 10),
+    restartDelayMs: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_RESTART_DELAY_MS ?? '5000', 10),
+    maxRestartAttempts: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_MAX_RESTARTS ?? '3', 10),
+    statusReportIntervalMs: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_STATUS_MS ?? '60000', 10),
+  },
+
+  // CLI / moments
+  vivimApiUrl: process.env.VIVIM_API_URL ?? null,
+  vivimWorkspace: process.env.VIVIM_WORKSPACE ?? null,
+
+  // Debug
+  debug: process.env.DEBUG === 'true',
+} as const
+
+// ── Ensure data directories exist on startup ──────────────────────────────
+// Safely creates dataDir and profileBaseDir so engines don't crash on first
+// boot in the Tauri sidecar or fresh install.
+try {
+  mkdirSync(config.dataDir, { recursive: true })
+  mkdirSync(config.profileBaseDir, { recursive: true })
+} catch {
+  // best-effort — sidecar-entry.ts has its own fallback path creation
+}
+
+/**
+ * Resolve OTEL sink configuration through the centralized config layer.
+ * Returns null endpoint when OTEL_EXPORTER_OTLP_ENDPOINT is unset (no-op mode).
+ */
+export function getOtelConfig(): { endpoint: string | null; serviceName: string } {
+  return { endpoint: config.otel.endpoint, serviceName: config.otel.serviceName }
+}
+
+// ── Storage path mutation (used by migration engine Phase 4) ────────────────
+//
+// Updates config.dataDir + config.dbPath in-memory AND persists to tunables.
+// Also writes to config_entry DB row via the caller (migration engine).
+// The PrismaClient must be closed and reconnected by the caller after this.
+
+/** Internal mutable reference — config.dataDir/dbPath are const, so we shadow via getter. */
+let _mutableDataDir: string | null = null
+let _mutableDbPath: string | null = null
+
+/** Get the current effective dataDir (may differ from config.dataDir after setStoragePaths). */
+export function getDataDir(): string {
+  return _mutableDataDir ?? config.dataDir
+}
+
+/** Get the current effective dbPath (may differ from config.dbPath after setStoragePaths). */
+export function getDbPath(): string {
+  return _mutableDbPath ?? config.dbPath
+}
+
+/**
+ * Atomically update the in-memory storage paths and persist to tunables.
+ * Does NOT reconnect Prisma — the caller (migration engine) must call
+ * closePrisma() before this and let getPrisma() create a fresh client after.
+ */
+export function setStoragePaths(dataDir: string, dbPath: string): void {
+  _mutableDataDir = dataDir
+  _mutableDbPath = dbPath
+  setTunable('storage.dataDir', dataDir)
+  setTunable('storage.dbPath', dbPath)
 }
 
 export function isAuthenticated(): boolean {

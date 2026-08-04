@@ -59,6 +59,9 @@ describe('buildChromeArgs (FR-12/13/NFR-8)', () => {
     const args = buildChromeArgs(makeProfile({ userDataDir: tmp }))
     expect(args).toContain('--disable-background-timer-throttling')
     expect(args).toContain('--no-first-run')
+    expect(args).toContain('--disable-restore-session-state')
+    expect(args).toContain('--disable-session-crashed-bubble')
+    expect(args).toContain('--disable-restore-last-session')
     expect(args).toContain('--disable-blink-features=AutomationControlled')
   })
 
