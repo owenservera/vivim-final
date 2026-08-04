@@ -5,6 +5,7 @@
 // Now it just wraps the engine result in the InterpretResponse discriminated union
 // (already defined in src/schema/api-types.ts) — one envelope, one token, one shape.
 
+import { z } from 'zod'
 import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
 import type {
@@ -31,16 +32,23 @@ export function createInterpretRouter(nlclEngine: NLCLEngine) {
 
     const _source = extractSource(req)
 
-    let body: InterpretBody
+    const bodySchema = z.object({
+      text: z.string().min(1),
+      ctx: z.object({
+        conversationId: z.string().optional(),
+        providerId: z.string().optional(),
+        slaveId: z.string().optional(),
+        userId: z.string().optional(),
+        metadata: z.record(z.unknown()).optional(),
+      }).optional(),
+    })
+    let body: z.infer<typeof bodySchema>
     try {
-      const parsed = await req.json()
-      body = parsed as InterpretBody
+      const parsed = bodySchema.safeParse(await req.json())
+      if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+      body = parsed.data
     } catch {
       return errorResponse('Invalid JSON body', 'BadRequest', 400)
-    }
-
-    if (!body?.text) {
-      return errorResponse('Missing text field', 'BadRequest', 400)
     }
 
     const start = Date.now()
