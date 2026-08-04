@@ -1,0 +1,161 @@
+{
+  "version": "1.0.0",
+  "generatedBy": "017-harness-command-registry",
+  "commands": [
+    {
+      "commandId": "harness.navigation",
+      "version": "1.0.0",
+      "kind": "action",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "Navigate to URL and wait for page readiness",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "enum": ["navigate", "wait_for", "get_current_url"] },
+          "url": { "type": "string" },
+          "selector": { "type": "string" },
+          "timeoutMs": { "type": "number", "default": 30000 }
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "commandId": "harness.composer",
+      "version": "1.0.0",
+      "kind": "action",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "Interact with chat composer element",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "enum": ["focus", "type", "clear", "send", "get_content"] },
+          "text": { "type": "string" },
+          "selector": { "type": "string" }
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "commandId": "harness.selector",
+      "version": "1.0.0",
+      "kind": "action",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "DOM querying and element interaction",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["query", "query_all", "wait_for", "click", "get_text", "get_attribute"]
+          },
+          "selector": { "type": "string" },
+          "attribute": { "type": "string" },
+          "timeoutMs": { "type": "number", "default": 5000 }
+        },
+        "required": ["action", "selector"]
+      }
+    },
+    {
+      "commandId": "harness.capture",
+      "version": "1.0.0",
+      "kind": "action",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "Capture network responses and DOM state",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["start_capture", "stop_capture", "get_response_body", "screenshot"]
+          },
+          "pattern": { "type": "string" },
+          "url": { "type": "string" }
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "commandId": "harness.login",
+      "version": "1.0.0",
+      "kind": "action",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "Handle login flows",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["wait_for_form", "type_email", "type_password", "submit", "detect_login_state"]
+          },
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "selector": { "type": "string" }
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "commandId": "harness.stealth",
+      "version": "1.0.0",
+      "kind": "action",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "Inject anti-detection stealth scripts via CDP",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "enum": ["inject", "verify"] }
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "commandId": "harness.retry",
+      "version": "1.0.0",
+      "kind": "retry",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "Wrap the following action node in a retry loop",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "retryCount": { "type": "number", "default": 3 },
+          "retryDelayMs": { "type": "number", "default": 250 }
+        }
+      }
+    },
+    {
+      "commandId": "harness.branch",
+      "version": "1.0.0",
+      "kind": "branch",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "Conditionally run the following body node",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "condition": {
+            "type": "object",
+            "properties": {
+              "outputKey": { "type": "string" },
+              "equals": { "type": "string" },
+              "truthy": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "commandId": "harness.precondition",
+      "version": "1.0.0",
+      "kind": "precondition",
+      "adaptorRef": "ChromeGovernor.executeHarnessPlan",
+      "description": "Gate the plan on a page-context condition",
+      "paramsSchema": {
+        "type": "object",
+        "properties": {
+          "expr": { "type": "string" },
+          "selector": { "type": "string" }
+        },
+        "required": ["expr"]
+      }
+    }
+  ]
+}

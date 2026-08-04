@@ -29,9 +29,9 @@ export function FleetStatus() {
   }, [refresh]);
 
   const statusColor = (s?: string) => {
-    if (s === 'ok' || s === 'healthy') return '#10b981';
-    if (s === 'error' || s === 'unhealthy') return '#ef4444';
-    return '#f59e0b';
+    if (s === 'ok' || s === 'healthy') return 'var(--color-success)';
+    if (s === 'error' || s === 'unhealthy') return 'var(--color-error)';
+    return 'var(--color-warning)';
   };
 
   const backendOk = health?.status === 'ok' || health?.status === 'healthy';
@@ -43,9 +43,9 @@ export function FleetStatus() {
       {/* Backend health */}
       <div style={{ padding: 12, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: healthLoading ? '#f59e0b' : statusColor(health?.status) }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: healthLoading ? 'var(--color-warning)' : statusColor(health?.status) }} />
           <span style={{ fontSize: 14, fontWeight: 600 }}>Backend</span>
-          <span style={{ padding: '1px 8px', background: healthLoading ? '#f59e0b' : statusColor(health?.status), color: '#fff', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>
+          <span style={{ padding: '1px 8px', background: healthLoading ? 'var(--color-warning)' : statusColor(health?.status), color: 'var(--bg)', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>
             {healthLoading ? 'checking…' : health?.status ?? 'unknown'}
           </span>
         </div>
@@ -67,7 +67,7 @@ export function FleetStatus() {
               <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{p.name}</span>
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>{p.slug}</div>
-            <div style={{ padding: '2px 6px', background: statusColor(p.status), color: '#fff', borderRadius: 3, fontSize: 9, fontWeight: 600, display: 'inline-block' }}>
+            <div style={{ padding: '2px 6px', background: statusColor(p.status), color: 'var(--bg)', borderRadius: 3, fontSize: 9, fontWeight: 600, display: 'inline-block' }}>
               {p.status ?? 'unknown'}
             </div>
             {p.capabilities && p.capabilities.length > 0 && (

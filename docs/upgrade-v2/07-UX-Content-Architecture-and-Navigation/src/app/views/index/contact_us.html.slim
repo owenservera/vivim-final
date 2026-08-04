@@ -1,0 +1,27 @@
+# UX7-01: was a 0-byte stub. Now a dedicated contact page.
+# Renders the same form as the footer, but in a dedicated page so users
+# can deep-link and share /contact-us.
+
+section.block id="contact"
+  .container
+    header
+      h2 Contact Us
+      span.line
+    .row
+      .col-sm-7
+        h3 Ready to start your project?
+        p Tell us a bit about what you're building. We respond within one business day.
+        = form_tag(contact_path) do
+          / (same accessible form markup as the layout - see UX5-02)
+          = text_field :contact, :name, class: 'form-control', placeholder: 'Name', required: true
+          = email_field :contact, :email, class: 'form-control', placeholder: 'Email', required: true
+          = phone_field :contact, :phone, class: 'form-control', placeholder: 'Phone'
+          = text_area :contact, :comment, class: 'form-control', placeholder: 'Comment', rows: 6, required: true
+          button.btn.btn-green type="submit" Send
+      .col-sm-4.col-sm-offset-1
+        h3 Or reach us directly
+        ul.list-unstyled
+          li: a href='tel:7205040111' 720.504.0111
+          li: a href='mailto:info@vivim.net' info@vivim.net
+          li 8400 East Crescent Parkway Suite 600
+          li Greenwood Village, CO 80111

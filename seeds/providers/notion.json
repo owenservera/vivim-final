@@ -1,0 +1,40 @@
+{
+  "provider": {
+    "slug": "notion",
+    "display_name": "Notion",
+    "description": "Notion workspace and knowledge base integration",
+    "category": "productivity",
+    "provider_type": "webapp",
+    "website_url": "https://www.notion.so",
+    "documentation_url": "https://developers.notion.com",
+    "auth_type": "oauth2",
+    "has_multi_account": true,
+    "profile_strategy": "browser",
+    "capabilities": [
+      "create_page",
+      "update_page",
+      "create_database",
+      "query_database",
+      "append_block",
+      "get_page",
+      "search_pages"
+    ]
+  },
+  "endpoints": [
+    {
+      "label": "api",
+      "url": "https://api.notion.com/v1",
+      "endpoint_type": "api",
+      "is_default": true
+    }
+  ],
+  "parsers": [
+    { "name": "notion-json", "version": 1, "is_active": true, "fallback": "generic-format-agnostic" }
+  ],
+  "models": [],
+  "capabilities_config": [],
+  "config": [
+    { "key": "api_key", "value": "NOTION_API_KEY", "is_secret": true },
+    { "key": "integration_id", "value": "NOTION_INTEGRATION_ID", "is_secret": false }
+  ]
+}

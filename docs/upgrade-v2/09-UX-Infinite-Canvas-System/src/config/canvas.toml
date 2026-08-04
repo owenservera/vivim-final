@@ -1,0 +1,120 @@
+# vivim Canvas - global user configuration.
+#
+# This file is hot-reloaded: save it and the canvas updates instantly.
+# Per-canvas overrides live inside the canvas JSON itself
+# (configOverrides field) and take precedence over values here.
+#
+# Format: TOML. Comments use #.
+# All units are canvas units unless noted. 1 canvas unit ~= 1px at scale=1.
+
+schema = "vivim.canvas.config/v1"
+theme = "auto"            # light | dark | auto | custom
+
+[palette]
+background = "#fafaf9"     # stone-50
+surface = "#ffffff"
+surfaceMuted = "#f5f5f4"
+border = "#e7e5e4"          # stone-200
+text = "#1c1917"            # stone-900
+textMuted = "#78716c"       # stone-500
+accent = "#0f172a"
+
+[palette.nodeByCategory]
+Security = "#e11d48"        # rose-600
+"Code Quality" = "#d97706"  # amber-600
+Reliability = "#0284c7"     # sky-600
+"Web Presence" = "#7c3aed"  # violet-600
+"UX & Features" = "#059669" # emerald-600
+
+[palette.edgeByKind]
+"depends-on" = "#0284c7"
+"conflicts" = "#e11d48"
+"relates" = "#78716c"
+"references" = "#7c3aed"
+
+[grid]
+style = "dots"              # none | dots | lines | cross
+size = 24
+color = "rgba(0,0,0,0.08)"
+colorMajor = "rgba(0,0,0,0.16)"
+majorEvery = 8
+
+[snap]
+enabled = true
+gridSize = 24
+toNodes = true
+threshold = 8
+
+[zoom]
+min = 0.05                  # 5% (bird's-eye)
+max = 8.0                   # 800% (pixel-level)
+wheelMode = "cmd-scroll"    # wheel | pinch | cmd-scroll | scroll-then-pinch
+invertDirection = false
+smoothingMs = 120
+
+[pan]
+wheelMode = "drag"          # scroll | drag | none
+invertDirection = false
+smoothingMs = 80
+
+[nodes]
+defaultSize = "comfortable" # compact | comfortable | spacious
+fontFamily = "Inter, system-ui, sans-serif"
+fontSize = 14
+borderRadius = 12
+shadow = true
+
+[nodes.compact]
+width = 200
+height = 120
+
+[nodes.comfortable]
+width = 320
+height = 200
+
+[nodes.spacious]
+width = 480
+height = 280
+
+[edges]
+arrowhead = "triangle"      # none | triangle | diamond | circle
+width = 2
+curved = true
+labelBackground = true
+
+[keyboard]
+mode = "modal"              # modal | direct | hybrid
+leaderKey = "<space>"
+modalIndicator = true
+
+[keyboard.bindings]
+"node.delete" = "dd"
+"node.yank" = "yy"
+"node.paste" = "p"
+"node.connect" = "c"
+"node.group" = "g"
+"view.zoom-in" = "+"
+"view.zoom-out" = "-"
+"view.fit" = "zf"
+"view.find" = "<cmd-k>"
+"insert.note" = "i"
+"insert.below" = "o"
+"insert.above" = "O"
+"command.open" = ":"
+"bookmark.set" = "m"
+"bookmark.goto" = "'"
+
+[persistence]
+autosaveMs = 500
+format = "json"             # json | toml | yaml
+location = "indexeddb"      # indexeddb | filesystem | server
+versionHistory = 50
+
+[collaboration]
+enabled = false             # set to true to enable Y.js sync
+presence = true
+
+[performance]
+virtualizeOffscreen = true
+offscreenMargin = 200
+maxNodesPerFrame = 500

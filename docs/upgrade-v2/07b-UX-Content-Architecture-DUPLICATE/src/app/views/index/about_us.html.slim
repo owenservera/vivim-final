@@ -1,0 +1,15 @@
+# UX7-01: was a 0-byte stub. Now real content.
+# Move the existing about-us section out of index.html.slim into this file.
+
+section id="aboutus"
+  .container
+    header
+      h2 About Us
+      span.line
+    .row
+      .info.col-xs-12.about-us-text
+        h3 We love to turn ideas into beautiful apps
+        p Vivim is a Denver-based mobile and web development studio. We build iOS, Android, and Ruby on Rails applications for startups and growing businesses across the Front Range.
+        p Our team brings together design, engineering, and product strategy under one roof. We work in small, senior teams - no juniors learning on your dime.
+        p Schedule a free 30-minute consultation to talk through your project.
+        = link_to 'Book a call', contact_us_path, class: 'btn btn-green'

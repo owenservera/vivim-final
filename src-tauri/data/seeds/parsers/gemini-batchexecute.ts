@@ -34,16 +34,36 @@ function decodeEnvelope(raw) {
 function parseStreamChunk(frame) {
   const payload = frame.payload;
   if (!Array.isArray(payload)) return null;
-  // Real gemini batchexecute: payload[4] holds [[deltaText]] (or payload[3]).
   const candidate = payload[4] != null ? payload[4] : payload[3];
   const textArr = Array.isArray(candidate) ? candidate[0] : undefined;
-  // text lives at textArr[0]; some envelopes double-wrap as textArr[1].
   let deltaArr = Array.isArray(textArr) ? (textArr[1] != null ? textArr[1] : textArr[0]) : undefined;
   if (typeof deltaArr === 'undefined' && Array.isArray(textArr)) deltaArr = textArr[0];
   let textDelta = '';
   if (Array.isArray(deltaArr)) textDelta = deltaArr.filter(function (s) { return typeof s === 'string'; }).join('');
   else if (typeof deltaArr === 'string') textDelta = deltaArr;
   return textDelta ? { textDelta: textDelta } : null;
+}
+function extractGrounding(frame) {
+  const payload = frame.payload;
+  if (!Array.isArray(payload)) return [];
+  const grounding = [];
+  for (let i = 0; i < payload.length; i++) {
+    const section = payload[i];
+    if (!Array.isArray(section)) continue;
+    for (const item of section) {
+      if (!Array.isArray(item) || item.length < 2) continue;
+      const entries = item[1];
+      if (!Array.isArray(entries)) continue;
+      for (const entry of entries) {
+        if (Array.isArray(entry) && entry.length >= 2 && typeof entry[0] === 'string' && entry[0].indexOf('http') === 0) {
+          grounding.push({ type: 'link', url: entry[0], title: String(entry[1] || '') });
+        } else if (entry && typeof entry === 'object' && entry.url) {
+          grounding.push({ type: 'link', url: String(entry.url), title: String(entry.title || entry.name || '') });
+        }
+      }
+    }
+  }
+  return grounding;
 }
 function parse(rawBody) {
   const blocks = [];
@@ -53,7 +73,14 @@ function parse(rawBody) {
     if (frame.rpc) {
       const delta = parseStreamChunk(frame);
       if (delta && delta.textDelta) blocks.push({ type: 'text', text: delta.textDelta });
-      else blocks.push({ type: 'meta', key: 'gemini_' + frame.rpc, value: frame.payload });
+      else {
+        const grounding = extractGrounding(frame);
+        if (grounding.length > 0) {
+          for (const g of grounding) blocks.push({ type: 'meta', key: 'grounding_link', value: g });
+        } else {
+          blocks.push({ type: 'meta', key: 'gemini_' + frame.rpc, value: frame.payload });
+        }
+      }
     }
   }
   if (blocks.length === 0 && rawBody.length > 0) blocks.push({ type: 'text', text: rawBody });
@@ -69,5 +96,5 @@ function getConfidence(rawBody) {
   if (b.includes('[[')) return 0.6;
   return 0.2;
 }
-module.exports.default = { name: 'gemini/001_batchexecute', version: 1, providerId: 'gemini', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
+module.exports.default = { name: 'gemini/001_batchexecute', version: 2, providerId: 'gemini', parse: parse, detectCompletion: detectCompletion, getConfidence: getConfidence };
 `

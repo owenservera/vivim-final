@@ -1,0 +1,120 @@
+{
+  "schema": "vivim.upgrade.package/v1",
+  "package": {
+    "title": "UX: Contact Form Validation, Feedback & Accessibility",
+    "summary": "The contact form POSTs to /contact, the controller silently redirects to / with no flash message, no validation, no spam protection, and no accessible labels. Users who submit the form get zero feedback - they don't know if it worked, failed, or vanished. This package adds accessible labels, client + server validation, a honeypot, and an aria-live status region.",
+    "index": 5,
+    "generatedAt": "2026-08-02T21:54:17.222Z",
+    "grounded": true,
+    "commitInspected": "71886e93f5743ed49d3b7ca3380644e9e054f60b"
+  },
+  "repo": {
+    "id": "cmsc7am6r0000ryi8uiccfd2u",
+    "name": "vivim",
+    "version": "0.1.0",
+    "url": "https://github.com/vivim/vivim"
+  },
+  "findings": [
+    {
+      "id": "UX5-01",
+      "severity": "high",
+      "title": "Form submission silently redirects with no user feedback",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX5-02",
+      "severity": "high",
+      "title": "Form fields have no accessible labels (placeholders only)",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX5-03",
+      "severity": "medium",
+      "title": "No client-side or server-side input validation beyond HTML 'required'",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX5-04",
+      "severity": "medium",
+      "title": "No spam protection on the contact endpoint (honeypot / reCAPTCHA / rate limit)",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX5-05",
+      "severity": "medium",
+      "title": "Form status messages have no aria-live region - screen readers hear nothing",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX5-06",
+      "severity": "low",
+      "title": "Submit button uses ignored 'value' attribute instead of inner text",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX5-07",
+      "severity": "low",
+      "title": "Inline onclick handlers will break under any Content Security Policy",
+      "evidenceCount": 2
+    }
+  ],
+  "tasks": [
+    {
+      "id": "UX5-T01",
+      "effort": "S"
+    },
+    {
+      "id": "UX5-T02",
+      "effort": "S"
+    },
+    {
+      "id": "UX5-T03",
+      "effort": "S"
+    },
+    {
+      "id": "UX5-T04",
+      "effort": "M"
+    },
+    {
+      "id": "UX5-T05",
+      "effort": "M"
+    },
+    {
+      "id": "UX5-T06",
+      "effort": "S"
+    },
+    {
+      "id": "UX5-T07",
+      "effort": "S"
+    },
+    {
+      "id": "UX5-T08",
+      "effort": "S"
+    }
+  ],
+  "specs": [
+    {
+      "id": "UX5-S1"
+    },
+    {
+      "id": "UX5-S2"
+    },
+    {
+      "id": "UX5-S3"
+    },
+    {
+      "id": "UX5-S4"
+    },
+    {
+      "id": "UX5-S5"
+    },
+    {
+      "id": "UX5-S6"
+    },
+    {
+      "id": "UX5-S7"
+    }
+  ],
+  "fileCount": 12,
+  "totalSizeBytes": 37707
+}

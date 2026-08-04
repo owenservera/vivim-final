@@ -76,17 +76,34 @@ export type { IconProps, IconName } from './Icon'
 // V9 — additional canvas components
 // CapabilityBar, RelatedNodes, StreamingIndicator deferred to Phase 2
 // (depend on hooks/SDK not yet ported)
+export { Minimap } from './Minimap'
+export type { MinimapProps } from './Minimap'
 export { MinimapNode } from './MinimapNode'
 export type { MinimapNodeProps } from './MinimapNode'
+export { CanvasSearch } from './CanvasSearch'
+export type { CanvasSearchProps } from './CanvasSearch'
 export { ChatSurface } from '../chat/ChatSurface'
 
 // New minimal chrome system
 export { Panel } from './Panel'
-export type { PanelConfig, PanelDock, PanelSize, PanelProps } from './Panel'
+export type { PanelConfig, PanelProps } from './Panel'
+export { SlidePanel } from './SlidePanel'
+export { PanelFrame } from './PanelFrame'
+export type { PanelFrameProps } from './PanelFrame'
+export { PanelPalette } from './PanelPalette'
+export type { PanelPaletteProps } from './PanelPalette'
+export { PanelSplit, usePanelSplitControls } from './PanelSplit'
+export type { PanelSplitProps, SplitDirection } from './PanelSplit'
 export { MainMenu } from './MainMenu'
 export { ConversationsPanel } from './panels/ConversationsPanel'
-export { ProvidersPanel } from './panels/ProvidersPanel'
 export { SettingsPanel } from './panels/SettingsPanel'
+export { ProvidersPanel } from './panels/ProvidersPanel'
+export { DocumentsPanel } from './panels/DocumentsPanel'
+export type { DocumentsPanelProps } from './panels/DocumentsPanel'
+export { MediaPanel } from './panels/MediaPanel'
+export type { MediaPanelProps } from './panels/MediaPanel'
+export { AgentsPanel } from './panels/AgentsPanel'
+export type { AgentsPanelProps } from './panels/AgentsPanel'
 
 // Canvas capability upgrade — new panel components
 export { HealthDashboard } from './HealthDashboard'
@@ -116,13 +133,15 @@ export { SessionStateProvider, useSessionState } from './SessionStateProvider'
 export type { CanvasSessionState, SessionAction, LayerState } from './SessionStateProvider'
 export { TabBar } from './TabBar'
 export { LayerSwitcher } from './LayerSwitcher'
-export { SlidePanel } from './SlidePanel'
 export { UnifiedEntry } from './UnifiedEntry'
-export { getLayerConfig, getPanelType } from './TabConfig'
-export type { LayerConfig, TabConfig, LayerId, PanelType } from './TabConfig'
+export { getLayerConfig, getTabsForLayer, getPanelType, getPanelConfig, listPanels } from './TabConfig'
+export type { LayerConfig, TabConfig, LayerId, PanelType, PanelSize, PanelDock, TabCategory } from './TabConfig'
 
 // Update notification
 export { UpdateNotification } from './UpdateNotification'
+
+// Storage settings
+export { StorageSettings } from './StorageSettings'
 
 // Universal registry — single registry for ALL UI components
 export { UniversalComponentProvider } from './UniversalComponentProvider'
@@ -145,3 +164,13 @@ export type {
   ComponentKind,
   ComponentCategory,
 } from './use-universal-registry'
+
+// Infinite Canvas system (Bundle 09)
+export { InfiniteCanvas } from './InfiniteCanvas'
+export type { InfiniteCanvasProps } from './InfiniteCanvas'
+export { CanvasMinimap } from './CanvasMinimap'
+export type { CanvasMinimapProps } from './CanvasMinimap'
+export { CanvasConfigPanel } from './CanvasConfigPanel'
+export type { CanvasConfigPanelProps } from './CanvasConfigPanel'
+export { CanvasPalette } from './CanvasPalette'
+export type { CanvasPaletteProps } from './CanvasPalette'

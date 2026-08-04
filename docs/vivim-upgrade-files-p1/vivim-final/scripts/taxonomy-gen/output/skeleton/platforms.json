@@ -1,0 +1,1683 @@
+{
+  "platforms": [
+    {
+      "slug": "whatsapp",
+      "category": "social_messaging",
+      "sourceConfidence": "high",
+      "label": "WhatsApp",
+      "url": "https://web.whatsapp.com",
+      "description": "WhatsApp Web messaging interface",
+      "authType": "qr_code",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "react",
+        "tailwind"
+      ]
+    },
+    {
+      "slug": "telegram",
+      "category": "social_messaging",
+      "sourceConfidence": "high",
+      "label": "Telegram",
+      "url": "https://web.telegram.org",
+      "description": "Telegram Web messaging interface",
+      "authType": "phone_code",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "react",
+        "tailwind"
+      ]
+    },
+    {
+      "slug": "discord",
+      "category": "social_messaging",
+      "sourceConfidence": "high",
+      "label": "Discord",
+      "url": "https://discord.com/app",
+      "description": "Discord chat and voice platform",
+      "authType": "oauth",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "slack",
+      "category": "social_messaging",
+      "sourceConfidence": "high",
+      "label": "Slack",
+      "url": "https://slack.com/signin",
+      "description": "Slack team messaging platform",
+      "authType": "oauth",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "messenger",
+      "category": "social_messaging",
+      "sourceConfidence": "medium",
+      "label": "Messenger",
+      "url": "https://www.messenger.com",
+      "description": "Facebook Messenger",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "signal",
+      "category": "social_messaging",
+      "sourceConfidence": "low",
+      "label": "Signal",
+      "url": "https://signal.org/download/",
+      "description": "Signal secure messaging (desktop only)",
+      "authType": "phone_code",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "electron"
+      ]
+    },
+    {
+      "slug": "wechat",
+      "category": "social_messaging",
+      "sourceConfidence": "medium",
+      "label": "WeChat",
+      "url": "https://web.wechat.com",
+      "description": "WeChat Web messaging",
+      "authType": "qr_code",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "facebook",
+      "category": "social_feed",
+      "sourceConfidence": "high",
+      "label": "Facebook",
+      "url": "https://facebook.com",
+      "description": "Facebook social feed and messaging",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "instagram",
+      "category": "social_feed",
+      "sourceConfidence": "high",
+      "label": "Instagram",
+      "url": "https://instagram.com",
+      "description": "Instagram photo/video sharing",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "x_twitter",
+      "category": "social_feed",
+      "sourceConfidence": "high",
+      "label": "X (Twitter)",
+      "url": "https://x.com",
+      "description": "X (formerly Twitter) microblogging",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "linkedin",
+      "category": "social_feed",
+      "sourceConfidence": "high",
+      "label": "LinkedIn",
+      "url": "https://linkedin.com",
+      "description": "LinkedIn professional networking",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "reddit",
+      "category": "social_feed",
+      "sourceConfidence": "high",
+      "label": "Reddit",
+      "url": "https://reddit.com",
+      "description": "Reddit discussion forums",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "tiktok",
+      "category": "social_feed",
+      "sourceConfidence": "medium",
+      "label": "TikTok",
+      "url": "https://tiktok.com",
+      "description": "TikTok short-form video",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "threads",
+      "category": "social_feed",
+      "sourceConfidence": "medium",
+      "label": "Threads",
+      "url": "https://threads.net",
+      "description": "Meta Threads microblogging",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "mastodon",
+      "category": "social_feed",
+      "sourceConfidence": "medium",
+      "label": "Mastodon",
+      "url": "https://mastodon.social",
+      "description": "Mastodon federated social network",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "tinder",
+      "category": "dating",
+      "sourceConfidence": "medium",
+      "label": "Tinder",
+      "url": "https://tinder.com",
+      "description": "Tinder dating app web",
+      "authType": "browser",
+      "interactionPattern": "swipe",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "bumble",
+      "category": "dating",
+      "sourceConfidence": "medium",
+      "label": "Bumble",
+      "url": "https://bumble.com",
+      "description": "Bumble dating app web",
+      "authType": "browser",
+      "interactionPattern": "swipe",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "hinge",
+      "category": "dating",
+      "sourceConfidence": "low",
+      "label": "Hinge",
+      "url": "https://hinge.co",
+      "description": "Hinge dating app web",
+      "authType": "browser",
+      "interactionPattern": "swipe",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "okcupid",
+      "category": "dating",
+      "sourceConfidence": "low",
+      "label": "OkCupid",
+      "url": "https://okcupid.com",
+      "description": "OkCupid dating web",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "chatgpt",
+      "category": "ai_chatbot",
+      "sourceConfidence": "high",
+      "label": "ChatGPT",
+      "url": "https://chatgpt.com",
+      "description": "OpenAI ChatGPT conversational AI",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "prosemirror",
+        "react",
+        "tailwind"
+      ]
+    },
+    {
+      "slug": "claude",
+      "category": "ai_chatbot",
+      "sourceConfidence": "high",
+      "label": "Claude",
+      "url": "https://claude.ai",
+      "description": "Anthropic Claude conversational AI",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "prosemirror",
+        "react",
+        "tailwind"
+      ]
+    },
+    {
+      "slug": "gemini",
+      "category": "ai_chatbot",
+      "sourceConfidence": "high",
+      "label": "Gemini",
+      "url": "https://gemini.google.com",
+      "description": "Google Gemini conversational AI",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "prosemirror",
+        "react"
+      ]
+    },
+    {
+      "slug": "deepseek",
+      "category": "ai_chatbot",
+      "sourceConfidence": "medium",
+      "label": "DeepSeek",
+      "url": "https://chat.deepseek.com",
+      "description": "DeepSeek conversational AI",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "prosemirror",
+        "react"
+      ]
+    },
+    {
+      "slug": "qwen",
+      "category": "ai_chatbot",
+      "sourceConfidence": "medium",
+      "label": "Qwen",
+      "url": "https://chat.qwen.ai",
+      "description": "Alibaba Qwen conversational AI",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "prosemirror",
+        "react"
+      ]
+    },
+    {
+      "slug": "perplexity",
+      "category": "ai_chatbot",
+      "sourceConfidence": "high",
+      "label": "Perplexity",
+      "url": "https://perplexity.ai",
+      "description": "Perplexity AI search assistant",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "prosemirror",
+        "react"
+      ]
+    },
+    {
+      "slug": "grok",
+      "category": "ai_chatbot",
+      "sourceConfidence": "medium",
+      "label": "Grok",
+      "url": "https://grok.com",
+      "description": "xAI Grok conversational AI",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "prosemirror",
+        "react"
+      ]
+    },
+    {
+      "slug": "poe",
+      "category": "ai_chatbot",
+      "sourceConfidence": "medium",
+      "label": "Poe",
+      "url": "https://poe.com",
+      "description": "Poe multi-model AI chat",
+      "authType": "browser",
+      "interactionPattern": "chat",
+      "techStackSlugs": [
+        "prosemirror",
+        "react"
+      ]
+    },
+    {
+      "slug": "midjourney",
+      "category": "ai_tooling",
+      "sourceConfidence": "medium",
+      "label": "Midjourney",
+      "url": "https://midjourney.com",
+      "description": "Midjourney AI image generation",
+      "authType": "browser",
+      "interactionPattern": "command",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "runway",
+      "category": "ai_tooling",
+      "sourceConfidence": "medium",
+      "label": "Runway",
+      "url": "https://runway.com",
+      "description": "Runway AI video generation",
+      "authType": "browser",
+      "interactionPattern": "command",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "suno",
+      "category": "ai_tooling",
+      "sourceConfidence": "medium",
+      "label": "Suno",
+      "url": "https://suno.com",
+      "description": "Suno AI music generation",
+      "authType": "browser",
+      "interactionPattern": "command",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "elevenlabs",
+      "category": "ai_tooling",
+      "sourceConfidence": "medium",
+      "label": "ElevenLabs",
+      "url": "https://elevenlabs.io",
+      "description": "ElevenLabs AI voice synthesis",
+      "authType": "browser",
+      "interactionPattern": "command",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "cursor",
+      "category": "ide",
+      "sourceConfidence": "medium",
+      "label": "Cursor",
+      "url": "https://cursor.sh",
+      "description": "Cursor AI-powered code editor",
+      "authType": "none",
+      "interactionPattern": "editor",
+      "techStackSlugs": [
+        "codemirror"
+      ]
+    },
+    {
+      "slug": "replit",
+      "category": "ide",
+      "sourceConfidence": "medium",
+      "label": "Replit",
+      "url": "https://replit.com",
+      "description": "Replit cloud IDE",
+      "authType": "browser",
+      "interactionPattern": "editor",
+      "techStackSlugs": [
+        "codemirror",
+        "react"
+      ]
+    },
+    {
+      "slug": "v0",
+      "category": "ai_tooling",
+      "sourceConfidence": "medium",
+      "label": "v0",
+      "url": "https://v0.dev",
+      "description": "Vercel v0 AI UI generation",
+      "authType": "browser",
+      "interactionPattern": "command",
+      "techStackSlugs": [
+        "react",
+        "nextjs"
+      ]
+    },
+    {
+      "slug": "lovable",
+      "category": "ai_tooling",
+      "sourceConfidence": "medium",
+      "label": "Lovable",
+      "url": "https://lovable.dev",
+      "description": "Lovable AI app builder",
+      "authType": "browser",
+      "interactionPattern": "command",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "vscode",
+      "category": "ide",
+      "sourceConfidence": "high",
+      "label": "VS Code",
+      "url": "https://code.visualstudio.com",
+      "description": "Visual Studio Code editor",
+      "authType": "none",
+      "interactionPattern": "editor",
+      "techStackSlugs": [
+        "codemirror"
+      ]
+    },
+    {
+      "slug": "claude_code",
+      "category": "agentic_agent",
+      "sourceConfidence": "high",
+      "label": "Claude Code",
+      "url": "https://claude.ai/code",
+      "description": "Anthropic Claude Code agentic coding",
+      "authType": "api_key",
+      "interactionPattern": "terminal",
+      "techStackSlugs": [
+        "codemirror"
+      ]
+    },
+    {
+      "slug": "devin",
+      "category": "agentic_agent",
+      "sourceConfidence": "medium",
+      "label": "Devin",
+      "url": "https://cognition.ai",
+      "description": "Cognition Devin AI software engineer",
+      "authType": "browser",
+      "interactionPattern": "terminal",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "opencode",
+      "category": "agentic_agent",
+      "sourceConfidence": "high",
+      "label": "OpenCode",
+      "url": "https://opencode.ai",
+      "description": "OpenCode CLI agentic coding",
+      "authType": "none",
+      "interactionPattern": "terminal",
+      "techStackSlugs": [
+        "codemirror"
+      ]
+    },
+    {
+      "slug": "aider",
+      "category": "agentic_agent",
+      "sourceConfidence": "medium",
+      "label": "Aider",
+      "url": "https://aider.chat",
+      "description": "Aider AI pair programming",
+      "authType": "api_key",
+      "interactionPattern": "terminal",
+      "techStackSlugs": []
+    },
+    {
+      "slug": "cline",
+      "category": "agentic_agent",
+      "sourceConfidence": "medium",
+      "label": "Cline",
+      "url": "https://cline.bot",
+      "description": "Cline VS Code AI assistant",
+      "authType": "api_key",
+      "interactionPattern": "editor",
+      "techStackSlugs": [
+        "codemirror"
+      ]
+    },
+    {
+      "slug": "chrome",
+      "category": "browser_automation",
+      "sourceConfidence": "high",
+      "label": "Chrome",
+      "url": "https://google.com/chrome",
+      "description": "Google Chrome browser (CDP automation)",
+      "authType": "none",
+      "interactionPattern": "browser",
+      "techStackSlugs": []
+    },
+    {
+      "slug": "playwright",
+      "category": "browser_automation",
+      "sourceConfidence": "high",
+      "label": "Playwright",
+      "url": "https://playwright.dev",
+      "description": "Playwright browser automation framework",
+      "authType": "none",
+      "interactionPattern": "api",
+      "techStackSlugs": []
+    },
+    {
+      "slug": "puppeteer",
+      "category": "browser_automation",
+      "sourceConfidence": "high",
+      "label": "Puppeteer",
+      "url": "https://pptr.dev",
+      "description": "Puppeteer browser automation",
+      "authType": "none",
+      "interactionPattern": "api",
+      "techStackSlugs": []
+    },
+    {
+      "slug": "selenium",
+      "category": "browser_automation",
+      "sourceConfidence": "high",
+      "label": "Selenium",
+      "url": "https://selenium.dev",
+      "description": "Selenium browser automation",
+      "authType": "none",
+      "interactionPattern": "api",
+      "techStackSlugs": []
+    },
+    {
+      "slug": "notion",
+      "category": "productivity",
+      "sourceConfidence": "high",
+      "label": "Notion",
+      "url": "https://notion.so",
+      "description": "Notion all-in-one workspace",
+      "authType": "browser",
+      "interactionPattern": "editor",
+      "techStackSlugs": [
+        "react",
+        "contenteditable"
+      ]
+    },
+    {
+      "slug": "trello",
+      "category": "productivity",
+      "sourceConfidence": "medium",
+      "label": "Trello",
+      "url": "https://trello.com",
+      "description": "Trello kanban board",
+      "authType": "browser",
+      "interactionPattern": "board",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "asana",
+      "category": "productivity",
+      "sourceConfidence": "medium",
+      "label": "Asana",
+      "url": "https://asana.com",
+      "description": "Asana project management",
+      "authType": "browser",
+      "interactionPattern": "board",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "linear",
+      "category": "productivity",
+      "sourceConfidence": "medium",
+      "label": "Linear",
+      "url": "https://linear.app",
+      "description": "Linear issue tracking",
+      "authType": "browser",
+      "interactionPattern": "board",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "jira",
+      "category": "productivity",
+      "sourceConfidence": "medium",
+      "label": "Jira",
+      "url": "https://atlassian.com/jira",
+      "description": "Atlassian Jira project tracking",
+      "authType": "browser",
+      "interactionPattern": "board",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "stackoverflow",
+      "category": "forum",
+      "sourceConfidence": "high",
+      "label": "Stack Overflow",
+      "url": "https://stackoverflow.com",
+      "description": "Stack Overflow Q&A",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "hackernews",
+      "category": "forum",
+      "sourceConfidence": "high",
+      "label": "Hacker News",
+      "url": "https://news.ycombinator.com",
+      "description": "Hacker News discussion",
+      "authType": "none",
+      "interactionPattern": "feed",
+      "techStackSlugs": []
+    },
+    {
+      "slug": "discourse",
+      "category": "forum",
+      "sourceConfidence": "medium",
+      "label": "Discourse",
+      "url": "https://discourse.org",
+      "description": "Discourse forum platform",
+      "authType": "browser",
+      "interactionPattern": "feed",
+      "techStackSlugs": [
+        "react"
+      ]
+    },
+    {
+      "slug": "cohere",
+      "category": "ai_chatbot",
+      "url": "https://cohere.com",
+      "authType": "api",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "mistral",
+      "category": "ai_chatbot",
+      "url": "https://chat.mistral.ai",
+      "authType": "api",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "anthropic_console",
+      "category": "ai_chatbot",
+      "url": "https://console.anthropic.com",
+      "authType": "api",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "you_com",
+      "category": "ai_chatbot",
+      "url": "https://you.com",
+      "authType": "api",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "character_ai",
+      "category": "ai_chatbot",
+      "url": "https://character.ai",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "replika",
+      "category": "ai_chatbot",
+      "url": "https://replika.ai",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "janitor",
+      "category": "ai_chatbot",
+      "url": "https://janitorai.com",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "spicychat",
+      "category": "ai_chatbot",
+      "url": "https://spicychat.ai",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "bluesky",
+      "category": "social_feed",
+      "url": "https://bsky.app",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "truth_social",
+      "category": "social_feed",
+      "url": "https://truthsocial.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "threads_meta",
+      "category": "social_feed",
+      "url": "https://threads.net",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "digg",
+      "category": "social_feed",
+      "url": "https://digg.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "slashdot",
+      "category": "social_feed",
+      "url": "https://slashdot.org",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "lobste_rs",
+      "category": "social_feed",
+      "url": "https://lobste.rs",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "producthunt",
+      "category": "social_feed",
+      "url": "https://producthunt.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "devto",
+      "category": "social_feed",
+      "url": "https://dev.to",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "line",
+      "category": "social_messaging",
+      "url": "https://line.me",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "viber",
+      "category": "social_messaging",
+      "url": "https://viber.com",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "skype",
+      "category": "social_messaging",
+      "url": "https://web.skype.com",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "teams",
+      "category": "social_messaging",
+      "url": "https://teams.microsoft.com",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "mattermost",
+      "category": "social_messaging",
+      "url": "https://mattermost.com",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "dalle",
+      "category": "ai_tooling",
+      "url": "https://labs.openai.com",
+      "authType": "api",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "stable_diffusion",
+      "category": "ai_tooling",
+      "url": "https://stability.ai",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "pika",
+      "category": "ai_tooling",
+      "url": "https://pika.art",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "synthesia",
+      "category": "ai_tooling",
+      "url": "https://synthesia.io",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "descript",
+      "category": "ai_tooling",
+      "url": "https://descript.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "notion_ai",
+      "category": "ai_tooling",
+      "url": "https://notion.so",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "cursor_agent",
+      "category": "agentic_agent",
+      "url": "https://cursor.com",
+      "authType": "api",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "github_copilot",
+      "category": "agentic_agent",
+      "url": "https://copilot.github.com",
+      "authType": "api",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "codex_cli",
+      "category": "agentic_agent",
+      "url": "https://openai.com/codex",
+      "authType": "api",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "bolt_new",
+      "category": "agentic_agent",
+      "url": "https://bolt.new",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "replit_agent",
+      "category": "agentic_agent",
+      "url": "https://replit.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "clickup",
+      "category": "productivity",
+      "url": "https://clickup.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "monday",
+      "category": "productivity",
+      "url": "https://monday.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "airtable",
+      "category": "productivity",
+      "url": "https://airtable.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "coda",
+      "category": "productivity",
+      "url": "https://coda.io",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "miro",
+      "category": "productivity",
+      "url": "https://miro.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "cypress",
+      "category": "browser_automation",
+      "url": "https://cypress.io",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "webdriverio",
+      "category": "browser_automation",
+      "url": "https://webdriver.io",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "testcafe",
+      "category": "browser_automation",
+      "url": "https://testcafe.io",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "match",
+      "category": "dating",
+      "url": "https://match.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "badoo",
+      "category": "dating",
+      "url": "https://badoo.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "plentyoffish",
+      "category": "dating",
+      "url": "https://pof.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "quora",
+      "category": "forum",
+      "url": "https://quora.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "medium",
+      "category": "forum",
+      "url": "https://medium.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "substack",
+      "category": "forum",
+      "url": "https://substack.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "windsurf",
+      "category": "ide",
+      "url": "https://codeium.com/windsurf",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "zed",
+      "category": "ide",
+      "url": "https://zed.dev",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "nova",
+      "category": "ide",
+      "url": "https://nova.app",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "amazon",
+      "category": "ecommerce",
+      "url": "https://amazon.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "shopify",
+      "category": "ecommerce",
+      "url": "https://shopify.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "ebay",
+      "category": "ecommerce",
+      "url": "https://ebay.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "walmart",
+      "category": "ecommerce",
+      "url": "https://walmart.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "etsy",
+      "category": "ecommerce",
+      "url": "https://etsy.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "alibaba",
+      "category": "ecommerce",
+      "url": "https://alibaba.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "taobao",
+      "category": "ecommerce",
+      "url": "https://taobao.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "bestbuy",
+      "category": "ecommerce",
+      "url": "https://bestbuy.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "target",
+      "category": "ecommerce",
+      "url": "https://target.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "stripe_dashboard",
+      "category": "ecommerce",
+      "url": "https://dashboard.stripe.com",
+      "authType": "api",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "paypal",
+      "category": "finance",
+      "url": "https://paypal.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "robinhood",
+      "category": "finance",
+      "url": "https://robinhood.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "coinbase",
+      "category": "finance",
+      "url": "https://coinbase.com",
+      "authType": "api",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "binance",
+      "category": "finance",
+      "url": "https://binance.com",
+      "authType": "api",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "schwab",
+      "category": "finance",
+      "url": "https://schwab.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "fidelity",
+      "category": "finance",
+      "url": "https://fidelity.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "wise",
+      "category": "finance",
+      "url": "https://wise.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "revolut",
+      "category": "finance",
+      "url": "https://revolut.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "canvas_lms",
+      "category": "education",
+      "url": "https://canvas.instructure.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "blackboard",
+      "category": "education",
+      "url": "https://blackboard.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "khan_academy",
+      "category": "education",
+      "url": "https://khanacademy.org",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "coursera",
+      "category": "education",
+      "url": "https://coursera.org",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "udemy",
+      "category": "education",
+      "url": "https://udemy.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "duolingo",
+      "category": "education",
+      "url": "https://duolingo.com",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "anki",
+      "category": "education",
+      "url": "https://apps.ankiweb.net",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "quizlet",
+      "category": "education",
+      "url": "https://quizlet.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "mychart",
+      "category": "healthcare",
+      "url": "https://mychart.org",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "teladoc",
+      "category": "healthcare",
+      "url": "https://teladoc.com",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "zocdoc",
+      "category": "healthcare",
+      "url": "https://zocdoc.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "fitbit",
+      "category": "healthcare",
+      "url": "https://fitbit.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "strava",
+      "category": "healthcare",
+      "url": "https://strava.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "myfitnesspal",
+      "category": "healthcare",
+      "url": "https://myfitnesspal.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "steam",
+      "category": "gaming",
+      "url": "https://store.steampowered.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "epic_games",
+      "category": "gaming",
+      "url": "https://epicgames.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "xbox",
+      "category": "gaming",
+      "url": "https://xbox.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "playstation",
+      "category": "gaming",
+      "url": "https://playstation.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "twitch",
+      "category": "gaming",
+      "url": "https://twitch.tv",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "discord_gaming",
+      "category": "gaming",
+      "url": "https://discord.com",
+      "authType": "browser",
+      "interactionPattern": "chat"
+    },
+    {
+      "slug": "youtube",
+      "category": "media",
+      "url": "https://youtube.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "spotify",
+      "category": "media",
+      "url": "https://open.spotify.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "netflix",
+      "category": "media",
+      "url": "https://netflix.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "soundcloud",
+      "category": "media",
+      "url": "https://soundcloud.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "bandcamp",
+      "category": "media",
+      "url": "https://bandcamp.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "mixcloud",
+      "category": "media",
+      "url": "https://mixcloud.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "podbean",
+      "category": "media",
+      "url": "https://podbean.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "anchor_fm",
+      "category": "media",
+      "url": "https://podcasts.spotify.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "airbnb",
+      "category": "travel",
+      "url": "https://airbnb.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "booking",
+      "category": "travel",
+      "url": "https://booking.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "expedia",
+      "category": "travel",
+      "url": "https://expedia.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "uber",
+      "category": "travel",
+      "url": "https://uber.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "lyft",
+      "category": "travel",
+      "url": "https://lyft.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "tripadvisor",
+      "category": "travel",
+      "url": "https://tripadvisor.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "github",
+      "category": "cloud_devops",
+      "url": "https://github.com",
+      "authType": "api",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "gitlab",
+      "category": "cloud_devops",
+      "url": "https://gitlab.com",
+      "authType": "api",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "vercel",
+      "category": "cloud_devops",
+      "url": "https://vercel.com",
+      "authType": "api",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "netlify",
+      "category": "cloud_devops",
+      "url": "https://netlify.com",
+      "authType": "api",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "aws_console",
+      "category": "cloud_devops",
+      "url": "https://console.aws.amazon.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "gcloud",
+      "category": "cloud_devops",
+      "url": "https://console.cloud.google.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "azure_portal",
+      "category": "cloud_devops",
+      "url": "https://portal.azure.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "docker_hub",
+      "category": "cloud_devops",
+      "url": "https://hub.docker.com",
+      "authType": "api",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "figma",
+      "category": "design",
+      "url": "https://figma.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "canva",
+      "category": "design",
+      "url": "https://canva.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "sketch",
+      "category": "design",
+      "url": "https://sketch.com",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "adobe_xd",
+      "category": "design",
+      "url": "https://adobe.com/xd",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "invision",
+      "category": "design",
+      "url": "https://invisionapp.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "zeplin",
+      "category": "design",
+      "url": "https://zeplin.io",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "salesforce",
+      "category": "crm",
+      "url": "https://salesforce.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "hubspot",
+      "category": "crm",
+      "url": "https://hubspot.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "pipedrive",
+      "category": "crm",
+      "url": "https://pipedrive.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "zoho_crm",
+      "category": "crm",
+      "url": "https://zoho.com/crm",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "freshsales",
+      "category": "crm",
+      "url": "https://freshworks.com/crm",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "close_crm",
+      "category": "crm",
+      "url": "https://close.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "google_analytics",
+      "category": "analytics",
+      "url": "https://analytics.google.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "mixpanel",
+      "category": "analytics",
+      "url": "https://mixpanel.com",
+      "authType": "api",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "amplitude",
+      "category": "analytics",
+      "url": "https://amplitude.com",
+      "authType": "api",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "segment",
+      "category": "analytics",
+      "url": "https://segment.com",
+      "authType": "api",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "hotjar",
+      "category": "analytics",
+      "url": "https://hotjar.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "posthog",
+      "category": "analytics",
+      "url": "https://posthog.com",
+      "authType": "api",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "google_docs",
+      "category": "docs_wiki",
+      "url": "https://docs.google.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "confluence",
+      "category": "docs_wiki",
+      "url": "https://confluence.atlassian.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "gitbook",
+      "category": "docs_wiki",
+      "url": "https://gitbook.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "obsidian_web",
+      "category": "docs_wiki",
+      "url": "https://obsidian.md",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "logseq",
+      "category": "docs_wiki",
+      "url": "https://logseq.com",
+      "authType": "none",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "roam_research",
+      "category": "docs_wiki",
+      "url": "https://roamresearch.com",
+      "authType": "browser",
+      "interactionPattern": "canvas"
+    },
+    {
+      "slug": "gmail",
+      "category": "email",
+      "url": "https://mail.google.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "outlook",
+      "category": "email",
+      "url": "https://outlook.office.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "protonmail",
+      "category": "email",
+      "url": "https://mail.proton.me",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "superhuman",
+      "category": "email",
+      "url": "https://superhuman.com",
+      "authType": "browser",
+      "interactionPattern": "feed"
+    },
+    {
+      "slug": "google_calendar",
+      "category": "calendar",
+      "url": "https://calendar.google.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "outlook_calendar",
+      "category": "calendar",
+      "url": "https://outlook.office.com/calendar",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "calendly",
+      "category": "calendar",
+      "url": "https://calendly.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    },
+    {
+      "slug": "cron_calendar",
+      "category": "calendar",
+      "url": "https://cron.com",
+      "authType": "browser",
+      "interactionPattern": "form"
+    }
+  ]
+}

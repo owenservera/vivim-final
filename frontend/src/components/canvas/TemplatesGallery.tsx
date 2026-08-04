@@ -100,11 +100,11 @@ export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: stri
               <div
                 style={{
                   padding: '6px 10px',
-                  background: '#10b98122',
-                  border: '1px solid #10b981',
+                  background: 'var(--color-success-surface)',
+                  border: '1px solid var(--color-success)',
                   borderRadius: 4,
                   fontSize: 11,
-                  color: '#10b981',
+                  color: 'var(--color-success)',
                   textAlign: 'center',
                 }}
               >

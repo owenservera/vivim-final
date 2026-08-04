@@ -35,6 +35,8 @@ import type { ResolvedSlot } from '../../shared/route-context';
 import type { CanvasLayout } from '../../shared/canvas-types';
 import type { AgentCanvasPlan } from '@/shared/agent-canvas';
 import type { AgentCanvasCommand, AgentCanvasResponse, AgentCanvasPolicy, CanvasState, DEFAULT_POLICY } from '@/shared/agent-canvas';
+import { Minimap } from './Minimap';
+import { CanvasSearch } from './CanvasSearch';
 
 export interface LivingCanvasProps {
   workspaceId: string;
@@ -91,8 +93,51 @@ export function LivingCanvas(props: LivingCanvasProps) {
   const [hoveredConn, setHoveredConn] = useState<string | null>(null);
   const [agentPlan, setAgentPlan] = useState<AgentCanvasPlan | null>(null);
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 });
+  const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const [rubberBand, setRubberBand] = useState<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const dragStateRef = useRef<{
+    id: string;
+    ids: string[];
+    startX: number;
+    startY: number;
+    origins: Record<string, { x: number; y: number }>;
+    snapshot: Record<string, CanvasLayout>;
+  } | null>(null);
+  const rubberBandRef = useRef<{ startX: number; startY: number; endX: number; endY: number } | null>(null);
+  const layoutsRef = useRef<Record<string, CanvasLayout>>(layouts);
+
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    layoutsRef.current = layouts;
+  }, [layouts]);
+
+  // Keyboard handler for Ctrl+F, Ctrl+Z/Y, Escape
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        history.undo();
+      }
+      if (((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) || ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
+        e.preventDefault();
+        history.redo();
+      }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        if (selectedNodes.size > 0) setSelectedNodes(new Set());
+        if (rubberBand) setRubberBand(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [history, selectedNodes, rubberBand]);
 
   const slotsToResolve = slotIds ?? Object.keys(DEFAULT_LAYOUTS);
   const { data: surface, isLoading, error } = useResolvedNodes({
@@ -159,16 +204,20 @@ export function LivingCanvas(props: LivingCanvasProps) {
     });
     const layoutEdges: LayoutEdge[] = connections.map((c) => ({ from: c.from.nodeId, to: c.to.nodeId, weight: 1 }));
     const result = computeLayout(layoutNodes, layoutEdges, intent, { width: containerSize.w, height: containerSize.h, iterations: 150 });
-    setLayouts((prev) => {
-      const next = { ...prev };
-      for (const [id, pos] of Object.entries(result.positions)) {
-        const existing = next[id] ?? { x: 0, y: 0, z: 0, w: 320, h: 240 };
-        next[id] = { ...existing, x: pos.x, y: pos.y };
-      }
-      return next;
+    const prev = { ...layouts };
+    const next = { ...layouts };
+    for (const [id, pos] of Object.entries(result.positions)) {
+      const existing = next[id] ?? { x: 0, y: 0, z: 0, w: 320, h: 240 };
+      next[id] = { ...existing, x: pos.x, y: pos.y };
+    }
+    history.execute({
+      id: `layout:${intent}:${Date.now()}`,
+      description: `layout ${intent}`,
+      execute: () => setLayouts(next),
+      undo: () => setLayouts(prev),
     });
     setLayoutIntent(intent);
-  }, [surface, effectiveLayouts, pinnedNodes, connections, containerSize, slotsToResolve]);
+  }, [surface, effectiveLayouts, pinnedNodes, connections, containerSize, slotsToResolve, layouts, history]);
 
   const zoomTier = getZoomTier(viewport.zoom);
   const visibleSlots = useMemo(() => {
@@ -193,57 +242,227 @@ export function LivingCanvas(props: LivingCanvasProps) {
     }
   }, []);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); history.undo(); }
-      if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); history.redo(); }
-      if (e.key === 'ArrowLeft') setViewport((vp) => ({ ...vp, x: vp.x - 50 / vp.zoom }));
-      if (e.key === 'ArrowRight') setViewport((vp) => ({ ...vp, x: vp.x + 50 / vp.zoom }));
-      if (e.key === 'ArrowUp') setViewport((vp) => ({ ...vp, y: vp.y - 50 / vp.zoom }));
-      if (e.key === 'ArrowDown') setViewport((vp) => ({ ...vp, y: vp.y + 50 / vp.zoom }));
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [history]);
+  const zoomToFit = useCallback(() => {
+    if (!surface || surface.slots.length === 0) return;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const slot of surface.slots) {
+      const key = `${slot.providerId}:${slot.slotId}`;
+      const l = effectiveLayouts[key];
+      if (!l) continue;
+      minX = Math.min(minX, l.x);
+      minY = Math.min(minY, l.y);
+      maxX = Math.max(maxX, l.x + l.w);
+      maxY = Math.max(maxY, l.y + l.h);
+    }
+    if (!isFinite(minX)) return;
+    const worldW = maxX - minX || 320;
+    const worldH = maxY - minY || 240;
+    const zoom = Math.min(containerSize.w / worldW, containerSize.h / worldH, 1.5);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    setViewport({ x: cx, y: cy, zoom });
+  }, [surface, effectiveLayouts, containerSize]);
 
-  const onNodePointerDown = useCallback((key: string, e: React.PointerEvent) => {
-    if (lockedNodes.has(key) || pinnedNodes.has(key)) return;
-    e.stopPropagation();
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    const layout = effectiveLayouts[key];
+  const zoomToSelection = useCallback(() => {
+    if (selectedNodes.size === 0) return;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const key of selectedNodes) {
+      const l = effectiveLayouts[key];
+      if (!l) continue;
+      minX = Math.min(minX, l.x);
+      minY = Math.min(minY, l.y);
+      maxX = Math.max(maxX, l.x + l.w);
+      maxY = Math.max(maxY, l.y + l.h);
+    }
+    if (!isFinite(minX)) return;
+    const worldW = maxX - minX || 320;
+    const worldH = maxY - minY || 240;
+    const zoom = Math.min(containerSize.w / worldW, containerSize.h / worldH, 1.5);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    setViewport({ x: cx, y: cy, zoom });
+  }, [selectedNodes, effectiveLayouts, containerSize]);
+
+  const handleNodePointerDown = useCallback((key: string, e: React.PointerEvent, locked: boolean, pinned: boolean) => {
+    if (e.button !== 0) return;
+
+    let newSelected: Set<string>;
+    if (e.shiftKey) {
+      e.stopPropagation();
+      newSelected = new Set(selectedNodes);
+      if (newSelected.has(key)) newSelected.delete(key);
+      else newSelected.add(key);
+    } else {
+      newSelected = new Set([key]);
+    }
+    setSelectedNodes(newSelected);
+
+    if (locked || pinned) return;
+
+    const currentLayouts = layoutsRef.current;
+    const layout = currentLayouts[key];
     if (!layout) return;
-    dragRef.current = { id: key, startX: e.clientX, startY: e.clientY, origX: layout.x, origY: layout.y };
-  }, [effectiveLayouts, lockedNodes, pinnedNodes]);
 
+    const ids = Array.from(newSelected);
+    const origins: Record<string, { x: number; y: number }> = {};
+    const snapshot: Record<string, CanvasLayout> = {};
+    for (const id of ids) {
+      const l = currentLayouts[id];
+      if (l) {
+        origins[id] = { x: l.x, y: l.y };
+        snapshot[id] = { ...l };
+      }
+    }
+
+    dragStateRef.current = {
+      id: key,
+      ids,
+      startX: e.clientX,
+      startY: e.clientY,
+      origins,
+      snapshot,
+    };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, [selectedNodes]);
+
+  // Drag-and-drop lifecycle (window-level pointermove/pointerup)
   useEffect(() => {
-    if (!dragRef.current) return;
     const onMove = (e: PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag) return;
+      if (!dragStateRef.current) return;
+      const drag = dragStateRef.current;
       const dx = (e.clientX - drag.startX) / viewport.zoom;
       const dy = (e.clientY - drag.startY) / viewport.zoom;
       setLayouts((prev) => {
-        const existing = prev[drag.id] ?? DEFAULT_LAYOUTS[slotsToResolve[0]] ?? { x: 0, y: 0, z: 0, w: 320, h: 240 };
-        return { ...prev, [drag.id]: { ...existing, x: drag.origX + dx, y: drag.origY + dy } };
+        const next = { ...prev };
+        for (const id of drag.ids) {
+          const origin = drag.origins[id];
+          if (!origin) continue;
+          const l = next[id];
+          if (!l) continue;
+          next[id] = { ...l, x: origin.x + dx, y: origin.y + dy };
+        }
+        return next;
       });
     };
-    const onUp = () => { dragRef.current = null; };
+
+    const onUp = (e: PointerEvent) => {
+      if (!dragStateRef.current) return;
+      const drag = dragStateRef.current;
+      const dx = (e.clientX - drag.startX) / viewport.zoom;
+      const dy = (e.clientY - drag.startY) / viewport.zoom;
+      const moved = Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5;
+
+      if (moved) {
+        const nextLayouts = { ...layoutsRef.current };
+        const prevLayouts = { ...layoutsRef.current };
+        for (const id of drag.ids) {
+          const snap = drag.snapshot[id];
+          if (snap) prevLayouts[id] = { ...snap };
+        }
+        history.execute({
+          id: `drag:${Date.now()}`,
+          description: `move ${drag.ids.length} node(s)`,
+          execute: () => setLayouts(nextLayouts),
+          undo: () => setLayouts(prevLayouts),
+        });
+      }
+
+      dragStateRef.current = null;
+    };
+
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-    return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
-  }, [viewport.zoom, slotsToResolve]);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [viewport.zoom, history]);
+
+  const handleCanvasPointerDown = useCallback((e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('[data-node-id]')) return;
+    if (e.button !== 0) return;
+    rubberBandRef.current = { startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY };
+    setRubberBand({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
+    setSelectedNodes(new Set());
+  }, []);
+
+  useEffect(() => {
+    if (!rubberBandRef.current) return;
+    const onMove = (e: PointerEvent) => {
+      const current = rubberBandRef.current;
+      if (!current) return;
+      rubberBandRef.current = { ...current, endX: e.clientX, endY: e.clientY };
+      setRubberBand({ ...current, endX: e.clientX, endY: e.clientY });
+    };
+const onUp = () => {
+       if (!rubberBandRef.current) return;
+       const rb = rubberBandRef.current;
+       const minX = Math.min(rb.startX, rb.endX);
+       const maxX = Math.max(rb.startX, rb.endX);
+       const minY = Math.min(rb.startY, rb.endY);
+       const maxY = Math.max(rb.startY, rb.endY);
+       const selected = new Set<string>();
+       for (const slot of visibleSlots) {
+         const key = `${slot.providerId}:${slot.slotId}`;
+         const l = effectiveLayouts[key];
+         if (!l) continue;
+         const sx = (l.x - viewport.x) * viewport.zoom + containerSize.w / 2;
+         const sy = (l.y - viewport.y) * viewport.zoom + containerSize.h / 2;
+         if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY) {
+           selected.add(key);
+         }
+       }
+       setSelectedNodes(selected);
+       rubberBandRef.current = null;
+       setRubberBand(null);
+     };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, []);
 
   const handleVCardAction = useCallback((key: string, actionId: string) => {
+    const prev = {
+      collapsed: new Set(collapsedNodes),
+      pinned: new Set(pinnedNodes),
+      locked: new Set(lockedNodes),
+      layouts: { ...layouts },
+    };
+    const next = { ...prev };
     switch (actionId) {
-      case 'collapse': setCollapsedNodes((s) => new Set(s).add(key)); break;
-      case 'expand': setCollapsedNodes((s) => { const n = new Set(s); n.delete(key); return n; }); break;
-      case 'pin': setPinnedNodes((s) => { const n = new Set(s); n.add(key); return n; }); break;
-      case 'fullscreen': setFullscreenNode((f) => (f === key ? null : key)); break;
-      case 'lock': setLockedNodes((s) => { const n = new Set(s); n.add(key); return n; }); break;
-      case 'remove': setLayouts((prev) => { const n = { ...prev }; delete n[key]; return n; }); break;
+      case 'collapse':
+        next.collapsed = new Set(prev.collapsed); next.collapsed.add(key); break;
+      case 'expand':
+        next.collapsed = new Set(prev.collapsed); next.collapsed.delete(key); break;
+      case 'pin':
+        next.pinned = new Set(prev.pinned); next.pinned.add(key); break;
+      case 'fullscreen': setFullscreenNode((f) => (f === key ? null : key)); return;
+      case 'lock':
+        next.locked = new Set(prev.locked); next.locked.add(key); break;
+      case 'remove':
+        delete next.layouts[key]; break;
       default: break;
     }
-  }, []);
+    history.execute({
+      id: `vcard:${actionId}:${key}:${Date.now()}`,
+      description: `${actionId} ${key}`,
+      execute: () => {
+        setCollapsedNodes(next.collapsed as Set<string>);
+        setPinnedNodes(next.pinned as Set<string>);
+        setLockedNodes(next.locked as Set<string>);
+        setLayouts(next.layouts as Record<string, CanvasLayout>);
+      },
+      undo: () => {
+        setCollapsedNodes(prev.collapsed);
+        setPinnedNodes(prev.pinned);
+        setLockedNodes(prev.locked);
+        setLayouts(prev.layouts);
+      },
+    });
+  }, [collapsedNodes, pinnedNodes, lockedNodes, layouts, history]);
 
   if (isLoading) {
     return (
@@ -273,6 +492,7 @@ export function LivingCanvas(props: LivingCanvasProps) {
       role="application"
       aria-label="Vivim Living Canvas"
       onWheel={onWheel}
+      onPointerDown={handleCanvasPointerDown}
       className="scrollbar-thin"
       style={{
         position: 'absolute', inset: 0, overflow: 'hidden',
@@ -336,19 +556,20 @@ export function LivingCanvas(props: LivingCanvasProps) {
             data-zoom-tier={zoomTier}
             data-pinned={isPinned}
             data-locked={isLocked}
-            onPointerDown={(e) => onNodePointerDown(key, e)}
-            className="node-surface fade-in-up"
-            style={{
-              position: 'absolute',
-              left: screenX, top: screenY,
-              width: screenW, height: screenH,
-              zIndex: isFullscreen ? 200 : layout.z,
-              overflow: 'hidden',
-              borderRadius: 'var(--radius)',
-              cursor: isPinned || isLocked ? 'default' : 'grab',
-              userSelect: 'none',
-              opacity: zoomTier === 'micro' ? 0.85 : 1,
-            }}
+             onPointerDown={(e) => handleNodePointerDown(key, e, isLocked, isPinned)}
+             className="node-surface fade-in-up"
+             style={{
+               position: 'absolute',
+               left: screenX, top: screenY,
+               width: screenW, height: screenH,
+               zIndex: isFullscreen ? 200 : layout.z,
+               overflow: 'hidden',
+               borderRadius: 'var(--radius)',
+               cursor: isPinned || isLocked ? 'default' : 'grab',
+               userSelect: 'none',
+               opacity: searchQuery.trim() === '' ? (zoomTier === 'micro' ? 0.85 : 1) : (slot.slotId.toLowerCase().includes(searchQuery.toLowerCase()) || slot.providerId.toLowerCase().includes(searchQuery.toLowerCase()) ? 1 : 0.3),
+               boxShadow: ((searchQuery.trim() !== '' && (slot.slotId.toLowerCase().includes(searchQuery.toLowerCase()) || slot.providerId.toLowerCase().includes(searchQuery.toLowerCase()))) || selectedNodes.has(key)) ? '0 0 0 2px var(--ring)' : undefined,
+             }}
           >
             <VCardMenu state={vcardState} onAction={(a) => handleVCardAction(key, a)}>
               {/* Node header */}
@@ -429,6 +650,45 @@ export function LivingCanvas(props: LivingCanvasProps) {
         );
       })}
 
+{/* Rubber-band selection overlay */}
+      {rubberBand && (
+        <div
+          style={{
+            position: 'absolute',
+            left: Math.min(rubberBand.startX, rubberBand.endX),
+            top: Math.min(rubberBand.startY, rubberBand.endY),
+            width: Math.abs(rubberBand.endX - rubberBand.startX),
+            height: Math.abs(rubberBand.endY - rubberBand.startY),
+            background: 'color-mix(in oklch, var(--ring) 15%, transparent)',
+            border: '1px solid var(--ring)',
+            borderRadius: 2,
+            pointerEvents: 'none',
+            zIndex: 50,
+          }}
+        />
+      )}
+
+{/* Minimap */}
+      <Minimap
+        slots={visibleSlots}
+        layouts={effectiveLayouts}
+        viewport={viewport}
+        containerSize={containerSize}
+        selectedNodes={selectedNodes}
+        onNavigate={(x, y) => setViewport((vp) => ({ ...vp, x, y }))}
+        onSelectNode={(nodeId) => setSelectedNodes(new Set([nodeId]))}
+      />
+
+{/* Canvas Search */}
+      <CanvasSearch
+        nodes={visibleSlots.map((s) => ({ id: `${s.providerId}:${s.slotId}`, label: s.slotId.replace('chat.', '') }))}
+        onSelect={(nodeId) => {
+          const layout = effectiveLayouts[nodeId];
+          if (layout) setViewport({ x: layout.x, y: layout.y, zoom: viewport.zoom });
+        }}
+        onQueryChange={setSearchQuery}
+      />
+
 {/* Agent overlay */}
       <AgentOverlay
         plan={agentPlan}
@@ -451,9 +711,67 @@ export function LivingCanvas(props: LivingCanvasProps) {
         fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--muted-foreground)',
         pointerEvents: 'auto', display: 'flex', gap: 8, alignItems: 'center',
       }}>
+         <button
+           onClick={zoomToFit}
+           title="Zoom to fit"
+           style={{
+             padding: '2px 5px', border: '1px solid var(--border)',
+             background: 'transparent', color: 'var(--muted-foreground)',
+             borderRadius: 'calc(var(--radius) - 4px)', cursor: 'pointer',
+             display: 'flex', alignItems: 'center',
+           }}
+         >
+           <Icon name="expand" size={11} />
+         </button>
+         {selectedNodes.size > 0 && (
+           <button
+             onClick={zoomToSelection}
+             title="Zoom to selection"
+             style={{
+               padding: '2px 5px', border: '1px solid var(--border)',
+               background: 'transparent', color: 'var(--muted-foreground)',
+               borderRadius: 'calc(var(--radius) - 4px)', cursor: 'pointer',
+               display: 'flex', alignItems: 'center',
+             }}
+           >
+             <Icon name="move" size={11} />
+           </button>
+         )}
+         <button
+           onClick={() => history.undo()}
+           disabled={!history.canUndo()}
+           title="Undo (Ctrl+Z)"
+           style={{
+             padding: '2px 5px', border: '1px solid var(--border)',
+             background: 'transparent', color: history.canUndo() ? 'var(--foreground)' : 'var(--text-muted)',
+             borderRadius: 'calc(var(--radius) - 4px)', cursor: history.canUndo() ? 'pointer' : 'default',
+             display: 'flex', alignItems: 'center', opacity: history.canUndo() ? 1 : 0.4,
+           }}
+         >
+           <Icon name="undo" size={11} />
+         </button>
+         <button
+           onClick={() => history.redo()}
+           disabled={!history.canRedo()}
+           title="Redo (Ctrl+Y)"
+           style={{
+             padding: '2px 5px', border: '1px solid var(--border)',
+             background: 'transparent', color: history.canRedo() ? 'var(--foreground)' : 'var(--text-muted)',
+             borderRadius: 'calc(var(--radius) - 4px)', cursor: history.canRedo() ? 'pointer' : 'default',
+             display: 'flex', alignItems: 'center', opacity: history.canRedo() ? 1 : 0.4,
+           }}
+         >
+           <Icon name="redo" size={11} />
+         </button>
         <span style={{ fontFamily: 'var(--font-mono)' }}>{viewport.zoom.toFixed(2)}x</span>
         <span style={{ color: 'var(--border)' }}>|</span>
         <span>{visibleSlots.length}/{surface?.slots.length ?? 0} nodes</span>
+        {selectedNodes.size > 0 && (
+          <>
+            <span style={{ color: 'var(--border)' }}>|</span>
+            <span style={{ color: 'var(--ring)' }}>{selectedNodes.size} selected</span>
+          </>
+        )}
         <span style={{ color: 'var(--border)' }}>|</span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9 }}>{surface?.traceId.slice(0, 10)}</span>
         <div style={{ display: 'flex', gap: 2, marginLeft: 4 }}>

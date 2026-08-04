@@ -1,0 +1,340 @@
+/**
+ * lib/canvas-engine-bootstrap.ts (refactored)
+ * --------------------------------------------------------------------
+ * TEMPLATE — Tasks 03 + 04.
+ *
+ * This template shows the SHAPE of the refactored file, not the full 378 lines.
+ * Copy the structure; preserve all engine imports + wiring verbatim from the
+ * existing file. Only the storage layer changes.
+ *
+ * Key changes from the original:
+ *   1. No `new MemoryXStore()` calls — replaced by `getStorageProvider()`.
+ *   2. `CanvasEngineBag` interface: store fields are `readonly` (getters).
+ *   3. The `_bag` object literal uses getters for store fields, not assignments.
+ *   4. Inline `MemoryAnnotationStore` class is gone (moved to storage/impl/).
+ *
+ * Placeholders to fill in:
+ *   - All engine imports + constructor calls (copy from existing file).
+ *   - All engine field declarations on CanvasEngineBag (copy from existing file).
+ */
+
+import { CapabilityEventBus } from '../engines/capability-event-bus';
+import { StructuredLogger, TraceStore } from '../engines/structured-logger';
+// ... all other engine imports (unchanged from existing file) ...
+
+import type {
+  UiComponentStore,
+  ProviderTypeStore,
+  PrimitiveStore,
+  ProviderStore,
+  AccountStore,
+  CapabilityTierStore,
+  UserLayoutStore,
+  CanvasDefinitionStore,
+  WorkspaceStore,
+  DocumentStore,
+  MediaStore,
+  AutomationStore,
+  AgentStore,
+  HitlGateStore,
+  PolicyRuleStore,
+  AnnotationStore,
+  ShellCommandStore,
+  NotificationStore,
+  AuditStore,
+  RbacStore,
+  WorkspaceTemplateStore,
+  PresenceStore,
+  SearchIndex,
+  OnboardingStore,
+  DocumentEditStore,
+  ZLayerStore,
+  DrawerStore,
+} from '../storage/contracts';
+import { getStorageProvider, type StorageProvider } from '../storage/provider';
+import { registerDefaultCommands } from '../cli/commands/shell';
+import { ulid } from './ulid';
+
+export interface CanvasEngineBag {
+  // ─── Primary storage accessor ──────────────────────────────────────
+  storage: StorageProvider;
+
+  // ─── Back-compat store getters ─────────────────────────────────────
+  // DO NOT add new consumers of these — use `bag.storage.X` instead.
+  // These exist only to avoid touching ~80 API route files in this PR.
+  readonly uiComponentStore: UiComponentStore;
+  readonly providerTypeStore: ProviderTypeStore;
+  readonly primitiveStore: PrimitiveStore;
+  readonly providerStore: ProviderStore;
+  readonly accountStore: AccountStore;
+  readonly capabilityTierStore: CapabilityTierStore;
+  readonly userLayoutStore: UserLayoutStore;
+  readonly canvasDefinitionStore: CanvasDefinitionStore;
+  readonly workspaceStore: WorkspaceStore;
+  readonly documentStore: DocumentStore;
+  readonly mediaStore: MediaStore;
+  readonly automationStore: AutomationStore;
+  readonly agentStore: AgentStore;
+  readonly hitlGateStore: HitlGateStore;
+  readonly policyRuleStore: PolicyRuleStore;
+  readonly annotationStore: AnnotationStore;
+  readonly shellCommandStore: ShellCommandStore;
+  readonly notificationStore: NotificationStore;
+  readonly auditStore: AuditStore;
+  readonly rbacStore: RbacStore;
+  readonly templateStore: WorkspaceTemplateStore;
+  readonly presenceStore: PresenceStore;
+  readonly searchIndex: SearchIndex;
+  readonly onboardingStore: OnboardingStore;
+  readonly documentEditStore: DocumentEditStore;
+  readonly zLayerStore: ZLayerStore;
+  readonly drawerStore: DrawerStore;
+
+  // ─── Engines + infrastructure (unchanged from existing file) ──────
+  eventBus: CapabilityEventBus;
+  logger: StructuredLogger;
+  traceStore: TraceStore;
+  canvasRegistry: ReturnType<typeof import('../engines/canvas-registry').CanvasRegistry>;
+  layerMounter: ReturnType<typeof import('../engines/canvas-layer-mounter').CanvasLayerMounter>;
+  hotReload: ReturnType<typeof import('../engines/plugin-hot-reload').PluginHotReload>;
+  workspace: ReturnType<typeof import('../engines/adaptive-workspace').AdaptiveWorkspace>;
+  routeSyncDeps: ReturnType<typeof import('../engines/conceptual-model-service').buildRouteSyncDeps>;
+  // ... all other engine fields (copy from existing file) ...
+  documentEngine: import('../engines/document-engine').DocumentEngine;
+  mediaEngine: import('../engines/media-engine').MediaEngine;
+  // ... etc ...
+}
+
+let _bag: CanvasEngineBag | null = null;
+let _seeded = false;
+
+export function getEngineBag(): CanvasEngineBag {
+  if (_bag) return _bag;
+
+  const storage = getStorageProvider();
+
+  const eventBus = CapabilityEventBus.getInstance();
+  const logger = new StructuredLogger('info');
+  const traceStore = new TraceStore();
+  logger.addSink((entry) => {
+    if (entry.traceId && entry.spanId) {
+      traceStore.append({
+        id: entry.spanId,
+        traceId: entry.traceId,
+        spanId: entry.spanId,
+        parentSpanId: entry.parentSpanId,
+        engine: entry.engine ?? 'unknown',
+        method: entry.msg,
+        durationMs: entry.durationMs ?? 0,
+        ok: !entry.msg.toLowerCase().includes('error'),
+        createdAt: entry.ts,
+      });
+    }
+  });
+
+  // Phase 1 engines — now consume storage.XStore instead of local vars
+  const canvasRegistry = new (require('../engines/canvas-registry').CanvasRegistry)(
+    storage.canvasDefinitionStore,
+    eventBus,
+  );
+  const layerMounter = new (require('../engines/canvas-layer-mounter').CanvasLayerMounter)(eventBus);
+  const hotReload = new (require('../engines/plugin-hot-reload').PluginHotReload)();
+  const routeSyncDeps = (require('../engines/conceptual-model-service').buildRouteSyncDeps)({
+    eventBus,
+    logger,
+    uiComponentStore: storage.uiComponentStore,
+    providerTypeStore: storage.providerTypeStore,
+    primitiveStore: storage.primitiveStore,
+    providerStore: storage.providerStore,
+    accountStore: storage.accountStore,
+    capabilityTierStore: storage.capabilityTierStore,
+  });
+  const workspace = new (require('../engines/adaptive-workspace').AdaptiveWorkspace)(routeSyncDeps, eventBus, logger);
+
+  // Phase 2 engines
+  const mediaBridge = new (require('../engines/media-bridge').MemoryMediaBridge)();
+  const documentEngine = new (require('../engines/document-engine').DocumentEngine)({
+    documentStore: storage.documentStore,
+    eventBus,
+    logger,
+  });
+  const mediaEngine = new (require('../engines/media-engine').MediaEngine)({
+    mediaStore: storage.mediaStore,
+    eventBus,
+    logger,
+    bridge: mediaBridge,
+  });
+  const annotationEngine = new (require('../engines/annotation-engine').AnnotationEngine)({
+    annotationStore: storage.annotationStore,
+    eventBus,
+    logger,
+  });
+  const workspaceEngine = new (require('../engines/workspace-engine').WorkspaceEngine)({
+    workspaceStore: storage.workspaceStore,
+    eventBus,
+    logger,
+  });
+  const automationBuilder = new (require('../engines/automation-builder').AutomationBuilder)({
+    automationStore: storage.automationStore,
+    eventBus,
+    logger,
+  });
+  const agentsBuilder = new (require('../engines/agents-builder').AgentsBuilder)({
+    agentStore: storage.agentStore,
+    hitlGateStore: storage.hitlGateStore,
+    policyRuleStore: storage.policyRuleStore,
+    eventBus,
+    logger,
+  });
+  const shellCommandEngine = new (require('../engines/shell-command-engine').ShellCommandEngine)({
+    commandStore: storage.shellCommandStore,
+    eventBus,
+    logger,
+  });
+
+  registerDefaultCommands(storage.shellCommandStore);
+
+  // Phase 3 engines
+  const notificationEngine = new (require('../engines/notification-engine').NotificationEngine)({
+    notificationStore: storage.notificationStore,
+    eventBus,
+    logger,
+  });
+  const searchEngine = new (require('../engines/search-engine').SearchEngine)({
+    searchIndex: storage.searchIndex,
+    shellCommandStore: storage.shellCommandStore,
+    documentStore: storage.documentStore,
+    mediaStore: storage.mediaStore,
+    automationStore: storage.automationStore,
+    agentStore: storage.agentStore,
+    workspaceStore: storage.workspaceStore,
+    providerStore: storage.providerStore,
+    logger,
+  });
+  const presenceEngine = new (require('../engines/presence-engine').PresenceEngine)({
+    presenceStore: storage.presenceStore,
+    eventBus,
+    logger,
+  });
+  const auditEngine = new (require('../engines/audit-engine').AuditEngine)({
+    auditStore: storage.auditStore,
+    eventBus,
+    logger,
+  });
+  const rbacEngine = new (require('../engines/rbac-engine').RbacEngine)({
+    rbacStore: storage.rbacStore,
+    eventBus,
+    logger,
+  });
+  const templateEngine = new (require('../engines/template-engine').TemplateEngine)({
+    templateStore: storage.templateStore,
+    workspaceStore: storage.workspaceStore,
+    documentStore: storage.documentStore,
+    mediaStore: storage.mediaStore,
+    automationStore: storage.automationStore,
+    agentStore: storage.agentStore,
+    eventBus,
+    logger,
+  });
+
+  notificationEngine.start();
+  auditEngine.start();
+
+  // Phase 4 engines
+  const documentEditorEngine = new (require('../engines/document-editor-engine').DocumentEditorEngine)({
+    editStore: storage.documentEditStore,
+    eventBus,
+    logger,
+  });
+  const zLayerEngine = new (require('../engines/z-layer-engine').ZLayerEngine)({
+    zLayerStore: storage.zLayerStore,
+    eventBus,
+    logger,
+  });
+  const drawerEngine = new (require('../engines/drawer-engine').DrawerEngine)({
+    drawerStore: storage.drawerStore,
+    eventBus,
+    logger,
+  });
+
+  const uiEngine = new (require('../engines/ui-engine').UIEngine)({ eventBus, logger });
+
+  // ─── Build the bag ─────────────────────────────────────────────────
+  // Storage is a plain field; the 24 store fields are GETTERS that delegate
+  // to `storage.X`. This guarantees identity: bag.X === storage.X always.
+  _bag = {
+    storage,
+
+    // Back-compat getters (closure over `storage`):
+    get uiComponentStore() { return storage.uiComponentStore; },
+    get providerTypeStore() { return storage.providerTypeStore; },
+    get primitiveStore() { return storage.primitiveStore; },
+    get providerStore() { return storage.providerStore; },
+    get accountStore() { return storage.accountStore; },
+    get capabilityTierStore() { return storage.capabilityTierStore; },
+    get userLayoutStore() { return storage.userLayoutStore; },
+    get canvasDefinitionStore() { return storage.canvasDefinitionStore; },
+    get workspaceStore() { return storage.workspaceStore; },
+    get documentStore() { return storage.documentStore; },
+    get mediaStore() { return storage.mediaStore; },
+    get automationStore() { return storage.automationStore; },
+    get agentStore() { return storage.agentStore; },
+    get hitlGateStore() { return storage.hitlGateStore; },
+    get policyRuleStore() { return storage.policyRuleStore; },
+    get annotationStore() { return storage.annotationStore; },
+    get shellCommandStore() { return storage.shellCommandStore; },
+    get notificationStore() { return storage.notificationStore; },
+    get auditStore() { return storage.auditStore; },
+    get rbacStore() { return storage.rbacStore; },
+    get templateStore() { return storage.templateStore; },
+    get presenceStore() { return storage.presenceStore; },
+    get searchIndex() { return storage.searchIndex; },
+    get onboardingStore() { return storage.onboardingStore; },
+    get documentEditStore() { return storage.documentEditStore; },
+    get zLayerStore() { return storage.zLayerStore; },
+    get drawerStore() { return storage.drawerStore; },
+
+    // Infrastructure
+    eventBus,
+    logger,
+    traceStore,
+    canvasRegistry,
+    layerMounter,
+    hotReload,
+    workspace,
+    routeSyncDeps,
+
+    // Engines
+    documentEngine,
+    mediaEngine,
+    mediaBridge,
+    annotationEngine,
+    workspaceEngine,
+    automationBuilder,
+    agentsBuilder,
+    shellCommandEngine,
+    notificationEngine,
+    searchEngine,
+    presenceEngine,
+    auditEngine,
+    rbacEngine,
+    templateEngine,
+    documentEditorEngine,
+    zLayerEngine,
+    drawerEngine,
+    uiEngine,
+  } as CanvasEngineBag;
+
+  return _bag;
+}
+
+export function isSeeded(): boolean {
+  return _seeded;
+}
+export function markSeeded(): void {
+  _seeded = true;
+}
+
+export function newTraceId(): string {
+  return ulid();
+}

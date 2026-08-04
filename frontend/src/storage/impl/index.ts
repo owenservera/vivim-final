@@ -20,6 +20,7 @@ export { MemoryDocumentStore } from './memory-document-store';
 export { MemoryMediaStore } from './memory-media-store';
 export { MemoryAutomationStore } from './memory-automation-store';
 export { MemoryAgentStore, MemoryHitlGateStore, MemoryPolicyRuleStore } from './memory-agent-store';
+export { MemoryAnnotationStore } from './memory-annotation-store';
 export { MemoryShellCommandStore } from './memory-shell-command-store';
 
 // Phase 3 — UX enhancements
@@ -30,6 +31,7 @@ export { MemoryWorkspaceTemplateStore } from './memory-template-store';
 export { MemoryPresenceStore } from './memory-presence-store';
 export { MemorySearchIndex } from './memory-search-index';
 export { MemoryOnboardingStore } from './memory-onboarding-store';
+export { PrismaOnboardingStore } from './prisma-onboarding-store';
 
 // Phase 4 — doc suite, z-layers, drawers
 export { MemoryDocumentEditStore } from './memory-document-edit-store';

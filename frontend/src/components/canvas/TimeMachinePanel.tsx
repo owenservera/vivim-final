@@ -54,16 +54,16 @@ export interface TimeMachinePanelProps {
 }
 
 const PROVENANCE_COLORS: Record<string, string> = {
-  manual: '#22c55e',
-  nlcl: '#3b82f6',
-  prefix: '#06b6d4',
-  plugin: '#a855f7',
-  'llm-harness': '#f59e0b',
-  system: '#64748b',
+  manual: 'var(--color-success)',
+  nlcl: 'var(--color-info)',
+  prefix: 'var(--color-cyan)',
+  plugin: 'var(--color-purple)',
+  'llm-harness': 'var(--color-warning)',
+  system: 'var(--text-muted)',
 };
 
 function provColor(p: string): string {
-  return PROVENANCE_COLORS[p] ?? '#64748b';
+  return PROVENANCE_COLORS[p] ?? 'var(--text-muted)';
 }
 
 function formatTime(ms: number): string {
@@ -186,7 +186,7 @@ export function TimeMachinePanel({ surfaceId }: TimeMachinePanelProps) {
       </div>
 
       {error && (
-        <p style={{ margin: 0, fontSize: 11, color: '#ef4444' }}>{error}</p>
+        <p style={{ margin: 0, fontSize: 11, color: 'var(--color-error)' }}>{error}</p>
       )}
 
       {loading && versions.length === 0 && (

@@ -224,7 +224,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 48,
     height: 48,
     borderRadius: '50%',
-    backgroundColor: '#3b82f6',
+    backgroundColor: 'var(--color-info)',
     color: '#ffffff',
     border: 'none',
     cursor: 'pointer',
@@ -288,7 +288,7 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: 'transparent',
     border: 'none',
     cursor: 'pointer',
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     borderRadius: 4,
   },
   closeIcon: {
@@ -301,12 +301,12 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
-    color: '#6b7280',
+    color: 'var(--text-muted)',
     textAlign: 'center',
   },
   stats: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: 'var(--text-subtle)',
     marginTop: 8,
   },
 };

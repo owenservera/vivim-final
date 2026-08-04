@@ -1,0 +1,54 @@
+/* frontend/src/app/accessibility.css */
+/* High contrast mode and reduced motion overrides. */
+
+@media (prefers-contrast: high) {
+  :root {
+    --border: oklch(0.2 0 0);
+    --input: oklch(0.2 0 0);
+    --ring: oklch(0.3 0 0);
+    --muted-foreground: oklch(0.2 0 0);
+    --text-muted: oklch(0.2 0 0);
+  }
+
+  * {
+    border-color: oklch(0.2 0 0) !important;
+  }
+
+  button, [role="button"] {
+    outline: 2px solid oklch(0.2 0 0) !important;
+    outline-offset: 2px !important;
+  }
+
+  a {
+    text-decoration: underline !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus-visible styles for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--ring, oklch(0.52 0.02 247));
+  outline-offset: 2px;
+  border-radius: var(--radius, 0.5rem);
+}
+
+/* Skip link (already in layout, styled here for high-contrast) */
+.skip-link:focus {
+  position: fixed !important;
+  top: 4px !important;
+  left: 4px !important;
+  z-index: 9999 !important;
+  padding: 8px 16px !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-radius: var(--radius) !important;
+  text-decoration: none !important;
+}

@@ -1,0 +1,38 @@
+en:
+  vivim:
+    site:
+      title: "Denver Mobile App Development | Web Design | UX/UI Design"
+      description: "Denver mobile app development studio building cutting-edge apps for iPhone, iPad, and Android. Ruby on Rails web development and UX/UI design."
+      copyright: "Vivim"
+    nav:
+      about: "ABOUT US"
+      experts: "EXPERTS"
+      projects: "PROJECTS"
+      clients: "CLIENTS"
+      why_ror: "WHY ROR?"
+      mobile: "MOBILE"
+      contact: "CONTACT US"
+    contact:
+      heading: "Ready to start your project?"
+      name_placeholder: "Name"
+      email_placeholder: "Email"
+      phone_placeholder: "Phone Number"
+      comment_placeholder: "Comment"
+      submit: "Send"
+      success_notice: "Thanks - we will be in touch within one business day."
+      failure_alert: "Sorry, we could not send your message. Please email info@vivim.net directly."
+    local_business:
+      name: "Vivim"
+      street: "8400 East Crescent Parkway Suite 600"
+      city: "Greenwood Village"
+      state: "CO"
+      zip: "80111"
+      phone: "+1-720-504-0111"
+      email: "info@vivim.net"
+      url: "https://vivim.net"
+      latitude: 39.6224585
+      longitude: -104.889195
+      opening_hours: "Mo-Fr 09:00-17:00"
+      same_as:
+        - "https://www.facebook.com/Vivimdesign"
+        - "https://twitter.com/VivimDesign"

@@ -177,7 +177,7 @@ export class NLCLEngine {
     if (this.deps.llmHarnessEscalator) {
       const agentMatch = rawInput.match(/^\/agent\s+(.+)$/i)
       if (agentMatch) {
-        const escalatorInput = agentMatch[1]?.trim()
+        const escalatorInput = agentMatch[1]!.trim()
         try {
           const escalation = await this.deps.llmHarnessEscalator(escalatorInput, ctx)
           if (escalation.ok) {

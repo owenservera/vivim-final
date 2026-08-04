@@ -338,7 +338,7 @@ const commandDescriptions: CommandDescriptionSeed[] = [
     category: 'provider',
     prefix: '@',
     confidence: 0.85,
-    enabled: true,
+    enabled: false,
   },
   {
     commandId: '@qwen',
@@ -347,7 +347,7 @@ const commandDescriptions: CommandDescriptionSeed[] = [
     category: 'provider',
     prefix: '@',
     confidence: 0.85,
-    enabled: true,
+    enabled: false,
   },
   {
     commandId: '@grok',
@@ -356,7 +356,7 @@ const commandDescriptions: CommandDescriptionSeed[] = [
     category: 'provider',
     prefix: '@',
     confidence: 0.85,
-    enabled: true,
+    enabled: false,
   },
 
   // ── # Prefix: Tag Commands ────────────────────────────────────────

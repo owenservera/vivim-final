@@ -1,0 +1,30 @@
+// UX8-06: renamed from .sass to .scss (CSS-superset syntax).
+
+//= require theme
+//= require vendor/font-awesome
+//= require_tree .
+//= require_self
+
+// UX8-07: CSS-only scroll-snap carousel replaces owl.carousel.
+[data-carousel] {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 16px;
+  padding-bottom: 16px;
+
+  > * {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    width: 240px;
+  }
+
+  // Hide scrollbar on Webkit
+  &::-webkit-scrollbar { height: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+}
+
+// UX8-04: only load the weights actually used (cut from 10 to 4).
+// Self-hosting is the long-term fix; this is the transitional.
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;400;600;700&display=swap');

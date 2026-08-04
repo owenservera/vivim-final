@@ -95,6 +95,21 @@
   --text-muted: oklch(0.5 0.01 247);
   --text-subtle: oklch(0.6 0.01 247);
   --font-mono: 'ui-monospace', monospace;
+  /* Semantic status colors — replace hardcoded hex */
+  --color-error: #ef4444;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+  --color-purple: #8b5cf6;
+  --color-cyan: #06b6d4;
+  --color-pink: #ec4899;
+  --color-indigo: #6366f1;
+  --color-orange: #f97316;
+  /* Error/success/warning surface mixes */
+  --color-error-surface: color-mix(in oklch, #ef4444 12%, var(--bg-elevated));
+  --color-success-surface: color-mix(in oklch, #10b981 12%, var(--bg-elevated));
+  --color-warning-surface: color-mix(in oklch, #f59e0b 12%, var(--bg-elevated));
+  --color-info-surface: color-mix(in oklch, #3b82f6 12%, var(--bg-elevated));
 }
 
 .dark {
@@ -134,6 +149,20 @@
   --bg-subtle: oklch(0.20 0.005 247);
   --text-muted: oklch(0.6 0.01 247);
   --text-subtle: oklch(0.5 0.01 247);
+  /* Semantic status colors — dark mode (brighter for contrast) */
+  --color-error: #f87171;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+  --color-purple: #a78bfa;
+  --color-cyan: #22d3ee;
+  --color-pink: #f472b6;
+  --color-indigo: #818cf8;
+  --color-orange: #fb923c;
+  --color-error-surface: color-mix(in oklch, #f87171 12%, var(--bg-elevated));
+  --color-success-surface: color-mix(in oklch, #34d399 12%, var(--bg-elevated));
+  --color-warning-surface: color-mix(in oklch, #fbbf24 12%, var(--bg-elevated));
+  --color-info-surface: color-mix(in oklch, #60a5fa 12%, var(--bg-elevated));
 }
 
 @layer base {
@@ -321,6 +350,42 @@
 .badge-success { background: color-mix(in oklch, oklch(0.65 0.15 160) 15%, transparent); color: oklch(0.5 0.15 160); }
 .badge-warning { background: color-mix(in oklch, oklch(0.7 0.18 85) 15%, transparent); color: oklch(0.55 0.18 85); }
 .badge-destructive { background: color-mix(in oklch, var(--destructive) 15%, transparent); color: var(--destructive); }
+
+/* Streaming cursor blink */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 0.6em;
+  animation: blink 1s step-end infinite;
+}
+
+/* Typing indicator dots */
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+/* Smooth streaming text reveal */
+@keyframes streaming-reveal {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.streaming-reveal {
+  animation: streaming-reveal 0.15s ease-out;
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {

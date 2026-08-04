@@ -132,11 +132,11 @@ export function TaskManager() {
       {/* Pending gates */}
       {gates.length > 0 && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#f59e0b', marginBottom: 4 }}>Pending Gates ({gates.length})</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-warning)', marginBottom: 4 }}>Pending Gates ({gates.length})</div>
           {gates.map((g) => (
-            <div key={g.id} style={{ padding: 8, background: 'color-mix(in oklch, #f59e0b 8%, var(--bg-elevated))', border: '1px solid #f59e0b', borderRadius: 6, marginBottom: 4, fontSize: 11 }}>
+            <div key={g.id} style={{ padding: 8, background: 'var(--color-warning-surface)', border: '1px solid var(--color-warning)', borderRadius: 6, marginBottom: 4, fontSize: 11 }}>
               <div style={{ marginBottom: 4 }}>{g.prompt}</div>
-              <button onClick={() => handleResolveGate(g.id)} style={{ padding: '3px 8px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 10, fontWeight: 600 }}>Approve</button>
+              <button onClick={() => handleResolveGate(g.id)} style={{ padding: '3px 8px', background: 'var(--color-success)', color: 'var(--bg)', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 10, fontWeight: 600 }}>Approve</button>
             </div>
           ))}
         </div>
@@ -148,7 +148,7 @@ export function TaskManager() {
       {tasks.map((t) => (
         <div key={t.id} style={{ padding: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 6, marginBottom: 4, fontSize: 11 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => setExpandedTask(expandedTask === t.id ? null : t.id)}>
-            <StatusDot color={t.status === 'done' ? '#10b981' : t.status === 'running' ? '#3b82f6' : t.status === 'failed' ? '#ef4444' : 'var(--text-muted)'} />
+            <StatusDot color={t.status === 'done' ? 'var(--color-success)' : t.status === 'running' ? 'var(--color-info)' : t.status === 'failed' ? 'var(--color-error)' : 'var(--text-muted)'} />
             <span style={{ fontWeight: 600, flex: 1 }}>{t.goal}</span>
             <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{t.status}</span>
           </div>
@@ -160,7 +160,7 @@ export function TaskManager() {
                 <div style={{ marginBottom: 4 }}>
                   {t.steps.map((s, i) => (
                     <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 10, padding: '2px 0' }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.status === 'done' ? '#10b981' : s.status === 'running' ? '#3b82f6' : 'var(--text-muted)' }} />
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.status === 'done' ? 'var(--color-success)' : s.status === 'running' ? 'var(--color-info)' : 'var(--text-muted)' }} />
                       <span>{s.name}</span>
                       {s.durationMs !== undefined && <span style={{ color: 'var(--text-subtle)' }}>{s.durationMs}ms</span>}
                     </div>
@@ -169,8 +169,8 @@ export function TaskManager() {
               )}
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => handleShowTrace(t.id)} style={{ padding: '2px 8px', background: 'transparent', border: '1px solid var(--border)', borderRadius: 3, cursor: 'pointer', fontSize: 10, color: 'var(--text)' }}>Trace</button>
-                <button onClick={() => handleCancel(t.id)} style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #ef4444', borderRadius: 3, cursor: 'pointer', fontSize: 10, color: '#ef4444' }}>Cancel</button>
-                <button onClick={() => handleReplay(t.id)} style={{ padding: '2px 8px', background: 'transparent', border: '1px solid #3b82f6', borderRadius: 3, cursor: 'pointer', fontSize: 10, color: '#3b82f6' }}>Replay</button>
+                <button onClick={() => handleCancel(t.id)} style={{ padding: '2px 8px', background: 'transparent', border: '1px solid var(--color-error)', borderRadius: 3, cursor: 'pointer', fontSize: 10, color: 'var(--color-error)' }}>Cancel</button>
+                <button onClick={() => handleReplay(t.id)} style={{ padding: '2px 8px', background: 'transparent', border: '1px solid var(--color-info)', borderRadius: 3, cursor: 'pointer', fontSize: 10, color: 'var(--color-info)' }}>Replay</button>
               </div>
             </div>
           )}

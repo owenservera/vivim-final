@@ -169,14 +169,12 @@ export function buildChromeArgs(profile: ChromeInstanceProfile): string[] {
   args.push('--no-default-browser-check')
   args.push('--no-pings')
   args.push('--no-first-run')
+  args.push('--disable-restore-session-state')
   if (profile.mode !== 'headed') {
     args.push('--no-startup-window')
   }
   args.push('--disable-session-crashed-bubble')
   args.push('--disable-restore-last-session')
-  if (profile.mode !== 'headed') {
-    args.push('--no-startup-window')
-  }
   args.push('--disable-blink-features=AutomationControlled')
   // Quote the user-agent to prevent shell splitting on spaces (Windows Bun.spawn
   // passes args through cmd.exe which tokenizes unquoted spaces).

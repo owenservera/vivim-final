@@ -153,8 +153,8 @@ export function DocEditor({ document: doc, userId = 'user:demo', onSaved }: DocE
             borderRadius: 3,
             fontSize: 9,
             fontWeight: 600,
-            background: state === 'saved' ? '#10b98122' : state === 'dirty' ? '#f59e0b22' : state === 'saving' ? '#0ea5e922' : state === 'error' ? '#ef444422' : 'transparent',
-            color: state === 'saved' ? '#10b981' : state === 'dirty' ? '#f59e0b' : state === 'saving' ? '#0ea5e9' : state === 'error' ? '#ef4444' : 'var(--text-muted)',
+            background: state === 'saved' ? 'var(--color-success-surface)' : state === 'dirty' ? 'var(--color-warning-surface)' : state === 'saving' ? 'var(--color-info-surface)' : state === 'error' ? 'var(--color-error-surface)' : 'transparent',
+            color: state === 'saved' ? 'var(--color-success)' : state === 'dirty' ? 'var(--color-warning)' : state === 'saving' ? 'var(--color-info)' : state === 'error' ? 'var(--color-error)' : 'var(--text-muted)',
           }}>
             {state === 'clean' && !dirty ? 'clean' : state === 'dirty' || dirty ? 'dirty' : state}
           </span>
@@ -424,7 +424,7 @@ function JsonPreview({ content }: { content: string }) {
   }
   if (parseError) {
     return (
-      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)', fontSize: 12, color: '#ef4444' }}>
+      <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-error)' }}>
         {content}
         {'\n\n Invalid JSON'}
       </pre>

@@ -22,16 +22,29 @@ function extractOpenAIBlock(data) {
   }
   const cp = data.message && data.message.content && data.message.content.parts;
   if (Array.isArray(cp)) return fromParts(cp);
+  if (data.type === 'tool_call' || data.type === 'function_call') {
+    return { type: 'tool-call', toolCallId: String(data.id || 'tc_' + Date.now()), toolName: String(data.name || data.function?.name || 'code_interpreter'), input: data.arguments || data.function?.arguments || {} };
+  }
+  if (data.type === 'tool_output' || (data.name === 'code_interpreter' && data.output)) {
+    return { type: 'tool-result', toolCallId: String(data.tool_call_id || ''), text: String(data.output || data.content || '') };
+  }
+  if (data.type === 'image_url' || (data.content_type && String(data.content_type).indexOf('image/') === 0)) {
+    return { type: 'file', url: String(data.url || data.asset_pointer || ''), mediaType: String(data.content_type || 'image/png'), filename: String(data.name || '') };
+  }
   return null;
 }
 function fromParts(parts) {
   const blocks = [];
   for (const p of parts) {
     if (typeof p === 'string') blocks.push({ type: 'text', text: p });
-    else if (p && typeof p === 'object' && 'asset_pointer' in p) blocks.push({ type: 'file', url: String(p.asset_pointer), mediaType: 'image/png', filename: '' });
+    else if (p && typeof p === 'object') {
+      if ('asset_pointer' in p) blocks.push({ type: 'file', url: String(p.asset_pointer), mediaType: p.metadata && p.metadata.content_type ? String(p.metadata.content_type) : 'image/png', filename: String(p.name || '') });
+      else if ('content_type' in p && String(p.content_type) === 'text') blocks.push({ type: 'text', text: String(p.text || '') });
+      else if ('content' in p && typeof p.content === 'string') blocks.push({ type: 'text', text: p.content });
+    }
   }
   if (blocks.length === 0) return null;
-  return blocks.length === 1 ? blocks[0] : blocks[0];
+  return blocks.length === 1 ? blocks[0] : blocks;
 }
 function parse(rawBody) {
   const blocks = [];

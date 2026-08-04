@@ -321,27 +321,10 @@ export const DEFAULT_FAMILIES: SeedFamily[] = [
 ];
 
 export const DEFAULT_PROVIDERS: SeedProvider[] = [
-  // ai-chat family
+  // ai-chat family (free tier — active by default)
   { id: 'chatgpt', slug: 'chatgpt', displayName: 'ChatGPT', providerTypeId: 'fam:ai-chat' },
   { id: 'claude', slug: 'claude', displayName: 'Claude', providerTypeId: 'fam:ai-chat' },
   { id: 'gemini', slug: 'gemini', displayName: 'Gemini', providerTypeId: 'fam:ai-chat' },
-  // email family
-  { id: 'gmail', slug: 'gmail', displayName: 'Gmail', providerTypeId: 'fam:email' },
-  { id: 'outlook', slug: 'outlook', displayName: 'Outlook', providerTypeId: 'fam:email' },
-  { id: 'protonmail', slug: 'protonmail', displayName: 'ProtonMail', providerTypeId: 'fam:email' },
-  // messenger family
-  { id: 'whatsapp', slug: 'whatsapp', displayName: 'WhatsApp', providerTypeId: 'fam:messenger' },
-  { id: 'slack', slug: 'slack', displayName: 'Slack', providerTypeId: 'fam:messenger' },
-  { id: 'telegram', slug: 'telegram', displayName: 'Telegram', providerTypeId: 'fam:messenger' },
-  { id: 'discord', slug: 'discord', displayName: 'Discord', providerTypeId: 'fam:messenger' },
-  // social family
-  { id: 'twitter', slug: 'twitter', displayName: 'Twitter', providerTypeId: 'fam:social' },
-  { id: 'linkedin', slug: 'linkedin', displayName: 'LinkedIn', providerTypeId: 'fam:social' },
-  { id: 'mastodon', slug: 'mastodon', displayName: 'Mastodon', providerTypeId: 'fam:social' },
-  // custom family
-  { id: 'notion', slug: 'notion', displayName: 'Notion', providerTypeId: 'fam:custom' },
-  { id: 'linear', slug: 'linear', displayName: 'Linear', providerTypeId: 'fam:custom' },
-  { id: 'airtable', slug: 'airtable', displayName: 'Airtable', providerTypeId: 'fam:custom' },
 ];
 
 export const DEFAULT_ACCOUNTS: SeedAccount[] = [
@@ -353,26 +336,6 @@ export const DEFAULT_ACCOUNTS: SeedAccount[] = [
   { id: 'acct:claude:pro', providerId: 'claude', userId: 'user:1', planTier: 'pro' },
   { id: 'acct:claude:trial', providerId: 'claude', userId: 'user:1', planTier: 'trial' },
   { id: 'acct:gemini:free', providerId: 'gemini', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:gmail:free', providerId: 'gmail', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:gmail:ent', providerId: 'gmail', userId: 'user:1', planTier: 'enterprise' },
-  { id: 'acct:outlook:free', providerId: 'outlook', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:outlook:ent', providerId: 'outlook', userId: 'user:1', planTier: 'enterprise' },
-  { id: 'acct:protonmail:free', providerId: 'protonmail', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:whatsapp:free', providerId: 'whatsapp', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:whatsapp:trial', providerId: 'whatsapp', userId: 'user:1', planTier: 'trial' },
-  { id: 'acct:slack:free', providerId: 'slack', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:slack:ent', providerId: 'slack', userId: 'user:1', planTier: 'enterprise' },
-  { id: 'acct:telegram:free', providerId: 'telegram', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:telegram:trial', providerId: 'telegram', userId: 'user:1', planTier: 'trial' },
-  { id: 'acct:discord:ent', providerId: 'discord', userId: 'user:1', planTier: 'enterprise' },
-  { id: 'acct:twitter:free', providerId: 'twitter', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:linkedin:free', providerId: 'linkedin', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:linkedin:pro', providerId: 'linkedin', userId: 'user:1', planTier: 'pro' },
-  { id: 'acct:linkedin:trial', providerId: 'linkedin', userId: 'user:1', planTier: 'trial' },
-  { id: 'acct:mastodon:free', providerId: 'mastodon', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:notion:free', providerId: 'notion', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:linear:free', providerId: 'linear', userId: 'user:1', planTier: 'free' },
-  { id: 'acct:airtable:free', providerId: 'airtable', userId: 'user:1', planTier: 'free' },
 ];
 
 export const DEFAULT_TAXONOMIES: SeedCapabilityTaxonomy[] = [

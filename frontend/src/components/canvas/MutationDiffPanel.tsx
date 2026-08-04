@@ -59,18 +59,18 @@ export interface MutationDiffPanelProps {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const OP_COLORS: Record<string, string> = {
-  replace: '#3b82f6',
-  insert: '#22c55e',
-  remove: '#ef4444',
-  reorder: '#a855f7',
-  restyle: '#f59e0b',
-  rebind: '#06b6d4',
-  set_property: '#6366f1',
-  set_slot: '#ec4899',
+  replace: 'var(--color-info)',
+  insert: 'var(--color-success)',
+  remove: 'var(--color-error)',
+  reorder: 'var(--color-purple)',
+  restyle: 'var(--color-warning)',
+  rebind: 'var(--color-cyan)',
+  set_property: 'var(--color-indigo)',
+  set_slot: 'var(--color-pink)',
 };
 
 function opColor(op: string): string {
-  return OP_COLORS[op] ?? '#64748b';
+  return OP_COLORS[op] ?? 'var(--text-muted)';
 }
 
 function formatTime(ms: number): string {
@@ -163,7 +163,7 @@ function MutationCard({ entry, mutation, index }: { entry?: PreviewEntry; mutati
         borderLeft: `3px solid ${color}`,
         borderRadius: 4,
         padding: 10,
-        background: hasError ? 'rgba(239, 68, 68, 0.05)' : 'var(--card, #fff)',
+        background: hasError ? 'var(--color-error-surface)' : 'var(--card)',
         marginBottom: 8,
       }}
     >
@@ -230,7 +230,7 @@ function MutationCard({ entry, mutation, index }: { entry?: PreviewEntry; mutati
             border: '1px solid rgba(239, 68, 68, 0.3)',
             borderRadius: 3,
             fontSize: 11,
-            color: '#b91c1c',
+            color: 'var(--color-error)',
             marginBottom: 8,
           }}
         >
@@ -343,11 +343,11 @@ function ErrorState({ error }: { error: string }) {
       style={{
         margin: 12,
         padding: 10,
-        background: 'rgba(239, 68, 68, 0.08)',
-        border: '1px solid rgba(239, 68, 68, 0.3)',
+        background: 'var(--color-error-surface)',
+        border: '1px solid var(--color-error)',
         borderRadius: 4,
         fontSize: 12,
-        color: '#b91c1c',
+        color: 'var(--color-error)',
       }}
     >
       <div style={{ fontWeight: 600, marginBottom: 4 }}>Preview failed</div>
@@ -486,8 +486,8 @@ export function MutationDiffPanel({
               padding: '6px 10px',
               fontSize: 12,
               fontWeight: 600,
-              color: '#fff',
-              background: allOk && !applying ? 'var(--accent, #3b82f6)' : 'var(--text-muted, #94a3b8)',
+              color: 'var(--bg)',
+              background: allOk && !applying ? 'var(--accent)' : 'var(--text-muted)',
               border: 'none',
               borderRadius: 3,
               cursor: allOk && !applying ? 'pointer' : 'not-allowed',
@@ -519,9 +519,9 @@ export function MutationDiffPanel({
               padding: '6px 10px',
               fontSize: 12,
               fontWeight: 600,
-              color: '#dc2626',
+              color: 'var(--color-error)',
               background: 'transparent',
-              border: '1px solid rgba(220, 38, 38, 0.3)',
+              border: '1px solid var(--color-error)',
               borderRadius: 3,
               cursor: 'pointer',
             }}

@@ -83,6 +83,13 @@ export class SelectorCache {
   }
 
   /**
+   * Purge all cached entries (used by clear-cache healing action).
+   */
+  clear(): void {
+    this.cache.clear()
+  }
+
+  /**
    * Get cache stats for diagnostics.
    */
   stats(): { size: number; entries: Array<{ key: string; successCount: number; age: number }> } {

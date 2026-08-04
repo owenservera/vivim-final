@@ -144,7 +144,7 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
                 padding: '8px 10px',
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
-                borderLeft: `3px solid ${role?.color ?? '#9ca3af'}`,
+                borderLeft: `3px solid ${role?.color ?? 'var(--text-subtle)'}`,
                 borderRadius: 4,
                 marginBottom: 4,
                 display: 'flex',
@@ -199,12 +199,12 @@ export function RbacManager({ workspaceId }: { workspaceId: string }) {
               padding: 10,
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',
-              borderLeft: `3px solid ${checkResult.allowed ? '#10b981' : '#ef4444'}`,
+              borderLeft: `3px solid ${checkResult.allowed ? 'var(--color-success)' : 'var(--color-error)'}`,
               borderRadius: 4,
               fontSize: 12,
             }}
           >
-            <strong style={{ color: checkResult.allowed ? '#10b981' : '#ef4444' }}>
+            <strong style={{ color: checkResult.allowed ? 'var(--color-success)' : 'var(--color-error)' }}>
               {checkResult.allowed ? ' ALLOWED' : ' DENIED'}
             </strong>
             <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>reason: {checkResult.reason}</span>
@@ -232,8 +232,8 @@ const btnPrimary: React.CSSProperties = {
 const btnDanger: React.CSSProperties = {
   padding: '4px 10px',
   background: 'transparent',
-  color: '#ef4444',
-  border: '1px solid #ef4444',
+  color: 'var(--color-error)',
+  border: '1px solid var(--color-error)',
   borderRadius: 4,
   cursor: 'pointer',
   fontSize: 10,

@@ -1,0 +1,52 @@
+# Replace the contact <section> in app/views/layouts/application.html.slim
+# (currently around lines 56-83) with the version below.
+# Fixes: UX5-01 (flash render), UX5-02 (labels), UX5-03 (client validation),
+#        UX5-04 (honeypot), UX5-05 (aria-live), UX5-06 (button value),
+#        UX5-07 (data attributes instead of onclick).
+
+footer.contact id="contact"
+  = render 'layouts/google_analytics_js'
+
+  / UX5-05: aria-live region for status messages
+  - if flash[:notice].present?
+    div role="status" aria-live="polite" class="flash flash-notice"
+      = flash[:notice]
+  - if flash[:alert].present?
+    div role="alert" aria-live="assertive" class="flash flash-alert"
+      = flash[:alert]
+
+  .container
+    .row
+      .col-xs-12.col-sm-4.col-md-4.col-lg-4
+        a href="#"
+          img.img-responsive src="images/logo.png" alt='Vivim logo'
+        ul
+          li Visit our office
+          li: a href='https://www.google.com/maps/place/8400+E+Crescent+Pkwy+%23600,+Englewood,+CO+80111/@39.6224585,-104.889195,17z' 8400 East Crescent Parkway Suite 600 Greenwood Village, CO 80111
+          li Phone: #{link_to '720.504.0111', 'tel:7205040111', class: 'phone', data: { event_category: 'Phone', event_action: 'Click' }}
+          li Email: #{link_to 'info@vivim.net', 'mailto:info@vivim.net'}
+      .col-xs-12.col-sm-7.col-md-7.col-lg-7.pull-right
+        h2 Ready to start your project?
+        = form_tag(contact_path, html: { novalidate: false }) do
+          / UX5-04: honeypot field - must stay empty
+          div style="position:absolute;left:-9999px;" aria-hidden="true"
+            = text_field :contact, :website, tabindex: -1, autocomplete: 'off'
+
+          .col-sm-6.col-md-6.col-lg-6
+            .form-group
+              = label :contact, :name, t('vivim.contact.name_placeholder'), class: 'sr-only'
+              = text_field :contact, :name, class: 'form-control', placeholder: t('vivim.contact.name_placeholder'), required: true, maxlength: 100, minlength: 3, autocomplete: 'name'
+            .form-group
+              = label :contact, :email, t('vivim.contact.email_placeholder'), class: 'sr-only'
+              = email_field :contact, :email, class: 'form-control', placeholder: t('vivim.contact.email_placeholder'), required: true, maxlength: 254, autocomplete: 'email'
+            .form-group
+              = label :contact, :phone, t('vivim.contact.phone_placeholder'), class: 'sr-only'
+              = phone_field :contact, :phone, class: 'form-control', placeholder: t('vivim.contact.phone_placeholder'), maxlength: 32, pattern: '[0-9+()\\-\\s]+', autocomplete: 'tel'
+          .col-sm-6.col-md-6.col-lg-6
+            .form-group
+              = label :contact, :comment, t('vivim.contact.comment_placeholder'), class: 'sr-only'
+              = text_area :contact, :comment, class: 'form-control', placeholder: t('vivim.contact.comment_placeholder'), rows: 6, required: true, maxlength: 5000, minlength: 10
+
+          / UX5-06: removed value='Submit' attribute. UX5-07: data attributes.
+          button.btn.btn-green type="submit" data-event-category="Start" data-event-action="Send"
+            = t('vivim.contact.submit')

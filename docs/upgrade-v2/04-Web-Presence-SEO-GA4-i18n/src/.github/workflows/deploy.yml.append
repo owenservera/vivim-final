@@ -1,0 +1,3 @@
+# Append to the deploy workflow after the cap deploy step:
+      - name: Refresh sitemap
+        run: bundle exec cap production rake:sitemap:refresh

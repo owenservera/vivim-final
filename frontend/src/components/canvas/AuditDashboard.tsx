@@ -73,8 +73,8 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
           <StatCard label="Total" value={stats.total} color="var(--text)" />
-          <StatCard label="OK" value={stats.ok} color="#10b981" />
-          <StatCard label="Failed" value={stats.failed} color="#ef4444" />
+          <StatCard label="OK" value={stats.ok} color="var(--color-success)" />
+          <StatCard label="Failed" value={stats.failed} color="var(--color-error)" />
           <StatCard label="Avg ms" value={stats.avgDurationMs} color="var(--accent)" />
         </div>
       )}
@@ -105,7 +105,7 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
                   style={{
                     flex: 1,
                     height: Math.max(2, h),
-                    background: failRatio > 0.3 ? '#ef4444' : failRatio > 0 ? '#f59e0b' : '#10b981',
+                    background: failRatio > 0.3 ? 'var(--color-error)' : failRatio > 0 ? 'var(--color-warning)' : 'var(--color-success)',
                     borderRadius: '2px 2px 0 0',
                     opacity: 0.85,
                   }}
@@ -175,7 +175,7 @@ export function AuditDashboard({ workspaceId }: { workspaceId: string }) {
               padding: '6px 10px',
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',
-              borderLeft: `3px solid ${e.ok ? '#10b981' : '#ef4444'}`,
+              borderLeft: `3px solid ${e.ok ? 'var(--color-success)' : 'var(--color-error)'}`,
               borderRadius: 4,
               fontSize: 11,
               display: 'flex',

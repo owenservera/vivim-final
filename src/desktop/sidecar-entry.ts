@@ -93,7 +93,59 @@ function mkdirRecursive(dir: string): void {
 }
 process.env.DATABASE_URL = resolveDbUrl()
 
+// ── Bootstrap DB from embedded snapshot on first boot ──────────────────────
+function bootstrapDb(): void {
+  const fs = require('node:fs') as typeof import('fs')
+  const path = require('node:path') as typeof import('path')
+
+  // Parse the DB path from DATABASE_URL (file:/path/to/db.sqlite)
+  const dbUrl = process.env.DATABASE_URL ?? ''
+  const dbPath = dbUrl.startsWith('file:') ? dbUrl.slice(5) : ''
+  if (!dbPath) return
+
+  const dbDir = path.dirname(dbPath)
+  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true })
+
+  const dbExists = fs.existsSync(dbPath)
+  const dbSize = dbExists ? fs.statSync(dbPath).size : 0
+
+  if (dbExists && dbSize > 100_000) {
+    // DB already has content — leave it alone
+    return
+  }
+
+  // DB is missing or empty — find the embedded snapshot
+  const exeDir = path.dirname(process.execPath)
+  const candidates = [
+    path.join(exeDir, 'data', 'seed-snapshot.db'),
+    path.join(exeDir, 'seed-snapshot.db'),
+    path.join(process.cwd(), 'seeds', 'seed-snapshot.db'),
+    path.join(process.cwd(), 'seed-snapshot.db'),
+  ]
+
+  const snapshotPath = candidates.find((p) => fs.existsSync(p))
+  if (!snapshotPath) {
+    console.warn('[vivim-server] No seed snapshot found — DB will be empty')
+    return
+  }
+
+  try {
+    if (dbExists) {
+      const backupPath = `${dbPath}.pre-bootstrap-${Date.now()}`
+      fs.copyFileSync(dbPath, backupPath)
+      console.log(`[vivim-server] Backed up empty DB to ${backupPath}`)
+    }
+    fs.copyFileSync(snapshotPath, dbPath)
+    console.log(`[vivim-server] Bootstrapped DB from snapshot → ${dbPath}`)
+  } catch (err) {
+    console.error('[vivim-server] Failed to bootstrap DB from snapshot:', err)
+  }
+}
+
 async function main() {
+  // Bootstrap DB before anything touches Prisma
+  bootstrapDb()
+
   // Self-healing: if the requested port is occupied, find the next available one.
   const port = await findAvailablePort(PORT)
   if (port !== PORT) {

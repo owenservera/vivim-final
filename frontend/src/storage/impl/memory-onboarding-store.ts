@@ -29,6 +29,35 @@ export class MemoryOnboardingStore implements OnboardingStore {
       row.completedSteps.push(stepId);
     }
     row.lastShownAt = now;
+    row.lastCompletedAt = now;
+    row.updatedAt = now;
+    return row;
+  }
+
+  async completeTour(
+    userId: string,
+    meta: { totalDurationMs: number; stepTimings: Record<string, number> },
+  ): Promise<OnboardingState> {
+    const now = Date.now();
+    let row = this.rows.get(userId);
+    if (!row) {
+      row = {
+        userId,
+        completedSteps: [],
+        dismissed: false,
+        createdAt: now,
+        updatedAt: now,
+      };
+      this.rows.set(userId, row);
+    }
+    // Mark all steps in stepTimings as completed
+    for (const stepId of Object.keys(meta.stepTimings)) {
+      if (!row.completedSteps.includes(stepId)) {
+        row.completedSteps.push(stepId);
+      }
+    }
+    row.lastCompletedAt = now;
+    row.tourTimings = meta.stepTimings;
     row.updatedAt = now;
     return row;
   }

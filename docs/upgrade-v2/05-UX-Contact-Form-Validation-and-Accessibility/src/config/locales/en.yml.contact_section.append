@@ -1,0 +1,12 @@
+# Append these keys to config/locales/en.yml under the existing 'vivim.contact' block:
+# (or merge with the WEB-02 i18n migration - they're compatible)
+
+  contact:
+    heading: "Ready to start your project?"
+    name_placeholder: "Name"
+    email_placeholder: "Email"
+    phone_placeholder: "Phone Number"
+    comment_placeholder: "Comment"
+    submit: "Send"
+    success_notice: "Thanks - we will be in touch within one business day."
+    failure_alert: "Sorry, we could not send your message. Please email info@vivim.net directly."

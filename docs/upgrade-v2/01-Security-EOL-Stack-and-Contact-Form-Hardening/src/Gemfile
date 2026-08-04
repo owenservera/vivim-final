@@ -1,0 +1,28 @@
+# Upgraded Gemfile for vivim - Rails 7.1 + Ruby 3.3
+source 'https://rubygems.org'
+ruby '3.3.4'
+
+gem 'rails', '~> 7.1.4'
+gem 'pg', '~> 1.5'
+gem 'puma', '>= 5.0'
+gem 'sass-rails', '>= 6'
+gem 'uglifier', '>= 4.0'
+gem 'jsbundling-rails'
+gem 'turbo-rails'
+gem 'stimulus-rails'
+gem 'slim-rails'
+gem 'bootsnap', require: false
+
+# Security hardening
+gem 'rack-attack'           # rate limiting
+gem 'rack-cors'             # CORS policy
+
+group :development, :test do
+  gem 'brakeman', require: false
+  gem 'bundler-audit', require: false
+  gem 'pry-rails'
+end
+
+group :production do
+  gem 'sentry-rails'        # error tracking (replaces silent failures)
+end

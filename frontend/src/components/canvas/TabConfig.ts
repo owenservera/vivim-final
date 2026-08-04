@@ -1,6 +1,9 @@
 // components/canvas/TabConfig.ts
 // SSOA layer definitions, panel categories, and tab ordering.
 
+export type PanelSize = 'compact' | 'normal' | 'wide';
+export type PanelDock = 'left' | 'right' | 'top' | 'bottom' | 'float';
+
 export type LayerId = 'chat' | 'build' | 'admin'
 export type PanelType = 'full' | 'mini' | 'badge' | 'indicator' | 'drawer'
 export type TabCategory =
@@ -32,18 +35,22 @@ export interface TabConfig {
   category: TabCategory
   panelType: PanelType
   color: string
+  description?: string
+  shortcut?: string
+  defaultSize?: PanelSize
+  defaultDock?: PanelDock
   badge?: number
   indicatorColor?: string
 }
 
 export const CATEGORY_COLORS: Record<TabCategory, string> = {
-  communication: '#3b82f6',
-  providers: '#8b5cf6',
-  tools: '#10b981',
-  content: '#f59e0b',
-  admin: '#ef4444',
-  canvas: '#06b6d4',
-  session: '#ec4899',
+  communication: 'var(--color-info)',
+  providers: 'var(--color-purple)',
+  tools: 'var(--color-success)',
+  content: 'var(--color-warning)',
+  admin: 'var(--color-error)',
+  canvas: 'var(--color-cyan)',
+  session: 'var(--color-pink)',
 }
 
 export const LAYER_REGISTRY: LayerConfig[] = [
@@ -106,6 +113,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'communication',
     panelType: 'full',
     color: CATEGORY_COLORS.communication,
+    description: 'List and manage conversations',
+    shortcut: 'Cmd+1',
+    defaultSize: 'normal',
+    defaultDock: 'left',
   },
   search: {
     id: 'search',
@@ -114,6 +125,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'tools',
     panelType: 'drawer',
     color: CATEGORY_COLORS.tools,
+    description: 'Search across conversations and capabilities',
+    shortcut: 'Cmd+K',
+    defaultSize: 'compact',
+    defaultDock: 'right',
   },
   health: {
     id: 'health',
@@ -122,7 +137,11 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'providers',
     panelType: 'mini',
     color: CATEGORY_COLORS.providers,
-    indicatorColor: '#10b981',
+    description: 'Provider health status and monitoring',
+    shortcut: 'Cmd+Shift+H',
+    defaultSize: 'compact',
+    defaultDock: 'bottom',
+    indicatorColor: 'var(--color-success)',
   },
   settings: {
     id: 'settings',
@@ -131,6 +150,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'session',
     panelType: 'full',
     color: CATEGORY_COLORS.session,
+    description: 'Workspace and application configuration',
+    shortcut: 'Cmd+,',
+    defaultSize: 'normal',
+    defaultDock: 'right',
   },
   capabilities: {
     id: 'capabilities',
@@ -139,6 +162,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'tools',
     panelType: 'full',
     color: CATEGORY_COLORS.tools,
+    description: 'Browse and invoke platform capabilities',
+    shortcut: 'Cmd+Shift+C',
+    defaultSize: 'wide',
+    defaultDock: 'right',
   },
   automation: {
     id: 'automation',
@@ -147,6 +174,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'tools',
     panelType: 'full',
     color: CATEGORY_COLORS.tools,
+    description: 'Automation rules and launchers',
+    shortcut: 'Cmd+Shift+A',
+    defaultSize: 'wide',
+    defaultDock: 'right',
   },
   terminal: {
     id: 'terminal',
@@ -155,6 +186,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'tools',
     panelType: 'drawer',
     color: CATEGORY_COLORS.tools,
+    description: 'Execute CLI commands within the canvas',
+    shortcut: 'Cmd+Shift+T',
+    defaultSize: 'compact',
+    defaultDock: 'bottom',
   },
   fleet: {
     id: 'fleet',
@@ -163,6 +198,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'providers',
     panelType: 'mini',
     color: CATEGORY_COLORS.providers,
+    description: 'Browser fleet and provider connection status',
+    shortcut: 'Cmd+Shift+F',
+    defaultSize: 'compact',
+    defaultDock: 'bottom',
   },
   templates: {
     id: 'templates',
@@ -171,6 +210,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'content',
     panelType: 'full',
     color: CATEGORY_COLORS.content,
+    description: 'Template gallery for reusable content',
+    shortcut: 'Cmd+Shift+P',
+    defaultSize: 'normal',
+    defaultDock: 'right',
   },
   audit: {
     id: 'audit',
@@ -179,6 +222,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'admin',
     panelType: 'full',
     color: CATEGORY_COLORS.admin,
+    description: 'Audit log and compliance monitoring',
+    shortcut: 'Cmd+Shift+L',
+    defaultSize: 'wide',
+    defaultDock: 'right',
   },
   rbac: {
     id: 'rbac',
@@ -187,6 +234,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'admin',
     panelType: 'full',
     color: CATEGORY_COLORS.admin,
+    description: 'Role-based access control management',
+    shortcut: 'Cmd+Shift+R',
+    defaultSize: 'normal',
+    defaultDock: 'right',
   },
   zlayers: {
     id: 'zlayers',
@@ -195,6 +246,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'canvas',
     panelType: 'full',
     color: CATEGORY_COLORS.canvas,
+    description: 'Canvas z-layer visibility and ordering',
+    shortcut: 'Cmd+Shift+Z',
+    defaultSize: 'compact',
+    defaultDock: 'right',
   },
   'session-controls': {
     id: 'session-controls',
@@ -203,6 +258,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'session',
     panelType: 'mini',
     color: CATEGORY_COLORS.session,
+    description: 'Session state and controls',
+    shortcut: 'Cmd+Shift+S',
+    defaultSize: 'compact',
+    defaultDock: 'bottom',
   },
   'task-manager': {
     id: 'task-manager',
@@ -211,6 +270,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'session',
     panelType: 'mini',
     color: CATEGORY_COLORS.session,
+    description: 'Task tracking and progress',
+    shortcut: 'Cmd+Shift+D',
+    defaultSize: 'compact',
+    defaultDock: 'bottom',
   },
   providers: {
     id: 'providers',
@@ -219,6 +282,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'providers',
     panelType: 'full',
     color: CATEGORY_COLORS.providers,
+    description: 'Manage LLM providers and accounts',
+    shortcut: 'Cmd+Shift+E',
+    defaultSize: 'normal',
+    defaultDock: 'left',
   },
   documents: {
     id: 'documents',
@@ -227,6 +294,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'content',
     panelType: 'full',
     color: CATEGORY_COLORS.content,
+    description: 'Document management and editing',
+    shortcut: 'Cmd+Shift+O',
+    defaultSize: 'wide',
+    defaultDock: 'right',
   },
   media: {
     id: 'media',
@@ -235,6 +306,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'content',
     panelType: 'full',
     color: CATEGORY_COLORS.content,
+    description: 'Media library and generation tools',
+    shortcut: 'Cmd+Shift+M',
+    defaultSize: 'wide',
+    defaultDock: 'right',
   },
   agents: {
     id: 'agents',
@@ -243,6 +318,10 @@ export const PANEL_REGISTRY: Record<string, TabConfig> = {
     category: 'tools',
     panelType: 'full',
     color: CATEGORY_COLORS.tools,
+    description: 'Agent management and orchestration',
+    shortcut: 'Cmd+Shift+G',
+    defaultSize: 'normal',
+    defaultDock: 'right',
   },
 }
 
@@ -259,4 +338,12 @@ export function getTabsForLayer(layerId: LayerId): TabConfig[] {
 
 export function getPanelType(panelId: string): PanelType {
   return PANEL_REGISTRY[panelId]?.panelType ?? 'full'
+}
+
+export function getPanelConfig(panelId: string): TabConfig | undefined {
+  return PANEL_REGISTRY[panelId]
+}
+
+export function listPanels(): TabConfig[] {
+  return Object.values(PANEL_REGISTRY)
 }

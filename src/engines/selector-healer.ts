@@ -34,6 +34,20 @@ const DEFAULT_CONFIG: SelectorHealerConfig = {
   llmModel: 'gpt-4o-mini',
 }
 
+/**
+ * Minimal contract for persisting selector heals. Accepts ProviderStore so
+ * healed selectors are written as capability overrides (type 'selector_healed')
+ * and survive app restarts.
+ */
+export interface SelectorHealerStore {
+  overrideCapability(input: {
+    providerId: string
+    capabilityId: string
+    overrideType: string
+    overrideJson: string
+  }): Promise<void>
+}
+
 export class SelectorHealer {
   private history = new Map<string, HealResult[]>()
   private cache = new SelectorCache()
@@ -42,6 +56,7 @@ export class SelectorHealer {
     private readonly grounding: SemanticGroundingEngine,
     private readonly mcpClient?: McpClientAdapter,
     private readonly config: SelectorHealerConfig = DEFAULT_CONFIG,
+    private readonly store?: SelectorHealerStore,
   ) {}
 
   async heal(params: {
@@ -78,6 +93,20 @@ export class SelectorHealer {
       this.history.set(historyKey, prev.slice(-100))
       // Cache successful heal
       this.cache.record(providerId, capabilityId, JSON.stringify(result.healed))
+
+      // Persist to DB so the healed selector survives app restarts.
+      // Stored as a 'selector_healed' capability override — the next execution
+      // reads it from the provider_capability table before trying discovery.
+      if (this.store) {
+        void this.store
+          .overrideCapability({
+            providerId,
+            capabilityId,
+            overrideType: 'selector_healed',
+            overrideJson: JSON.stringify(result.healed),
+          })
+          .catch(() => {}) // non-fatal — persistence failure must not break healing
+      }
     }
 
     return result

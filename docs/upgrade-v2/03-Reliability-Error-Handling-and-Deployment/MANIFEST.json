@@ -1,0 +1,117 @@
+{
+  "schema": "vivim.upgrade.package/v1",
+  "package": {
+    "title": "Reliability: Error Handling & Deployment Refresh",
+    "summary": "The contact mailer raises a 500 on any SMTP failure with no user feedback, there is no error tracking (no Sentry/Rollbar), the Capistrano config hardcodes the production IP and SSH port in the repo, and the only deploy path is a 2014-vintage Capistrano 3.2.1 script. This package adds error handling, observability, and a modern deploy pipeline.",
+    "index": 3,
+    "generatedAt": "2026-08-02T23:40:45.625Z",
+    "grounded": true,
+    "commitInspected": "71886e93f5743ed49d3b7ca3380644e9e054f60b"
+  },
+  "repo": {
+    "id": "cmsc7am6r0000ryi8uiccfd2u",
+    "name": "vivim",
+    "version": "0.1.0",
+    "url": "https://github.com/vivim/vivim"
+  },
+  "findings": [
+    {
+      "id": "REL-01",
+      "severity": "high",
+      "title": "Contact mailer raises unhandled exceptions; user sees a 500 page",
+      "evidenceCount": 1
+    },
+    {
+      "id": "REL-02",
+      "severity": "high",
+      "title": "No error tracking service is configured",
+      "evidenceCount": 2
+    },
+    {
+      "id": "REL-03",
+      "severity": "high",
+      "title": "Capistrano 3.2.1 with hardcoded production IP, port, and SSH key path",
+      "evidenceCount": 2
+    },
+    {
+      "id": "REL-04",
+      "severity": "medium",
+      "title": "No background job processor; mail is sent synchronously in the request",
+      "evidenceCount": 2
+    },
+    {
+      "id": "REL-05",
+      "severity": "medium",
+      "title": "Unicorn before_fork/after_fork hooks reference ActiveRecord directly",
+      "evidenceCount": 1
+    },
+    {
+      "id": "REL-06",
+      "severity": "medium",
+      "title": "No health check endpoint; load balancer cannot verify app health",
+      "evidenceCount": 1
+    },
+    {
+      "id": "REL-07",
+      "severity": "low",
+      "title": "Log level is hardcoded to :info with no tags",
+      "evidenceCount": 1
+    }
+  ],
+  "tasks": [
+    {
+      "id": "REL-T01",
+      "effort": "M"
+    },
+    {
+      "id": "REL-T02",
+      "effort": "S"
+    },
+    {
+      "id": "REL-T03",
+      "effort": "M"
+    },
+    {
+      "id": "REL-T04",
+      "effort": "S"
+    },
+    {
+      "id": "REL-T05",
+      "effort": "M"
+    },
+    {
+      "id": "REL-T06",
+      "effort": "S"
+    },
+    {
+      "id": "REL-T07",
+      "effort": "L"
+    },
+    {
+      "id": "REL-T08",
+      "effort": "S"
+    }
+  ],
+  "specs": [
+    {
+      "id": "REL-S1"
+    },
+    {
+      "id": "REL-S2"
+    },
+    {
+      "id": "REL-S3"
+    },
+    {
+      "id": "REL-S4"
+    },
+    {
+      "id": "REL-S5"
+    },
+    {
+      "id": "REL-S6"
+    }
+  ],
+  "fileCount": 16,
+  "totalSizeBytes": 31920
+}

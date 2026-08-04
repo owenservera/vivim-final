@@ -111,8 +111,7 @@ export class BrowserPool {
 
     // Try ephemeral pool
     if (this.ephemeralPool.length > 0) {
-      const slave = this.ephemeralPool.pop() ?? null
-      if (!slave) return null
+      const slave = this.ephemeralPool.pop()!
       const lease = new Lease(
         slave.id,
         createProviderId(providerId ?? 'generic'),

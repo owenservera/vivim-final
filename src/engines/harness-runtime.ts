@@ -19,8 +19,24 @@ export type HarnessNode =
   | { type: 'step'; moduleId: string; input: Record<string, unknown>; outputKey: string }
 
 export interface HarnessCondition {
-  type: 'selector_exists' | 'url_matches' | 'text_contains' | 'variable'
+  type:
+    | 'selector_exists'
+    | 'element_visible'
+    | 'element_contains_text'
+    | 'page_url_matches'
+    | 'page_title_contains'
+    | 'element_count_gt'
+    | 'element_has_class'
+    | 'url_matches'
+    | 'text_contains'
+    | 'variable'
   value: string
+  /** CSS selector for element-based conditions */
+  selector?: string
+  /** Expected count for element_count_gt */
+  expectedCount?: number
+  /** Class name for element_has_class */
+  className?: string
 }
 
 export interface HarnessContext {
@@ -188,7 +204,16 @@ export class HarnessRuntime {
       }
 
       case 'precondition': {
-        // For now, preconditions are ignored — full implementation in Phase 9
+        const allMet = await evaluatePreconditions(node.checks, ctx)
+        if (!allMet) {
+          ctx.emitTelemetry({
+            type: 'selector_miss',
+            moduleId: 'precondition',
+            data: { checks: node.checks, result: 'skipped' },
+            ts: Date.now(),
+          })
+          return { outputs: {}, stepsCompleted: 0 }
+        }
         return this.executeNode(node.step, ctx, 1, 1)
       }
     }
@@ -265,10 +290,190 @@ export class HarnessRuntime {
     }
   }
 
-  private async evaluateCondition(cond: HarnessCondition, _ctx: HarnessContext): Promise<boolean> {
-    // Stub: real implementation in Phase 9
-    return cond.type === 'selector_exists'
+  private async evaluateCondition(cond: HarnessCondition, ctx: HarnessContext): Promise<boolean> {
+    return evaluateConditionImpl(cond, ctx)
   }
+}
+
+// ── Condition Evaluation Implementation ──────────────────────────────────
+
+export async function evaluateConditionImpl(
+  cond: HarnessCondition,
+  ctx: HarnessContext,
+): Promise<boolean> {
+  switch (cond.type) {
+    case 'selector_exists': {
+      const el = await ctx.query(cond.value)
+      return el !== null
+    }
+
+    case 'element_visible': {
+      const el = await ctx.query(cond.value)
+      if (!el) return false
+      if (el.boundingBox) {
+        return el.boundingBox.width > 0 && el.boundingBox.height > 0
+      }
+      return true
+    }
+
+    case 'element_contains_text': {
+      const condExt = cond as HarnessCondition & { selector?: string }
+      const selector = condExt.selector ?? cond.value
+      const el = await ctx.query(selector)
+      if (!el) return false
+      const textToFind = condExt.selector ? cond.value : cond.value
+      return el.text.toLowerCase().includes(textToFind.toLowerCase())
+    }
+
+    case 'page_url_matches':
+    case 'url_matches': {
+      const state = await ctx.getPageState()
+      const url = state.url
+      try {
+        const regex = new RegExp(cond.value)
+        return regex.test(url)
+      } catch {
+        return url.includes(cond.value)
+      }
+    }
+
+    case 'page_title_contains': {
+      const state = await ctx.getPageState()
+      return state.title.toLowerCase().includes(cond.value.toLowerCase())
+    }
+
+    case 'element_count_gt': {
+      const condExt = cond as HarnessCondition & {
+        selector?: string
+        expectedCount?: number
+      }
+      const selector = condExt.selector ?? cond.value
+      const elements = await ctx.queryAll(selector)
+      const threshold = condExt.expectedCount ?? parseInt(cond.value, 10)
+      return elements.length > threshold
+    }
+
+    case 'element_has_class': {
+      const condExt = cond as HarnessCondition & {
+        selector?: string
+        className?: string
+      }
+      const selector = condExt.selector ?? cond.value
+      const el = await ctx.query(selector)
+      if (!el) return false
+      const className = condExt.className ?? cond.value
+      const classAttr = el.attributes['class'] ?? ''
+      return classAttr.split(/\s+/).includes(className)
+    }
+
+    case 'variable': {
+      return cond.value.trim().length > 0 && cond.value.trim() !== 'false'
+    }
+
+    case 'text_contains': {
+      const state = await ctx.getPageState()
+      return state.title.toLowerCase().includes(cond.value.toLowerCase())
+    }
+
+    default: {
+      return false
+    }
+  }
+}
+
+// ── Precondition Evaluation ──────────────────────────────────────────────
+
+/**
+ * Evaluates a set of precondition checks.
+ * Each check string is a condition expression in one of these formats:
+ *   - "selector_exists:css-selector"
+ *   - "element_visible:css-selector"
+ *   - "page_url_matches:pattern"
+ *   - "page_title_contains:text"
+ *   - "element_contains_text:selector:text"
+ *   - "element_count_gt:selector:count"
+ *   - "element_has_class:selector:className"
+ */
+export async function evaluatePreconditions(
+  checks: string[],
+  ctx: HarnessContext,
+): Promise<boolean> {
+  for (const check of checks) {
+    const colonIndex = check.indexOf(':')
+    if (colonIndex === -1) {
+      return false
+    }
+
+    const type = check.slice(0, colonIndex)
+    const value = check.slice(colonIndex + 1)
+
+    let cond: HarnessCondition
+
+    switch (type) {
+      case 'selector_exists':
+        cond = { type: 'selector_exists', value }
+        break
+      case 'element_visible':
+        cond = { type: 'element_visible', value }
+        break
+      case 'page_url_matches':
+        cond = { type: 'page_url_matches', value }
+        break
+      case 'page_title_contains':
+        cond = { type: 'page_title_contains', value }
+        break
+      case 'element_contains_text': {
+        const secondColon = value.indexOf(':')
+        if (secondColon === -1) {
+          cond = { type: 'element_contains_text', value }
+        } else {
+          cond = {
+            type: 'element_contains_text',
+            value: value.slice(secondColon + 1),
+            selector: value.slice(0, secondColon),
+          } as HarnessCondition & { selector: string }
+        }
+        break
+      }
+      case 'element_count_gt': {
+        const secondColon = value.indexOf(':')
+        if (secondColon === -1) {
+          cond = { type: 'element_count_gt', value }
+        } else {
+          cond = {
+            type: 'element_count_gt',
+            value,
+            selector: value.slice(0, secondColon),
+            expectedCount: parseInt(value.slice(secondColon + 1), 10),
+          } as HarnessCondition & { selector: string; expectedCount: number }
+        }
+        break
+      }
+      case 'element_has_class': {
+        const secondColon = value.indexOf(':')
+        if (secondColon === -1) {
+          cond = { type: 'element_has_class', value }
+        } else {
+          cond = {
+            type: 'element_has_class',
+            value,
+            selector: value.slice(0, secondColon),
+            className: value.slice(secondColon + 1),
+          } as HarnessCondition & { selector: string; className: string }
+        }
+        break
+      }
+      default:
+        return false
+    }
+
+    const result = await evaluateConditionImpl(cond, ctx)
+    if (!result) {
+      return false
+    }
+  }
+
+  return true
 }
 
 export interface HarnessModule {

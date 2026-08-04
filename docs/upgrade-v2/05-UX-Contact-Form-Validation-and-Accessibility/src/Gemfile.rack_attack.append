@@ -1,0 +1,13 @@
+# UX5-04: rack-attack for IP rate limiting on /contact.
+# Add to Gemfile:
+gem 'rack-attack', '~> 6.6'
+
+# Add to config/initializers/rack_attack.rb:
+#   class Rack::Attack
+#     throttle('contact/ip', limit: 5, period: 1.hour) do |req|
+#       req.ip if req.path == '/contact' && req.post?
+#     end
+#   end
+#
+# Add to config/application.rb:
+#   config.middleware.use Rack::Attack

@@ -36,13 +36,9 @@ export interface Annotation {
   updatedAt: number;
 }
 
-export interface AnnotationStore {
-  get(id: string): Promise<Annotation | null>;
-  list(filter?: { targetKind?: string; targetId?: string }): Promise<Annotation[]>;
-  create(input: Omit<Annotation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Annotation>;
-  update(id: string, patch: Partial<Annotation>): Promise<Annotation>;
-  remove(id: string): Promise<boolean>;
-}
+// Re-export from storage/contracts for back-compat.
+import type { AnnotationStore } from '../storage/contracts/annotation-store';
+export type { AnnotationStore };
 
 export interface AnnotationEngineDeps {
   annotationStore: AnnotationStore;

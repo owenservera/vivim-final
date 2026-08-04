@@ -21,6 +21,7 @@ export interface ProviderDefinitionRow {
   category: string
   provider_type: string
   is_active: number
+  protocol_status: string
   website_url: string | null
   documentation_url: string | null
   auth_type: string

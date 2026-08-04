@@ -52,4 +52,14 @@ export interface ProviderStore {
   ): Promise<
     Array<{ id: string; slug: string; title: string; description?: string; version?: string }>
   >
+
+  // ── Selector heal persistence ───────────────────────────────────────────
+  // Persists dynamically healed selectors as capability overrides so they
+  // survive app restarts. The override type is 'selector_healed' and the
+  // overrideJson contains the healed SemanticSelector.
+  getCapabilityOverride(
+    providerId: string,
+    capabilityId: string,
+    overrideType: string,
+  ): Promise<{ overrideJson: string } | null>
 }

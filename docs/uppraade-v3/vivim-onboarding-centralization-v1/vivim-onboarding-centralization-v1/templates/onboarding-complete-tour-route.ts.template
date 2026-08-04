@@ -1,0 +1,69 @@
+// templates/onboarding-complete-tour-route.ts.template
+//
+// frontend/src/app/api/onboarding/complete-tour/route.ts
+//
+// Called by OnboardingTour.tsx (line 121) when the user finishes the tour.
+// Persists the tour completion + step timings to the OnboardingStore.
+
+import { NextRequest, NextResponse } from 'next/server';
+import { getBag } from '@/lib/canvas-engine-bootstrap';
+
+interface CompleteTourBody {
+  userId: string;
+  totalDurationMs: number;
+  stepTimings: Record<string, number>;
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = (await req.json()) as CompleteTourBody;
+
+    // Validate
+    if (!body || typeof body.userId !== 'string') {
+      return NextResponse.json(
+        { ok: false, error: 'Missing userId' },
+        { status: 400 }
+      );
+    }
+    if (typeof body.totalDurationMs !== 'number' || body.totalDurationMs < 0) {
+      return NextResponse.json(
+        { ok: false, error: 'Invalid totalDurationMs' },
+        { status: 400 }
+      );
+    }
+    if (!body.stepTimings || typeof body.stepTimings !== 'object') {
+      return NextResponse.json(
+        { ok: false, error: 'Invalid stepTimings' },
+        { status: 400 }
+      );
+    }
+
+    const bag = getBag();
+    const state = await bag.onboardingStore.completeTour(body.userId, {
+      totalDurationMs: body.totalDurationMs,
+      stepTimings: body.stepTimings,
+    });
+
+    // Fire an analytics event too (best-effort, fire-and-forget)
+    try {
+      await fetch('/api/onboarding/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'tour_completed',
+          userId: body.userId,
+          totalDurationMs: body.totalDurationMs,
+          stepTimings: body.stepTimings,
+          timestamp: Date.now(),
+        }),
+      });
+    } catch {
+      // Non-fatal — analytics are best-effort
+    }
+
+    return NextResponse.json({ ok: true, state });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
+}

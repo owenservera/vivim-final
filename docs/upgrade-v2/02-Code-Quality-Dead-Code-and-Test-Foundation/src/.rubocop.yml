@@ -1,0 +1,16 @@
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - 'bin/**/*'
+    - 'db/schema.rb'
+    - 'node_modules/**/*'
+    - 'vendor/bundle/**/*'
+
+Layout/IndentationConsistency:
+  EnforcedStyle: rails
+
+Layout/IndentationWidth:
+  Width: 2

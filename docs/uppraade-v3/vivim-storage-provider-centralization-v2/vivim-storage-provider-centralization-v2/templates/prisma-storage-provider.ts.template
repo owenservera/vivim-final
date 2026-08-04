@@ -1,0 +1,136 @@
+/**
+ * storage/provider/prisma-storage-provider.ts
+ * --------------------------------------------------------------------
+ * TEMPLATE — Tasks 08 + 09.
+ *
+ * The Prisma-backed StorageProvider. As of v2: 1/24 stores migrated
+ * (onboardingStore, in Task 09). The rest are NotImplementedErrorProxy
+ * stubs that throw on first method call.
+ *
+ * Migration status is visible via /api/storage/health or
+ * `bun run storage:inspect` — both report migrationProgress.
+ *
+ * Placeholders to fill in:
+ *   - Task 09: uncomment the PrismaOnboardingStore import + property.
+ *   - Future migrations: replace each NotImplementedErrorProxy with
+ *     new PrismaXStore(), one at a time, in priority order (see ROADMAP.md).
+ */
+
+import type { StorageProvider } from './storage-provider';
+import { NotImplementedErrorProxy } from './not-implemented-proxy';
+// Task 09 uncomments this:
+// import { PrismaOnboardingStore } from '../impl/prisma-onboarding-store';
+
+/**
+ * Prisma-backed StorageProvider.
+ *
+ * STATUS: 0/24 stores migrated (Task 09 brings it to 1/24).
+ * See ROADMAP.md for the migration plan.
+ *
+ * Each unimplemented store is a NotImplementedErrorProxy that throws on
+ * first method call. /api/storage/health detects this via the
+ * __notImplemented marker and reports it as `ready: false`.
+ */
+export class PrismaStorageProvider implements StorageProvider {
+  readonly name = 'prisma' as const;
+
+  // ─── Phase 1 — all stubs ───────────────────────────────────────────
+  readonly uiComponentStore = NotImplementedErrorProxy.create(
+    'uiComponentStore',
+    'PrismaUiComponentStore',
+  );
+  readonly providerTypeStore = NotImplementedErrorProxy.create(
+    'providerTypeStore',
+    'PrismaProviderTypeStore',
+  );
+  readonly primitiveStore = NotImplementedErrorProxy.create(
+    'primitiveStore',
+    'PrismaPrimitiveStore',
+  );
+  readonly providerStore = NotImplementedErrorProxy.create(
+    'providerStore',
+    'PrismaProviderStore',
+  );
+  readonly accountStore = NotImplementedErrorProxy.create(
+    'accountStore',
+    'PrismaAccountStore',
+  );
+  readonly capabilityTierStore = NotImplementedErrorProxy.create(
+    'capabilityTierStore',
+    'PrismaCapabilityTierStore',
+  );
+  readonly userLayoutStore = NotImplementedErrorProxy.create(
+    'userLayoutStore',
+    'PrismaUserLayoutStore',
+  );
+  readonly canvasDefinitionStore = NotImplementedErrorProxy.create(
+    'canvasDefinitionStore',
+    'PrismaCanvasDefinitionStore',
+  );
+
+  // ─── Phase 2 — all stubs ───────────────────────────────────────────
+  readonly workspaceStore = NotImplementedErrorProxy.create(
+    'workspaceStore',
+    'PrismaWorkspaceStore',
+  );
+  readonly documentStore = NotImplementedErrorProxy.create(
+    'documentStore',
+    'PrismaDocumentStore',
+  );
+  readonly mediaStore = NotImplementedErrorProxy.create('mediaStore', 'PrismaMediaStore');
+  readonly automationStore = NotImplementedErrorProxy.create(
+    'automationStore',
+    'PrismaAutomationStore',
+  );
+  readonly agentStore = NotImplementedErrorProxy.create('agentStore', 'PrismaAgentStore');
+  readonly hitlGateStore = NotImplementedErrorProxy.create(
+    'hitlGateStore',
+    'PrismaHitlGateStore',
+  );
+  readonly policyRuleStore = NotImplementedErrorProxy.create(
+    'policyRuleStore',
+    'PrismaPolicyRuleStore',
+  );
+  readonly annotationStore = NotImplementedErrorProxy.create(
+    'annotationStore',
+    'PrismaAnnotationStore',
+  );
+  readonly shellCommandStore = NotImplementedErrorProxy.create(
+    'shellCommandStore',
+    'PrismaShellCommandStore',
+  );
+
+  // ─── Phase 3 — onboardingStore filled in Task 09; rest are stubs ──
+  readonly notificationStore = NotImplementedErrorProxy.create(
+    'notificationStore',
+    'PrismaNotificationStore',
+  );
+  readonly auditStore = NotImplementedErrorProxy.create('auditStore', 'PrismaAuditStore');
+  readonly rbacStore = NotImplementedErrorProxy.create('rbacStore', 'PrismaRbacStore');
+  readonly templateStore = NotImplementedErrorProxy.create(
+    'templateStore',
+    'PrismaWorkspaceTemplateStore',
+  );
+  readonly presenceStore = NotImplementedErrorProxy.create(
+    'presenceStore',
+    'PrismaPresenceStore',
+  );
+  readonly searchIndex = NotImplementedErrorProxy.create('searchIndex', 'PrismaSearchIndex');
+
+  // ── BEFORE Task 09 ──
+  readonly onboardingStore = NotImplementedErrorProxy.create(
+    'onboardingStore',
+    'PrismaOnboardingStore',
+  );
+
+  // ── AFTER Task 09 (uncomment, delete the stub above) ──
+  // readonly onboardingStore = new PrismaOnboardingStore();
+
+  // ─── Phase 4 — all stubs ───────────────────────────────────────────
+  readonly documentEditStore = NotImplementedErrorProxy.create(
+    'documentEditStore',
+    'PrismaDocumentEditStore',
+  );
+  readonly zLayerStore = NotImplementedErrorProxy.create('zLayerStore', 'PrismaZLayerStore');
+  readonly drawerStore = NotImplementedErrorProxy.create('drawerStore', 'PrismaDrawerStore');
+}

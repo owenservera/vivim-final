@@ -1,0 +1,10 @@
+# Add to package.json (created by jsbundling-rails install):
+{
+  "dependencies": {
+    "@hotwired/turbo-rails": "^1.4.0",
+    "glightbox": "^3.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.0"
+  }
+}

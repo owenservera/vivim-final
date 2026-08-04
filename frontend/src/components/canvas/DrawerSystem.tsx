@@ -16,11 +16,12 @@
  * Data-driven from /api/drawer.
  */
 
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import type { WorkspaceDrawerConfig, DrawerConfig, DrawerEdge, DrawerPanel } from '../../shared/drawer';
 import { useIO } from './UnifiedIOProvider';
-import { useConversation } from '@/sdk/web/use-conversation';
+import { getPanelLoader } from './PanelRegistry';
 
+const STORAGE_KEY = 'vivim:drawer:collapsed';
 
 export function DrawerSystem({ workspaceId, children }: { workspaceId: string; children: React.ReactNode }) {
   const io = useIO();
@@ -28,11 +29,35 @@ export function DrawerSystem({ workspaceId, children }: { workspaceId: string; c
 
   const fetchConfig = async () => {
     const res = await io.get<{ config: WorkspaceDrawerConfig }>(`/api/drawer/get?workspaceId=${encodeURIComponent(workspaceId)}`);
-    if (res.ok) setConfig(res.data.config);
+    if (res.ok) {
+      let fetchedConfig = res.data.config;
+      // Apply persisted collapsed states
+      try {
+        const saved = localStorage.getItem(`${STORAGE_KEY}:${workspaceId}`);
+        if (saved) {
+          const collapsed = JSON.parse(saved);
+          fetchedConfig = {
+            ...fetchedConfig,
+            drawers: {
+              ...fetchedConfig.drawers,
+              left: { ...fetchedConfig.drawers.left, collapsed: collapsed.left ?? fetchedConfig.drawers.left.collapsed },
+              right: { ...fetchedConfig.drawers.right, collapsed: collapsed.right ?? fetchedConfig.drawers.right.collapsed },
+              bottom: { ...fetchedConfig.drawers.bottom, collapsed: collapsed.bottom ?? fetchedConfig.drawers.bottom.collapsed },
+            },
+          };
+        }
+      } catch {}
+      setConfig(fetchedConfig);
+      // Save collapsed states for next time
+      const collapsed: Record<string, boolean> = {};
+      for (const edge of ['left', 'right', 'bottom'] as DrawerEdge[]) {
+        collapsed[edge] = fetchedConfig.drawers[edge]?.collapsed ?? false;
+      }
+      try { localStorage.setItem(`${STORAGE_KEY}:${workspaceId}`, JSON.stringify(collapsed)); } catch {}
+    }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchConfig();
   }, [workspaceId]);
 
@@ -40,6 +65,13 @@ export function DrawerSystem({ workspaceId, children }: { workspaceId: string; c
     if (!config) return;
     const updated = { ...config, drawers: { ...config.drawers, [edge]: { ...config.drawers[edge], collapsed: !config.drawers[edge].collapsed } } };
     setConfig(updated);
+    // Persist collapsed state
+    try {
+      const existing = localStorage.getItem(`${STORAGE_KEY}:${workspaceId}`);
+      const collapsed = existing ? JSON.parse(existing) : {};
+      collapsed[edge] = updated.drawers[edge].collapsed;
+      localStorage.setItem(`${STORAGE_KEY}:${workspaceId}`, JSON.stringify(collapsed));
+    } catch {}
     await io.post('/api/drawer/toggle', { workspaceId, edge });
   };
 
@@ -256,11 +288,16 @@ function BottomDrawer({
 }
 
 function PanelBody({ panel, workspaceId }: { panel: DrawerPanel; workspaceId: string }) {
+  const loader = getPanelLoader(panel.kind)
+  if (loader) {
+    const Component = lazy(loader)
+    return (
+      <Suspense fallback={<div style={{ padding: 12, fontSize: 11, color: 'var(--muted-foreground)' }}>Loading…</div>}>
+        <Component workspaceId={workspaceId} />
+      </Suspense>
+    )
+  }
   switch (panel.kind) {
-    case 'conversations':
-      return <ConversationsPanel workspaceId={workspaceId} />;
-    case 'agents':
-      return <AgentsPanel workspaceId={workspaceId} />;
     case 'todos':
       return <TodosPanel />;
     case 'priorities':
@@ -282,46 +319,6 @@ function PanelBody({ panel, workspaceId }: { panel: DrawerPanel; workspaceId: st
 
 // ── Panel implementations ──────────────────────────────────────────────
 
-function ConversationsPanel({ workspaceId }: { workspaceId: string }) {
-  const { conversations, loading, error, refresh } = useConversation();
-  useEffect(() => { refresh(); }, [workspaceId]);
-  return (
-    <div style={{ padding: 8 }}>
-      {loading && <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: 8 }}>Loading…</div>}
-      {error && <div style={{ fontSize: 11, color: 'var(--destructive)', padding: 8 }}>{error}</div>}
-      {!loading && !error && conversations.length === 0 && <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: 8 }}>No conversations yet.</div>}
-      {conversations.map((c) => (
-        <div key={c.id} style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer', color: 'var(--text)' }} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--accent-subtle)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-          {c.title ?? c.id.slice(0, 16)}{c.updatedAt ? ` — ${new Date(c.updatedAt).toLocaleDateString()}` : ''}
-        </div>
-      ))}
-      <div style={{ fontSize: 9, color: 'var(--text-subtle)', marginTop: 8, padding: '0 8px' }}>workspace: {workspaceId.slice(0, 24)}</div>
-    </div>
-  );
-}
-
-function AgentsPanel({ workspaceId }: { workspaceId: string }) {
-  const [agents, setAgents] = useState<Array<{ name: string; status: string; steps: number }>>([]);
-  const io = useIO();
-  useEffect(() => {
-    io.get<{ ok: boolean; agents: Array<{ name: string; status: string; steps: unknown[] }> }>(`/api/agent/list?workspaceId=${encodeURIComponent(workspaceId)}`)
-      .then((res) => {
-        if (res.data?.ok) setAgents(res.data.agents.map((a) => ({ name: a.name, status: a.status, steps: a.steps.length })));
-      })
-      .catch(() => {});
-  }, [workspaceId, io]);
-  return (
-    <div style={{ padding: 8 }}>
-      {agents.length === 0 && <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: 8 }}>No agents in this workspace.</div>}
-      {agents.map((a, i) => (
-        <div key={i} style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, color: 'var(--text)' }}>
-           {a.name} <span style={{ color: 'var(--text-muted)' }}>· {a.steps} steps · {a.status}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function TodosPanel() {
   const todos = [
     { id: 1, text: 'Review research plan', done: false },
@@ -342,8 +339,8 @@ function TodosPanel() {
 
 function PrioritiesPanel() {
   const items = [
-    { id: 1, label: 'P0: Approve HITL gate', color: '#ef4444' },
-    { id: 2, label: 'P1: Draft blog post', color: '#f59e0b' },
+    { id: 1, label: 'P0: Approve HITL gate', color: 'var(--color-error)' },
+    { id: 2, label: 'P1: Draft blog post', color: 'var(--color-warning)' },
   ];
   return (
     <div style={{ padding: 8 }}>
@@ -433,7 +430,7 @@ function AuditPanel() {
     <div style={{ padding: 8 }}>
       {entries.length === 0 && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>No audit events.</div>}
       {entries.map((e, i) => (
-        <div key={i} style={{ padding: '3px 8px', fontSize: 10, color: 'var(--text)', borderLeft: `2px solid ${e.ok ? '#10b981' : '#ef4444'}`, marginBottom: 2 }}>
+        <div key={i} style={{ padding: '3px 8px', fontSize: 10, color: 'var(--text)', borderLeft: `2px solid ${e.ok ? 'var(--color-success)' : 'var(--color-error)'}`, marginBottom: 2 }}>
           {e.engine} · {e.method} · {e.durationMs}ms
         </div>
       ))}

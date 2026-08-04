@@ -88,7 +88,7 @@ export function ConversationsPanel({ onSelect }: { onSelect?: (id: string) => vo
       <div style={{ flex: 1, overflow: 'auto', padding: 4 }} className="scrollbar-thin">
         {loading && <EmptyState>Loading...</EmptyState>}
         {error && (
-          <div style={{ padding: 16, textAlign: 'center', color: '#ef4444', fontSize: 11 }}>
+          <div style={{ padding: 16, textAlign: 'center', color: 'var(--color-error)', fontSize: 11 }}>
             {error}
           </div>
         )}

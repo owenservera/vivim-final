@@ -1,0 +1,126 @@
+{
+  "schema": "vivim.upgrade.package/v1",
+  "package": {
+    "title": "UX: Mobile & Responsive Modernization",
+    "summary": "The site targets mobile users in its marketing copy (\"150 times a day\" phone-checks) but ships Bootstrap 3 navbar + img-responsive classes (BS3 was EOL July 2019), no srcset/sizes for the hero banner, no apple-touch-icon, no theme-color, no PWA manifest, and a carousel that ignores prefers-reduced-motion. On modern phones the site looks dated and cannot be installed as an app.",
+    "index": 6,
+    "generatedAt": "2026-08-02T23:40:45.801Z",
+    "grounded": true,
+    "commitInspected": "71886e93f5743ed49d3b7ca3380644e9e054f60b"
+  },
+  "repo": {
+    "id": "cmsc7am6r0000ryi8uiccfd2u",
+    "name": "vivim",
+    "version": "0.1.0",
+    "url": "https://github.com/vivim/vivim"
+  },
+  "findings": [
+    {
+      "id": "UX6-01",
+      "severity": "high",
+      "title": "Bootstrap 3 navbar markup (navbar-toggle, icon-bar) - BS3 EOL July 2019",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX6-02",
+      "severity": "high",
+      "title": "Images use img-responsive (Bootstrap 3 class, removed in BS4/5)",
+      "evidenceCount": 3
+    },
+    {
+      "id": "UX6-03",
+      "severity": "high",
+      "title": "Hero banner loads full-size PNG with no srcset/sizes",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX6-04",
+      "severity": "medium",
+      "title": "No apple-touch-icon, no theme-color, no PWA manifest",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX6-05",
+      "severity": "medium",
+      "title": "Carousel autoPlay:3000 ignores prefers-reduced-motion",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX6-06",
+      "severity": "medium",
+      "title": "Colorbox lightbox has no touch/swipe support - mobile users cannot navigate",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX6-07",
+      "severity": "low",
+      "title": "Copyright year hardcoded as '© 2014 - Vivim' - never updates",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX6-08",
+      "severity": "low",
+      "title": "viewport meta lacks viewport-fit=cover for notch/Dynamic Island",
+      "evidenceCount": 1
+    }
+  ],
+  "tasks": [
+    {
+      "id": "UX6-T01",
+      "effort": "L"
+    },
+    {
+      "id": "UX6-T02",
+      "effort": "S"
+    },
+    {
+      "id": "UX6-T03",
+      "effort": "M"
+    },
+    {
+      "id": "UX6-T04",
+      "effort": "S"
+    },
+    {
+      "id": "UX6-T05",
+      "effort": "S"
+    },
+    {
+      "id": "UX6-T06",
+      "effort": "M"
+    },
+    {
+      "id": "UX6-T07",
+      "effort": "S"
+    },
+    {
+      "id": "UX6-T08",
+      "effort": "S"
+    }
+  ],
+  "specs": [
+    {
+      "id": "UX6-S1"
+    },
+    {
+      "id": "UX6-S2"
+    },
+    {
+      "id": "UX6-S3"
+    },
+    {
+      "id": "UX6-S4"
+    },
+    {
+      "id": "UX6-S5"
+    },
+    {
+      "id": "UX6-S6"
+    },
+    {
+      "id": "UX6-S7"
+    }
+  ],
+  "fileCount": 13,
+  "totalSizeBytes": 38004
+}

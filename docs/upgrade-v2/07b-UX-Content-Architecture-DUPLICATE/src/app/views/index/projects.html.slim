@@ -1,0 +1,27 @@
+# UX7-01: was a 0-byte stub. Now real content.
+# Promote the project carousel into a full case-studies index.
+
+section id="projects"
+  .container
+    header
+      h2 Recent Projects
+      span.line
+    .row
+      .col-sm-4
+        .project-card
+          = image_tag 'iPhone-App-Design-in-denver.png', class: 'img-fluid'
+          h3 iOS Fitness App
+          p 50k downloads in 3 months. Built the Swift backend and the WatchKit companion.
+          = link_to 'Read case study', case_study_path('ios-fitness-app')
+      .col-sm-4
+        .project-card
+          = image_tag 'denver-website-design.png', class: 'img-fluid'
+          h3 Rails SaaS Platform
+          p Migrated a legacy PHP app to Rails 7, cut page load by 60%.
+          = link_to 'Read case study', case_study_path('rails-saas-platform')
+      .col-sm-4
+        .project-card
+          = image_tag 'android-app-design-denver.png', class: 'img-fluid'
+          h3 Android Banking App
+          p Kotlin + Jetpack Compose, SOC 2 compliance, shipped to 200k users.
+          = link_to 'Read case study', case_study_path('android-banking-app')

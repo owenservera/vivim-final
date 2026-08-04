@@ -186,14 +186,19 @@ export class PortReaper {
   private async getProcessCommand(pid: number): Promise<string> {
     if (process.platform === 'win32') {
       try {
+        // Use Get-CimInstance instead of deprecated wmic (removed in Win11 24H2)
         const proc = Bun.spawn({
-          cmd: ['wmic', 'process', 'where', `ProcessId=${pid}`, 'get', 'CommandLine'],
+          cmd: [
+            'powershell',
+            '-NoProfile',
+            '-Command',
+            `Get-CimInstance Win32_Process -Filter "ProcessId=${pid}" | Select-Object -ExpandProperty CommandLine`,
+          ],
           stdout: 'pipe',
           stderr: 'ignore',
         })
         const output = (await new Response(proc.stdout).text()).trim()
-        const lines = output.split('\n').filter(Boolean)
-        return lines[1] ?? ''
+        return output || ''
       } catch {
         return ''
       }

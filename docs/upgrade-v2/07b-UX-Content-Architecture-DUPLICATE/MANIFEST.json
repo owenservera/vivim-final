@@ -1,0 +1,126 @@
+{
+  "schema": "vivim.upgrade.package/v1",
+  "package": {
+    "title": "UX: Content Architecture & Navigation Features",
+    "summary": "Four view templates exist as 0-byte stubs (about_us, contact_us, experts, projects) - abandoned features or never-built routes. The nav links to in-page anchors instead of real pages. The footer still links to Google+ (shut down April 2019). There is no privacy policy, no blog, and the 404/500 pages are generic Rails defaults with no site nav. This package turns the stubs into real pages, adds legal pages, and modernizes the footer.",
+    "index": 7,
+    "generatedAt": "2026-08-02T23:40:45.826Z",
+    "grounded": true,
+    "commitInspected": "71886e93f5743ed49d3b7ca3380644e9e054f60b"
+  },
+  "repo": {
+    "id": "cmsc7am6r0000ryi8uiccfd2u",
+    "name": "vivim",
+    "version": "0.1.0",
+    "url": "https://github.com/vivim/vivim"
+  },
+  "findings": [
+    {
+      "id": "UX7-01",
+      "severity": "high",
+      "title": "Four view templates exist as 0-byte stubs (about_us, contact_us, experts, projects)",
+      "evidenceCount": 4
+    },
+    {
+      "id": "UX7-02",
+      "severity": "high",
+      "title": "Nav links are in-page anchors, not real routes - back button and deep-linking break",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX7-03",
+      "severity": "high",
+      "title": "Footer links to Google+ (shut down April 2, 2019) - dead external link",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX7-04",
+      "severity": "medium",
+      "title": "No privacy policy or terms of service - legally required for PII collection",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX7-05",
+      "severity": "medium",
+      "title": "No blog / news / case-study section - no content marketing surface",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX7-06",
+      "severity": "medium",
+      "title": "404/422/500 pages are generic Rails defaults with no site nav",
+      "evidenceCount": 3
+    },
+    {
+      "id": "UX7-07",
+      "severity": "low",
+      "title": "Footer address uses </br> inside <li> - invalid HTML",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX7-08",
+      "severity": "low",
+      "title": "Nav items use uppercase TEXT instead of CSS text-transform - hurts screen readers",
+      "evidenceCount": 1
+    }
+  ],
+  "tasks": [
+    {
+      "id": "UX7-T01",
+      "effort": "M"
+    },
+    {
+      "id": "UX7-T02",
+      "effort": "M"
+    },
+    {
+      "id": "UX7-T03",
+      "effort": "S"
+    },
+    {
+      "id": "UX7-T04",
+      "effort": "M"
+    },
+    {
+      "id": "UX7-T05",
+      "effort": "L"
+    },
+    {
+      "id": "UX7-T06",
+      "effort": "M"
+    },
+    {
+      "id": "UX7-T07",
+      "effort": "S"
+    },
+    {
+      "id": "UX7-T08",
+      "effort": "S"
+    }
+  ],
+  "specs": [
+    {
+      "id": "UX7-S1"
+    },
+    {
+      "id": "UX7-S2"
+    },
+    {
+      "id": "UX7-S3"
+    },
+    {
+      "id": "UX7-S4"
+    },
+    {
+      "id": "UX7-S5"
+    },
+    {
+      "id": "UX7-S6"
+    },
+    {
+      "id": "UX7-S7"
+    }
+  ],
+  "fileCount": 21,
+  "totalSizeBytes": 49552
+}

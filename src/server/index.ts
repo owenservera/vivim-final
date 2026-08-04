@@ -574,24 +574,40 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const providerStore = new ProviderStoreImpl(db)
   const registrar = new ProviderRegistrar(providerStore, undefined, eventBus)
 
-  const needsSeed = process.env.FORCE_SEED
-    ? true
-    : (await db.prisma.providerDefinition.count()) === 0
+  let needsSeed: boolean;
+  if (process.env.FORCE_SEED) {
+    needsSeed = true;
+  } else {
+    try {
+      needsSeed = (await db.prisma.providerDefinition.count()) === 0;
+    } catch (err: unknown) {
+      // P2021 = "no such table" — DB exists but schema wasn't applied
+      const code = (err as { code?: string })?.code;
+      if (code === 'P2021') {
+        log.warn('DB schema not applied (P2021) — will attempt snapshot restore');
+        needsSeed = true;
+      } else {
+        throw err;
+      }
+    }
+  }
 
   if (needsSeed) {
     // ── Snapshot auto-restore: if snapshot exists and FORCE_SEED is not set,
-    //    copy snapshot → dev.db instead of running individual seeds ──────────
+    //    copy snapshot → dbPath instead of running individual seeds ──────────
     const forceSeed = !!process.env.FORCE_SEED
     if (!forceSeed) {
-      const { existsSync, copyFileSync } = await import('node:fs')
-      const { join } = await import('node:path')
+      const { existsSync, copyFileSync, mkdirSync } = await import('node:fs')
+      const { join, dirname } = await import('node:path')
       const snapshotPath = join(process.cwd(), 'seeds', 'seed-snapshot.db')
+      const dbTarget = config.dbPath
       if (existsSync(snapshotPath)) {
         const { closePrisma } = await import('../storage/prisma.js')
-        const dbPath = join(process.cwd(), 'prisma', 'dev.db')
         log.info('Restoring from seed snapshot — closing DB...')
         await closePrisma()
-        copyFileSync(snapshotPath, dbPath)
+        // Ensure target directory exists
+        mkdirSync(dirname(dbTarget), { recursive: true })
+        copyFileSync(snapshotPath, dbTarget)
         log.info('Snapshot copied — reopening DB...')
         // Reopen DB: clear singleton and re-get
         const { setDb } = await import('../storage/db.js')
@@ -608,6 +624,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         log.info('DB restored from seed snapshot')
         // Skip individual seeds — snapshot is fully seeded
       } else {
+        log.warn(`Snapshot not found at ${snapshotPath} — running individual seeds`)
         await runIndividualSeeds(db, registrar, providerStore, log)
       }
     } else {
@@ -994,7 +1011,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       async getStorageConfig() {
         const row = await db.prisma.configEntry.findUnique({
           where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
           },
         })
         if (!row) return null
@@ -1009,13 +1026,13 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         const now = Date.now()
         await db.prisma.configEntry.upsert({
           where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
           },
           create: {
             id: 'storage:global',
             engineId: 'storage',
             scopeType: 'global',
-            scopeId: null,
+            scopeId: '',
             configJson: JSON.stringify(config),
             schemaVersion: 1,
             createdAt: now,
@@ -1030,7 +1047,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       async getArchivedLocations() {
         const row = await db.prisma.configEntry.findUnique({
           where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
           },
         })
         if (!row) return []
@@ -1046,7 +1063,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       async markArchived(path, archivedAt, sizeBytes) {
         const row = await db.prisma.configEntry.findUnique({
           where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
           },
         })
         const parsed = row ? (JSON.parse(row.configJson) as Record<string, unknown>) : {}
@@ -1061,13 +1078,13 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         const now = Date.now()
         await db.prisma.configEntry.upsert({
           where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
           },
           create: {
             id: 'storage:global',
             engineId: 'storage',
             scopeType: 'global',
-            scopeId: null,
+            scopeId: '',
             configJson: JSON.stringify(parsed),
             schemaVersion: 1,
             createdAt: now,
@@ -1079,7 +1096,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       async removeArchived(path) {
         const row = await db.prisma.configEntry.findUnique({
           where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
           },
         })
         if (!row) return
@@ -1094,7 +1111,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         const now = Date.now()
         await db.prisma.configEntry.update({
           where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: null },
+            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
           },
           data: { configJson: JSON.stringify(parsed), updatedAt: now },
         })

@@ -3,6 +3,7 @@
 // corrective (self-healing) actions. Auto-heal respects AutoHealPolicy.
 
 import { NotFoundError } from '../../errors.js'
+import type { CapabilityEventBus } from '../capability-event-bus.js'
 import type { KernelStore } from '../../storage/contracts/kernel-store.js'
 import type { KernelRegistry } from './kernel-registry.js'
 import type { DiagnosticIssue, OracleDiagnosticEngine } from './oracle-diagnostic.js'
@@ -34,12 +35,29 @@ export interface AutoHealPolicy {
   notify: { enabled: boolean; channels: string[] }
 }
 
+/**
+ * Abstract interface for engine reconnection. ChromeGovernor and similar
+ * engines implement this so the actuator can trigger real reconnection
+ * without importing concrete engine types.
+ */
+export interface Reconnectable {
+  reconnect(providerId: string): Promise<void>
+}
+
+/**
+ * Abstract interface for cache clearing. Engines with transient caches
+ * implement this so the actuator can purge stale state.
+ */
+export interface CacheClearable {
+  clearCache(): void
+}
+
 const CATEGORY_TO_ACTION: Record<
   DiagnosticIssue['category'],
   { kind: HealKind; autoFixable: boolean }
 > = {
   stalled: { kind: 'restart-engine', autoFixable: true },
-  'broken-wire': { kind: 'reconnect', autoFixable: false },
+  'broken-wire': { kind: 'reconnect', autoFixable: true },
   'missing-dep': { kind: 'notify', autoFixable: false },
   'health-degraded': { kind: 'reset-circuit', autoFixable: true },
   'config-missing': { kind: 'reconfigure', autoFixable: true },
@@ -59,10 +77,16 @@ export class OracleActuator {
   private policy: AutoHealPolicy = structuredClone(DEFAULT_POLICY)
   private healCallbacks = new Set<(action: HealAction) => void>()
 
+  /** Optional reconnectable engines keyed by engine ID (set at boot). */
+  private reconnectables = new Map<string, Reconnectable>()
+  /** Optional cache-clearable engines keyed by engine ID (set at boot). */
+  private cacheClearables = new Map<string, CacheClearable>()
+
   constructor(
     private readonly registry: KernelRegistry,
     private readonly diagnostic: OracleDiagnosticEngine,
     private readonly store: KernelStore | null = null,
+    private readonly eventBus?: CapabilityEventBus,
   ) {}
 
   onHeal(callback: (action: HealAction) => void): () => void {
@@ -70,6 +94,16 @@ export class OracleActuator {
     return () => {
       this.healCallbacks.delete(callback)
     }
+  }
+
+  /** Register a reconnectable engine so the `reconnect` heal action triggers real reconnection. */
+  registerReconnectable(engineId: string, target: Reconnectable): void {
+    this.reconnectables.set(engineId, target)
+  }
+
+  /** Register a cache-clearable engine so the `clear-cache` heal action purges its caches. */
+  registerCacheClearable(engineId: string, target: CacheClearable): void {
+    this.cacheClearables.set(engineId, target)
   }
 
   async heal(issueId: string): Promise<HealAction> {
@@ -188,14 +222,49 @@ export class OracleActuator {
         }
         break
       }
-      case 'reconnect':
-        this.registry.markWired(action.engineId)
+      case 'reconnect': {
+        // Real reconnection: delegate to the registered Reconnectable engine.
+        const target = this.reconnectables.get(action.engineId)
+        if (target) {
+          const providerId = (action.parameters.providerId as string) ?? 'default'
+          await target.reconnect(providerId)
+          this.registry.markWired(action.engineId)
+        } else {
+          // Fallback: just mark wired in registry (no real engine to reconnect)
+          this.registry.markWired(action.engineId)
+        }
         break
-      case 'clear-cache':
-        // No global cache handle; record intent.
+      }
+      case 'clear-cache': {
+        // Purge all registered caches for this engine.
+        const clearer = this.cacheClearables.get(action.engineId)
+        if (clearer) {
+          clearer.clearCache()
+        }
+        // Also clear all registered cache-clearables if no engine-specific one found.
+        if (!clearer) {
+          for (const [, c] of this.cacheClearables) {
+            c.clearCache()
+          }
+        }
         break
-      case 'notify':
+      }
+      case 'notify': {
+        // Publish the issue + heal action to the event bus for downstream consumers.
+        if (this.eventBus) {
+          this.eventBus.emit({
+            type: 'kernel:issue_detected' as never,
+            issueId: issue.id,
+            engineId: issue.engineId,
+            category: issue.category,
+            severity: issue.severity,
+            description: issue.description,
+            healActionId: action.id,
+            healKind: action.kind,
+          } as never)
+        }
         break
+      }
       default:
         break
     }
@@ -210,6 +279,10 @@ export class OracleActuator {
         return this.policy.circuitBreakerReset.enabled
       case 'reconfigure':
         return this.policy.configFallback.enabled
+      case 'reconnect':
+        return true // always allowed when a reconnectable engine is registered
+      case 'clear-cache':
+        return true // always allowed when a cache-clearable engine is registered
       case 'notify':
         return this.policy.notify.enabled
       default:

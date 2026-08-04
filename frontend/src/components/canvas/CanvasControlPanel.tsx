@@ -105,10 +105,10 @@ export function CanvasControlPanel() {
       <SectionLabel style={{ marginBottom: 4 }}>History</SectionLabel>
       {history.length === 0 && <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>No mutations yet</div>}
       {history.slice(0, 20).map((h) => (
-        <div key={h.id} style={{ padding: '4px 8px', background: 'var(--bg-elevated)', border: `1px solid var(--border)`, borderLeft: `3px solid ${h.ok ? '#10b981' : '#ef4444'}`, borderRadius: 4, fontSize: 10, marginBottom: 4, display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div key={h.id} style={{ padding: '4px 8px', background: 'var(--bg-elevated)', border: `1px solid var(--border)`, borderLeft: `3px solid ${h.ok ? 'var(--color-success)' : 'var(--color-error)'}`, borderRadius: 4, fontSize: 10, marginBottom: 4, display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>{new Date(h.appliedAt).toLocaleTimeString()}</span>
           <Truncate style={{ flex: 1 }}>{h.mutation.op ?? 'mutation'}</Truncate>
-          <span style={{ color: h.ok ? '#10b981' : '#ef4444', fontSize: 9 }}>{h.ok ? 'OK' : 'FAIL'}</span>
+          <span style={{ color: h.ok ? 'var(--color-success)' : 'var(--color-error)', fontSize: 9 }}>{h.ok ? 'OK' : 'FAIL'}</span>
         </div>
       ))}
 

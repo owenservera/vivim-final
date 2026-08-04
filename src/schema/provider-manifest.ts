@@ -173,6 +173,7 @@ export const ProviderManifestSchema = z.object({
       })
       .optional(),
     capabilities: z.array(z.string()).default([]),
+    accessTier: z.enum(['free', 'premium']).optional().default('free'),
   }),
   endpoints: z.array(EndpointSchema).default([]),
   parsers: z.array(ParserSchema).default([]),

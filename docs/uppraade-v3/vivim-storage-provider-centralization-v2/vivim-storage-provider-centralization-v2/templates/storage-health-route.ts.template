@@ -1,0 +1,131 @@
+/**
+ * app/api/storage/health/route.ts
+ * --------------------------------------------------------------------
+ * TEMPLATE — Task 06.
+ *
+ * GET /api/storage/health
+ *
+ * Returns a JSON report of the storage layer's current state:
+ *   - provider name (memory | prisma | test)
+ *   - per-store impl name + ready flag + row count
+ *   - migration progress (migrated / total / pct)
+ *
+ * Used for:
+ *   - Debugging "where did my data go?" (memory vs prisma)
+ *   - Verifying migration progress
+ *   - Tauri Rust supervisor readiness check
+ *
+ * Placeholders to fill in:
+ *   - After Task 07, replace the inline probeStore/STORE_NAMES with
+ *     imports from storage/health/probe.ts (shared with the CLI).
+ */
+
+import { NextResponse } from 'next/server';
+import { getStorageProvider } from '@/storage/provider';
+
+export const dynamic = 'force-dynamic';
+
+interface StoreHealth {
+  impl: string;
+  ready: boolean;
+  count: number | null;
+  error?: string;
+}
+
+interface StorageHealthReport {
+  ok: boolean;
+  provider: 'memory' | 'prisma' | 'test';
+  stores: Record<string, StoreHealth>;
+  migrationProgress: { migrated: number; total: number; pct: number };
+  generatedAt: string;
+}
+
+const STORE_NAMES = [
+  'uiComponentStore', 'providerTypeStore', 'primitiveStore', 'providerStore',
+  'accountStore', 'capabilityTierStore', 'userLayoutStore', 'canvasDefinitionStore',
+  'workspaceStore', 'documentStore', 'mediaStore', 'automationStore',
+  'agentStore', 'hitlGateStore', 'policyRuleStore', 'annotationStore',
+  'shellCommandStore',
+  'notificationStore', 'auditStore', 'rbacStore', 'templateStore',
+  'presenceStore', 'searchIndex', 'onboardingStore',
+  'documentEditStore', 'zLayerStore', 'drawerStore',
+] as const;
+
+function implName(store: unknown): string {
+  if (store === null || store === undefined) return 'null';
+  const ctor = (store as { constructor?: { name?: string } }).constructor;
+  return ctor?.name ?? 'unknown';
+}
+
+async function probeStore(store: unknown): Promise<StoreHealth> {
+  // Detect NotImplementedErrorProxy (from PrismaStorageProvider stubs)
+  if (store && typeof store === 'object' && '__notImplemented' in store) {
+    return {
+      impl: 'NotImplementedErrorProxy',
+      ready: false,
+      count: null,
+      error: (store as { __message?: string }).__message ?? 'not implemented',
+    };
+  }
+
+  try {
+    const s = store as Record<string, unknown>;
+    if (typeof s.list === 'function') {
+      const result = await (s.list as (filter?: unknown) => Promise<unknown[]>)(undefined);
+      const count = Array.isArray(result) ? result.length : null;
+      return { impl: implName(store), ready: true, count };
+    }
+    if (typeof s.stats === 'function') {
+      const result = await (s.stats as (userId?: string) => Promise<Record<string, unknown>>)('user:demo');
+      const count = typeof result.total === 'number' ? result.total : null;
+      return { impl: implName(store), ready: true, count };
+    }
+    return { impl: implName(store), ready: true, count: null };
+  } catch (err) {
+    return {
+      impl: implName(store),
+      ready: false,
+      count: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+export async function GET() {
+  try {
+    const provider = getStorageProvider();
+    const stores: Record<string, StoreHealth> = {};
+
+    for (const name of STORE_NAMES) {
+      const store = (provider as unknown as Record<string, unknown>)[name];
+      stores[name] = await probeStore(store);
+    }
+
+    const migrated = Object.values(stores).filter(
+      (s) => s.impl !== 'NotImplementedErrorProxy' && s.impl !== 'null' && s.ready
+    ).length;
+    const total = STORE_NAMES.length;
+
+    const report: StorageHealthReport = {
+      ok: true,
+      provider: provider.name,
+      stores,
+      migrationProgress: {
+        migrated,
+        total,
+        pct: Number(((migrated / total) * 100).toFixed(2)),
+      },
+      generatedAt: new Date().toISOString(),
+    };
+
+    return NextResponse.json(report);
+  } catch (err) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+      },
+      { status: 500 }
+    );
+  }
+}

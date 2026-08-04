@@ -1,6 +1,8 @@
 'use client'
 
 import { Component, type ReactNode, type ErrorInfo } from 'react'
+import { logError } from '@/lib/errorLogger'
+import { FullPageError } from '@/components/FullPageError'
 
 interface Props {
   children: ReactNode
@@ -12,27 +14,31 @@ interface Props {
   autoRetry?: boolean
   /** Delay in ms before auto-retry (default 3000). */
   retryDelay?: number
+  /** Use full-page fallback (for top-level boundary). */
+  fullPage?: boolean
 }
 
 interface State {
   hasError: boolean
   error: Error | null
+  errorInfo: ErrorInfo | null
   retryCount: number
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { hasError: false, error: null, retryCount: 0 }
+    this.state = { hasError: false, error: null, errorInfo: null, retryCount: 0 }
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, retryCount: 0 }
+  static getDerivedStateFromError(error: Error): Partial<State> {
+    return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    this.setState({ errorInfo })
     this.props.onError?.(error, errorInfo)
-    console.error(`[ErrorBoundary:${this.props.name ?? 'unknown'}]`, error, errorInfo)
+    logError(error, this.props.name, errorInfo.componentStack ?? undefined)
   }
 
   componentDidUpdate(_prev: Props, prevState: State): void {
@@ -47,6 +53,7 @@ export class ErrorBoundary extends Component<Props, State> {
         this.setState((s) => ({
           hasError: false,
           error: null,
+          errorInfo: null,
           retryCount: s.retryCount + 1,
         }))
       }, delay)
@@ -56,6 +63,17 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback
+
+      if (this.props.fullPage && this.state.error) {
+        return (
+          <FullPageError
+            error={this.state.error}
+            errorInfo={this.state.errorInfo ?? undefined}
+            onRetry={() => this.setState({ hasError: false, error: null, errorInfo: null })}
+          />
+        )
+      }
+
       return (
         <div style={{
           padding: 16,
@@ -73,7 +91,7 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.state.error?.message ?? 'Unknown error'}
           </div>
           <button
-            onClick={() => this.setState({ hasError: false, error: null })}
+            onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
             style={{
               marginTop: 8,
               padding: '4px 12px',

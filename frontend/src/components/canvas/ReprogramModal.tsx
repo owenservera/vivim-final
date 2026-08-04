@@ -53,18 +53,18 @@ export interface ReprogramModalProps {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const OP_COLORS: Record<string, string> = {
-  replace: '#3b82f6',
-  insert: '#22c55e',
-  remove: '#ef4444',
-  reorder: '#a855f7',
-  restyle: '#f59e0b',
-  rebind: '#06b6d4',
-  set_property: '#6366f1',
-  set_slot: '#ec4899',
+  replace: 'var(--color-info)',
+  insert: 'var(--color-success)',
+  remove: 'var(--color-error)',
+  reorder: 'var(--color-purple)',
+  restyle: 'var(--color-warning)',
+  rebind: 'var(--color-cyan)',
+  set_property: 'var(--color-indigo)',
+  set_slot: 'var(--color-pink)',
 };
 
 function opColor(op: string): string {
-  return OP_COLORS[op] ?? '#64748b';
+  return OP_COLORS[op] ?? 'var(--text-muted)';
 }
 
 function safeStringify(value: unknown): string {
@@ -465,7 +465,7 @@ export function ReprogramModal({
                 </button>
               </div>
               {nlclError && (
-                <p style={{ marginTop: '6px', fontSize: '12px', color: '#ef4444' }}>{nlclError}</p>
+                <p style={{ marginTop: '6px', fontSize: '12px', color: 'var(--color-error)' }}>{nlclError}</p>
               )}
             </section>
 
@@ -571,7 +571,7 @@ export function ReprogramModal({
                 <p style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)' }}>Loading variants…</p>
               )}
               {variant.error && (
-                <p style={{ fontSize: '12px', color: '#ef4444' }}>{variant.error}</p>
+                <p style={{ fontSize: '12px', color: 'var(--color-error)' }}>{variant.error}</p>
               )}
               {!variant.loading && otherVariants.length === 0 && !activeVariant && (
                 <p style={{ fontSize: '12px', color: 'var(--text-muted, #64748b)' }}>
@@ -646,15 +646,15 @@ export function ReprogramModal({
                     }}
                   />
                   {specError && (
-                    <p style={{ marginTop: '4px', fontSize: '12px', color: '#ef4444' }}>{specError}</p>
+                    <p style={{ marginTop: '4px', fontSize: '12px', color: 'var(--color-error)' }}>{specError}</p>
                   )}
                   {!specError && !parsedSpec.ok && (
-                    <p style={{ marginTop: '4px', fontSize: '12px', color: '#ef4444' }}>
+                    <p style={{ marginTop: '4px', fontSize: '12px', color: 'var(--color-error)' }}>
                       {parsedSpec.error}
                     </p>
                   )}
                   {parsedSpec.ok && (
-                    <p style={{ marginTop: '4px', fontSize: '11px', color: '#22c55e' }}>
+                    <p style={{ marginTop: '4px', fontSize: '11px', color: 'var(--color-success)' }}>
                       Valid spec — kind: {parsedSpec.value.kind}
                     </p>
                   )}
@@ -758,7 +758,7 @@ export function ReprogramModal({
                   ))}
                 </ul>
                 {builder.previewError && (
-                  <p style={{ marginTop: '6px', fontSize: '12px', color: '#ef4444' }}>
+                  <p style={{ marginTop: '6px', fontSize: '12px', color: 'var(--color-error)' }}>
                     {builder.previewError}
                   </p>
                 )}
@@ -954,7 +954,7 @@ function VariantRow({
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
-            color: '#ef4444',
+            color: 'var(--color-error)',
             fontSize: '11px',
           }}
         >

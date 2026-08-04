@@ -1,0 +1,126 @@
+{
+  "schema": "vivim.upgrade.package/v1",
+  "package": {
+    "title": "Security: EOL Stack & Contact Form Hardening",
+    "summary": "Rails 4.1.1 (EOL 2016), Ruby 2.1.2 (EOL 2017), Rack 1.5.2 (9+ CVEs), and an unvalidated contact form that accepts arbitrary SMTP headers. This package upgrades the stack and closes the form relay.",
+    "index": 1,
+    "generatedAt": "2026-08-02T23:40:45.583Z",
+    "grounded": true,
+    "commitInspected": "71886e93f5743ed49d3b7ca3380644e9e054f60b"
+  },
+  "repo": {
+    "id": "cmsc7am6r0000ryi8uiccfd2u",
+    "name": "vivim",
+    "version": "0.1.0",
+    "url": "https://github.com/vivim/vivim"
+  },
+  "findings": [
+    {
+      "id": "SEC-01",
+      "severity": "critical",
+      "title": "Rails 4.1.1 is 8+ years past end-of-life",
+      "evidenceCount": 2
+    },
+    {
+      "id": "SEC-02",
+      "severity": "critical",
+      "title": "Ruby 2.1.2 is end-of-life (since March 2017)",
+      "evidenceCount": 2
+    },
+    {
+      "id": "SEC-03",
+      "severity": "critical",
+      "title": "Rack 1.5.2 has 9+ published CVEs",
+      "evidenceCount": 1
+    },
+    {
+      "id": "SEC-04",
+      "severity": "critical",
+      "title": "Contact form forwards unvalidated input to SMTP headers (open relay)",
+      "evidenceCount": 3
+    },
+    {
+      "id": "SEC-05",
+      "severity": "high",
+      "title": "Kernel#open used to read sitemap file (dangerous anti-pattern)",
+      "evidenceCount": 1
+    },
+    {
+      "id": "SEC-06",
+      "severity": "high",
+      "title": "Real-looking secret_key_base committed in secrets.yml.example",
+      "evidenceCount": 1
+    },
+    {
+      "id": "SEC-07",
+      "severity": "medium",
+      "title": "Production server IP and SSH key path committed to repo",
+      "evidenceCount": 1
+    },
+    {
+      "id": "SEC-08",
+      "severity": "medium",
+      "title": "force_ssl is commented out in production",
+      "evidenceCount": 1
+    }
+  ],
+  "tasks": [
+    {
+      "id": "SEC-T01",
+      "effort": "M"
+    },
+    {
+      "id": "SEC-T02",
+      "effort": "L"
+    },
+    {
+      "id": "SEC-T03",
+      "effort": "S"
+    },
+    {
+      "id": "SEC-T04",
+      "effort": "M"
+    },
+    {
+      "id": "SEC-T05",
+      "effort": "S"
+    },
+    {
+      "id": "SEC-T06",
+      "effort": "M"
+    },
+    {
+      "id": "SEC-T07",
+      "effort": "S"
+    },
+    {
+      "id": "SEC-T08",
+      "effort": "S"
+    }
+  ],
+  "specs": [
+    {
+      "id": "SEC-S1"
+    },
+    {
+      "id": "SEC-S2"
+    },
+    {
+      "id": "SEC-S3"
+    },
+    {
+      "id": "SEC-S4"
+    },
+    {
+      "id": "SEC-S5"
+    },
+    {
+      "id": "SEC-S6"
+    },
+    {
+      "id": "SEC-S7"
+    }
+  ],
+  "fileCount": 12,
+  "totalSizeBytes": 32981
+}

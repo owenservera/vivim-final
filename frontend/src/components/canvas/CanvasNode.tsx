@@ -142,7 +142,7 @@ export function CanvasNode({
           background: 'rgba(0,0,0,0.04)',
           borderBottom: '1px solid rgba(0,0,0,0.08)',
           fontSize: 11,
-          color: '#444',
+          color: 'var(--text-muted)',
           fontFamily: 'ui-sans-serif, system-ui',
         }}
       >
@@ -156,16 +156,16 @@ export function CanvasNode({
             borderRadius: 4,
             background:
               slot.tier === 'provider+variant'
-                ? '#fde68a'
+                ? 'var(--color-warning)'
                 : slot.tier === 'provider'
-                  ? '#fcd34d'
+                  ? 'var(--color-warning)'
                   : slot.tier === 'family+variant'
-                    ? '#bbf7d0'
+                    ? 'var(--color-success)'
                     : slot.tier === 'family'
-                      ? '#86efac'
+                      ? 'var(--color-success)'
                       : slot.tier === 'cross-type'
-                        ? '#bfdbfe'
-                        : '#e5e7eb',
+                        ? 'var(--color-info)'
+                        : 'var(--bg-subtle)',
             fontSize: 10,
             fontWeight: 600,
           }}
@@ -194,7 +194,7 @@ export function CanvasNode({
               padding: 12,
               fontFamily: 'ui-sans-serif, system-ui',
               fontSize: 12,
-              color: '#888',
+              color: 'var(--text-muted)',
             }}
           >
             <div style={{ fontWeight: 600, marginBottom: 4 }}>System default</div>

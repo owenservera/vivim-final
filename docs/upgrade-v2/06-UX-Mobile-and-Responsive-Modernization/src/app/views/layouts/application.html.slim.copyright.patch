@@ -1,0 +1,4 @@
+# Replace line 84:
+#   p © 2014 - Vivim
+# with:
+p = "© #{Date.current.year} - #{t('vivim.site.copyright')}"

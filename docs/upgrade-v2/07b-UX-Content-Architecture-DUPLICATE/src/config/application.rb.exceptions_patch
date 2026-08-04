@@ -1,0 +1,11 @@
+# UX7-06: route exceptions to the ErrorsController.
+# Add to config/application.rb (inside the Rails::Application class):
+
+config.exceptions_app = ->(env) {
+  ErrorsController.action(:not_found).call(env)
+}
+
+# And in config/routes.rb, add at the bottom:
+#   match '/404', to: 'errors#not_found', via: :all
+#   match '/422', to: 'errors#unprocessable', via: :all
+#   match '/500', to: 'errors#internal_server_error', via: :all

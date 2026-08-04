@@ -920,6 +920,52 @@ export class ChromeGovernor {
   }
 
   /**
+   * Active session verification via CDP: evaluates authenticated DOM markers
+   * to confirm genuine logged-in state (not just cookie file existence).
+   * Returns true if the session is valid and authenticated, false otherwise.
+   * Used by preflight/status checks to detect expired or invalid sessions.
+   */
+  async verifyLiveSession(slaveId: string): Promise<{ authenticated: boolean; reason: string }> {
+    try {
+      const slave = this.slaves.get(slaveId)
+      if (!slave) return { authenticated: false, reason: 'slave not found' }
+      if (slave.status !== 'running') return { authenticated: false, reason: 'slave not running' }
+
+      // Provider-specific authenticated DOM markers
+      const markers: Record<string, string> = {
+        gemini: 'document.querySelector("[data-test-id]") !== null || document.title.includes("Gemini")',
+        chatgpt:
+          'document.querySelector("#prompt-textarea") !== null || document.querySelector("[data-testid]") !== null',
+        claude:
+          'document.querySelector("[contenteditable]") !== null || document.querySelector(".prose") !== null',
+      }
+
+      const marker = markers[slave.providerId] ?? 'document.readyState === "complete"'
+      const expression = `(() => { try { return ${marker} } catch { return false } })()`
+
+      const result = (await this.cdp.send(slaveId, 'Runtime.evaluate', {
+        expression,
+        returnByValue: true,
+      })) as { result?: { value?: boolean }; exceptionDetails?: unknown }
+
+      if (result?.exceptionDetails) {
+        return { authenticated: false, reason: 'evaluation error' }
+      }
+
+      const authenticated = result?.result?.value === true
+      return {
+        authenticated,
+        reason: authenticated ? 'DOM marker found' : 'DOM marker not found — session may be expired',
+      }
+    } catch (err) {
+      return {
+        authenticated: false,
+        reason: err instanceof Error ? err.message : 'unknown error',
+      }
+    }
+  }
+
+  /**
    * Aggregate fleet super-state (FR-3): idle | active | degraded | terminal.
    */
   getSuperState(): FleetSuperState {

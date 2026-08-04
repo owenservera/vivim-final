@@ -1,0 +1,117 @@
+{
+  "schema": "vivim.upgrade.package/v1",
+  "package": {
+    "title": "Web Presence: SEO, GA4, i18n Refresh",
+    "summary": "Google Analytics Universal (analytics.js) was sunset in July 2023 - the site collects zero analytics today. Marketing copy is hardcoded in Ruby helper methods instead of i18n files. The sitemap config is hardcoded to vivim.net. There is no JSON-LD structured data, no canonical tags, and robots.txt is fully commented out.",
+    "index": 4,
+    "generatedAt": "2026-08-02T23:40:45.700Z",
+    "grounded": true,
+    "commitInspected": "71886e93f5743ed49d3b7ca3380644e9e054f60b"
+  },
+  "repo": {
+    "id": "cmsc7am6r0000ryi8uiccfd2u",
+    "name": "vivim",
+    "version": "0.1.0",
+    "url": "https://github.com/vivim/vivim"
+  },
+  "findings": [
+    {
+      "id": "WEB-01",
+      "severity": "high",
+      "title": "Google Analytics Universal (analytics.js) was sunset July 2023",
+      "evidenceCount": 1
+    },
+    {
+      "id": "WEB-02",
+      "severity": "medium",
+      "title": "All marketing copy is hardcoded in Ruby helper methods, not i18n",
+      "evidenceCount": 2
+    },
+    {
+      "id": "WEB-03",
+      "severity": "medium",
+      "title": "Sitemap config hardcoded to www.vivim.net",
+      "evidenceCount": 2
+    },
+    {
+      "id": "WEB-04",
+      "severity": "medium",
+      "title": "robots.txt is fully commented out",
+      "evidenceCount": 1
+    },
+    {
+      "id": "WEB-05",
+      "severity": "low",
+      "title": "No canonical URL or Open Graph tags",
+      "evidenceCount": 1
+    },
+    {
+      "id": "WEB-06",
+      "severity": "low",
+      "title": "No JSON-LD structured data",
+      "evidenceCount": 2
+    },
+    {
+      "id": "WEB-07",
+      "severity": "low",
+      "title": "Google Fonts loaded over HTTP (not HTTPS)",
+      "evidenceCount": 1
+    }
+  ],
+  "tasks": [
+    {
+      "id": "WEB-T01",
+      "effort": "S"
+    },
+    {
+      "id": "WEB-T02",
+      "effort": "M"
+    },
+    {
+      "id": "WEB-T03",
+      "effort": "S"
+    },
+    {
+      "id": "WEB-T04",
+      "effort": "S"
+    },
+    {
+      "id": "WEB-T05",
+      "effort": "M"
+    },
+    {
+      "id": "WEB-T06",
+      "effort": "S"
+    },
+    {
+      "id": "WEB-T07",
+      "effort": "S"
+    },
+    {
+      "id": "WEB-T08",
+      "effort": "S"
+    }
+  ],
+  "specs": [
+    {
+      "id": "WEB-S1"
+    },
+    {
+      "id": "WEB-S2"
+    },
+    {
+      "id": "WEB-S3"
+    },
+    {
+      "id": "WEB-S4"
+    },
+    {
+      "id": "WEB-S5"
+    },
+    {
+      "id": "WEB-S6"
+    }
+  ],
+  "fileCount": 15,
+  "totalSizeBytes": 34072
+}

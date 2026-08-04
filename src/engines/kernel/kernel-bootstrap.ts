@@ -236,8 +236,25 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
   // ── Construct Kernel Oracle (Phase 15) ───────────────────────────────────
   const diagnostic = new OracleDiagnosticEngine(registry, deps.store ?? null)
   const query = new OracleQueryEngine(registry, tracer, provenance, config)
-  const actuator = new OracleActuator(registry, diagnostic, deps.store ?? null)
+  const actuator = new OracleActuator(registry, diagnostic, deps.store ?? null, deps.eventBus)
   const events = new OracleEventStream(diagnostic, actuator, registry, deps.eventBus)
+
+  // Register ChromeGovernor as a reconnectable engine so the oracle's
+  // `reconnect` heal action triggers real slave re-launch.
+  if (deps.governor) {
+    actuator.registerReconnectable('chrome-governor', {
+      reconnect: async (providerId: string) => {
+        // Kill any errored slave for this provider, then relaunch.
+        const slaves = deps.governor!.getAllSlaves({ providerId })
+        for (const slave of slaves) {
+          if (slave.status === 'error') {
+            await deps.governor!.kill(slave.slaveId).catch(() => {})
+          }
+        }
+        await deps.governor!.launch(providerId)
+      },
+    })
+  }
 
   kernel.context().oracle = { query, diagnostic, actuator, events }
 
@@ -258,6 +275,41 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
       config: {},
       metadata: { description: oe.description },
     })
+  }
+
+  // ── Background diagnostic-to-healing loop ────────────────────────────────
+  // Periodically scan for issues and auto-heal what the policy allows.
+  // Runs every 60s; the interval is stopped when `stopKernelDiagnosticLoop()`
+  // is called (e.g. on server shutdown).
+  const DIAGNOSTIC_INTERVAL_MS = 60_000
+  let diagnosticTimer: ReturnType<typeof setInterval> | null = null
+  diagnosticTimer = setInterval(() => {
+    void (async () => {
+      try {
+        const issues = await diagnostic.scan()
+        if (issues.length > 0) {
+          const healed = await actuator.autoHeal(issues)
+          if (healed.length > 0) {
+            logger.info('oracle auto-heal cycle', {
+              issuesDetected: issues.length,
+              actionsExecuted: healed.length,
+            })
+          }
+        }
+      } catch {
+        // Diagnostic loop must never crash the server.
+      }
+    })()
+  }, DIAGNOSTIC_INTERVAL_MS)
+
+  // Attach stop function to kernel for graceful shutdown.
+  const origStop = kernel.stop.bind(kernel)
+  kernel.stop = async () => {
+    if (diagnosticTimer) {
+      clearInterval(diagnosticTimer)
+      diagnosticTimer = null
+    }
+    await origStop()
   }
 
   return kernel

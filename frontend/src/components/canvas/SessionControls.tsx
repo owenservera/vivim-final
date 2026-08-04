@@ -1,51 +1,57 @@
 'use client';
 
-/**
- * components/canvas/SessionControls.tsx
- * --------------------------------------------------------------------
- * Session lifecycle — current session info, login form, logout.
- * Uses useSession() SDK hook. CSS variables only.
- */
-
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useSession } from '@/sdk/web/use-session';
 import { PanelShell } from './PanelShell';
 import { ErrorBanner } from './ErrorBanner';
 import { Toast } from './Toast';
 import { Button } from './Button';
-import { InputField } from './InputField';
+import { ValidatedField } from '@/components/ui/ValidatedField';
+import { Form } from '@/components/ui/form';
+import { FormErrorSummary } from '@/components/ui/FormErrorSummary';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema, type LoginFormData } from '@/schema/forms';
 import { useToast } from '@/hooks/useToast';
 
 export function SessionControls() {
   const { session, loading, error, getSession, login, logout } = useSession();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
   const { toast, showToast } = useToast();
 
-  useEffect(() => { getSession(); }, [getSession]);
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+    mode: 'onChange',
+  });
 
-  const handleLogin = useCallback(async () => {
-    if (!email.trim() || !password.trim()) return;
-    setLoginLoading(true);
+  useEffect(() => {
+    getSession();
+  }, [getSession]);
+
+  const handleLogin = async () => {
+    const isValid = await form.trigger();
+    if (!isValid) return;
+
     try {
-      const ok = await login(email.trim(), password);
+      const ok = await login(form.getValues('email'), form.getValues('password'));
       if (ok) {
         showToast('ok', 'Logged in');
-        setEmail('');
-        setPassword('');
+        form.reset();
       } else {
         showToast('err', 'Login failed');
       }
-    } finally {
-      setLoginLoading(false);
+    } catch (error) {
+      showToast('err', 'Login error');
     }
-  }, [email, password, login, showToast]);
+  };
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = async () => {
     await logout();
     showToast('ok', 'Logged out');
-  }, [logout, showToast]);
+  };
 
   return (
     <PanelShell>
@@ -56,7 +62,7 @@ export function SessionControls() {
       {/* Current session */}
       <div style={{ padding: 12, background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: session.authenticated ? '#10b981' : '#f59e0b' }} />
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: session.authenticated ? 'var(--color-success)' : 'var(--color-warning)' }} />
           <span style={{ fontSize: 14, fontWeight: 600 }}>{session.authenticated ? 'Authenticated' : 'Not authenticated'}</span>
         </div>
         {session.authenticated && (
@@ -73,25 +79,37 @@ export function SessionControls() {
       {/* Login form */}
       {!session.authenticated && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Login</div>
-          <InputField
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            type="email"
-            style={{ marginBottom: 8 }}
-          />
-          <InputField
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            type="password"
-            onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }}
-            style={{ marginBottom: 8 }}
-          />
-          <Button onClick={handleLogin} disabled={!email.trim() || !password.trim() || loginLoading}>
-            {loginLoading ? 'Logging in…' : 'Login'}
-          </Button>
+          <Form {...form}>
+            <form onSubmit={(e) => e.preventDefault()} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <FormErrorSummary />
+
+              <ValidatedField
+                form={form}
+                name="email"
+                label="Email"
+                placeholder="Enter your email"
+                type="email"
+                helpText="We'll never share your email with anyone else."
+              />
+
+              <ValidatedField
+                form={form}
+                name="password"
+                label="Password"
+                placeholder="Enter your password"
+                type="password"
+                helpText="Password must be at least 8 characters with uppercase, lowercase, and number."
+              />
+
+              <Button
+                onClick={handleLogin}
+                disabled={!form.formState.isDirty || form.formState.isSubmitting}
+                style={{ marginTop: 8 }}
+              >
+                {form.formState.isSubmitting ? 'Logging in…' : 'Login'}
+              </Button>
+            </form>
+          </Form>
         </div>
       )}
 

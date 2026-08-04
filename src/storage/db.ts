@@ -69,6 +69,7 @@ export class CapStoreDb {
     category?: string
     providerType?: string
     isActive?: number
+    protocolStatus?: string
     websiteUrl?: string | null
     documentationUrl?: string | null
     authType?: string
@@ -90,6 +91,7 @@ export class CapStoreDb {
         category: def.category ?? 'ai',
         providerType: def.providerType ?? 'llm',
         isActive: def.isActive ?? 1,
+        protocolStatus: def.protocolStatus ?? 'Active',
         websiteUrl: def.websiteUrl ?? null,
         documentationUrl: def.documentationUrl ?? null,
         authType: def.authType ?? 'browser',
@@ -108,6 +110,7 @@ export class CapStoreDb {
         category: def.category ?? 'ai',
         providerType: def.providerType ?? 'llm',
         isActive: def.isActive ?? 1,
+        protocolStatus: def.protocolStatus ?? 'Active',
         websiteUrl: def.websiteUrl ?? null,
         documentationUrl: def.documentationUrl ?? null,
         authType: def.authType ?? 'browser',

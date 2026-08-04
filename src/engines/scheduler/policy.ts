@@ -54,7 +54,7 @@ export class SchedulerPolicy {
     // Sort by effective priority (highest first)
     candidates.sort((a, b) => b.effectivePriority - a.effectivePriority)
 
-    return candidates[0]?.name
+    return candidates[0]?.name ?? null
   }
 
   /**

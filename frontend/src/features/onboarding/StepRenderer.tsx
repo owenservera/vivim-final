@@ -259,7 +259,9 @@ export function StepRenderer({
               fontSize: 10,
               background: 'var(--muted, #f3f4f6)',
             }}>
-              {step.keyboardHint}
+              {typeof step.keyboardHint === 'string'
+                ? step.keyboardHint
+                : step.keyboardHint?.keys?.join('+')}
             </kbd>
             <span>to try it now</span>
           </div>

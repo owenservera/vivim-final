@@ -1,0 +1,3231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L0: Bookkeeping
+// ═══════════════════════════════════════════════════════════════════
+
+model SchemaMeta {
+  key   String
+  value String
+
+  @@id([key, value])
+}
+
+model MigrationLog {
+  id        String @id
+  filename  String
+  checksum  String
+  appliedAt BigInt @map("applied_at")
+
+  @@map("migration_log")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L1: Provider Knowledge Graph
+// ═══════════════════════════════════════════════════════════════════
+
+model ProviderDefinition {
+  id               String  @id
+  slug             String  @unique
+  displayName      String  @map("display_name")
+  description      String?
+  category         String  @default("ai")
+  providerType     String  @default("llm") @map("provider_type")
+  isActive         Int     @default(1) @map("is_active")
+  protocolStatus   String  @default("Active") @map("protocol_status")
+  websiteUrl       String? @map("website_url")
+  documentationUrl String? @map("documentation_url")
+  authType         String  @default("browser") @map("auth_type")
+  hasMultiAccount  Int     @default(0) @map("has_multi_account")
+  profileStrategy  String  @default("per_account") @map("profile_strategy")
+  fleetConfigJson  String  @default("{}") @map("fleet_config_json")
+  capabilitiesJson String  @default("{}") @map("capabilities_json")
+  modelsJson       String  @default("[]") @map("models_json")
+  pluginId         String? @map("plugin_id")
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
+
+  endpoints             ProviderEndpoint[]
+  parsers               ProviderParser[]
+  capabilities          ProviderCapability[]
+  configs               ProviderConfig[]
+  models                ProviderModel[]
+  accounts              ProviderAccount[]
+  overrides             ProviderOverride[]
+  // L5
+  manifestVersions      ProviderManifestVersion[]
+  registrationEvents    RegistrationEvent[]
+  manifestDrifts        ManifestDrift[]
+  // L7
+  healthHistories       ProviderHealthHistory[]
+  capabilityTelemetry   CapabilityTelemetry[]
+  telemetrySummaries    TelemetrySummaryDaily[]
+  manifestChangeLogs    ManifestChangeLog[]
+  // L11
+  healthTicks           HealthTick[]
+  driftEvents           DriftEvent[]
+  fleetEvents           FleetEvent[]
+  providerHealth        ProviderHealth?
+  alertConditions       AlertCondition[]
+  // L4
+  providerSessions      ProviderSession[]
+  conversations         Conversation[]
+  // L6
+  bindings              CapabilityBinding[]
+  selectorStrategies    SelectorStrategy[]
+  // L7
+  // L9
+  macros                CapabilityMacro[]
+  // L12
+  routeSpecs            RouteSpec[]
+  transferPatternsFrom  TransferPattern[]         @relation("FromProvider")
+  transferPatternsTo    TransferPattern[]         @relation("ToProvider")
+  learningEvents        LearningEvent[]
+  providerStreamConfigs ProviderStreamConfig[]
+
+  @@map("provider_definition")
+}
+
+model ProviderEndpoint {
+  id            String @id
+  providerId    String @map("provider_id")
+  url           String
+  label         String
+  endpointType  String @default("landing") @map("endpoint_type")
+  isDefault     Int    @default(0) @map("is_default")
+  selectorsJson String @default("{}") @map("selectors_json")
+
+  // DOM Interaction Config
+  composerType    String @default("textarea") @map("composer_type")
+  // 'textarea' | 'contenteditable' | 'prosemirror' | 'quill'
+  sendMethod      String @default("both") @map("send_method")
+  // 'enter_key' | 'button_click' | 'both'
+  contentEditable Int    @default(0) @map("content_editable")
+  // 1 = requires Input.insertText, 0 = standard textarea
+
+  createdAt BigInt @map("created_at")
+  updatedAt BigInt @map("updated_at")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId], map: "idx_pe_provider")
+  @@map("provider_endpoint")
+}
+
+model ProviderParser {
+  id               String  @id
+  providerId       String  @map("provider_id")
+  parserName       String  @map("parser_name")
+  parserVersion    Int     @default(1) @map("parser_version")
+  parserLogicType  String  @default("file") @map("parser_logic_type")
+  parserFilePath   String? @map("parser_file_path")
+  parserLogicCode  String? @map("parser_logic_code") // Inline TypeScript/JavaScript for DB-driven loading
+  parserHash       String? @map("parser_hash")
+  sampleBody       String? @map("sample_body") // Representative wire-format sample for testing
+  isActive         Int     @default(1) @map("is_active")
+  fallbackParserId String? @map("fallback_parser_id")
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
+
+  provider       ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  fallbackParser ProviderParser?    @relation("FallbackParser", fields: [fallbackParserId], references: [id], onDelete: SetNull)
+  fallbackFor    ProviderParser[]   @relation("FallbackParser")
+
+  @@index([providerId], map: "idx_pp_provider")
+  @@map("provider_parser")
+}
+
+model ProviderCapability {
+  id                          String  @id
+  providerId                  String  @map("provider_id")
+  globalCapabilityId          String  @map("global_capability_id")
+  recoveryStrategiesJson      String  @default("[]") @map("recovery_strategies_json")
+  uiComponentOverride         String? @map("ui_component_override")
+  uiLabelOverride             String? @map("ui_label_override")
+  uiIconOverride              String? @map("ui_icon_override")
+  uiPositionOverride          String? @map("ui_position_override")
+  uiOrderOverride             Int?    @map("ui_order_override")
+  uiGroupOverride             String? @map("ui_group_override")
+  uiPriorityOverride          String? @map("ui_priority_override")
+  interactionModeOverride     String? @map("interaction_mode_override")
+  uiStatesOverrideJson        String? @map("ui_states_override_json")
+  uiVisibilityRuleOverride    String? @map("ui_visibility_rule_override")
+  existentialRuleOverride     String? @map("existential_rule_override")
+  uiInputSchemaOverride       String? @map("ui_input_schema_override")
+  mutationEffectsOverrideJson String? @map("mutation_effects_override_json")
+  recoveryBehaviorOverride    String? @map("recovery_behavior_override")
+  statePersistenceOverride    String? @map("state_persistence_override")
+  dataFlowOverride            String? @map("data_flow_override")
+  minPlanTierOverride         String? @map("min_plan_tier_override")
+  dependsOnOverrideJson       String? @map("depends_on_override_json")
+  confidence                  Float   @default(1.0)
+  successCount                Int     @default(0) @map("success_count")
+  failCount                   Int     @default(0) @map("fail_count")
+  consecutiveFailures         Int     @default(0) @map("consecutive_failures")
+  avgLatencyMs                Float   @default(0) @map("avg_latency_ms")
+  p95LatencyMs                Float   @default(0) @map("p95_latency_ms")
+  lastUsedAt                  BigInt? @map("last_used_at")
+  selectorHitCount            Int     @default(0) @map("selector_hit_count")
+  selectorMissCount           Int     @default(0) @map("selector_miss_count")
+  selectorLastMissAt          BigInt? @map("selector_last_miss_at")
+  selectorLastError           String? @map("selector_last_error")
+  createdAt                   BigInt  @map("created_at")
+  updatedAt                   BigInt  @map("updated_at")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, globalCapabilityId])
+  @@index([providerId], map: "idx_pc_provider")
+  @@index([globalCapabilityId], map: "idx_pc_cap")
+  @@index([providerId, confidence], map: "idx_pc_confidence")
+  @@index([providerId, selectorHitCount], map: "idx_pc_selector")
+  @@map("provider_capability")
+}
+
+model ProviderConfig {
+  id          String @id
+  providerId  String @map("provider_id")
+  configKey   String @map("config_key")
+  configValue String @map("config_value")
+  configType  String @default("string") @map("config_type")
+  isSecret    Int    @default(0) @map("is_secret")
+  createdAt   BigInt @map("created_at")
+  updatedAt   BigInt @map("updated_at")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, configKey])
+  @@map("provider_config")
+}
+
+model ProviderModel {
+  id                 String @id
+  providerId         String @map("provider_id")
+  modelSlug          String @map("model_slug")
+  displayName        String @map("display_name")
+  isActive           Int    @default(1) @map("is_active")
+  isDefault          Int    @default(0) @map("is_default")
+  capabilitiesJson   String @default("[]") @map("capabilities_json")
+  contextWindow      Int?   @map("context_window")
+  maxOutputTokens    Int?   @map("max_output_tokens")
+  supportsStreaming  Int    @default(0) @map("supports_streaming")
+  supportsVision     Int    @default(0) @map("supports_vision")
+  supportsThinking   Int    @default(0) @map("supports_thinking")
+  supportsTools      Int    @default(0) @map("supports_tools")
+  pricingInputPer1m  Float? @map("pricing_input_per_1m")
+  pricingOutputPer1m Float? @map("pricing_output_per_1m")
+  createdAt          BigInt @map("created_at")
+  updatedAt          BigInt @map("updated_at")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, modelSlug])
+  @@map("provider_model")
+}
+
+model ProviderAccount {
+  id                String  @id
+  providerId        String  @map("provider_id")
+  email             String
+  planTier          String  @default("free") @map("plan_tier")
+  isDefault         Int     @default(0) @map("is_default")
+  isKind            Int     @default(0) @map("is_kind")
+  loginState        String  @default("unknown") @map("login_state")
+  loginAttempts     Int     @default(0) @map("login_attempts")
+  lastLoginAt       BigInt? @map("last_login_at")
+  providerStateJson String  @default("{}") @map("provider_state_json")
+  debugPort         Int?    @map("debug_port")
+  profileDir        String? @map("profile_dir")
+  chromeSlaveId     String? @map("chrome_slave_id")
+  userId           String  @default("default") @map("user_id")
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+
+  provider         ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  providerSessions ProviderSession[]
+
+  @@unique([providerId, email])
+  @@index([providerId], map: "idx_pa_provider")
+  @@index([email], map: "idx_pa_email")
+  @@index([loginState], map: "idx_pa_login")
+  @@map("provider_account")
+}
+
+model ProviderStreamConfig {
+  id                      String  @id
+  providerId              String  @map("provider_id")
+  streamTransport         String  @map("stream_transport") // 'sse' | 'batchexecute' | 'websocket' | 'sse-patch'
+  streamTerminalJson      String  @default("[]") @map("stream_terminal_json")
+  sseFormat               String? @map("sse_format") // 'openai' | 'anthropic' | 'gemini' | 'generic'
+  deltaPathJson           String? @map("delta_path_json")
+  contentType             String? @map("content_type")
+  completionDetectorsJson String  @default("[]") @map("completion_detectors_json")
+  harnessJs               String? @map("harness_js")
+  isActive                Int     @default(1) @map("is_active")
+  version                 Int     @default(1)
+  supersededById          String? @map("superseded_by")
+  createdAt               BigInt  @map("created_at")
+  updatedAt               BigInt  @map("updated_at")
+
+  provider      ProviderDefinition     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  supersededBy  ProviderStreamConfig?  @relation("SuperStreamConfig", fields: [supersededById], references: [id])
+  supersersedes ProviderStreamConfig[] @relation("SuperStreamConfig")
+
+  @@unique([providerId, streamTransport, version])
+  @@index([providerId], map: "idx_psc_provider")
+  @@index([streamTransport], map: "idx_psc_transport")
+  @@map("provider_stream_config")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L2: Trace
+// ═══════════════════════════════════════════════════════════════════
+
+model TraceEntry {
+  id             String  @id
+  engine         String
+  method         String
+  requestId      String? @map("request_id")
+  conversationId String? @map("conversation_id")
+  providerId     String? @map("provider_id")
+  accountId      String? @map("account_id")
+  slaveId        String? @map("slave_id")
+  cdpMethod      String? @map("cdp_method")
+  cdpParamsJson  String? @map("cdp_params_json")
+  cdpResultJson  String? @map("cdp_result_json")
+  durationMs     Int     @default(0) @map("duration_ms")
+  ok             Int     @default(1)
+  error          String?
+  ts             BigInt
+
+  @@index([engine, ts], map: "idx_te_engine")
+  @@index([conversationId, ts], map: "idx_te_conv")
+  @@index([providerId, ts], map: "idx_te_provider")
+  @@index([slaveId, ts], map: "idx_te_slave")
+  @@map("trace_entry")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L3: Universal Capability System
+// ═══════════════════════════════════════════════════════════════════
+
+model CapabilityTaxonomy {
+  id                       String  @id
+  name                     String
+  slug                     String  @unique
+  category                 String
+  description              String?
+  inputType                String  @default("void") @map("input_type")
+  uiComponent              String  @default("action_button") @map("ui_component")
+  uiLabel                  String? @map("ui_label")
+  uiIcon                   String? @map("ui_icon")
+  uiPosition               String  @default("composer") @map("ui_position")
+  uiOrder                  Int     @default(0) @map("ui_order")
+  uiLayerDepth             Int     @default(0) @map("ui_layer_depth")
+  parentCapabilityId       String? @map("parent_capability_id")
+  uiGroup                  String  @default("default") @map("ui_group")
+  uiPriority               String  @default("secondary") @map("ui_priority")
+  interactionMode          String  @default("single_click") @map("interaction_mode")
+  uiStatesJson             String  @default("[]") @map("ui_states_json")
+  uiVisibilityRule         String? @map("ui_visibility_rule")
+  existentialRule          String? @map("existential_rule")
+  uiInputSchema            String  @default("{}") @map("ui_input_schema")
+  mutationEffectsJson      String  @default("{}") @map("mutation_effects_json")
+  recoveryBehavior         String  @default("retry_manual") @map("recovery_behavior")
+  statePersistence         String  @default("none") @map("state_persistence")
+  dataFlow                 String  @default("user_to_provider") @map("data_flow")
+  minPlanTier              String  @default("free") @map("min_plan_tier")
+  dependsOnJson            String  @default("[]") @map("depends_on_json")
+  concurrencySafe          Int     @default(0) @map("concurrency_safe")
+  opClassification         String? @map("op_classification")
+  requiresUserConfirmation Int     @default(0) @map("requires_user_confirmation")
+  maxResultSize            Int     @default(100000) @map("max_result_size")
+  resultComponent          String  @default("text_block") @map("result_component")
+  resultLayout             String  @default("inline") @map("result_layout")
+  searchHintsJson          String  @default("[]") @map("search_hints_json")
+  aliasesJson              String  @default("[]") @map("aliases_json")
+  availabilityJson         String  @default("{}") @map("availability_json")
+  prefetch                 Int     @default(0)
+  createdAt                BigInt  @map("created_at")
+  updatedAt                BigInt  @map("updated_at")
+
+  parent     CapabilityTaxonomy?         @relation("ParentCapability", fields: [parentCapabilityId], references: [id], onDelete: SetNull)
+  children   CapabilityTaxonomy[]        @relation("ParentCapability")
+  tiers      CapabilityTier[]
+  bindings   CapabilityBinding[]
+  selectors  SelectorStrategy[]
+  outcomes   Outcome[]
+  // L6
+  versions   CapabilityTaxonomyVersion[]
+  // L7
+  telemetry  CapabilityTelemetry[]
+  // L12
+  routeSpecs RouteSpec[]
+  transfers  TransferPattern[]
+  learning   LearningEvent[]
+  // 1.3 — Override and Intent relations
+  overrides  ProviderOverride[]
+  intents    CapabilityIntent[]
+
+  @@index([category], map: "idx_ct_category")
+  @@index([uiPosition, uiGroup, uiOrder], map: "idx_ct_position")
+  @@index([slug], map: "idx_ct_slug")
+  @@index([parentCapabilityId], map: "idx_ct_parent")
+  @@index([opClassification], map: "idx_ct_classification")
+  @@map("capability_taxonomy")
+}
+
+model CapabilityTier {
+  id                    String  @id
+  capabilityId          String  @map("capability_id")
+  planTier              String  @map("plan_tier")
+  maxModels             Int?    @map("max_models")
+  maxFileSize           Int?    @map("max_file_size")
+  maxOptions            Int?    @map("max_options")
+  customConfigJson      String  @default("{}") @map("custom_config_json")
+  uiStatesOverrideJson  String? @map("ui_states_override_json")
+  uiComponentOverride   String? @map("ui_component_override")
+  uiLabelOverride       String? @map("ui_label_override")
+  uiIconOverride        String? @map("ui_icon_override")
+  uiInputSchemaOverride String? @map("ui_input_schema_override")
+  createdAt             BigInt  @map("created_at")
+  updatedAt             BigInt  @map("updated_at")
+
+  capability CapabilityTaxonomy @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([capabilityId, planTier])
+  @@map("capability_tier")
+}
+
+model CapabilityBinding {
+  id                   String  @id
+  globalId             String  @map("global_id")
+  providerId           String  @map("provider_id")
+  status               String  @default("prospect")
+  bestProgramId        String? @map("best_program_id")
+  currentProgramId     String? @map("current_program_id")
+  promotionHistoryJson String  @default("[]") @map("promotion_history_json")
+  confidence           Float   @default(0.0)
+  createdAt            BigInt  @map("created_at")
+  updatedAt            BigInt  @map("updated_at")
+
+  capability              CapabilityTaxonomy      @relation(fields: [globalId], references: [id], onDelete: Cascade)
+  provider                ProviderDefinition      @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  programs                CapabilityProgram[]
+  // L6
+  statusLogs              BindingStatusLog[]
+  versionMetrics          ProgramVersionMetric[]
+  // L7
+  selectorHealthHistories SelectorHealthHistory[]
+  // L12
+  bindingEvents           BindingEvent[]
+
+  @@unique([globalId, providerId])
+  @@index([providerId], map: "idx_cb_provider")
+  @@index([status], map: "idx_cb_status")
+  @@index([globalId], map: "idx_cb_global")
+  @@map("capability_binding")
+}
+
+// Unit 1.3 — capability_override (per-provider override of canonical taxonomy)
+model ProviderOverride {
+  id           String @id
+  providerId   String @map("provider_id")
+  capabilityId String @map("capability_id")
+  overrideType String @map("override_type")
+  overrideJson String @map("override_json")
+  createdAt    BigInt @map("created_at")
+
+  provider   ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  capability CapabilityTaxonomy @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, capabilityId, overrideType])
+  @@map("capability_override")
+}
+
+// Unit 1.3 — capability_intent (human-readable NL intent linking to capability)
+model CapabilityIntent {
+  id           String @id
+  capabilityId String @map("capability_id")
+  intentText   String @map("intent_text")
+  patternsJson String @map("patterns_json")
+  confidence   Float  @default(1.0)
+  isPrimary    Int    @default(0) @map("is_primary")
+  createdAt    BigInt @map("created_at")
+
+  capability CapabilityTaxonomy @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+
+  @@index([intentText], map: "idx_ci_intent")
+  @@index([isPrimary], map: "idx_ci_primary")
+  @@map("capability_intent")
+}
+
+model CapabilityProgram {
+  id             String  @id
+  bindingId      String  @map("binding_id")
+  version        Int     @default(1)
+  name           String?
+  supersededById String? @map("superseded_by")
+  isActive       Int     @default(1) @map("is_active")
+  configJson     String  @default("{}") @map("config_json")
+  createdAt      BigInt  @map("created_at")
+  updatedAt      BigInt  @map("updated_at")
+
+  binding        CapabilityBinding      @relation(fields: [bindingId], references: [id], onDelete: Cascade)
+  supersededBy   CapabilityProgram?     @relation("SupersededProgram", fields: [supersededById], references: [id], onDelete: SetNull)
+  supersededFrom CapabilityProgram[]    @relation("SupersededProgram")
+  metrics        ProgramVersionMetric[]
+
+  @@index([bindingId], map: "idx_cp_binding")
+  @@map("capability_program")
+}
+
+model SelectorStrategy {
+  id            String  @id
+  name          String
+  capabilityId  String  @map("capability_id")
+  providerId    String  @map("provider_id")
+  strategyType  String  @map("strategy_type")
+  selectorValue String  @map("selector_value")
+  priority      Int     @default(1)
+  isActive      Int     @default(1) @map("is_active")
+  hitCount      Int     @default(0) @map("hit_count")
+  missCount     Int     @default(0) @map("miss_count")
+  lastUsedAt    BigInt? @map("last_used_at")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
+
+  capability      CapabilityTaxonomy      @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+  provider        ProviderDefinition      @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  healthHistories SelectorHealthHistory[]
+
+  @@index([capabilityId, providerId], map: "idx_ss_cap")
+  @@index([providerId], map: "idx_ss_provider")
+  @@map("selector_strategy")
+}
+
+model Outcome {
+  id                 String  @id
+  capabilityId       String  @map("capability_id")
+  bindingId          String? @map("binding_id")
+  providerId         String  @map("provider_id")
+  programId          String? @map("program_id")
+  selectorStrategyId String? @map("selector_strategy_id")
+  ok                 Int     @default(0)
+  error              String?
+  durationMs         Int?    @map("duration_ms")
+  confidence         Float?
+  selectorUsed       String? @map("selector_used")
+  selectorHit        Int?    @map("selector_hit")
+  ts                 BigInt
+
+  capability             CapabilityTaxonomy      @relation(fields: [capabilityId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  // L12
+  failureClassifications FailureClassification[]
+
+  @@index([providerId, ts], map: "idx_o_provider")
+  @@index([capabilityId, ts], map: "idx_o_cap")
+  @@index([ok, ts], map: "idx_o_ok")
+  @@index([ts], map: "idx_o_ts")
+  @@map("outcome")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L4: State & Session
+// ═══════════════════════════════════════════════════════════════════
+
+model VivimSession {
+  id          String @id
+  state       String @default("idle")
+  contextJson String @default("{}") @map("context_json")
+  createdAt   BigInt @map("created_at")
+  updatedAt   BigInt @map("updated_at")
+
+  providerSessions ProviderSession[]
+  checkpoints      SessionCheckpoint[]
+
+  @@map("vivim_session")
+}
+
+model ProviderSession {
+  id             String @id
+  vivimSessionId String @map("vivim_session_id")
+  providerId     String @map("provider_id")
+  accountId      String @map("account_id")
+  state          String @default("idle")
+  contextJson    String @default("{}") @map("context_json")
+  createdAt      BigInt @map("created_at")
+  updatedAt      BigInt @map("updated_at")
+
+  vivimSession    VivimSession       @relation(fields: [vivimSessionId], references: [id], onDelete: Cascade)
+  provider        ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  account         ProviderAccount    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  profileSessions ProfileSession[]
+  conversations   Conversation[]
+
+  @@index([vivimSessionId], map: "idx_ps_session")
+  @@map("provider_session")
+}
+
+model ProfileSession {
+  id                String  @id
+  providerSessionId String  @map("provider_session_id")
+  profileDir        String  @map("profile_dir")
+  chromeSlaveId     String? @map("chrome_slave_id")
+  state             String  @default("stopped")
+  port              Int?
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+
+  providerSession ProviderSession @relation(fields: [providerSessionId], references: [id], onDelete: Cascade)
+
+  @@index([providerSessionId], map: "idx_prs_session")
+  @@map("profile_session")
+}
+
+model Conversation {
+  id                String  @id
+  providerSessionId String  @map("provider_session_id")
+  providerId        String  @map("provider_id")
+  title             String?
+  state             String  @default("active")
+  messageCount      Int     @default(0) @map("message_count")
+  lastMessageAt     BigInt? @map("last_message_at")
+  contextJson       String  @default("{}") @map("context_json")
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+  projectId         String? @map("project_id")
+  topicId           String? @map("topic_id")
+  source            String  @default("live")
+  externalId        String? @map("external_id")
+  importJobId       String? @map("import_job_id")
+
+  providerSession ProviderSession       @relation(fields: [providerSessionId], references: [id], onDelete: Cascade)
+  provider        ProviderDefinition    @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  messages        ConversationMessage[]
+  streamBlocks    StreamBlock[]
+
+  @@index([providerSessionId], map: "idx_conv_session")
+  @@index([providerId], map: "idx_conv_provider")
+  @@index([source])
+  @@index([externalId])
+  @@index([importJobId])
+  @@map("conversation")
+}
+
+model ConversationMessage {
+  id              String  @id
+  conversationId  String  @map("conversation_id")
+  role            String
+  content         String?
+  blocksJson      String  @default("[]") @map("blocks_json")
+  blockCount      Int     @default(0) @map("block_count")
+  parentMessageId String? @map("parent_message_id")
+  sequenceIndex   Int     @default(0) @map("sequence_index")
+  latencyMs       Int?    @map("latency_ms")
+  tokenCount      Int?    @map("token_count")
+  model           String?
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt? @map("updated_at")
+
+  conversation    Conversation          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  parent          ConversationMessage?  @relation("MessageParent", fields: [parentMessageId], references: [id], onDelete: SetNull)
+  children        ConversationMessage[] @relation("MessageParent")
+  streamBlocks    StreamBlock[]
+  attachments     MessageAttachment[]
+  contentUnits    ContentUnit[]
+  linksSource     MessageLink[]         @relation("LinkSource")
+  linksTarget     MessageLink[]         @relation("LinkTarget")
+  messageEntities MessageEntity[]
+
+  @@index([conversationId, sequenceIndex], map: "idx_cm_conv")
+  @@index([role], map: "idx_cm_role")
+  @@map("conversation_message")
+}
+
+model MessageAttachment {
+  id            String  @id
+  messageId     String  @map("message_id")
+  filename      String
+  mimeType      String  @map("mime_type")
+  sizeBytes     Int     @map("size_bytes")
+  storagePath   String  @map("storage_path")
+  thumbnailPath String? @map("thumbnail_path")
+  metadataJson  String  @default("{}") @map("metadata_json")
+  createdAt     BigInt  @map("created_at")
+
+  message ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId], map: "idx_ma_message")
+  @@map("message_attachment")
+}
+
+model StateTransition {
+  id           String  @id
+  entityType   String  @map("entity_type")
+  entityId     String  @map("entity_id")
+  fromState    String? @map("from_state")
+  toState      String  @map("to_state")
+  trigger      String
+  metadataJson String  @default("{}") @map("metadata_json")
+  ts           BigInt
+
+  @@index([entityType, entityId, ts], map: "idx_st_entity")
+  @@map("state_transition")
+}
+
+model SessionCheckpoint {
+  id             String @id
+  vivimSessionId String @map("vivim_session_id")
+  checkpointJson String @map("checkpoint_json")
+  createdAt      BigInt @map("created_at")
+
+  session VivimSession @relation(fields: [vivimSessionId], references: [id], onDelete: Cascade)
+
+  @@index([vivimSessionId, createdAt], map: "idx_sc_session")
+  @@map("session_checkpoint")
+}
+
+model StreamBlock {
+  id             String @id
+  conversationId String @map("conversation_id")
+  messageId      String @map("message_id")
+  blockIndex     Int    @map("block_index")
+  blockKind      String @map("block_kind")
+  blockData      String @map("block_data")
+  blockMeta      String @default("{}") @map("block_meta")
+  createdAt      BigInt @map("created_at")
+
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, messageId, blockIndex])
+  @@index([conversationId, messageId, blockIndex], map: "idx_sb_conv")
+  @@index([messageId], map: "idx_sb_message")
+  @@index([conversationId, blockKind], map: "idx_sb_kind")
+  @@map("stream_block")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Parser Execution Log — every parse() call is recorded for diagnostics,
+// confidence tracking, and repair triggers. Enables the feedback loop:
+// parse → log → analyze → repair → reparse.
+// ═══════════════════════════════════════════════════════════════════
+
+model ParserExecutionLog {
+  id             String  @id
+  providerId     String  @map("provider_id")
+  parserName     String  @map("parser_name")
+  parserVersion  Int     @map("parser_version")
+  conversationId String? @map("conversation_id")
+  messageId      String? @map("message_id")
+  confidence     Float
+  blockCount     Int     @map("block_count")
+  textBlocks     Int     @default(0) @map("text_blocks")
+  toolCallBlocks Int     @default(0) @map("tool_call_blocks")
+  fileBlocks     Int     @default(0) @map("file_blocks")
+  errorBlocks    Int     @default(0) @map("error_blocks")
+  durationMs     Int     @map("duration_ms")
+  rawSizeBytes   Int     @default(0) @map("raw_size_bytes")
+  wireFormat     String? @map("wire_format")
+  fallbackUsed   Int     @default(0) @map("fallback_used")
+  metadataJson   String  @default("{}") @map("metadata_json")
+  createdAt      BigInt  @map("created_at")
+
+  @@index([providerId, createdAt], map: "idx_pel_provider")
+  @@index([conversationId], map: "idx_pel_conversation")
+  @@index([confidence], map: "idx_pel_confidence")
+  @@map("parser_execution_log")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Universal Node Layer — every piece of data in the second brain is a Node.
+// Messages, emails, documents, contacts, tasks, events, media, social posts,
+// financial records, and any future type are stored here. parentId enables
+// forking; rawSource preserves the original import payload so any node can be
+// re-parsed (remux); schemaVersion + immutable ids enable local time travel.
+// SQLite has no native JSON/array, so structured fields are stored as JSON TEXT.
+// ═══════════════════════════════════════════════════════════════════
+
+model Node {
+  id             String  @id
+  type           String  @map("type")
+  parentId       String? @map("parent_id")
+  schemaVersion  Int     @default(1) @map("schema_version")
+  // Raw, unparsed import payload (for remux / re-parse). Null when synthesized.
+  rawSource      String? @map("raw_source")
+  // Typed node data, JSON-serialized per the registered NodeSchema.
+  dataJson       String  @default("{}") @map("data_json")
+  // Outgoing edges (graph), JSON array of {type,targetId,label,properties}.
+  edgesJson      String  @default("[]") @map("edges_json")
+  // Arbitrary key/value metadata (sync status, source ids, dedup keys, etc.).
+  metaJson       String  @default("{}") @map("meta_json")
+  // Free-text content for full-text search (populated from NodeSchema.indexContent).
+  searchText     String  @default("") @map("search_text")
+  // Origin conversation/message when this node was captured from a chat stream.
+  conversationId String? @map("conversation_id")
+  messageId      String? @map("message_id")
+  // Provenance: which parser/adapter produced this node.
+  sourceParser   String? @map("source_parser")
+  // ── Node-layer v2: ACU-proven fields (adopted from vivim-app-og) ──
+  // Content integrity / dedup hash (OG contentHash).
+  contentHash    String? @map("content_hash")
+  // Monotonic edit version (starts at 1).
+  version        Int     @default(1) @map("version")
+  // Lifecycle state (OG state).
+  state          String  @default("active") @map("state")
+  // Sensitivity tier (OG securityLevel).
+  securityLevel  Int?    @map("security_level")
+  // Fine-grained content classification (OG contentType).
+  contentType    String? @map("content_type")
+  // Provenance (OG authorDid / signature).
+  authorDid      String? @map("author_did")
+  signature      String? @map("signature")
+  // Access control list, JSON (OG sharing*).
+  aclJson        String  @default("{}") @map("acl_json")
+  // Curation quality scoring, JSON (OG quality*).
+  qualityJson    String  @default("{}") @map("quality_json")
+  // Temporal validity window (OG validFrom / validUntil).
+  validFrom      BigInt? @map("valid_from")
+  validUntil     BigInt? @map("valid_until")
+  // Predecessor version in the version chain (OG LCG parent).
+  parentVersion  Int?    @map("parent_version")
+  // ── ACU fields (Phase 0 — doc 00 §9) ──
+  // ACU type: conversation_root | claim | decision | code | preference | insight | fact
+  acuType        String? @map("acu_type")
+  // Lineage kind for derived ACUs: remix | fork | quote | extract
+  lineageKind    String? @map("lineage_kind")
+  // Extractor / parser version that produced this ACU (re-runnable lens).
+  extractorVersion String? @map("extractor_version")
+  parserVersion  String? @map("parser_version")
+  // Computed importance score (0.0–1.0) — high-value targeting heuristic.
+  valueScore     Float?  @map("value_score")
+  // Boolean flag: crossed the promotion threshold.
+  isHighValue    Int     @default(0) @map("is_high_value")
+  createdAt      BigInt  @map("created_at")
+  updatedAt      BigInt  @map("updated_at")
+
+  parent  Node?   @relation("NodeParent", fields: [parentId], references: [id], onDelete: SetNull)
+  children Node[] @relation("NodeParent")
+  outgoingEdges NodeEdge[] @relation("EdgeSource")
+  incomingEdges NodeEdge[] @relation("EdgeTarget")
+  versions NodeVersion[] @relation("NodeVersions")
+
+  @@index([type], map: "idx_node_type")
+  @@index([parentId], map: "idx_node_parent")
+  @@index([conversationId], map: "idx_node_conversation")
+  @@index([messageId], map: "idx_node_message")
+  @@index([createdAt], map: "idx_node_created")
+  @@index([searchText], map: "idx_node_search")
+  @@index([contentHash], map: "idx_node_content_hash")
+  @@index([state], map: "idx_node_state")
+  @@index([acuType], map: "idx_node_acu_type")
+  @@map("node")
+}
+
+// Version chain for a Node (mirrors OG temporal_log). Enables time-travel:
+// point-in-time reads (getNodeAtVersion) and full history (getNodeHistory).
+model NodeVersion {
+  id           String  @id
+  nodeId       String  @map("node_id")
+  version      Int     @map("version")
+  hash         String
+  contentRef   String  @map("content_ref")
+  op           String  // create | update | supersede
+  parentVersion Int?   @map("parent_version")
+  createdAt    BigInt  @map("created_at")
+
+  node Node @relation("NodeVersions", fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId, version], map: "uq_node_version")
+  @@index([nodeId], map: "idx_nodeversion_node")
+  @@map("node_version")
+}
+
+// Entity alias -> canonical resolution (mirrors OG EntityAlias). Enables
+// contacts/entities to be merged under a single canonical node id.
+model NodeAlias {
+  id          String  @id
+  aliasId     String  @map("alias_id")
+  canonicalId String  @map("canonical_id")
+  method      String
+  confidence  Float   @default(1.0)
+  createdAt   BigInt  @map("created_at")
+
+  @@unique([aliasId], map: "uq_node_alias")
+  @@index([canonicalId], map: "idx_node_alias_canonical")
+  @@map("node_alias")
+}
+
+// Materialized edge table for efficient graph traversal (denormalized from
+// edgesJson). One row per directed edge. Mirrors the in-memory Edge shape.
+model NodeEdge {
+  id         String  @id
+  sourceId   String  @map("source_id")
+  targetId   String  @map("target_id")
+  edgeType   String  @map("edge_type")
+  label      String? @map("label")
+  weight     Float?  @map("weight")
+  propertiesJson String @default("{}") @map("properties_json")
+  createdAt  BigInt  @map("created_at")
+
+  source Node @relation("EdgeSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target Node @relation("EdgeTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId, edgeType], map: "uq_edge")
+  @@index([sourceId], map: "idx_edge_source")
+  @@index([targetId], map: "idx_edge_target")
+  @@index([edgeType], map: "idx_edge_type")
+  @@map("node_edge")
+}
+
+
+
+model ProviderManifestVersion {
+  id            String  @id
+  providerId    String  @map("provider_id")
+  manifestFile  String  @map("manifest_file")
+  version       Int     @default(1)
+  hash          String
+  contentJson   String  @map("content_json")
+  changeSummary String? @map("change_summary")
+  actor         String  @default("system")
+  createdAt     BigInt  @map("created_at")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, manifestFile, version])
+  @@index([providerId, version], map: "idx_pmv_provider")
+  @@map("provider_manifest_version")
+}
+
+model RegistrationEvent {
+  id                String  @id
+  providerId        String  @map("provider_id")
+  manifestVersionId String? @map("manifest_version_id")
+  eventType         String  @map("event_type")
+  tableName         String  @map("table_name")
+  recordId          String? @map("record_id")
+  fieldName         String? @map("field_name")
+  fromValue         String? @map("from_value")
+  toValue           String? @map("to_value")
+  changeSummary     String? @map("change_summary")
+  actor             String  @default("system")
+  ts                BigInt
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, ts], map: "idx_re_provider")
+  @@index([eventType], map: "idx_re_type")
+  @@index([tableName], map: "idx_re_table")
+  @@map("registration_event")
+}
+
+model ManifestDrift {
+  id              String  @id
+  providerId      String  @map("provider_id")
+  driftType       String  @map("drift_type")
+  tableName       String? @map("table_name")
+  recordId        String? @map("record_id")
+  seedValue       String? @map("seed_value")
+  dbValue         String? @map("db_value")
+  resolved        Int     @default(0)
+  resolvedByActor String? @map("resolved_by_actor")
+  resolvedAt      BigInt? @map("resolved_at")
+  detectedAt      BigInt  @map("detected_at")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, resolved, detectedAt], map: "idx_md_provider")
+  @@map("manifest_drift")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L6: Versioning Lifecycle
+// ═══════════════════════════════════════════════════════════════════
+
+model CapabilityTaxonomyVersion {
+  id                String  @id
+  capabilityId      String  @map("capability_id")
+  version           Int
+  snapshotJson      String  @map("snapshot_json")
+  changeSummary     String? @map("change_summary")
+  changedFieldsJson String  @default("[]") @map("changed_fields_json")
+  actor             String  @default("system")
+  createdAt         BigInt  @map("created_at")
+
+  capability CapabilityTaxonomy @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([capabilityId, version])
+  @@index([capabilityId, version], map: "idx_ctv_cap")
+  @@index([createdAt], map: "idx_ctv_created")
+  @@map("capability_taxonomy_version")
+}
+
+model BindingStatusLog {
+  id                      String  @id
+  bindingId               String  @map("binding_id")
+  fromStatus              String? @map("from_status")
+  toStatus                String  @map("to_status")
+  fromProgramId           String? @map("from_program_id")
+  toProgramId             String? @map("to_program_id")
+  trigger                 String
+  confidenceAtTransition  Float?  @map("confidence_at_transition")
+  successRateAtTransition Float?  @map("success_rate_at_transition")
+  reason                  String?
+  actor                   String  @default("system")
+  metadataJson            String  @default("{}") @map("metadata_json")
+  ts                      BigInt
+
+  binding CapabilityBinding @relation(fields: [bindingId], references: [id], onDelete: Cascade)
+
+  @@index([bindingId, ts], map: "idx_bsl_binding")
+  @@index([trigger], map: "idx_bsl_trigger")
+  @@index([ts], map: "idx_bsl_ts")
+  @@map("binding_status_log")
+}
+
+model ProgramVersionMetric {
+  id               String  @id
+  bindingId        String  @map("binding_id")
+  programId        String  @map("program_id")
+  programVersion   Int     @map("program_version")
+  totalExecutions  Int     @default(0) @map("total_executions")
+  successCount     Int     @default(0) @map("success_count")
+  failCount        Int     @default(0) @map("fail_count")
+  avgLatencyMs     Float   @default(0) @map("avg_latency_ms")
+  p50LatencyMs     Float   @default(0) @map("p50_latency_ms")
+  p95LatencyMs     Float   @default(0) @map("p95_latency_ms")
+  p99LatencyMs     Float   @default(0) @map("p99_latency_ms")
+  lastExecutedAt   BigInt? @map("last_executed_at")
+  firstExecutedAt  BigInt? @map("first_executed_at")
+  window1hTotal    Int     @default(0) @map("window_1h_total")
+  window1hSuccess  Int     @default(0) @map("window_1h_success")
+  window24hTotal   Int     @default(0) @map("window_24h_total")
+  window24hSuccess Int     @default(0) @map("window_24h_success")
+  window7dTotal    Int     @default(0) @map("window_7d_total")
+  window7dSuccess  Int     @default(0) @map("window_7d_success")
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
+
+  binding CapabilityBinding @relation(fields: [bindingId], references: [id], onDelete: Cascade)
+  program CapabilityProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([bindingId, programId, programVersion])
+  @@index([bindingId], map: "idx_pvm_binding")
+  @@index([programId], map: "idx_pvm_program")
+  @@index([updatedAt], map: "idx_pvm_updated")
+  @@map("program_version_metric")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L7: Telemetry Lifecycle
+// ═══════════════════════════════════════════════════════════════════
+
+model ProviderHealthHistory {
+  id                    String  @id
+  providerId            String  @map("provider_id")
+  runtimeState          String  @map("runtime_state")
+  activeSessions        Int     @default(0) @map("active_sessions")
+  totalConversations    Int     @default(0) @map("total_conversations")
+  totalMessages         Int     @default(0) @map("total_messages")
+  capabilityExecutions  Int     @default(0) @map("capability_executions")
+  capabilitySuccesses   Int     @default(0) @map("capability_successes")
+  capabilityFailures    Int     @default(0) @map("capability_failures")
+  errorCount            Int     @default(0) @map("error_count")
+  parserConfidenceAvg   Float?  @map("parser_confidence_avg")
+  selectorHitRateAvg    Float?  @map("selector_hit_rate_avg")
+  avgResponseLatencyMs  Float?  @map("avg_response_latency_ms")
+  p50ResponseLatencyMs  Float?  @map("p50_response_latency_ms")
+  p95ResponseLatencyMs  Float?  @map("p95_response_latency_ms")
+  p99ResponseLatencyMs  Float?  @map("p99_response_latency_ms")
+  circuitBreakerState   String? @map("circuit_breaker_state")
+  fleetRestarts         Int     @default(0) @map("fleet_restarts")
+  driftEventsUnresolved Int     @default(0) @map("drift_events_unresolved")
+  windowStartTs         BigInt  @map("window_start_ts")
+  windowEndTs           BigInt  @map("window_end_ts")
+  snapshotTs            BigInt  @map("snapshot_ts")
+  schemaVersion         Int     @default(1) @map("schema_version")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, snapshotTs], map: "idx_phh_provider")
+  @@index([windowStartTs, windowEndTs], map: "idx_phh_window")
+  @@map("provider_health_history")
+}
+
+model CapabilityTelemetry {
+  id                    String  @id
+  capabilityId          String  @map("capability_id")
+  bindingId             String? @map("binding_id")
+  providerId            String  @map("provider_id")
+  programId             String? @map("program_id")
+  totalExecutions       Int     @default(0) @map("total_executions")
+  successCount          Int     @default(0) @map("success_count")
+  failCount             Int     @default(0) @map("fail_count")
+  avgLatencyMs          Float   @default(0) @map("avg_latency_ms")
+  p50LatencyMs          Float   @default(0) @map("p50_latency_ms")
+  p95LatencyMs          Float   @default(0) @map("p95_latency_ms")
+  lastExecutedAt        BigInt? @map("last_executed_at")
+  lastError             String? @map("last_error")
+  lastErrorTs           BigInt? @map("last_error_ts")
+  consecutiveFailures   Int     @default(0) @map("consecutive_failures")
+  window1hExecutions    Int     @default(0) @map("window_1h_executions")
+  window1hSuccessCount  Int     @default(0) @map("window_1h_success_count")
+  window24hExecutions   Int     @default(0) @map("window_24h_executions")
+  window24hSuccessCount Int     @default(0) @map("window_24h_success_count")
+  window7dExecutions    Int     @default(0) @map("window_7d_executions")
+  window7dSuccessCount  Int     @default(0) @map("window_7d_success_count")
+  createdAt             BigInt  @map("created_at")
+  updatedAt             BigInt  @map("updated_at")
+
+  capability CapabilityTaxonomy @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+  provider   ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([capabilityId, bindingId, programId])
+  @@index([providerId], map: "idx_captel_provider")
+  @@index([capabilityId], map: "idx_captel_capability")
+  @@index([updatedAt], map: "idx_captel_updated")
+  @@map("capability_telemetry")
+}
+
+model SelectorHealthHistory {
+  id                 String @id
+  selectorStrategyId String @map("selector_strategy_id")
+  bindingId          String @map("binding_id")
+  hitCount           Int    @default(0) @map("hit_count")
+  missCount          Int    @default(0) @map("miss_count")
+  hitRate            Float  @default(0) @map("hit_rate")
+  avgDurationMs      Float  @default(0) @map("avg_duration_ms")
+  p95DurationMs      Float  @default(0) @map("p95_duration_ms")
+  windowStartTs      BigInt @map("window_start_ts")
+  windowEndTs        BigInt @map("window_end_ts")
+  snapshotTs         BigInt @map("snapshot_ts")
+  schemaVersion      Int    @default(1) @map("schema_version")
+
+  selector SelectorStrategy  @relation(fields: [selectorStrategyId], references: [id], onDelete: Cascade)
+  binding  CapabilityBinding @relation(fields: [bindingId], references: [id], onDelete: Cascade)
+
+  @@index([selectorStrategyId, snapshotTs], map: "idx_shh_selector")
+  @@index([bindingId, snapshotTs], map: "idx_shh_binding")
+  @@index([windowStartTs, windowEndTs], map: "idx_shh_window")
+  @@map("selector_health_history")
+}
+
+model TelemetrySummaryDaily {
+  id                        String @id
+  providerId                String @map("provider_id")
+  dayTs                     String @map("day_ts")
+  totalConversations        Int    @default(0) @map("total_conversations")
+  totalConversationsCreated Int    @default(0) @map("total_conversations_created")
+  totalMessagesSent         Int    @default(0) @map("total_messages_sent")
+  totalCapabilityExecutions Int    @default(0) @map("total_capability_executions")
+  totalCapabilitySuccesses  Int    @default(0) @map("total_capability_successes")
+  totalCapabilityFailures   Int    @default(0) @map("total_capability_failures")
+  totalErrors               Int    @default(0) @map("total_errors")
+  avgResponseLatencyMs      Float  @default(0) @map("avg_response_latency_ms")
+  p95ResponseLatencyMs      Float  @default(0) @map("p95_response_latency_ms")
+  peakConcurrentSessions    Int    @default(0) @map("peak_concurrent_sessions")
+  peakConcurrentSlaves      Int    @default(0) @map("peak_concurrent_slaves")
+  parserHealthEvents        Int    @default(0) @map("parser_health_events")
+  circuitBreakerOpens       Int    @default(0) @map("circuit_breaker_opens")
+  circuitBreakerResets      Int    @default(0) @map("circuit_breaker_resets")
+  driftEvents               Int    @default(0) @map("drift_events")
+  driftResolved             Int    @default(0) @map("drift_resolved")
+  fleetRestarts             Int    @default(0) @map("fleet_restarts")
+  manifestChanges           Int    @default(0) @map("manifest_changes")
+  schemaVersion             Int    @default(1) @map("schema_version")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, dayTs])
+  @@index([providerId, dayTs], map: "idx_tsd_provider")
+  @@index([dayTs], map: "idx_tsd_day")
+  @@map("telemetry_summary_daily")
+}
+
+model ManifestChangeLog {
+  id                 String  @id
+  providerId         String  @map("provider_id")
+  changeType         String  @map("change_type")
+  filePath           String? @map("file_path")
+  oldHash            String? @map("old_hash")
+  newHash            String? @map("new_hash")
+  tablesAffectedJson String  @default("[]") @map("tables_affected_json")
+  rowsAdded          Int     @default(0) @map("rows_added")
+  rowsModified       Int     @default(0) @map("rows_modified")
+  rowsRemoved        Int     @default(0) @map("rows_removed")
+  actor              String  @default("system")
+  manifestVersionId  String? @map("manifest_version_id")
+  ts                 BigInt
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, ts], map: "idx_mcl_provider")
+  @@index([changeType], map: "idx_mcl_type")
+  @@index([ts], map: "idx_mcl_ts")
+  @@map("manifest_change_log")
+}
+
+model TelemetryCycleLog {
+  id           String  @id
+  scheduleName String  @map("schedule_name")
+  rowsWritten  Int     @default(0) @map("rows_written")
+  durationMs   Int     @default(0) @map("duration_ms")
+  error        String?
+  ts           BigInt
+
+  @@index([scheduleName, ts], map: "idx_tcl_schedule")
+  @@map("telemetry_cycle_log")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L8: Config
+// ═══════════════════════════════════════════════════════════════════
+
+model ConfigEntry {
+  id            String  @id
+  engineId      String  @map("engine_id")
+  scopeType     String  @map("scope_type")
+  scopeId       String? @map("scope_id")
+  configJson    String  @map("config_json")
+  schemaVersion Int     @default(1) @map("schema_version")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
+
+  audits ConfigAudit[]
+
+  @@unique([engineId, scopeType, scopeId])
+  @@index([engineId], map: "idx_ce_engine")
+  @@map("config_entry")
+}
+
+model ConfigAudit {
+  id       String  @id
+  engineId String  @map("engine_id")
+  entryId  String  @map("entry_id")
+  action   String
+  fromJson String? @map("from_json")
+  toJson   String? @map("to_json")
+  actor    String  @default("system")
+  ts       BigInt
+
+  entry ConfigEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([engineId, ts], map: "idx_ca_engine")
+  @@index([entryId, ts], map: "idx_ca_entry")
+  @@map("config_audit")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L9: Harness
+// ═══════════════════════════════════════════════════════════════════
+
+model HarnessCheckpoint {
+  id                String  @id
+  slaveId           String  @map("slave_id")
+  conversationId    String? @map("conversation_id")
+  activeDagJson     String? @map("active_dag_json")
+  dagPosition       Int?    @map("dag_position")
+  loadedModulesJson String  @default("[]") @map("loaded_modules_json")
+  pageUrl           String? @map("page_url")
+  pageTitle         String? @map("page_title")
+  authState         String? @map("auth_state")
+  createdAt         BigInt  @map("created_at")
+
+  @@index([slaveId, createdAt], map: "idx_hc_slave")
+  @@index([conversationId], map: "idx_hc_conv")
+  @@map("harness_checkpoint")
+}
+
+// ── Harness Command Registry (017-harness-command-registry) ──
+model HarnessCommand {
+  id              String @id
+  commandId       String @map("command_id")
+  version         String
+  kind            String
+  paramsSchemaJson String @map("params_schema_json")
+  adaptorRef      String @map("adaptor_ref")
+  description     String
+  createdAt       BigInt @map("created_at")
+  updatedAt       BigInt @map("updated_at")
+
+  @@unique([commandId, version], map: "uq_harness_cmd_id_ver")
+  @@index([commandId], map: "idx_harness_cmd_id")
+  @@map("harness_command")
+}
+
+model RepairSession {
+  id              String  @id
+  conversationId  String? @map("conversation_id")
+  commandId       String? @map("command_id")
+  originalContent String  @map("original_content")
+  repairedContent String? @map("repaired_content")
+  strategy        String
+  success         Int
+  errorsJson      String  @map("errors_json")
+  repairsJson     String  @map("repairs_json")
+  createdAt       BigInt  @map("created_at")
+
+  @@index([conversationId], map: "idx_repair_conv")
+  @@index([commandId], map: "idx_repair_cmd")
+  @@map("repair_session")
+}
+
+model CapabilityMacro {
+  id          String  @id
+  name        String
+  description String?
+  providerId  String? @map("provider_id")
+  dagJson     String  @map("dag_json")
+  isActive    Int     @default(1) @map("is_active")
+  createdAt   BigInt  @map("created_at")
+  updatedAt   BigInt  @map("updated_at")
+
+  provider ProviderDefinition? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId], map: "idx_cm_provider")
+  @@map("capability_macro")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L10: MCP Server Config
+// ═══════════════════════════════════════════════════════════════════
+
+model McpServerConfig {
+  id        String @id
+  name      String @unique
+  enabled   Int    @default(0)
+  port      Int    @default(0)
+  toolsJson String @default("[]") @map("tools_json")
+  createdAt BigInt @map("created_at")
+  updatedAt BigInt @map("updated_at")
+
+  @@map("mcp_server_config")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L11: Operations
+// ═══════════════════════════════════════════════════════════════════
+
+model HealthTick {
+  id         String  @id
+  providerId String  @map("provider_id")
+  slaveId    String? @map("slave_id")
+  status     String
+  responseMs Int?    @map("response_ms")
+  error      String?
+  ts         BigInt
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, ts], map: "idx_ht_provider")
+  @@map("health_tick")
+}
+
+model CircuitBreakerState {
+  id            String  @id
+  slaveId       String  @map("slave_id")
+  state         String
+  failCount     Int     @default(0) @map("fail_count")
+  lastFailAt    BigInt? @map("last_fail_at")
+  lastSuccessAt BigInt? @map("last_success_at")
+  openedAt      BigInt? @map("opened_at")
+  halfOpenedAt  BigInt? @map("half_opened_at")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
+
+  @@unique([slaveId])
+  @@map("circuit_breaker_state")
+}
+
+model DriftEvent {
+  id            String  @id
+  providerId    String  @map("provider_id")
+  capabilitySlug  String  @map("capability_slug") // Per-provider capability slug (not taxonomy id)
+  selector      String? @map("selector") // The drifted selector (optional)
+  detectedAt   BigInt  @map("detected_at")
+  resolvedAt   BigInt? @map("resolved_at")
+  status        String   @default("open") // open | resolved | accepted
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, detectedAt], map: "idx_de_provider")
+  @@index([status], map: "idx_de_status")
+  @@map("drift_event")
+}
+
+model FleetEvent {
+  id            String  @id
+  slaveId       String  @map("slave_id")
+  providerId    String? @map("provider_id")
+  eventType     String  @map("event_type")
+  eventDataJson String  @default("{}") @map("event_data_json")
+  ts            BigInt
+
+  provider ProviderDefinition? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([slaveId, ts], map: "idx_fe_slave")
+  @@index([providerId, ts], map: "idx_fe_provider")
+  @@map("fleet_event")
+}
+
+model ProviderHealth {
+  id                  String  @id
+  providerId          String  @map("provider_id")
+  overallStatus       String  @default("unknown") @map("overall_status")
+  overallScore        Float   @default(0) @map("overall_score")
+  signalsJson         String  @default("{}") @map("signals_json")
+  parserConfidenceAvg Float?  @map("parser_confidence_avg")
+  selectorHitRateAvg  Float?  @map("selector_hit_rate_avg")
+  fleetRunning        Int     @default(0) @map("fleet_running")
+  fleetStopped        Int     @default(0) @map("fleet_stopped")
+  fleetError          Int     @default(0) @map("fleet_error")
+  circuitOpen         Int     @default(0) @map("circuit_open")
+  driftRecent         Int     @default(0) @map("drift_recent")
+  driftUnresolved     Int     @default(0) @map("drift_unresolved")
+  lastCheckAt         BigInt? @map("last_check_at")
+  createdAt           BigInt  @map("created_at")
+  updatedAt           BigInt  @map("updated_at")
+
+  provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId])
+  @@map("provider_health")
+}
+
+model AutomationSchedule {
+  id               String  @id
+  name             String
+  scheduleType     String  @map("schedule_type")
+  scheduleValue    String  @map("schedule_value")
+  action           String
+  actionConfigJson String  @default("{}") @map("action_config_json")
+  isActive         Int     @default(1) @map("is_active")
+  lastRunAt        BigInt? @map("last_run_at")
+  nextRunAt        BigInt? @map("next_run_at")
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
+
+  runs AutomationRun[]
+
+  @@map("automation_schedule")
+}
+
+model AutomationRun {
+  id          String  @id
+  scheduleId  String  @map("schedule_id")
+  status      String
+  resultJson  String? @map("result_json")
+  error       String?
+  startedAt   BigInt  @map("started_at")
+  completedAt BigInt? @map("completed_at")
+
+  schedule AutomationSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId, startedAt], map: "idx_ar_schedule")
+  @@map("automation_run")
+}
+
+model AlertCondition {
+  id         String  @id
+  name       String
+  providerId String? @map("provider_id")
+  metric     String
+  operator   String
+  threshold  Float
+  windowS    Int     @default(300) @map("window_s")
+  cooldownS  Int     @default(600) @map("cooldown_s")
+  isActive   Int     @default(1) @map("is_active")
+  createdAt  BigInt  @map("created_at")
+  updatedAt  BigInt  @map("updated_at")
+
+  provider ProviderDefinition? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  events   AlertEvent[]
+
+  @@map("alert_condition")
+}
+
+model AlertEvent {
+  id             String  @id
+  conditionId    String  @map("condition_id")
+  providerId     String? @map("provider_id")
+  metricValue    Float?  @map("metric_value")
+  threshold      Float?
+  firedAt        BigInt  @map("fired_at")
+  acknowledged   Int     @default(0)
+  acknowledgedAt BigInt? @map("acknowledged_at")
+  acknowledgedBy String? @map("acknowledged_by")
+
+  condition AlertCondition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  @@index([conditionId, firedAt], map: "idx_ae_condition")
+  @@map("alert_event")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L12: Transfer & Learning
+// ═══════════════════════════════════════════════════════════════════
+
+model RouteSpec {
+  id           String @id
+  name         String
+  providerId   String @map("provider_id")
+  capabilityId String @map("capability_id")
+  isActive     Int    @default(1) @map("is_active")
+  configJson   String @default("{}") @map("config_json")
+  createdAt    BigInt @map("created_at")
+  updatedAt    BigInt @map("updated_at")
+
+  provider   ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  capability CapabilityTaxonomy @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+  requests   RouteRequest[]
+  targets    RouteTarget[]
+
+  @@map("route_spec")
+}
+
+model RouteRequest {
+  id             String  @id
+  routeSpecId    String  @map("route_spec_id")
+  conversationId String? @map("conversation_id")
+  status         String  @default("pending")
+  resultJson     String? @map("result_json")
+  ts             BigInt
+
+  spec   RouteSpec    @relation(fields: [routeSpecId], references: [id], onDelete: Cascade)
+  events RouteEvent[]
+
+  @@map("route_request")
+}
+
+model RouteTarget {
+  id          String  @id
+  routeSpecId String  @map("route_spec_id")
+  providerId  String  @map("provider_id")
+  accountId   String? @map("account_id")
+  priority    Int     @default(1)
+  isActive    Int     @default(1) @map("is_active")
+  createdAt   BigInt  @map("created_at")
+
+  spec RouteSpec @relation(fields: [routeSpecId], references: [id], onDelete: Cascade)
+
+  @@map("route_target")
+}
+
+model RouteEvent {
+  id             String @id
+  routeRequestId String @map("route_request_id")
+  eventType      String @map("event_type")
+  eventDataJson  String @default("{}") @map("event_data_json")
+  ts             BigInt
+
+  request RouteRequest @relation(fields: [routeRequestId], references: [id], onDelete: Cascade)
+
+  @@map("route_event")
+}
+
+model TransferPattern {
+  id                String  @id
+  fromProviderId    String  @map("from_provider_id")
+  toProviderId      String  @map("to_provider_id")
+  capabilityId      String  @map("capability_id")
+  confidence        Float   @default(0.0)
+  lastTransferredAt BigInt? @map("last_transferred_at")
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+
+  fromProvider ProviderDefinition  @relation("FromProvider", fields: [fromProviderId], references: [id], onDelete: Cascade)
+  toProvider   ProviderDefinition  @relation("ToProvider", fields: [toProviderId], references: [id], onDelete: Cascade)
+  capability   CapabilityTaxonomy  @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+  candidates   TransferCandidate[]
+
+  @@map("transfer_pattern")
+}
+
+model TransferCandidate {
+  id                String @id
+  transferPatternId String @map("transfer_pattern_id")
+  status            String @default("pending")
+  metadataJson      String @default("{}") @map("metadata_json")
+  createdAt         BigInt @map("created_at")
+
+  pattern  TransferPattern   @relation(fields: [transferPatternId], references: [id], onDelete: Cascade)
+  attempts TransferAttempt[]
+
+  @@map("transfer_candidate")
+}
+
+model TransferAttempt {
+  id                  String  @id
+  transferCandidateId String  @map("transfer_candidate_id")
+  ok                  Int     @default(0)
+  resultJson          String? @map("result_json")
+  error               String?
+  durationMs          Int?    @map("duration_ms")
+  ts                  BigInt
+
+  candidate TransferCandidate @relation(fields: [transferCandidateId], references: [id], onDelete: Cascade)
+
+  @@map("transfer_attempt")
+}
+
+model LearningEvent {
+  id           String @id
+  providerId   String @map("provider_id")
+  capabilityId String @map("capability_id")
+  eventType    String @map("event_type")
+  dataJson     String @default("{}") @map("data_json")
+  ts           BigInt
+
+  provider   ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  capability CapabilityTaxonomy @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+
+  @@map("learning_event")
+}
+
+model Rule {
+  id            String @id
+  name          String
+  ruleType      String @map("rule_type")
+  conditionJson String @default("{}") @map("condition_json")
+  actionJson    String @default("{}") @map("action_json")
+  isActive      Int    @default(1) @map("is_active")
+  confidence    Float  @default(0.0)
+  createdAt     BigInt @map("created_at")
+  updatedAt     BigInt @map("updated_at")
+
+  @@map("rule")
+}
+
+model BindingEvent {
+  id        String @id
+  bindingId String @map("binding_id")
+  eventType String @map("event_type")
+  dataJson  String @default("{}") @map("data_json")
+  ts        BigInt
+
+  binding CapabilityBinding @relation(fields: [bindingId], references: [id], onDelete: Cascade)
+
+  @@map("binding_event")
+}
+
+model FailureClassification {
+  id              String  @id
+  outcomeId       String  @map("outcome_id")
+  failureType     String  @map("failure_type")
+  isRecoverable   Int     @default(0) @map("is_recoverable")
+  suggestedAction String? @map("suggested_action")
+  ts              BigInt
+
+  outcome Outcome @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
+
+  @@map("failure_classification")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L13: Testing
+// ═══════════════════════════════════════════════════════════════════
+
+model TestRun {
+  id           String  @id
+  capabilityId String? @map("capability_id")
+  bindingId    String? @map("binding_id")
+  providerId   String? @map("provider_id")
+  testType     String  @map("test_type")
+  status       String  @default("running")
+  resultJson   String? @map("result_json")
+  startedAt    BigInt  @map("started_at")
+  completedAt  BigInt? @map("completed_at")
+
+  @@map("test_run")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L14: SOTA — Shape-Agnostic Registration (Phase 8)
+// ═══════════════════════════════════════════════════════════════════
+
+model CapabilityShape {
+  id                     String @id
+  name                   String
+  expectedCapsJson       String @map("expected_caps_json")
+  discoveryHintsJson     String @map("discovery_hints_json")
+  projectionRulesJson    String @map("projection_rules_json")
+  parserExpectationsJson String @map("parser_expectations_json")
+  isBuiltIn              Int    @default(0) @map("is_built_in")
+  createdAt              BigInt @map("created_at")
+  updatedAt              BigInt @map("updated_at")
+
+  @@map("capability_shape")
+}
+
+model CapabilityShapeBinding {
+  id           String @id
+  shapeId      String @map("shape_id")
+  providerId   String @map("provider_id")
+  capabilityId String @map("capability_id")
+  mappingJson  String @map("mapping_json")
+  isActive     Int    @default(1) @map("is_active")
+  createdAt    BigInt @map("created_at")
+
+  @@map("capability_shape_binding")
+}
+
+model ProviderArchetype {
+  id           String  @id
+  shapeId      String  @map("shape_id")
+  name         String
+  description  String?
+  manifestJson String  @map("manifest_json")
+  isDefault    Int     @default(0) @map("is_default")
+  createdAt    BigInt  @map("created_at")
+  updatedAt    BigInt  @map("updated_at")
+
+  @@map("provider_archetype")
+}
+
+model ProviderShapeBinding {
+  id          String  @id
+  providerId  String  @map("provider_id")
+  archetypeId String  @map("archetype_id")
+  shapeId     String  @map("shape_id")
+  configJson  String? @map("config_json")
+  isActive    Int     @default(1) @map("is_active")
+  createdAt   BigInt  @map("created_at")
+
+  @@map("provider_shape_binding")
+}
+
+model DiscoverySession {
+  id                String  @id
+  url               String
+  status            String  @default("started")
+  shapeId           String? @map("shape_id")
+  confidence        Float   @default(0)
+  capabilitiesJson  String  @map("capabilities_json")
+  interactiveJson   String  @map("interactive_json")
+  parserFormat      String? @map("parser_format")
+  manifestDraftJson String? @map("manifest_draft_json")
+  error             String?
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+
+  @@map("discovery_session")
+}
+
+model DiscoveryResult {
+  id           String  @id
+  sessionId    String  @map("session_id")
+  providerId   String? @map("provider_id")
+  approvedBy   String? @map("approved_by")
+  manifestJson String? @map("manifest_json")
+  status       String  @default("pending")
+  createdAt    BigInt  @map("created_at")
+
+  @@map("discovery_result")
+}
+
+model MirrorState {
+  id              String  @id
+  conversationId  String  @unique @map("conversation_id")
+  chromeStateJson String? @map("chrome_state_json")
+  uiStateJson     String? @map("ui_state_json")
+  pendingOpsJson  String? @map("pending_ops_json")
+  lastSyncAt      BigInt  @map("last_sync_at")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@map("mirror_state")
+}
+
+model OptimisticUpdate {
+  id                String  @id
+  conversationId    String  @map("conversation_id")
+  action            String
+  expectedStateJson String  @map("expected_state_json")
+  actualStateJson   String? @map("actual_state_json")
+  confirmed         Int     @default(0)
+  createdAt         BigInt  @map("created_at")
+  resolvedAt        BigInt? @map("resolved_at")
+
+  @@map("optimistic_update")
+}
+
+model LatencyMeasurement {
+  id             String @id
+  conversationId String @map("conversation_id")
+  stage          String
+  durationMs     Int    @map("duration_ms")
+  timestamp      Int
+
+  @@map("latency_measurement")
+}
+
+model MirrorSnapshot {
+  id             String @id
+  conversationId String @map("conversation_id")
+  trigger        String
+  stateJson      String @map("state_json")
+  timestamp      Int
+
+  @@map("mirror_snapshot")
+}
+
+model ObservationEvent {
+  id             String @id
+  conversationId String @map("conversation_id")
+  slaveId        String @map("slave_id")
+  eventType      String @map("event_type")
+  dataJson       String @map("data_json")
+  timestamp      Int
+
+  @@map("observation_event")
+}
+
+// ── Phase 9: SOTA Workflow ─────────────────────────────────────────────
+
+model WorkflowDefinition {
+  id            String  @id
+  name          String
+  description   String?
+  nodesJson     String  @map("nodes_json")
+  edgesJson     String  @map("edges_json")
+  variablesJson String? @map("variables_json")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
+
+  @@map("workflow_definition")
+}
+
+model WorkflowNode {
+  id         String @id
+  workflowId String @map("workflow_id")
+  nodeId     String @map("node_id")
+  type       String
+  category   String
+  configJson String @map("config_json")
+  positionX  Int?   @map("position_x")
+  positionY  Int?   @map("position_y")
+
+  @@map("workflow_node")
+}
+
+model WorkflowEdge {
+  id         String  @id
+  workflowId String  @map("workflow_id")
+  edgeId     String  @map("edge_id")
+  source     String
+  target     String
+  condition  String?
+
+  @@map("workflow_edge")
+}
+
+model WorkflowExecution {
+  id          String  @id
+  workflowId  String  @map("workflow_id")
+  status      String
+  inputJson   String? @map("input_json")
+  outputJson  String? @map("output_json")
+  startedAt   BigInt  @map("started_at")
+  completedAt BigInt? @map("completed_at")
+
+  @@map("workflow_execution")
+}
+
+model WorkflowNodeExecution {
+  id          String  @id
+  executionId String  @map("execution_id")
+  nodeId      String  @map("node_id")
+  status      String
+  inputJson   String? @map("input_json")
+  outputJson  String? @map("output_json")
+  error       String?
+  startedAt   BigInt? @map("started_at")
+  completedAt BigInt? @map("completed_at")
+
+  @@map("workflow_node_execution")
+}
+
+model WorkflowWebhook {
+  id         String  @id
+  workflowId String  @map("workflow_id")
+  path       String
+  method     String
+  active     Boolean @default(true)
+  secret     String?
+  createdAt  BigInt  @map("created_at")
+
+  @@map("workflow_webhook")
+}
+
+model WorkflowCredential {
+  id             String @id
+  workflowId     String @map("workflow_id")
+  name           String
+  type           String
+  valueEncrypted String @map("value_encrypted")
+  createdAt      BigInt @map("created_at")
+
+  @@map("workflow_credential")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L10: MCP Integration
+// ═══════════════════════════════════════════════════════════════════
+
+model McpTool {
+  id              String  @id
+  serverId        String  @map("server_id")
+  name            String
+  description     String?
+  inputSchemaJson String  @default("{}") @map("input_schema_json")
+  createdAt       BigInt  @map("created_at")
+
+  @@map("mcp_tool")
+}
+
+model McpToolCall {
+  id         String  @id
+  serverId   String  @map("server_id")
+  toolName   String  @map("tool_name")
+  inputJson  String  @map("input_json")
+  outputJson String? @map("output_json")
+  success    Boolean
+  durationMs Int     @map("duration_ms")
+  createdAt  BigInt  @map("created_at")
+
+  @@map("mcp_tool_call")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L12: Memory
+// ═══════════════════════════════════════════════════════════════════
+
+model EpisodicMemory {
+  id           String  @id
+  providerId   String  @map("provider_id")
+  capabilityId String? @map("capability_id")
+  slaveId      String? @map("slave_id")
+  action       String
+  inputJson    String  @map("input_json")
+  outputJson   String  @map("output_json")
+  success      Boolean
+  durationMs   Int     @map("duration_ms")
+  tagsJson     String  @default("[]") @map("tags_json")
+  timestamp    Int
+  createdAt    BigInt  @map("created_at")
+
+  @@map("episodic_memory")
+}
+
+model SemanticMemory {
+  id         String  @id
+  subject    String
+  predicate  String
+  objectJson String  @map("object_json")
+    confidence Float   @default(1.0)
+    source     String
+    timestamp  BigInt
+    expiresAt  BigInt? @map("expires_at")
+    createdAt  BigInt  @map("created_at")
+
+  @@map("semantic_memory")
+}
+
+model ProceduralRule {
+  id            String @id
+  name          String
+  condition     String
+  action        String
+  confidence    Float  @default(0.5)
+  successCount  Int    @default(0) @map("success_count")
+  failureCount  Int    @default(0) @map("failure_count")
+  lastTriggered Int?   @map("last_triggered")
+  createdAt     BigInt @map("created_at")
+  updatedAt     BigInt @map("updated_at")
+
+  @@map("procedural_rule")
+}
+
+model AgentDecisionLog {
+  id           String  @id
+  agentId      String  @map("agent_id")
+  decisionType String  @map("decision_type")
+  inputJson    String  @map("input_json")
+  outputJson   String  @map("output_json")
+  confidence   Float
+  reasoning    String?
+  timestamp    Int
+  createdAt    BigInt  @map("created_at")
+
+  @@map("agent_decision_log")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L15: Agent Loop
+// ═══════════════════════════════════════════════════════════════════
+
+model AgentLoopRun {
+  id          String  @id
+  agentId     String  @map("agent_id")
+  goal        String
+  status      String
+  inputJson   String? @map("input_json")
+  outputJson  String? @map("output_json")
+  startedAt   BigInt  @map("started_at")
+  completedAt BigInt? @map("completed_at")
+
+  @@map("agent_loop_run")
+}
+
+model AgentStep {
+  id         String  @id
+  runId      String  @map("run_id")
+  stepIndex  Int     @map("step_index")
+  actionType String  @map("action_type")
+  actionJson String  @map("action_json")
+  resultJson String? @map("result_json")
+  success    Boolean
+  durationMs Int     @map("duration_ms")
+  createdAt  BigInt  @map("created_at")
+
+  @@map("agent_step")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L16: Sovereign Intelligence (Phase 15)
+// ═══════════════════════════════════════════════════════════════════
+
+model Entity {
+  id              String          @id
+  name            String
+  type            String          @map("entity_type")
+  description     String?
+  confidence      Float           @default(0.5)
+  mentionCount    Int             @default(0) @map("mention_count")
+  firstSeenAt     BigInt          @map("first_seen_at")
+  lastSeenAt      BigInt          @map("last_seen_at")
+  createdAt       BigInt          @map("created_at")
+  updatedAt       BigInt          @map("updated_at")
+  mentions        EntityMention[]
+  messageEntities MessageEntity[]
+
+  @@unique([name, type])
+  @@index([type])
+  @@map("entity")
+}
+
+model EntityMention {
+  id             String @id
+  entityId       String @map("entity_id")
+  conversationId String @map("conversation_id")
+  messageId      String @map("message_id")
+  context        String
+  confidence     Float  @default(0.5)
+  ts             BigInt
+
+  entity Entity @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@index([entityId])
+  @@index([conversationId])
+  @@map("entity_mention")
+}
+
+model DecisionRecord {
+  id               String  @id
+  conversationId   String  @map("conversation_id")
+  messageId        String  @map("message_id")
+  decisionText     String  @map("decision_text")
+  rationale        String?
+  alternativesJson String  @default("[]") @map("alternatives_json")
+  confidence       Float   @default(0.5)
+  ts               BigInt
+
+  @@index([conversationId])
+  @@map("decision_record")
+}
+
+model PatternExtract {
+  id          String @id
+  name        String
+  description String
+  patternType String @map("pattern_type")
+  occurrences Int    @default(1)
+  confidence  Float  @default(0.5)
+  firstSeenAt BigInt @map("first_seen_at")
+  lastSeenAt  BigInt @map("last_seen_at")
+  createdAt   BigInt @map("created_at")
+  updatedAt   BigInt @map("updated_at")
+
+  @@unique([name, patternType])
+  @@map("pattern_extract")
+}
+
+model Topic {
+  id                String  @id
+  name              String
+  description       String?
+  color             String?
+  conversationCount Int     @default(0) @map("conversation_count")
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+
+  @@map("topic")
+}
+
+model Project {
+  id                String  @id
+  name              String
+  description       String?
+  status            String  @default("active")
+  conversationCount Int     @default(0) @map("conversation_count")
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+
+  @@map("project")
+}
+
+model ConversationTopic {
+  id             String @id
+  conversationId String @map("conversation_id")
+  topicId        String @map("topic_id")
+  confidence     Float  @default(0.5)
+  assignedAt     BigInt @map("assigned_at")
+  assignedBy     String @default("auto") @map("assigned_by")
+
+  @@unique([conversationId, topicId])
+  @@map("conversation_topic")
+}
+
+model ImportJob {
+  id          String  @id
+  source      String  @map("import_source")
+  filePath    String  @map("file_path")
+  status      String  @default("pending")
+  configJson  String  @default("{}") @map("config_json")
+  resultJson  String? @map("result_json")
+  error       String?
+  startedAt   BigInt  @map("started_at")
+  completedAt BigInt? @map("completed_at")
+
+  @@index([source])
+  @@map("import_job")
+}
+
+model MemoryEmbedding {
+  id          String @id
+  entityType  String @map("entity_type")
+  entityId    String @map("entity_id")
+  embedding   String
+  model       String
+  dimensions  Int
+  contentHash String @map("content_hash")
+  createdAt   BigInt @map("created_at")
+
+  @@unique([entityType, entityId])
+  @@map("memory_embedding")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L17: Provider Muxing (Upgrade — Phase 16)
+// ═══════════════════════════════════════════════════════════════════
+
+model MuxSession {
+  id                  String  @id
+  message             String
+  conversationId      String? @map("conversation_id")
+  strategy            String
+  status              String  @default("pending")
+  synthesizedResponse String? @map("synthesized_response")
+  bestProviderId      String? @map("best_provider_id")
+  totalCostCents      Int     @default(0) @map("total_cost_cents")
+  totalLatencyMs      Int     @default(0) @map("total_latency_ms")
+  startedAt           BigInt  @map("started_at")
+  completedAt         BigInt? @map("completed_at")
+
+  responses MuxResponseRow[]
+
+  @@index([conversationId], map: "idx_ms_conv")
+  @@index([status], map: "idx_ms_status")
+  @@map("mux_session")
+}
+
+model MuxResponseRow {
+  id           String  @id
+  muxSessionId String  @map("mux_session_id")
+  providerId   String  @map("provider_id")
+  accountId    String? @map("account_id")
+  ok           Int     @default(0)
+  response     String
+  latencyMs    Int     @map("latency_ms")
+  costCents    Int     @default(0) @map("cost_cents")
+  error        String?
+  ts           BigInt
+
+  session MuxSession @relation(fields: [muxSessionId], references: [id], onDelete: Cascade)
+
+  @@index([muxSessionId], map: "idx_mr_session")
+  @@index([providerId], map: "idx_mr_provider")
+  @@map("mux_response")
+}
+
+model RoutingPreference {
+  id           String @id
+  capabilityId String @map("capability_id")
+  providerId   String @map("provider_id")
+  score        Float  @default(0.5)
+  sampleCount  Int    @default(0) @map("sample_count")
+  updatedAt    BigInt @map("updated_at")
+
+  @@unique([capabilityId, providerId])
+  @@index([capabilityId], map: "idx_rp_cap")
+  @@map("routing_preference")
+}
+
+model ProviderCostLog {
+  id           String  @id
+  providerId   String  @map("provider_id")
+  costCents    Int     @map("cost_cents")
+  tokensInput  Int     @default(0) @map("tokens_input")
+  tokensOutput Int     @default(0) @map("tokens_output")
+  model        String?
+  ts           BigInt
+
+  @@index([providerId, ts], map: "idx_pcl_provider")
+  @@map("provider_cost_log")
+}
+
+model ProviderLatencyLog {
+  id           String  @id
+  providerId   String  @map("provider_id")
+  latencyMs    Int     @map("latency_ms")
+  capabilityId String? @map("capability_id")
+  ts           BigInt
+
+  @@index([providerId, ts], map: "idx_pll_provider")
+  @@map("provider_latency_log")
+}
+
+// ── Phase 17: Context Assembly Tables ──────────────────────────────────────
+
+model SituationLog {
+  id             String  @id
+  conversationId String? @map("conversation_id")
+  detectedType   String  @map("detected_type")
+  confidence     Float
+  signalsJson    String  @map("signals_json")
+  timestamp      Int
+
+  @@index([conversationId], map: "idx_sl_conv")
+  @@index([detectedType], map: "idx_sl_type")
+  @@map("situation_log")
+}
+
+model ContextLayerRow {
+  id             String @id
+  conversationId String @map("conversation_id")
+  layerName      String @map("layer_name")
+  content        String
+  tokenCount     Int    @map("token_count")
+  priority       Float
+  sourcesJson    String @default("[]") @map("sources_json")
+  assembledAt    BigInt @map("assembled_at")
+
+  @@index([conversationId], map: "idx_clr_conv")
+  @@index([layerName], map: "idx_clr_layer")
+  @@map("context_layer")
+}
+
+model TokenBudgetRow {
+  id             String @id
+  conversationId String @map("conversation_id")
+  totalBudget    Int    @map("total_budget")
+  layersJson     String @map("layers_json")
+  strategy       String
+  ts             BigInt
+
+  @@index([conversationId], map: "idx_tb_conv")
+  @@map("token_budget")
+}
+
+// ── Phase 18: Workspace Tables ──────────────────────────────────────────
+
+model WorkspaceMode {
+  id         String @id
+  userId     String @default("default") @map("user_id")
+  mode       String @default("chat")
+  panelsJson String @default("[]") @map("panels_json")
+  updatedAt  BigInt @map("updated_at")
+
+  @@unique([userId])
+  @@map("workspace_mode")
+}
+
+model UserPreference {
+  id         String @id
+  userId     String @default("default") @map("user_id")
+  key        String
+  value      String
+  learnedAt  BigInt @map("learned_at")
+  confidence Float  @default(0.5)
+
+  @@unique([userId, key])
+  @@map("user_preference")
+}
+
+model PluginRegistry {
+  id             String  @id
+  name           String
+  version        String
+  filePath       String  @map("file_path")
+  capabilities   String  @default("[]") @map("capabilities_json")
+  description    String? @map("description")
+  dependsOnJson  String  @default("[]") @map("depends_on_json")
+  integrityHash  String? @map("integrity_hash")
+  manifestJson   String  @default("{}") @map("manifest_json")
+  isActive       Int     @default(1) @map("is_active")
+  loadedAt       BigInt? @map("loaded_at")
+  createdAt      BigInt  @map("created_at")
+  updatedAt      BigInt  @map("updated_at")
+
+  @@unique([name])
+  @@map("plugin_registry")
+}
+
+model MemoryCurated {
+  id         String  @id
+  memoryType String  @map("memory_type")
+  memoryId   String  @map("memory_id")
+  curatedBy  String  @default("user") @map("curated_by")
+  isVerified Int     @default(1) @map("is_verified")
+  isPinned   Int     @default(0) @map("is_pinned")
+  note       String?
+  curatedAt  BigInt  @map("curated_at")
+
+  @@unique([memoryType, memoryId])
+  @@map("memory_curated")
+}
+
+model MemoryFeedback {
+  id         String  @id
+  memoryType String  @map("memory_type")
+  memoryId   String  @map("memory_id")
+  feedback   String
+  correction String?
+  userId     String  @default("default") @map("user_id")
+  ts         BigInt
+
+  @@index([memoryType, memoryId], map: "idx_mf_memory")
+  @@map("memory_feedback")
+}
+
+// ── Phase 19: Autonomous Execution ──────────────────────────────────────
+
+model PolicyRule {
+  id               String @id
+  name             String
+  condition        String
+  classification   String
+  requiresApproval Int    @default(0) @map("requires_approval")
+  cooldownMs       Int    @default(0) @map("cooldown_ms")
+  maxOccurrences   Int    @default(1000000) @map("max_occurrences")
+  windowMs         Int    @default(60000) @map("window_ms")
+  isActive         Int    @default(1) @map("is_active")
+
+  @@unique([name])
+  @@map("policy_rule")
+}
+
+model AutonomousTask {
+  id              String  @id
+  goalJson        String  @map("goal_json")
+  status          String  @default("pending")
+  resultJson      String? @map("result_json")
+  error           String?
+  pausedStateJson String? @map("paused_state_json")
+  startedAt       BigInt  @map("started_at")
+  completedAt     BigInt? @map("completed_at")
+
+  steps AutonomousStep[]
+  gates HitlGate[]
+
+  @@index([status], map: "idx_at_status")
+  @@map("autonomous_task")
+}
+
+model AutonomousStep {
+  id                    String  @id
+  taskId                String  @map("task_id")
+  stepIndex             Int     @map("step_index")
+  description           String
+  action                String
+  actionInputJson       String  @map("action_input_json")
+  classification        String  @map("classification")
+  status                String  @default("pending")
+  resultJson            String? @map("result_json")
+  error                 String?
+  startedAt             BigInt? @map("started_at")
+  completedAt           BigInt? @map("completed_at")
+  requiresHumanApproval Int     @default(0) @map("requires_human_approval")
+
+  task AutonomousTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId], map: "idx_ast_task")
+  @@map("autonomous_step")
+}
+
+model HitlGate {
+  id           String  @id
+  taskId       String  @map("task_id")
+  stepId       String  @map("step_id")
+  gateType     String  @map("gate_type")
+  prompt       String
+  optionsJson  String  @default("[]") @map("options_json")
+  defaultValue String? @map("default_value")
+  status       String  @default("pending")
+  resolvedBy   String? @map("resolved_by")
+  resolvedAt   BigInt? @map("resolved_at")
+  response     String?
+  createdAt    BigInt  @map("created_at")
+  expiresAt    BigInt? @map("expires_at")
+
+  task AutonomousTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, status], map: "idx_hg_task_status")
+  @@index([status], map: "idx_hg_status")
+  @@map("hitl_gate")
+}
+
+// ── Phase 8.10: Task Templates ──────────────────────────────────────────
+
+model TaskTemplate {
+  id        String  @id
+  name      String  @unique
+  paramsJson String @default("[]") @map("params_json")
+  planJson  String  @map("plan_json")
+  version   Int     @default(1)
+  isShared  Int     @default(0) @map("is_shared")
+  createdAt BigInt  @map("created_at")
+  updatedAt BigInt  @map("updated_at")
+
+  @@map("task_template")
+}
+
+// ── Phase 20: Sovereign Data ─────────────────────────────────────────────
+
+model SyncLog {
+  id        String  @id
+  deviceId  String  @map("device_id")
+  table     String
+  recordId  String  @map("record_id")
+  operation String
+  dataJson  String  @map("data_json")
+  ts        BigInt
+  syncedAt  BigInt? @map("synced_at")
+
+  @@index([deviceId, syncedAt], map: "idx_sl_device")
+  @@index([table, recordId], map: "idx_sl_record")
+  @@map("sync_log")
+}
+
+model SyncPeer {
+  id         String  @id
+  deviceId   String  @map("device_id")
+  name       String
+  publicKey  String  @map("public_key")
+  lastSyncAt BigInt? @map("last_sync_at")
+  status     String  @default("pending")
+  pairedAt   BigInt? @map("paired_at")
+
+  @@unique([deviceId])
+  @@map("sync_peer")
+}
+
+// ── Phase 21: v1 Gap Closure — HpeSession ────────────────────────────────
+
+model HpeSession {
+  id          String  @id
+  agentId     String  @map("agent_id")
+  prompt      String
+  response    String?
+  actions     String  @default("[]")
+  status      String  @default("pending")
+  startedAt   BigInt  @map("started_at")
+  completedAt BigInt? @map("completed_at")
+  createdAt   BigInt  @map("created_at")
+
+  @@index([agentId, startedAt], map: "idx_hs_agent")
+  @@map("hpe_session")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 0: Kernel Core — self-understanding layer
+// ═══════════════════════════════════════════════════════════════════
+
+model KernelSpan {
+  id        String  @id
+  traceId   String  @map("trace_id")
+  parentId  String? @map("parent_id")
+  name      String
+  startTime Int     @map("start_time")
+  endTime   Int?    @map("end_time")
+  duration  Int?
+  status    String  @default("ok")
+  error     String?
+  attrs     String?
+  engineId  String? @map("engine_id")
+  createdAt BigInt  @map("created_at")
+
+  @@index([traceId], map: "idx_kernel_spans_trace")
+  @@index([engineId], map: "idx_kernel_spans_engine")
+  @@index([startTime], map: "idx_kernel_spans_time")
+  @@map("kernel_spans")
+}
+
+model KernelProvenance {
+  id          String  @id
+  traceId     String  @map("trace_id")
+  parentId    String? @map("parent_id")
+  kind        String
+  engineId    String  @map("engine_id")
+  description String
+  input       String?
+  output      String?
+  duration    Int?
+  timestamp   Int
+
+  @@index([traceId], map: "idx_kernel_prov_trace")
+  @@index([engineId], map: "idx_kernel_prov_engine")
+  @@index([kind], map: "idx_kernel_prov_kind")
+  @@map("kernel_provenance")
+}
+
+model KernelTopology {
+  id        Int    @id @default(autoincrement())
+  snapshot  String
+  createdAt BigInt @map("created_at")
+
+  @@map("kernel_topology")
+}
+
+model KernelEvent {
+  id        Int     @id @default(autoincrement())
+  kind      String
+  engineId  String? @map("engine_id")
+  data      String?
+  createdAt BigInt  @default(0) @map("created_at")
+
+  @@index([kind], map: "idx_kernel_events_kind")
+  @@index([createdAt], map: "idx_kernel_events_time")
+  @@map("kernel_events")
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// L-NLCL: Natural Language Command Layer — Knowledge Graph
+// A network graph of command knowledge (intents, aliases, keywords, examples,
+// synonyms, normalization rules). Expansion = add nodes/edges, no code edits.
+// ───────────────────────────────────────────────────────────────────────────
+
+model NlclGraphNode {
+  id        String  @id
+  kind      String
+  label     String
+  dataJson  String? @map("data_json")
+  createdAt BigInt  @default(0) @map("created_at")
+
+  @@index([kind], map: "idx_nlcl_nodes_kind")
+  @@index([label], map: "idx_nlcl_nodes_label")
+  @@map("nlcl_graph_nodes")
+}
+
+model NlclGraphEdge {
+  id        String  @id
+  fromId    String  @map("from_id")
+  toId      String  @map("to_id")
+  relation  String
+  weight    Float   @default(1)
+  dataJson  String? @map("data_json")
+  createdAt BigInt  @default(0) @map("created_at")
+
+  @@index([fromId], map: "idx_nlcl_edges_from")
+  @@index([toId], map: "idx_nlcl_edges_to")
+  @@index([relation], map: "idx_nlcl_edges_rel")
+  @@map("nlcl_graph_edges")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Stealth Core (Phase 11)
+// ═══════════════════════════════════════════════════════════════════
+
+model StealthLaunchProfile {
+  id               String  @id
+  mode             String  @default("cdp_stealth")
+  chromeArgsJson   String  @default("[]") @map("chrome_args_json")
+  stealthProfileId String? @map("stealth_profile_id")
+  attachPort       Int?    @map("attach_port")
+  extensionId      String? @map("extension_id")
+  windowSizeJson   String  @default("{\"width\":1280,\"height\":720}") @map("window_size_json")
+  extraArgsJson    String  @default("[]") @map("extra_args_json")
+  createdAt        BigInt  @default(0) @map("created_at")
+  updatedAt        BigInt  @default(0) @map("updated_at")
+
+  @@map("stealth_launch_profile")
+}
+
+model StealthModuleProfile {
+  id          String @id
+  name        String
+  modulesJson String @default("[]") @map("modules_json")
+  createdAt   BigInt @default(0) @map("created_at")
+  updatedAt   BigInt @default(0) @map("updated_at")
+
+  @@map("stealth_module_profile")
+}
+
+model StealthPolicy {
+  id                     String  @id @default("default")
+  defaultLaunchProfileId String? @map("default_launch_profile_id")
+  defaultModuleProfileId String? @map("default_module_profile_id")
+  providerOverridesJson  String  @default("{}") @map("provider_overrides_json")
+
+  @@map("stealth_policy")
+}
+
+// ───────────────────────────────────────────────────────────────
+// Sandbox (Unit 31.1) — audit log for untrusted inline handler runs
+// ───────────────────────────────────────────────────────────────
+
+model SandboxAudit {
+  id              String  @id
+  handlerSlug     String  @map("handler_slug")
+  ok              Int     @map("ok")
+  error           String? @map("error")
+  permissionsJson String  @map("permissions_json")
+  ts              BigInt
+
+  @@index([handlerSlug, ts], map: "idx_sa_handler")
+  @@map("sandbox_audit")
+}
+
+model HealthDigest {
+  id          String @id
+  day         String @unique @map("day")
+  markdown    String @map("markdown")
+  metricsJson String @map("metrics_json")
+  createdAt   BigInt @map("created_at")
+
+  @@index([day], map: "idx_hd_day")
+  @@map("health_digest")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Migration 002: Chat Upgrade — Rich Content, Memory, Context
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Group 1: Rich Message Content ────────────────────────────────────────
+
+model ContentUnit {
+  id             String  @id
+  messageId      String  @map("message_id")
+  conversationId String  @map("conversation_id")
+  unitType       String  @map("unit_type")
+  content        String
+  mimeType       String? @map("mime_type")
+  metadataJson   String  @default("{}") @map("metadata_json")
+  sequenceIndex  Int     @default(0) @map("sequence_index")
+  qualityScore   Float?  @map("quality_score")
+  createdAt      BigInt  @map("created_at")
+
+  message ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId], map: "idx_cu_message")
+  @@index([conversationId, unitType], map: "idx_cu_conv_type")
+  @@map("content_unit")
+}
+
+model MessageLink {
+  id              String @id
+  sourceMessageId String @map("source_message_id")
+  targetMessageId String @map("target_message_id")
+  relation        String
+  weight          Float  @default(1.0)
+  metadataJson    String @default("{}") @map("metadata_json")
+  createdAt       BigInt @map("created_at")
+
+  source ConversationMessage @relation("LinkSource", fields: [sourceMessageId], references: [id], onDelete: Cascade)
+  target ConversationMessage @relation("LinkTarget", fields: [targetMessageId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceMessageId, targetMessageId, relation])
+  @@index([sourceMessageId], map: "idx_ml_source")
+  @@index([targetMessageId], map: "idx_ml_target")
+  @@map("message_link")
+}
+
+model MessageEntity {
+  id               String @id
+  messageId        String @map("message_id")
+  entityId         String @map("entity_id")
+  confidence       Float  @default(0.5)
+  context          String
+  extractionSource String @default("llm") @map("extraction_source")
+  createdAt        BigInt @map("created_at")
+
+  message ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  entity  Entity              @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, entityId])
+  @@index([messageId], map: "idx_ment_message")
+  @@index([entityId], map: "idx_ment_entity")
+  @@map("message_entity")
+}
+
+// ── Group 2: Memory & Learning ───────────────────────────────────────────
+
+model MemoryLink {
+  id               String @id
+  sourceMemoryType String @map("source_memory_type")
+  sourceMemoryId   String @map("source_memory_id")
+  targetMemoryType String @map("target_memory_type")
+  targetMemoryId   String @map("target_memory_id")
+  relation         String
+  strength         Float  @default(0.5)
+  metadataJson     String @default("{}") @map("metadata_json")
+  createdAt        BigInt @map("created_at")
+
+  @@unique([sourceMemoryType, sourceMemoryId, targetMemoryType, targetMemoryId, relation])
+  @@index([sourceMemoryType, sourceMemoryId], map: "idx_mlink_source")
+  @@index([targetMemoryType, targetMemoryId], map: "idx_mlink_target")
+  @@map("memory_link")
+}
+
+model MemoryAccess {
+  id           String  @id
+  memoryType   String  @map("memory_type")
+  memoryId     String  @map("memory_id")
+  accessReason String  @map("access_reason")
+  queryText    String? @map("query_text")
+  resultRank   Int?    @map("result_rank")
+  wasUsed      Int     @default(0) @map("was_used")
+  latencyMs    Int     @map("latency_ms")
+  createdAt    BigInt  @map("created_at")
+
+  @@index([memoryType, memoryId], map: "idx_macc_memory")
+  @@index([createdAt], map: "idx_macc_time")
+  @@map("memory_access")
+}
+
+model ReflectionLog {
+  id             String  @id
+  providerId     String? @map("provider_id")
+  conversationId String? @map("conversation_id")
+  reflectionType String  @map("reflection_type")
+  inputJson      String  @map("input_json")
+  outputJson     String  @map("output_json")
+  confidence     Float   @default(0.5)
+  applied        Int     @default(0) @map("applied")
+  createdAt      BigInt  @map("created_at")
+
+  @@index([reflectionType], map: "idx_rl_type")
+  @@index([conversationId], map: "idx_rl_conv")
+  @@index([createdAt], map: "idx_rl_time")
+  @@map("reflection_log")
+}
+
+// ── Group 3: Context Assembly ────────────────────────────────────────────
+
+model ContextBudgetConfig {
+  id                   String @id
+  userId               String @default("default") @map("user_id")
+  maxContextTokens     Int    @default(128000) @map("max_context_tokens")
+  responseStyle        String @default("balanced") @map("response_style")
+  compressionStrategy  String @default("auto") @map("compression_strategy")
+  systemLayerPct       Float  @default(0.10) @map("system_layer_pct")
+  memoryLayerPct       Float  @default(0.15) @map("memory_layer_pct")
+  conversationLayerPct Float  @default(0.50) @map("conversation_layer_pct")
+  situationLayerPct    Float  @default(0.10) @map("situation_layer_pct")
+  reservePct           Float  @default(0.15) @map("reserve_pct")
+  enablePredictions    Int    @default(1) @map("enable_predictions")
+  enableJitRetrieval   Int    @default(1) @map("enable_jit_retrieval")
+  enableCompression    Int    @default(1) @map("enable_compression")
+  enableEntityContext  Int    @default(1) @map("enable_entity_context")
+  enableTopicContext   Int    @default(1) @map("enable_topic_context")
+  createdAt            BigInt @map("created_at")
+  updatedAt            BigInt @map("updated_at")
+
+  @@unique([userId])
+  @@map("context_budget_config")
+}
+
+model SituationDetection {
+  id                String  @id
+  conversationId    String? @map("conversation_id")
+  detectedType      String  @map("detected_type")
+  confidence        Float
+  signalsJson       String  @map("signals_json")
+  recommendedAction String? @map("recommended_action")
+  actionTaken       String? @map("action_taken")
+  actionResult      String? @map("action_result")
+  timestamp         Int
+
+  @@index([conversationId], map: "idx_sd_conv")
+  @@index([detectedType], map: "idx_sd_type")
+  @@index([timestamp], map: "idx_sd_time")
+  @@map("situation_detection")
+}
+
+// ── Conceptual UI Model (capability-global slots) ──────────────────────────
+// Backing tables for ProviderTypeStore / PrimitiveStore / UiComponentStore.
+// See docs/vivim-canvas/implementation/10-conceptual-matrix.md §3.
+
+model ProviderType {
+  id                   String @id
+  slug                 String @unique @map("slug")
+  displayName          String @map("display_name")
+  description          String? @map("description")
+  slotCatalogJson      String @default("[]") @map("slot_catalog_json")
+  regionLayoutJson     String @default("{}") @map("region_layout_json")
+  interactionGrammarJson String @default("{}") @map("interaction_grammar_json")
+  basePrimitive        String @default("conversations") @map("base_primitive")
+  version              Int    @default(1)
+  createdAt            BigInt @map("created_at")
+  updatedAt            BigInt @map("updated_at")
+
+  primitives           Primitive[]
+  @@map("provider_type")
+}
+
+model Primitive {
+  id               String  @id
+  scope            String  @map("scope")
+  familyId         String? @map("family_id")
+  providerId       String? @map("provider_id")
+  label            String
+  description      String? @map("description")
+  defaultRegionJson String @default("{}") @map("default_region_json")
+  version          Int     @default(1)
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
+
+  providerType     ProviderType? @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  components       UiComponent[]
+
+  @@index([scope], map: "idx_prim_scope")
+  @@index([familyId], map: "idx_prim_family")
+  @@index([providerId], map: "idx_prim_provider")
+  @@map("primitive")
+}
+
+model UiComponent {
+  id               String  @id
+  primitiveId      String  @map("primitive_id")
+  scope            String  @map("scope")
+  ownerId          String  @map("owner_id")
+  variant          String? @map("variant")
+  componentKey      String  @map("component_key")
+  displayName       String  @map("display_name")
+  html              String  @default("")
+  css               String  @default("")
+  scriptUrl         String? @map("script_url")
+  sandboxJson       String  @default("{}") @map("sandbox_json")
+  constraintsJson   String  @default("{}") @map("constraints_json")
+  contractJson      String  @default("{}") @map("contract_json")
+  archetype         String? @map("archetype")
+  version           Int     @default(1)
+  status            String  @default("published") @map("status")
+  author            String  @default("system") @map("author")
+  defaultRegionJson String  @default("") @map("default_region_json")
+  tagsJson          String  @default("[]") @map("tags_json")
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+
+  primitive         Primitive @relation(fields: [primitiveId], references: [id], onDelete: Cascade)
+
+  @@unique([primitiveId, scope, ownerId, variant], map: "uniq_comp_resolve")
+  @@index([primitiveId], map: "idx_uc_prim")
+  @@index([scope, ownerId], map: "idx_uc_owner")
+  @@map("ui_component")
+}
+
+// ── User Identity ───────────────────────────────────────────────────────────
+
+model User {
+  id            String  @id
+  displayName   String  @map("display_name")
+  role          String  @default("member")
+  avatarColor   String  @map("avatar_color")
+  avatarUrl     String? @map("avatar_url")
+  status        String  @default("active")
+  isDefault     Int     @default(0) @map("is_default")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
+  lastActiveAt  BigInt? @map("last_active_at")
+  lastSessionId String? @map("last_session_id")
+
+  @@index([status], map: "idx_user_status")
+  @@index([isDefault], map: "idx_user_default")
+  @@map("user")
+}
+
+// ── Workflow Engine storage ──────────────────────────────────────────────
+
+model WorkflowRetryQueue {
+  id              String @id
+  nodeExecutionId String @map("node_execution_id")
+  attempt         Int
+  nextRetryAt     BigInt @map("next_retry_at")
+  maxAttempts     Int    @map("max_attempts")
+  backoffMs       Int    @map("backoff_ms")
+  status          String @default("pending")
+
+  @@index([status, nextRetryAt], map: "idx_wrq_status_time")
+  @@map("workflow_retry_queue")
+}
+
+model WorkflowVersion {
+  id            String @id
+  workflowId    String @map("workflow_id")
+  version       Int
+  definitionJson String @map("definition_json")
+  createdAt     BigInt @map("created_at")
+
+  @@unique([workflowId, version], map: "uq_wv_wf_ver")
+  @@index([workflowId], map: "idx_wv_wf")
+  @@map("workflow_version")
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// Agentic Backbone (SOTA agentic system) — ADD only, never rewrite.
+// Backbone entities are cap-store.* Nodes (persisted via NodeStore).
+// These are the *materialized* helper tables + OpenCode/event substrate.
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Agent builder pipeline (human_led / agent_led) ──────────────────
+model AgentBuilderRun {
+  id              String   @id
+  initiatorJson   String   @map("initiator_json") // ActorRef JSON
+  intentJson      String   @map("intent_json")
+  mode            String   @default("human_led")
+  stage           String   @default("discover") // discover|infer|draft|validate|spawn|done|failed
+  producedAgentId String?  @map("produced_agent_id")
+  producedRunId   String?  @map("produced_run_id")
+  status          String   @default("pending") // pending|running|done|failed
+  resultJson      String   @default("{}") @map("result_json")
+  createdAt       BigInt   @map("created_at")
+  updatedAt       BigInt   @map("updated_at")
+
+  @@index([mode], map: "idx_abr_mode")
+  @@index([status], map: "idx_abr_status")
+  @@map("agent_builder_run")
+}
+
+// ── Mid-run task inbox (asap / when_idle) ────────────────────────────
+model RunInbox {
+  id          String   @id
+  runId       String   @map("run_id")
+  priority    String   @default("asap") // asap|when_idle
+  contentJson String   @map("content_json")
+  status      String   @default("pending") // pending|done|skipped
+  createdAt   BigInt   @map("created_at")
+  updatedAt   BigInt   @map("updated_at")
+
+  @@index([runId, status], map: "idx_ri_run")
+  @@map("run_inbox")
+}
+
+// ── Audited UI↔agent/role hot-swap binding ──────────────────────────
+model SlotBinding {
+  id            String   @id
+  slotId        String   @map("slot_id")
+  componentId   String   @map("component_id")
+  boundAgentId  String?  @map("bound_agent_id")
+  boundRoleId   String?  @map("bound_role_id")
+  boundByJson   String   @map("bound_by_json") // ActorRef JSON
+  active        Int      @default(1)
+  auditJson     String   @default("{}") @map("audit_json")
+  createdAt     BigInt   @map("created_at")
+  updatedAt     BigInt   @map("updated_at")
+
+  @@index([slotId, active], map: "idx_sb_slot")
+  @@map("slot_binding")
+}
+
+// ── Durable event outbox (source-tagged, hash-chained) ───────────────
+// Shared substrate: OpenCode + browser fleet + capability layer all write here.
+// This is the single source of truth for cross-surface event replay.
+model EventRecord {
+  id                String   @id
+  source            String   // opencode|browser_fleet|capability|...
+  entityType        String?  @map("entity_type")
+  entityId          String?  @map("entity_id")
+  providerSessionId String?  @map("provider_session_id")
+  type              String
+  payloadJson       String   @map("payload_json")
+  seq               Int
+  hash              String
+  createdAt         BigInt   @map("created_at")
+
+  @@unique([source, seq], map: "uq_er_src_seq")
+  @@index([source, entityType, entityId], map: "idx_er_src_ent")
+  @@index([providerSessionId], map: "idx_er_session")
+  @@map("event_record")
+}
+
+// ── OpenCode supervision extension of ProviderSession ────────────────
+model AgentSession {
+  id                String   @id
+  providerSessionId String   @unique @map("provider_session_id")
+  providerId        String   @default("opencode") @map("provider_id")
+  parentSessionId   String?  @map("parent_session_id")
+  agentName         String?  @map("agent_name")
+  model             String?
+  projectPath       String?  @map("project_path")
+  status            String   @default("idle")
+  createdAt         BigInt   @map("created_at")
+  updatedAt         BigInt   @map("updated_at")
+
+  parentSession AgentSession? @relation("AgentSessionFork", fields: [parentSessionId], references: [id], onDelete: SetNull)
+  childSessions AgentSession[] @relation("AgentSessionFork")
+  permissionDecisions AgentPermissionDecision[]
+  fileEdits AgentFileEdit[]
+
+  @@index([providerSessionId], map: "idx_as_session")
+  @@map("agent_session")
+}
+
+// ── Governor-owned permission decisions ──────────────────────────────
+model AgentPermissionDecision {
+  id                String   @id
+  agentSessionId    String   @map("agent_session_id")
+  providerPermissionId String @unique @map("provider_permission_id")
+  toolName          String   @map("tool_name")
+  riskTier          Int      @map("risk_tier") // local 1-5, maps onto Node.securityLevel
+  requestedAt       BigInt   @map("requested_at")
+  respondedAt       BigInt?  @map("responded_at")
+  decision          String?  // allow|deny|allow_always
+  decidedBy         String?  @map("decided_by")
+  payloadJson       String   @default("{}") @map("payload_json")
+  createdAt         BigInt   @map("created_at")
+
+  agentSession AgentSession @relation(fields: [agentSessionId], references: [id], onDelete: Cascade)
+
+  @@index([agentSessionId], map: "idx_apd_session")
+  @@map("agent_permission_decision")
+}
+
+// ── Filesystem truth from /session/:id/diff ──────────────────────────
+model AgentFileEdit {
+  id                String   @id
+  agentSessionId    String   @map("agent_session_id")
+  messageId         String?  @map("message_id")
+  filePath          String   @map("file_path")
+  patchJson         String   @map("patch_json") // RFC-6902 JSON Patch
+  beforeHash        String?  @map("before_hash")
+  afterHash         String?  @map("after_hash")
+  createdAt         BigInt   @map("created_at")
+
+  agentSession AgentSession @relation(fields: [agentSessionId], references: [id], onDelete: Cascade)
+
+  @@index([agentSessionId], map: "idx_afe_session")
+  @@map("agent_file_edit")
+}
+
+// ── Versioned agent / permission presets as data ─────────────────────
+model AgentDefinition {
+  id             String   @id
+  name           String   @unique
+  mode           String   @default("all") // all|primary|subagent
+  permissionsJson String  @map("permissions_json")
+  model          String?
+  systemPrompt   String?  @map("system_prompt")
+  version        Int      @default(1)
+  createdAt      BigInt   @map("created_at")
+
+  @@index([name], map: "idx_ad_name")
+  @@map("agent_definition")
+}
+
+// ── Command Language: NLP description + patterns ────────────────────
+model CommandDescription {
+  id          String  @id
+  commandId   String  @map("command_id") @unique
+  description String
+  patterns    String  // JSON array of pattern strings
+  category    String
+  prefix      String?
+  confidence  Float   @default(0.7)
+  enabled     Boolean @default(true)
+  createdAt   BigInt  @map("created_at")
+  updatedAt   BigInt  @map("updated_at")
+
+  @@index([commandId], map: "idx_cd_command_id")
+  @@index([category], map: "idx_cd_category")
+  @@index([enabled], map: "idx_cd_enabled")
+  @@map("command_description")
+}
+
+// ── Onboarding pipeline: Provider auto-onboarding ─────────────────────
+model ProviderOnboardingSession {
+  id                      String          @id @default(cuid())
+  providerId              String?
+  slaveId                 String
+  targetOrigin            String
+  status                  String // attached|fingerprinted|taxonomy_resolved|discovered|synthesized|promoted|registered|failed
+  wfvJson                 String?
+  wfvShapeSignature       String?
+  taxonomyId              String?
+  taxonomy                WebAppTaxonomy? @relation(fields: [taxonomyId], references: [id])
+  discoveredEntitiesJson  String?
+  parserCandidatesJson    String?
+  protocolFingerprintJson String?
+  errorJson               String?
+  startedAt               DateTime        @default(now())
+  completedAt             DateTime?
+
+  discoveredEntities    DiscoveredDomEntity[]
+  protocolFingerprints  ProtocolFingerprint[]
+  parserCandidates      ParserCandidate[]
+  taxonomyGenerationRun TaxonomyGenerationRun?
+
+  @@unique([slaveId, targetOrigin, wfvShapeSignature])
+  @@index([status])
+  @@index([targetOrigin])
+  @@map("provider_onboarding_session")
+}
+
+model DiscoveredDomEntity {
+  id           String                    @id @default(cuid())
+  sessionId    String
+  session      ProviderOnboardingSession @relation(fields: [sessionId], references: [id])
+  role         String // 'input' | 'send_control' | 'message_container' | 'stream_region' | ...
+  selectorJson String // candidate SelectorStrategy payload
+  confidence   Float                     @default(0)
+  testedAt     DateTime?
+  status       String                    @default("prospect") // prospect|active|rejected
+
+  @@index([sessionId, role])
+  @@map("discovered_dom_entity")
+}
+
+model ProtocolFingerprint {
+  id                String                    @id @default(cuid())
+  sessionId         String
+  session           ProviderOnboardingSession @relation(fields: [sessionId], references: [id])
+  transportClass    String // sse|websocket|chunked_fetch|xhr_poll|dom_mutation_only
+  endpointPattern   String?
+  sampleHeadersJson String?
+  cadenceMs         Int?
+  confidence        Float                     @default(0)
+
+  parserCandidates ParserCandidate[]
+
+  @@map("protocol_fingerprint")
+}
+
+model ParserCandidate {
+  id                    String                    @id @default(cuid())
+  sessionId             String
+  session               ProviderOnboardingSession @relation(fields: [sessionId], references: [id])
+  protocolFingerprintId String?
+  protocolFingerprint   ProtocolFingerprint?      @relation(fields: [protocolFingerprintId], references: [id])
+  inducedShapeJson      String // output of Structural Parser Induction
+  parserProgramId       String?
+  confidence            Float                     @default(0)
+  sampleCount           Int                       @default(0)
+  status                String                    @default("prospect") // prospect|active|rejected
+
+  testResults ParserTestResult[]
+
+  @@map("parser_candidate")
+}
+
+model ParserTestResult {
+  id                String          @id @default(cuid())
+  parserCandidateId String
+  parserCandidate   ParserCandidate @relation(fields: [parserCandidateId], references: [id])
+  passed            Boolean
+  detailJson        String?
+  runAt             DateTime        @default(now())
+
+  @@map("parser_test_result")
+}
+
+model WebAppTaxonomy {
+  id                     String   @id @default(cuid())
+  slug                   String   @unique
+  origin                 String // 'curated' | 'auto_generated'
+  displayName            String
+  centroidVectorJson     String
+  capabilityTemplateJson String
+  confidence             Float    @default(0.5)
+  sampleCount            Int      @default(0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  generationRuns     TaxonomyGenerationRun[]
+  onboardingSessions ProviderOnboardingSession[]
+
+  @@index([origin])
+  @@map("webapp_taxonomy")
+}
+
+model TaxonomyGenerationRun {
+  id                  String                    @id @default(cuid())
+  taxonomyId          String
+  taxonomy            WebAppTaxonomy            @relation(fields: [taxonomyId], references: [id])
+  onboardingSessionId String                    @unique
+  onboardingSession   ProviderOnboardingSession @relation(fields: [onboardingSessionId], references: [id])
+  inputWfvJson        String
+  method              String // 'auto_generated' | 'matched_existing'
+  matchScore          Float?
+  createdAt           DateTime                  @default(now())
+
+  @@map("taxonomy_generation_run")
+}
+
+// ── Reprogrammability: Surface versioning ─────────────────────────────
+model SurfaceVersion {
+  id         String   @id @default(cuid())
+  surfaceId  String
+  version    Int
+  specJson   String
+  provenance String // manual | nlcl | prefix | plugin | llm-harness | system
+  mutationId String?
+  createdAt  DateTime @default(now())
+
+  @@unique([surfaceId, version])
+  @@index([surfaceId, createdAt])
+  @@map("surface_version")
+}
+
+// ── Workspace management ──────────────────────────────────────────────
+model WorkspaceBackup {
+  id           String   @id @default(cuid())
+  snapshotJson String
+  source       String // cron | manual | pre-restore
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("workspace_backup")
+}
+
+model WorkspaceTemplateRow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  graphJson   String
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("workspace_template_row")
+}

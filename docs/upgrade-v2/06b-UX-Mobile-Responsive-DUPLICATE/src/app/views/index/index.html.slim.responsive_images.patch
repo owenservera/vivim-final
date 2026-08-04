@@ -1,0 +1,17 @@
+# Replace the hero banner (line 2-4) and all feature images with responsive srcset.
+# Example for the hero (devices.png):
+
+section.banner
+  .container
+    .row
+      .img.img-banner
+        img.img-fluid srcset="images/devices-480w.webp 480w, images/devices-1024w.webp 1024w, images/devices-1920w.webp 1920w" sizes="(max-width: 480px) 100vw, (max-width: 1024px) 100vw, 1920px" src="images/devices-1024w.webp" alt="Denver mobile app development company" width="1920" height="600"
+
+# Same pattern for all images in lines 13, 23, 31, 39, 47.
+# Replace every occurrence of 'img.img-responsive' with 'img.img-fluid' (UX6-02).
+# Generate the WebP variants with:
+#   for f in images/devices.png images/feature1.png images/feature2.png images/feature3.jpg; do
+#     cwebp -q 80 -resize 480 0 "$f" -o "${f%.*}-480w.webp"
+#     cwebp -q 80 -resize 1024 0 "$f" -o "${f%.*}-1024w.webp"
+#     cwebp -q 80 -resize 1920 0 "$f" -o "${f%.*}-1920w.webp"
+#   done

@@ -1,0 +1,67 @@
+/**
+ * storage/provider/index.ts
+ * --------------------------------------------------------------------
+ * TEMPLATE — Task 05.
+ *
+ * Process-singleton accessor for the StorageProvider.
+ *
+ * Placeholders to fill in:
+ *   - Uncomment the prisma case after Task 08.
+ *   - Adjust the test case if/when a TestStorageProvider is added.
+ */
+
+export * from './storage-provider';
+export * from './memory-storage-provider';
+// export * from './prisma-storage-provider';  // ← uncomment in Task 08
+
+import { MemoryStorageProvider } from './memory-storage-provider';
+// import { PrismaStorageProvider } from './prisma-storage-provider';  // Task 08
+import type { StorageProvider } from './storage-provider';
+
+let _provider: StorageProvider | null = null;
+
+/**
+ * Process-singleton accessor for the storage layer.
+ *
+ * Impl is selected by `VIVIM_STORAGE_PROVIDER` env var:
+ *  - 'memory' (default) — in-memory stores, lost on restart
+ *  - 'prisma'            — Prisma-backed stores (see PrismaStorageProvider for migration status)
+ *  - 'test'              — reserved for a future deterministic-seed provider
+ *
+ * Calling this multiple times returns the same instance.
+ */
+export function getStorageProvider(): StorageProvider {
+  if (_provider) return _provider;
+
+  const name = (process.env.VIVIM_STORAGE_PROVIDER ?? 'memory').toLowerCase();
+
+  switch (name) {
+    case 'memory':
+      _provider = new MemoryStorageProvider();
+      break;
+    // case 'prisma':
+    //   _provider = new PrismaStorageProvider();
+    //   break;
+    case 'prisma':
+      throw new Error(
+        'VIVIM_STORAGE_PROVIDER=prisma is not available yet. ' +
+        'Implement PrismaStorageProvider (see tasks/08-prisma-provider-stub.md).'
+      );
+    case 'test':
+      throw new Error(
+        'VIVIM_STORAGE_PROVIDER=test is reserved for a future deterministic-seed provider. ' +
+        'Use "memory" for now.'
+      );
+    default:
+      throw new Error(
+        `Unknown VIVIM_STORAGE_PROVIDER: "${name}". Valid values: memory, prisma, test.`
+      );
+  }
+
+  return _provider;
+}
+
+/** Test-only: reset the singleton. Used by unit tests to get a fresh provider. */
+export function __resetStorageProviderForTests(): void {
+  _provider = null;
+}

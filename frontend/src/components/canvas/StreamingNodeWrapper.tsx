@@ -48,20 +48,20 @@ const STREAM_KIND_ICONS: Record<string, IconName> = {
 };
 
 const STREAM_KIND_COLORS: Record<string, string> = {
-  thinking: '#8b5cf6',
-  text: '#3b82f6',
-  code: '#10b981',
-  tool_use: '#f59e0b',
-  tool_result: '#06b6d4',
-  image: '#ec4899',
-  citation: '#6366f1',
-  error: '#ef4444',
-  meta: '#64748b',
-  progress: '#0ea5e9',
-  status: '#22c55e',
-  complete: '#22c55e',
-  cost: '#f97316',
-  heartbeat: '#ec4899',
+  thinking: 'var(--color-purple)',
+  text: 'var(--color-info)',
+  code: 'var(--color-success)',
+  tool_use: 'var(--color-warning)',
+  tool_result: 'var(--color-cyan)',
+  image: 'var(--color-pink)',
+  citation: 'var(--color-indigo)',
+  error: 'var(--color-error)',
+  meta: 'var(--text-muted)',
+  progress: 'var(--color-info)',
+  status: 'var(--color-success)',
+  complete: 'var(--color-success)',
+  cost: 'var(--color-orange)',
+  heartbeat: 'var(--color-pink)',
 };
 
 export function StreamingNodeWrapper({

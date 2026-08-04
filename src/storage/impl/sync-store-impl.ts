@@ -1,106 +1,183 @@
 // src/storage/impl/sync-store-impl.ts
-// PrismaStoreImpl for SyncStore contract — Phase 20.6
+// Prisma-backed SyncStore — CRUD + lifecycle for SyncState.
 
-import type { SyncLogEntry, SyncPeer, SyncStore } from '../../engines/sync.js'
+import { newId } from '../../ids.js'
 import type { CapStoreDb } from '../db.js'
 
-export class SyncStoreImpl implements SyncStore {
-  constructor(private db: CapStoreDb) {}
+// ── Domain types ────────────────────────────────────────────────────────────
 
-  async createLogEntry(entry: SyncLogEntry): Promise<void> {
-    await this.db.prisma.syncLog.create({
-      data: {
-        id: entry.id,
-        deviceId: entry.deviceId,
-        table: entry.table,
-        recordId: entry.recordId,
-        operation: entry.operation,
-        dataJson: entry.dataJson,
-        ts: entry.ts,
-        syncedAt: entry.syncedAt,
-      },
-    })
-  }
+export interface SyncStateRow {
+  id: string
+  providerId: string
+  accountId: string
+  entityType: string
+  entityId: string
+  syncDirection: string
+  syncStatus: string
+  syncVersion: string | null
+  cursorJson: string | null
+  lastSyncedAt: number | null
+  nextSyncAt: number | null
+  errorCount: number
+  lastError: string | null
+  itemsSynced: number
+  itemsFailed: number
+  bytesSynced: number
+  createdAt: number
+  updatedAt: number
+}
 
-  async getUnsyncedEntries(deviceId: string, limit?: number): Promise<SyncLogEntry[]> {
-    const rows = await this.db.prisma.syncLog.findMany({
-      where: { deviceId, syncedAt: null },
-      orderBy: { ts: 'asc' },
-      take: limit ?? 100,
-    })
-    return rows.map((r) => ({
-      id: r.id,
-      deviceId: r.deviceId,
-      table: r.table,
-      recordId: r.recordId,
-      operation: r.operation as SyncLogEntry['operation'],
-      dataJson: r.dataJson,
-      ts: Number(r.ts),
-      syncedAt: r.syncedAt == null ? null : Number(r.syncedAt),
-    }))
-  }
+// ── Store implementation ────────────────────────────────────────────────────
 
-  async markSynced(ids: string[]): Promise<void> {
+export class SyncStoreImpl {
+  constructor(private readonly db: CapStoreDb) {}
+
+  async upsertSyncState(input: {
+    providerId: string
+    accountId: string
+    entityType: string
+    entityId: string
+    syncDirection?: string
+    syncStatus?: string
+    cursorJson?: string
+  }): Promise<SyncStateRow> {
     const now = Date.now()
-    await this.db.prisma.syncLog.updateMany({
-      where: { id: { in: ids } },
-      data: { syncedAt: now },
-    })
-  }
-
-  async createPeer(peer: SyncPeer): Promise<void> {
-    await this.db.prisma.syncPeer.create({
-      data: {
-        id: peer.id,
-        deviceId: peer.deviceId,
-        name: peer.name,
-        publicKey: peer.publicKey,
-        lastSyncAt: peer.lastSyncAt,
-        status: peer.status,
-        pairedAt: peer.pairedAt ?? null,
+    // Try to find existing
+    const existing = await (this.db.prisma as any).syncState.findFirst({
+      where: {
+        providerId: input.providerId,
+        accountId: input.accountId,
+        entityType: input.entityType,
+        entityId: input.entityId,
       },
     })
+    if (existing) {
+      const row = await (this.db.prisma as any).syncState.update({
+        where: { id: existing.id },
+        data: {
+          syncDirection: input.syncDirection ?? existing.syncDirection,
+          syncStatus: input.syncStatus ?? existing.syncStatus,
+          cursorJson: input.cursorJson ?? existing.cursorJson,
+          lastSyncedAt: now,
+          updatedAt: now,
+        },
+      })
+      return this.toRow(row)
+    }
+    const row = await (this.db.prisma as any).syncState.create({
+      data: {
+        id: newId(),
+        providerId: input.providerId,
+        accountId: input.accountId,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        syncDirection: input.syncDirection ?? 'pull',
+        syncStatus: input.syncStatus ?? 'pending',
+        syncVersion: null,
+        cursorJson: input.cursorJson ?? null,
+        lastSyncedAt: null,
+        nextSyncAt: null,
+        errorCount: 0,
+        lastError: null,
+        itemsSynced: 0,
+        itemsFailed: 0,
+        bytesSynced: 0,
+        createdAt: now,
+        updatedAt: now,
+      },
+    })
+    return this.toRow(row)
   }
 
-  async updatePeer(id: string, patch: Partial<SyncPeer>): Promise<void> {
-    const data: Record<string, unknown> = {}
-    if (patch.name !== undefined) data.name = patch.name
-    if (patch.publicKey !== undefined) data.publicKey = patch.publicKey
-    if (patch.lastSyncAt !== undefined) data.lastSyncAt = patch.lastSyncAt
-    if (patch.status !== undefined) data.status = patch.status
-    if (patch.pairedAt !== undefined) data.pairedAt = patch.pairedAt
-    await this.db.prisma.syncPeer.update({
+  async getSyncState(
+    providerId: string,
+    accountId: string,
+    entityType: string,
+    entityId: string,
+  ): Promise<SyncStateRow | null> {
+    const row = await (this.db.prisma as any).syncState.findFirst({
+      where: { providerId, accountId, entityType, entityId },
+    })
+    return row ? this.toRow(row) : null
+  }
+
+  async getSyncStatesByAccount(accountId: string): Promise<SyncStateRow[]> {
+    const rows = await (this.db.prisma as any).syncState.findMany({
+      where: { accountId },
+      orderBy: { updatedAt: 'desc' },
+    })
+    return rows.map((r: any) => this.toRow(r))
+  }
+
+  async getSyncStatesPending(): Promise<SyncStateRow[]> {
+    const rows = await (this.db.prisma as any).syncState.findMany({
+      where: { syncStatus: 'pending' },
+      orderBy: { updatedAt: 'asc' },
+      take: 100,
+    })
+    return rows.map((r: any) => this.toRow(r))
+  }
+
+  async updateSyncStatus(id: string, status: string, error?: string): Promise<SyncStateRow> {
+    const now = Date.now()
+    const data: any = { syncStatus: status, updatedAt: now }
+    if (error) {
+      data.lastError = error
+      data.errorCount = { increment: 1 }
+    }
+    if (status === 'synced') {
+      data.lastSyncedAt = now
+    }
+    const row = await (this.db.prisma as any).syncState.update({ where: { id }, data })
+    return this.toRow(row)
+  }
+
+  async incrementSyncStats(
+    id: string,
+    itemsSynced: number,
+    itemsFailed: number,
+    bytesSynced: number,
+  ): Promise<SyncStateRow> {
+    const now = Date.now()
+    const row = await (this.db.prisma as any).syncState.update({
       where: { id },
-      data,
+      data: {
+        itemsSynced: { increment: itemsSynced },
+        itemsFailed: { increment: itemsFailed },
+        bytesSynced: { increment: bytesSynced },
+        lastSyncedAt: now,
+        updatedAt: now,
+      },
     })
+    return this.toRow(row)
   }
 
-  async getPeers(): Promise<SyncPeer[]> {
-    const rows = await this.db.prisma.syncPeer.findMany()
-    return rows.map((r) => ({
-      id: r.id,
-      deviceId: r.deviceId,
-      name: r.name,
-      publicKey: r.publicKey,
-      lastSyncAt: Number(r.lastSyncAt),
-      status: r.status as SyncPeer['status'],
-      pairedAt: r.pairedAt == null ? undefined : Number(r.pairedAt),
-    }))
+  async deleteSyncState(id: string): Promise<void> {
+    await (this.db.prisma as any).syncState.delete({ where: { id } })
   }
 
-  async getPeer(deviceId: string): Promise<SyncPeer | null> {
-    const row = await this.db.prisma.syncPeer.findUnique({
-      where: { deviceId },
-    })
-    if (!row) return null
+  // ── Helpers ─────────────────────────────────────────────────────────────
+
+  private toRow(r: any): SyncStateRow {
     return {
-      id: row.id,
-      deviceId: row.deviceId,
-      name: row.name,
-      publicKey: row.publicKey,
-      lastSyncAt: Number(row.lastSyncAt),
-      status: row.status as SyncPeer['status'],
-      pairedAt: row.pairedAt == null ? undefined : Number(row.pairedAt),
+      id: r.id,
+      providerId: r.providerId,
+      accountId: r.accountId,
+      entityType: r.entityType,
+      entityId: r.entityId,
+      syncDirection: r.syncDirection,
+      syncStatus: r.syncStatus,
+      syncVersion: r.syncVersion,
+      cursorJson: r.cursorJson,
+      lastSyncedAt: r.lastSyncedAt,
+      nextSyncAt: r.nextSyncAt,
+      errorCount: r.errorCount,
+      lastError: r.lastError,
+      itemsSynced: r.itemsSynced,
+      itemsFailed: r.itemsFailed,
+      bytesSynced: r.bytesSynced,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
     }
   }
 }

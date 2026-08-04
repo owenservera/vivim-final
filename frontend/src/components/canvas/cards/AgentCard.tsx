@@ -40,10 +40,10 @@ export function AgentCard({ agent, onInvoke }: AgentCardProps) {
       <header
         style={{
           padding: '6px 10px',
-          borderBottom: '1px solid #e5e7eb',
-          background: '#f9fafb',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--bg-subtle)',
           fontSize: 11,
-          color: '#374151',
+          color: 'var(--text)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -52,8 +52,8 @@ export function AgentCard({ agent, onInvoke }: AgentCardProps) {
             style={{
               padding: '1px 6px',
               borderRadius: 4,
-              background: '#ede9fe',
-              color: '#4c1d95',
+              background: 'var(--color-purple-surface, var(--bg-subtle))',
+              color: 'var(--color-purple)',
               fontSize: 10,
               fontWeight: 600,
             }}
@@ -91,7 +91,7 @@ export function AgentCard({ agent, onInvoke }: AgentCardProps) {
           })}
           <defs>
             <marker id="arrow-agent" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="#9ca3af" />
+              <path d="M0,0 L8,4 L0,8 Z" fill="var(--text-muted)" />
             </marker>
           </defs>
         </svg>
@@ -108,23 +108,23 @@ export function AgentCard({ agent, onInvoke }: AgentCardProps) {
               borderRadius: 4,
               background:
                 step.kind === 'perceive'
-                  ? '#dbeafe'
+                  ? 'var(--color-info-surface, var(--bg-subtle))'
                   : step.kind === 'think'
-                    ? '#fef3c7'
+                    ? 'var(--color-warning-surface)'
                     : step.kind === 'act'
-                      ? '#d1fae5'
+                      ? 'var(--color-success-surface)'
                       : step.kind === 'hitl'
-                        ? '#fee2e2'
+                        ? 'var(--color-error-surface)'
                         : step.kind === 'output'
-                          ? '#e9d5ff'
-                          : 'white',
-              border: '1px solid #d1d5db',
+                          ? 'var(--color-purple-surface, var(--bg-subtle))'
+                          : 'var(--bg)',
+              border: '1px solid var(--border)',
               fontSize: 10,
               textAlign: 'center',
             }}
           >
-            <div style={{ fontWeight: 600, color: '#374151' }}>{step.kind}</div>
-            <div style={{ color: '#6b7280', fontSize: 9 }}>{step.label}</div>
+            <div style={{ fontWeight: 600, color: 'var(--text)' }}>{step.kind}</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 9 }}>{step.label}</div>
           </div>
         ))}
       </div>
@@ -132,13 +132,13 @@ export function AgentCard({ agent, onInvoke }: AgentCardProps) {
       <footer
         style={{
           padding: '4px 10px',
-          borderTop: '1px solid #e5e7eb',
-          background: '#f9fafb',
+          borderTop: '1px solid var(--border)',
+          background: 'var(--bg-subtle)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: 10,
-          color: '#6b7280',
+          color: 'var(--text-muted)',
         }}
       >
         <span>
@@ -149,8 +149,8 @@ export function AgentCard({ agent, onInvoke }: AgentCardProps) {
           disabled={running}
           style={{
             padding: '2px 10px',
-            border: '1px solid #d1d5db',
-            background: running ? '#f3f4f6' : 'white',
+            border: '1px solid var(--border)',
+            background: running ? 'var(--bg-subtle)' : 'var(--bg)',
             borderRadius: 3,
             fontSize: 10,
             cursor: running ? 'not-allowed' : 'pointer',

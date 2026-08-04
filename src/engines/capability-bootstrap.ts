@@ -23,6 +23,7 @@ import type { NLCContext } from './nlcl/types.js'
 import type { OpenCodeClient } from './opencode/opencode-client.js'
 import type { OpenCodeIngest } from './opencode/opencode-ingest.js'
 import type { SemanticSearchEngine } from './semantic-search.js'
+import type { StorageRelocationEngine } from './storage-relocation-engine.js'
 import type {
   CapabilitySurface,
   UnifiedCapability,
@@ -43,6 +44,7 @@ export interface BootstrapServices {
   localAgentExecutor?: LocalAgentProviderExecutor
   opencodeClient?: OpenCodeClient
   opencodeIngest?: OpenCodeIngest
+  relocationEngine?: StorageRelocationEngine
 }
 
 const ALL_SURFACES: CapabilitySurface[] = ['cli', 'ui', 'workflow', 'mcp', 'api']
@@ -53,6 +55,7 @@ export function makeCapability(
     'isAsync' | 'requiresConfirmation' | 'tags' | 'surfaces' | 'handler'
   > & {
     surfaces?: CapabilitySurface[]
+    requiresConfirmation?: boolean
   },
   handler: UnifiedCapability['handler'],
 ): UnifiedCapability {
@@ -61,7 +64,7 @@ export function makeCapability(
     surfaces: partial.surfaces ?? ALL_SURFACES,
     handler,
     isAsync: true,
-    requiresConfirmation: false,
+    requiresConfirmation: partial.requiresConfirmation ?? false,
     tags: [],
   }
 }
@@ -924,6 +927,164 @@ export async function registerDefaultCapabilities(
       ),
     )
   }
+
+  // ── Storage Relocation Capabilities ─────────────────────────────────────
+  const relocationEngine = services.relocationEngine
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:storage:status',
+        slug: 'storage_status',
+        name: 'Storage Status',
+        description:
+          'Show current data storage location, disk usage breakdown, and archived locations.',
+        category: 'storage',
+        inputSchema: { type: 'object', properties: {} },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'storage status',
+          aliases: ['ss'],
+          examples: ['storage status'],
+        },
+        ui: { component: 'storage-status', position: 'settings', order: 1 },
+        mcpToolName: 'storage_status',
+        apiEndpoint: { method: 'GET', path: '/api/storage/status' },
+      },
+      async () => {
+        if (!relocationEngine) {
+          return { error: 'Storage engine not available' }
+        }
+        return relocationEngine.getStorageStatus()
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:storage:relocate',
+        slug: 'storage_relocate',
+        name: 'Relocate Data',
+        description: 'Move all data to a new storage location with zero-downtime migration.',
+        category: 'storage',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            targetDir: { type: 'string', description: 'Absolute path to the new data directory' },
+          },
+          required: ['targetDir'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'storage move',
+          aliases: ['sm'],
+          examples: ['storage move --to "D:\\MyData\\vivim"'],
+        },
+        ui: { component: 'storage-relocate', position: 'settings', order: 2 },
+        mcpToolName: 'storage_relocate',
+        apiEndpoint: { method: 'POST', path: '/api/storage/move' },
+        requiresConfirmation: true,
+      },
+      async (input) => {
+        if (!relocationEngine) {
+          return { error: 'Storage engine not available' }
+        }
+        const targetDir = String(input.targetDir ?? '')
+        if (!targetDir) {
+          return { error: 'targetDir is required' }
+        }
+        return relocationEngine.relocate(targetDir)
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:storage:rollback',
+        slug: 'storage_rollback',
+        name: 'Rollback Storage',
+        description: 'Revert to the previous data storage location.',
+        category: 'storage',
+        inputSchema: { type: 'object', properties: {} },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'storage rollback',
+          aliases: ['sr'],
+          examples: ['storage rollback'],
+        },
+        ui: { component: 'storage-rollback', position: 'settings', order: 3 },
+        mcpToolName: 'storage_rollback',
+        apiEndpoint: { method: 'POST', path: '/api/storage/rollback' },
+        requiresConfirmation: true,
+      },
+      async () => {
+        if (!relocationEngine) {
+          return { error: 'Storage engine not available' }
+        }
+        return relocationEngine.rollback()
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:storage:cleanup',
+        slug: 'storage_cleanup',
+        name: 'Cleanup Old Data',
+        description: 'Delete expired archived data from previous storage locations.',
+        category: 'storage',
+        inputSchema: { type: 'object', properties: {} },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'storage cleanup',
+          aliases: ['sc'],
+          examples: ['storage cleanup'],
+        },
+        ui: { component: 'storage-cleanup', position: 'settings', order: 4 },
+        mcpToolName: 'storage_cleanup',
+        apiEndpoint: { method: 'POST', path: '/api/storage/cleanup' },
+        requiresConfirmation: true,
+      },
+      async () => {
+        if (!relocationEngine) {
+          return { error: 'Storage engine not available' }
+        }
+        const cleaned = await relocationEngine.cleanupExpiredArchives()
+        return { cleaned, count: cleaned.length }
+      },
+    ),
+  )
+
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:storage:progress',
+        slug: 'storage_progress',
+        name: 'Migration Progress',
+        description: 'Check the progress of an in-flight storage migration.',
+        category: 'storage',
+        inputSchema: { type: 'object', properties: {} },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'storage progress',
+          aliases: ['sp'],
+          examples: ['storage progress'],
+        },
+        ui: { component: 'storage-progress', position: 'settings', order: 5 },
+        mcpToolName: 'storage_progress',
+        apiEndpoint: { method: 'GET', path: '/api/storage/progress' },
+      },
+      async () => {
+        if (!relocationEngine) {
+          return { error: 'Storage engine not available' }
+        }
+        return relocationEngine.getStatus()
+      },
+    ),
+  )
 
   for (const cap of defaults) {
     registry.register(cap)

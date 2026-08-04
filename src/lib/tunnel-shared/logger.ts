@@ -43,5 +43,5 @@ export function getLogger(module: string): pino.Logger {
   if (!rootLogger) {
     initLogger()
   }
-  return rootLogger?.child({ module })
+  return rootLogger!.child({ module })
 }

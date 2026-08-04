@@ -3,6 +3,7 @@
 // Assembles context from memory, search, and history before sending to provider.
 
 import { newId } from '../ids.js'
+import type { CapStoreDb } from '../storage/db.js'
 import type { ContextAssemblyStore } from '../storage/contracts/context-assembly-store.js'
 import type { MemoryEngine } from './memory-engine.js'
 import type { SemanticSearchEngine } from './semantic-search.js'
@@ -264,6 +265,7 @@ export class ContextAssemblyEngine {
     private budget: number = DEFAULT_BUDGET,
     /** Optional per-agent frozen memory snapshot provider (spec 024 FR-005). */
     private memorySnapshotProvider?: (conversationId: string) => Promise<string | null>,
+    private conversationStore?: CapStoreDb,
   ) {}
 
   async assemble(conversationId: string, userMessage: string): Promise<AssembledContext> {
@@ -470,14 +472,23 @@ export class ContextAssemblyEngine {
     // Project state layer
     layers.push(...(await this.recallProjectState(conversationId)))
 
-    // Conversation history (placeholder — real impl needs conversation store)
-    layers.push({
-      name: 'conversation_history',
-      content: '',
-      tokenCount: 0,
-      priority: 0,
-      sources: [],
-    })
+    // Conversation history — real query from conversation store
+    if (this.conversationStore) {
+      const historyLayer = await buildConversationHistoryLayer(
+        this.conversationStore,
+        conversationId,
+      )
+      if (historyLayer) layers.push(historyLayer)
+    } else {
+      // Fallback to empty layer when store is not wired
+      layers.push({
+        name: 'conversation_history',
+        content: '',
+        tokenCount: 0,
+        priority: 0,
+        sources: [],
+      })
+    }
 
     return layers
   }
@@ -613,5 +624,115 @@ export class ContextAssemblyEngine {
     } catch {
       // Best-effort
     }
+  }
+}
+
+// ── Conversation History Layer Builder ──────────────────────────────────────
+
+/** Maximum number of recent messages to include in the context layer */
+const MAX_HISTORY_MESSAGES = 50
+
+/** Maximum character budget for the conversation history content */
+const MAX_HISTORY_CHARS = 12_000
+
+interface ConversationMessage {
+  id: string
+  role: string
+  content: string | null
+  blocksJson: string
+  createdAt: number
+  sequenceIndex: number
+}
+
+interface ConversationHistoryLayer {
+  name: 'conversation_history'
+  content: string
+  tokenCount: number
+  priority: number
+  sources: string[]
+}
+
+/**
+ * Builds a real conversation_history layer by querying the conversation store.
+ */
+export async function buildConversationHistoryLayer(
+  db: CapStoreDb,
+  conversationId: string,
+): Promise<ConversationHistoryLayer | null> {
+  // Fetch recent messages for this conversation
+  let messages: ConversationMessage[]
+  try {
+    const raw = await db.prisma.conversationMessage.findMany({
+      where: { conversationId },
+      orderBy: { sequenceIndex: 'asc' },
+      take: MAX_HISTORY_MESSAGES,
+    })
+    messages = raw as unknown as ConversationMessage[]
+  } catch {
+    // If the query fails (e.g. table doesn't exist yet), return null
+    return null
+  }
+
+  if (messages.length === 0) {
+    return null
+  }
+
+  // Format messages into a structured conversation history
+  const formattedParts: string[] = []
+  let totalChars = 0
+  const sources: string[] = []
+
+  for (const msg of messages) {
+    // Parse block content if available
+    let textContent = msg.content ?? ''
+    if (msg.blocksJson && msg.blocksJson !== '[]') {
+      try {
+        const blocks = JSON.parse(msg.blocksJson) as Array<{ text?: string; type?: string }>
+        for (const block of blocks) {
+          if (block.text) {
+            textContent += (textContent ? '\n' : '') + block.text
+          }
+        }
+      } catch {
+        // blocksJson may be malformed — fall back to raw content
+      }
+    }
+
+    // Skip empty messages
+    if (!textContent.trim()) continue
+
+    // Format: [role] content
+    const timestamp = new Date(Number(msg.createdAt)).toISOString()
+    const formatted = `[${msg.role}] (${timestamp}) ${textContent}`
+
+    // Respect character budget
+    if (totalChars + formatted.length > MAX_HISTORY_CHARS) {
+      // Truncate the last message to fit
+      const remaining = MAX_HISTORY_CHARS - totalChars
+      if (remaining > 50) {
+        const truncated = formatted.slice(0, remaining - 1) + '…'
+        formattedParts.push(truncated)
+        totalChars += truncated.length
+      }
+      break
+    }
+
+    formattedParts.push(formatted)
+    totalChars += formatted.length
+    sources.push(msg.id)
+  }
+
+  if (formattedParts.length === 0) {
+    return null
+  }
+
+  const content = formattedParts.join('\n')
+
+  return {
+    name: 'conversation_history',
+    content,
+    tokenCount: estimateTokens(content),
+    priority: 0,
+    sources,
   }
 }

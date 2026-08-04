@@ -1,0 +1,40 @@
+{
+  "provider": {
+    "slug": "whatsapp",
+    "display_name": "WhatsApp",
+    "description": "WhatsApp messaging integration via Business API",
+    "category": "chat",
+    "provider_type": "webapp",
+    "website_url": "https://business.whatsapp.com",
+    "documentation_url": "https://developers.facebook.com/docs/whatsapp",
+    "auth_type": "api_key",
+    "has_multi_account": true,
+    "profile_strategy": "browser",
+    "capabilities": [
+      "send_message",
+      "send_reply",
+      "send_media",
+      "send_template",
+      "mark_as_read",
+      "get_contacts"
+    ]
+  },
+  "endpoints": [
+    {
+      "label": "api",
+      "url": "https://graph.facebook.com/v18.0",
+      "endpoint_type": "api",
+      "is_default": true
+    }
+  ],
+  "parsers": [
+    { "name": "whatsapp-webhook", "version": 1, "is_active": true, "fallback": "generic-format-agnostic" }
+  ],
+  "models": [],
+  "capabilities_config": [],
+  "config": [
+    { "key": "access_token", "value": "WHATSAPP_ACCESS_TOKEN", "is_secret": true },
+    { "key": "phone_number_id", "value": "WHATSAPP_PHONE_NUMBER_ID", "is_secret": false },
+    { "key": "verify_token", "value": "WHATSAPP_VERIFY_TOKEN", "is_secret": true }
+  ]
+}

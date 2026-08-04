@@ -4,6 +4,7 @@
 import { NotFoundError } from '../errors.js'
 import { newId } from '../ids.js'
 import type { NodeStoreContract } from '../storage/contracts/node-store.js'
+import type { MemoryIntelligenceStoreImpl } from '../storage/impl/memory-intelligence-store-impl.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -152,13 +153,21 @@ export interface ProceduralMemoryStore {
 
 export class MemoryEngine {
   private consolidationTimer?: ReturnType<typeof setInterval>
+  private intelligenceStore?: MemoryIntelligenceStoreImpl
 
   constructor(
     private readonly episodic: EpisodicMemoryStore,
     private readonly semantic: SemanticMemoryStore,
     private readonly procedural: ProceduralMemoryStore,
     private readonly eventBus: CapabilityEventBus,
-  ) {}
+    intelligenceStore?: MemoryIntelligenceStoreImpl,
+  ) {
+    this.intelligenceStore = intelligenceStore
+  }
+
+  setIntelligenceStore(store: MemoryIntelligenceStoreImpl): void {
+    this.intelligenceStore = store
+  }
 
   // ── Export helpers ───────────────────────────────────────────────────────
 
@@ -582,11 +591,57 @@ export class MemoryEngine {
     description?: string
     conversationId?: string
     messageId?: string
-  }): Promise<void> {
+  }): Promise<{ id: string; name: string; type: string }> {
+    if (!this.intelligenceStore) {
+      this.eventBus.emit({
+        type: 'memory:entity_recorded',
+        data: { name: input.name, type: input.type },
+      })
+      return { id: newId(), name: input.name, type: input.type }
+    }
+
+    // Check if entity already exists (by unique name+type)
+    const existing = await this.intelligenceStore.findByName(input.name)
+    if (existing && existing.type === input.type) {
+      // Entity exists — increment mention count and optionally create a mention
+      await this.intelligenceStore.incrementMentionCount(existing.id)
+      if (input.conversationId && input.messageId) {
+        await this.intelligenceStore.createEntityMention({
+          entityId: existing.id,
+          conversationId: input.conversationId,
+          messageId: input.messageId,
+          context: input.description ?? '',
+        })
+      }
+      this.eventBus.emit({
+        type: 'memory:entity_recorded',
+        data: { id: existing.id, name: input.name, type: input.type },
+      })
+      return { id: existing.id, name: existing.name, type: existing.type }
+    }
+
+    // Create new entity
+    const entity = await this.intelligenceStore.createEntity({
+      name: input.name,
+      type: input.type,
+      description: input.description,
+    })
+
+    // Create mention if conversation context is provided
+    if (input.conversationId && input.messageId) {
+      await this.intelligenceStore.createEntityMention({
+        entityId: entity.id,
+        conversationId: input.conversationId,
+        messageId: input.messageId,
+        context: input.description ?? '',
+      })
+    }
+
     this.eventBus.emit({
       type: 'memory:entity_recorded',
-      data: { name: input.name, type: input.type },
+      data: { id: entity.id, name: entity.name, type: entity.type },
     })
+    return { id: entity.id, name: entity.name, type: entity.type }
   }
 
   async recordDecision(input: {
@@ -595,38 +650,120 @@ export class MemoryEngine {
     decisionText: string
     rationale?: string
     alternatives?: string[]
-  }): Promise<void> {
+  }): Promise<{ id: string; conversationId: string; decisionText: string }> {
+    if (!this.intelligenceStore) {
+      this.eventBus.emit({
+        type: 'memory:decision_recorded',
+        data: { conversationId: input.conversationId, decisionText: input.decisionText },
+      })
+      return { id: newId(), conversationId: input.conversationId, decisionText: input.decisionText }
+    }
+
+    const record = await this.intelligenceStore.createDecisionRecord({
+      conversationId: input.conversationId,
+      messageId: input.messageId,
+      decisionText: input.decisionText,
+      rationale: input.rationale,
+      alternatives: input.alternatives,
+    })
+
     this.eventBus.emit({
       type: 'memory:decision_recorded',
-      data: { conversationId: input.conversationId, decisionText: input.decisionText },
+      data: {
+        id: record.id,
+        conversationId: input.conversationId,
+        decisionText: input.decisionText,
+      },
     })
+    return {
+      id: record.id,
+      conversationId: record.conversationId,
+      decisionText: record.decisionText,
+    }
   }
 
   async recordPattern(input: {
     name: string
     description: string
     patternType: string
-  }): Promise<void> {
+  }): Promise<{ id: string; name: string; patternType: string }> {
+    if (!this.intelligenceStore) {
+      this.eventBus.emit({
+        type: 'memory:pattern_recorded',
+        data: { name: input.name, patternType: input.patternType },
+      })
+      return { id: newId(), name: input.name, patternType: input.patternType }
+    }
+
+    // Check if pattern already exists (by unique name+patternType)
+    const existing = await this.intelligenceStore.listPatternExtracts({ patternType: input.patternType })
+    const match = existing.find((p) => p.name === input.name)
+
+    if (match) {
+      // Pattern exists — increment occurrences
+      await this.intelligenceStore.incrementOccurrences(match.id)
+      this.eventBus.emit({
+        type: 'memory:pattern_recorded',
+        data: { id: match.id, name: input.name, patternType: input.patternType },
+      })
+      return { id: match.id, name: match.name, patternType: match.patternType }
+    }
+
+    // Create new pattern
+    const pattern = await this.intelligenceStore.createPatternExtract({
+      name: input.name,
+      description: input.description,
+      patternType: input.patternType,
+    })
+
     this.eventBus.emit({
       type: 'memory:pattern_recorded',
-      data: { name: input.name, patternType: input.patternType },
+      data: { id: pattern.id, name: pattern.name, patternType: pattern.patternType },
     })
+    return { id: pattern.id, name: pattern.name, patternType: pattern.patternType }
   }
 
   async getTopics(): Promise<Array<{ id: string; name: string; description: string | null }>> {
-    return []
+    if (!this.intelligenceStore) {
+      return []
+    }
+    const topics = await this.intelligenceStore.listTopics()
+    return topics.map((t) => ({
+      id: t.id,
+      name: t.name,
+      description: t.description,
+    }))
   }
 
   async getProjects(): Promise<
     Array<{ id: string; name: string; description: string | null; status: string }>
   > {
-    return []
+    if (!this.intelligenceStore) {
+      return []
+    }
+    const projects = await this.intelligenceStore.listProjects()
+    return projects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      status: p.status,
+    }))
   }
 
-  async assignTopic(conversationId: string, topicId: string): Promise<void> {
+  async assignTopic(conversationId: string, topicId: string, assignmentType: 'auto' | 'manual' = 'auto'): Promise<void> {
+    if (!this.intelligenceStore) {
+      this.eventBus.emit({
+        type: 'memory:topic_assigned',
+        data: { conversationId, topicId },
+      })
+      return
+    }
+
+    await this.intelligenceStore.assignConversation(conversationId, topicId, assignmentType)
+
     this.eventBus.emit({
       type: 'memory:topic_assigned',
-      data: { conversationId, topicId },
+      data: { conversationId, topicId, assignmentType },
     })
   }
 

@@ -89,9 +89,9 @@ export function CapabilityCatalog() {
 
       {/* Error */}
       {error && (
-        <div style={{ padding: 16, background: 'color-mix(in oklch, #ef4444 12%, var(--bg-elevated))', border: '1px solid #ef4444', borderRadius: 8, color: '#ef4444', fontSize: 12 }}>
+        <div style={{ padding: 16, background: 'var(--color-error-surface)', border: '1px solid var(--color-error)', borderRadius: 8, color: 'var(--color-error)', fontSize: 12 }}>
           {error}
-          <button onClick={refresh} style={{ marginLeft: 8, padding: '2px 8px', background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>Retry</button>
+          <button onClick={refresh} style={{ marginLeft: 8, padding: '2px 8px', background: 'transparent', border: '1px solid var(--color-error)', color: 'var(--color-error)', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}>Retry</button>
         </div>
       )}
 

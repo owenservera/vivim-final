@@ -1,0 +1,129 @@
+{
+  "schema": "vivim.upgrade.package/v1",
+  "package": {
+    "title": "UX: Frontend Performance & Asset Modernization",
+    "summary": "The frontend ships CoffeeScript (deprecated, removed from Rails 7 defaults), Turbolinks (replaced by Hotwire/Turbo in 2021), jQuery as a global (90KB), three jQuery plugins (flexslider, colorbox, owl.carousel), and render-blocking Google Fonts. All project screenshots are PNG (no WebP). This package cuts the JS payload, removes deprecated tech, and modernizes the asset pipeline.",
+    "index": 8,
+    "generatedAt": "2026-08-02T21:54:17.336Z",
+    "grounded": true,
+    "commitInspected": "71886e93f5743ed49d3b7ca3380644e9e054f60b"
+  },
+  "repo": {
+    "id": "cmsc7am6r0000ryi8uiccfd2u",
+    "name": "vivim",
+    "version": "0.1.0",
+    "url": "https://github.com/vivim/vivim"
+  },
+  "findings": [
+    {
+      "id": "UX8-01",
+      "severity": "high",
+      "title": "CoffeeScript is deprecated and removed from Rails 7 defaults",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX8-02",
+      "severity": "high",
+      "title": "Turbolinks is deprecated - replaced by Hotwire/Turbo in 2021",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX8-03",
+      "severity": "high",
+      "title": "jQuery loaded as a global - 90KB+ for what could be 0KB of vanilla JS",
+      "evidenceCount": 3
+    },
+    {
+      "id": "UX8-04",
+      "severity": "medium",
+      "title": "Google Fonts loaded render-blocking without preconnect",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX8-05",
+      "severity": "medium",
+      "title": "All project screenshots are PNG (no WebP/AVIF) - 30-50% larger",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX8-06",
+      "severity": "medium",
+      "title": "Stylesheet uses .sass indented syntax (deprecated in favor of .scss)",
+      "evidenceCount": 1
+    },
+    {
+      "id": "UX8-07",
+      "severity": "medium",
+      "title": "Three jQuery plugins loaded (flexslider, colorbox, owl.carousel) for a single page",
+      "evidenceCount": 2
+    },
+    {
+      "id": "UX8-08",
+      "severity": "low",
+      "title": "Google Fonts link has no integrity or crossorigin attributes",
+      "evidenceCount": 1
+    }
+  ],
+  "tasks": [
+    {
+      "id": "UX8-T01",
+      "effort": "M"
+    },
+    {
+      "id": "UX8-T02",
+      "effort": "M"
+    },
+    {
+      "id": "UX8-T03",
+      "effort": "L"
+    },
+    {
+      "id": "UX8-T04",
+      "effort": "S"
+    },
+    {
+      "id": "UX8-T05",
+      "effort": "M"
+    },
+    {
+      "id": "UX8-T06",
+      "effort": "S"
+    },
+    {
+      "id": "UX8-T07",
+      "effort": "S"
+    },
+    {
+      "id": "UX8-T08",
+      "effort": "S"
+    }
+  ],
+  "specs": [
+    {
+      "id": "UX8-S1"
+    },
+    {
+      "id": "UX8-S2"
+    },
+    {
+      "id": "UX8-S3"
+    },
+    {
+      "id": "UX8-S4"
+    },
+    {
+      "id": "UX8-S5"
+    },
+    {
+      "id": "UX8-S6"
+    },
+    {
+      "id": "UX8-S7"
+    },
+    {
+      "id": "UX8-S8"
+    }
+  ],
+  "fileCount": 15,
+  "totalSizeBytes": 40646
+}

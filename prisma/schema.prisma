@@ -507,7 +507,7 @@ model SelectorStrategy {
   healthHistories SelectorHealthHistory[]
 
   @@index([capabilityId, providerId], map: "idx_ss_cap")
-  @@index([providerId], map: "idx_ss_provider")
+  @@index([providerId], map: "idx_selstrat_provider")
   @@map("selector_strategy")
 }
 
@@ -2875,6 +2875,21 @@ model User {
   @@map("user")
 }
 
+model UserOnboarding {
+  id              String  @id @default(cuid())
+  userId          String  @unique @map("user_id")
+  completedSteps  String  @default("[]") @map("completed_steps")
+  dismissed       Boolean @default(false)
+  lastShownAt     BigInt? @map("last_shown_at")
+  lastCompletedAt BigInt? @map("last_completed_at")
+  tourTimings     String? @map("tour_timings")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@index([userId], map: "idx_user_onboarding_user_id")
+  @@map("user_onboarding")
+}
+
 // ── Workflow Engine storage ──────────────────────────────────────────────
 
 model WorkflowRetryQueue {
@@ -3228,4 +3243,518 @@ model WorkspaceTemplateRow {
 
   @@index([createdAt])
   @@map("workspace_template_row")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Phase 1: Next Tranche WebApps — 21 Models
+// Source: docs/vivim-upgrade-files-p1/download/vivim-next-tranche-db-upgrade-plan.md
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Cross-Cutting Schema ──────────────────────────────────────────────────
+
+model EntityContainer {
+  id                String  @id
+  providerId        String  @map("provider_id")
+  accountId         String  @map("account_id")
+  parentContainerId String? @map("parent_container_id")
+  containerType     String  @map("container_type") // server, workspace, subreddit, page, channel, thread, group
+  providerNativeId  String  @map("provider_native_id") // provider's own ID (Discord server ID, Slack workspace ID)
+  name              String
+  description       String?
+  iconUrl           String? @map("icon_url")
+  metadataJson      String  @default("{}") @map("metadata_json")
+  sortOrder         Int     @default(0) @map("sort_order")
+  isCollapsed       Int     @default(0) @map("is_collapsed") // UI state: collapsed in sidebar
+  isMuted           Int     @default(0) @map("is_muted") // muted containers don't show notifications
+  isSynced          Int     @default(0) @map("is_synced") // whether this container's data has been synced
+  lastSyncedAt      BigInt? @map("last_synced_at")
+  syncCursorJson    String  @default("{}") @map("sync_cursor_json") // opaque cursor for incremental sync
+  unreadCount       Int     @default(0) @map("unread_count")
+  mentionCount      Int     @default(0) @map("mention_count")
+  isArchived        Int     @default(0) @map("is_archived")
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
+
+  memberships EntityContainerMembership[]
+  content     ContentItem[]
+
+  @@unique([providerId, accountId, providerNativeId])
+  @@index([providerId, accountId], map: "idx_ec_provider")
+  @@index([parentContainerId], map: "idx_ec_parent")
+  @@index([containerType], map: "idx_ec_type")
+  @@index([providerId, accountId, unreadCount], map: "idx_ec_unread")
+  @@index([isSynced, lastSyncedAt], map: "idx_ec_sync")
+  @@map("entity_container")
+}
+
+model EntityContainerMembership {
+  id                     String  @id
+  containerId            String  @map("container_id")
+  userRole               String  @default("member") @map("user_role") // owner, admin, moderator, member, guest, viewer
+  joinedAt               BigInt? @map("joined_at")
+  lastActiveAt           BigInt? @map("last_active_at")
+  isFavorite             Int     @default(0) @map("is_favorite")
+  notificationPreference String  @default("all") @map("notification_preference") // all, mentions, none
+  metadataJson           String  @default("{}") @map("metadata_json")
+  createdAt              BigInt  @map("created_at")
+  updatedAt              BigInt  @map("updated_at")
+
+  container EntityContainer @relation(fields: [containerId], references: [id], onDelete: Cascade)
+
+  @@unique([containerId, userRole])
+  @@index([containerId], map: "idx_ecm_container")
+  @@map("entity_container_membership")
+}
+
+model ContentItem {
+  id                   String  @id
+  providerId           String  @map("provider_id")
+  accountId            String  @map("account_id")
+  containerId          String? @map("container_id")
+  parentItemId         String? @map("parent_item_id") // for nested content (comment on post, reply to thread)
+  conversationId       String? @map("conversation_id") // link to existing conversation for AI chat
+  providerNativeId     String? @map("provider_native_id") // provider's own ID (message ID, post ID)
+  contentType          String  @map("content_type") // message, post, comment, reply, thread_op, page, block, dm, notification
+  authorName           String? @map("author_name")
+  authorAvatarUrl      String? @map("author_avatar_url")
+  authorProviderId     String? @map("author_provider_id") // provider-specific user ID of the author
+  title                String? // for posts, thread titles, page names
+  bodyText             String? @map("body_text") // plain text body (for search indexing)
+  bodyRichJson         String  @default("{}") @map("body_rich_json") // structured rich content (blocks, formatting)
+  summaryText          String? @map("summary_text") // AI-generated or extracted summary
+  url                  String? // link to original content on provider's site
+  mediaAttachmentsJson String  @default("[]") @map("media_attachments_json")
+  reactionsJson        String  @default("[]") @map("reactions_json") // [{emoji, count, is_reacted, user_names[]}]
+  tagsJson             String  @default("[]") @map("tags_json") // hashtags, labels, categories
+  mentionsJson         String  @default("[]") @map("mentions_json") // [{user_id, username, display_name}]
+  linksJson            String  @default("[]") @map("links_json") // [{url, title, description, image_url, domain}]
+  editHistoryJson      String  @default("[]") @map("edit_history_json") // [{body_text, edited_at, edit_reason}]
+  isEdited             Int     @default(0) @map("is_edited")
+  isPinned             Int     @default(0) @map("is_pinned")
+  isDeleted            Int     @default(0) @map("is_deleted")
+  isBookmarked         Int     @default(0) @map("is_bookmarked")
+  voteScore            Int?    @map("vote_score") // Reddit upvotes, Discord reactions
+  voteDirection        String? @map("vote_direction") // up, down, none
+  replyCount           Int     @default(0) @map("reply_count")
+  shareCount           Int     @default(0) @map("share_count")
+  viewCount            Int?    @map("view_count")
+  sequenceIndex        Int     @default(0) @map("sequence_index") // for ordered content
+  sortTimestamp        BigInt  @map("sort_timestamp") // timestamp used for sorting
+  metadataJson         String  @default("{}") @map("metadata_json")
+  createdAt            BigInt  @map("created_at")
+  updatedAt            BigInt  @map("updated_at")
+  deletedAt            BigInt? @map("deleted_at")
+
+  container EntityContainer? @relation(fields: [containerId], references: [id], onDelete: SetNull)
+  media     MediaAttachment[]
+
+  @@index([providerId, accountId], map: "idx_ci_provider")
+  @@index([containerId, sortTimestamp], map: "idx_ci_container")
+  @@index([parentItemId, sequenceIndex], map: "idx_ci_parent")
+  @@index([conversationId], map: "idx_ci_conversation")
+  @@index([contentType], map: "idx_ci_type")
+  @@index([authorProviderId], map: "idx_ci_author")
+  @@index([isBookmarked, sortTimestamp], map: "idx_ci_bookmarked")
+  @@index([isDeleted], map: "idx_ci_deleted")
+  @@index([containerId, contentType, sortTimestamp], map: "idx_ci_sort")
+  @@index([providerId, bodyText], map: "idx_ci_search")
+  @@map("content_item")
+}
+
+model Notification {
+  id               String  @id
+  providerId       String  @map("provider_id")
+  accountId        String  @map("account_id")
+  containerId      String? @map("container_id")
+  contentItemId    String? @map("content_item_id")
+  notificationType String  @map("notification_type") // mention, dm, reply, reaction, follow, invite, system, reminder, alert
+  title            String
+  bodyText         String? @map("body_text")
+  iconUrl          String? @map("icon_url")
+  actionUrl        String? @map("action_url") // deep link to the relevant content
+  senderName       String? @map("sender_name")
+  senderAvatarUrl  String? @map("sender_avatar_url")
+  isRead           Int     @default(0) @map("is_read")
+  isActioned       Int     @default(0) @map("is_actioned") // whether the user has taken action
+  priority         String  @default("normal") // urgent, high, normal, low
+  expiresAt        BigInt? @map("expires_at") // some notifications expire (Discord temp invites)
+  metadataJson     String  @default("{}") @map("metadata_json")
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
+
+  @@index([providerId, accountId, isRead, createdAt], map: "idx_notif_provider")
+  @@index([notificationType], map: "idx_notif_type")
+  @@index([isRead, createdAt], map: "idx_notif_unread")
+  @@index([containerId], map: "idx_notif_container")
+  @@map("notification")
+}
+
+model Contact {
+  id               String  @id
+  providerId       String  @map("provider_id")
+  accountId        String  @map("account_id")
+  providerNativeId String  @map("provider_native_id") // provider's own ID (phone number, Discord user ID)
+  displayName      String  @map("display_name")
+  username         String?
+  avatarUrl        String? @map("avatar_url")
+  phoneNumber      String? @map("phone_number")
+  email            String?
+  isOnline         Int     @default(0) @map("is_online") // real-time presence status
+  statusText       String? @map("status_text") // custom status message
+  lastSeenAt       BigInt? @map("last_seen_at")
+  relationship     String  @default("contact") // contact, friend, colleague, following, follower, mutual, blocked
+  isFavorite       Int     @default(0) @map("is_favorite")
+  isBlocked        Int     @default(0) @map("is_blocked")
+  notes            String? // user's personal notes about this contact
+  metadataJson     String  @default("{}") @map("metadata_json")
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
+
+  identities ContactIdentity[]
+
+  @@unique([providerId, accountId, providerNativeId])
+  @@index([providerId, accountId], map: "idx_contact_provider")
+  @@index([displayName], map: "idx_contact_name")
+  @@index([isOnline], map: "idx_contact_online")
+  @@index([isFavorite], map: "idx_contact_favorite")
+  @@map("contact")
+}
+
+model ContactIdentity {
+  id                 String  @id
+  canonicalContactId String  @map("canonical_contact_id")
+  mergedContactId    String  @map("merged_contact_id")
+  mergeConfidence    Float   @default(0.5) @map("merge_confidence") // how confident we are that these are the same person
+  mergeMethod        String  @default("auto") @map("merge_method") // auto, manual, email_match, phone_match, name_heuristic
+  isConfirmed        Int     @default(0) @map("is_confirmed") // user confirmed this merge
+  createdAt          BigInt  @map("created_at")
+
+  canonicalContact Contact @relation(fields: [canonicalContactId], references: [id], onDelete: Cascade)
+
+  @@unique([canonicalContactId, mergedContactId])
+  @@index([canonicalContactId], map: "idx_ci_canonical")
+  @@map("contact_identity")
+}
+
+model SyncState {
+  id             String  @id
+  providerId     String  @map("provider_id")
+  accountId      String  @map("account_id")
+  entityType     String  @map("entity_type") // container, content_item, contact, notification
+  entityId       String  @map("entity_id") // the ID of the entity being synced
+  syncDirection  String  @default("pull") @map("sync_direction") // pull, push, bidirectional
+  syncStatus     String  @default("pending") @map("sync_status") // pending, in_progress, completed, failed, conflict, partial
+  syncVersion    Int     @default(0) @map("sync_version") // incremented on each successful sync
+  cursorJson     String  @default("{}") @map("cursor_json") // opaque cursor for incremental sync
+  lastSyncedAt   BigInt? @map("last_synced_at")
+  nextSyncAt     BigInt? @map("next_sync_at") // scheduled next sync time
+  errorCount     Int     @default(0) @map("error_count")
+  lastError      String? @map("last_error")
+  itemsSynced    Int     @default(0) @map("items_synced")
+  itemsFailed    Int     @default(0) @map("items_failed")
+  bytesSynced    Int     @default(0) @map("bytes_synced")
+  metadataJson   String  @default("{}") @map("metadata_json")
+  createdAt      BigInt  @map("created_at")
+  updatedAt      BigInt  @map("updated_at")
+
+  @@unique([providerId, accountId, entityType, entityId])
+  @@index([providerId, accountId], map: "idx_ss_provider")
+  @@index([syncStatus], map: "idx_ss_status")
+  @@index([nextSyncAt], map: "idx_ss_next")
+  @@index([entityType, entityId], map: "idx_ss_entity")
+  @@map("sync_state")
+}
+
+model MediaAttachment {
+  id                  String   @id
+  providerId          String   @map("provider_id")
+  contentItemId       String?  @map("content_item_id")
+  mediaType           String   @map("media_type") // image, video, audio, file, embed, sticker, voice, avatar, icon
+  mimeType            String   @map("mime_type")
+  filename            String?
+  originalUrl         String   @map("original_url") // provider's URL for this media
+  localPath           String?  @map("local_path") // local file path after download (sovereign data)
+  thumbnailUrl        String?  @map("thumbnail_url")
+  thumbnailLocalPath  String?  @map("thumbnail_local_path")
+  sizeBytes           Int?     @map("size_bytes")
+  width               Int?
+  height              Int?
+  durationSeconds     Float?   @map("duration_seconds") // for audio/video
+  isDownloaded        Int      @default(0) @map("is_downloaded")
+  isEncrypted         Int      @default(0) @map("is_encrypted")
+  encryptionKeyRef    String?  @map("encryption_key_ref") // reference to encryption key (sovereign data)
+  downloadProgress    Float?   @default(0) @map("download_progress") // 0.0 to 1.0
+  providerNativeId    String?  @map("provider_native_id") // provider's own ID for this media
+  metadataJson        String   @default("{}") @map("metadata_json") // EXIF, transcription, OCR, etc.
+  createdAt           BigInt   @map("created_at")
+  updatedAt           BigInt   @map("updated_at")
+
+  contentItem ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
+
+  @@index([providerId], map: "idx_ma_provider")
+  @@index([contentItemId], map: "idx_ma_content")
+  @@index([mediaType], map: "idx_ma_type")
+  @@index([isDownloaded], map: "idx_ma_downloaded")
+  @@map("media_attachment")
+}
+
+model ProviderCapabilityTaxonomy {
+  id                     String  @id
+  providerId             String  @map("provider_id")
+  platformCategory       String  @map("platform_category") // ai_chatbot, social_messaging, social_feed, productivity, dating, forum, ide, agentic_agent, ai_tooling, browser_automation
+  interactionPattern     String  @map("interaction_pattern") // chat, feed, thread, document, canvas, voice, mixed
+  messageTypesJson       String  @default("[]") @map("message_types_json") // platform-specific message/content types
+  capabilitiesJson       String  @default("[]") @map("capabilities_json") // [{slug, type, authScope, description}]
+  constraintsJson        String  @default("{}") @map("constraints_json") // {rateLimits, maxMessageLength, supportedMediaTypes, maxFileSize}
+  authRequirementsJson   String  @default("[]") @map("auth_requirements_json") // auth steps required
+  discoveryHintsJson     String  @default("{}") @map("discovery_hints_json") // {composerSelector, sendButtonSelector, etc.}
+  nlpEntityTypesJson     String  @default("[]") @map("nlp_entity_types_json") // [{name, extractionPattern, normalizationFn}]
+  nlpIntentPatternsJson  String  @default("[]") @map("nlp_intent_patterns_json") // [{intent, patterns[], confidence, requiredEntities[]}]
+  entityHierarchyJson    String  @default("[]") @map("entity_hierarchy_json") // [{level, label, children[], icon, selectorHint}]
+  syncCapabilitiesJson   String  @default("{}") @map("sync_capabilities_json") // {supported, method, maxAge, batchSize}
+  seedDataVersion        Int     @default(1) @map("seed_data_version")
+  isActive               Int     @default(1) @map("is_active")
+  createdAt              BigInt  @map("created_at")
+  updatedAt              BigInt  @map("updated_at")
+
+  @@unique([providerId, platformCategory, interactionPattern])
+  @@index([platformCategory], map: "idx_pct_category")
+  @@index([interactionPattern], map: "idx_pct_pattern")
+  @@index([providerId], map: "idx_pct_provider")
+  @@map("provider_capability_taxonomy")
+}
+
+// ── Discord Extensions ────────────────────────────────────────────────────
+
+model DiscordVoiceState {
+  id              String  @id
+  containerId     String  @map("container_id") // guild/channel ID
+  userId          String  @map("user_id")
+  channelId       String  @map("channel_id")
+  guildId         String? @map("guild_id")
+  sessionId       String  @map("session_id")
+  deaf            Int     @default(0)
+  mute            Int     @default(0)
+  selfDeaf        Int     @default(0) @map("self_deaf")
+  selfMute        Int     @default(0) @map("self_mute")
+  suppress        Int     @default(0)
+  requestToSpeakTimestamp BigInt? @map("request_to_speak_timestamp")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([userId, channelId])
+  @@index([guildId], map: "idx_dvs_guild")
+  @@index([channelId], map: "idx_dvs_channel")
+  @@map("discord_voice_state")
+}
+
+model DiscordMemberMeta {
+  id              String  @id
+  containerId     String  @map("container_id") // guild ID
+  userId          String  @map("user_id")
+  nick            String?
+  roles           String  @default("[]") @map("roles_json")
+  joinedAt        BigInt  @map("joined_at")
+  premiumSince    BigInt? @map("premium_since")
+  isPending       Int     @default(0) @map("is_pending")
+  communicationDisabledUntil BigInt? @map("communication_disabled_until")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([containerId, userId])
+  @@index([userId], map: "idx_dmm_user")
+  @@map("discord_member_meta")
+}
+
+// ── Slack Extensions ──────────────────────────────────────────────────────
+
+model SlackChannelMeta {
+  id              String  @id
+  containerId     String  @map("container_id") // channel ID
+  workspaceId     String? @map("workspace_id")
+  name            String
+  topic           String?
+  purpose         String?
+  isPrivate       Int     @default(0) @map("is_private")
+  isArchived      Int     @default(0) @map("is_archived")
+  memberCount     Int     @default(0) @map("member_count")
+  lastMessageAt   BigInt? @map("last_message_at")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([containerId])
+  @@index([workspaceId], map: "idx_scm_workspace")
+  @@index([isArchived], map: "idx_scm_archived")
+  @@map("slack_channel_meta")
+}
+
+model SlackThreadMeta {
+  id              String  @id
+  containerId     String  @map("container_id") // channel ID
+  threadTs        String  @map("thread_ts") // Slack thread timestamp
+  parentTs        String  @map("parent_ts") // parent message timestamp
+  replyCount      Int     @default(0) @map("reply_count")
+  lastReplyAt     BigInt? @map("last_reply_at")
+  isParticipated  Int     @default(0) @map("is_participated")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([containerId, threadTs])
+  @@index([parentTs], map: "idx_stm_parent")
+  @@map("slack_thread_meta")
+}
+
+// ── WhatsApp Extensions ───────────────────────────────────────────────────
+
+model WhatsAppEncryptionMeta {
+  id              String  @id
+  containerId     String  @map("container_id") // chat ID
+  userId          String  @map("user_id")
+  keyIndex        String? @map("key_index")
+  identityKey     String? @map("identity_key")
+  registrationId  Int?    @map("registration_id")
+  preKeyId        Int?    @map("pre_key_id")
+  signedPreKeyId  Int?    @map("signed_pre_key_id")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([containerId, userId])
+  @@index([userId], map: "idx_wem_user")
+  @@map("whatsapp_encryption_meta")
+}
+
+model WhatsAppContactMeta {
+  id              String  @id
+  contactId       String  @map("contact_id")
+  phoneNumber     String  @map("phone_number")
+  isBusiness      Int     @default(0) @map("is_business")
+  businessName    String? @map("business_name")
+  businessDescription String? @map("business_description")
+  isBlocked       Int     @default(0) @map("is_blocked")
+  isFavorite      Int     @default(0) @map("is_favorite")
+  lastSeenAt      BigInt? @map("last_seen_at")
+  about           String?
+  profilePhotoUrl String? @map("profile_photo_url")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([contactId])
+  @@index([phoneNumber], map: "idx_wcm_phone")
+  @@index([isBusiness], map: "idx_wcm_business")
+  @@map("whatsapp_contact_meta")
+}
+
+// ── Reddit Extensions ─────────────────────────────────────────────────────
+
+model RedditSubredditMeta {
+  id              String  @id
+  containerId     String  @map("container_id") // subreddit ID
+  name            String
+  displayName     String  @map("display_name")
+  description     String?
+  shortDescription String? @map("short_description")
+  subscriberCount Int     @default(0) @map("subscriber_count")
+  activeCount     Int     @default(0) @map("active_count")
+  isNsfw          Int     @default(0) @map("is_nsfw")
+  isPrivate       Int     @default(0) @map("is_private")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([containerId])
+  @@index([name], map: "idx_rsm_name")
+  @@index([subscriberCount], map: "idx_rsm_subscribers")
+  @@map("reddit_subreddit_meta")
+}
+
+model RedditPostMeta {
+  id              String  @id
+  contentItemId   String  @map("content_item_id")
+  subredditId     String? @map("subreddit_id")
+  authorId        String? @map("author_id")
+  authorName      String? @map("author_name")
+  title           String
+  url             String?
+  permalink       String?
+  score           Int     @default(0)
+  upvoteRatio     Float?  @map("upvote_ratio")
+  commentCount    Int     @default(0) @map("comment_count")
+  isSelf          Int     @default(0) @map("is_self")
+  selfText        String? @map("self_text")
+  isNsfw          Int     @default(0) @map("is_nsfw")
+  isSpoiler       Int     @default(0) @map("is_spoiler")
+  flair           String?
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([contentItemId])
+  @@index([subredditId], map: "idx_rpm_subreddit")
+  @@index([authorId], map: "idx_rpm_author")
+  @@index([score], map: "idx_rpm_score")
+  @@map("reddit_post_meta")
+}
+
+// ── Notion Extensions ─────────────────────────────────────────────────────
+
+model NotionBlockMeta {
+  id              String  @id
+  contentItemId   String  @map("content_item_id")
+  blockType       String  @map("block_type") // paragraph, heading, list, code, etc.
+  blockId         String  @map("block_id") // Notion block ID
+  parentId        String? @map("parent_id")
+  hasChildren     Int     @default(0) @map("has_children")
+  richTextJson    String  @default("[]") @map("rich_text_json")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([contentItemId])
+  @@index([blockType], map: "idx_nbm_type")
+  @@index([parentId], map: "idx_nbm_parent")
+  @@map("notion_block_meta")
+}
+
+model NotionDatabaseMeta {
+  id              String  @id
+  contentItemId   String  @map("content_item_id")
+  databaseId      String  @map("database_id")
+  title           String
+  description     String?
+  icon            String?
+  cover           String?
+  isInline        Int     @default(0) @map("is_inline")
+  propertiesJson  String  @default("[]") @map("properties_json")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([contentItemId])
+  @@index([databaseId], map: "idx_ndm_database")
+  @@map("notion_database_meta")
+}
+
+model NotionPageMeta {
+  id              String  @id
+  contentItemId   String  @map("content_item_id")
+  pageId          String  @map("page_id")
+  databaseId      String? @map("database_id")
+  title           String
+  icon            String?
+  cover           String?
+  isPublished     Int     @default(0) @map("is_published")
+  propertiesJson  String  @default("[]") @map("properties_json")
+  metadataJson    String  @default("{}") @map("metadata_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
+
+  @@unique([contentItemId])
+  @@index([databaseId], map: "idx_npm_database")
+  @@index([pageId], map: "idx_npm_page")
+  @@map("notion_page_meta")
 }

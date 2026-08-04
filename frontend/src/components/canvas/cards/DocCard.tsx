@@ -31,16 +31,16 @@ export function DocCard({ document: doc, onAnnotate }: DocCardProps) {
         flexDirection: 'column',
         height: '100%',
         fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-        background: 'white',
+        background: 'var(--bg)',
       }}
     >
       <header
         style={{
           padding: '6px 10px',
-          borderBottom: '1px solid #e5e7eb',
-          background: '#f9fafb',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--bg-subtle)',
           fontSize: 11,
-          color: '#374151',
+          color: 'var(--text)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -49,8 +49,8 @@ export function DocCard({ document: doc, onAnnotate }: DocCardProps) {
             style={{
               padding: '1px 6px',
               borderRadius: 4,
-              background: '#dbeafe',
-              color: '#1e40af',
+              background: 'var(--color-info-surface, var(--bg-subtle))',
+              color: 'var(--color-info)',
               fontSize: 10,
               fontWeight: 600,
             }}
@@ -58,7 +58,7 @@ export function DocCard({ document: doc, onAnnotate }: DocCardProps) {
             {doc.engine}
           </span>
         </div>
-        <div style={{ marginTop: 2, fontSize: 10, color: '#6b7280' }}>
+        <div style={{ marginTop: 2, fontSize: 10, color: 'var(--text-muted)' }}>
           {doc.mimeType}
           {doc.wordCount ? ` · ${doc.wordCount} words` : ''}
           {doc.pageCount ? ` · ${doc.pageCount} pages` : ''}
@@ -73,7 +73,7 @@ export function DocCard({ document: doc, onAnnotate }: DocCardProps) {
           padding: 12,
           fontSize: 13,
           lineHeight: 1.5,
-          color: '#1f2937',
+          color: 'var(--text)',
           whiteSpace: 'pre-wrap',
           fontFamily:
             doc.engine === 'code'
@@ -84,7 +84,7 @@ export function DocCard({ document: doc, onAnnotate }: DocCardProps) {
         {doc.inlineContent ? (
           doc.inlineContent
         ) : doc.sourceUrl ? (
-          <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+          <div style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
             Loading from {doc.sourceUrl}…
             <br />
             <br />
@@ -94,20 +94,20 @@ export function DocCard({ document: doc, onAnnotate }: DocCardProps) {
             </span>
           </div>
         ) : (
-          <div style={{ color: '#9ca3af' }}>Empty document</div>
+          <div style={{ color: 'var(--text-subtle)' }}>Empty document</div>
         )}
       </div>
 
       <footer
         style={{
           padding: '4px 10px',
-          borderTop: '1px solid #e5e7eb',
-          background: '#f9fafb',
+          borderTop: '1px solid var(--border)',
+          background: 'var(--bg-subtle)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: 10,
-          color: '#6b7280',
+          color: 'var(--text-muted)',
         }}
       >
         <span>
@@ -148,8 +148,8 @@ export function DocCard({ document: doc, onAnnotate }: DocCardProps) {
 
 const pageBtnStyle: React.CSSProperties = {
   padding: '0 6px',
-  border: '1px solid #d1d5db',
-  background: 'white',
+  border: '1px solid var(--border)',
+  background: 'var(--bg)',
   borderRadius: 3,
   fontSize: 11,
   cursor: 'pointer',
