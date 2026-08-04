@@ -209,10 +209,9 @@ export class BrowserActor {
     return new Promise((resolve) => {
       const check = () => {
         if (!this.mailbox.isEmpty()) {
-          // Peek at the message without removing it
-          const msg = (this.mailbox as any).queue[0]?.msg
+          const msg = this.mailbox.peek()
           if (msg) {
-            ;(this.mailbox as any).queue.shift()
+            this.mailbox.dequeue()
             resolve(msg)
           } else {
             resolve(null)

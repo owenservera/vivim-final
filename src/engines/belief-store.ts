@@ -24,12 +24,12 @@ export class BeliefStore {
     // owner -> belief edge
     const owner = await this.store.nodes.getNode(spec.ownerId)
     if (owner) {
-      const edges = JSON.parse((owner as any).edgesJson ?? '[]')
+      const edges = JSON.parse(owner.edgesJson ?? '[]')
       edges.push({ type: AGENTIC_EDGE.BELIEVES, targetId: id })
       await this.store.nodes.updateNode(spec.ownerId, {
-        dataJson: (owner as any).dataJson,
+        dataJson: owner.dataJson,
         edgesJson: JSON.stringify(edges),
-      } as never)
+      })
     }
     return { id, version }
   }
@@ -40,11 +40,11 @@ export class BeliefStore {
   ): Promise<number> {
     const b = await this.store.nodes.getNode(beliefId)
     if (!b) return 0
-    const data = JSON.parse((b as any).dataJson)
+    const data = JSON.parse(b.dataJson)
     if (patch.claim != null) data.claim = patch.claim
     if (patch.confidence != null) data.confidence = patch.confidence
     if (patch.evidenceNodeIds != null) data.evidenceNodeIds = patch.evidenceNodeIds
-    await this.store.nodes.updateNode(beliefId, { dataJson: JSON.stringify(data) } as never)
+    await this.store.nodes.updateNode(beliefId, { dataJson: JSON.stringify(data) })
     const versions = await this.store.nodes.getNodeHistory(beliefId)
     return versions.length
   }

@@ -37,13 +37,13 @@ export class CapabilityBinder {
   async resolveOrder(runId: string): Promise<BoundCapability[]> {
     const run = await this.store.nodes.getNode(runId)
     if (!run) return []
-    const edges = JSON.parse((run as any).edgesJson ?? '[]')
+    const edges = JSON.parse(run.edgesJson ?? '[]')
     const uses = edges.filter((e: any) => e.type === 'uses')
     const caps: BoundCapability[] = []
     for (const e of uses) {
       const cap = await this.store.nodes.getNode(e.targetId)
       if (!cap) continue
-      const data = JSON.parse((cap as any).dataJson)
+      const data = JSON.parse(cap.dataJson)
       caps.push({
         capId: e.targetId,
         name: data.name,

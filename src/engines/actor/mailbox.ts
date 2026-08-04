@@ -90,6 +90,21 @@ export class Mailbox<M> {
   }
 
   /**
+   * Peek at the next message without removing it.
+   */
+  peek(): M | null {
+    return this.queue[0]?.msg ?? null
+  }
+
+  /**
+   * Remove and return the next message from the queue.
+   */
+  dequeue(): M | null {
+    const entry = this.queue.shift()
+    return entry?.msg ?? null
+  }
+
+  /**
    * Clear all pending messages.
    */
   clear(): void {

@@ -92,7 +92,7 @@ export class StructuredLogger {
     bindings: Partial<Pick<StructuredLog, 'engine' | 'conversationId' | 'slaveId' | 'providerId'>>,
   ): StructuredLogger {
     const child = new StructuredLogger({
-      minLevel: 'trace' as any,
+      minLevel: 'trace',
       transports: [],
       redactPaths: [],
     })
@@ -129,7 +129,7 @@ export class StructuredLogger {
 
     const entry: StructuredLog = {
       ts: Date.now(),
-      level: level as any,
+      level: level as 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal',
       msg,
       ...this.bindings,
       data: redacted,

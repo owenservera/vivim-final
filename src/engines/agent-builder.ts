@@ -47,12 +47,12 @@ export class AgentBuilderEngine {
     // child run -> parent run edge (sub-agent tree)
     const parent = await this.store.nodes.getNode(parentRunId)
     if (parent) {
-      const edges = JSON.parse((parent as any).edgesJson ?? '[]')
+      const edges = JSON.parse(parent.edgesJson ?? '[]')
       edges.push({ type: 'child', targetId: runId })
       await this.store.nodes.updateNode(parentRunId, {
-        dataJson: (parent as any).dataJson,
+        dataJson: parent.dataJson,
         edgesJson: JSON.stringify(edges),
-      } as never)
+      })
     }
     void actorDid
     return { builderRunId, agentId, runId }

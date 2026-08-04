@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
-import { assertTrustedExpressionSource } from '../engines/safe-eval.js'
+import { parseMigrationScript } from '../engines/safe-expression.js'
 import { newId } from '../ids.js'
 import { UiComponentInputSchema } from '../schema/conceptual-model.js'
 import type { ServerContext } from './index.js'
@@ -472,9 +472,23 @@ export function createPluginRouter(ctx: ServerContext) {
 
         if (body.migrationScript) {
           try {
-            assertTrustedExpressionSource(body.migrationScript, 'plugin migration')
-            const fn = new Function('db', 'oldVersion', 'newVersion', body.migrationScript)
-            await fn(db, plugin.version, newVersion)
+            const steps = parseMigrationScript(body.migrationScript)
+            for (const step of steps) {
+              if (step.action === 'addColumn' && step.table && step.column && step.type) {
+                // Safe: structured migration step, not arbitrary SQL
+                await db.prisma.$executeRawUnsafe(
+                  `ALTER TABLE "${step.table}" ADD COLUMN "${step.column}" ${step.type}`,
+                )
+              } else if (step.action === 'dropColumn' && step.table && step.column) {
+                await db.prisma.$executeRawUnsafe(
+                  `ALTER TABLE "${step.table}" DROP COLUMN "${step.column}"`,
+                )
+              } else if (step.action === 'renameTable' && step.table && step.newName) {
+                await db.prisma.$executeRawUnsafe(
+                  `ALTER TABLE "${step.table}" RENAME TO "${step.newName}"`,
+                )
+              }
+            }
           } catch (err) {
             await rm(extractDir, { recursive: true, force: true })
             return errorResponse(

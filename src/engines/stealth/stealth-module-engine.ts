@@ -101,7 +101,7 @@ export class StealthModuleEngine {
         }
       } catch (err) {
         this.logger?.error(`Stealth module apply failed: ${modConfig.name}`, {
-          error: err as any,
+          error: err instanceof Error ? { message: err.message, stack: err.stack, name: err.name } : { message: String(err), name: 'UnknownError' },
         })
       }
     }

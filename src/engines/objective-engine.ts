@@ -44,12 +44,12 @@ export class ObjectiveEngine {
   async pursue(agentId: string, objectiveId: string): Promise<void> {
     const agent = await this.store.nodes.getNode(agentId)
     if (!agent) return
-    const edges = JSON.parse((agent as any).edgesJson ?? '[]')
+    const edges = JSON.parse(agent.edgesJson ?? '[]')
     edges.push({ type: AGENTIC_EDGE.PURSUES, targetId: objectiveId })
     await this.store.nodes.updateNode(agentId, {
-      dataJson: (agent as any).dataJson,
+      dataJson: agent.dataJson,
       edgesJson: JSON.stringify(edges),
-    } as never)
+    })
     void actorDid
   }
 }

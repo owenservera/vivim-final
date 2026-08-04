@@ -44,10 +44,10 @@ export class EvictionManager {
     private eventBus: CapabilityEventBus,
   ) {
     this.eventBus.on(
-      'capability:executed' as any,
-      ((e: any) => {
+      'capability:executed',
+      ((e: { slaveId?: string }) => {
         if (e.slaveId) this.recordAccess(e.slaveId)
-      }) as any,
+      }) as never,
     )
   }
 
