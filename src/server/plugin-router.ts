@@ -16,15 +16,6 @@ import { UiComponentInputSchema } from '../schema/conceptual-model.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
 
-interface PluginInstallRequest {
-  filePath: string
-}
-
-interface PluginUpgradeRequest {
-  filePath: string
-  migrationScript?: string
-}
-
 async function computeFileHash(filePath: string): Promise<string> {
   const content = await readFile(filePath)
   return createHash('sha256').update(content).digest('hex')
