@@ -6,6 +6,7 @@
 import { z } from 'zod'
 import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import type {
   ProgramMetricRow,
   StatusLogRow,
@@ -205,7 +206,7 @@ export class VersionManager {
   async getCompositeAtVersion(compositeId: string, version: number): Promise<CompositeSnapshot> {
     const row = await this.store.getTaxonomyVersion(compositeId, version)
     if (!row) throw new EngineError(`No version ${version} for composite ${compositeId}`)
-    const parsed = JSON.parse(row.snapshotJson) as Partial<CompositeSnapshot>
+    const parsed = safeJsonParse(row.snapshotJson, {}) as Partial<CompositeSnapshot>
     if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) {
       throw new EngineError(`Version ${version} of ${compositeId} is not a composite DAG`)
     }
@@ -263,7 +264,7 @@ export class VersionManager {
     })
     return {
       restoredVersion,
-      restoredFields: JSON.parse(target.changedFieldsJson) as string[],
+      restoredFields: safeJsonParse(target.changedFieldsJson, []) as string[],
       changeSummary: `Restored snapshot from v${targetVersion} as v${restoredVersion}`,
     }
   }

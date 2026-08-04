@@ -8,8 +8,9 @@
 
 import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
-import type { AutonomousStep, AutonomousTask, StepStatus } from './autonomous-execution.js'
+import type { AutonomousGoal, AutonomousStep, AutonomousTask, StepStatus } from './autonomous-execution.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 export interface ReplayBranchOptions {
@@ -169,7 +170,7 @@ export class ReplayController {
     const steps = await this.store.getSteps(taskId)
     return {
       id: row.id as string,
-      goal: JSON.parse(row.goalJson as string),
+      goal: safeJsonParse(row.goalJson as string, {} as AutonomousGoal),
       status: row.status as AutonomousTask['status'],
       steps: steps.map((s) => ({
         id: s.id as string,
@@ -177,10 +178,10 @@ export class ReplayController {
         stepIndex: s.stepIndex as number,
         description: s.description as string,
         action: s.action as string,
-        actionInput: JSON.parse(s.actionInputJson as string),
+        actionInput: safeJsonParse(s.actionInputJson as string, {}),
         classification: s.classification as AutonomousStep['classification'],
         status: s.status as StepStatus,
-        result: s.resultJson ? JSON.parse(s.resultJson as string) : null,
+        result: safeJsonParse(s.resultJson as string, null),
         error: s.error as string | null,
         startedAt: s.startedAt as number | null,
         completedAt: s.completedAt as number | null,
@@ -190,7 +191,7 @@ export class ReplayController {
       })),
       startedAt: row.startedAt as number,
       completedAt: row.completedAt as number | null,
-      result: row.resultJson ? JSON.parse(row.resultJson as string) : null,
+      result: safeJsonParse(row.resultJson as string, null),
       error: row.error as string | null,
     }
   }

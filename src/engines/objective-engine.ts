@@ -7,6 +7,7 @@
 
 import { AGENTIC_EDGE, type ActorRef, actorDid } from '../schema/agentic.js'
 import type { AgenticStoreContract } from '../storage/contracts/agentic-store.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 
 export class ObjectiveEngine {
   constructor(private readonly store: AgenticStoreContract) {}
@@ -44,7 +45,7 @@ export class ObjectiveEngine {
   async pursue(agentId: string, objectiveId: string): Promise<void> {
     const agent = await this.store.nodes.getNode(agentId)
     if (!agent) return
-    const edges = JSON.parse(agent.edgesJson ?? '[]')
+    const edges = safeJsonParse(agent.edgesJson ?? '[]', [] as Array<{ type: string; targetId: string }>)
     edges.push({ type: AGENTIC_EDGE.PURSUES, targetId: objectiveId })
     await this.store.nodes.updateNode(agentId, {
       dataJson: agent.dataJson,

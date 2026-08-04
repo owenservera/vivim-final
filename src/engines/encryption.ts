@@ -3,6 +3,7 @@
 
 import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from 'node:crypto'
 import { EngineError } from '../errors.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ export class EncryptionEngine {
 
   decryptField(encryptedValue: string): string {
     const json = Buffer.from(encryptedValue, 'base64').toString('utf8')
-    const encrypted = JSON.parse(json) as EncryptedData
+    const encrypted = safeJsonParse(json, {} as EncryptedData) as EncryptedData
     return this.decrypt(encrypted)
   }
 

@@ -7,6 +7,7 @@
 
 import { AGENTIC_EDGE } from '../schema/agentic.js'
 import type { AgenticStoreContract } from '../storage/contracts/agentic-store.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 
 export class BeliefStore {
   constructor(private readonly store: AgenticStoreContract) {}
@@ -24,7 +25,7 @@ export class BeliefStore {
     // owner -> belief edge
     const owner = await this.store.nodes.getNode(spec.ownerId)
     if (owner) {
-      const edges = JSON.parse(owner.edgesJson ?? '[]')
+      const edges = safeJsonParse(owner.edgesJson ?? '[]', [] as Array<{ type: string; targetId: string }>)
       edges.push({ type: AGENTIC_EDGE.BELIEVES, targetId: id })
       await this.store.nodes.updateNode(spec.ownerId, {
         dataJson: owner.dataJson,
@@ -40,7 +41,7 @@ export class BeliefStore {
   ): Promise<number> {
     const b = await this.store.nodes.getNode(beliefId)
     if (!b) return 0
-    const data = JSON.parse(b.dataJson)
+    const data = safeJsonParse(b.dataJson, {} as Record<string, unknown>)
     if (patch.claim != null) data.claim = patch.claim
     if (patch.confidence != null) data.confidence = patch.confidence
     if (patch.evidenceNodeIds != null) data.evidenceNodeIds = patch.evidenceNodeIds

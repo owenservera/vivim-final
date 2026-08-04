@@ -7,6 +7,7 @@
 
 import { type ActorRef, actorDid } from '../schema/agentic.js'
 import type { AgenticStoreContract } from '../storage/contracts/agentic-store.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import type { MemoryFabric } from './memory/memory-fabric.js'
 
 export class AgentBuilderEngine {
@@ -47,7 +48,7 @@ export class AgentBuilderEngine {
     // child run -> parent run edge (sub-agent tree)
     const parent = await this.store.nodes.getNode(parentRunId)
     if (parent) {
-      const edges = JSON.parse(parent.edgesJson ?? '[]')
+      const edges = safeJsonParse(parent.edgesJson ?? '[]', [] as Array<{ type: string; targetId: string }>)
       edges.push({ type: 'child', targetId: runId })
       await this.store.nodes.updateNode(parentRunId, {
         dataJson: parent.dataJson,
