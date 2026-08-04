@@ -7,6 +7,7 @@
 // GET  /api/nlcl/audit     — get audit log
 // POST /api/nlcl/parse     — parse-only (no execute)
 
+import { NlclInterpretSchema, NlclConfirmSchema, NlclExecuteSchema } from '../schema/api-validators.js'
 import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
 import type { InterpretResponse } from '../schema/api-types.js'
@@ -24,27 +25,18 @@ export function createNLCLRouter(engine: NLCLEngine) {
           return errorResponse('Method not allowed', 'MethodNotAllowed', 405)
         }
         try {
-          const body = (await req.json()) as {
-            input?: string
-            surface?: string
-            providerId?: string
-            conversationId?: string
-            workspacePath?: string
-            userId?: string
-            metadata?: Record<string, unknown>
+          const parsed = NlclInterpretSchema.safeParse(await req.json())
+          if (!parsed.success) {
+            return errorResponse(parsed.error.message, 'ValidationError', 400)
           }
-          const rawInput = body.input?.trim()
-          if (!rawInput) {
-            return errorResponse('Missing "input" field', 'ValidationError', 400)
-          }
+          const rawInput = parsed.data.input.trim()
 
           const ctx: NLCContext = {
-            surface: (body.surface as NLCContext['surface']) ?? 'api',
-            providerId: body.providerId,
-            conversationId: body.conversationId,
-            workspacePath: body.workspacePath,
-            userId: body.userId,
-            metadata: body.metadata ?? {},
+            surface: (parsed.data.surface as NLCContext['surface']) ?? 'api',
+            providerId: parsed.data.providerId,
+            conversationId: parsed.data.conversationId,
+            workspacePath: parsed.data.workspacePath,
+            metadata: parsed.data.metadata ?? {},
           }
 
           const start = Date.now()
@@ -73,12 +65,12 @@ export function createNLCLRouter(engine: NLCLEngine) {
           return errorResponse('Method not allowed', 'MethodNotAllowed', 405)
         }
         try {
-          const body = (await req.json()) as { token?: string }
-          if (!body.token) {
-            return errorResponse('Missing "token" field', 'ValidationError', 400)
+          const parsed = NlclConfirmSchema.safeParse(await req.json())
+          if (!parsed.success) {
+            return errorResponse(parsed.error.message, 'ValidationError', 400)
           }
           const store = engine.getConfirmationStore()
-          const pending = store.consume(body.token)
+          const pending = store.consume(parsed.data.token)
           if (!pending) {
             // 410 Gone — token was expired, already consumed, or HMAC-invalid.
             return errorResponse(
@@ -237,11 +229,11 @@ export function createNLCLRouter(engine: NLCLEngine) {
           return errorResponse('Method not allowed', 'MethodNotAllowed', 405)
         }
         try {
-          const body = (await req.json()) as { input?: string }
-          const rawInput = body.input?.trim()
-          if (!rawInput) {
-            return errorResponse('Missing "input" field', 'ValidationError', 400)
+          const parsed = NlclExecuteSchema.safeParse(await req.json())
+          if (!parsed.success) {
+            return errorResponse(parsed.error.message, 'ValidationError', 400)
           }
+          const rawInput = parsed.data.input.trim()
           const ctx: NLCContext = { surface: 'api', metadata: {} }
           const start = Date.now()
           const result = await engine.interpret(rawInput, ctx)

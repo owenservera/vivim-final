@@ -1,7 +1,13 @@
 // src/server/autonomous-router.ts
 // REST API for autonomous task execution and observability
 
+import {
+  AutonomousExecuteSchema,
+  GateResolveSchema,
+  ReplaySchema,
+} from '../schema/api-validators.js'
 import type { AutonomousExecutionEngine, AutonomousGoal } from '../engines/autonomous-execution.js'
+import type { ActionClassification } from '../engines/autonomous-execution.js'
 import type { ExecutionPolicyEngine } from '../engines/execution-policy.js'
 
 export interface AutonomousRouterDeps {
@@ -28,9 +34,21 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
 
     // POST /api/autonomous/execute
     if (path === '/api/autonomous/execute' && req.method === 'POST') {
-      const body = (await req.json()) as { goal: AutonomousGoal }
-      if (!body.goal?.description) return error('goal.description is required')
-      const task = await autonomousEngine.execute(body.goal)
+      const parsed = AutonomousExecuteSchema.safeParse(await req.json())
+      if (!parsed.success) return error(parsed.error.message)
+      // Fill required fields with defaults — Zod schema allows partial input,
+      // but AutonomousGoal type requires all fields.
+      const goal: AutonomousGoal = {
+        maxSteps: 50,
+        maxDurationMs: 300_000,
+        allowBrowser: false,
+        costBudgetCents: 0,
+        tokenBudget: 100_000,
+        iterationBudget: 200,
+        ...parsed.data.goal,
+        requireApprovalAbove: (parsed.data.goal.requireApprovalAbove ?? 'destructive') as ActionClassification,
+      }
+      const task = await autonomousEngine.execute(goal)
       return json({ taskId: task.id, status: task.status })
     }
 
@@ -60,10 +78,10 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     const gateResolveMatch = path.match(/^\/api\/autonomous\/gates\/([^/]+)\/resolve$/)
     if (gateResolveMatch && req.method === 'POST') {
       const gateId = gateResolveMatch[1] ?? ''
-      const body = (await req.json()) as { response: string; resolvedBy: string }
-      if (!body.response || !body.resolvedBy) return error('response and resolvedBy are required')
-      await autonomousEngine.resolveGate(gateId, body.response, body.resolvedBy)
-      return json({ ok: true, gateId, response: body.response })
+      const parsed = GateResolveSchema.safeParse(await req.json())
+      if (!parsed.success) return error(parsed.error.message)
+      await autonomousEngine.resolveGate(gateId, parsed.data.response, parsed.data.resolvedBy)
+      return json({ ok: true, gateId, response: parsed.data.response })
     }
 
     // GET /api/autonomous/status/:id
@@ -85,9 +103,10 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     // POST /api/autonomous/:id/replay
     const replayMatch = path.match(/^\/api\/autonomous\/([^/]+)\/replay$/)
     if (replayMatch && req.method === 'POST') {
-      const body = (await req.json().catch(() => ({}))) as { fromStep?: number }
+      const parsed = ReplaySchema.safeParse(await req.json().catch(() => ({})))
+      const fromStep = parsed.success ? (parsed.data.fromStep ?? 0) : 0
       const taskId = await autonomousEngine.replay(replayMatch[1] ?? '', {
-        fromStep: body.fromStep ?? 0,
+        fromStep,
         branch: false,
       })
       const task = await autonomousEngine.getStatus(taskId)

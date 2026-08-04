@@ -64,7 +64,7 @@ function loadPool(): TaxonomyPoolCapability[] {
       .filter((n) => n.kind === 'capability')
       .map((n) => n as unknown as TaxonomyPoolCapability)
   } catch {
-    console.warn('[bootstrap-generated] pool.taxonomy.json not found, returning empty set')
+    log.warn('pool.taxonomy.json not found, returning empty set')
     return []
   }
 }
