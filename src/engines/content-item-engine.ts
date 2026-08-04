@@ -2,6 +2,7 @@
 // ContentItemEngine — universal content entity management (posts, messages, comments, blocks)
 
 import { newId } from '../ids.js'
+import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -121,7 +122,7 @@ export class ContentItemEngine {
 
   async getItem(id: string): Promise<ContentItem> {
     const item = await this.store.getItemById(id)
-    if (!item) throw new Error(`Content item not found: ${id}`)
+    if (!item) throw new NotFoundError(`Content item not found: ${id}`)
     return item
   }
 

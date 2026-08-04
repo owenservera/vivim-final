@@ -2,6 +2,7 @@
 // EntityContainerEngine — manages organizational containers (servers, workspaces, channels)
 
 import { newId } from '../ids.js'
+import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ export class EntityContainerEngine {
 
   async getContainer(id: string): Promise<Container> {
     const container = await this.store.getContainerById(id)
-    if (!container) throw new Error(`Container not found: ${id}`)
+    if (!container) throw new NotFoundError(`Container not found: ${id}`)
     return container
   }
 

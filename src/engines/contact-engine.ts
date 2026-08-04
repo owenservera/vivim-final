@@ -2,6 +2,7 @@
 // ContactEngine — cross-provider contact management with identity merging
 
 import { newId } from '../ids.js'
+import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -87,7 +88,7 @@ export class ContactEngine {
 
   async getContact(id: string): Promise<Contact> {
     const contact = await this.store.getContactById(id)
-    if (!contact) throw new Error(`Contact not found: ${id}`)
+    if (!contact) throw new NotFoundError(`Contact not found: ${id}`)
     return contact
   }
 

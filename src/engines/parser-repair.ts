@@ -46,7 +46,7 @@ function parse(rawBody) {
         else blocks.push({ kind: 'meta', key: 'json', value: obj, index: i })
         i++
         continue
-      } catch {}
+      } catch { /* not valid JSON — fall through to text block */ }
     }
     blocks.push({ kind: 'text', content: line, index: i })
     i++

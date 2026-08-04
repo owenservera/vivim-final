@@ -4,6 +4,7 @@
 // private collaborator of Governor, not a peer.
 
 import type { SlaveLifecycle } from '../../executor/slave-states.js'
+import { EngineError } from '../../errors.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
 import { getTracer } from '../../observability/tracing.js'
@@ -258,7 +259,7 @@ export class ReconnectManager {
       }
     }
 
-    throw new Error(`Reconnect failed after ${this.policy.maxRetries} attempts`)
+    throw new EngineError(`Reconnect failed after ${this.policy.maxRetries} attempts`)
   }
 
   reset(): void {
@@ -294,7 +295,7 @@ export class BrowserRuntime {
   for(slaveId: string): BrowserSession {
     const session = this.sessions.get(slaveId)
     if (!session) {
-      throw new Error(`No session for slave ${slaveId}`)
+      throw new EngineError(`No session for slave ${slaveId}`)
     }
     return session
   }

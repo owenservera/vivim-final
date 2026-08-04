@@ -2,6 +2,7 @@
 // NotificationEngine — unified notification management across providers
 
 import { newId } from '../ids.js'
+import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -75,7 +76,7 @@ export class NotificationEngine {
 
   async getNotification(id: string): Promise<Notification> {
     const notification = await this.store.getNotificationById(id)
-    if (!notification) throw new Error(`Notification not found: ${id}`)
+    if (!notification) throw new NotFoundError(`Notification not found: ${id}`)
     return notification
   }
 

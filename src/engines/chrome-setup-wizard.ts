@@ -142,7 +142,7 @@ export class ChromeSetupWizard {
           } else {
             process.kill(launchResult.pid, 'SIGTERM')
           }
-        } catch {}
+        } catch { /* best-effort kill — process may already be gone */ }
       }
       return {
         ok: false,
