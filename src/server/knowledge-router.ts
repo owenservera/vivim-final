@@ -4,6 +4,11 @@
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
 
+import {
+  KnowledgeIngestSchema,
+  KnowledgeSynthesizeSchema,
+  KnowledgeTopicSchema,
+} from '../schema/api-validators.js'
 import type { ExportScope } from '../engines/export.js'
 import type { ImportSource } from '../engines/knowledge-ingestion.js'
 import { newId } from '../ids.js'
@@ -21,24 +26,17 @@ export function createKnowledgeRouter(ctx: ServerContext) {
     try {
       // POST /api/knowledge/ingest
       if (pathname === '/api/knowledge/ingest' && method === 'POST') {
-        const body = (await req.json()) as {
-          source: string
-          filePath: string
-          deduplicate?: boolean
-          extractEntities?: boolean
-          extractDecisions?: boolean
-          generateEmbeddings?: boolean
-        }
-        if (!body.source || !body.filePath) {
-          return errorResponse('source and filePath required', 'ValidationError', 400)
+        const parsed = KnowledgeIngestSchema.safeParse(await req.json())
+        if (!parsed.success) {
+          return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
         const result = await ctx.knowledgeIngestion?.ingest({
-          source: body.source as ImportSource,
-          filePath: body.filePath,
-          deduplicate: body.deduplicate ?? true,
-          extractEntities: body.extractEntities ?? true,
-          extractDecisions: body.extractDecisions ?? true,
-          generateEmbeddings: body.generateEmbeddings ?? true,
+          source: parsed.data.source as ImportSource,
+          filePath: parsed.data.filePath,
+          deduplicate: parsed.data.deduplicate ?? true,
+          extractEntities: parsed.data.extractEntities ?? true,
+          extractDecisions: parsed.data.extractDecisions ?? true,
+          generateEmbeddings: true,
         })
         if (!result) return errorResponse('Engine not wired', 'InternalError', 500)
         return json(result, 201)
@@ -56,16 +54,14 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // POST /api/knowledge/synthesize
       if (pathname === '/api/knowledge/synthesize' && method === 'POST') {
-        const body = (await req.json()) as {
-          question: string
-          maxSources?: number
-          synthesisStyle?: 'summary' | 'detailed' | 'bullets'
+        const parsed = KnowledgeSynthesizeSchema.safeParse(await req.json())
+        if (!parsed.success) {
+          return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
-        if (!body.question) return errorResponse('question required', 'ValidationError', 400)
         const result = await ctx.synthesizer?.synthesize({
-          question: body.question,
-          maxSources: body.maxSources ?? 10,
-          synthesisStyle: body.synthesisStyle ?? 'summary',
+          question: parsed.data.question,
+          maxSources: parsed.data.maxSources ?? 10,
+          synthesisStyle: parsed.data.synthesisStyle ?? 'summary',
           scope: {},
         })
         if (!result) return errorResponse('Engine not wired', 'InternalError', 500)
@@ -114,14 +110,16 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // POST /api/knowledge/topics
       if (pathname === '/api/knowledge/topics' && method === 'POST') {
-        const body = (await req.json()) as { name: string; description?: string }
-        if (!body.name) return errorResponse('name required', 'ValidationError', 400)
+        const parsed = KnowledgeTopicSchema.safeParse(await req.json())
+        if (!parsed.success) {
+          return errorResponse(parsed.error.message, 'ValidationError', 400)
+        }
         const now = Date.now()
         const topic = await ctx.db.prisma.topic.create({
           data: {
             id: newId(),
-            name: body.name,
-            description: body.description ?? null,
+            name: parsed.data.name,
+            description: parsed.data.description ?? null,
             createdAt: now,
             updatedAt: now,
           },

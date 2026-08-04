@@ -18,6 +18,11 @@
 
 import { ulid } from 'ulid'
 import { getLogger } from '../lib/logger.js'
+import {
+  AgentCanvasCommandSchema,
+  AgentCanvasPolicySchema,
+  AgentCanvasPlanSchema,
+} from '../schema/api-validators.js'
 import type { AgentCanvasCommand, AgentCanvasPolicy } from '../shared/agent-canvas.js'
 import { DEFAULT_POLICY } from '../shared/agent-canvas.js'
 import type { ServerContext } from './index.js'
@@ -47,16 +52,11 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
     // POST /api/agent/canvas/command — execute agent canvas command
     if (url.pathname === '/api/agent/canvas/command' && req.method === 'POST') {
       try {
-        const body = await req.json()
-        const { agentId, workspaceId, command } = body as {
-          agentId: string
-          workspaceId: string
-          command: AgentCanvasCommand
+        const parsed = AgentCanvasCommandSchema.safeParse(await req.json())
+        if (!parsed.success) {
+          return errorResponse(parsed.error.message, 'VALIDATION_ERROR', 400)
         }
-
-        if (!agentId || !workspaceId || !command) {
-          return errorResponse('Missing agentId, workspaceId, or command', 'VALIDATION_ERROR', 400)
-        }
+        const { agentId, workspaceId, command } = parsed.data
 
         // Phase 2 fix: instead of returning 501, emit a `canvas:command` event
         // on the EventBus. The frontend subscribes to canvas events via
@@ -119,16 +119,11 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
     // PUT /api/agent/canvas/policy — update agent canvas policy
     if (url.pathname === '/api/agent/canvas/policy' && req.method === 'PUT') {
       try {
-        const body = await req.json()
-        const { agentId, workspaceId, policy } = body as {
-          agentId: string
-          workspaceId: string
-          policy: Partial<AgentCanvasPolicy>
+        const parsed = AgentCanvasPolicySchema.safeParse(await req.json())
+        if (!parsed.success) {
+          return errorResponse(parsed.error.message, 'VALIDATION_ERROR', 400)
         }
-
-        if (!agentId || !workspaceId) {
-          return errorResponse('Missing agentId or workspaceId', 'VALIDATION_ERROR', 400)
-        }
+        const { agentId, workspaceId, policy } = parsed.data
 
         const key = policyKey(agentId, workspaceId)
         const existing = policyStore.get(key) ?? { ...DEFAULT_POLICY, agentId, workspaceId }
@@ -145,12 +140,11 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
     // POST /api/agent/canvas/plan — natural language → canvas plan
     if (url.pathname === '/api/agent/canvas/plan' && req.method === 'POST') {
       try {
-        const body = (await req.json()) as Record<string, unknown>
-        const prompt = (body.prompt ?? '').toString().trim()
-
-        if (!prompt) {
-          return errorResponse('Missing prompt', 'VALIDATION_ERROR', 400)
+        const parsed = AgentCanvasPlanSchema.safeParse(await req.json())
+        if (!parsed.success) {
+          return errorResponse(parsed.error.message, 'VALIDATION_ERROR', 400)
         }
+        const prompt = parsed.data.prompt
 
         // Phase 2 fix: replace keyword-matching stub with a real call to
         // nlclEngine.interpret(). This closes gap gap_ms2h7krm_j0w2.
@@ -170,8 +164,8 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
 
         const traceId = ulid()
         const now = Date.now()
-        const sessionId = (body.sessionId as string) ?? `plan-${traceId}`
-        const conversationId = (body.conversationId as string) ?? null
+        const sessionId = parsed.data.sessionId ?? `plan-${traceId}`
+        const conversationId = parsed.data.conversationId ?? null
 
         const nlclResult = await nlcl.interpret(prompt, {
           conversationId: conversationId ?? undefined,
