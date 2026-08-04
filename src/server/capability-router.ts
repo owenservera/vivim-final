@@ -47,7 +47,10 @@ export function createCapabilityRouter(ctx: ServerContext) {
 
     // 24.2 — GET /api/capabilities?<surface>&<category>&<tag>
     if (req.method === 'GET' && url.pathname === '/api/capabilities') {
-      const surface = (url.searchParams.get('surface') as any) ?? undefined
+      const surface =
+        (url.searchParams.get('surface') as
+          | import('../engines/unified-registry.js').CapabilitySurface
+          | null) ?? undefined
       const category = url.searchParams.get('category') ?? undefined
       const tag = url.searchParams.get('tag') ?? undefined
       const caps = registry.list({ surface, category, tag })
@@ -100,8 +103,11 @@ export function createCapabilityRouter(ctx: ServerContext) {
         ctx.eventBus?.emit({
           type: 'capability:executed',
           capabilityId: cap.id,
+          providerId: (cap as { providerId?: string }).providerId ?? 'local',
+          traceId: globalThis.crypto?.randomUUID?.() ?? 'n/a',
+          ok: true,
           latencyMs,
-        } as any)
+        })
         const response: CapabilityExecuteResponse = {
           ok: true,
           capabilityId: cap.id,

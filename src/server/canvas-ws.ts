@@ -45,10 +45,10 @@ export class ServerLayerHost implements LayerHost {
 // ── Closed primitive set backed by the DB (P6) ──────────────────────────
 // Each primitive is a fnPrimitive over the store — no new framework invented.
 export function corePrimitiveProviders(db: CapStoreDb): PrimitiveProvider[] {
-  const prisma = db.prisma as unknown as Record<string, any>
+  const prisma = db.prisma as unknown as Record<string, unknown>
   const count = async (model: string): Promise<number> => {
     try {
-      const m = (prisma as any)[model]
+      const m = prisma[model] as { count?: () => Promise<number> } | undefined
       if (m?.count) return await m.count()
     } catch {
       /* model unavailable — report 0 */
@@ -78,10 +78,10 @@ export function corePrimitiveProviders(db: CapStoreDb): PrimitiveProvider[] {
 
 // ── Oracle visibility snapshot (P4) ─────────────────────────────────────
 export function createOracleVisibility(db: CapStoreDb): OracleReadProvider {
-  const prisma = db.prisma as unknown as Record<string, any>
+  const prisma = db.prisma as unknown as Record<string, unknown>
   const count = async (model: string): Promise<number> => {
     try {
-      const m = (prisma as any)[model]
+      const m = prisma[model] as { count?: () => Promise<number> } | undefined
       if (m?.count) return await m.count()
     } catch {
       /* model unavailable — report 0 */
