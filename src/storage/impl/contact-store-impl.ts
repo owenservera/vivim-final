@@ -2,7 +2,7 @@
 // Prisma-backed ContactStore — CRUD + merge for Contact + ContactIdentity.
 
 import { newId } from '../../ids.js'
-import type { CapStoreDb } from '../db.js'
+import { type CapStoreDb, type PrismaLoose } from '../db.js'
 
 // ── Domain types ────────────────────────────────────────────────────────────
 
@@ -44,27 +44,27 @@ export class ContactStoreImpl {
   constructor(private readonly db: CapStoreDb) {}
 
   async getContactById(id: string): Promise<ContactRow | null> {
-    const row = await (this.db.prisma as any).contact.findUnique({ where: { id } })
+    const row = await this.db.loose.contact.findUnique({ where: { id } })
     return row ? this.toRow(row) : null
   }
 
   async getContactsByAccount(accountId: string): Promise<ContactRow[]> {
-    const rows = await (this.db.prisma as any).contact.findMany({
+    const rows = await this.db.loose.contact.findMany({
       where: { accountId },
       orderBy: { updatedAt: 'desc' },
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r: Record<string, unknown>) => this.toRow(r))
   }
 
   async getContactByNativeId(providerId: string, accountId: string, providerNativeId: string): Promise<ContactRow | null> {
-    const row = await (this.db.prisma as any).contact.findFirst({
+    const row = await this.db.loose.contact.findFirst({
       where: { providerId, accountId, providerNativeId },
     })
     return row ? this.toRow(row) : null
   }
 
   async searchContacts(query: string, accountId?: string): Promise<ContactRow[]> {
-    const where: any = {
+    const where: Record<string, unknown> = {
       OR: [
         { displayName: { contains: query } },
         { username: { contains: query } },
@@ -73,12 +73,12 @@ export class ContactStoreImpl {
       ],
     }
     if (accountId) where.accountId = accountId
-    const rows = await (this.db.prisma as any).contact.findMany({
+    const rows = await this.db.loose.contact.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
       take: 50,
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r: Record<string, unknown>) => this.toRow(r))
   }
 
   async createContact(input: {
@@ -95,7 +95,7 @@ export class ContactStoreImpl {
     metadataJson?: string
   }): Promise<ContactRow> {
     const now = Date.now()
-    const row = await (this.db.prisma as any).contact.create({
+    const row = await this.db.loose.contact.create({
       data: {
         id: newId(),
         providerId: input.providerId,
@@ -128,16 +128,16 @@ export class ContactStoreImpl {
       'isOnline', 'statusText', 'lastSeenAt', 'relationship', 'isFavorite',
       'isBlocked', 'notes', 'metadataJson',
     ]
-    const data: any = { updatedAt: now }
+    const data: Record<string, unknown> = { updatedAt: now }
     for (const key of allowed) {
       if (key in updates) data[key] = updates[key]
     }
-    const row = await (this.db.prisma as any).contact.update({ where: { id }, data })
+    const row = await this.db.loose.contact.update({ where: { id }, data })
     return this.toRow(row)
   }
 
   async deleteContact(id: string): Promise<void> {
-    await (this.db.prisma as any).contact.delete({ where: { id } })
+    await this.db.loose.contact.delete({ where: { id } })
   }
 
   async mergeContacts(
@@ -146,7 +146,7 @@ export class ContactStoreImpl {
     method: string,
     confidence: number,
   ): Promise<ContactIdentityRow> {
-    const row = await (this.db.prisma as any).contactIdentity.create({
+    const row = await this.db.loose.contactIdentity.create({
       data: {
         id: newId(),
         canonicalContactId: canonicalId,
@@ -161,7 +161,7 @@ export class ContactStoreImpl {
   }
 
   async getMergedContacts(contactId: string): Promise<ContactIdentityRow[]> {
-    const rows = await (this.db.prisma as any).contactIdentity.findMany({
+    const rows = await this.db.loose.contactIdentity.findMany({
       where: {
         OR: [
           { canonicalContactId: contactId },
@@ -170,12 +170,12 @@ export class ContactStoreImpl {
       },
       orderBy: { createdAt: 'desc' },
     })
-    return rows.map((r: any) => this.toIdentityRow(r))
+    return rows.map((r: Record<string, unknown>) => this.toIdentityRow(r))
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: any): ContactRow {
+  private toRow(r: Record<string, unknown>): ContactRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -199,7 +199,7 @@ export class ContactStoreImpl {
     }
   }
 
-  private toIdentityRow(r: any): ContactIdentityRow {
+  private toIdentityRow(r: Record<string, unknown>): ContactIdentityRow {
     return {
       id: r.id,
       canonicalContactId: r.canonicalContactId,

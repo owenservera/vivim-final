@@ -17,10 +17,10 @@ export class LocalAgentStoreImpl implements LocalAgentStore {
   private db: CapStoreDb
 
   constructor(db: CapStoreDb) {
-    this.db = db
+    this.db = db.loose
   }
 
-  private get p(): any {
+  private get p() {
     return this.db.prisma
   }
 

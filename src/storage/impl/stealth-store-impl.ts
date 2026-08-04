@@ -24,7 +24,11 @@ export class InMemoryStealthStore implements StealthProfileStore {
   }
   async upsertLaunchProfile(id: string, data: Partial<LaunchProfileRow>): Promise<void> {
     const existing = this.launch.get(id)
-    this.launch.set(id, { ...(existing ?? {} as LaunchProfileRow), id, ...data } as LaunchProfileRow)
+    this.launch.set(id, {
+      ...(existing ?? ({} as LaunchProfileRow)),
+      id,
+      ...data,
+    } as LaunchProfileRow)
   }
   async deleteLaunchProfile(id: string): Promise<void> {
     this.launch.delete(id)
@@ -38,7 +42,11 @@ export class InMemoryStealthStore implements StealthProfileStore {
   }
   async upsertModuleProfile(id: string, data: Partial<ModuleProfileRow>): Promise<void> {
     const existing = this.module.get(id)
-    this.module.set(id, { ...(existing ?? {} as ModuleProfileRow), id, ...data } as ModuleProfileRow)
+    this.module.set(id, {
+      ...(existing ?? ({} as ModuleProfileRow)),
+      id,
+      ...data,
+    } as ModuleProfileRow)
   }
   async deleteModuleProfile(id: string): Promise<void> {
     this.module.delete(id)
@@ -48,7 +56,15 @@ export class InMemoryStealthStore implements StealthProfileStore {
     return this.policy
   }
   async upsertPolicy(data: Partial<StealthPolicyRow>): Promise<void> {
-    this.policy = { ...(this.policy ?? { id: 'default', defaultLaunchProfileId: null, defaultModuleProfileId: null, providerOverridesJson: '{}' }), ...data } as StealthPolicyRow
+    this.policy = {
+      ...(this.policy ?? {
+        id: 'default',
+        defaultLaunchProfileId: null,
+        defaultModuleProfileId: null,
+        providerOverridesJson: '{}',
+      }),
+      ...data,
+    } as StealthPolicyRow
   }
 }
 
@@ -131,7 +147,13 @@ export class PrismaStealthStore implements StealthProfileStore {
       unknown
     > | null
     return row
-      ? { id: String(row.id), name: String(row.name), modulesJson: String(row.modulesJson), createdAt: (row.createdAt as number) ?? 0, updatedAt: (row.updatedAt as number) ?? 0 }
+      ? {
+          id: String(row.id),
+          name: String(row.name),
+          modulesJson: String(row.modulesJson),
+          createdAt: (row.createdAt as number) ?? 0,
+          updatedAt: (row.updatedAt as number) ?? 0,
+        }
       : null
   }
   async upsertModuleProfile(id: string, data: Partial<ModuleProfileRow>): Promise<void> {

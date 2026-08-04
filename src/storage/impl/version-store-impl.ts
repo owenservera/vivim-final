@@ -136,12 +136,12 @@ export class VersionStoreImpl implements VersionStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db as unknown as PrismaLoose
+    this.db = db.loose 
   }
 
   // Contained escape hatch: the generated Prisma client types are verbose and
   // add no safety at the call site. Typed through `any` here only.
-  private get p(): any {
+  private get p() {
     return this.db.prisma
   }
 

@@ -14,14 +14,15 @@ import type {
   TelemetryStore,
 } from '../contracts/telemetry-store.js'
 import type { PrismaClientLike } from './prisma-like.js'
+import type { PrismaLoose } from '../db.js'
 
 type Row = Record<string, unknown>
 
 export class TelemetryStoreImpl implements TelemetryStore {
   constructor(private prisma: PrismaClientLike) {}
 
-  private get p(): any {
-    return this.prisma as unknown as any
+  private get p(): PrismaLoose {
+    return this.prisma 
   }
 
   private toSqlite(sql: string): string {

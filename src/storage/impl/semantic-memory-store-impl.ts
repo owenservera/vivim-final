@@ -10,10 +10,10 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db as unknown as PrismaLoose
+    this.db = db.loose 
   }
 
-  private get p(): any {
+  private get p() {
     return this.db.prisma
   }
 

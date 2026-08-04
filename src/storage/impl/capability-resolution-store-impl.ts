@@ -11,7 +11,7 @@ import type { PrismaClientLike } from './prisma-like.js'
 export class CapabilityResolutionStoreImpl implements CapabilityResolutionStore {
   constructor(private prisma: PrismaClientLike) {}
 
-  private get p(): any {
+  private get p() {
     return this.prisma
   }
 
