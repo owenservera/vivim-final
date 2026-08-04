@@ -3,6 +3,7 @@
 
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
+import { z } from 'zod'
 
 export function createUserRouter(ctx: ServerContext) {
   return async function userRouter(req: Request): Promise<Response | undefined> {
@@ -29,23 +30,24 @@ export function createUserRouter(ctx: ServerContext) {
 
       // POST /api/users — create profile
       if (req.method === 'POST' && path === '/api/users') {
-        const body = (await req.json()) as { name?: string; avatarColor?: string }
-        if (!body.name || typeof body.name !== 'string') {
-          return errorResponse('name is required', 'ValidationError', 400)
-        }
-        const user = await ctx.userIdentity.createProfile(body.name, {
-          avatarColor: body.avatarColor,
+        const schema = z.object({
+          name: z.string().min(1, 'name is required'),
+          avatarColor: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const user = await ctx.userIdentity.createProfile(parsed.data.name, {
+          avatarColor: parsed.data.avatarColor,
         })
         return json({ user }, 201)
       }
 
       // POST /api/users/switch — switch active profile
       if (req.method === 'POST' && path === '/api/users/switch') {
-        const body = (await req.json()) as { userId?: string }
-        if (!body.userId || typeof body.userId !== 'string') {
-          return errorResponse('userId is required', 'ValidationError', 400)
-        }
-        const result = await ctx.userIdentity.switchProfile(body.userId)
+        const schema = z.object({ userId: z.string().min(1, 'userId is required') })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const result = await ctx.userIdentity.switchProfile(parsed.data.userId)
         return json(result)
       }
 
@@ -53,12 +55,14 @@ export function createUserRouter(ctx: ServerContext) {
       const userMatch = path.match(/^\/api\/users\/([^/]+)$/)
       if (req.method === 'PATCH' && userMatch && userMatch[1]) {
         const userId = userMatch[1]
-        const body = (await req.json()) as {
-          displayName?: string
-          avatarColor?: string
-          avatarUrl?: string | null
-        }
-        await ctx.userIdentity.updateProfile(userId, body)
+        const schema = z.object({
+          displayName: z.string().optional(),
+          avatarColor: z.string().optional(),
+          avatarUrl: z.string().nullable().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        await ctx.userIdentity.updateProfile(userId, parsed.data)
         const updated = await ctx.userIdentity.getProfile(userId)
         return json({ user: updated })
       }

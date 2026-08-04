@@ -3,6 +3,7 @@
 
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
+import { z } from 'zod'
 
 export function createSyncRouter(ctx: ServerContext) {
   return async function syncRouter(req: Request): Promise<Response | undefined> {
@@ -40,61 +41,49 @@ export function createSyncRouter(ctx: ServerContext) {
 
       // POST /api/sync
       if (req.method === 'POST' && path === '/api/sync') {
-        const body = (await req.json()) as {
-          providerId?: string
-          accountId?: string
-          entityType?: string
-          entityId?: string
-          syncDirection?: string
-          syncStatus?: string
-          cursorJson?: string
-        }
-        if (!body.providerId || typeof body.providerId !== 'string') {
-          return errorResponse('providerId is required', 'ValidationError', 400)
-        }
-        if (!body.accountId || typeof body.accountId !== 'string') {
-          return errorResponse('accountId is required', 'ValidationError', 400)
-        }
-        if (!body.entityType || typeof body.entityType !== 'string') {
-          return errorResponse('entityType is required', 'ValidationError', 400)
-        }
-        if (!body.entityId || typeof body.entityId !== 'string') {
-          return errorResponse('entityId is required', 'ValidationError', 400)
-        }
-        const state = await store.upsertSyncState(body)
+        const schema = z.object({
+          providerId: z.string().min(1, 'providerId is required'),
+          accountId: z.string().min(1, 'accountId is required'),
+          entityType: z.string().min(1, 'entityType is required'),
+          entityId: z.string().min(1, 'entityId is required'),
+          syncDirection: z.string().optional(),
+          syncStatus: z.string().optional(),
+          cursorJson: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const state = await store.upsertSyncState(parsed.data)
         return json({ state }, 201)
       }
 
       // POST /api/sync/progress
       if (req.method === 'POST' && path === '/api/sync/progress') {
-        const body = (await req.json()) as {
-          id?: string
-          itemsSynced?: number
-          itemsFailed?: number
-          bytesSynced?: number
-        }
-        if (!body.id || typeof body.id !== 'string') {
-          return errorResponse('id is required', 'ValidationError', 400)
-        }
+        const schema = z.object({
+          id: z.string().min(1, 'id is required'),
+          itemsSynced: z.number().int().nonnegative().optional(),
+          itemsFailed: z.number().int().nonnegative().optional(),
+          bytesSynced: z.number().int().nonnegative().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
         const state = await store.incrementSyncStats(
-          body.id,
-          body.itemsSynced ?? 0,
-          body.itemsFailed ?? 0,
-          body.bytesSynced ?? 0,
+          parsed.data.id,
+          parsed.data.itemsSynced ?? 0,
+          parsed.data.itemsFailed ?? 0,
+          parsed.data.bytesSynced ?? 0,
         )
         return json({ state })
       }
 
       // POST /api/sync/error
       if (req.method === 'POST' && path === '/api/sync/error') {
-        const body = (await req.json()) as { id?: string; errorMessage?: string }
-        if (!body.id || typeof body.id !== 'string') {
-          return errorResponse('id is required', 'ValidationError', 400)
-        }
-        if (!body.errorMessage || typeof body.errorMessage !== 'string') {
-          return errorResponse('errorMessage is required', 'ValidationError', 400)
-        }
-        const state = await store.updateSyncStatus(body.id, 'failed', body.errorMessage)
+        const schema = z.object({
+          id: z.string().min(1, 'id is required'),
+          errorMessage: z.string().min(1, 'errorMessage is required'),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const state = await store.updateSyncStatus(parsed.data.id, 'failed', parsed.data.errorMessage)
         return json({ state })
       }
 
