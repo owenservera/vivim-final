@@ -100,6 +100,7 @@ export class OtelSink {
     try {
       await fetch(this.cfg.endpoint, {
         method: 'POST',
+        signal: AbortSignal.timeout(5_000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })

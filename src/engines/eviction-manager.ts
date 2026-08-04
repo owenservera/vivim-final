@@ -43,12 +43,9 @@ export class EvictionManager {
     private governor: ChromeGovernor,
     private eventBus: CapabilityEventBus,
   ) {
-    this.eventBus.on(
-      'capability:executed',
-      ((e: { slaveId?: string }) => {
-        if (e.slaveId) this.recordAccess(e.slaveId)
-      }) as never,
-    )
+    this.eventBus.on('capability:executed', ((e: { slaveId?: string }) => {
+      if (e.slaveId) this.recordAccess(e.slaveId)
+    }) as never)
   }
 
   start(): void {

@@ -114,6 +114,7 @@ export class OTLPTraceExporter implements SpanExporter {
     try {
       await fetch(`${this.endpoint}/v1/traces`, {
         method: 'POST',
+        signal: AbortSignal.timeout(5_000),
         headers: {
           'Content-Type': 'application/json',
           ...this.headers,

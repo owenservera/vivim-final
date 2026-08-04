@@ -188,7 +188,7 @@ export function registerCommandParityCapabilities(
         const method = (
           input.method ? String(input.method) : input.body ? 'POST' : 'GET'
         ).toUpperCase()
-        const init: RequestInit = { method }
+        const init: RequestInit = { method, signal: AbortSignal.timeout(15_000) }
         if (input.body) init.body = String(input.body)
         const res = await fetch(url, init)
         const text = await res.text()

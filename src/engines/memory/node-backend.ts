@@ -8,8 +8,8 @@
 //   - aclJson = { ownerAgentId }
 //   - acuType = 'cap-store.memory'
 
-import { newId } from '../../ids.js'
 import { CapStoreError } from '../../errors.js'
+import { newId } from '../../ids.js'
 import { createNode } from '../../schema/node.js'
 import type { KnowledgeExtractorStore } from '../../storage/contracts/knowledge-extractor-store.js'
 import type { MemoryCuratedStore } from '../../storage/contracts/memory-curated-store.js'

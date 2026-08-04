@@ -117,6 +117,7 @@ export class SyncEngine {
 
         const res = await fetch(`${this.config.relayUrl}/sync/${peer.deviceId}`, {
           method: 'POST',
+          signal: AbortSignal.timeout(15_000),
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ entries: encryptedEntries, fromDeviceId: this.config.deviceId }),
         })

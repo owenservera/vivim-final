@@ -111,7 +111,10 @@ export class MetricsRegistry {
         await exporter.export(snapshots)
       } catch (err) {
         this.logger?.error(`Metrics export failed: ${exporter.name}`, {
-          error: err instanceof Error ? { message: err.message, stack: err.stack, name: err.name } : { message: String(err), name: 'UnknownError' },
+          error:
+            err instanceof Error
+              ? { message: err.message, stack: err.stack, name: err.name }
+              : { message: String(err), name: 'UnknownError' },
         })
       }
     }

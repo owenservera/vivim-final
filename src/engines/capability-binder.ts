@@ -5,8 +5,8 @@
 // capability to a run creates a `uses` edge with an `ordering` property. toposort
 // resolves execution order from the wraps/wrappedBy/requires edges (or ordering).
 
-import type { AgenticStoreContract } from '../storage/contracts/agentic-store.js'
 import { safeJsonParse } from '../lib/safe-json.js'
+import type { AgenticStoreContract } from '../storage/contracts/agentic-store.js'
 
 export interface BoundCapability {
   capId: string
@@ -38,7 +38,10 @@ export class CapabilityBinder {
   async resolveOrder(runId: string): Promise<BoundCapability[]> {
     const run = await this.store.nodes.getNode(runId)
     if (!run) return []
-    const edges = safeJsonParse(run.edgesJson ?? '[]', [] as Array<{ type: string; targetId: string; properties?: Record<string, unknown> }>)
+    const edges = safeJsonParse(
+      run.edgesJson ?? '[]',
+      [] as Array<{ type: string; targetId: string; properties?: Record<string, unknown> }>,
+    )
     const uses = edges.filter((e: any) => e.type === 'uses')
     const caps: BoundCapability[] = []
     for (const e of uses) {
@@ -48,7 +51,8 @@ export class CapabilityBinder {
       caps.push({
         capId: e.targetId,
         name: data.name as string,
-        kind: ((data.provenanceJson as Record<string, unknown>)?.capabilityKind as string) ?? 'builtin',
+        kind:
+          ((data.provenanceJson as Record<string, unknown>)?.capabilityKind as string) ?? 'builtin',
         ordering: (e.properties?.ordering as number) ?? 0,
       })
     }

@@ -1,7 +1,3 @@
-// src/engines/content-item-engine.ts
-// ContentItemEngine — universal content entity management (posts, messages, comments, blocks)
-
-import { newId } from '../ids.js'
 import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
@@ -103,7 +99,10 @@ export interface ContentItemStore {
   queryItems(query: ContentItemQuery): Promise<ContentItem[]>
   updateItem(id: string, updates: Partial<ContentItemInput>): Promise<ContentItem>
   deleteItem(id: string): Promise<void>
-  searchItems(query: string, opts?: { containerId?: string; contentType?: string }): Promise<ContentItem[]>
+  searchItems(
+    query: string,
+    opts?: { containerId?: string; contentType?: string },
+  ): Promise<ContentItem[]>
 }
 
 // ── Engine ──────────────────────────────────────────────────────────────
@@ -145,7 +144,10 @@ export class ContentItemEngine {
     this.eventBus?.emit({ type: 'content:deleted', itemId: id } as never)
   }
 
-  async searchItems(query: string, opts?: { containerId?: string; contentType?: string }): Promise<ContentItem[]> {
+  async searchItems(
+    query: string,
+    opts?: { containerId?: string; contentType?: string },
+  ): Promise<ContentItem[]> {
     return this.store.searchItems(query, opts)
   }
 }

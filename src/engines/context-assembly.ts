@@ -3,9 +3,8 @@
 // Assembles context from memory, search, and history before sending to provider.
 
 import { newId } from '../ids.js'
-import { safeJsonParse } from '../lib/safe-json.js'
-import type { CapStoreDb } from '../storage/db.js'
 import type { ContextAssemblyStore } from '../storage/contracts/context-assembly-store.js'
+import type { CapStoreDb } from '../storage/db.js'
 import type { MemoryEngine } from './memory-engine.js'
 import type { SemanticSearchEngine } from './semantic-search.js'
 import type { SituationDetector, SituationSignal, TaskType } from './situation-detector.js'

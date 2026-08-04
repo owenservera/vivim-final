@@ -2,9 +2,9 @@
 // BrowserScheduler — resource-class-aware task scheduler.
 // Phase 5: Replaces single-mailbox execution with dependency-aware scheduling.
 
+import { ValidationError } from '../../errors.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
-import { ValidationError } from '../../errors.js'
 import { SchedulerPolicy } from './policy.js'
 import type { QueueName } from './queues.js'
 import { QUEUE_CONFIGS } from './queues.js'

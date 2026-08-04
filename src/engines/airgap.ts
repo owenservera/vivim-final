@@ -108,15 +108,19 @@ export class AirGapEngine {
     const cached = this.responseCache.get(message)
     if (cached) return { ok: true, response: cached }
     try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 30_000)
       const res = await fetch(`${this.config.localModelEndpoint}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           model: this.localModelName,
           prompt: message,
           stream: false,
         }),
       })
+      clearTimeout(timeout)
       if (!res.ok) {
         return { ok: false, response: '', error: `Local model HTTP ${res.status}` }
       }

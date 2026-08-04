@@ -5,9 +5,9 @@
 // bumps the Node version (time-travelable via getNodeAtVersion). retract flips
 // the `retracted` flag. getBeliefs returns the live set for an owner.
 
+import { safeJsonParse } from '../lib/safe-json.js'
 import { AGENTIC_EDGE } from '../schema/agentic.js'
 import type { AgenticStoreContract } from '../storage/contracts/agentic-store.js'
-import { safeJsonParse } from '../lib/safe-json.js'
 
 export class BeliefStore {
   constructor(private readonly store: AgenticStoreContract) {}
@@ -25,7 +25,10 @@ export class BeliefStore {
     // owner -> belief edge
     const owner = await this.store.nodes.getNode(spec.ownerId)
     if (owner) {
-      const edges = safeJsonParse(owner.edgesJson ?? '[]', [] as Array<{ type: string; targetId: string }>)
+      const edges = safeJsonParse(
+        owner.edgesJson ?? '[]',
+        [] as Array<{ type: string; targetId: string }>,
+      )
       edges.push({ type: AGENTIC_EDGE.BELIEVES, targetId: id })
       await this.store.nodes.updateNode(spec.ownerId, {
         dataJson: owner.dataJson,

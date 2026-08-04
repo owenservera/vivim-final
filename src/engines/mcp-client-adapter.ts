@@ -36,7 +36,7 @@ export class McpClientAdapter {
     this.urls.set(serverId, url)
 
     try {
-      const res = await fetch(`${url}/tools`, { method: 'GET' })
+      const res = await fetch(`${url}/tools`, { method: 'GET', signal: AbortSignal.timeout(5_000) })
       if (!res.ok) {
         this.connections.set(serverId, {
           id: serverId,
@@ -100,6 +100,7 @@ export class McpClientAdapter {
     try {
       const res = await fetch(`${url}/tools/call`, {
         method: 'POST',
+        signal: AbortSignal.timeout(30_000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: toolName, input }),
       })

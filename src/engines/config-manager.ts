@@ -3,8 +3,8 @@
 // Handles schema registration, scoped config read/write, audit trail, and event emission.
 
 import type { z } from 'zod'
-import { safeJsonParse } from '../lib/safe-json.js'
 import { EngineError } from '../errors.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import type { ConfigScope, ConfigStore } from '../storage/contracts/config-store.js'
 
 // ── Event bus ──────────────────────────────────────────────────────────────

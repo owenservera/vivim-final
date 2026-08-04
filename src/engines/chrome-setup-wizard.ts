@@ -142,7 +142,9 @@ export class ChromeSetupWizard {
           } else {
             process.kill(launchResult.pid, 'SIGTERM')
           }
-        } catch { /* best-effort kill — process may already be gone */ }
+        } catch {
+          /* best-effort kill — process may already be gone */
+        }
       }
       return {
         ok: false,
@@ -199,7 +201,9 @@ export class ChromeSetupWizard {
       }
     }
 
-    const navResp = await fetch(`http://127.0.0.1:${debugPort}/json/new?${encodeURIComponent(url)}`)
+    const navResp = await fetch(`http://127.0.0.1:${debugPort}/json/new?${encodeURIComponent(url)}`, {
+      signal: AbortSignal.timeout(5_000),
+    })
     if (!navResp.ok) throw new EngineError(`Failed to create tab: ${navResp.status}`)
 
     // Wait for the page to load
@@ -253,7 +257,9 @@ export class ChromeSetupWizard {
    */
   private async getCurrentUrl(debugPort: number): Promise<string | null> {
     try {
-      const resp = await fetch(`http://127.0.0.1:${debugPort}/json/list`)
+      const resp = await fetch(`http://127.0.0.1:${debugPort}/json/list`, {
+        signal: AbortSignal.timeout(3_000),
+      })
       if (!resp.ok) return null
 
       const tabs = (await resp.json()) as Array<{ url?: string; type?: string }>

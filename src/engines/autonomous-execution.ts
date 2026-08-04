@@ -559,7 +559,11 @@ export class AutonomousExecutionEngine {
     const pausedStateJson = pausedRow?.pausedStateJson as string | null
     let worldMatches = true
     if (pausedStateJson) {
-      const snapshot = safeJsonParse(pausedStateJson, { cursor: 0, plan: [], provenanceRoot: null }) as {
+      const snapshot = safeJsonParse(pausedStateJson, {
+        cursor: 0,
+        plan: [],
+        provenanceRoot: null,
+      }) as {
         cursor: number
         plan: Array<{ id: string; stepIndex: number; status: string }>
         provenanceRoot: string | null

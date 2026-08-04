@@ -1,7 +1,3 @@
-// src/engines/notification-engine.ts
-// NotificationEngine — unified notification management across providers
-
-import { newId } from '../ids.js'
 import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 

@@ -10,7 +10,12 @@ import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import { safeJsonParse } from '../lib/safe-json.js'
 import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
-import type { AutonomousGoal, AutonomousStep, AutonomousTask, StepStatus } from './autonomous-execution.js'
+import type {
+  AutonomousGoal,
+  AutonomousStep,
+  AutonomousTask,
+  StepStatus,
+} from './autonomous-execution.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 export interface ReplayBranchOptions {

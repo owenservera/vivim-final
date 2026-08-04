@@ -1,7 +1,3 @@
-// src/engines/media-engine.ts
-// MediaEngine — media attachment management with download tracking
-
-import { newId } from '../ids.js'
 import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
