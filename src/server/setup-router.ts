@@ -1,6 +1,7 @@
 // src/server/setup-router.ts
 // REST API routes for workspace selection + provider setup wizard.
 
+import { z } from 'zod'
 import { BunCdpClient } from '../executor/cdp.js'
 import { killChrome, launchChrome } from '../executor/launcher.js'
 import { ProfileAllocator } from '../executor/profile-allocator.js'
@@ -70,33 +71,29 @@ export function createSetupRouter(ctx: ServerContext) {
 
       // POST /api/setup/workspace - set workspace hint
       if (pathname === '/api/setup/workspace' && method === 'POST') {
-        const body = (await req.json()) as { path: string }
-        if (!body.path) return errorResponse('path required', 'ValidationError', 400)
-        await ctx.db.setWorkspaceHint?.(body.path)
-        audit('workspace_set', { path: body.path })
-        return json({ ok: true, workspacePath: body.path })
+        const schema = z.object({ path: z.string().min(1, 'path is required') })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        await ctx.db.setWorkspaceHint?.(parsed.data.path)
+        audit('workspace_set', { path: parsed.data.path })
+        return json({ ok: true, workspacePath: parsed.data.path })
       }
 
       // POST /api/setup/launch-visible - spawn Chrome for login
       if (pathname === '/api/setup/launch-visible' && method === 'POST') {
-        const body = (await req.json()) as {
-          providerId: string
-          accountSlug: string
-          workspace: string
-          port?: number
-        }
-        if (!body.providerId || !body.accountSlug || !body.workspace) {
-          return errorResponse(
-            'providerId, accountSlug, workspace required',
-            'ValidationError',
-            400,
-          )
-        }
+        const schema = z.object({
+          providerId: z.string().min(1, 'providerId is required'),
+          accountSlug: z.string().min(1, 'accountSlug is required'),
+          workspace: z.string().min(1, 'workspace is required'),
+          port: z.number().int().positive().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
 
-        const allocator = new ProfileAllocator(body.workspace)
-        const profileDir = await allocator.allocate(body.providerId, body.accountSlug)
-        const loginUrl = PROVIDER_LOGIN_URLS[body.providerId] ?? `https://${body.providerId}.com`
-        const port = body.port ?? 9222
+        const allocator = new ProfileAllocator(parsed.data.workspace)
+        const profileDir = await allocator.allocate(parsed.data.providerId, parsed.data.accountSlug)
+        const loginUrl = PROVIDER_LOGIN_URLS[parsed.data.providerId] ?? `https://${parsed.data.providerId}.com`
+        const port = parsed.data.port ?? 9222
 
         const result = await launchChrome({
           visible: true,
@@ -106,7 +103,7 @@ export function createSetupRouter(ctx: ServerContext) {
         })
 
         audit('chrome_launched', {
-          providerId: body.providerId,
+          providerId: parsed.data.providerId,
           port: result.debugPort,
           pid: result.pid,
         })
@@ -121,13 +118,17 @@ export function createSetupRouter(ctx: ServerContext) {
 
       // POST /api/setup/verify - verify headless profile has auth
       if (pathname === '/api/setup/verify' && method === 'POST') {
-        const body = (await req.json()) as { port: number; providerId?: string }
-        if (!body.port) return errorResponse('port required', 'ValidationError', 400)
+        const schema = z.object({
+          port: z.number().int().positive('port is required'),
+          providerId: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
 
         // Get the actual WebSocket URL from Chrome's /json/version endpoint
-        let wsUrl = `ws://127.0.0.1:${body.port}/devtools/browser`
+        let wsUrl = `ws://127.0.0.1:${parsed.data.port}/devtools/browser`
         try {
-          const versionResp = await fetch(`http://127.0.0.1:${body.port}/json/version`, {
+          const versionResp = await fetch(`http://127.0.0.1:${parsed.data.port}/json/version`, {
             signal: AbortSignal.timeout(3000),
           })
           if (versionResp.ok) {
@@ -157,7 +158,7 @@ export function createSetupRouter(ctx: ServerContext) {
           let loggedIn = false
           let method: 'url_pattern' | 'dom_check' | 'cookie_check' = 'url_pattern'
           let loggedInUrl = url
-          const providerId = body.providerId
+          const providerId = parsed.data.providerId
 
           for (const page of pages) {
             if (loggedIn) break
@@ -268,10 +269,10 @@ export function createSetupRouter(ctx: ServerContext) {
             alive: !!version,
             loggedIn,
             url: loggedInUrl,
-            port: body.port,
+            port: parsed.data.port,
             method,
           }
-          audit('verify_result', { loggedIn, method, providerId: body.providerId })
+          audit('verify_result', { loggedIn, method, providerId: parsed.data.providerId })
           return json({ ok: true, ...result })
         } catch (err) {
           await client.disconnect().catch(() => {})
@@ -281,16 +282,16 @@ export function createSetupRouter(ctx: ServerContext) {
 
       // POST /api/setup/complete - finalize login, update DB
       if (pathname === '/api/setup/complete' && method === 'POST') {
-        const body = (await req.json()) as {
-          providerId: string
-          accountSlug: string
-          workspace: string
-          profileDir: string
-          debugPort: number
-        }
-        if (!body.providerId || !body.accountSlug) {
-          return errorResponse('providerId, accountSlug required', 'ValidationError', 400)
-        }
+        const schema = z.object({
+          providerId: z.string().min(1, 'providerId is required'),
+          accountSlug: z.string().min(1, 'accountSlug is required'),
+          workspace: z.string().min(1, 'workspace is required'),
+          profileDir: z.string().min(1, 'profileDir is required'),
+          debugPort: z.number().int().positive('debugPort is required'),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const body = parsed.data
 
         // Ensure provider exists
         let provider = await ctx.db.getProvider(body.providerId)
@@ -329,8 +330,9 @@ export function createSetupRouter(ctx: ServerContext) {
 
       // POST /api/setup/restore — scan workspace for existing profiles, recreate DB rows
       if (pathname === '/api/setup/restore' && method === 'POST') {
-        const body = (await req.json()) as { workspace?: string }
-        const workspace = body.workspace ?? (await ctx.db.getWorkspaceHint?.()) ?? null
+        const schema = z.object({ workspace: z.string().optional() })
+        const parsed = schema.safeParse(await req.json().catch(() => ({})))
+        const workspace = (parsed.success ? parsed.data.workspace : null) ?? (await ctx.db.getWorkspaceHint?.()) ?? null
         if (!workspace) {
           return errorResponse('No workspace path configured', 'ValidationError', 400)
         }
@@ -458,15 +460,16 @@ export function createSetupRouter(ctx: ServerContext) {
 
       // POST /api/setup/kill — kill a Chrome process by debug port
       if (pathname === '/api/setup/kill' && method === 'POST') {
-        const body = (await req.json()) as { port: number }
-        if (!body.port) return errorResponse('port required', 'ValidationError', 400)
+        const schema = z.object({ port: z.number().int().positive('port is required') })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
 
         // Find PID from port using netstat/tasklist
-        const pid = await findPidOnPort(body.port)
+        const pid = await findPidOnPort(parsed.data.port)
         if (!pid) return json({ ok: true, message: 'No process on port' })
 
         await killChrome(pid)
-        audit('chrome_killed', { port: body.port, pid })
+        audit('chrome_killed', { port: parsed.data.port, pid })
         return json({ ok: true, pid })
       }
 
