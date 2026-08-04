@@ -1,6 +1,7 @@
 // src/server/conversation-router.ts
 // REST API router — core endpoints
 
+import { z } from 'zod'
 import { config } from '../config.js'
 import type {
   PlanTier,
@@ -185,8 +186,10 @@ export function createConversationRouter(ctx: ServerContext) {
       // POST /api/fleet/start — delegate to ChromeGovernor.spawn()
       if (pathname === '/api/fleet/start' && method === 'POST') {
         if (!ctx.governor) return errorResponse('Engine not wired', 'InternalError', 500)
-        const body = (await req.json()) as { providerId: string; accountId: string }
-        const slave = await ctx.governor.spawn(body.providerId, body.accountId)
+        const schema = z.object({ providerId: z.string().min(1), accountId: z.string().min(1) })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const slave = await ctx.governor.spawn(parsed.data.providerId, parsed.data.accountId)
         return json(slave, 201)
       }
 
@@ -198,20 +201,22 @@ export function createConversationRouter(ctx: ServerContext) {
       }
 
       if (pathname === '/api/conversations' && method === 'POST') {
-        const body = (await req.json()) as {
-          providerId: string
-          accountId?: string
-          title?: string
-        }
+        const schema = z.object({
+          providerId: z.string().min(1),
+          accountId: z.string().optional(),
+          title: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
         const session = await ctx.db.ensureProviderSession({
-          providerId: body.providerId,
-          accountId: body.accountId,
+          providerId: parsed.data.providerId,
+          accountId: parsed.data.accountId,
         })
         const conv = await ctx.db.createConversation({
           id: crypto.randomUUID(),
           providerSessionId: session.id,
-          providerId: body.providerId,
-          title: body.title,
+          providerId: parsed.data.providerId,
+          title: parsed.data.title,
         })
         return json(conv, 201)
       }
@@ -222,11 +227,13 @@ export function createConversationRouter(ctx: ServerContext) {
         const conversationId = sendMatch[1]
         if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
         if (!ctx.conversationManager) return errorResponse('Engine not wired', 'InternalError', 500)
-        const body = (await req.json()) as { message: string }
+        const schema = z.object({ message: z.string().min(1) })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
         // 30s timeout — prevents hanging when no Chrome slave is connected.
         const SEND_TIMEOUT_MS = 30_000
         const result = await Promise.race([
-          ctx.conversationManager.send(conversationId, body.message),
+          ctx.conversationManager.send(conversationId, parsed.data.message),
           new Promise<never>((_, reject) =>
             setTimeout(
               () => reject(new Error('Send timed out — no Chrome slave connected')),
@@ -346,9 +353,9 @@ export function createConversationRouter(ctx: ServerContext) {
             circuitBreakerResetMs: govConfig.circuitBreakerResetMs ?? 60_000,
           },
           chromeConfig: {
-            path: config.chromePath,
-            extraArgs: [],
-            disableGpu: false,
+            path: govConfig.chromePath ?? '',
+            extraArgs: govConfig.extraArgs ?? [],
+            disableGpu: govConfig.disableGpu ?? false,
           },
         })
       }
