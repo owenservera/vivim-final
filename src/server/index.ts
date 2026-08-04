@@ -32,6 +32,7 @@ import { type CapStoreDb, getDb } from '../storage/db.js'
 import { createAuthMiddleware } from './auth-gate.js'
 import { createAutomationRouter } from './automation-router.js'
 import { createAutonomousRouter } from './autonomous-router.js'
+import { bootstrapEngines } from './bootstrap-engines.js'
 import { createCapabilityRouter } from './capability-router.js'
 import { createChromeRouter } from './chrome-router.js'
 import { createConversationRouter } from './conversation-router.js'
@@ -67,10 +68,21 @@ import {
   registerNodeEventForwarder,
   setCanvasWsHandler,
 } from './websocket.js'
-import { bootstrapEngines } from './bootstrap-engines.js'
+
+/**
+ * Boot phase discriminator. Callers can narrow what's available on ServerContext
+ * by checking `ctx.phase` rather than testing individual optional fields.
+ *
+ * - `db-only`       — only `db` is guaranteed
+ * - `seeds-done`    — seed data loaded
+ * - `engines-ready` — all stores, engines, and capability registrations complete
+ * - `fully-booted`  — kernel boot, health kernel, onboarding pipeline done
+ */
+export type BootPhase = 'db-only' | 'seeds-done' | 'engines-ready' | 'fully-booted'
 
 export interface ServerContext {
   port: number
+  phase: BootPhase
   db: CapStoreDb
   eventBus: CapabilityEventBus
   conversationManager?: ConversationManager
@@ -176,7 +188,7 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   // NLCL works even in minimal mode — deterministic parser needs no external deps
   const nlclEngine = new NLCLEngine({ db })
 
-  const ctx: ServerContext = { port, db, eventBus, nlclEngine }
+  const ctx: ServerContext = { port, phase: 'db-only', db, eventBus, nlclEngine }
 
   // Phase 1 stores — entity containers, content, notifications, contacts, sync, media
   const { EntityContainerStoreImpl } = await import(
@@ -456,6 +468,7 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   ctx.port = boundPort
 
   // Mark server as ready after Bun.serve succeeds
+  ctx.phase = 'engines-ready'
   ready = true
 
   // Register signal handlers for graceful shutdown
@@ -474,6 +487,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
   const ctx: ServerContext = {
     port,
+    phase: 'db-only',
     db: engines.db,
     eventBus: engines.eventBus,
     conversationManager: engines.conversationManager,
@@ -824,6 +838,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   )
 
   ctx.port = boundPort
+  ctx.phase = 'fully-booted'
   ready = true
   process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
   process.on('SIGINT', () => gracefulShutdown('SIGINT'))
