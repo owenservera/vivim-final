@@ -3,8 +3,8 @@
 
 import { NotFoundError } from '../errors.js'
 import { newId } from '../ids.js'
-import type { NodeStoreContract } from '../storage/contracts/node-store.js'
 import type { MemoryIntelligenceStore } from '../storage/contracts/memory-intelligence-store.js'
+import type { NodeStoreContract } from '../storage/contracts/node-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -696,7 +696,9 @@ export class MemoryEngine {
     }
 
     // Check if pattern already exists (by unique name+patternType)
-    const existing = await this.intelligenceStore.listPatternExtracts({ patternType: input.patternType })
+    const existing = await this.intelligenceStore.listPatternExtracts({
+      patternType: input.patternType,
+    })
     const match = existing.find((p) => p.name === input.name)
 
     if (match) {
@@ -750,7 +752,11 @@ export class MemoryEngine {
     }))
   }
 
-  async assignTopic(conversationId: string, topicId: string, assignmentType: 'auto' | 'manual' = 'auto'): Promise<void> {
+  async assignTopic(
+    conversationId: string,
+    topicId: string,
+    assignmentType: 'auto' | 'manual' = 'auto',
+  ): Promise<void> {
     if (!this.intelligenceStore) {
       this.eventBus.emit({
         type: 'memory:topic_assigned',

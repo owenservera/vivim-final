@@ -51,7 +51,9 @@ export class LaunchProfileEngine {
 
   async resolve(providerId: string): Promise<LaunchProfile> {
     const policy = await this.store.getPolicy()
-    const overrides = policy?.providerOverridesJson ? JSON.parse(policy.providerOverridesJson) as Record<string, string> : {}
+    const overrides = policy?.providerOverridesJson
+      ? (JSON.parse(policy.providerOverridesJson) as Record<string, string>)
+      : {}
     const overrideId = overrides[providerId]
     const profileId = overrideId ?? policy?.defaultLaunchProfileId ?? 'default'
     const profile = this.profiles.get(profileId)

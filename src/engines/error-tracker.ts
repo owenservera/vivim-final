@@ -101,7 +101,9 @@ export class ErrorTracker {
         for (const error of this.seen.values()) {
           try {
             await reporter.report(error)
-          } catch { /* best-effort reporter — don't crash flush loop */ }
+          } catch {
+            /* best-effort reporter — don't crash flush loop */
+          }
         }
       }
     }

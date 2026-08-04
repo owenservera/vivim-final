@@ -1,7 +1,3 @@
-// src/engines/entity-container-engine.ts
-// EntityContainerEngine — manages organizational containers (servers, workspaces, channels)
-
-import { newId } from '../ids.js'
 import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
@@ -107,7 +103,11 @@ export class EntityContainerEngine {
     return container
   }
 
-  async listContainers(type?: string, providerId?: string, accountId?: string): Promise<Container[]> {
+  async listContainers(
+    type?: string,
+    providerId?: string,
+    accountId?: string,
+  ): Promise<Container[]> {
     if (type) return this.store.getContainersByType(type)
     if (providerId && accountId) return this.store.getContainersByProvider(providerId, accountId)
     return []

@@ -32,29 +32,81 @@ function tokenize(expr: string): Token[] {
   let i = 0
   while (i < expr.length) {
     const ch = expr[i]!
-    if (/\s/.test(ch)) { i++; continue }
-    if (ch === '(') { tokens.push({ type: '(' }); i++; continue }
-    if (ch === ')') { tokens.push({ type: ')' }); i++; continue }
-    if (ch === '[') { tokens.push({ type: '[' }); i++; continue }
-    if (ch === ']') { tokens.push({ type: ']' }); i++; continue }
-    if (ch === '?') { tokens.push({ type: '?' }); i++; continue }
-    if (ch === ':') { tokens.push({ type: ':' }); i++; continue }
-    if (ch === ',') { tokens.push({ type: ',' }); i++; continue }
+    if (/\s/.test(ch)) {
+      i++
+      continue
+    }
+    if (ch === '(') {
+      tokens.push({ type: '(' })
+      i++
+      continue
+    }
+    if (ch === ')') {
+      tokens.push({ type: ')' })
+      i++
+      continue
+    }
+    if (ch === '[') {
+      tokens.push({ type: '[' })
+      i++
+      continue
+    }
+    if (ch === ']') {
+      tokens.push({ type: ']' })
+      i++
+      continue
+    }
+    if (ch === '?') {
+      tokens.push({ type: '?' })
+      i++
+      continue
+    }
+    if (ch === ':') {
+      tokens.push({ type: ':' })
+      i++
+      continue
+    }
+    if (ch === ',') {
+      tokens.push({ type: ',' })
+      i++
+      continue
+    }
     if (ch === '!') {
-      if (expr[i + 1] === '=') { tokens.push({ type: '!=' }); i += 2 }
-      else { tokens.push({ type: '!' }); i++ }
+      if (expr[i + 1] === '=') {
+        tokens.push({ type: '!=' })
+        i += 2
+      } else {
+        tokens.push({ type: '!' })
+        i++
+      }
       continue
     }
     if (ch === '>' || ch === '<' || ch === '=' || ch === '&' || ch === '|') {
       const next = expr[i + 1]
-      if (ch === '=' && next === '=') { tokens.push({ type: '==' }); i += 2 }
-      else if (ch === '>' && next === '=') { tokens.push({ type: '>=' }); i += 2 }
-      else if (ch === '<' && next === '=') { tokens.push({ type: '<=' }); i += 2 }
-      else if (ch === '>' && next !== '=') { tokens.push({ type: '>' }); i++ }
-      else if (ch === '<' && next !== '=') { tokens.push({ type: '<' }); i++ }
-      else if (ch === '&' && next === '&') { tokens.push({ type: '&&' }); i += 2 }
-      else if (ch === '|' && next === '|') { tokens.push({ type: '||' }); i += 2 }
-      else { i++ }
+      if (ch === '=' && next === '=') {
+        tokens.push({ type: '==' })
+        i += 2
+      } else if (ch === '>' && next === '=') {
+        tokens.push({ type: '>=' })
+        i += 2
+      } else if (ch === '<' && next === '=') {
+        tokens.push({ type: '<=' })
+        i += 2
+      } else if (ch === '>' && next !== '=') {
+        tokens.push({ type: '>' })
+        i++
+      } else if (ch === '<' && next !== '=') {
+        tokens.push({ type: '<' })
+        i++
+      } else if (ch === '&' && next === '&') {
+        tokens.push({ type: '&&' })
+        i += 2
+      } else if (ch === '|' && next === '|') {
+        tokens.push({ type: '||' })
+        i += 2
+      } else {
+        i++
+      }
       continue
     }
     if (ch === '"' || ch === "'") {
@@ -62,8 +114,12 @@ function tokenize(expr: string): Token[] {
       i++
       let val = ''
       while (i < expr.length && expr[i] !== quote) {
-        if (expr[i] === '\\') { i++; val += expr[i] ?? '' }
-        else { val += expr[i]! }
+        if (expr[i] === '\\') {
+          i++
+          val += expr[i] ?? ''
+        } else {
+          val += expr[i]!
+        }
         i++
       }
       i++ // skip closing quote
@@ -72,13 +128,19 @@ function tokenize(expr: string): Token[] {
     }
     if (/[0-9]/.test(ch)) {
       let num = ''
-      while (i < expr.length && /[0-9.]/.test(expr[i]!)) { num += expr[i]; i++ }
+      while (i < expr.length && /[0-9.]/.test(expr[i]!)) {
+        num += expr[i]
+        i++
+      }
       tokens.push({ type: 'number', value: Number(num) })
       continue
     }
     if (/[a-zA-Z_$]/.test(ch)) {
       let ident = ''
-      while (i < expr.length && /[a-zA-Z0-9_$]/.test(expr[i]!)) { ident += expr[i]; i++ }
+      while (i < expr.length && /[a-zA-Z0-9_$]/.test(expr[i]!)) {
+        ident += expr[i]
+        i++
+      }
       if (ident === 'true') tokens.push({ type: 'boolean', value: true })
       else if (ident === 'false') tokens.push({ type: 'boolean', value: false })
       else if (ident === 'null') tokens.push({ type: 'ident', value: 'null' })
@@ -109,12 +171,17 @@ class Parser {
   private pos = 0
   constructor(private tokens: Token[]) {}
 
-  private peek(): Token | undefined { return this.tokens[this.pos] }
-  private advance(): Token | undefined { return this.tokens[this.pos++] }
+  private peek(): Token | undefined {
+    return this.tokens[this.pos]
+  }
+  private advance(): Token | undefined {
+    return this.tokens[this.pos++]
+  }
 
   private expect<T extends Token['type']>(type: T): Extract<Token, { type: T }> {
     const tok = this.advance()
-    if (!tok || tok.type !== type) throw new EngineError(`Expected ${String(type)}, got ${tok ? String(tok.type) : 'EOF'}`)
+    if (!tok || tok.type !== type)
+      throw new EngineError(`Expected ${String(type)}, got ${tok ? String(tok.type) : 'EOF'}`)
     return tok as Extract<Token, { type: T }>
   }
 
@@ -158,9 +225,14 @@ class Parser {
 
   private parseComparison(): ASTNode {
     let left = this.parseUnary()
-    while (this.peek()?.type === '==' || this.peek()?.type === '!=' ||
-           this.peek()?.type === '>' || this.peek()?.type === '<' ||
-           this.peek()?.type === '>=' || this.peek()?.type === '<=') {
+    while (
+      this.peek()?.type === '==' ||
+      this.peek()?.type === '!=' ||
+      this.peek()?.type === '>' ||
+      this.peek()?.type === '<' ||
+      this.peek()?.type === '>=' ||
+      this.peek()?.type === '<='
+    ) {
       const op = this.advance()!.type as string
       const right = this.parseUnary()
       left = { kind: 'binary', op, left, right }
@@ -199,9 +271,18 @@ class Parser {
   private parsePrimary(): ASTNode {
     const tok = this.peek()
     if (!tok) throw new EngineError('Unexpected end of expression')
-    if (tok.type === 'number') { this.advance(); return { kind: 'literal', value: tok.value } }
-    if (tok.type === 'string') { this.advance(); return { kind: 'literal', value: tok.value } }
-    if (tok.type === 'boolean') { this.advance(); return { kind: 'literal', value: tok.value } }
+    if (tok.type === 'number') {
+      this.advance()
+      return { kind: 'literal', value: tok.value }
+    }
+    if (tok.type === 'string') {
+      this.advance()
+      return { kind: 'literal', value: tok.value }
+    }
+    if (tok.type === 'boolean') {
+      this.advance()
+      return { kind: 'literal', value: tok.value }
+    }
     if (tok.type === 'ident') {
       this.advance()
       if (tok.value === 'null') return { kind: 'literal', value: null }
@@ -233,8 +314,10 @@ function resolvePath(obj: unknown, path: string): unknown {
 
 function evaluate(node: ASTNode, vars: Record<string, unknown>): unknown {
   switch (node.kind) {
-    case 'literal': return node.value
-    case 'ident': return vars[node.name]
+    case 'literal':
+      return node.value
+    case 'ident':
+      return vars[node.name]
     case 'access': {
       const obj = evaluate(node.object, vars)
       if (obj == null) return undefined
@@ -260,15 +343,24 @@ function evaluate(node: ASTNode, vars: Record<string, unknown>): unknown {
       const left = evaluate(node.left, vars)
       const right = evaluate(node.right, vars)
       switch (node.op) {
-        case '==': return left === right || left == right
-        case '!=': return left !== right && left != right
-        case '>': return (left as number) > (right as number)
-        case '<': return (left as number) < (right as number)
-        case '>=': return (left as number) >= (right as number)
-        case '<=': return (left as number) <= (right as number)
-        case '&&': return Boolean(left) && Boolean(right)
-        case '||': return Boolean(left) || Boolean(right)
-        default: return undefined
+        case '==':
+          return left === right || left == right
+        case '!=':
+          return left !== right && left != right
+        case '>':
+          return (left as number) > (right as number)
+        case '<':
+          return (left as number) < (right as number)
+        case '>=':
+          return (left as number) >= (right as number)
+        case '<=':
+          return (left as number) <= (right as number)
+        case '&&':
+          return Boolean(left) && Boolean(right)
+        case '||':
+          return Boolean(left) || Boolean(right)
+        default:
+          return undefined
       }
     }
     case 'ternary': {
@@ -329,11 +421,21 @@ export interface MigrationStep {
 
 export function parseMigrationScript(script: string): MigrationStep[] {
   const steps: MigrationStep[] = []
-  const lines = script.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('//'))
+  const lines = script
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('//'))
   for (const line of lines) {
-    const addMatch = line.match(/^addColumn\(\s*['"](\w+)['"]\s*,\s*['"](\w+)['"]\s*,\s*['"](\w+)['"]\s*\)/)
+    const addMatch = line.match(
+      /^addColumn\(\s*['"](\w+)['"]\s*,\s*['"](\w+)['"]\s*,\s*['"](\w+)['"]\s*\)/,
+    )
     if (addMatch) {
-      steps.push({ action: 'addColumn', table: addMatch[1], column: addMatch[2], type: addMatch[3] })
+      steps.push({
+        action: 'addColumn',
+        table: addMatch[1],
+        column: addMatch[2],
+        type: addMatch[3],
+      })
       continue
     }
     const dropMatch = line.match(/^dropColumn\(\s*['"](\w+)['"]\s*,\s*['"](\w+)['"]\s*\)/)

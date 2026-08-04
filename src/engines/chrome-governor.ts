@@ -13,7 +13,6 @@ import type {
   TraceEntryInput,
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
-import type { StealthProfileStore } from './stealth/stealth-profile-store.js'
 import { injectAntiDetection } from './anti-detection.js'
 import type { BrowserHarnessActions } from './browser-automation/harness-actions.js'
 import type { CapabilitySnapshot, CapabilitySnapshotEntry } from './capability-snapshot.js'
@@ -22,6 +21,7 @@ import { submitMessage, typeMessage } from './composer-typing.js'
 import { configToProgram } from './harness/program-schema.js'
 import { registerDefaultStealthModules } from './stealth/register-defaults.js'
 import { StealthModuleEngine } from './stealth/stealth-module-engine.js'
+import type { StealthProfileStore } from './stealth/stealth-profile-store.js'
 import type {
   LaunchProfileRow,
   ModuleProfileRow,
@@ -35,16 +35,36 @@ function createInMemoryStealthStore(): StealthProfileStore {
   const modules = new Map<string, ModuleProfileRow>()
   let policy: StealthPolicyRow | null = null
   return {
-    async getLaunchProfile(id) { return launches.get(id) ?? null },
-    async getAllLaunchProfiles() { return [...launches.values()] },
-    async upsertLaunchProfile(id, data) { launches.set(id, { ...launches.get(id), ...data, id } as LaunchProfileRow) },
-    async deleteLaunchProfile(id) { launches.delete(id) },
-    async getModuleProfile(id) { return modules.get(id) ?? null },
-    async getAllModuleProfiles() { return [...modules.values()] },
-    async upsertModuleProfile(id, data) { modules.set(id, { ...modules.get(id), ...data, id } as ModuleProfileRow) },
-    async deleteModuleProfile(id) { modules.delete(id) },
-    async getPolicy() { return policy },
-    async upsertPolicy(data) { policy = { ...policy, ...data } as StealthPolicyRow },
+    async getLaunchProfile(id) {
+      return launches.get(id) ?? null
+    },
+    async getAllLaunchProfiles() {
+      return [...launches.values()]
+    },
+    async upsertLaunchProfile(id, data) {
+      launches.set(id, { ...launches.get(id), ...data, id } as LaunchProfileRow)
+    },
+    async deleteLaunchProfile(id) {
+      launches.delete(id)
+    },
+    async getModuleProfile(id) {
+      return modules.get(id) ?? null
+    },
+    async getAllModuleProfiles() {
+      return [...modules.values()]
+    },
+    async upsertModuleProfile(id, data) {
+      modules.set(id, { ...modules.get(id), ...data, id } as ModuleProfileRow)
+    },
+    async deleteModuleProfile(id) {
+      modules.delete(id)
+    },
+    async getPolicy() {
+      return policy
+    },
+    async upsertPolicy(data) {
+      policy = { ...policy, ...data } as StealthPolicyRow
+    },
   }
 }
 
@@ -856,9 +876,7 @@ export class ChromeGovernor {
   ) {
     this.cdpTransport = transport ?? null
     this.nextPort = config.portRange[0]
-    this.stealthEngine = new StealthModuleEngine(
-      stealthStore ?? createInMemoryStealthStore(),
-    )
+    this.stealthEngine = new StealthModuleEngine(stealthStore ?? createInMemoryStealthStore())
     registerDefaultStealthModules(this.stealthEngine)
 
     // Use injected fleetSupervisor or create real one
@@ -1035,7 +1053,9 @@ export class ChromeGovernor {
   allocatePort(): number {
     const port = this.nextPort
     if (port > this.config.portRange[1]) {
-      throw new EngineError(`Port range exhausted: ${this.config.portRange[0]}-${this.config.portRange[1]}`)
+      throw new EngineError(
+        `Port range exhausted: ${this.config.portRange[0]}-${this.config.portRange[1]}`,
+      )
     }
     this.nextPort++
     return port

@@ -140,6 +140,7 @@ export class UpdateEngine {
   async fetchRelease(tag?: string): Promise<GitHubRelease | null> {
     try {
       const response = await fetch(this.getReleaseUrl(tag), {
+        signal: AbortSignal.timeout(10_000),
         headers: {
           Accept: 'application/vnd.github.v3+json',
           'User-Agent': 'Vivim-Desktop-Updater',
@@ -257,6 +258,7 @@ export class UpdateEngine {
     log.info({ url }, 'Downloading update')
 
     const response = await fetch(url, {
+      signal: AbortSignal.timeout(120_000),
       headers: {
         'User-Agent': 'Vivim-Desktop-Updater',
       },

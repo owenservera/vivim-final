@@ -22,8 +22,11 @@ export class ApiProviderAdapter {
       throw new EngineError(`Missing API key for ${this.cfg.providerId}`)
     }
 
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 60_000)
     const res = await fetch(this.cfg.baseUrl, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'content-type': 'application/json',
         authorization: `Bearer ${key}`,
@@ -34,6 +37,7 @@ export class ApiProviderAdapter {
         stream: true,
       }),
     })
+    clearTimeout(timeout)
 
     if (!res.ok) {
       throw new EngineError(`API call failed for ${this.cfg.providerId}: ${res.status}`)

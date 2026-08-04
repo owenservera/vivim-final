@@ -1,7 +1,3 @@
-// src/engines/contact-engine.ts
-// ContactEngine — cross-provider contact management with identity merging
-
-import { newId } from '../ids.js'
 import { NotFoundError } from '../errors.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
@@ -63,12 +59,21 @@ export interface ContactIdentity {
 export interface ContactStore {
   createContact(input: ContactInput): Promise<Contact>
   getContactById(id: string): Promise<Contact | null>
-  getContactByNativeId(providerId: string, accountId: string, providerNativeId: string): Promise<Contact | null>
+  getContactByNativeId(
+    providerId: string,
+    accountId: string,
+    providerNativeId: string,
+  ): Promise<Contact | null>
   getContactsByAccount(accountId: string): Promise<Contact[]>
   searchContacts(query: string, accountId?: string): Promise<Contact[]>
   updateContact(id: string, updates: Partial<ContactInput>): Promise<Contact>
   deleteContact(id: string): Promise<void>
-  mergeContacts(canonicalId: string, mergedId: string, method: string, confidence: number): Promise<ContactIdentity>
+  mergeContacts(
+    canonicalId: string,
+    mergedId: string,
+    method: string,
+    confidence: number,
+  ): Promise<ContactIdentity>
   getMergedContacts(contactId: string): Promise<ContactIdentity[]>
 }
 
@@ -92,7 +97,11 @@ export class ContactEngine {
     return contact
   }
 
-  async getByNativeId(providerId: string, accountId: string, providerNativeId: string): Promise<Contact | null> {
+  async getByNativeId(
+    providerId: string,
+    accountId: string,
+    providerNativeId: string,
+  ): Promise<Contact | null> {
     return this.store.getContactByNativeId(providerId, accountId, providerNativeId)
   }
 
@@ -115,7 +124,12 @@ export class ContactEngine {
     this.eventBus?.emit({ type: 'contact:deleted', contactId: id } as never)
   }
 
-  async mergeContacts(canonicalId: string, mergedId: string, method: string, confidence: number): Promise<ContactIdentity> {
+  async mergeContacts(
+    canonicalId: string,
+    mergedId: string,
+    method: string,
+    confidence: number,
+  ): Promise<ContactIdentity> {
     return this.store.mergeContacts(canonicalId, mergedId, method, confidence)
   }
 
