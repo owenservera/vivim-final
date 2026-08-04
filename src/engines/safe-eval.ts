@@ -1,12 +1,12 @@
 // src/engines/safe-eval.ts
-// Guard for the three `new Function()` evaluation sites (stream-parser inline
-// parsers, workflow-compiler / workflow-engine DSL conditions).
+// Guard for the remaining `new Function()` evaluation site (stream-parser inline
+// parsers via SandboxRunner).
 //
-// Those expressions originate from DB-backed parser definitions and
-// author-authored workflow definitions — they are NOT free-form user input.
-// This guard rejects the most common code-execution vectors if a definition is
-// ever sourced externally without authorization, closing the gap the security
-// audit (AU-0001/0002/0003) flagged.
+// The workflow-compiler and workflow-engine sites have been migrated to
+// safe-expression.ts (AST-based evaluator). The plugin-router migration script
+// site has been migrated to a structured migration DSL (parseMigrationScript).
+// This guard remains for the stream-parser SandboxRunner path, which still uses
+// `new Function()` for DB-backed parser definitions.
 
 import { EngineError } from '../errors.js'
 

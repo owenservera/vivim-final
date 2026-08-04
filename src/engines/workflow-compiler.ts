@@ -2,7 +2,7 @@
 // WorkflowCompiler — transforms visual workflow JSON → executable HarnessDAG
 
 import type { HarnessDAG, HarnessNode } from '../schema/harness.js'
-import { assertTrustedExpressionSource } from './safe-eval.js'
+import { compileExpression } from './safe-expression.js'
 import type { WorkflowDefinition, WorkflowEdge, WorkflowNode } from './workflow-engine.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -90,19 +90,6 @@ function nodeCategory(type: string): string {
   const d = DATA_MAP[type]
   if (d) return d
   return `unknown-${type}`
-}
-
-function compileExpression(expr: string): ExpressionFn {
-  try {
-    // Trusted: `expr` is an author-defined workflow DSL condition, not free-form
-    // user input. Evaluation is intentional; route through SandboxRunner if
-    // workflow definitions ever become externally sourced.
-    assertTrustedExpressionSource(expr, 'workflow expression')
-    const fn = new Function('vars', `with(vars) { return (${expr}) }`) as ExpressionFn
-    return fn
-  } catch {
-    return () => false
-  }
 }
 
 // ── Compiler ────────────────────────────────────────────────────────────

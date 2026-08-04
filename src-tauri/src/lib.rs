@@ -12,6 +12,11 @@ const BACKEND_SIDECAR: &str = "vivim-server";
 const DEFAULT_PORT: u16 = 9421;
 const MAX_RESTARTS: u32 = 5;
 const BACKEND_READY_TIMEOUT_MS: u64 = 30_000;
+const HEALTH_POLL_INTERVAL_MS: u64 = 200;
+const HEALTH_POLL_MAX_ATTEMPTS: u32 = 150; // 30s / 200ms = 150
+
+/// Shared port state accessible from both supervisor and Tauri command.
+static ACTUAL_PORT: AtomicU16 = AtomicU16::new(DEFAULT_PORT);
 
 /// Resolve the supervisor log path (mirrors the sidecar's log location so all
 /// app logs live in one place): %LOCALAPPDATA%/vivim/vivim-supervisor.log.
@@ -89,8 +94,37 @@ fn spawn_backend(
                     print!("[vivim-server] {line}");
                     if let Some(port) = extract_port_from_line(&line) {
                         actual_port_clone.store(port, Ordering::SeqCst);
-                        backend_ready_clone.store(true, Ordering::SeqCst);
-                        let _ = app_clone.emit("backend-ready", port);
+                        ACTUAL_PORT.store(port, Ordering::SeqCst);
+
+                        // Poll /readyz before signaling backend-ready
+                        let mut ready = false;
+                        for _ in 0..HEALTH_POLL_MAX_ATTEMPTS {
+                            let url = format!("http://127.0.0.1:{port}/readyz");
+                            match reqwest::get(&url).await {
+                                Ok(resp) if resp.status().is_success() => {
+                                    ready = true;
+                                    break;
+                                }
+                                _ => {
+                                    tokio::time::sleep(tokio::time::Duration::from_millis(
+                                        HEALTH_POLL_INTERVAL_MS,
+                                    ))
+                                    .await;
+                                }
+                            }
+                        }
+                        if ready {
+                            backend_ready_clone.store(true, Ordering::SeqCst);
+                            let _ = app_clone.emit("backend-ready", port);
+                        } else {
+                            eprintln!("[vivim] WARNING: /readyz polling timed out after {BACKEND_READY_TIMEOUT_MS}ms");
+                            log_supervisor(&format!(
+                                "/readyz polling timed out on port {port}"
+                            ));
+                            // Emit anyway — frontend has its own timeout fallback
+                            backend_ready_clone.store(true, Ordering::SeqCst);
+                            let _ = app_clone.emit("backend-ready", port);
+                        }
                     }
                 }
                 CommandEvent::Stderr(bytes) => {
@@ -170,7 +204,7 @@ fn supervise_sidecar(app: &tauri::AppHandle) {
 
 #[tauri::command]
 fn backend_port() -> u16 {
-    DEFAULT_PORT
+    ACTUAL_PORT.load(Ordering::SeqCst)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

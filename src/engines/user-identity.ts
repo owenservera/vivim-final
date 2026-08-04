@@ -74,7 +74,7 @@ export class UserIdentityEngine {
       type: 'user:profile:created',
       userId: user.id,
       role: user.role,
-    } as any)
+    })
     return user
   }
 
@@ -93,7 +93,7 @@ export class UserIdentityEngine {
       userId,
       previousUserId: previous,
       role: user.role,
-    } as any)
+    })
     return { user, previousUserId: previous }
   }
 
@@ -116,7 +116,7 @@ export class UserIdentityEngine {
     this.eventBus.emit({
       type: 'user:profile:deleted',
       userId,
-    } as any)
+    })
   }
 
   async setRole(userId: string, role: UserRole): Promise<void> {
@@ -134,7 +134,7 @@ export class UserIdentityEngine {
       fromRole,
       toRole: role,
       changedBy: this.activeUserId,
-    } as any)
+    })
   }
 
   getActiveUserId(): string | null {
@@ -165,6 +165,6 @@ export class UserIdentityEngine {
     this.eventBus.emit({
       type: 'user:profile:updated',
       userId,
-    } as any)
+    })
   }
 }

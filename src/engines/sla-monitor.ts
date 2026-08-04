@@ -102,7 +102,7 @@ export class SlaMonitor {
             p50,
             p95,
             p99,
-          } as any)
+          })
         }
       }
     }
