@@ -4,6 +4,7 @@
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
 
+import { z } from 'zod'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
@@ -56,22 +57,21 @@ export function createNodeRouter(ctx: ServerContext) {
     try {
       // ── POST /api/nodes/alias ──
       if (pathname === '/api/nodes/alias' && method === 'POST') {
-        const body = (await req.json()) as {
-          aliasId: string
-          canonicalId: string
-          method: string
-          confidence?: number
-        }
-        if (!body.aliasId || !body.canonicalId || !body.method) {
-          return errorResponse('aliasId, canonicalId, and method required', 'ValidationError', 400)
-        }
+        const schema = z.object({
+          aliasId: z.string().min(1, 'aliasId is required'),
+          canonicalId: z.string().min(1, 'canonicalId is required'),
+          method: z.string().min(1, 'method is required'),
+          confidence: z.number().min(0).max(1).optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
         await ns.registerAlias(
-          body.aliasId,
-          body.canonicalId,
-          body.method,
-          body.confidence ?? 1.0,
+          parsed.data.aliasId,
+          parsed.data.canonicalId,
+          parsed.data.method,
+          parsed.data.confidence ?? 1.0,
         )
-        return json({ ok: true, aliasId: body.aliasId, canonicalId: body.canonicalId }, 201)
+        return json({ ok: true, aliasId: parsed.data.aliasId, canonicalId: parsed.data.canonicalId }, 201)
       }
 
       // ── GET /api/nodes/alias/:aliasId ──

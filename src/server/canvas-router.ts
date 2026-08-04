@@ -6,6 +6,7 @@
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
 
+import { z } from 'zod'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
@@ -60,7 +61,7 @@ export function createCanvasRouter(ctx: ServerContext) {
     // POST /api/canvas/definitions → canvas_define (body = LayerDraft)
     if (url.pathname === '/api/canvas/definitions' && req.method === 'POST') {
       try {
-        const body = (await req.json()) as Record<string, unknown>
+        const body = z.record(z.unknown()).parse(await req.json())
         return json({ ok: true, result: await cap('cap:canvas:define', body) })
       } catch (e) {
         return errorResponse((e as Error).message, 'CanvasDefineFailed', 500)
@@ -70,7 +71,7 @@ export function createCanvasRouter(ctx: ServerContext) {
     // POST /api/canvas/spawn → canvas_spawn
     if (url.pathname === '/api/canvas/spawn' && req.method === 'POST') {
       try {
-        const body = (await req.json()) as Record<string, unknown>
+        const body = z.record(z.unknown()).parse(await req.json())
         return json({ ok: true, result: await cap('cap:canvas:spawn', body) })
       } catch (e) {
         return errorResponse((e as Error).message, 'CanvasSpawnFailed', 500)
@@ -88,13 +89,15 @@ export function createCanvasRouter(ctx: ServerContext) {
           conceptualModel &&
           typeof (conceptualModel as { resolveSurface?: unknown }).resolveSurface === 'function'
         ) {
-          const body = (await req.json()) as {
-            workspaceId?: string
-            userId?: string
-            providerIds?: string[]
-            slotIds?: string[]
-            variant?: string
-          }
+          const schema = z.object({
+            workspaceId: z.string().optional(),
+            userId: z.string().optional(),
+            providerIds: z.array(z.string()).optional(),
+            slotIds: z.array(z.string()).optional(),
+            variant: z.string().optional(),
+          })
+          const parsed = schema.safeParse(await req.json())
+          const body = parsed.success ? parsed.data : {}
           const providerId = body.providerIds?.[0] ?? 'generic'
           const family = await (
             conceptualModel as {
@@ -182,7 +185,7 @@ export function createCanvasRouter(ctx: ServerContext) {
     const mutateMatch = url.pathname.match(/^\/api\/canvas\/instance\/([^/]+)\/mutate$/)
     if (mutateMatch && req.method === 'POST') {
       try {
-        const body = (await req.json()) as Record<string, unknown>
+        const body = z.record(z.unknown()).parse(await req.json())
         return json({
           ok: true,
           result: await cap('cap:canvas:mutate', {
