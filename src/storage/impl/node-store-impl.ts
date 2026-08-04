@@ -40,12 +40,12 @@ function toRow(n: NodeBase): NodeRow {
     validUntil: n.validUntil ?? null,
     parentVersion: n.parentVersion ?? null,
     // ACU fields
-    acuType: (n as any).acuType ?? null,
-    lineageKind: (n as any).lineageKind ?? null,
-    extractorVersion: (n as any).extractorVersion ?? null,
-    parserVersion: (n as any).parserVersion ?? null,
-    valueScore: (n as any).valueScore ?? null,
-    isHighValue: (n as any).isHighValue ? 1 : 0,
+    acuType: (n as Record<string, unknown>).acuType ?? null,
+    lineageKind: (n as Record<string, unknown>).lineageKind ?? null,
+    extractorVersion: (n as Record<string, unknown>).extractorVersion ?? null,
+    parserVersion: (n as Record<string, unknown>).parserVersion ?? null,
+    valueScore: (n as Record<string, unknown>).valueScore ?? null,
+    isHighValue: (n as Record<string, unknown>).isHighValue ? 1 : 0,
     createdAt: n.createdAt,
     updatedAt: n.updatedAt,
   }
@@ -185,7 +185,7 @@ export class NodeStoreImpl implements NodeStoreContract {
 
   async getOutgoingEdges(sourceId: string): Promise<Edge[]> {
     const rows = await this.prisma.nodeEdge.findMany({ where: { sourceId } })
-    return rows.map((r: any) => ({
+    return rows.map((r: Record<string, unknown>) => ({
       type: r.edgeType,
       targetId: r.targetId,
       label: r.label ?? undefined,
@@ -195,7 +195,7 @@ export class NodeStoreImpl implements NodeStoreContract {
 
   async getIncomingEdges(targetId: string): Promise<Edge[]> {
     const rows = await this.prisma.nodeEdge.findMany({ where: { targetId } })
-    return rows.map((r: any) => ({
+    return rows.map((r: Record<string, unknown>) => ({
       type: r.edgeType,
       targetId: r.sourceId,
       label: r.label ?? undefined,

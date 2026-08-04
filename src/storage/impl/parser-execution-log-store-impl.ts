@@ -10,7 +10,7 @@ import type { CapStoreDb } from '../db.js'
 
 type PrismaLoose = Record<string, unknown>
 
-function toLogRow(r: any): ParserExecutionLogRow {
+function toLogRow(r: Record<string, unknown>): ParserExecutionLogRow {
   return {
     id: r.id,
     providerId: r.providerId,
@@ -37,10 +37,10 @@ export class ParserExecutionLogStoreImpl implements ParserExecutionLogStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db as unknown as PrismaLoose
+    this.db = db.loose 
   }
 
-  private get p(): any {
+  private get p() {
     return this.db.prisma
   }
 
@@ -104,9 +104,9 @@ export class ParserExecutionLogStoreImpl implements ParserExecutionLogStore {
     })
     if (rows.length === 0) return null
     const total = rows.length
-    const avgConf = rows.reduce((s: number, r: any) => s + r.confidence, 0) / total
-    const avgDur = rows.reduce((s: number, r: any) => s + r.durationMs, 0) / total
-    const fallbacks = rows.filter((r: any) => r.fallbackUsed).length
+    const avgConf = rows.reduce((s: number, r: Record<string, unknown>) => s + (r.confidence as number), 0) / total
+    const avgDur = rows.reduce((s: number, r: Record<string, unknown>) => s + (r.durationMs as number), 0) / total
+    const fallbacks = rows.filter((r: Record<string, unknown>) => r.fallbackUsed).length
     return {
       totalExecutions: total,
       avgConfidence: avgConf,

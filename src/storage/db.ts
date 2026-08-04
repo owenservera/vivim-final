@@ -9,8 +9,23 @@ import { type PrismaClient, closePrisma, getPrisma } from './prisma.js'
 
 const log = getLogger('db')
 
+/**
+ * Loose type for Prisma model delegates — eliminates `as any` casts in store impls.
+ * Covers the common CRUD methods (findUnique, findMany, create, update, delete,
+ * upsert, count,findFirst, findFirstOrThrow, updateMany, deleteMany).
+ */
+export type PrismaLoose = Record<string, (...args: unknown[]) => Promise<unknown>>
+
 export class CapStoreDb {
   public readonly prisma: PrismaClient
+
+  /**
+   * Loose-typed access to all Prisma model delegates.
+   * Use this instead of `(db.prisma as any).modelName` in store impls.
+   */
+  get loose(): PrismaLoose {
+    return this.prisma as unknown as PrismaLoose
+  }
 
   constructor(_path?: string) {
     // _path kept for backward compat but ignored — Prisma uses DATABASE_URL

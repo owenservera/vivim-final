@@ -52,7 +52,7 @@ export class ContentItemStoreImpl {
   constructor(private readonly db: CapStoreDb) {}
 
   async getItemById(id: string): Promise<ContentItemRow | null> {
-    const row = await (this.db.prisma as any).contentItem.findUnique({ where: { id } })
+    const row = await this.db.loose.contentItem.findUnique({ where: { id } })
     return row ? this.toRow(row) : null
   }
 
@@ -64,18 +64,18 @@ export class ContentItemStoreImpl {
     limit?: number
     offset?: number
   }): Promise<ContentItemRow[]> {
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     if (query.containerId) where.containerId = query.containerId
     if (query.providerId) where.providerId = query.providerId
     if (query.accountId) where.accountId = query.accountId
     if (query.contentType) where.contentType = query.contentType
-    const rows = await (this.db.prisma as any).contentItem.findMany({
+    const rows = await this.db.loose.contentItem.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
       take: query.limit ?? 50,
       skip: query.offset ?? 0,
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r: Record<string, unknown>) => this.toRow(r))
   }
 
   async createItem(input: {
@@ -98,7 +98,7 @@ export class ContentItemStoreImpl {
     sortTimestamp?: number
   }): Promise<ContentItemRow> {
     const now = Date.now()
-    const row = await (this.db.prisma as any).contentItem.create({
+    const row = await this.db.loose.contentItem.create({
       data: {
         id: newId(),
         providerId: input.providerId,
@@ -151,16 +151,16 @@ export class ContentItemStoreImpl {
       'isBookmarked', 'voteScore', 'voteDirection', 'replyCount', 'shareCount',
       'viewCount', 'sequenceIndex', 'sortTimestamp', 'deletedAt',
     ]
-    const data: any = { updatedAt: now }
+    const data: Record<string, unknown> = { updatedAt: now }
     for (const key of allowed) {
       if (key in updates) data[key] = updates[key]
     }
-    const row = await (this.db.prisma as any).contentItem.update({ where: { id }, data })
+    const row = await this.db.loose.contentItem.update({ where: { id }, data })
     return this.toRow(row)
   }
 
   async deleteItem(id: string): Promise<void> {
-    await (this.db.prisma as any).contentItem.delete({ where: { id } })
+    await this.db.loose.contentItem.delete({ where: { id } })
   }
 
   async searchItems(query: string, opts?: {
@@ -178,12 +178,12 @@ export class ContentItemStoreImpl {
       }
       if (opts?.containerId) where.containerId = opts.containerId
       if (opts?.contentType) where.contentType = opts.contentType
-      const rows = await (this.db.prisma as any).contentItem.findMany({
+      const rows = await this.db.loose.contentItem.findMany({
         where,
         orderBy: { updatedAt: 'desc' },
         take: 50,
       })
-      return rows.map((r: any) => this.toRow(r))
+      return rows.map((r: Record<string, unknown>) => this.toRow(r))
     } catch {
       return []
     }
@@ -191,7 +191,7 @@ export class ContentItemStoreImpl {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: any): ContentItemRow {
+  private toRow(r: Record<string, unknown>): ContentItemRow {
     return {
       id: r.id,
       providerId: r.providerId,
