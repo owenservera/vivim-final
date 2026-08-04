@@ -7,6 +7,7 @@ import { AGENT_ROLES } from '../engines/automation/agents.js'
 import type { AutomationOrchestrator } from '../engines/automation/orchestrator.js'
 import { EngineError } from '../errors.js'
 import { errorResponse, json } from './response.js'
+import { z } from 'zod'
 
 export interface AutomationRouterDeps {
   orchestrator: AutomationOrchestrator
@@ -43,17 +44,16 @@ export function createAutomationRouter(deps: AutomationRouterDeps) {
 
       // POST /api/automate/run — execute an AutomationGoal
       if (url.pathname === '/api/automate/run' && req.method === 'POST') {
-        const body = await req.json().catch(() => ({}))
-        const { role, recipeId, intent, params, destructive } = body as {
-          role?: string
-          recipeId?: string
-          intent?: string
-          params?: Record<string, string>
-          destructive?: boolean
-        }
-        if (!role) {
-          return errorResponse('Missing required field: role', 'BadRequest', 400)
-        }
+        const schema = z.object({
+          role: z.string().min(1, 'role is required'),
+          recipeId: z.string().optional(),
+          intent: z.string().optional(),
+          params: z.record(z.string()).optional(),
+          destructive: z.boolean().optional(),
+        })
+        const parsed = schema.safeParse(await req.json().catch(() => ({})))
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const { role, recipeId, intent, params, destructive } = parsed.data
         const result = await orchestrator.run({
           role,
           recipeId,
