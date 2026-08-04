@@ -106,7 +106,7 @@ export class SyncStoreImpl {
       where: { accountId },
       orderBy: { updatedAt: 'desc' },
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async getSyncStatesPending(): Promise<SyncStateRow[]> {
@@ -115,7 +115,7 @@ export class SyncStoreImpl {
       orderBy: { updatedAt: 'asc' },
       take: 100,
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async updateSyncStatus(id: string, status: string, error?: string): Promise<SyncStateRow> {
@@ -158,7 +158,7 @@ export class SyncStoreImpl {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: Record<string, unknown>): SyncStateRow {
+  private toRow(r: any): SyncStateRow {
     return {
       id: r.id,
       providerId: r.providerId,

@@ -4,9 +4,9 @@
 import type { ContentUnitRow, ContentUnitStore } from '../contracts/content-unit-store.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
-function toRow(r: Record<string, unknown>): ContentUnitRow {
+function toRow(r: any): ContentUnitRow {
   return {
     id: r.id,
     messageId: r.messageId,
@@ -25,7 +25,7 @@ export class ContentUnitStoreImpl implements ContentUnitStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {

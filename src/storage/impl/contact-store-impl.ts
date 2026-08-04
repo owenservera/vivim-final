@@ -2,7 +2,7 @@
 // Prisma-backed ContactStore — CRUD + merge for Contact + ContactIdentity.
 
 import { newId } from '../../ids.js'
-import { type CapStoreDb, type PrismaLoose } from '../db.js'
+import type { CapStoreDb } from '../db.js'
 
 // ── Domain types ────────────────────────────────────────────────────────────
 
@@ -53,10 +53,14 @@ export class ContactStoreImpl {
       where: { accountId },
       orderBy: { updatedAt: 'desc' },
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
-  async getContactByNativeId(providerId: string, accountId: string, providerNativeId: string): Promise<ContactRow | null> {
+  async getContactByNativeId(
+    providerId: string,
+    accountId: string,
+    providerNativeId: string,
+  ): Promise<ContactRow | null> {
     const row = await this.db.loose.contact.findFirst({
       where: { providerId, accountId, providerNativeId },
     })
@@ -78,7 +82,7 @@ export class ContactStoreImpl {
       orderBy: { updatedAt: 'desc' },
       take: 50,
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async createContact(input: {
@@ -124,9 +128,19 @@ export class ContactStoreImpl {
   async updateContact(id: string, updates: Record<string, unknown>): Promise<ContactRow> {
     const now = Date.now()
     const allowed = [
-      'displayName', 'username', 'avatarUrl', 'phoneNumber', 'email',
-      'isOnline', 'statusText', 'lastSeenAt', 'relationship', 'isFavorite',
-      'isBlocked', 'notes', 'metadataJson',
+      'displayName',
+      'username',
+      'avatarUrl',
+      'phoneNumber',
+      'email',
+      'isOnline',
+      'statusText',
+      'lastSeenAt',
+      'relationship',
+      'isFavorite',
+      'isBlocked',
+      'notes',
+      'metadataJson',
     ]
     const data: Record<string, unknown> = { updatedAt: now }
     for (const key of allowed) {
@@ -163,19 +177,16 @@ export class ContactStoreImpl {
   async getMergedContacts(contactId: string): Promise<ContactIdentityRow[]> {
     const rows = await this.db.loose.contactIdentity.findMany({
       where: {
-        OR: [
-          { canonicalContactId: contactId },
-          { mergedContactId: contactId },
-        ],
+        OR: [{ canonicalContactId: contactId }, { mergedContactId: contactId }],
       },
       orderBy: { createdAt: 'desc' },
     })
-    return rows.map((r: Record<string, unknown>) => this.toIdentityRow(r))
+    return rows.map((r: any) => this.toIdentityRow(r))
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: Record<string, unknown>): ContactRow {
+  private toRow(r: any): ContactRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -199,7 +210,7 @@ export class ContactStoreImpl {
     }
   }
 
-  private toIdentityRow(r: Record<string, unknown>): ContactIdentityRow {
+  private toIdentityRow(r: any): ContactIdentityRow {
     return {
       id: r.id,
       canonicalContactId: r.canonicalContactId,

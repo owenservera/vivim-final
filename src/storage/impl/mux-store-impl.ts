@@ -12,13 +12,13 @@ import type {
 } from '../contracts/mux-store.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 export class MuxStoreImpl implements MuxStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {

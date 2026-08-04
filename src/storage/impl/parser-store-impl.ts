@@ -4,7 +4,7 @@
 import type { ParserStore, ProviderParserRow } from '../contracts/parser-store.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 interface PrismaParserRow {
   id: string
@@ -62,7 +62,7 @@ export class ParserStoreImpl implements ParserStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {

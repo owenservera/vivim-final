@@ -13,13 +13,13 @@ import type {
 import type { RegistrationStore } from '../contracts/registration-store.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 export class RegistrationStoreImpl implements RegistrationStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {

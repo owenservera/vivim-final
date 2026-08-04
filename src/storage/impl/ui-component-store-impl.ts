@@ -12,13 +12,13 @@ import type {
 } from '../contracts/ui-component-store.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 export class UiComponentStoreImpl implements UiComponentStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {

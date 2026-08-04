@@ -75,7 +75,7 @@ export class ContentItemStoreImpl {
       take: query.limit ?? 50,
       skip: query.offset ?? 0,
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async createItem(input: {
@@ -145,11 +145,30 @@ export class ContentItemStoreImpl {
   async updateItem(id: string, updates: Record<string, unknown>): Promise<ContentItemRow> {
     const now = Date.now()
     const allowed = [
-      'title', 'bodyText', 'bodyRichJson', 'summaryText', 'url', 'metadataJson',
-      'mediaAttachmentsJson', 'reactionsJson', 'tagsJson', 'mentionsJson',
-      'linksJson', 'editHistoryJson', 'isEdited', 'isPinned', 'isDeleted',
-      'isBookmarked', 'voteScore', 'voteDirection', 'replyCount', 'shareCount',
-      'viewCount', 'sequenceIndex', 'sortTimestamp', 'deletedAt',
+      'title',
+      'bodyText',
+      'bodyRichJson',
+      'summaryText',
+      'url',
+      'metadataJson',
+      'mediaAttachmentsJson',
+      'reactionsJson',
+      'tagsJson',
+      'mentionsJson',
+      'linksJson',
+      'editHistoryJson',
+      'isEdited',
+      'isPinned',
+      'isDeleted',
+      'isBookmarked',
+      'voteScore',
+      'voteDirection',
+      'replyCount',
+      'shareCount',
+      'viewCount',
+      'sequenceIndex',
+      'sortTimestamp',
+      'deletedAt',
     ]
     const data: Record<string, unknown> = { updatedAt: now }
     for (const key of allowed) {
@@ -163,10 +182,13 @@ export class ContentItemStoreImpl {
     await this.db.loose.contentItem.delete({ where: { id } })
   }
 
-  async searchItems(query: string, opts?: {
-    containerId?: string
-    contentType?: string
-  }): Promise<ContentItemRow[]> {
+  async searchItems(
+    query: string,
+    opts?: {
+      containerId?: string
+      contentType?: string
+    },
+  ): Promise<ContentItemRow[]> {
     // Use FTS5 if available, fallback to LIKE
     try {
       const where: any = {
@@ -183,7 +205,7 @@ export class ContentItemStoreImpl {
         orderBy: { updatedAt: 'desc' },
         take: 50,
       })
-      return rows.map((r: Record<string, unknown>) => this.toRow(r))
+      return rows.map((r: any) => this.toRow(r))
     } catch {
       return []
     }
@@ -191,7 +213,7 @@ export class ContentItemStoreImpl {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: Record<string, unknown>): ContentItemRow {
+  private toRow(r: any): ContentItemRow {
     return {
       id: r.id,
       providerId: r.providerId,

@@ -63,7 +63,7 @@ export class EntityContainerStoreImpl {
       where,
       orderBy: { updatedAt: 'desc' },
     })
-    return rows.map((r: Record<string, unknown>) => this.toRow(r))
+    return rows.map((r: any) => this.toRow(r))
   }
 
   async createContainer(input: {
@@ -109,9 +109,20 @@ export class EntityContainerStoreImpl {
   async updateContainer(id: string, updates: Record<string, unknown>): Promise<EntityContainerRow> {
     const now = Date.now()
     const allowed = [
-      'name', 'description', 'iconUrl', 'metadataJson', 'parentContainerId',
-      'sortOrder', 'isCollapsed', 'isMuted', 'isSynced', 'lastSyncedAt',
-      'syncCursorJson', 'unreadCount', 'mentionCount', 'isArchived',
+      'name',
+      'description',
+      'iconUrl',
+      'metadataJson',
+      'parentContainerId',
+      'sortOrder',
+      'isCollapsed',
+      'isMuted',
+      'isSynced',
+      'lastSyncedAt',
+      'syncCursorJson',
+      'unreadCount',
+      'mentionCount',
+      'isArchived',
     ]
     const data: Record<string, unknown> = { updatedAt: now }
     for (const key of allowed) {
@@ -130,7 +141,7 @@ export class EntityContainerStoreImpl {
       where: { containerId },
       orderBy: { joinedAt: 'desc' },
     })
-    return rows.map((r: Record<string, unknown>) => this.toMembershipRow(r))
+    return rows.map((r: any) => this.toMembershipRow(r))
   }
 
   async addMembership(input: {
@@ -162,7 +173,7 @@ export class EntityContainerStoreImpl {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: Record<string, unknown>): EntityContainerRow {
+  private toRow(r: any): EntityContainerRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -188,7 +199,7 @@ export class EntityContainerStoreImpl {
     }
   }
 
-  private toMembershipRow(r: Record<string, unknown>): ContainerMembershipRow {
+  private toMembershipRow(r: any): ContainerMembershipRow {
     return {
       id: r.id,
       containerId: r.containerId,

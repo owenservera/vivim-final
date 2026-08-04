@@ -12,13 +12,13 @@ import type {
 } from '../../schema/types.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 export class ProviderStoreImpl {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {
@@ -128,7 +128,7 @@ export class ProviderStoreImpl {
       where,
       orderBy: { displayName: 'asc' },
     })
-    return rows.map((r: Record<string, unknown>) => ({
+    return rows.map((r: any) => ({
       id: r.id as string,
       slug: r.slug as string,
       display_name: r.displayName as string,

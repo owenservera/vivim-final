@@ -5,13 +5,13 @@ import { type Primitive, rowToPrimitive } from 'shared/conceptual-model.js'
 import type { PrimitiveInput, PrimitiveRow, PrimitiveStore } from '../contracts/primitive-store.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = Record<string, unknown>
+type PrismaLoose = any
 
 export class PrimitiveStoreImpl implements PrimitiveStore {
   private db: PrismaLoose
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose 
+    this.db = db.loose
   }
 
   private get p() {
