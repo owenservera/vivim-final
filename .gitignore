@@ -122,6 +122,14 @@ scripts/tauri/vivim-desktop-setup.exe
 .runtime/ptest.ts
 .runtime/vivim-server-test.exe
 
+# Build artifacts (Bun compile)
+test-sidecar.exe
+test-sidecar.js
+test-sidecar.js.map
+test-sidecar-prod.exe
+test-sidecar-prod.js
+test-sidecar-prod.js.map
+
 # Frontend workspace/upload artifacts
 frontend/workspace-*
 frontend/upload/

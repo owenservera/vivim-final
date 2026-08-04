@@ -58,9 +58,7 @@
         "languages": [
           "English"
         ],
-        "installerIcon": "icons/icon.ico",
-        "headerImage": "",
-        "sidebarImage": ""
+        "installerIcon": "icons/icon.ico"
       }
     },
     "externalBin": [

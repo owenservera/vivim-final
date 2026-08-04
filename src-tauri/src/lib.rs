@@ -3,6 +3,7 @@ use std::io::Write;
 use std::sync::atomic::{AtomicU16, AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri::Emitter;
+use tauri::Listener;
 use tauri::Manager;
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::{CommandEvent, TerminatedPayload};

@@ -24,24 +24,17 @@ Write-Host '=== vivim Desktop Build (Tauri V2 + NSIS) ==='
 Write-Host ''
 
 # ── Step 1: Compile the Bun backend sidecar ─────────────────────────────────
-Write-Host 'Step 1/3: Compiling sidecar...'
+Write-Host 'Step 1/2: Compiling sidecar...'
 & pwsh (Join-Path $repoRoot 'scripts' 'tauri' 'build-sidecar.ps1')
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host ''
 
-# ── Step 2: Build Next.js as static export ────────────────────────────────────
-# prepare-frontend.ts handles patching next.config.mjs to output:'export',
-# building, then restoring the original config.
-Write-Host 'Step 2/3: Building frontend static export...'
-$proc = Start-Process -FilePath $bunExe -ArgumentList @('run', 'scripts/tauri/prepare-frontend.ts') -WorkingDirectory $repoRoot -NoNewWindow -PassThru -Wait
-if ($proc.ExitCode -ne 0) {
-  Write-Error "Frontend build failed with exit code $($proc.ExitCode)"
-  exit $proc.ExitCode
-}
-Write-Host ''
-
-# ── Step 3: Invoke Tauri CLI to build the NSIS installer ─────────────────────
-Write-Host 'Step 3/3: Running cargo tauri build (NSIS)...'
+# ── Step 2: Invoke Tauri CLI to build the NSIS installer ─────────────────────
+# cargo tauri build automatically runs beforeBuildCommand (prepare-frontend.ts)
+# so we don't need to build frontend separately - avoids double build
+# Use --config to enable incremental Rust compilation for faster rebuilds
+Write-Host 'Step 2/2: Running cargo tauri build (NSIS)...'
+$env:CARGO_INCREMENTAL = '1'
 $proc = Start-Process -FilePath 'cargo' -ArgumentList @('tauri', 'build', '--bundles', 'nsis') -WorkingDirectory (Join-Path $repoRoot 'src-tauri') -NoNewWindow -PassThru -Wait
 if ($proc.ExitCode -ne 0) {
   Write-Error "cargo tauri build failed with exit code $($proc.ExitCode)"
