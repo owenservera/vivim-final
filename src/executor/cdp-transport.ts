@@ -10,6 +10,7 @@
 // when none exists.
 
 import type { CDPTransport, CaptureResult, PageState } from '../engines/chrome-governor.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { BunCdpClient } from './cdp.js'
 
 interface SlaveSession {
@@ -180,7 +181,8 @@ export class CdpTransportImpl implements CDPTransport {
             { sessionId },
           )
           finish(result.body)
-        } catch {
+        } catch (e) {
+          catchDebug(e, 'cdp-transport: capture body failed')
           finish('')
         }
       }
@@ -254,7 +256,8 @@ export class CdpTransportImpl implements CDPTransport {
             resolved = true
             cleanup()
             resolve({ body, chunks })
-          } catch {
+          } catch (e) {
+            catchDebug(e, 'cdp-transport: stream failed, resolving partial')
             cleanup()
             resolve({ body: chunks.join(''), chunks })
           }
@@ -317,7 +320,8 @@ export class CdpTransportImpl implements CDPTransport {
         title: state.title ?? '',
         readyState: state.readyState ?? '',
       }
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'cdp-transport: getPageState failed')
       return { url: '', title: '', readyState: '' }
     }
   }
