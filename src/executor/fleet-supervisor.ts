@@ -10,6 +10,7 @@ import {
   killChrome,
   launchChrome,
 } from './launcher.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { PortReaper } from './port-reaper.js'
 import { ProfileAllocator } from './profile-allocator.js'
 import { readSystemPressure } from './system-pressure.js'
@@ -214,8 +215,8 @@ export class FleetSupervisor {
   private async reapTree(pid: number): Promise<void> {
     try {
       await this.portReaper.reapProcess(pid)
-    } catch {
-      /* best-effort */
+    } catch (e) {
+      catchDebug(e, 'fleet-supervisor: reap process failed')
     }
   }
 
@@ -276,13 +277,13 @@ export class FleetSupervisor {
               await Bun.sleep(500)
               process.kill(pid, 'SIGKILL')
             }
-          } catch {
-            /* already dead */
+          } catch (e) {
+            catchDebug(e, 'fleet-supervisor: kill process failed')
           }
         }
       }
-    } catch {
-      /* best-effort */
+    } catch (e) {
+      catchDebug(e, 'fleet-supervisor: kill all processes failed')
     }
   }
 
@@ -337,7 +338,8 @@ export class FleetSupervisor {
               signal: AbortSignal.timeout(500),
             })
             // fetch returned a response = port is occupied, don't reuse
-          } catch {
+          } catch (e) {
+            catchDebug(e, 'fleet-supervisor: port reuse check failed')
             // fetch threw = nothing listening, safe to reuse
             reusePort = persistedPort
           }
@@ -420,8 +422,8 @@ export class FleetSupervisor {
                 await navCdp.connect()
                 await navCdp.send('Target.createTarget', { url: loginUrl })
                 await navCdp.disconnect()
-              } catch {
-                // Navigation is best-effort — profile reuse is the invariant that matters
+              } catch (e) {
+                catchDebug(e, 'fleet-supervisor: navigation disconnect failed')
               }
 
               await this.store.createFleetEvent({
