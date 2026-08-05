@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { BunCdpClient } from '../executor/cdp.js'
 import { killChrome, launchChrome } from '../executor/launcher.js'
 import { ProfileAllocator } from '../executor/profile-allocator.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
 
@@ -15,7 +16,8 @@ function getLoginUrl(providerId: string, _ctx?: ServerContext): string {
   if (providerId === 'gemini') return 'https://gemini.google.com/app'
   try {
     return getProviderRegistry().getLoginUrl(providerId)
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'setup-router: registry login URL fallback')
     if (providerId === 'chatgpt') return 'https://chatgpt.com'
     if (providerId === 'claude') return 'https://claude.ai'
     return `https://${providerId}.com`
@@ -92,7 +94,8 @@ export function createSetupRouter(ctx: ServerContext) {
 
         const allocator = new ProfileAllocator(parsed.data.workspace)
         const profileDir = await allocator.allocate(parsed.data.providerId, parsed.data.accountSlug)
-        const loginUrl = PROVIDER_LOGIN_URLS[parsed.data.providerId] ?? `https://${parsed.data.providerId}.com`
+        const loginUrl =
+          PROVIDER_LOGIN_URLS[parsed.data.providerId] ?? `https://${parsed.data.providerId}.com`
         const port = parsed.data.port ?? 9222
 
         const result = await launchChrome({
@@ -137,7 +140,9 @@ export function createSetupRouter(ctx: ServerContext) {
               wsUrl = version.webSocketDebuggerUrl
             }
           }
-        } catch {}
+        } catch (e) {
+          catchDebug(e, 'setup-router: kill before relaunch')
+        }
 
         const client = new BunCdpClient(wsUrl)
         try {
@@ -237,7 +242,8 @@ export function createSetupRouter(ctx: ServerContext) {
                         break
                       }
                       if (attempt < 2) await new Promise((r) => setTimeout(r, 1000))
-                    } catch {
+                    } catch (e) {
+                      catchDebug(e, 'setup-router: screenshot retry')
                       if (attempt < 2) await new Promise((r) => setTimeout(r, 1000))
                     }
                   }
@@ -245,7 +251,8 @@ export function createSetupRouter(ctx: ServerContext) {
               }
 
               await client.send('Target.detachFromTarget', { sessionId }).catch(() => {})
-            } catch {
+            } catch (e) {
+              catchDebug(e, 'setup-router: login detection failed')
               const indicator = LOGIN_INDICATORS[providerId]
               const pattern = indicator?.urlPattern ?? /login|auth|signin|sign-in/i
               if (page.url && !pattern.test(page.url)) {
@@ -332,7 +339,10 @@ export function createSetupRouter(ctx: ServerContext) {
       if (pathname === '/api/setup/restore' && method === 'POST') {
         const schema = z.object({ workspace: z.string().optional() })
         const parsed = schema.safeParse(await req.json().catch(() => ({})))
-        const workspace = (parsed.success ? parsed.data.workspace : null) ?? (await ctx.db.getWorkspaceHint?.()) ?? null
+        const workspace =
+          (parsed.success ? parsed.data.workspace : null) ??
+          (await ctx.db.getWorkspaceHint?.()) ??
+          null
         if (!workspace) {
           return errorResponse('No workspace path configured', 'ValidationError', 400)
         }
@@ -355,7 +365,8 @@ export function createSetupRouter(ctx: ServerContext) {
           let entries: import('node:fs').Dirent[]
           try {
             entries = await readdir(providerDir, { withFileTypes: true })
-          } catch {
+          } catch (e) {
+            catchDebug(e, 'setup-router: readdir provider dir (list)')
             continue
           }
 
@@ -427,7 +438,8 @@ export function createSetupRouter(ctx: ServerContext) {
           let entries: import('node:fs').Dirent[]
           try {
             entries = await readdir(providerDir, { withFileTypes: true })
-          } catch {
+          } catch (e) {
+            catchDebug(e, 'setup-router: readdir provider dir (discover)')
             continue
           }
 
@@ -499,6 +511,8 @@ async function findPidOnPort(port: number): Promise<number | null> {
         if (Number.isFinite(pid)) return pid
       }
     }
-  } catch {}
+  } catch (e) {
+    catchDebug(e, 'setup-router: port owner lookup failed')
+  }
   return null
 }
