@@ -4,6 +4,7 @@
 // Matches the proven pattern from vivim-app-og cap-store.
 
 import { rmSync } from 'node:fs'
+import { catchDebug } from '../lib/catch-logger.js'
 import {
   type ChromeChannel,
   type ChromeInstanceProfile,
@@ -46,8 +47,8 @@ export function clearSingletonLock(userDataDir: string): void {
   for (const name of ['SingletonLock', 'SingletonCookie', 'SingletonSocket']) {
     try {
       rmSync(`${userDataDir}/${name}`, { force: true })
-    } catch {
-      /* best-effort */
+    } catch (e) {
+      catchDebug(e, 'launcher: cleanup userDataDir profile')
     }
   }
 }
@@ -72,15 +73,15 @@ export function clearSessionRestore(userDataDir: string): void {
   for (const name of files) {
     try {
       rmSync(`${defaultDir}/${name}`, { force: true })
-    } catch {
-      /* best-effort */
+    } catch (e) {
+      catchDebug(e, 'launcher: cleanup defaultDir profile')
     }
   }
   // Also clear the Sessions directory
   try {
     rmSync(`${defaultDir}/Sessions`, { recursive: true, force: true })
-  } catch {
-    /* best-effort */
+  } catch (e) {
+    catchDebug(e, 'launcher: cleanup Sessions dir')
   }
 }
 
@@ -90,7 +91,8 @@ async function isPortInUse(port: number): Promise<boolean> {
       signal: AbortSignal.timeout(1000),
     })
     return resp.ok
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'launcher: health check failed')
     return false
   }
 }
@@ -142,8 +144,8 @@ export async function launchProfile(profile: ChromeInstanceProfile): Promise<Lau
   if (!ready) {
     try {
       proc.kill('SIGKILL')
-    } catch {
-      /* ignore */
+    } catch (e) {
+      catchDebug(e, 'launcher: kill timed-out process')
     }
     throw new ChromeLaunchTimeoutError(debugPort, profile.launchTimeoutMs, binary)
   }
@@ -209,7 +211,8 @@ export async function killChrome(pid: number): Promise<void> {
   }
   try {
     process.kill(pid, 'SIGTERM')
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'launcher: process already dead (SIGTERM)')
     return
   }
   const start = Date.now()
@@ -219,8 +222,8 @@ export async function killChrome(pid: number): Promise<void> {
   }
   try {
     process.kill(pid, 'SIGKILL')
-  } catch {
-    /* already dead */
+  } catch (e) {
+    catchDebug(e, 'launcher: process already dead (SIGKILL)')
   }
 }
 
@@ -238,7 +241,8 @@ export async function isChromeRunning(pid: number): Promise<boolean> {
     }
     process.kill(pid, 0)
     return true
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'launcher: isProcessAlive check failed')
     return false
   }
 }
