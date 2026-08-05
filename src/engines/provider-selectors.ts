@@ -4,11 +4,13 @@
 // ALL data is loaded from the DB via ProviderRegistry at boot.
 
 import { getProviderRegistry } from '../config/provider-registry.js'
+import { catchDebug } from '../lib/catch-logger.js'
 
 export function getComposerSelectors(providerId: string): string[] {
   try {
     return getProviderRegistry().getComposerSelectors(providerId)
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'provider-selectors: composer fallback')
     return ['textarea', '[contenteditable="true"]', '[role="textbox"]']
   }
 }
@@ -16,7 +18,8 @@ export function getComposerSelectors(providerId: string): string[] {
 export function getSendButtonSelectors(providerId: string): string[] {
   try {
     return getProviderRegistry().getSendButtonSelectors(providerId)
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'provider-selectors: send button fallback')
     return ['button[type="submit"]']
   }
 }
@@ -25,7 +28,8 @@ export function getProviderUrl(providerId: string): string {
   if (providerId === 'gemini') return 'https://gemini.google.com/app'
   try {
     return getProviderRegistry().getProviderUrl(providerId)
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'provider-selectors: URL fallback')
     if (providerId === 'chatgpt') return 'https://chatgpt.com'
     if (providerId === 'claude') return 'https://claude.ai'
     return `https://${providerId}.com`
@@ -36,7 +40,8 @@ export function getProviderLoginUrl(providerId: string): string {
   if (providerId === 'gemini') return 'https://gemini.google.com/app'
   try {
     return getProviderRegistry().getLoginUrl(providerId)
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'provider-selectors: login URL fallback')
     if (providerId === 'chatgpt') return 'https://chatgpt.com'
     if (providerId === 'claude') return 'https://claude.ai'
     return `https://${providerId}.com`
@@ -46,7 +51,8 @@ export function getProviderLoginUrl(providerId: string): string {
 export function getProviderUrlPattern(providerId: string): RegExp | undefined {
   try {
     return getProviderRegistry().getProviderUrlPattern(providerId)
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'provider-selectors: URL pattern fallback')
     return undefined
   }
 }
