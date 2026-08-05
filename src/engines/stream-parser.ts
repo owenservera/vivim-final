@@ -7,6 +7,7 @@
 // Legacy {kind,content,index} blocks from seed parsers are auto-migrated at the boundary.
 
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import { ContentPartSchema, isLegacyBlock, migrateLegacyParts } from '../schema/streaming.js'
 
@@ -134,8 +135,8 @@ function detectWireFormat(raw: string): WireFormat {
     try {
       const arr = JSON.parse(trimmed)
       if (Array.isArray(arr)) return 'json-array'
-    } catch {
-      /* partial */
+    } catch (e) {
+      catchDebug(e, 'stream-parser: JSON detection partial')
     }
   }
   if (trimmed.includes(")]}'") || trimmed.startsWith(')]}')) return 'xssi'
@@ -147,7 +148,8 @@ function detectWireFormat(raw: string): WireFormat {
       try {
         JSON.parse(l)
         return true
-      } catch {
+      } catch (e) {
+        catchDebug(e, 'stream-parser: JSON detection failed')
         return false
       }
     })
@@ -256,7 +258,8 @@ export class StreamParserEngine {
         module = await this.loadModuleFromRow(row)
         blocks = normalizeBlocks(module.parse(rawBody))
         break
-      } catch {
+      } catch (e) {
+        catchDebug(e, 'stream-parser: module load failed')
         module = null
       }
     }
@@ -322,8 +325,8 @@ export class StreamParserEngine {
       try {
         const module = await this.loadModuleFromRow(row)
         return module.detectCompletion(rawBody)
-      } catch {
-        /* try next fallback in the chain */
+      } catch (e) {
+        catchDebug(e, 'stream-parser: detectCompletion failed, trying next')
       }
     }
     return true
@@ -426,8 +429,8 @@ export class StreamParserEngine {
       try {
         const row = await this.store.getParserByProviderAndVersion(providerId, 'latest')
         if (row) await this.loadModuleFromRow(row)
-      } catch {
-        // non-fatal: missing parser is handled lazily on parse()
+      } catch (e) {
+        catchDebug(e, 'stream-parser: parser load deferred')
       }
     }
   }
