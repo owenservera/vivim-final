@@ -93,23 +93,20 @@ agent-brief/
 dev-poc/
 
 
-# Tauri desktop build artifacts (MVP target - ADR-016)
-src-tauri/target/
-src-tauri/binaries/
-scripts/tauri/vivim-desktop-setup.exe
-.runtime/tauri-db/
-.runtime/capout.txt
-.runtime/caperr.txt
-.runtime/ptest.ts
-.runtime/vivim-server-test.exe
+# Tauri desktop (entire layer — not needed for core app dev)
+src-tauri/
+scripts/tauri/
+devops/desktop/
+src/desktop/
+tests/e2e/tauri-sidecar.test.ts
+.opencode/skill/desktop-build-testing/
+.opencode/skill/production-build/
 
 # Build artifacts (Bun compile)
-test-sidecar.exe
-test-sidecar.js
-test-sidecar.js.map
-test-sidecar-prod.exe
-test-sidecar-prod.js
-test-sidecar-prod.js.map
+test-sidecar*
+*.exe
+
+
 
 # Frontend workspace/upload artifacts
 frontend/workspace-*
