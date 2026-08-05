@@ -4,6 +4,7 @@
 
 import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { ContentUnitStore } from '../storage/contracts/content-unit-store.js'
 import type {
   ConversationMessageRow,
@@ -132,7 +133,8 @@ function getCapturePattern(providerId: string): RegExp | undefined {
   try {
     const raw = getProviderRegistry().getCapturePattern(providerId)
     return raw ? new RegExp(raw) : undefined
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'conversation-manager: regex compile')
     return undefined
   }
 }
@@ -351,8 +353,8 @@ export class ConversationManager {
       if (slave.accountId === account.id) {
         try {
           await this.governor.kill(slave.slaveId)
-        } catch {
-          // ignore
+        } catch (e) {
+          catchDebug(e, 'conversation-manager: governor kill')
         }
       }
     }
@@ -360,8 +362,8 @@ export class ConversationManager {
     // FleetSupervisor.spawn prevents concurrent callers from spawning extras.
     try {
       await this.governor.ensureRunningForAccount(conv.providerId, account.id)
-    } catch {
-      // ignore — sendInternal will retry
+    } catch (e) {
+      catchDebug(e, 'conversation-manager: ensure slave')
     }
   }
 
@@ -386,14 +388,14 @@ export class ConversationManager {
         try {
           assembledContext = await this.contextAssembly.assemble(conversationId, message)
           memoryContext = this.assembledToMemoryContext(assembledContext)
-        } catch {
-          // Context assembly is best-effort — don't block the pipeline
+        } catch (e) {
+          catchDebug(e, 'conversation-manager: context assembly')
         }
       } else if (this.memory) {
         try {
           memoryContext = await this.memory.getAgentContext(conv.providerId, '')
-        } catch {
-          // Memory recall is best-effort — don't block the pipeline
+        } catch (e) {
+          catchDebug(e, 'conversation-manager: memory recall')
         }
       }
 
@@ -407,10 +409,10 @@ export class ConversationManager {
           const snapshot = await this.memoryFabric.snapshotForSession(agentId)
           if (snapshot && snapshot.trim().length > 0) {
             memoryContext.identityContext = snapshot
-          }
-        } catch {
-          // Snapshot injection is best-effort — don't block the pipeline
         }
+      } catch (e) {
+        catchDebug(e, 'conversation-manager: snapshot injection')
+      }
       }
       timing.recall = Date.now() - t0
 
@@ -437,8 +439,8 @@ export class ConversationManager {
           await this.governor.cdp.send(slaveId, 'Page.navigate', { url: providerUrl })
           await new Promise((r) => setTimeout(r, 3_000))
         }
-      } catch {
-        // CDP not connected yet — will be caught in the send step
+      } catch (e) {
+        catchDebug(e, 'conversation-manager: CDP pre-check')
       }
 
       // [1.5] INJECT CONTEXT — attach provider/account/chrome/capability/memory state to the conversation
@@ -492,8 +494,8 @@ export class ConversationManager {
       const capturePattern = CAPTURE_PATTERNS[conv.providerId] ?? /\/api\/conversation\//
       try {
         await this.governor.cdp.send(slaveId, 'Network.enable')
-      } catch {
-        // Network domain already enabled — harmless
+      } catch (e) {
+        catchDebug(e, 'conversation-manager: Network.enable')
       }
 
       const sendResult = await this.governor.cdp.executeHarnessPlan(slaveId, dag)
@@ -545,9 +547,9 @@ export class ConversationManager {
           conv.providerId,
         )
         timing.parse = Date.now() - t0
-      } catch {
+      } catch (e) {
+        catchDebug(e, 'conversation-manager: CDP capture')
         timing.capture = Date.now() - t0
-        // CDP not configured - stub for now
       }
 
       // [8] STORE + EMIT
@@ -749,8 +751,8 @@ export class ConversationManager {
     const capturePattern = CAPTURE_PATTERNS[conv.providerId] ?? /\/api\/conversation\//
     try {
       await this.governor.cdp.send(slaveId, 'Network.enable')
-    } catch {
-      // already enabled
+    } catch (e) {
+      catchDebug(e, 'conversation-manager: Network.enable (retry)')
     }
 
     const dag: HarnessDAG = {
@@ -809,10 +811,10 @@ export class ConversationManager {
                 const newChunk = body.slice(lastBody.length)
                 lastBody = body
                 await this.streamingProtocol?.captureChunk(conversationId, messageId, newChunk)
-              }
-            } catch {
-              // body not ready
             }
+          } catch (e) {
+            catchDebug(e, 'conversation-manager: body not ready')
+          }
             cleanup()
             resolve()
           }
@@ -839,8 +841,8 @@ export class ConversationManager {
                 body.slice(lastBody.length),
               )
             }
-          } catch {
-            // capture failed
+          } catch (e) {
+            catchDebug(e, 'conversation-manager: capture failed')
           }
           cleanup()
           resolve()
@@ -898,8 +900,8 @@ export class ConversationManager {
       const captureResult = await this.governor.cdp.capture(slaveId, capturePattern, 60_000)
       rawBody = (captureResult as { body?: string }).body ?? ''
       parseResult = await this.parser.parse(rawBody, conv.providerId)
-    } catch {
-      // CDP not configured
+    } catch (e) {
+      catchDebug(e, 'conversation-manager: CDP parse')
     }
 
     // Store
