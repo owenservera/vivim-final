@@ -12,6 +12,7 @@ import { basename, join } from 'node:path'
 import { z } from 'zod'
 import { parseMigrationScript } from '../engines/safe-expression.js'
 import { newId } from '../ids.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { UiComponentInputSchema } from '../schema/conceptual-model.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
@@ -65,7 +66,8 @@ async function extractTarGz(archivePath: string, destDir: string): Promise<void>
         child.on('error', reject)
       })
       return true
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'plugin-router: path validation failed')
       return false
     }
   }
@@ -116,7 +118,8 @@ export function createPluginRouter(ctx: ServerContext) {
         let _archiveStat: Awaited<ReturnType<typeof stat>>
         try {
           _archiveStat = await stat(archivePath)
-        } catch {
+        } catch (e) {
+          catchDebug(e, 'plugin-router: archive not found')
           return errorResponse(`Plugin archive not found: ${archivePath}`, 'NotFound', 404)
         }
 
@@ -128,7 +131,8 @@ export function createPluginRouter(ctx: ServerContext) {
         let manifestRaw: string
         try {
           manifestRaw = await readFile(manifestPath, 'utf-8')
-        } catch {
+        } catch (e) {
+          catchDebug(e, 'plugin-router: manifest.json not found')
           await rm(extractDir, { recursive: true, force: true })
           return errorResponse('manifest.json not found in plugin archive', 'InvalidPlugin', 400)
         }
@@ -136,7 +140,8 @@ export function createPluginRouter(ctx: ServerContext) {
         let manifest: Record<string, unknown>
         try {
           manifest = JSON.parse(manifestRaw)
-        } catch {
+        } catch (e) {
+          catchDebug(e, 'plugin-router: manifest.json parse failed')
           await rm(extractDir, { recursive: true, force: true })
           return errorResponse('manifest.json is not valid JSON', 'InvalidPlugin', 400)
         }
@@ -303,14 +308,14 @@ export function createPluginRouter(ctx: ServerContext) {
             let scriptUrl: string | null = null
             try {
               css = await _readFile(cssPath, 'utf-8')
-            } catch {
-              /* optional */
+            } catch (e) {
+              catchDebug(e, 'plugin-router: optional CSS not loaded')
             }
             try {
               await _readFile(jsPath, 'utf-8')
               scriptUrl = `/plugins/${pluginName}/components/${comp.name}/script.js`
-            } catch {
-              /* optional */
+            } catch (e) {
+              catchDebug(e, 'plugin-router: optional script not loaded')
             }
 
             const primitiveId = `prim:cross:${comp.name}`
@@ -455,7 +460,8 @@ export function createPluginRouter(ctx: ServerContext) {
         let manifestRaw: string
         try {
           manifestRaw = await readFile(manifestPath, 'utf-8')
-        } catch {
+        } catch (e) {
+          catchDebug(e, 'plugin-router: manifest.json not found (upgrade)')
           await rm(extractDir, { recursive: true, force: true })
           return errorResponse('manifest.json not found', 'InvalidPlugin', 400)
         }
@@ -626,8 +632,8 @@ export function createPluginRouter(ctx: ServerContext) {
         let currentHash: string | null = null
         try {
           currentHash = await computeFileHash(plugin.filePath)
-        } catch {
-          /* file may not exist */
+        } catch (e) {
+          catchDebug(e, 'plugin-router: file hash computation failed')
         }
 
         return json({
