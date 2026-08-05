@@ -5,6 +5,8 @@
 // `getConfidence`). CDP-agnostic: takes a raw captured body, not a live browser.
 // Capture itself stays in ProtocolDiscoveryEngine (Governor Canon preserved).
 
+import { catchDebug } from '../lib/catch-logger.js'
+
 export type StreamTransport = 'sse' | 'batchexecute' | 'websocket' | 'polling' | 'unknown'
 
 export interface StreamAnalysis {
@@ -235,8 +237,8 @@ function classifyTransport(body: string): { transport: StreamTransport; eventNam
     try {
       JSON.parse(trimmed)
       return { transport: 'websocket' }
-    } catch {
-      // fall through
+    } catch (e) {
+      catchDebug(e, 'streaming-response-analyzer: WebSocket detection failed')
     }
   }
   // JSON-lines polling
@@ -246,7 +248,8 @@ function classifyTransport(body: string): { transport: StreamTransport; eventNam
     for (const l of lines.slice(0, 5)) {
       try {
         JSON.parse(l)
-      } catch {
+      } catch (e) {
+        catchDebug(e, 'streaming-response-analyzer: JSON line detection failed')
         allJson = false
         break
       }
@@ -271,16 +274,16 @@ function extractJsonRecords(body: string): Json[] {
     if (!payload) continue
     try {
       records.push(JSON.parse(payload))
-    } catch {
-      /* ignore non-json */
+    } catch (e) {
+      catchDebug(e, 'streaming-response-analyzer: JSONL record parse skipped')
     }
   }
   if (sawSse && records.length > 0) return records
   // Bare JSON
   try {
     records.push(JSON.parse(trimmed))
-  } catch {
-    /* ignore */
+  } catch (e) {
+    catchDebug(e, 'streaming-response-analyzer: bare JSON parse skipped')
   }
   // JSON-lines
   if (records.length === 0) {
