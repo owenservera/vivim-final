@@ -5,6 +5,7 @@
 // ── Types ───────────────────────────────────────────────────────────────
 
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 
 export interface NetworkCallRecord {
   id: string
@@ -42,7 +43,8 @@ export class TelemetryAudit {
     this.providerDomains = providerUrls.map((url) => {
       try {
         return new URL(url).hostname
-      } catch {
+      } catch (e) {
+        catchDebug(e, 'telemetry-audit: URL parse failed')
         return url
       }
     })
@@ -153,7 +155,8 @@ export class TelemetryAudit {
   private extractHostname(url: string): string {
     try {
       return new URL(url).hostname
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'telemetry-audit: extractHost failed')
       return url
     }
   }
@@ -162,7 +165,8 @@ export class TelemetryAudit {
     try {
       const parsed = new URL(url)
       return `${parsed.protocol}//${parsed.hostname}${parsed.port ? `:${parsed.port}` : ''}`
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'telemetry-audit: normalizeUrl failed')
       return url
     }
   }
