@@ -8,6 +8,7 @@
 import { existsSync, lstatSync } from 'node:fs'
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { catchDebug } from '../lib/catch-logger.js'
 
 export const DEFAULT_PROFILE_BASE = 'chrome-profiles'
 
@@ -27,13 +28,13 @@ async function calcDirSize(dir: string): Promise<number> {
         try {
           const s = await stat(full)
           total += s.size
-        } catch {
-          // skip unreadable files
+        } catch (e) {
+          catchDebug(e, 'profile-allocator: skip unreadable file')
         }
       }
     }
-  } catch {
-    // skip unreadable directories
+  } catch (e) {
+    catchDebug(e, 'profile-allocator: skip unreadable directory')
   }
   return total
 }
@@ -253,8 +254,8 @@ export class ProfileAllocator {
             crashCount = meta.crashCount ?? 0
             diskSizeBytes = meta.diskSizeBytes ?? 0
             lastAuthVerifiedAt = meta.lastAuthVerifiedAt ? new Date(meta.lastAuthVerifiedAt) : null
-          } catch {
-            // corrupted meta, use defaults
+          } catch (e) {
+            catchDebug(e, 'profile-allocator: corrupted meta, using defaults')
           }
         }
 
@@ -283,8 +284,8 @@ export class ProfileAllocator {
         try {
           await rm(profile.path, { recursive: true, force: true })
           removed++
-        } catch {
-          // best-effort removal
+        } catch (e) {
+          catchDebug(e, 'profile-allocator: best-effort removal failed')
         }
       }
     }
@@ -325,8 +326,8 @@ export class ProfileAllocator {
             const s = await stat(full)
             if (s.size > 0) return true
           }
-        } catch {
-          // keep checking other candidates
+        } catch (e) {
+          catchDebug(e, 'profile-allocator: candidate check failed, trying next')
         }
       }
     }
@@ -356,7 +357,8 @@ export class ProfileAllocator {
         try {
           const stats = lstatSync(lockPath)
           if (!stats.isSymbolicLink()) return false // stale lock from crashed process
-        } catch {
+        } catch (e) {
+          catchDebug(e, 'profile-allocator: lock file check failed')
           return false
         }
       }
@@ -364,7 +366,8 @@ export class ProfileAllocator {
       // Verify the lock isn't orphaned by checking for a live Chrome process
       // holding this profile. Best-effort: if we can't verify, assume live.
       return await this.isLockHeldByProcess(profileDir)
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'profile-allocator: lock held check failed')
       return false
     }
   }
@@ -397,7 +400,8 @@ export class ProfileAllocator {
       }
       // Unix: lock symlink exists and is valid — assume live
       return true
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'profile-allocator: process alive check failed, assuming live')
       return true // best-effort: assume live if check fails
     }
   }
