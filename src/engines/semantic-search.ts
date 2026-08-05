@@ -3,6 +3,7 @@
 
 import { createHash } from 'node:crypto'
 import { newId } from '../ids.js'
+import { catchDebug, catchWarn } from '../lib/catch-logger.js'
 import type { CapStoreDb } from '../storage/db.js'
 import type { SemanticSearchStore } from '../storage/contracts/semantic-search-store.js'
 
@@ -182,9 +183,7 @@ export async function reindexAllEntities(
         text: `Decision: ${row.decisionText}${row.rationale ? ` — ${row.rationale}` : ''}`,
       })
     }
-  } catch {
-    report.errors++
-  }
+  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
 
   // 3. Pattern extracts
   try {
@@ -196,9 +195,7 @@ export async function reindexAllEntities(
         text: `Pattern (${row.patternType}): ${row.name} — ${row.description}`,
       })
     }
-  } catch {
-    report.errors++
-  }
+  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
 
   // 4. Topics
   try {
@@ -210,9 +207,7 @@ export async function reindexAllEntities(
         text: `Topic: ${row.name}${row.description ? ` — ${row.description}` : ''}`,
       })
     }
-  } catch {
-    report.errors++
-  }
+  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
 
   // 5. Projects
   try {
@@ -224,9 +219,7 @@ export async function reindexAllEntities(
         text: `Project (${row.status}): ${row.name}${row.description ? ` — ${row.description}` : ''}`,
       })
     }
-  } catch {
-    report.errors++
-  }
+  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
 
   // 6. Conversation messages (sample recent ones)
   try {
@@ -246,9 +239,7 @@ export async function reindexAllEntities(
         text: `[${row.role}] ${content}`,
       })
     }
-  } catch {
-    report.errors++
-  }
+  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
 
   // Process in batches of 50 for embedding generation
   const BATCH_SIZE = 50
@@ -281,11 +272,10 @@ export async function reindexAllEntities(
             createdAt: Date.now(),
           })
           report.indexed++
-        } catch {
-          report.errors++
-        }
+        } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
       }
-    } catch {
+    } catch (e) {
+      catchWarn(e, 'semantic-search: batch embedding failed')
       // Batch embedding failed — count all as errors
       report.errors += batch.length
     }
@@ -333,7 +323,8 @@ export async function searchHybridImpl(
       limit: limit * 3, // Over-fetch to allow for merging with keyword results
       threshold: 0.0,
     })
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'semantic-search: embedding failed, falling back to keyword')
     // Semantic search failed — fall back to keyword-only
   }
 
@@ -362,7 +353,8 @@ export async function searchHybridImpl(
           snippet: text.slice(0, 200),
         })
       }
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'semantic-search: entity search skipped')
       // Table may not exist
     }
 
@@ -386,7 +378,8 @@ export async function searchHybridImpl(
           snippet: text.slice(0, 200),
         })
       }
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'semantic-search: decision search skipped')
       // Table may not exist
     }
 
@@ -410,7 +403,8 @@ export async function searchHybridImpl(
           snippet: text.slice(0, 200),
         })
       }
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'semantic-search: pattern search skipped')
       // Table may not exist
     }
 
@@ -434,7 +428,8 @@ export async function searchHybridImpl(
           snippet: text.slice(0, 200),
         })
       }
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'semantic-search: topic search skipped')
       // Table may not exist
     }
 
@@ -456,7 +451,8 @@ export async function searchHybridImpl(
           snippet: text.slice(0, 200),
         })
       }
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'semantic-search: message search skipped')
       // Table may not exist
     }
   }
