@@ -2,6 +2,7 @@
 // WebSocket ↔ EventBus bridge + Agent Command Router
 
 import type { CapabilityEventBus, EngineEvent } from '../engines/capability-event-bus.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 
 export interface WsLike {
@@ -42,8 +43,8 @@ export function registerConfigEventForwarder(eventBus: CapabilityEventBus): void
       if (session.subscriptions.has('config:changed')) {
         try {
           session.ws.send(JSON.stringify(event))
-        } catch {
-          // Drop if a socket is mid-close
+        } catch (e) {
+          catchDebug(e, 'websocket: send failed (socket mid-close)')
         }
       }
     }
@@ -62,8 +63,8 @@ export function registerOracleEventForwarder(eventBus: CapabilityEventBus): void
       if (session.subscriptions.has('kernel:oracle')) {
         try {
           session.ws.send(JSON.stringify(event))
-        } catch {
-          // Drop if a socket is mid-close
+        } catch (e) {
+          catchDebug(e, 'websocket: send failed (socket mid-close)')
         }
       }
     }
@@ -85,8 +86,8 @@ export function registerConversationForwarder(eventBus: CapabilityEventBus): voi
       if (session.subscriptions.has(topic)) {
         try {
           session.ws.send(JSON.stringify(event))
-        } catch {
-          // Drop if a socket is mid-close
+        } catch (e) {
+          catchDebug(e, 'websocket: send failed (socket mid-close)')
         }
       }
     }
@@ -111,8 +112,8 @@ export function registerCanvasMutationForwarder(eventBus: CapabilityEventBus): v
       ) {
         try {
           session.ws.send(JSON.stringify(event))
-        } catch {
-          // Drop if a socket is mid-close
+        } catch (e) {
+          catchDebug(e, 'websocket: send failed (socket mid-close)')
         }
       }
     }
@@ -137,8 +138,8 @@ export function registerNodeEventForwarder(eventBus: CapabilityEventBus): void {
       ) {
         try {
           session.ws.send(JSON.stringify(event))
-        } catch {
-          // Drop if a socket is mid-close
+        } catch (e) {
+          catchDebug(e, 'websocket: send failed (socket mid-close)')
         }
       }
     }
