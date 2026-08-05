@@ -3,6 +3,7 @@
 
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
+import { z } from 'zod'
 
 export function createMediaRouter(ctx: ServerContext) {
   return async function mediaRouter(req: Request): Promise<Response | undefined> {
@@ -56,36 +57,26 @@ export function createMediaRouter(ctx: ServerContext) {
 
       // POST /api/media
       if (req.method === 'POST' && path === '/api/media') {
-        const body = (await req.json()) as {
-          providerId?: string
-          contentItemId?: string
-          mediaType?: string
-          mimeType?: string
-          filename?: string
-          originalUrl?: string
-          localPath?: string
-          thumbnailUrl?: string
-          thumbnailLocalPath?: string
-          sizeBytes?: number
-          width?: number
-          height?: number
-          durationSeconds?: number
-          providerNativeId?: string
-          metadataJson?: string
-        }
-        if (!body.mediaType || typeof body.mediaType !== 'string') {
-          return errorResponse('mediaType is required', 'ValidationError', 400)
-        }
-        if (!body.mimeType || typeof body.mimeType !== 'string') {
-          return errorResponse('mimeType is required', 'ValidationError', 400)
-        }
-        if (!body.originalUrl || typeof body.originalUrl !== 'string') {
-          return errorResponse('originalUrl is required', 'ValidationError', 400)
-        }
-        if (!body.providerId || typeof body.providerId !== 'string') {
-          return errorResponse('providerId is required', 'ValidationError', 400)
-        }
-        const attachment = await store.createMedia(body)
+        const schema = z.object({
+          providerId: z.string().min(1, 'providerId is required'),
+          contentItemId: z.string().optional(),
+          mediaType: z.string().min(1, 'mediaType is required'),
+          mimeType: z.string().min(1, 'mimeType is required'),
+          filename: z.string().optional(),
+          originalUrl: z.string().min(1, 'originalUrl is required'),
+          localPath: z.string().optional(),
+          thumbnailUrl: z.string().optional(),
+          thumbnailLocalPath: z.string().optional(),
+          sizeBytes: z.number().int().nonnegative().optional(),
+          width: z.number().int().nonnegative().optional(),
+          height: z.number().int().nonnegative().optional(),
+          durationSeconds: z.number().nonnegative().optional(),
+          providerNativeId: z.string().optional(),
+          metadataJson: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const attachment = await store.createMedia(parsed.data)
         return json({ attachment }, 201)
       }
 

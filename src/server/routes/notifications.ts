@@ -3,6 +3,7 @@
 
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
+import { z } from 'zod'
 
 export function createNotificationsRouter(ctx: ServerContext) {
   return async function notificationsRouter(req: Request): Promise<Response | undefined> {
@@ -45,32 +46,25 @@ export function createNotificationsRouter(ctx: ServerContext) {
 
       // POST /api/notifications
       if (req.method === 'POST' && path === '/api/notifications') {
-        const body = (await req.json()) as {
-          providerId?: string
-          accountId?: string
-          containerId?: string
-          contentItemId?: string
-          notificationType?: string
-          title?: string
-          bodyText?: string
-          iconUrl?: string
-          actionUrl?: string
-          senderName?: string
-          senderAvatarUrl?: string
-          priority?: string
-          expiresAt?: number
-          metadataJson?: string
-        }
-        if (!body.accountId || typeof body.accountId !== 'string') {
-          return errorResponse('accountId is required', 'ValidationError', 400)
-        }
-        if (!body.notificationType || typeof body.notificationType !== 'string') {
-          return errorResponse('notificationType is required', 'ValidationError', 400)
-        }
-        if (!body.providerId || typeof body.providerId !== 'string') {
-          return errorResponse('providerId is required', 'ValidationError', 400)
-        }
-        const notification = await store.createNotification(body)
+        const schema = z.object({
+          providerId: z.string().min(1, 'providerId is required'),
+          accountId: z.string().min(1, 'accountId is required'),
+          containerId: z.string().optional(),
+          contentItemId: z.string().optional(),
+          notificationType: z.string().min(1, 'notificationType is required'),
+          title: z.string().optional(),
+          bodyText: z.string().optional(),
+          iconUrl: z.string().optional(),
+          actionUrl: z.string().optional(),
+          senderName: z.string().optional(),
+          senderAvatarUrl: z.string().optional(),
+          priority: z.string().optional(),
+          expiresAt: z.number().optional(),
+          metadataJson: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const notification = await store.createNotification(parsed.data)
         return json({ notification }, 201)
       }
 
@@ -104,11 +98,10 @@ export function createNotificationsRouter(ctx: ServerContext) {
 
       // POST /api/notifications/read-all
       if (req.method === 'POST' && path === '/api/notifications/read-all') {
-        const body = (await req.json()) as { accountId?: string }
-        if (!body.accountId || typeof body.accountId !== 'string') {
-          return errorResponse('accountId is required', 'ValidationError', 400)
-        }
-        const count = await store.markAllAsRead(body.accountId)
+        const schema = z.object({ accountId: z.string().min(1, 'accountId is required') })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const count = await store.markAllAsRead(parsed.data.accountId)
         return json({ count })
       }
 
