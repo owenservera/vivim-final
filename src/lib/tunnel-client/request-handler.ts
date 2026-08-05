@@ -120,6 +120,7 @@ export class RequestHandler {
     if (req.body && req.method !== 'GET' && req.method !== 'HEAD') {
       fetchOptions.body = req.body
     }
+    fetchOptions.signal = AbortSignal.timeout(30_000)
 
     const response = await fetch(url.toString(), fetchOptions)
 

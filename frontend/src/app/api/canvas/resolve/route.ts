@@ -10,12 +10,12 @@
  * blocked by the emit (Governor Canon, bundle 02 §G.1).
  */
 
-import { NextResponse } from 'next/server';
-import { getEngineBag, newTraceId, isSeeded, markSeeded } from '@/lib/canvas-engine-bootstrap';
-import { routeSync } from '@/engines/route-sync';
-import { seedCanvasModel } from '@/lib/seed-canvas-model';
-import type { RouteContext, AccountContext } from '@/shared/route-context';
-import { z } from 'zod';
+import { routeSync } from '@/engines/route-sync'
+import { getEngineBag, isSeeded, markSeeded, newTraceId } from '@/lib/canvas-engine-bootstrap'
+import { seedCanvasModel } from '@/lib/seed-canvas-model'
+import type { AccountContext, RouteContext } from '@/shared/route-context'
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 const REQUEST_SCHEMA = z.object({
   workspaceId: z.string(),
@@ -30,19 +30,19 @@ const REQUEST_SCHEMA = z.object({
   ),
   slotIds: z.array(z.string()),
   variant: z.string().optional(),
-});
+})
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as unknown;
-  const parsed = REQUEST_SCHEMA.safeParse(body);
+  const body = (await req.json()) as unknown
+  const parsed = REQUEST_SCHEMA.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 });
+    return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 })
   }
 
-  const bag = getEngineBag();
+  const bag = getEngineBag()
   if (!isSeeded()) {
-    await seedCanvasModel(bag);
-    markSeeded();
+    await seedCanvasModel(bag)
+    markSeeded()
   }
 
   const ctx: RouteContext = {
@@ -53,8 +53,8 @@ export async function POST(req: Request) {
     accounts: parsed.data.accounts as AccountContext[],
     slotIds: parsed.data.slotIds,
     variant: parsed.data.variant,
-  };
+  }
 
-  const surface = await routeSync(ctx, bag.routeSyncDeps);
-  return NextResponse.json(surface);
+  const surface = await routeSync(ctx, bag.routeSyncDeps)
+  return NextResponse.json(surface)
 }

@@ -2,8 +2,8 @@
 // WebSocket ↔ EventBus bridge + Agent Command Router
 
 import type { CapabilityEventBus, EngineEvent } from '../engines/capability-event-bus.js'
-import { catchDebug } from '../lib/catch-logger.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import { catchDebug } from '../lib/catch-logger.js'
 
 export interface WsLike {
   send(data: string): void

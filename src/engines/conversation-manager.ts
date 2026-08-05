@@ -346,6 +346,7 @@ export class ConversationManager {
   private async recoverSlave(conversationId: string): Promise<void> {
     const conv = await this.store.getConversation(conversationId)
     if (!conv) return
+    if (!conv.providerSessionId) return // No session to recover for history-synced conversations
     const account = await this.store.getAccount(conv.providerSessionId)
     if (!account) return
     const slaves = this.governor.getAllSlaves({ providerId: conv.providerId })
@@ -376,6 +377,7 @@ export class ConversationManager {
       let t0 = Date.now()
       const conv = await this.store.getConversation(conversationId)
       if (!conv) throw new EngineError(`Conversation not found: ${conversationId}`)
+      if (!conv.providerSessionId) throw new EngineError(`No provider session for conversation: ${conversationId}`)
       const account = await this.store.getAccount(conv.providerSessionId)
       if (!account) throw new EngineError(`Account not found: ${conv.providerSessionId}`)
       timing.resolve = Date.now() - t0
@@ -409,10 +411,10 @@ export class ConversationManager {
           const snapshot = await this.memoryFabric.snapshotForSession(agentId)
           if (snapshot && snapshot.trim().length > 0) {
             memoryContext.identityContext = snapshot
+          }
+        } catch (e) {
+          catchDebug(e, 'conversation-manager: snapshot injection')
         }
-      } catch (e) {
-        catchDebug(e, 'conversation-manager: snapshot injection')
-      }
       }
       timing.recall = Date.now() - t0
 
@@ -712,6 +714,7 @@ export class ConversationManager {
     // [1] RESOLVE
     const conv = await this.store.getConversation(conversationId)
     if (!conv) throw new EngineError(`Conversation not found: ${conversationId}`)
+    if (!conv.providerSessionId) throw new EngineError(`No provider session for conversation: ${conversationId}`)
     const account = await this.store.getAccount(conv.providerSessionId)
     if (!account) throw new EngineError(`Account not found: ${conv.providerSessionId}`)
 
@@ -811,10 +814,10 @@ export class ConversationManager {
                 const newChunk = body.slice(lastBody.length)
                 lastBody = body
                 await this.streamingProtocol?.captureChunk(conversationId, messageId, newChunk)
+              }
+            } catch (e) {
+              catchDebug(e, 'conversation-manager: body not ready')
             }
-          } catch (e) {
-            catchDebug(e, 'conversation-manager: body not ready')
-          }
             cleanup()
             resolve()
           }

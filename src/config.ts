@@ -322,8 +322,14 @@ export const config = {
     subdomain: process.env.VIVIM_SUBDOMAIN ?? '',
     authToken: process.env.VIVIM_TUNNEL_TOKEN ?? null,
     heartbeatIntervalMs: Number.parseInt(process.env.VIVIM_TUNNEL_HEARTBEAT_MS ?? '30000', 10),
-    heartbeatTimeoutMs: Number.parseInt(process.env.VIVIM_TUNNEL_HEARTBEAT_TIMEOUT_MS ?? '10000', 10),
-    reconnectInitialDelayMs: Number.parseInt(process.env.VIVIM_TUNNEL_RECONNECT_INITIAL_MS ?? '1000', 10),
+    heartbeatTimeoutMs: Number.parseInt(
+      process.env.VIVIM_TUNNEL_HEARTBEAT_TIMEOUT_MS ?? '10000',
+      10,
+    ),
+    reconnectInitialDelayMs: Number.parseInt(
+      process.env.VIVIM_TUNNEL_RECONNECT_INITIAL_MS ?? '1000',
+      10,
+    ),
     reconnectMaxDelayMs: Number.parseInt(process.env.VIVIM_TUNNEL_RECONNECT_MAX_MS ?? '30000', 10),
     reconnectJitterFactor: Number.parseFloat(process.env.VIVIM_TUNNEL_RECONNECT_JITTER ?? '0.3'),
     maxConcurrentRequests: Number.parseInt(process.env.VIVIM_TUNNEL_MAX_REQUESTS ?? '50', 10),
@@ -346,7 +352,9 @@ export const config = {
     host: process.env.VIVIM_LOCAL_SERVER_HOST ?? '127.0.0.1',
     port: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_PORT ?? '8080', 10),
     corsEnabled: process.env.VIVIM_LOCAL_SERVER_CORS !== 'false',
-    corsOrigins: (process.env.VIVIM_LOCAL_SERVER_CORS_ORIGINS ?? 'http://localhost:3000').split(','),
+    corsOrigins: (process.env.VIVIM_LOCAL_SERVER_CORS_ORIGINS ?? 'http://localhost:3000').split(
+      ',',
+    ),
     rateLimitPerMinute: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_RATE_LIMIT ?? '60', 10),
     maxRequestBodyBytes: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_MAX_BODY ?? '10485760', 10),
     staticDir: process.env.VIVIM_LOCAL_SERVER_STATIC_DIR ?? './workspace-ui',
@@ -355,7 +363,10 @@ export const config = {
     healthCheckIntervalMs: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_HEALTH_MS ?? '30000', 10),
     restartDelayMs: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_RESTART_DELAY_MS ?? '5000', 10),
     maxRestartAttempts: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_MAX_RESTARTS ?? '3', 10),
-    statusReportIntervalMs: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_STATUS_MS ?? '60000', 10),
+    statusReportIntervalMs: Number.parseInt(
+      process.env.VIVIM_ORCHESTRATOR_STATUS_MS ?? '60000',
+      10,
+    ),
   },
 
   // CLI / moments

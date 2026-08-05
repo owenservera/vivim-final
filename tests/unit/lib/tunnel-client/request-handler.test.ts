@@ -40,8 +40,13 @@ describe('RequestHandler', () => {
       type: 'http.request' as const,
       method: 'GET',
       path: '/test',
+      query: {},
       headers: {},
       body: null,
+      bodySize: 0,
+      remoteAddress: '127.0.0.1',
+      protocol: 'http',
+      host: 'localhost',
       timestamp: Date.now(),
       version: '1.0',
     }

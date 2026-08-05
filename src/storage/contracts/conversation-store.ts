@@ -6,8 +6,9 @@
 
 export interface ConversationRow {
   id: string
-  providerSessionId: string
+  providerSessionId: string | null
   providerId: string
+  accountId: string | null
   title: string | null
   state: string
   messageCount: number
@@ -15,6 +16,12 @@ export interface ConversationRow {
   contextJson: string
   createdAt: number
   updatedAt: number
+  projectId?: string | null
+  topicId?: string | null
+  source: string
+  externalId: string | null
+  importJobId: string | null
+  syncedAt: number | null
 }
 
 export interface ConversationMessageRow {
@@ -55,11 +62,16 @@ export interface ProviderAccountRow {
 // ── Input types ────────────────────────────────────────────────────────────
 
 export interface ConversationInput {
-  providerSessionId: string
+  providerSessionId?: string // Optional for history-synced conversations
   providerId: string
+  accountId?: string // Direct account link for sync queries
   title?: string | null
   state?: string
   contextJson?: string
+  source?: string // 'live' | 'history-sync' | 'import'
+  externalId?: string // Provider's native conversation ID
+  importJobId?: string
+  syncedAt?: number // Last sync timestamp
 }
 
 export interface MessageInput {
@@ -102,6 +114,27 @@ export interface ConversationStore {
     limit?: number
     offset?: number
   }): Promise<ConversationRow[]>
+  
+  // ── History Sync Methods ──────────────────────────────────────────────────
+  
+  /** Get a conversation by external provider ID (for idempotent upsert) */
+  getConversationByExternalId(externalId: string, providerId: string): Promise<ConversationRow | null>
+  
+  /** Upsert a conversation by external ID (idempotent sync operation) */
+  upsertConversationByExternalId(input: ConversationInput & { externalId: string }): Promise<ConversationRow>
+  
+  /** List conversations by account ID (direct query, no ProviderSession join) */
+  listConversationsByAccountId(accountId: string, opts?: {
+    limit?: number
+    offset?: number
+    source?: string
+  }): Promise<ConversationRow[]>
+  
+  /** Batch create messages for efficient sync */
+  createMessages(inputs: MessageInput[]): Promise<ConversationMessageRow[]>
+  
+  // ── Message Methods ───────────────────────────────────────────────────────
+  
   createMessage(input: MessageInput): Promise<ConversationMessageRow>
   getMessage(id: string): Promise<ConversationMessageRow | null>
   getMessages(
@@ -126,4 +159,114 @@ export interface ConversationStore {
   getAttachments(messageId: string): Promise<MessageAttachmentRow[]>
   getAttachment(id: string): Promise<MessageAttachmentRow | null>
   deleteAttachment(id: string): Promise<void>
+}
+
+// ── Sync State Types ───────────────────────────────────────────────────────
+
+export interface ConversationSyncStateRow {
+  id: string
+  providerId: string
+  accountId: string
+  syncType: string
+  status: string
+  cursorJson: string
+  totalConversations: number
+  syncedConversations: number
+  failedConversations: number
+  lastSyncedAt: number | null
+  nextSyncAt: number | null
+  errorJson: string | null
+  configJson: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface ConversationSyncLogRow {
+  id: string
+  providerId: string
+  accountId: string
+  syncType: string
+  status: string
+  startedAt: number
+  completedAt: number | null
+  durationMs: number | null
+  conversationsFound: number
+  conversationsSynced: number
+  conversationsFailed: number
+  errorJson: string | null
+  metadataJson: string
+}
+
+// ── Sync State Contract ────────────────────────────────────────────────────
+
+export interface ConversationSyncStateStore {
+  /** Get sync state for a provider account */
+  getSyncState(providerId: string, accountId: string): Promise<ConversationSyncStateRow | null>
+  
+  /** Upsert sync state (create or update) */
+  upsertSyncState(input: {
+    providerId: string
+    accountId: string
+    syncType?: string
+    status?: string
+    cursorJson?: string
+    totalConversations?: number
+    syncedConversations?: number
+    failedConversations?: number
+    errorJson?: string
+    configJson?: string
+  }): Promise<ConversationSyncStateRow>
+  
+  /** Update sync status */
+  updateSyncStatus(
+    providerId: string,
+    accountId: string,
+    status: string,
+    error?: string
+  ): Promise<ConversationSyncStateRow>
+  
+  /** Increment sync progress counters */
+  incrementSyncProgress(
+    providerId: string,
+    accountId: string,
+    synced: number,
+    failed: number
+  ): Promise<ConversationSyncStateRow>
+  
+  /** Get all pending syncs */
+  getPendingSyncs(): Promise<ConversationSyncStateRow[]>
+  
+  /** Delete sync state */
+  deleteSyncState(providerId: string, accountId: string): Promise<void>
+  
+  // ── Sync Log Methods ────────────────────────────────────────────────────
+  
+  /** Create a sync log entry */
+  createSyncLog(input: {
+    providerId: string
+    accountId: string
+    syncType: string
+    status: string
+  }): Promise<ConversationSyncLogRow>
+  
+  /** Update sync log on completion */
+  updateSyncLog(
+    id: string,
+    input: {
+      status: string
+      completedAt?: number
+      durationMs?: number
+      conversationsFound?: number
+      conversationsSynced?: number
+      conversationsFailed?: number
+      errorJson?: string
+    }
+  ): Promise<ConversationSyncLogRow>
+  
+  /** Get sync logs for an account */
+  getSyncLogs(
+    providerId: string,
+    accountId: string,
+    opts?: { limit?: number; offset?: number }
+  ): Promise<ConversationSyncLogRow[]>
 }

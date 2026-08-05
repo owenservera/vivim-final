@@ -12,7 +12,18 @@ const mockNode = {
   start: mock(() => Promise.resolve()),
   stop: mock(() => Promise.resolve()),
   addEventListener: mock(() => {}),
-}
+  peerStore: { getPeers: mock(() => Promise.resolve([])) },
+  peerRouting: {},
+  contentRouting: {},
+  logger: { forComponent: mock(() => ({ warn: mock(() => {}), error: mock(() => {}), info: mock(() => {}), debug: mock(() => {}) })) },
+  dial: mock(() => Promise.resolve(null)),
+  hangUp: mock(() => Promise.resolve()),
+  getProtocols: mock(() => []),
+  getMultiaddrs: mock(() => []),
+  getAddresses: mock(() => []),
+  status: 'started',
+  services: {},
+} as any
 
 mock.module('libp2p', () => ({
   createLibp2p: mock(() => Promise.resolve(mockNode)),
@@ -24,43 +35,57 @@ import type { VivimConfig } from '../../../../src/lib/tunnel-shared/types.js'
 const DEFAULT_CONFIG: VivimConfig = {
   p2p: {
     enabled: true,
-    listenPort: 0,
-    relayNodes: [],
     bootstrapNodes: [],
     mdnsEnabled: false,
     mdnsInterval: 60_000,
-    autoRelay: true,
-    maxRelaySlots: 10,
-    circuitHopLimit: 3,
-    connectionTimeout: 10_000,
-    idleTimeout: 300_000,
-    keepAliveInterval: 60_000,
-    maxConnections: 100,
+    dhtEnabled: false,
+    relayEnabled: true,
+    maxPeers: 10,
+    maxConcurrentTransfers: 5,
+    maxFileSize: 1_048_576,
+    identityPath: '',
   },
   tunnel: {
     enabled: true,
     serverUrl: 'wss://test.example.com',
     subdomain: 'test',
-    authToken: 'test-token',
-    reconnectBaseDelay: 1000,
-    reconnectMaxDelay: 30_000,
-    reconnectMaxAttempts: 10,
-    heartbeatInterval: 30_000,
-    heartbeatTimeout: 10_000,
+    protocolVersion: '1.0',
+    heartbeatIntervalMs: 30_000,
+    heartbeatTimeoutMs: 10_000,
+    reconnectInitialDelayMs: 1000,
+    reconnectMaxDelayMs: 30_000,
+    reconnectJitterFactor: 0.1,
     maxConcurrentRequests: 100,
-    requestTimeout: 30_000,
-    maxPayloadSize: 1_048_576,
-    compress: false,
+    requestTimeoutMs: 30_000,
+    authToken: 'test-token',
   },
   localServer: {
     enabled: false,
-    port: 9500,
     host: '127.0.0.1',
+    port: 9500,
+    corsEnabled: false,
+    corsOrigins: [],
+    rateLimitPerMinute: 100,
+    maxRequestBodyBytes: 1_048_576,
+    staticDir: '',
+  },
+  orchestrator: {
+    healthCheckIntervalMs: 30_000,
+    restartDelayMs: 5000,
+    maxRestartAttempts: 3,
+    statusReportIntervalMs: 60_000,
   },
   logging: {
     level: 'info',
+    pretty: false,
+    logDir: null,
   },
-} as VivimConfig
+  ledger: {
+    enabled: false,
+    baseUrl: '',
+    syncIntervalMs: 60_000,
+  },
+} as unknown as VivimConfig
 
 describe('NodeManager', () => {
   let manager: NodeManager
@@ -119,8 +144,8 @@ describe('NodeManager', () => {
     await manager.start()
     const peers = manager.getPeers()
     expect(peers).toHaveLength(1)
-    expect(peers[0].peerId).toBe('peer-abc')
-    expect(peers[0].isRelayed).toBe(false)
+    expect(peers[0]!.peerId).toBe('peer-abc')
+    expect(peers[0]!.isRelayed).toBe(false)
   })
 
   it('getPeers detects relayed connections', async () => {
@@ -133,7 +158,7 @@ describe('NodeManager', () => {
 
     await manager.start()
     const peers = manager.getPeers()
-    expect(peers[0].isRelayed).toBe(true)
+    expect(peers[0]!.isRelayed).toBe(true)
   })
 
   it('getMetrics returns initial metrics when stopped', () => {

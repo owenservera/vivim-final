@@ -26,8 +26,14 @@ function formatNode(row: any, extra?: Record<string, unknown>) {
     contentHash: row.contentHash ?? null,
     acuType: row.acuType ?? null,
     searchText: row.searchText ?? null,
-    createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : new Date(row.createdAt).toISOString(),
-    updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : new Date(row.updatedAt).toISOString(),
+    createdAt:
+      row.createdAt instanceof Date
+        ? row.createdAt.toISOString()
+        : new Date(row.createdAt).toISOString(),
+    updatedAt:
+      row.updatedAt instanceof Date
+        ? row.updatedAt.toISOString()
+        : new Date(row.updatedAt).toISOString(),
     ...extra,
   }
 }
@@ -71,7 +77,10 @@ export function createNodeRouter(ctx: ServerContext) {
           parsed.data.method,
           parsed.data.confidence ?? 1.0,
         )
-        return json({ ok: true, aliasId: parsed.data.aliasId, canonicalId: parsed.data.canonicalId }, 201)
+        return json(
+          { ok: true, aliasId: parsed.data.aliasId, canonicalId: parsed.data.canonicalId },
+          201,
+        )
       }
 
       // ── GET /api/nodes/alias/:aliasId ──
@@ -102,10 +111,19 @@ export function createNodeRouter(ctx: ServerContext) {
         const messageId = url.searchParams.get('messageId') ?? undefined
         const limit = parseLimit(url.searchParams.get('limit'))
         const offset = parseOffset(url.searchParams.get('offset'))
-        const orderBy = (url.searchParams.get('orderBy') as 'createdAt' | 'updatedAt') ?? 'createdAt'
+        const orderBy =
+          (url.searchParams.get('orderBy') as 'createdAt' | 'updatedAt') ?? 'createdAt'
         const orderDir = (url.searchParams.get('orderDir') as 'asc' | 'desc') ?? 'desc'
 
-        const rows = await ns.listNodes({ type, conversationId, messageId, limit, offset, orderBy, orderDir })
+        const rows = await ns.listNodes({
+          type,
+          conversationId,
+          messageId,
+          limit,
+          offset,
+          orderBy,
+          orderDir,
+        })
         const total = await ns.countNodes()
         return json({
           nodes: rows.map((r: any) => formatNode(r)),
@@ -206,7 +224,8 @@ export function createNodeRouter(ctx: ServerContext) {
         const versionMatch = sub.match(/^versions\/(\d+)$/)
         if (versionMatch) {
           const version = Number(versionMatch[1])
-          if (Number.isNaN(version)) return errorResponse('Invalid version number', 'ValidationError', 400)
+          if (Number.isNaN(version))
+            return errorResponse('Invalid version number', 'ValidationError', 400)
           const snapshot = await ns.getNodeAtVersion(id, version)
           if (!snapshot) return errorResponse('Version not found', 'NotFoundError', 404)
           return json(snapshot)
@@ -219,10 +238,12 @@ export function createNodeRouter(ctx: ServerContext) {
             ns.getOutgoingEdges(id),
             ns.getIncomingEdges(id),
           ])
-          return json(formatNode(node, {
-            childCount: children.length,
-            edgeCount: outgoing.length + incoming.length,
-          }))
+          return json(
+            formatNode(node, {
+              childCount: children.length,
+              edgeCount: outgoing.length + incoming.length,
+            }),
+          )
         }
 
         return errorResponse('Not found', 'NotFoundError', 404)

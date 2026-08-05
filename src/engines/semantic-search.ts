@@ -4,8 +4,8 @@
 import { createHash } from 'node:crypto'
 import { newId } from '../ids.js'
 import { catchDebug, catchWarn } from '../lib/catch-logger.js'
-import type { CapStoreDb } from '../storage/db.js'
 import type { SemanticSearchStore } from '../storage/contracts/semantic-search-store.js'
+import type { CapStoreDb } from '../storage/db.js'
 
 export interface SearchQuery {
   text: string
@@ -183,7 +183,10 @@ export async function reindexAllEntities(
         text: `Decision: ${row.decisionText}${row.rationale ? ` — ${row.rationale}` : ''}`,
       })
     }
-  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
+  } catch (e) {
+    catchWarn(e, 'semantic-search: entity harvest')
+    report.errors++
+  }
 
   // 3. Pattern extracts
   try {
@@ -195,7 +198,10 @@ export async function reindexAllEntities(
         text: `Pattern (${row.patternType}): ${row.name} — ${row.description}`,
       })
     }
-  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
+  } catch (e) {
+    catchWarn(e, 'semantic-search: entity harvest')
+    report.errors++
+  }
 
   // 4. Topics
   try {
@@ -207,7 +213,10 @@ export async function reindexAllEntities(
         text: `Topic: ${row.name}${row.description ? ` — ${row.description}` : ''}`,
       })
     }
-  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
+  } catch (e) {
+    catchWarn(e, 'semantic-search: entity harvest')
+    report.errors++
+  }
 
   // 5. Projects
   try {
@@ -219,7 +228,10 @@ export async function reindexAllEntities(
         text: `Project (${row.status}): ${row.name}${row.description ? ` — ${row.description}` : ''}`,
       })
     }
-  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
+  } catch (e) {
+    catchWarn(e, 'semantic-search: entity harvest')
+    report.errors++
+  }
 
   // 6. Conversation messages (sample recent ones)
   try {
@@ -239,7 +251,10 @@ export async function reindexAllEntities(
         text: `[${row.role}] ${content}`,
       })
     }
-  } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
+  } catch (e) {
+    catchWarn(e, 'semantic-search: entity harvest')
+    report.errors++
+  }
 
   // Process in batches of 50 for embedding generation
   const BATCH_SIZE = 50
@@ -272,7 +287,10 @@ export async function reindexAllEntities(
             createdAt: Date.now(),
           })
           report.indexed++
-        } catch (e) { catchWarn(e, "semantic-search: entity harvest"); report.errors++ }
+        } catch (e) {
+          catchWarn(e, 'semantic-search: entity harvest')
+          report.errors++
+        }
       }
     } catch (e) {
       catchWarn(e, 'semantic-search: batch embedding failed')
@@ -337,10 +355,7 @@ export async function searchHybridImpl(
     try {
       const entityMatches = await db.prisma.entity.findMany({
         where: {
-          OR: [
-            { name: { contains: query.text } },
-            { description: { contains: query.text } },
-          ],
+          OR: [{ name: { contains: query.text } }, { description: { contains: query.text } }],
         },
         take: 50,
       })
@@ -362,10 +377,7 @@ export async function searchHybridImpl(
     try {
       const decisionMatches = await db.prisma.decisionRecord.findMany({
         where: {
-          OR: [
-            { decisionText: { contains: query.text } },
-            { rationale: { contains: query.text } },
-          ],
+          OR: [{ decisionText: { contains: query.text } }, { rationale: { contains: query.text } }],
         },
         take: 50,
       })
@@ -387,10 +399,7 @@ export async function searchHybridImpl(
     try {
       const patternMatches = await db.prisma.patternExtract.findMany({
         where: {
-          OR: [
-            { name: { contains: query.text } },
-            { description: { contains: query.text } },
-          ],
+          OR: [{ name: { contains: query.text } }, { description: { contains: query.text } }],
         },
         take: 50,
       })
@@ -412,10 +421,7 @@ export async function searchHybridImpl(
     try {
       const topicMatches = await db.prisma.topic.findMany({
         where: {
-          OR: [
-            { name: { contains: query.text } },
-            { description: { contains: query.text } },
-          ],
+          OR: [{ name: { contains: query.text } }, { description: { contains: query.text } }],
         },
         take: 50,
       })
@@ -458,8 +464,10 @@ export async function searchHybridImpl(
   }
 
   // 3. Merge results using hybrid scoring
-  const merged: Map<string, { score: number; entityType: string; entityId: string; snippet: string }> =
-    new Map()
+  const merged: Map<
+    string,
+    { score: number; entityType: string; entityId: string; snippet: string }
+  > = new Map()
 
   // Add semantic results
   for (const result of semanticResults) {

@@ -52,8 +52,8 @@ export const workspaceSettingsSchema = z.object({
   chromeConfig: z.object({
     path: z
       .string()
-      .url("Please enter a valid URL")
-      .or(z.string().length(0).nullable()),
+      .min(0, "Chrome binary path can be empty or a file path")
+      .optional(),
     extraArgs: z.array(z.string()),
     disableGpu: z.boolean(),
   }),

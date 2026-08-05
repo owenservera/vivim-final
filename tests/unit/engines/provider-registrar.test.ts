@@ -115,6 +115,7 @@ const CLAUDE_MANIFEST: ProviderManifest = {
     has_multi_account: true,
     profile_strategy: 'per_account',
     capabilities: ['send_message', 'select_model'],
+    accessTier: 'free' as const,
   },
   endpoints: [
     {

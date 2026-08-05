@@ -1,0 +1,1379 @@
+{
+  "capabilities": [
+    {
+      "slug": "send_message",
+      "label": "Send Message",
+      "capabilityKind": "action",
+      "description": "Compose and dispatch a message in the composer",
+      "sourceConfidence": "high",
+      "tags": ["compose"]
+    },
+    {
+      "slug": "read_response",
+      "label": "Read Response",
+      "capabilityKind": "state",
+      "description": "Observe the assistant response stream render",
+      "sourceConfidence": "high",
+      "tags": ["observe"]
+    },
+    {
+      "slug": "new_chat",
+      "label": "New Chat",
+      "capabilityKind": "action",
+      "description": "Start a new conversation",
+      "sourceConfidence": "high",
+      "tags": ["session"]
+    },
+    {
+      "slug": "switch_provider",
+      "label": "Switch Provider",
+      "description": "Switch the active LLM provider",
+      "capabilityKind": "action",
+      "tags": ["switch", "provider"]
+    },
+    {
+      "slug": "list_conversations",
+      "label": "List Conversations",
+      "description": "List all available conversations",
+      "capabilityKind": "query",
+      "tags": ["list", "conversation"]
+    },
+    {
+      "slug": "search_messages",
+      "label": "Search Messages",
+      "description": "Search messages across conversations",
+      "capabilityKind": "query",
+      "tags": ["search", "message"]
+    },
+    {
+      "slug": "attach_file",
+      "label": "Attach File",
+      "description": "Attach a file to the current message",
+      "capabilityKind": "action",
+      "tags": ["attach", "file"]
+    },
+    {
+      "slug": "edit_message",
+      "label": "Edit Message",
+      "description": "Edit a previously sent message",
+      "capabilityKind": "action",
+      "tags": ["edit", "message"]
+    },
+    {
+      "slug": "delete_message",
+      "label": "Delete Message",
+      "description": "Delete a message from the conversation",
+      "capabilityKind": "action",
+      "tags": ["delete", "message"]
+    },
+    {
+      "slug": "copy_message",
+      "label": "Copy Message",
+      "description": "Copy message content to clipboard",
+      "capabilityKind": "action",
+      "tags": ["copy", "message"]
+    },
+    {
+      "slug": "regenerate_response",
+      "label": "Regenerate Response",
+      "description": "Regenerate the last assistant response",
+      "capabilityKind": "action",
+      "tags": ["regenerate", "response"]
+    },
+    {
+      "slug": "stop_generation",
+      "label": "Stop Generation",
+      "description": "Stop an in-progress response generation",
+      "capabilityKind": "action",
+      "tags": ["stop", "generation"]
+    },
+    {
+      "slug": "toggle_sidebar",
+      "label": "Toggle Sidebar",
+      "description": "Show or hide the sidebar",
+      "capabilityKind": "action",
+      "tags": ["toggle", "sidebar"]
+    },
+    {
+      "slug": "clear_conversation",
+      "label": "Clear Conversation",
+      "description": "Clear all messages in the current conversation",
+      "capabilityKind": "action",
+      "tags": ["clear", "conversation"]
+    },
+    {
+      "slug": "export_conversation",
+      "label": "Export Conversation",
+      "description": "Export conversation to file",
+      "capabilityKind": "action",
+      "tags": ["export", "conversation"]
+    },
+    {
+      "slug": "rename_conversation",
+      "label": "Rename Conversation",
+      "description": "Rename the current conversation",
+      "capabilityKind": "action",
+      "tags": ["rename", "conversation"]
+    },
+    {
+      "slug": "archive_conversation",
+      "label": "Archive Conversation",
+      "description": "Archive a conversation",
+      "capabilityKind": "action",
+      "tags": ["archive", "conversation"]
+    },
+    {
+      "slug": "pin_conversation",
+      "label": "Pin Conversation",
+      "description": "Pin a conversation to the top",
+      "capabilityKind": "action",
+      "tags": ["pin", "conversation"]
+    },
+    {
+      "slug": "voice_input",
+      "label": "Voice Input",
+      "description": "Capture voice input via microphone",
+      "capabilityKind": "action",
+      "tags": ["voice", "input"]
+    },
+    {
+      "slug": "image_generate",
+      "label": "Image Generate",
+      "description": "Generate an image from a text prompt",
+      "capabilityKind": "action",
+      "tags": ["image", "generate"]
+    },
+    {
+      "slug": "code_execute",
+      "label": "Code Execute",
+      "description": "Execute code in a sandboxed environment",
+      "capabilityKind": "action",
+      "tags": ["code", "execute"]
+    },
+    {
+      "slug": "web_search",
+      "label": "Web Search",
+      "description": "Search the web for information",
+      "capabilityKind": "action",
+      "tags": ["web", "search"]
+    },
+    {
+      "slug": "canvas_set_background",
+      "label": "Canvas Set Background",
+      "description": "Set the canvas background",
+      "capabilityKind": "action",
+      "tags": ["canvas", "background"]
+    },
+    {
+      "slug": "canvas_add_layer",
+      "label": "Canvas Add Layer",
+      "description": "Add a new layer to the canvas",
+      "capabilityKind": "action",
+      "tags": ["canvas", "layer"]
+    },
+    {
+      "slug": "canvas_remove_layer",
+      "label": "Canvas Remove Layer",
+      "description": "Remove a layer from the canvas",
+      "capabilityKind": "action",
+      "tags": ["canvas", "layer"]
+    },
+    {
+      "slug": "canvas_set_layout",
+      "label": "Canvas Set Layout",
+      "description": "Set the canvas layout mode",
+      "capabilityKind": "action",
+      "tags": ["canvas", "layout"]
+    },
+    {
+      "slug": "canvas_set_theme",
+      "label": "Canvas Set Theme",
+      "description": "Set the canvas visual theme",
+      "capabilityKind": "action",
+      "tags": ["canvas", "theme"]
+    },
+    {
+      "slug": "channel_add",
+      "label": "Channel Add",
+      "description": "Add a new channel",
+      "capabilityKind": "action",
+      "tags": ["channel", "add"]
+    },
+    {
+      "slug": "channel_connect",
+      "label": "Channel Connect",
+      "description": "Connect to a channel",
+      "capabilityKind": "action",
+      "tags": ["channel", "connect"]
+    },
+    {
+      "slug": "channel_list",
+      "label": "Channel List",
+      "description": "List available channels",
+      "capabilityKind": "query",
+      "tags": ["channel", "list"]
+    },
+    {
+      "slug": "channel_remove",
+      "label": "Channel Remove",
+      "description": "Remove a channel",
+      "capabilityKind": "action",
+      "tags": ["channel", "remove"]
+    },
+    {
+      "slug": "session_load",
+      "label": "Session Load",
+      "description": "Load a saved session",
+      "capabilityKind": "action",
+      "tags": ["session", "load"]
+    },
+    {
+      "slug": "session_start",
+      "label": "Session Start",
+      "description": "Start a new session",
+      "capabilityKind": "action",
+      "tags": ["session", "start"]
+    },
+    {
+      "slug": "session_list",
+      "label": "Session List",
+      "description": "List all sessions",
+      "capabilityKind": "query",
+      "tags": ["session", "list"]
+    },
+    {
+      "slug": "memory_recall",
+      "label": "Memory Recall",
+      "description": "Recall stored memories",
+      "capabilityKind": "query",
+      "tags": ["memory", "recall"]
+    },
+    {
+      "slug": "memory_store",
+      "label": "Memory Store",
+      "description": "Store information in memory",
+      "capabilityKind": "action",
+      "tags": ["memory", "store"]
+    },
+    {
+      "slug": "system_health",
+      "label": "System Health",
+      "description": "Check system health status",
+      "capabilityKind": "query",
+      "tags": ["system", "health"]
+    },
+    {
+      "slug": "system_providers",
+      "label": "System Providers",
+      "description": "List available providers",
+      "capabilityKind": "query",
+      "tags": ["system", "providers"]
+    },
+    {
+      "slug": "system_fleet",
+      "label": "System Fleet",
+      "description": "View system fleet status",
+      "capabilityKind": "query",
+      "tags": ["system", "fleet"]
+    },
+    {
+      "slug": "system_capabilities",
+      "label": "System Capabilities",
+      "description": "List all registered capabilities",
+      "capabilityKind": "query",
+      "tags": ["system", "capabilities"]
+    },
+    {
+      "slug": "system_version",
+      "label": "System Version",
+      "description": "Get system version info",
+      "capabilityKind": "query",
+      "tags": ["system", "version"]
+    },
+    {
+      "slug": "system_workspace",
+      "label": "System Workspace",
+      "description": "Get workspace information",
+      "capabilityKind": "query",
+      "tags": ["system", "workspace"]
+    },
+    {
+      "slug": "help",
+      "label": "Help",
+      "description": "Get help information",
+      "capabilityKind": "query",
+      "tags": ["help", "info"]
+    },
+    {
+      "slug": "workflow_newsletter",
+      "label": "Workflow Newsletter",
+      "description": "Generate a newsletter",
+      "capabilityKind": "action",
+      "tags": ["workflow", "newsletter"]
+    },
+    {
+      "slug": "schedule_register",
+      "label": "Schedule Register",
+      "description": "Register a scheduled task",
+      "capabilityKind": "action",
+      "tags": ["schedule", "register"]
+    },
+    {
+      "slug": "browser_navigate",
+      "label": "Browser Navigate",
+      "description": "Navigate the browser to a URL",
+      "capabilityKind": "action",
+      "tags": ["browser", "navigate"]
+    },
+    {
+      "slug": "browser_search",
+      "label": "Browser Search",
+      "description": "Search via browser",
+      "capabilityKind": "action",
+      "tags": ["browser", "search"]
+    },
+    {
+      "slug": "browser_screenshot",
+      "label": "Browser Screenshot",
+      "description": "Take a browser screenshot",
+      "capabilityKind": "action",
+      "tags": ["browser", "screenshot"]
+    },
+    {
+      "slug": "browser_extract",
+      "label": "Browser Extract",
+      "description": "Extract content from a web page",
+      "capabilityKind": "query",
+      "tags": ["browser", "extract"]
+    },
+    {
+      "slug": "file_open",
+      "label": "File Open",
+      "description": "Open a file",
+      "capabilityKind": "action",
+      "tags": ["file", "open"]
+    },
+    {
+      "slug": "file_list",
+      "label": "File List",
+      "description": "List files in a directory",
+      "capabilityKind": "query",
+      "tags": ["file", "list"]
+    },
+    {
+      "slug": "file_search",
+      "label": "File Search",
+      "description": "Search for files",
+      "capabilityKind": "query",
+      "tags": ["file", "search"]
+    },
+    {
+      "slug": "file_create",
+      "label": "File Create",
+      "description": "Create a new file",
+      "capabilityKind": "action",
+      "tags": ["file", "create"]
+    },
+    {
+      "slug": "file_read",
+      "label": "File Read",
+      "description": "Read file contents",
+      "capabilityKind": "query",
+      "tags": ["file", "read"]
+    },
+    {
+      "slug": "email_send",
+      "label": "Email Send",
+      "description": "Send an email",
+      "capabilityKind": "action",
+      "tags": ["email", "send"]
+    },
+    {
+      "slug": "llm_ask",
+      "label": "LLM Ask",
+      "description": "Ask an LLM a question",
+      "capabilityKind": "action",
+      "tags": ["llm", "ask"]
+    },
+    {
+      "slug": "llm_summarize",
+      "label": "LLM Summarize",
+      "description": "Summarize content with an LLM",
+      "capabilityKind": "action",
+      "tags": ["llm", "summarize"]
+    },
+    {
+      "slug": "llm_translate",
+      "label": "LLM Translate",
+      "description": "Translate text with an LLM",
+      "capabilityKind": "action",
+      "tags": ["llm", "translate"]
+    },
+    {
+      "slug": "llm_explain",
+      "label": "LLM Explain",
+      "description": "Explain content with an LLM",
+      "capabilityKind": "action",
+      "tags": ["llm", "explain"]
+    },
+    {
+      "slug": "llm_rewrite",
+      "label": "LLM Rewrite",
+      "description": "Rewrite content with an LLM",
+      "capabilityKind": "action",
+      "tags": ["llm", "rewrite"]
+    },
+    {
+      "slug": "llm_code",
+      "label": "LLM Code",
+      "description": "Generate code with an LLM",
+      "capabilityKind": "action",
+      "tags": ["llm", "code"]
+    },
+    {
+      "slug": "app_launch",
+      "label": "App Launch",
+      "description": "Launch an application",
+      "capabilityKind": "action",
+      "tags": ["app", "launch"]
+    },
+    {
+      "slug": "web_query",
+      "label": "Web Query",
+      "description": "Query the web for data",
+      "capabilityKind": "query",
+      "tags": ["web", "query"]
+    },
+    {
+      "slug": "web_summarize",
+      "label": "Web Summarize",
+      "description": "Summarize a web page",
+      "capabilityKind": "action",
+      "tags": ["web", "summarize"]
+    },
+    {
+      "slug": "product_search",
+      "label": "Product Search",
+      "description": "Search for products across platforms",
+      "capabilityKind": "query",
+      "tags": ["product", "search"]
+    },
+    {
+      "slug": "product_detail",
+      "label": "Product Detail",
+      "description": "Get detailed product information",
+      "capabilityKind": "query",
+      "tags": ["product", "detail"]
+    },
+    {
+      "slug": "cart_add",
+      "label": "Cart Add",
+      "description": "Add item to shopping cart",
+      "capabilityKind": "action",
+      "tags": ["cart", "add"]
+    },
+    {
+      "slug": "cart_remove",
+      "label": "Cart Remove",
+      "description": "Remove item from cart",
+      "capabilityKind": "action",
+      "tags": ["cart", "remove"]
+    },
+    {
+      "slug": "cart_view",
+      "label": "Cart View",
+      "description": "View shopping cart contents",
+      "capabilityKind": "query",
+      "tags": ["cart", "view"]
+    },
+    {
+      "slug": "order_place",
+      "label": "Order Place",
+      "description": "Place an order",
+      "capabilityKind": "action",
+      "tags": ["order", "place"]
+    },
+    {
+      "slug": "order_track",
+      "label": "Order Track",
+      "description": "Track order status",
+      "capabilityKind": "query",
+      "tags": ["order", "track"]
+    },
+    {
+      "slug": "review_submit",
+      "label": "Review Submit",
+      "description": "Submit a product review",
+      "capabilityKind": "action",
+      "tags": ["review", "submit"]
+    },
+    {
+      "slug": "price_compare",
+      "label": "Price Compare",
+      "description": "Compare prices across sellers",
+      "capabilityKind": "query",
+      "tags": ["price", "compare"]
+    },
+    {
+      "slug": "wishlist_add",
+      "label": "Wishlist Add",
+      "description": "Add item to wishlist",
+      "capabilityKind": "action",
+      "tags": ["wishlist", "add"]
+    },
+    {
+      "slug": "portfolio_view",
+      "label": "Portfolio View",
+      "description": "View investment portfolio",
+      "capabilityKind": "query",
+      "tags": ["portfolio", "view"]
+    },
+    {
+      "slug": "trade_execute",
+      "label": "Trade Execute",
+      "description": "Execute a trade",
+      "capabilityKind": "action",
+      "tags": ["trade", "execute"]
+    },
+    {
+      "slug": "balance_check",
+      "label": "Balance Check",
+      "description": "Check account balance",
+      "capabilityKind": "query",
+      "tags": ["balance", "check"]
+    },
+    {
+      "slug": "transaction_list",
+      "label": "Transaction List",
+      "description": "List recent transactions",
+      "capabilityKind": "query",
+      "tags": ["transaction", "list"]
+    },
+    {
+      "slug": "transfer_funds",
+      "label": "Transfer Funds",
+      "description": "Transfer funds between accounts",
+      "capabilityKind": "action",
+      "tags": ["transfer", "funds"]
+    },
+    {
+      "slug": "invoice_create",
+      "label": "Invoice Create",
+      "description": "Create an invoice",
+      "capabilityKind": "action",
+      "tags": ["invoice", "create"]
+    },
+    {
+      "slug": "expense_track",
+      "label": "Expense Track",
+      "description": "Track expenses",
+      "capabilityKind": "action",
+      "tags": ["expense", "track"]
+    },
+    {
+      "slug": "budget_set",
+      "label": "Budget Set",
+      "description": "Set a budget",
+      "capabilityKind": "action",
+      "tags": ["budget", "set"]
+    },
+    {
+      "slug": "course_enroll",
+      "label": "Course Enroll",
+      "description": "Enroll in a course",
+      "capabilityKind": "action",
+      "tags": ["course", "enroll"]
+    },
+    {
+      "slug": "lesson_complete",
+      "label": "Lesson Complete",
+      "description": "Mark lesson as complete",
+      "capabilityKind": "action",
+      "tags": ["lesson", "complete"]
+    },
+    {
+      "slug": "quiz_take",
+      "label": "Quiz Take",
+      "description": "Take a quiz",
+      "capabilityKind": "action",
+      "tags": ["quiz", "take"]
+    },
+    {
+      "slug": "flashcard_review",
+      "label": "Flashcard Review",
+      "description": "Review flashcards",
+      "capabilityKind": "action",
+      "tags": ["flashcard", "review"]
+    },
+    {
+      "slug": "progress_track",
+      "label": "Progress Track",
+      "description": "Track learning progress",
+      "capabilityKind": "query",
+      "tags": ["progress", "track"]
+    },
+    {
+      "slug": "certificate_earn",
+      "label": "Certificate Earn",
+      "description": "Earn a course certificate",
+      "capabilityKind": "action",
+      "tags": ["certificate", "earn"]
+    },
+    {
+      "slug": "note_create",
+      "label": "Note Create",
+      "description": "Create study notes",
+      "capabilityKind": "action",
+      "tags": ["note", "create"]
+    },
+    {
+      "slug": "schedule_class",
+      "label": "Schedule Class",
+      "description": "Schedule a class session",
+      "capabilityKind": "action",
+      "tags": ["schedule", "class"]
+    },
+    {
+      "slug": "appointment_book",
+      "label": "Appointment Book",
+      "description": "Book a medical appointment",
+      "capabilityKind": "action",
+      "tags": ["appointment", "book"]
+    },
+    {
+      "slug": "appointment_cancel",
+      "label": "Appointment Cancel",
+      "description": "Cancel a medical appointment",
+      "capabilityKind": "action",
+      "tags": ["appointment", "cancel"]
+    },
+    {
+      "slug": "prescription_refill",
+      "label": "Prescription Refill",
+      "description": "Refill a prescription",
+      "capabilityKind": "action",
+      "tags": ["prescription", "refill"]
+    },
+    {
+      "slug": "symptom_check",
+      "label": "Symptom Check",
+      "description": "Check symptoms",
+      "capabilityKind": "query",
+      "tags": ["symptom", "check"]
+    },
+    {
+      "slug": "health_metric_log",
+      "label": "Health Metric Log",
+      "description": "Log health metrics",
+      "capabilityKind": "action",
+      "tags": ["health", "metric"]
+    },
+    {
+      "slug": "doctor_message",
+      "label": "Doctor Message",
+      "description": "Message a doctor",
+      "capabilityKind": "action",
+      "tags": ["doctor", "message"]
+    },
+    {
+      "slug": "record_view",
+      "label": "Record View",
+      "description": "View medical records",
+      "capabilityKind": "query",
+      "tags": ["record", "view"]
+    },
+    {
+      "slug": "game_launch",
+      "label": "Game Launch",
+      "description": "Launch a game",
+      "capabilityKind": "action",
+      "tags": ["game", "launch"]
+    },
+    {
+      "slug": "game_purchase",
+      "label": "Game Purchase",
+      "description": "Purchase a game",
+      "capabilityKind": "action",
+      "tags": ["game", "purchase"]
+    },
+    {
+      "slug": "game_invite",
+      "label": "Game Invite",
+      "description": "Invite friend to game",
+      "capabilityKind": "action",
+      "tags": ["game", "invite"]
+    },
+    {
+      "slug": "game_chat",
+      "label": "Game Chat",
+      "description": "Chat during gameplay",
+      "capabilityKind": "action",
+      "tags": ["game", "chat"]
+    },
+    {
+      "slug": "game_clip",
+      "label": "Game Clip",
+      "description": "Record game clip",
+      "capabilityKind": "action",
+      "tags": ["game", "clip"]
+    },
+    {
+      "slug": "stream_watch",
+      "label": "Stream Watch",
+      "description": "Watch a game stream",
+      "capabilityKind": "action",
+      "tags": ["stream", "watch"]
+    },
+    {
+      "slug": "media_play",
+      "label": "Media Play",
+      "description": "Play media content",
+      "capabilityKind": "action",
+      "tags": ["media", "play"]
+    },
+    {
+      "slug": "media_pause",
+      "label": "Media Pause",
+      "description": "Pause media playback",
+      "capabilityKind": "action",
+      "tags": ["media", "pause"]
+    },
+    {
+      "slug": "media_skip",
+      "label": "Media Skip",
+      "description": "Skip to next track",
+      "capabilityKind": "action",
+      "tags": ["media", "skip"]
+    },
+    {
+      "slug": "playlist_create",
+      "label": "Playlist Create",
+      "description": "Create a new playlist",
+      "capabilityKind": "action",
+      "tags": ["playlist", "create"]
+    },
+    {
+      "slug": "playlist_add",
+      "label": "Playlist Add",
+      "description": "Add to playlist",
+      "capabilityKind": "action",
+      "tags": ["playlist", "add"]
+    },
+    {
+      "slug": "media_download",
+      "label": "Media Download",
+      "description": "Download media for offline",
+      "capabilityKind": "action",
+      "tags": ["media", "download"]
+    },
+    {
+      "slug": "media_share",
+      "label": "Media Share",
+      "description": "Share media content",
+      "capabilityKind": "action",
+      "tags": ["media", "share"]
+    },
+    {
+      "slug": "subscribe_channel",
+      "label": "Subscribe Channel",
+      "description": "Subscribe to a channel",
+      "capabilityKind": "action",
+      "tags": ["subscribe", "channel"]
+    },
+    {
+      "slug": "flight_search",
+      "label": "Flight Search",
+      "description": "Search for flights",
+      "capabilityKind": "query",
+      "tags": ["flight", "search"]
+    },
+    {
+      "slug": "hotel_search",
+      "label": "Hotel Search",
+      "description": "Search for hotels",
+      "capabilityKind": "query",
+      "tags": ["hotel", "search"]
+    },
+    {
+      "slug": "booking_reserve",
+      "label": "Booking Reserve",
+      "description": "Reserve a booking",
+      "capabilityKind": "action",
+      "tags": ["booking", "reserve"]
+    },
+    {
+      "slug": "booking_cancel",
+      "label": "Booking Cancel",
+      "description": "Cancel a booking",
+      "capabilityKind": "action",
+      "tags": ["booking", "cancel"]
+    },
+    {
+      "slug": "review_write",
+      "label": "Review Write",
+      "description": "Write a travel review",
+      "capabilityKind": "action",
+      "tags": ["review", "write"]
+    },
+    {
+      "slug": "itinerary_plan",
+      "label": "Itinerary Plan",
+      "description": "Plan a travel itinerary",
+      "capabilityKind": "action",
+      "tags": ["itinerary", "plan"]
+    },
+    {
+      "slug": "repo_clone",
+      "label": "Repo Clone",
+      "description": "Clone a repository",
+      "capabilityKind": "action",
+      "tags": ["repo", "clone"]
+    },
+    {
+      "slug": "pr_create",
+      "label": "PR Create",
+      "description": "Create a pull request",
+      "capabilityKind": "action",
+      "tags": ["pr", "create"]
+    },
+    {
+      "slug": "pr_merge",
+      "label": "PR Merge",
+      "description": "Merge a pull request",
+      "capabilityKind": "action",
+      "tags": ["pr", "merge"]
+    },
+    {
+      "slug": "ci_status",
+      "label": "CI Status",
+      "description": "Check CI/CD status",
+      "capabilityKind": "query",
+      "tags": ["ci", "status"]
+    },
+    {
+      "slug": "deploy_trigger",
+      "label": "Deploy Trigger",
+      "description": "Trigger a deployment",
+      "capabilityKind": "action",
+      "tags": ["deploy", "trigger"]
+    },
+    {
+      "slug": "deploy_rollback",
+      "label": "Deploy Rollback",
+      "description": "Rollback a deployment",
+      "capabilityKind": "action",
+      "tags": ["deploy", "rollback"]
+    },
+    {
+      "slug": "log_view",
+      "label": "Log View",
+      "description": "View deployment logs",
+      "capabilityKind": "query",
+      "tags": ["log", "view"]
+    },
+    {
+      "slug": "env_var_set",
+      "label": "Env Var Set",
+      "description": "Set environment variable",
+      "capabilityKind": "action",
+      "tags": ["env", "set"]
+    },
+    {
+      "slug": "container_start",
+      "label": "Container Start",
+      "description": "Start a container",
+      "capabilityKind": "action",
+      "tags": ["container", "start"]
+    },
+    {
+      "slug": "container_stop",
+      "label": "Container Stop",
+      "description": "Stop a container",
+      "capabilityKind": "action",
+      "tags": ["container", "stop"]
+    },
+    {
+      "slug": "design_create",
+      "label": "Design Create",
+      "description": "Create a new design file",
+      "capabilityKind": "action",
+      "tags": ["design", "create"]
+    },
+    {
+      "slug": "design_export",
+      "label": "Design Export",
+      "description": "Export design to file",
+      "capabilityKind": "action",
+      "tags": ["design", "export"]
+    },
+    {
+      "slug": "design_share",
+      "label": "Design Share",
+      "description": "Share design for collaboration",
+      "capabilityKind": "action",
+      "tags": ["design", "share"]
+    },
+    {
+      "slug": "design_comment",
+      "label": "Design Comment",
+      "description": "Comment on a design",
+      "capabilityKind": "action",
+      "tags": ["design", "comment"]
+    },
+    {
+      "slug": "prototype_create",
+      "label": "Prototype Create",
+      "description": "Create an interactive prototype",
+      "capabilityKind": "action",
+      "tags": ["prototype", "create"]
+    },
+    {
+      "slug": "component_library",
+      "label": "Component Library",
+      "description": "Access design component library",
+      "capabilityKind": "query",
+      "tags": ["component", "library"]
+    },
+    {
+      "slug": "lead_create",
+      "label": "Lead Create",
+      "description": "Create a new lead",
+      "capabilityKind": "action",
+      "tags": ["lead", "create"]
+    },
+    {
+      "slug": "lead_update",
+      "label": "Lead Update",
+      "description": "Update lead information",
+      "capabilityKind": "action",
+      "tags": ["lead", "update"]
+    },
+    {
+      "slug": "deal_create",
+      "label": "Deal Create",
+      "description": "Create a new deal",
+      "capabilityKind": "action",
+      "tags": ["deal", "create"]
+    },
+    {
+      "slug": "deal_stage_move",
+      "label": "Deal Stage Move",
+      "description": "Move deal to next stage",
+      "capabilityKind": "action",
+      "tags": ["deal", "stage"]
+    },
+    {
+      "slug": "contact_import",
+      "label": "Contact Import",
+      "description": "Import contacts from CSV",
+      "capabilityKind": "action",
+      "tags": ["contact", "import"]
+    },
+    {
+      "slug": "report_generate",
+      "label": "Report Generate",
+      "description": "Generate a CRM report",
+      "capabilityKind": "action",
+      "tags": ["report", "generate"]
+    },
+    {
+      "slug": "pipeline_view",
+      "label": "Pipeline View",
+      "description": "View sales pipeline",
+      "capabilityKind": "query",
+      "tags": ["pipeline", "view"]
+    },
+    {
+      "slug": "activity_log",
+      "label": "Activity Log",
+      "description": "View activity log",
+      "capabilityKind": "query",
+      "tags": ["activity", "log"]
+    },
+    {
+      "slug": "dashboard_view",
+      "label": "Dashboard View",
+      "description": "View analytics dashboard",
+      "capabilityKind": "query",
+      "tags": ["dashboard", "view"]
+    },
+    {
+      "slug": "report_create",
+      "label": "Report Create",
+      "description": "Create an analytics report",
+      "capabilityKind": "action",
+      "tags": ["report", "create"]
+    },
+    {
+      "slug": "metric_track",
+      "label": "Metric Track",
+      "description": "Track custom metrics",
+      "capabilityKind": "action",
+      "tags": ["metric", "track"]
+    },
+    {
+      "slug": "funnel_analyze",
+      "label": "Funnel Analyze",
+      "description": "Analyze conversion funnel",
+      "capabilityKind": "query",
+      "tags": ["funnel", "analyze"]
+    },
+    {
+      "slug": "event_track",
+      "label": "Event Track",
+      "description": "Track user events",
+      "capabilityKind": "action",
+      "tags": ["event", "track"]
+    },
+    {
+      "slug": "ab_test",
+      "label": "AB Test",
+      "description": "Run A/B test",
+      "capabilityKind": "action",
+      "tags": ["ab", "test"]
+    },
+    {
+      "slug": "doc_create",
+      "label": "Doc Create",
+      "description": "Create a new document",
+      "capabilityKind": "action",
+      "tags": ["doc", "create"]
+    },
+    {
+      "slug": "doc_edit",
+      "label": "Doc Edit",
+      "description": "Edit a document",
+      "capabilityKind": "action",
+      "tags": ["doc", "edit"]
+    },
+    {
+      "slug": "doc_comment",
+      "label": "Doc Comment",
+      "description": "Comment on a document",
+      "capabilityKind": "action",
+      "tags": ["doc", "comment"]
+    },
+    {
+      "slug": "doc_publish",
+      "label": "Doc Publish",
+      "description": "Publish a document",
+      "capabilityKind": "action",
+      "tags": ["doc", "publish"]
+    },
+    {
+      "slug": "wiki_search",
+      "label": "Wiki Search",
+      "description": "Search the wiki",
+      "capabilityKind": "query",
+      "tags": ["wiki", "search"]
+    },
+    {
+      "slug": "template_use",
+      "label": "Template Use",
+      "description": "Use a document template",
+      "capabilityKind": "action",
+      "tags": ["template", "use"]
+    },
+    {
+      "slug": "email_compose",
+      "label": "Email Compose",
+      "description": "Compose a new email",
+      "capabilityKind": "action",
+      "tags": ["email", "compose"]
+    },
+    {
+      "slug": "email_reply",
+      "label": "Email Reply",
+      "description": "Reply to an email",
+      "capabilityKind": "action",
+      "tags": ["email", "reply"]
+    },
+    {
+      "slug": "email_forward",
+      "label": "Email Forward",
+      "description": "Forward an email",
+      "capabilityKind": "action",
+      "tags": ["email", "forward"]
+    },
+    {
+      "slug": "email_archive",
+      "label": "Email Archive",
+      "description": "Archive an email",
+      "capabilityKind": "action",
+      "tags": ["email", "archive"]
+    },
+    {
+      "slug": "email_label",
+      "label": "Email Label",
+      "description": "Label/categorize an email",
+      "capabilityKind": "action",
+      "tags": ["email", "label"]
+    },
+    {
+      "slug": "email_search",
+      "label": "Email Search",
+      "description": "Search emails",
+      "capabilityKind": "query",
+      "tags": ["email", "search"]
+    },
+    {
+      "slug": "event_create",
+      "label": "Event Create",
+      "description": "Create a calendar event",
+      "capabilityKind": "action",
+      "tags": ["event", "create"]
+    },
+    {
+      "slug": "event_update",
+      "label": "Event Update",
+      "description": "Update a calendar event",
+      "capabilityKind": "action",
+      "tags": ["event", "update"]
+    },
+    {
+      "slug": "event_delete",
+      "label": "Event Delete",
+      "description": "Delete a calendar event",
+      "capabilityKind": "action",
+      "tags": ["event", "delete"]
+    },
+    {
+      "slug": "availability_check",
+      "label": "Availability Check",
+      "description": "Check availability",
+      "capabilityKind": "query",
+      "tags": ["availability", "check"]
+    },
+    {
+      "slug": "meeting_schedule",
+      "label": "Meeting Schedule",
+      "description": "Schedule a meeting",
+      "capabilityKind": "action",
+      "tags": ["meeting", "schedule"]
+    },
+    {
+      "slug": "reminder_set",
+      "label": "Reminder Set",
+      "description": "Set a reminder",
+      "capabilityKind": "action",
+      "tags": ["reminder", "set"]
+    },
+    {
+      "slug": "post_create",
+      "label": "Post Create",
+      "description": "Create a social post",
+      "capabilityKind": "action",
+      "tags": ["post", "create"]
+    },
+    {
+      "slug": "post_like",
+      "label": "Post Like",
+      "description": "Like a social post",
+      "capabilityKind": "action",
+      "tags": ["post", "like"]
+    },
+    {
+      "slug": "post_comment",
+      "label": "Post Comment",
+      "description": "Comment on a social post",
+      "capabilityKind": "action",
+      "tags": ["post", "comment"]
+    },
+    {
+      "slug": "post_share",
+      "label": "Post Share",
+      "description": "Share a social post",
+      "capabilityKind": "action",
+      "tags": ["post", "share"]
+    },
+    {
+      "slug": "post_bookmark",
+      "label": "Post Bookmark",
+      "description": "Bookmark a social post",
+      "capabilityKind": "action",
+      "tags": ["post", "bookmark"]
+    },
+    {
+      "slug": "feed_scroll",
+      "label": "Feed Scroll",
+      "description": "Scroll through the feed",
+      "capabilityKind": "action",
+      "tags": ["feed", "scroll"]
+    },
+    {
+      "slug": "profile_update",
+      "label": "Profile Update",
+      "description": "Update user profile",
+      "capabilityKind": "action",
+      "tags": ["profile", "update"]
+    },
+    {
+      "slug": "follower_follow",
+      "label": "Follower Follow",
+      "description": "Follow a user",
+      "capabilityKind": "action",
+      "tags": ["follower", "follow"]
+    },
+    {
+      "slug": "follower_unfollow",
+      "label": "Follower Unfollow",
+      "description": "Unfollow a user",
+      "capabilityKind": "action",
+      "tags": ["follower", "unfollow"]
+    },
+    {
+      "slug": "notification_manage",
+      "label": "Notification Manage",
+      "description": "Manage notification settings",
+      "capabilityKind": "config",
+      "tags": ["notification", "manage"]
+    },
+    {
+      "slug": "settings_update",
+      "label": "Settings Update",
+      "description": "Update application settings",
+      "capabilityKind": "config",
+      "tags": ["settings", "update"]
+    },
+    {
+      "slug": "theme_change",
+      "label": "Theme Change",
+      "description": "Change UI theme",
+      "capabilityKind": "config",
+      "tags": ["theme", "change"]
+    },
+    {
+      "slug": "language_set",
+      "label": "Language Set",
+      "description": "Set display language",
+      "capabilityKind": "config",
+      "tags": ["language", "set"]
+    },
+    {
+      "slug": "privacy_manage",
+      "label": "Privacy Manage",
+      "description": "Manage privacy settings",
+      "capabilityKind": "config",
+      "tags": ["privacy", "manage"]
+    },
+    {
+      "slug": "notification_preferences",
+      "label": "Notification Preferences",
+      "description": "Set notification preferences",
+      "capabilityKind": "config",
+      "tags": ["notification", "preferences"]
+    },
+    {
+      "slug": "share_workspace",
+      "label": "Share Workspace",
+      "description": "Share workspace with others",
+      "capabilityKind": "action",
+      "tags": ["share", "workspace"]
+    },
+    {
+      "slug": "invite_member",
+      "label": "Invite Member",
+      "description": "Invite member to workspace",
+      "capabilityKind": "action",
+      "tags": ["invite", "member"]
+    },
+    {
+      "slug": "permission_manage",
+      "label": "Permission Manage",
+      "description": "Manage permissions",
+      "capabilityKind": "config",
+      "tags": ["permission", "manage"]
+    },
+    {
+      "slug": "comment_thread",
+      "label": "Comment Thread",
+      "description": "Comment on a thread",
+      "capabilityKind": "action",
+      "tags": ["comment", "thread"]
+    },
+    {
+      "slug": "mention_user",
+      "label": "Mention User",
+      "description": "Mention a user",
+      "capabilityKind": "action",
+      "tags": ["mention", "user"]
+    },
+    {
+      "slug": "data_import",
+      "label": "Data Import",
+      "description": "Import data from external source",
+      "capabilityKind": "action",
+      "tags": ["data", "import"]
+    },
+    {
+      "slug": "data_export",
+      "label": "Data Export",
+      "description": "Export data to file",
+      "capabilityKind": "action",
+      "tags": ["data", "export"]
+    },
+    {
+      "slug": "api_call",
+      "label": "API Call",
+      "description": "Make an API call",
+      "capabilityKind": "action",
+      "tags": ["api", "call"]
+    },
+    {
+      "slug": "webhook_set",
+      "label": "Webhook Set",
+      "description": "Set up a webhook",
+      "capabilityKind": "action",
+      "tags": ["webhook", "set"]
+    },
+    {
+      "slug": "integration_connect",
+      "label": "Integration Connect",
+      "description": "Connect an integration",
+      "capabilityKind": "action",
+      "tags": ["integration", "connect"]
+    },
+    {
+      "slug": "integration_disconnect",
+      "label": "Integration Disconnect",
+      "description": "Disconnect an integration",
+      "capabilityKind": "action",
+      "tags": ["integration", "disconnect"]
+    },
+    {
+      "slug": "global_search",
+      "label": "Global Search",
+      "description": "Search across all content",
+      "capabilityKind": "query",
+      "tags": ["global", "search"]
+    },
+    {
+      "slug": "filter_apply",
+      "label": "Filter Apply",
+      "description": "Apply search filters",
+      "capabilityKind": "action",
+      "tags": ["filter", "apply"]
+    },
+    {
+      "slug": "sort_results",
+      "label": "Sort Results",
+      "description": "Sort search results",
+      "capabilityKind": "action",
+      "tags": ["sort", "results"]
+    },
+    {
+      "slug": "history_view",
+      "label": "History View",
+      "description": "View search history",
+      "capabilityKind": "query",
+      "tags": ["history", "view"]
+    },
+    {
+      "slug": "trending_view",
+      "label": "Trending View",
+      "description": "View trending content",
+      "capabilityKind": "query",
+      "tags": ["trending", "view"]
+    }
+  ]
+}

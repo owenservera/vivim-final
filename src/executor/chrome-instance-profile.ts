@@ -123,10 +123,18 @@ async function probePath(cmd: string): Promise<string | null> {
   return null
 }
 
-/** Build the Chrome launch argument list from a profile (FR-12/13). */
+/**
+ * Build the Chrome launch argument list from a profile.
+ *
+ * Minimalist flag set — only essential flags that don't leak automation signals.
+ * Removed: --no-startup-window (headless-only signal), --disable-gpu (triggers
+ * SwiftShader), --window-position=-32000,-32000 (off-screen anomaly),
+ * --disable-features=VizDisplayCompositor (real users don't set this),
+ * --user-agent="..." (hardcoded version drifts; --headless=new uses real UA),
+ * and 6 background-timer flags (no detection value for single-tab automation).
+ */
 export function buildChromeArgs(profile: ChromeInstanceProfile): string[] {
   const args: string[] = []
-  const IS_WIN = process.platform === 'win32'
 
   if (profile.debugPort) args.push(`--remote-debugging-port=${profile.debugPort}`)
 
@@ -139,49 +147,24 @@ export function buildChromeArgs(profile: ChromeInstanceProfile): string[] {
   switch (profile.mode) {
     case 'headless-new':
       args.push('--headless=new')
-      args.push('--disable-gpu')
       break
     case 'headless':
       args.push('--headless')
-      args.push('--disable-gpu')
       break
     case 'headed':
-      args.push('--window-position=100,100')
       break
   }
 
-  // On Windows keep headed windows off-screen but allow headed for re-login
-  if (profile.mode !== 'headed' && IS_WIN) {
-    args.push('--window-position=-32000,-32000')
-  }
-
+  // Realistic window dimensions — replaces the anomalous -32000,-32000 position
   if (profile.windowSize) {
     args.push(`--window-size=${profile.windowSize.width},${profile.windowSize.height}`)
+  } else {
+    args.push('--window-size=1920,1080')
   }
 
-  // Anti-throttle / determinism flags (NFR-7): no session restore, no nags,
-  // no background throttling, and strip the AutomationControlled signal so
-  // Cloudflare/OAuth interstitials don't trap a logged-in profile.
-  args.push('--disable-features=VizDisplayCompositor')
-  args.push('--disable-background-timer-throttling')
-  args.push('--disable-backgrounding-occluded-windows')
-  args.push('--disable-renderer-backgrounding')
-  args.push('--no-default-browser-check')
-  args.push('--no-pings')
+  // Essential flags only — no detection signals
   args.push('--no-first-run')
-  args.push('--disable-restore-session-state')
-  if (profile.mode !== 'headed') {
-    args.push('--no-startup-window')
-  }
-  args.push('--disable-session-crashed-bubble')
-  args.push('--disable-restore-last-session')
   args.push('--disable-blink-features=AutomationControlled')
-  // Quote the user-agent to prevent shell splitting on spaces (Windows Bun.spawn
-  // passes args through cmd.exe which tokenizes unquoted spaces).
-  args.push(
-    '--user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
-      '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"',
-  )
 
   if (profile.extraArgs?.length) args.push(...profile.extraArgs)
   return args

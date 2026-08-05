@@ -10,19 +10,19 @@ import { createHash } from 'node:crypto'
 import {
   existsSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
-  statSync,
-  writeFileSync,
-  unlinkSync,
+  readdirSync,
   rmSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
 } from 'node:fs'
-import { join, dirname, relative, resolve } from 'node:path'
-import { closePrisma, getPrisma, initPrismaWal } from '../storage/prisma.js'
+import { dirname, join, relative, resolve } from 'node:path'
 import { getDataDir, getDbPath, setStoragePaths } from '../config.js'
 import { EngineError } from '../errors.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
+import { closePrisma, getPrisma, initPrismaWal } from '../storage/prisma.js'
 
 const log = getLogger('storage-relocation')
 
@@ -198,7 +198,12 @@ export class StorageRelocationEngine {
   // ── Full Relocation Pipeline ─────────────────────────────────────────────
 
   async relocate(targetDir: string): Promise<RelocationResult> {
-    if (this.status.phase !== 'idle' && this.status.phase !== 'done' && this.status.phase !== 'failed' && this.status.phase !== 'rolled_back') {
+    if (
+      this.status.phase !== 'idle' &&
+      this.status.phase !== 'done' &&
+      this.status.phase !== 'failed' &&
+      this.status.phase !== 'rolled_back'
+    ) {
       throw new EngineError('Migration already in progress')
     }
 
@@ -334,10 +339,7 @@ export class StorageRelocationEngine {
       log.warn({ targetDir }, 'Target may be a network share or removable drive')
     }
 
-    log.info(
-      { sourceSize, targetDir },
-      'Phase 1: PREFLIGHT complete',
-    )
+    log.info({ sourceSize, targetDir }, 'Phase 1: PREFLIGHT complete')
   }
 
   // ── Phase 2: COPY ───────────────────────────────────────────────────────
@@ -618,7 +620,12 @@ export class StorageRelocationEngine {
       logs: this.dirSize(join(dataDir, 'logs')),
       other: 0,
     }
-    breakdown.other = totalBytes - breakdown.database - breakdown.chromeProfiles - breakdown.parserCache - breakdown.logs
+    breakdown.other =
+      totalBytes -
+      breakdown.database -
+      breakdown.chromeProfiles -
+      breakdown.parserCache -
+      breakdown.logs
 
     const archivedLocations = await this.store.getArchivedLocations()
 

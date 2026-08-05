@@ -35,8 +35,9 @@ function mockConversationStore(): ConversationStore {
     createConversation: async (input) => {
       const row: ConversationRow = {
         id: `conv-${Date.now()}`,
-        providerSessionId: input.providerSessionId,
+        providerSessionId: input.providerSessionId ?? null,
         providerId: input.providerId,
+        accountId: input.accountId ?? null,
         title: input.title ?? null,
         state: input.state ?? 'active',
         messageCount: 0,
@@ -44,6 +45,10 @@ function mockConversationStore(): ConversationStore {
         contextJson: '{}',
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        source: input.source ?? 'live',
+        externalId: input.externalId ?? null,
+        importJobId: input.importJobId ?? null,
+        syncedAt: input.syncedAt ?? null,
       }
       return row
     },
@@ -87,6 +92,10 @@ function mockConversationStore(): ConversationStore {
     getAttachments: async () => [],
     getAttachment: async () => null,
     deleteAttachment: async () => {},
+    getConversationByExternalId: async () => null,
+    upsertConversationByExternalId: async () => ({ id: 'x' }) as never,
+    listConversationsByAccountId: async () => [],
+    createMessages: async () => [],
   }
 }
 

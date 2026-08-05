@@ -9,7 +9,7 @@ import { applyManifestEntries } from '../../../src/lib/ledger-client/manifest-ap
 
 // Mock Prisma for integration test
 function makeMockPrisma() {
-  const store: Record<string, Record<string, unknown>[]> = {
+  const store: Record<string, Record<string, unknown>[] | undefined> = {
     providerDefinition: [],
     providerEndpoint: [],
     providerParser: [],
@@ -22,45 +22,45 @@ function makeMockPrisma() {
     prisma: {
       providerDefinition: {
         upsert: mock(async ({ where, create }: any) => {
-          const existing = store.providerDefinition.find((r) => r.id === where.id)
+          const existing = store.providerDefinition!.find((r) => r.id === where.id)
           if (existing) {
             Object.assign(existing, create)
             return existing
           }
-          store.providerDefinition.push(create)
+          store.providerDefinition!.push(create)
           return create
         }),
         findUnique: mock(async ({ where }: any) => {
-          return store.providerDefinition.find((r) => r.id === where.id) ?? null
+          return store.providerDefinition!.find((r) => r.id === where.id) ?? null
         }),
       },
       providerEndpoint: {
         upsert: mock(async ({ create }: any) => {
-          store.providerEndpoint.push(create)
+          store.providerEndpoint!.push(create)
           return create
         }),
       },
       providerParser: {
         upsert: mock(async ({ create }: any) => {
-          store.providerParser.push(create)
+          store.providerParser!.push(create)
           return create
         }),
       },
       providerCapability: {
         upsert: mock(async ({ create }: any) => {
-          store.providerCapability.push(create)
+          store.providerCapability!.push(create)
           return create
         }),
       },
       capabilityBinding: {
         upsert: mock(async ({ create }: any) => {
-          store.capabilityBinding.push(create)
+          store.capabilityBinding!.push(create)
           return create
         }),
       },
       capabilityTaxonomy: {
         upsert: mock(async ({ create }: any) => {
-          store.capabilityTaxonomy.push(create)
+          store.capabilityTaxonomy!.push(create)
           return create
         }),
       },
@@ -93,7 +93,14 @@ describe('sync-pipeline (integration)', () => {
       ),
     )
 
-    const config = {
+    const config: {
+      baseUrl: string
+      userToken: string | null
+      subdomain: string | null
+      userId: string | null
+      publicKeyHex: string
+      syncIntervalMs: number
+    } = {
       baseUrl: 'https://ledger.test',
       userToken: null,
       subdomain: null,
@@ -174,8 +181,8 @@ describe('sync-pipeline (integration)', () => {
 
     const applyResult = await applyManifestEntries(mockDb as never, entries)
     expect(applyResult.upserted).toBe(1)
-    expect(mockDb.store.providerDefinition.length).toBe(1)
-    expect(mockDb.store.providerDefinition[0].slug).toBe('gemini')
+    expect(mockDb.store.providerDefinition!.length).toBe(1)
+    expect(mockDb.store.providerDefinition![0]!.slug).toBe('gemini')
 
     // Step 4: Mint tunnel JWT
     fetchMock.mockResolvedValueOnce(
@@ -343,12 +350,12 @@ describe('sync-pipeline (integration)', () => {
 
     expect(result.upserted).toBe(6)
     expect(result.errors).toEqual([])
-    expect(mockDb.store.providerDefinition.length).toBe(1)
-    expect(mockDb.store.providerEndpoint.length).toBe(1)
-    expect(mockDb.store.providerParser.length).toBe(1)
-    expect(mockDb.store.providerCapability.length).toBe(1)
-    expect(mockDb.store.capabilityBinding.length).toBe(1)
-    expect(mockDb.store.capabilityTaxonomy.length).toBe(1)
+    expect(mockDb.store.providerDefinition!.length).toBe(1)
+    expect(mockDb.store.providerEndpoint!.length).toBe(1)
+    expect(mockDb.store.providerParser!.length).toBe(1)
+    expect(mockDb.store.providerCapability!.length).toBe(1)
+    expect(mockDb.store.capabilityBinding!.length).toBe(1)
+    expect(mockDb.store.capabilityTaxonomy!.length).toBe(1)
   })
 
   it('chain verification catches tampered entries', async () => {

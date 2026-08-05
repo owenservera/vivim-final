@@ -1,6 +1,7 @@
 // src/executor/fleet-supervisor.ts
 // FleetSupervisor — Chrome instance lifecycle management with state machine + circuit breaker.
 
+import { catchDebug } from '../lib/catch-logger.js'
 import type { GovernorStore } from '../storage/contracts/governor-store.js'
 import { BunCdpClient } from './cdp.js'
 import { FleetLimiter } from './fleet-limiter.js'
@@ -10,7 +11,6 @@ import {
   killChrome,
   launchChrome,
 } from './launcher.js'
-import { catchDebug } from '../lib/catch-logger.js'
 import { PortReaper } from './port-reaper.js'
 import { ProfileAllocator } from './profile-allocator.js'
 import { readSystemPressure } from './system-pressure.js'

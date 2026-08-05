@@ -21,7 +21,9 @@ export const AutonomousGoalSchema = z.object({
   description: z.string().min(1, 'goal.description is required'),
   maxSteps: z.number().int().positive().optional(),
   maxDurationMs: z.number().int().positive().optional(),
-  requireApprovalAbove: z.enum(['read', 'write', 'navigate', 'destructive', 'financial']).optional(),
+  requireApprovalAbove: z
+    .enum(['read', 'write', 'navigate', 'destructive', 'financial'])
+    .optional(),
   allowBrowser: z.boolean().optional(),
   costBudgetCents: z.number().int().nonnegative().optional(),
   tokenBudget: z.number().int().nonnegative().optional(),
@@ -159,13 +161,15 @@ export const FleetStartSchema = z.object({
 
 export const InterpretSchema = z.object({
   text: z.string().min(1, 'text is required'),
-  ctx: z.object({
-    conversationId: OptionalString,
-    providerId: OptionalString,
-    slaveId: OptionalString,
-    userId: OptionalString,
-    metadata: MetadataRecord,
-  }).optional(),
+  ctx: z
+    .object({
+      conversationId: OptionalString,
+      providerId: OptionalString,
+      slaveId: OptionalString,
+      userId: OptionalString,
+      metadata: MetadataRecord,
+    })
+    .optional(),
 })
 
 // ── Plugin schemas ───────────────────────────────────────────────────────────

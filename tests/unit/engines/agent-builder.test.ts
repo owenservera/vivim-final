@@ -11,10 +11,10 @@ describe('AgentBuilderEngine', () => {
   beforeEach(() => {
     nodesMap = new Map()
     mockStore = {
-      startBuilderRun: async (intent, mode, initiator) => {
+      startBuilderRun: async (intent: Record<string, unknown>, mode: string, initiator: { kind: string; id: string }) => {
         return { id: 'builder-run-1' }
       },
-      spawnFromBuilder: async (builderRunId) => {
+      spawnFromBuilder: async (builderRunId: string) => {
         return { agentId: 'agent-1', runId: 'run-1' }
       },
       nodes: {
@@ -33,7 +33,7 @@ describe('AgentBuilderEngine', () => {
     const res = await engine.startBuilderRun(
       { goal: 'build agent' },
       'human_led',
-      { id: 'user-1', type: 'user' },
+      { id: 'user-1', kind: 'user' },
     )
     expect(res.id).toBe('builder-run-1')
   })
@@ -54,7 +54,7 @@ describe('AgentBuilderEngine', () => {
     const res = await engine.spawnChild(
       'parent-run-1',
       { goal: 'child task' },
-      { id: 'parent-agent-1', type: 'agent' },
+      { id: 'parent-agent-1', kind: 'agent' },
     )
 
     expect(res.builderRunId).toBe('builder-run-1')

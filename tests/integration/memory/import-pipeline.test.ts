@@ -70,8 +70,9 @@ function makeConversationStore(): ConversationStore {
       convCounter++
       return {
         id: `conv-${convCounter}`,
-        providerSessionId: input.providerSessionId,
+        providerSessionId: input.providerSessionId ?? null,
         providerId: input.providerId,
+        accountId: input.accountId ?? null,
         title: input.title ?? null,
         state: input.state ?? 'active',
         messageCount: 0,
@@ -79,7 +80,10 @@ function makeConversationStore(): ConversationStore {
         contextJson: '{}',
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        providerConversationUrl: null,
+        source: input.source ?? 'live',
+        externalId: input.externalId ?? null,
+        importJobId: input.importJobId ?? null,
+        syncedAt: input.syncedAt ?? null,
       }
     },
     updateConversation: async () => {},
@@ -122,6 +126,10 @@ function makeConversationStore(): ConversationStore {
     getAttachments: async () => [],
     getAttachment: async () => null,
     deleteAttachment: async () => {},
+    getConversationByExternalId: async () => null,
+    upsertConversationByExternalId: async () => ({ id: 'x' }) as never,
+    listConversationsByAccountId: async () => [],
+    createMessages: async () => [],
   }
 }
 

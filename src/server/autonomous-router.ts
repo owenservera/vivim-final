@@ -1,14 +1,14 @@
 // src/server/autonomous-router.ts
 // REST API for autonomous task execution and observability
 
+import type { AutonomousExecutionEngine, AutonomousGoal } from '../engines/autonomous-execution.js'
+import type { ActionClassification } from '../engines/autonomous-execution.js'
+import type { ExecutionPolicyEngine } from '../engines/execution-policy.js'
 import {
   AutonomousExecuteSchema,
   GateResolveSchema,
   ReplaySchema,
 } from '../schema/api-validators.js'
-import type { AutonomousExecutionEngine, AutonomousGoal } from '../engines/autonomous-execution.js'
-import type { ActionClassification } from '../engines/autonomous-execution.js'
-import type { ExecutionPolicyEngine } from '../engines/execution-policy.js'
 
 export interface AutonomousRouterDeps {
   autonomousEngine: AutonomousExecutionEngine
@@ -46,7 +46,8 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
         tokenBudget: 100_000,
         iterationBudget: 200,
         ...parsed.data.goal,
-        requireApprovalAbove: (parsed.data.goal.requireApprovalAbove ?? 'destructive') as ActionClassification,
+        requireApprovalAbove: (parsed.data.goal.requireApprovalAbove ??
+          'destructive') as ActionClassification,
       }
       const task = await autonomousEngine.execute(goal)
       return json({ taskId: task.id, status: task.status })

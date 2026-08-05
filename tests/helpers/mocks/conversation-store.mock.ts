@@ -5,6 +5,7 @@ import type {
   ConversationMessageRow,
   ConversationRow,
   ConversationStore,
+  MessageAttachmentRow,
 } from '../../../src/storage/contracts/conversation-store.js'
 
 export function createMockConversationStore(
@@ -18,8 +19,9 @@ export function createMockConversationStore(
     createConversation: mock((input) => {
       const row: ConversationRow = {
         id: crypto.randomUUID(),
-        providerSessionId: input.providerSessionId,
+        providerSessionId: input.providerSessionId ?? null,
         providerId: input.providerId,
+        accountId: input.accountId ?? null,
         title: input.title ?? null,
         state: input.state ?? 'active',
         messageCount: 0,
@@ -27,6 +29,10 @@ export function createMockConversationStore(
         contextJson: input.contextJson ?? '{}',
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        source: input.source ?? 'live',
+        externalId: input.externalId ?? null,
+        importJobId: input.importJobId ?? null,
+        syncedAt: input.syncedAt ?? null,
       }
       conversations.set(row.id, row)
       return row
@@ -34,6 +40,30 @@ export function createMockConversationStore(
     updateConversation: mock(() => {}),
     deleteConversation: mock(() => {}),
     listConversations: mock(() => [...conversations.values()]),
+    getConversationByExternalId: mock(() => null),
+    upsertConversationByExternalId: mock((input) => {
+      const row: ConversationRow = {
+        id: crypto.randomUUID(),
+        providerSessionId: input.providerSessionId ?? null,
+        providerId: input.providerId,
+        accountId: input.accountId ?? null,
+        title: input.title ?? null,
+        state: input.state ?? 'active',
+        messageCount: 0,
+        lastMessageAt: null,
+        contextJson: input.contextJson ?? '{}',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        source: input.source ?? 'live',
+        externalId: input.externalId ?? null,
+        importJobId: input.importJobId ?? null,
+        syncedAt: input.syncedAt ?? null,
+      }
+      conversations.set(row.id, row)
+      return row
+    }),
+    listConversationsByAccountId: mock(() => []),
+    createMessages: mock(() => []),
     createMessage: mock((input) => {
       const msg: ConversationMessageRow = {
         id: crypto.randomUUID(),

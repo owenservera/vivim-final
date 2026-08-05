@@ -27,15 +27,14 @@ describe('MemoryEngine.recordMemory() Phase 0A patch', () => {
   let engine: MemoryEngine
 
   beforeEach(() => {
-    engine = new MemoryEngine({} as any)
+    engine = new MemoryEngine({} as never, {} as never, {} as never, {} as never)
   })
 
   it('recordMemory is a function on MemoryEngine', () => {
     expect(typeof (engine as any).recordMemory).toBe('function')
   })
 
-  it('recordMemory accepts memory type parameter', () => {
-    // Verify the method signature accepts the 3-arg form
-    expect((engine as any).recordMemory.length).toBeLessThanOrEqual(4)
+  it('recordMemory accepts an input object', () => {
+    expect((engine as any).recordMemory.length).toBeLessThanOrEqual(2)
   })
 })

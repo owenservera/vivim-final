@@ -1,3 +1,4 @@
+import { Database } from 'bun:sqlite'
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -37,15 +38,17 @@ describe('StorageRelocationEngine', () => {
 
   beforeEach(() => {
     // Reset global mutable state from previous tests
-    setStoragePaths(undefined)
+    setStoragePaths(undefined as never, undefined as never)
 
     // Create a source dir with test files (simulates a data directory)
     sourceDir = mkdtempSync(join(tmpdir(), 'vivim-source-'))
-    writeFileSync(join(sourceDir, 'cap-store.sqlite'), 'fake db content')
+    const db = new Database(join(sourceDir, 'cap-store.sqlite'))
+    db.exec('CREATE TABLE IF NOT EXISTS _test (id INTEGER PRIMARY KEY)')
+    db.close()
     writeFileSync(join(sourceDir, 'test-file.txt'), 'hello world')
 
     // Set the mutable data dir to our source
-    setStoragePaths(sourceDir)
+    setStoragePaths(sourceDir, join(sourceDir, 'cap-store.sqlite'))
 
     targetDir = mkdtempSync(join(tmpdir(), 'vivim-target-'))
     rmSync(targetDir, { recursive: true, force: true })
@@ -58,7 +61,7 @@ describe('StorageRelocationEngine', () => {
   })
 
   afterEach(() => {
-    setStoragePaths(undefined)
+    setStoragePaths(undefined as never, undefined as never)
     try {
       rmSync(sourceDir, { recursive: true, force: true })
     } catch {}
@@ -83,7 +86,7 @@ describe('StorageRelocationEngine', () => {
   })
 
   it('should handle nonexistent source gracefully', async () => {
-    setStoragePaths('/nonexistent/path/that/does/not/exist')
+    setStoragePaths('/nonexistent/path/that/does/not/exist', '/nonexistent/path/cap-store.sqlite')
     const e = new StorageRelocationEngine(createMockStore(), { minFreeSpaceMultiplier: 1 })
     const result = await e.relocate(targetDir)
     expect(result.ok).toBe(false)

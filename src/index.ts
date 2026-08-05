@@ -12,6 +12,17 @@ export * from './schema/index.js'
 export { CapabilityEventBus } from './engines/capability-event-bus.js'
 export { ChromeGovernor } from './engines/chrome-governor.js'
 export { ConversationManager } from './engines/conversation-manager.js'
+export type {
+  ProviderConversationAdapter,
+  ConversationHeader,
+  ConversationMessage,
+  ConversationFull,
+  ConversationArtifact,
+  PaginatedResult,
+  AuthContext,
+  AdapterErrorCode,
+} from './engines/provider-conversation-adapter.js'
+export { AdapterError } from './engines/provider-conversation-adapter.js'
 export { StreamParserEngine } from './engines/stream-parser.js'
 export { CapabilityEngine } from './engines/capability.js'
 export { ProviderRegistrar } from './engines/provider-registrar.js'

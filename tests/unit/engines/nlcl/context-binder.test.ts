@@ -67,6 +67,7 @@ describe('context-binder', () => {
           id: 'conv-1',
           providerSessionId: 'ps-1',
           providerId: 'gemini',
+          accountId: null,
           title: null,
           state: 'active',
           messageCount: 0,
@@ -74,6 +75,10 @@ describe('context-binder', () => {
           contextJson: '{}',
           createdAt: Date.now(),
           updatedAt: Date.now(),
+          source: 'live',
+          externalId: null,
+          importJobId: null,
+          syncedAt: null,
         }),
       }
       const ctx = await bindContext({ conversationId: 'conv-1' }, { conversationStore: convStore })

@@ -26,6 +26,7 @@ function makeConv(overrides?: Partial<ConversationRow>): ConversationRow {
     id: 'conv_1',
     providerSessionId: 'session_1',
     providerId: 'claude',
+    accountId: null,
     title: 'Test',
     state: 'active',
     messageCount: 0,
@@ -33,6 +34,10 @@ function makeConv(overrides?: Partial<ConversationRow>): ConversationRow {
     contextJson: '{}',
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    source: 'live',
+    externalId: null,
+    importJobId: null,
+    syncedAt: null,
     ...overrides,
   }
 }

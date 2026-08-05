@@ -28,6 +28,7 @@ function makeConv(overrides?: Partial<ConversationRow>): ConversationRow {
     id: 'conv_1',
     providerSessionId: 'session_1',
     providerId: 'claude',
+    accountId: null,
     title: 'Test',
     state: 'active',
     messageCount: 0,
@@ -35,6 +36,10 @@ function makeConv(overrides?: Partial<ConversationRow>): ConversationRow {
     contextJson: '{}',
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    source: 'live',
+    externalId: null,
+    importJobId: null,
+    syncedAt: null,
     ...overrides,
   }
 }
@@ -154,6 +159,10 @@ function mockStore(overrides?: Partial<ConversationStore>): ConversationStore {
     getAttachments: mock(() => Promise.resolve([])),
     getAttachment: mock(() => Promise.resolve(null)),
     deleteAttachment: mock(() => Promise.resolve()),
+    getConversationByExternalId: mock(() => Promise.resolve(null)),
+    upsertConversationByExternalId: mock((input) => Promise.resolve(makeConv({ id: 'conv_upsert', ...input }))),
+    listConversationsByAccountId: mock(() => Promise.resolve([])),
+    createMessages: mock(() => Promise.resolve([])),
     ...overrides,
   }
 }

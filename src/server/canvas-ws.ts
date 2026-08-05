@@ -13,8 +13,8 @@ import type { PrimitiveKind, PrimitiveProvider } from '../canvas/primitives.js'
 import { fnPrimitive } from '../canvas/primitives.js'
 import type { CanvasDefinition, LayerInstance, OracleReadProvider } from '../canvas/types.js'
 import type { CapabilityExecutor } from '../canvas/types.js'
-import { catchDebug } from '../lib/catch-logger.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { CapStoreDb } from '../storage/db.js'
 
 export interface WsLike {

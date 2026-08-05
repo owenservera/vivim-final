@@ -24,11 +24,12 @@ describe('CRDTDocument', () => {
   it('applyOperation increments clock', () => {
     const doc = new CRDTDocument('doc-1')
     doc.applyOperation({
+      id: 'op-1',
       type: 'insert',
-      path: '/text',
+      position: 0,
       value: 'hello',
       lamportClock: 1,
-      peerId: 'peer-1',
+      authorPeerId: 'peer-1',
     })
     expect(doc.getClock()).toBe(2)
     expect(doc.getVersion()).toBe('v1:2')
@@ -36,19 +37,19 @@ describe('CRDTDocument', () => {
 
   it('applyOperation uses max of clocks', () => {
     const doc = new CRDTDocument('doc-1')
-    doc.applyOperation({ type: 'insert', path: '/a', value: 1, lamportClock: 5, peerId: 'p1' })
+    doc.applyOperation({ id: 'op-a', type: 'insert', position: 0, value: 'a', lamportClock: 5, authorPeerId: 'p1' })
     expect(doc.getClock()).toBe(6) // max(0, 5) + 1 = 6
-    doc.applyOperation({ type: 'insert', path: '/b', value: 2, lamportClock: 3, peerId: 'p2' })
+    doc.applyOperation({ id: 'op-b', type: 'insert', position: 1, value: 'b', lamportClock: 3, authorPeerId: 'p2' })
     expect(doc.getClock()).toBe(7) // max(6, 3) + 1 = 7
-    doc.applyOperation({ type: 'insert', path: '/c', value: 3, lamportClock: 10, peerId: 'p3' })
+    doc.applyOperation({ id: 'op-c', type: 'insert', position: 2, value: 'c', lamportClock: 10, authorPeerId: 'p3' })
     expect(doc.getClock()).toBe(11) // max(7, 10) + 1 = 11
   })
 
   it('getOperationsSince returns only newer ops', () => {
     const doc = new CRDTDocument('doc-1')
-    doc.applyOperation({ type: 'insert', path: '/a', value: 1, lamportClock: 1, peerId: 'p1' })
-    doc.applyOperation({ type: 'insert', path: '/b', value: 2, lamportClock: 3, peerId: 'p2' })
-    doc.applyOperation({ type: 'insert', path: '/c', value: 3, lamportClock: 5, peerId: 'p3' })
+    doc.applyOperation({ id: 'op-a', type: 'insert', position: 0, value: 'a', lamportClock: 1, authorPeerId: 'p1' })
+    doc.applyOperation({ id: 'op-b', type: 'insert', position: 1, value: 'b', lamportClock: 3, authorPeerId: 'p2' })
+    doc.applyOperation({ id: 'op-c', type: 'insert', position: 2, value: 'c', lamportClock: 5, authorPeerId: 'p3' })
 
     const since1 = doc.getOperationsSince(1)
     expect(since1).toHaveLength(2) // ops with clock 3 and 5
@@ -62,8 +63,8 @@ describe('CRDTDocument', () => {
 
   it('getOperationsSince with clock 0 returns all', () => {
     const doc = new CRDTDocument('doc-1')
-    doc.applyOperation({ type: 'insert', path: '/a', value: 1, lamportClock: 1, peerId: 'p1' })
-    doc.applyOperation({ type: 'delete', path: '/b', lamportClock: 2, peerId: 'p2' })
+    doc.applyOperation({ id: 'op-a', type: 'insert', position: 0, value: 'a', lamportClock: 1, authorPeerId: 'p1' })
+    doc.applyOperation({ id: 'op-b', type: 'delete', position: 1, lamportClock: 2, authorPeerId: 'p2' })
 
     const all = doc.getOperationsSince(0)
     expect(all).toHaveLength(2)

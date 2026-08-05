@@ -14,24 +14,24 @@
  * dispatched via cap:canvas:shell-command. No second transport.
  */
 
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { getEngineBag } from '@/lib/canvas-engine-bootstrap';
+import { getEngineBag } from '@/lib/canvas-engine-bootstrap'
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 const REQUEST_SCHEMA = z.object({
   command: z.string().min(1),
   workspaceId: z.string().optional(),
   userId: z.string().optional(),
-});
+})
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as unknown;
-  const parsed = REQUEST_SCHEMA.safeParse(body);
+  const body = (await req.json()) as unknown
+  const parsed = REQUEST_SCHEMA.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 });
+    return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 })
   }
 
-  const bag = getEngineBag();
+  const bag = getEngineBag()
 
   // The ShellCommandEngine emits chunks via the event bus → SSE forwarder
   // → /api/canvas/events → canvas shell card. The synchronous return is
@@ -40,14 +40,14 @@ export async function POST(req: Request) {
     command: parsed.data.command,
     workspaceId: parsed.data.workspaceId,
     userId: parsed.data.userId,
-  });
+  })
 
-  return NextResponse.json(result);
+  return NextResponse.json(result)
 }
 
 /** GET /api/canvas/shell — list all registered commands (autocomplete). */
 export async function GET() {
-  const bag = getEngineBag();
-  const commands = await bag.shellCommandEngine.listCommands();
-  return NextResponse.json({ ok: true, commands });
+  const bag = getEngineBag()
+  const commands = await bag.shellCommandEngine.listCommands()
+  return NextResponse.json({ ok: true, commands })
 }

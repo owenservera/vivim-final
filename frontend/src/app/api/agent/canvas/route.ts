@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ulid } from '@/lib/ulid';
-import type { AgentCanvasOp, AgentCanvasPlan } from '@/shared/agent-canvas';
+import { ulid } from '@/lib/ulid'
+import type { AgentCanvasOp, AgentCanvasPlan } from '@/shared/agent-canvas'
+import { type NextRequest, NextResponse } from 'next/server'
 
 /**
  * POST /api/agent/canvas/plan
@@ -8,23 +8,30 @@ import type { AgentCanvasOp, AgentCanvasPlan } from '@/shared/agent-canvas';
  * Production: wire to nlcl engine for structured extraction.
  */
 export async function POST(req: NextRequest) {
-  const parsed = await req.json().catch(() => ({}));
-  const prompt = (parsed.prompt ?? '').toString().trim();
+  const parsed = await req.json().catch(() => ({}))
+  const prompt = (parsed.prompt ?? '').toString().trim()
 
   if (!prompt) {
-    return NextResponse.json({ error: 'Missing prompt' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing prompt' }, { status: 400 })
   }
 
-  const traceId = ulid();
-  const now = Date.now();
+  const traceId = ulid()
+  const now = Date.now()
 
   // Parse the prompt into proposed ops (stub — production wires to nlcl engine).
-  const promptLower = prompt.toLowerCase();
-  const ops: AgentCanvasOp[] = [];
+  const promptLower = prompt.toLowerCase()
+  const ops: AgentCanvasOp[] = []
 
   if (promptLower.includes('competitive analysis') || promptLower.includes('research')) {
     // Spawn 6 research nodes + a synthesis node.
-    const researchTopics = ['Market Overview', 'Competitor A', 'Competitor B', 'Pricing', 'SWOT', 'Synthesis'];
+    const researchTopics = [
+      'Market Overview',
+      'Competitor A',
+      'Competitor B',
+      'Pricing',
+      'SWOT',
+      'Synthesis',
+    ]
     researchTopics.forEach((title, i) => {
       ops.push({
         id: `op:${traceId}:${i}`,
@@ -39,8 +46,8 @@ export async function POST(req: NextRequest) {
         payload: { title, category: 'chat' },
         status: 'pending',
         createdAt: now + i,
-      });
-    });
+      })
+    })
     // Wire them.
     for (let i = 0; i < 5; i++) {
       ops.push({
@@ -50,17 +57,20 @@ export async function POST(req: NextRequest) {
         payload: { fromNodeId: `agent-node:${traceId}:${i}`, toNodeId: `agent-node:${traceId}:5` },
         status: 'pending',
         createdAt: now + 10 + i,
-      });
+      })
     }
   } else if (promptLower.includes('summarize') || promptLower.includes('summarise')) {
     ops.push({
       id: `op:${traceId}:0`,
       type: 'runLayout',
       action: 'layout',
-      payload: { summary: 'I would summarize the visible canvas region and create a synthesis node with the key findings.' },
+      payload: {
+        summary:
+          'I would summarize the visible canvas region and create a synthesis node with the key findings.',
+      },
       status: 'pending',
       createdAt: now,
-    });
+    })
   } else {
     // Default: spawn a single chat node.
     ops.push({
@@ -76,7 +86,7 @@ export async function POST(req: NextRequest) {
       payload: { title: `Agent: ${prompt.slice(0, 40)}`, category: 'chat' },
       status: 'pending',
       createdAt: now,
-    });
+    })
   }
 
   const plan: AgentCanvasPlan = {
@@ -88,7 +98,7 @@ export async function POST(req: NextRequest) {
     ops,
     status: 'proposed',
     createdAt: now,
-  };
+  }
 
-  return NextResponse.json({ ok: true, plan });
+  return NextResponse.json({ ok: true, plan })
 }

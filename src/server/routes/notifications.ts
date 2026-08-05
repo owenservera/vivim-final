@@ -1,25 +1,29 @@
 // src/server/routes/notifications.ts
 // REST API routes for notification lifecycle management.
 
+import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
-import { z } from 'zod'
 
 export function createNotificationsRouter(ctx: ServerContext) {
   return async function notificationsRouter(req: Request): Promise<Response | undefined> {
     const url = new URL(req.url)
     const path = url.pathname
 
-    const store = (ctx as unknown as { notificationStore?: {
-      getNotificationById(id: string): Promise<unknown>
-      queryNotifications(query: unknown): Promise<unknown[]>
-      createNotification(input: unknown): Promise<unknown>
-      updateNotification(id: string, updates: unknown): Promise<unknown>
-      deleteNotification(id: string): Promise<void>
-      markAsRead(id: string): Promise<unknown>
-      markAllAsRead(accountId: string): Promise<number>
-      getUnreadCount(accountId: string): Promise<number>
-    }}).notificationStore
+    const store = (
+      ctx as unknown as {
+        notificationStore?: {
+          getNotificationById(id: string): Promise<unknown>
+          queryNotifications(query: unknown): Promise<unknown[]>
+          createNotification(input: unknown): Promise<unknown>
+          updateNotification(id: string, updates: unknown): Promise<unknown>
+          deleteNotification(id: string): Promise<void>
+          markAsRead(id: string): Promise<unknown>
+          markAllAsRead(accountId: string): Promise<number>
+          getUnreadCount(accountId: string): Promise<number>
+        }
+      }
+    ).notificationStore
 
     if (!store) {
       return errorResponse('NotificationStore not available', 'EngineUnavailable', 503)
@@ -38,9 +42,22 @@ export function createNotificationsRouter(ctx: ServerContext) {
         const accountId = url.searchParams.get('accountId') ?? undefined
         const providerId = url.searchParams.get('providerId') ?? undefined
         const notificationType = url.searchParams.get('notificationType') ?? undefined
-        const isRead = url.searchParams.get('isRead') === 'true' ? true : url.searchParams.get('isRead') === 'false' ? false : undefined
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
-        const notifications = await store.queryNotifications({ accountId, providerId, notificationType, isRead, limit })
+        const isRead =
+          url.searchParams.get('isRead') === 'true'
+            ? true
+            : url.searchParams.get('isRead') === 'false'
+              ? false
+              : undefined
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
+        const notifications = await store.queryNotifications({
+          accountId,
+          providerId,
+          notificationType,
+          isRead,
+          limit,
+        })
         return json({ notifications, count: (notifications as unknown[]).length })
       }
 

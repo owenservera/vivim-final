@@ -4,7 +4,7 @@ import { ConceptualModelService } from '../../../src/engines/conceptual-model-se
 
 describe('ConceptualModelService', () => {
   it('instantiates and returns default model state', () => {
-    const service = new ConceptualModelService()
+    const service = new ConceptualModelService({} as never, {} as never, {} as never)
     expect(service).toBeDefined()
   })
 })

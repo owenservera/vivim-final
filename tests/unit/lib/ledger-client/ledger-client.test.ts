@@ -43,7 +43,7 @@ describe('LedgerClient', () => {
       const result = await client.signup('test@example.com')
 
       expect(fetchMock).toHaveBeenCalledTimes(1)
-      const [url, opts] = fetchMock.mock.calls[0]
+      const [url, opts] = fetchMock.mock.calls[0]!
       expect(url).toBe('https://ledger.test.local/api/v1/beta/signup')
       expect(opts.method).toBe('POST')
       expect(result.userId).toBe('u1')
@@ -99,7 +99,7 @@ describe('LedgerClient', () => {
       const client = new LedgerClient(makeConfig({ userToken: 'existing_token' }))
       const result = await client.mintTunnelToken()
 
-      const [url, opts] = fetchMock.mock.calls[0]
+      const [url, opts] = fetchMock.mock.calls[0]!
       expect(url).toBe('https://ledger.test.local/api/v1/tunnel/token')
       expect(opts.headers).toEqual({ Authorization: 'Bearer existing_token' })
       expect(result.token).toBe('jwt_abc')
@@ -128,7 +128,7 @@ describe('LedgerClient', () => {
       const client = new LedgerClient(makeConfig({ userToken: 'tok' }))
       const result = await client.sync()
 
-      const [url, opts] = fetchMock.mock.calls[0]
+      const [url, opts] = fetchMock.mock.calls[0]!
       expect(url).toContain('/api/v1/ledger/sync')
       expect(opts.headers).toEqual({ Authorization: 'Bearer tok' })
       expect(result.applied).toBe(0)
