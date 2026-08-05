@@ -2,33 +2,54 @@
 // Integration tests for conversation sync — verifies the full flow from
 // adapter → sync engine → DB upsert → API route.
 
-import { describe, expect, test, beforeEach, afterEach } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 import { ConversationHistorySyncEngine } from '../../src/engines/conversation-history-sync.js'
-import { ChatGPTAdapter } from '../../src/engines/adapters/chatgpt-adapter.js'
-import type { ProviderConversationAdapter, AuthContext, ConversationHeader, ConversationFull } from '../../src/engines/provider-conversation-adapter.js'
-import type { ConversationStore, ConversationSyncStateStore } from '../../src/storage/contracts/conversation-store.js'
+import type {
+  AuthContext,
+  ConversationFull,
+  ConversationHeader,
+  ProviderConversationAdapter,
+} from '../../src/engines/provider-conversation-adapter.js'
+import type {
+  ConversationStore,
+  ConversationSyncStateStore,
+} from '../../src/storage/contracts/conversation-store.js'
 
 // ── In-memory stores ─────────────────────────────────────────────────────────
 
-function createInMemoryConversationStore(): ConversationStore & { conversations: Map<string, Record<string, unknown>>; messages: Map<string, Record<string, unknown>[]> } {
+function createInMemoryConversationStore(): ConversationStore & {
+  conversations: Map<string, Record<string, unknown>>
+  messages: Map<string, Record<string, unknown>[]>
+} {
   const conversations = new Map<string, Record<string, unknown>>()
   const messages = new Map<string, Record<string, unknown>[]>()
   let convCounter = 0
   let msgCounter = 0
 
-  const store: ConversationStore & { conversations: typeof conversations; messages: typeof messages } = {
+  const store: ConversationStore & {
+    conversations: typeof conversations
+    messages: typeof messages
+  } = {
     conversations,
     messages,
-    getConversation: async (id: string) => (conversations.get(id) as Awaited<ReturnType<ConversationStore['getConversation']>>) ?? null,
+    getConversation: async (id: string) =>
+      (conversations.get(id) as Awaited<ReturnType<ConversationStore['getConversation']>>) ?? null,
     createConversation: async (input) => {
       const id = `conv-${++convCounter}`
       const conv = { id, ...input, createdAt: Date.now(), updatedAt: Date.now() }
       conversations.set(id, conv)
       return conv as Awaited<ReturnType<ConversationStore['createConversation']>>
     },
-    updateConversation: async (id, patch) => { conversations.set(id, { ...conversations.get(id), ...patch }) },
-    deleteConversation: async (id) => { conversations.delete(id) },
-    listConversations: async () => Array.from(conversations.values()) as Awaited<ReturnType<ConversationStore['listConversations']>>,
+    updateConversation: async (id, patch) => {
+      conversations.set(id, { ...conversations.get(id), ...patch })
+    },
+    deleteConversation: async (id) => {
+      conversations.delete(id)
+    },
+    listConversations: async () =>
+      Array.from(conversations.values()) as Awaited<
+        ReturnType<ConversationStore['listConversations']>
+      >,
     getConversationByExternalId: async (externalId, providerId) => {
       for (const conv of conversations.values()) {
         if (conv.externalId === externalId && conv.providerId === providerId) {
@@ -44,17 +65,37 @@ function createInMemoryConversationStore(): ConversationStore & { conversations:
         return (await store.getConversation(existing.id))!
       }
       const id = `conv-${++convCounter}`
-      const conv = { id, ...input, providerSessionId: null, state: 'active', messageCount: 0, lastMessageAt: null, createdAt: Date.now(), updatedAt: Date.now() }
+      const conv = {
+        id,
+        ...input,
+        providerSessionId: null,
+        state: 'active',
+        messageCount: 0,
+        lastMessageAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
       conversations.set(id, conv)
       return conv as Awaited<ReturnType<ConversationStore['upsertConversationByExternalId']>>
     },
     listConversationsByAccountId: async (accountId) => {
-      return Array.from(conversations.values()).filter(c => c.accountId === accountId) as Awaited<ReturnType<ConversationStore['listConversationsByAccountId']>>
+      return Array.from(conversations.values()).filter((c) => c.accountId === accountId) as Awaited<
+        ReturnType<ConversationStore['listConversationsByAccountId']>
+      >
     },
     createMessages: async (inputs) => {
       return inputs.map((input) => {
         const id = `msg-${++msgCounter}`
-        const msg = { id, ...input, blocksJson: '[]', blockCount: 0, latencyMs: null, tokenCount: null, metadataJson: '{}', createdAt: input.createdAt ?? Date.now() }
+        const msg = {
+          id,
+          ...input,
+          blocksJson: '[]',
+          blockCount: 0,
+          latencyMs: null,
+          tokenCount: null,
+          metadataJson: '{}',
+          createdAt: input.createdAt ?? Date.now(),
+        }
         const existing = messages.get(input.conversationId) ?? []
         existing.push(msg)
         messages.set(input.conversationId, existing)
@@ -63,7 +104,16 @@ function createInMemoryConversationStore(): ConversationStore & { conversations:
     },
     createMessage: async (input) => {
       const id = `msg-${++msgCounter}`
-      const msg = { id, ...input, blocksJson: '[]', blockCount: 0, latencyMs: null, tokenCount: null, metadataJson: '{}', createdAt: Date.now() }
+      const msg = {
+        id,
+        ...input,
+        blocksJson: '[]',
+        blockCount: 0,
+        latencyMs: null,
+        tokenCount: null,
+        metadataJson: '{}',
+        createdAt: Date.now(),
+      }
       const existing = messages.get(input.conversationId) ?? []
       existing.push(msg)
       messages.set(input.conversationId, existing)
@@ -74,7 +124,17 @@ function createInMemoryConversationStore(): ConversationStore & { conversations:
     getLastMessage: async () => null,
     updateMessage: async () => {},
     getAccount: async () => null,
-    createAttachment: async () => ({ id: 'att', messageId: 'msg', filename: '', mimeType: '', sizeBytes: 0, storagePath: '', thumbnailPath: null, metadataJson: '{}', createdAt: Date.now() }),
+    createAttachment: async () => ({
+      id: 'att',
+      messageId: 'msg',
+      filename: '',
+      mimeType: '',
+      sizeBytes: 0,
+      storagePath: '',
+      thumbnailPath: null,
+      metadataJson: '{}',
+      createdAt: Date.now(),
+    }),
     getAttachments: async () => [],
     getAttachment: async () => null,
     deleteAttachment: async () => {},
@@ -84,7 +144,10 @@ function createInMemoryConversationStore(): ConversationStore & { conversations:
   return store
 }
 
-function createInMemorySyncStateStore(): ConversationSyncStateStore & { states: Map<string, Record<string, unknown>>; logs: Map<string, Record<string, unknown>[]> } {
+function createInMemorySyncStateStore(): ConversationSyncStateStore & {
+  states: Map<string, Record<string, unknown>>
+  logs: Map<string, Record<string, unknown>[]>
+} {
   const states = new Map<string, Record<string, unknown>>()
   const logs = new Map<string, Record<string, unknown>[]>()
   let logCounter = 0
@@ -94,7 +157,9 @@ function createInMemorySyncStateStore(): ConversationSyncStateStore & { states: 
     logs,
     getSyncState: async (providerId, accountId) => {
       const key = `${providerId}:${accountId}`
-      return (states.get(key) as Awaited<ReturnType<ConversationSyncStateStore['getSyncState']>>) ?? null
+      return (
+        (states.get(key) as Awaited<ReturnType<ConversationSyncStateStore['getSyncState']>>) ?? null
+      )
     },
     upsertSyncState: async (input) => {
       const key = `${input.providerId}:${input.accountId}`
@@ -129,10 +194,23 @@ function createInMemorySyncStateStore(): ConversationSyncStateStore & { states: 
       return existing as Awaited<ReturnType<ConversationSyncStateStore['incrementSyncProgress']>>
     },
     getPendingSyncs: async () => [],
-    deleteSyncState: async (providerId, accountId) => { states.delete(`${providerId}:${accountId}`) },
+    deleteSyncState: async (providerId, accountId) => {
+      states.delete(`${providerId}:${accountId}`)
+    },
     createSyncLog: async (input) => {
       const id = `log-${++logCounter}`
-      const log = { id, ...input, startedAt: Date.now(), completedAt: null, durationMs: null, conversationsFound: 0, conversationsSynced: 0, conversationsFailed: 0, errorJson: null, metadataJson: '{}' }
+      const log = {
+        id,
+        ...input,
+        startedAt: Date.now(),
+        completedAt: null,
+        durationMs: null,
+        conversationsFound: 0,
+        conversationsSynced: 0,
+        conversationsFailed: 0,
+        errorJson: null,
+        metadataJson: '{}',
+      }
       const key = `${input.providerId}:${input.accountId}`
       const existing = logs.get(key) ?? []
       existing.push(log)
@@ -159,12 +237,15 @@ function createInMemorySyncStateStore(): ConversationSyncStateStore & { states: 
 
 // ── Mock adapter ─────────────────────────────────────────────────────────────
 
-function createMockAdapter(conversations: ConversationHeader[] = [], fullConversations: ConversationFull[] = []): ProviderConversationAdapter & { getAuthContext(slaveId: string): Promise<AuthContext> } {
+function createMockAdapter(
+  conversations: ConversationHeader[] = [],
+  fullConversations: ConversationFull[] = [],
+): ProviderConversationAdapter & { getAuthContext(slaveId: string): Promise<AuthContext> } {
   return {
     providerId: 'chatgpt',
     listConversations: async (_accountId, _auth, opts) => {
       const limit = opts?.limit ?? 50
-      const cursor = opts?.cursor ? parseInt(opts.cursor, 10) : 0
+      const cursor = opts?.cursor ? Number.parseInt(opts.cursor, 10) : 0
       const items = conversations.slice(cursor, cursor + limit)
       return {
         items,
@@ -173,7 +254,7 @@ function createMockAdapter(conversations: ConversationHeader[] = [], fullConvers
       }
     },
     getConversation: async (_accountId, _auth, conversationId) => {
-      return fullConversations.find(c => c.id === conversationId) ?? null
+      return fullConversations.find((c) => c.id === conversationId) ?? null
     },
     searchConversations: async () => [],
     getAuthContext: async () => ({ bearerToken: 'test-token' }),
@@ -195,7 +276,13 @@ describe('Conversation Sync Integration', () => {
         title: 'Chat 1',
         messages: [
           { id: 'msg-1', parentId: null, role: 'user', content: 'Hello', timestamp: 1700000000 },
-          { id: 'msg-2', parentId: 'msg-1', role: 'assistant', content: 'Hi!', timestamp: 1700000001 },
+          {
+            id: 'msg-2',
+            parentId: 'msg-1',
+            role: 'assistant',
+            content: 'Hi!',
+            timestamp: 1700000001,
+          },
         ],
       },
       {
@@ -212,7 +299,12 @@ describe('Conversation Sync Integration', () => {
     const syncStateStore = createInMemorySyncStateStore()
     const governor = { send: async () => null }
 
-    const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+    const engine = new ConversationHistorySyncEngine(
+      adapter,
+      conversationStore,
+      syncStateStore,
+      governor,
+    )
 
     // Run sync
     const result = await engine.sync('account-1', 'slave-1')
@@ -255,7 +347,12 @@ describe('Conversation Sync Integration', () => {
     const syncStateStore = createInMemorySyncStateStore()
     const governor = { send: async () => null }
 
-    const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+    const engine = new ConversationHistorySyncEngine(
+      adapter,
+      conversationStore,
+      syncStateStore,
+      governor,
+    )
 
     // First sync with small batch size — syncs all items (pagination continues until empty)
     const result1 = await engine.sync('account-1', 'slave-1', { batchSize: 2 })
@@ -272,16 +369,19 @@ describe('Conversation Sync Integration', () => {
       { id: 'conv-2', title: 'Chat 2', updatedAt: 1699001000, createdAt: 1699000000 },
     ]
 
-    const fullConvs: ConversationFull[] = [
-      { id: 'conv-1', title: 'Chat 1', messages: [] },
-    ]
+    const fullConvs: ConversationFull[] = [{ id: 'conv-1', title: 'Chat 1', messages: [] }]
 
     const adapter = createMockAdapter(headers, fullConvs)
     const conversationStore = createInMemoryConversationStore()
     const syncStateStore = createInMemorySyncStateStore()
     const governor = { send: async () => null }
 
-    const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+    const engine = new ConversationHistorySyncEngine(
+      adapter,
+      conversationStore,
+      syncStateStore,
+      governor,
+    )
 
     // Selective sync - only conv-1
     const result = await engine.sync('account-1', 'slave-1', {
@@ -303,13 +403,18 @@ describe('Conversation Sync Integration', () => {
 
     // Track if getConversation was called
     let getConversationCalled = false
-    const adapter: ProviderConversationAdapter & { getAuthContext(slaveId: string): Promise<AuthContext> } = {
+    const adapter: ProviderConversationAdapter & {
+      getAuthContext(slaveId: string): Promise<AuthContext>
+    } = {
       providerId: 'chatgpt',
       listConversations: async (_accountId, _auth, opts) => ({
         items: headers.slice(0, opts?.limit ?? 50),
         total: headers.length,
       }),
-      getConversation: async () => { getConversationCalled = true; return null },
+      getConversation: async () => {
+        getConversationCalled = true
+        return null
+      },
       searchConversations: async () => [],
       getAuthContext: async () => ({ bearerToken: 'token' }),
     }
@@ -318,7 +423,12 @@ describe('Conversation Sync Integration', () => {
     const syncStateStore = createInMemorySyncStateStore()
     const governor = { send: async () => null }
 
-    const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+    const engine = new ConversationHistorySyncEngine(
+      adapter,
+      conversationStore,
+      syncStateStore,
+      governor,
+    )
 
     // Headers-only sync
     const result = await engine.sync('account-1', 'slave-1', { headersOnly: true })
@@ -329,9 +439,13 @@ describe('Conversation Sync Integration', () => {
   })
 
   test('error handling: auth expired marks sync as failed', async () => {
-    const adapter: ProviderConversationAdapter & { getAuthContext(slaveId: string): Promise<AuthContext> } = {
+    const adapter: ProviderConversationAdapter & {
+      getAuthContext(slaveId: string): Promise<AuthContext>
+    } = {
       providerId: 'chatgpt',
-      listConversations: async () => { throw new Error('Auth expired') },
+      listConversations: async () => {
+        throw new Error('Auth expired')
+      },
       getConversation: async () => null,
       searchConversations: async () => [],
       getAuthContext: async () => ({ bearerToken: 'token' }),
@@ -341,7 +455,12 @@ describe('Conversation Sync Integration', () => {
     const syncStateStore = createInMemorySyncStateStore()
     const governor = { send: async () => null }
 
-    const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+    const engine = new ConversationHistorySyncEngine(
+      adapter,
+      conversationStore,
+      syncStateStore,
+      governor,
+    )
 
     const result = await engine.sync('account-1', 'slave-1')
 
@@ -367,7 +486,12 @@ describe('Conversation Sync Integration', () => {
     const syncStateStore = createInMemorySyncStateStore()
     const governor = { send: async () => null }
 
-    const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+    const engine = new ConversationHistorySyncEngine(
+      adapter,
+      conversationStore,
+      syncStateStore,
+      governor,
+    )
 
     const result = await engine.fetchConversation('account-1', 'slave-1', 'conv-1')
 
@@ -382,7 +506,12 @@ describe('Conversation Sync Integration', () => {
     const syncStateStore = createInMemorySyncStateStore()
     const governor = { send: async () => null }
 
-    const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+    const engine = new ConversationHistorySyncEngine(
+      adapter,
+      conversationStore,
+      syncStateStore,
+      governor,
+    )
 
     const result = await engine.fetchConversation('account-1', 'slave-1', 'nonexistent')
 

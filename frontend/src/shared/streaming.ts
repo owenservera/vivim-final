@@ -22,74 +22,84 @@ export type StreamEventKind =
   | 'status' // status change
   | 'complete' // stream finished
   | 'cost' // token cost update
-  | 'heartbeat'; // keepalive
+  | 'heartbeat' // keepalive
 
 export interface StreamEvent {
-  kind: StreamEventKind;
+  kind: StreamEventKind
   /** Incremental index (0-based). */
-  index: number;
+  index: number
   /** Text content (for 'text'/'code'/'thinking'/'error'). */
-  content?: string;
+  content?: string
   /** Language hint (for 'code'). */
-  language?: string;
+  language?: string
   /** Tool name (for 'tool_use'/'tool_result'). */
-  toolName?: string;
+  toolName?: string
   /** Tool input/output (for 'tool_use'/'tool_result'). */
-  input?: Record<string, unknown>;
-  output?: unknown;
+  input?: Record<string, unknown>
+  output?: unknown
   /** Image URL (for 'image'). */
-  url?: string;
-  alt?: string;
+  url?: string
+  alt?: string
   /** Citation source (for 'citation'). */
-  source?: string;
+  source?: string
   /** Progress (for 'progress'). */
-  step?: number;
-  total?: number;
-  description?: string;
+  step?: number
+  total?: number
+  description?: string
   /** Status (for 'status'). */
-  status?: string;
+  status?: string
   /** Cost (for 'cost'). */
-  tokensIn?: number;
-  tokensOut?: number;
-  costUsd?: number;
+  tokensIn?: number
+  tokensOut?: number
+  costUsd?: number
   /** Error (for 'error'). */
-  message?: string;
-  code?: string;
+  message?: string
+  code?: string
   /** Trace id for correlation. */
-  traceId?: string;
-  timestamp: number;
+  traceId?: string
+  timestamp: number
 }
 
-export type StreamState = 'idle' | 'connecting' | 'streaming' | 'thinking' | 'paused' | 'complete' | 'error';
+export type StreamState =
+  | 'idle'
+  | 'connecting'
+  | 'streaming'
+  | 'thinking'
+  | 'paused'
+  | 'complete'
+  | 'error'
 
 export interface StreamSession {
-  id: string;
-  nodeId: string;
-  capabilityId: string;
-  state: StreamState;
+  id: string
+  nodeId: string
+  capabilityId: string
+  state: StreamState
   /** All events received so far. */
-  events: StreamEvent[];
+  events: StreamEvent[]
   /** Accumulated text (from 'text' events). */
-  accumulatedText: string;
+  accumulatedText: string
   /** Total tokens in/out. */
-  tokensIn: number;
-  tokensOut: number;
+  tokensIn: number
+  tokensOut: number
   /** Total cost in USD. */
-  costUsd: number;
+  costUsd: number
   /** Started at (ms). */
-  startedAt: number;
+  startedAt: number
   /** Last event at (ms). */
-  lastEventAt: number;
+  lastEventAt: number
   /** Completed at (ms). */
-  completedAt?: number;
+  completedAt?: number
   /** Error message (if state='error'). */
-  error?: string;
+  error?: string
   /** Trace id. */
-  traceId: string;
+  traceId: string
 }
 
 /** Visual indicator for stream state. */
-export const STREAM_STATE_INDICATOR: Record<StreamState, { icon: string; color: string; label: string }> = {
+export const STREAM_STATE_INDICATOR: Record<
+  StreamState,
+  { icon: string; color: string; label: string }
+> = {
   idle: { icon: '', color: '#9ca3af', label: 'Idle' },
   connecting: { icon: '◐', color: '#f59e0b', label: 'Connecting…' },
   streaming: { icon: '', color: '#0ea5e9', label: 'Streaming' },
@@ -97,4 +107,4 @@ export const STREAM_STATE_INDICATOR: Record<StreamState, { icon: string; color: 
   paused: { icon: '', color: '#6b7280', label: 'Paused' },
   complete: { icon: '', color: '#10b981', label: 'Complete' },
   error: { icon: '', color: '#ef4444', label: 'Error' },
-};
+}

@@ -90,7 +90,10 @@ function toSyncLogRow(r: PrismaSyncLog): ConversationSyncLogRow {
 export class ConversationSyncStoreImpl implements ConversationSyncStateStore {
   constructor(private db: CapStoreDb) {}
 
-  async getSyncState(providerId: string, accountId: string): Promise<ConversationSyncStateRow | null> {
+  async getSyncState(
+    providerId: string,
+    accountId: string,
+  ): Promise<ConversationSyncStateRow | null> {
     const row = await this.db.prisma.conversationSyncState.findUnique({
       where: { providerId_accountId: { providerId, accountId } },
     })
@@ -111,10 +114,12 @@ export class ConversationSyncStoreImpl implements ConversationSyncStateStore {
   }): Promise<ConversationSyncStateRow> {
     const now = Date.now()
     const existing = await this.getSyncState(input.providerId, input.accountId)
-    
+
     if (existing) {
       const row = await this.db.prisma.conversationSyncState.update({
-        where: { providerId_accountId: { providerId: input.providerId, accountId: input.accountId } },
+        where: {
+          providerId_accountId: { providerId: input.providerId, accountId: input.accountId },
+        },
         data: {
           syncType: input.syncType ?? existing.syncType,
           status: input.status ?? existing.status,
@@ -129,7 +134,7 @@ export class ConversationSyncStoreImpl implements ConversationSyncStateStore {
       })
       return toSyncStateRow(row as unknown as PrismaSyncState)
     }
-    
+
     const row = await this.db.prisma.conversationSyncState.create({
       data: {
         id: newId(),
@@ -154,19 +159,19 @@ export class ConversationSyncStoreImpl implements ConversationSyncStateStore {
     providerId: string,
     accountId: string,
     status: string,
-    error?: string
+    error?: string,
   ): Promise<ConversationSyncStateRow> {
     const now = Date.now()
     const data: Record<string, unknown> = { status, updatedAt: now }
-    
+
     if (error) {
       data.errorJson = JSON.stringify({ error, timestamp: now })
     }
-    
+
     if (status === 'completed') {
       data.lastSyncedAt = now
     }
-    
+
     const row = await this.db.prisma.conversationSyncState.update({
       where: { providerId_accountId: { providerId, accountId } },
       data,
@@ -178,7 +183,7 @@ export class ConversationSyncStoreImpl implements ConversationSyncStateStore {
     providerId: string,
     accountId: string,
     synced: number,
-    failed: number
+    failed: number,
   ): Promise<ConversationSyncStateRow> {
     const now = Date.now()
     const row = await this.db.prisma.conversationSyncState.update({
@@ -243,17 +248,19 @@ export class ConversationSyncStoreImpl implements ConversationSyncStateStore {
       conversationsSynced?: number
       conversationsFailed?: number
       errorJson?: string
-    }
+    },
   ): Promise<ConversationSyncLogRow> {
     const data: Record<string, unknown> = { status: input.status }
-    
+
     if (input.completedAt !== undefined) data.completedAt = input.completedAt
     if (input.durationMs !== undefined) data.durationMs = input.durationMs
     if (input.conversationsFound !== undefined) data.conversationsFound = input.conversationsFound
-    if (input.conversationsSynced !== undefined) data.conversationsSynced = input.conversationsSynced
-    if (input.conversationsFailed !== undefined) data.conversationsFailed = input.conversationsFailed
+    if (input.conversationsSynced !== undefined)
+      data.conversationsSynced = input.conversationsSynced
+    if (input.conversationsFailed !== undefined)
+      data.conversationsFailed = input.conversationsFailed
     if (input.errorJson !== undefined) data.errorJson = input.errorJson
-    
+
     const row = await this.db.prisma.conversationSyncLog.update({
       where: { id },
       data,
@@ -264,7 +271,7 @@ export class ConversationSyncStoreImpl implements ConversationSyncStateStore {
   async getSyncLogs(
     providerId: string,
     accountId: string,
-    opts?: { limit?: number; offset?: number }
+    opts?: { limit?: number; offset?: number },
   ): Promise<ConversationSyncLogRow[]> {
     const rows = await this.db.prisma.conversationSyncLog.findMany({
       where: { providerId, accountId },

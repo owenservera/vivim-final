@@ -114,6 +114,7 @@ test-sidecar-prod.js.map
 # Frontend workspace/upload artifacts
 frontend/workspace-*
 frontend/upload/
+frontend/frontend/
 
 # embedded agent clones (scratch, not source)
 .clones/

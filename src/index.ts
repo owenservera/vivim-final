@@ -441,5 +441,3 @@ export { FormatClassifier } from './engines/format-classifier.js'
 export { PromptAugmenter } from './engines/prompt-augmenter.js'
 export { IdempotencyGuard } from './engines/idempotency-guard.js'
 export { IndexingPipeline } from './engines/indexing-pipeline.js'
-
-

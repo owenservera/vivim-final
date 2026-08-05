@@ -1,7 +1,7 @@
 // tests/unit/engines/memory-engine-record.test.ts
 // Phase 0A patch: memory-engine.ts recordMemory() — captureAsNode integration
 
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 
 // Mock CapStoreDb
 mock.module('../../../src/storage/impl/memory-engine-impl.js', () => ({

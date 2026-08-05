@@ -16,51 +16,96 @@
 
 export type VCardActionId =
   // Global
-  | 'collapse' | 'expand' | 'pin' | 'fullscreen' | 'duplicate' | 'detach'
-  | 'settings' | 'connections' | 'thread' | 'remux' | 'inspect' | 'remove'
-  | 'export' | 'history' | 'lock'
+  | 'collapse'
+  | 'expand'
+  | 'pin'
+  | 'fullscreen'
+  | 'duplicate'
+  | 'detach'
+  | 'settings'
+  | 'connections'
+  | 'thread'
+  | 'remux'
+  | 'inspect'
+  | 'remove'
+  | 'export'
+  | 'history'
+  | 'lock'
   // Chat
-  | 'new_thread' | 'branch' | 'merge' | 'clear_context' | 'export_transcript'
-  | 'model_select' | 'system_prompt' | 'temperature'
+  | 'new_thread'
+  | 'branch'
+  | 'merge'
+  | 'clear_context'
+  | 'export_transcript'
+  | 'model_select'
+  | 'system_prompt'
+  | 'temperature'
   // Tool
-  | 'configure' | 'test_run' | 'view_schema' | 'enable_disable' | 'permissions'
+  | 'configure'
+  | 'test_run'
+  | 'view_schema'
+  | 'enable_disable'
+  | 'permissions'
   // Memory
-  | 'recall' | 'forget' | 'consolidate' | 'memory_export' | 'memory_import'
+  | 'recall'
+  | 'forget'
+  | 'consolidate'
+  | 'memory_export'
+  | 'memory_import'
   // File
-  | 'file_open' | 'download' | 'upload' | 'version_history' | 'diff'
+  | 'file_open'
+  | 'download'
+  | 'upload'
+  | 'version_history'
+  | 'diff'
   // Provider
-  | 'health' | 'rate_limits' | 'switch_model' | 'test_connection' | 'usage';
+  | 'health'
+  | 'rate_limits'
+  | 'switch_model'
+  | 'test_connection'
+  | 'usage'
 
 export interface VCardAction {
-  id: VCardActionId;
-  label: string;
-  icon: string;
+  id: VCardActionId
+  label: string
+  icon: string
   /** Whether the action is currently enabled (context-dependent). */
-  enabled: boolean;
+  enabled: boolean
   /** Whether this action has a submenu. */
-  hasSubmenu?: boolean;
+  hasSubmenu?: boolean
   /** Shortcut key (display only). */
-  shortcut?: string;
+  shortcut?: string
 }
 
-export type VCardCategory = 'chat' | 'tool' | 'memory' | 'file' | 'provider' | 'automation' | 'agent' | 'media' | 'document' | 'shell' | 'generic';
+export type VCardCategory =
+  | 'chat'
+  | 'tool'
+  | 'memory'
+  | 'file'
+  | 'provider'
+  | 'automation'
+  | 'agent'
+  | 'media'
+  | 'document'
+  | 'shell'
+  | 'generic'
 
 export interface VCardState {
-  nodeId: string;
+  nodeId: string
   /** Whether the node is collapsed (title bar only). */
-  collapsed: boolean;
+  collapsed: boolean
   /** Whether the node is pinned (no drag). */
-  pinned: boolean;
+  pinned: boolean
   /** Whether the node is fullscreen. */
-  fullscreen: boolean;
+  fullscreen: boolean
   /** Whether the node is locked (no changes). */
-  locked: boolean;
+  locked: boolean
   /** Whether I/O connection lines are visible. */
-  connectionsVisible: boolean;
+  connectionsVisible: boolean
   /** Whether the node is detached (separate window). */
-  detached: boolean;
+  detached: boolean
   /** Node category (drives per-type actions). */
-  category: VCardCategory;
+  category: VCardCategory
 }
 
 /** Global actions available on ALL vCards. */
@@ -80,7 +125,7 @@ export const GLOBAL_ACTIONS: VCardAction[] = [
   { id: 'lock', label: 'Lock', icon: '', enabled: true },
   { id: 'export', label: 'Export', icon: '', enabled: true },
   { id: 'remove', label: 'Remove', icon: '', enabled: true },
-];
+]
 
 /** Per-category actions. */
 export const CATEGORY_ACTIONS: Record<VCardCategory, VCardAction[]> = {
@@ -144,20 +189,22 @@ export const CATEGORY_ACTIONS: Record<VCardCategory, VCardAction[]> = {
     { id: 'export_transcript', label: 'Export Log', icon: '', enabled: true },
   ],
   generic: [],
-};
+}
 
 /** Get all actions for a vCard (global + category-specific). */
 export function getActionsForCard(state: VCardState): VCardAction[] {
   const global = GLOBAL_ACTIONS.map((a) => {
     // Toggle labels based on state.
-    if (a.id === 'collapse' && state.collapsed) return { ...a, label: 'Expand', icon: '▴' };
-    if (a.id === 'expand' && !state.collapsed) return { ...a, enabled: false };
-    if (a.id === 'pin' && state.pinned) return { ...a, label: 'Unpin', icon: 'pin' };
-    if (a.id === 'lock' && state.locked) return { ...a, label: 'Unlock', icon: '' };
-    if (a.id === 'connections' && !state.connectionsVisible) return { ...a, label: 'Show Connections', icon: '⤴' };
-    if (a.id === 'connections' && state.connectionsVisible) return { ...a, label: 'Hide Connections', icon: '⤴' };
-    return a;
-  });
-  const category = CATEGORY_ACTIONS[state.category] ?? [];
-  return [...global, ...category];
+    if (a.id === 'collapse' && state.collapsed) return { ...a, label: 'Expand', icon: '▴' }
+    if (a.id === 'expand' && !state.collapsed) return { ...a, enabled: false }
+    if (a.id === 'pin' && state.pinned) return { ...a, label: 'Unpin', icon: 'pin' }
+    if (a.id === 'lock' && state.locked) return { ...a, label: 'Unlock', icon: '' }
+    if (a.id === 'connections' && !state.connectionsVisible)
+      return { ...a, label: 'Show Connections', icon: '⤴' }
+    if (a.id === 'connections' && state.connectionsVisible)
+      return { ...a, label: 'Hide Connections', icon: '⤴' }
+    return a
+  })
+  const category = CATEGORY_ACTIONS[state.category] ?? []
+  return [...global, ...category]
 }

@@ -7,10 +7,7 @@ import type {
   ConversationMessageRow,
   ConversationRow,
   ConversationStore,
-  ConversationSyncLogRow,
-  ConversationSyncStateRow,
   MessageInput,
-  MessageAttachmentRow,
   ProviderAccountRow,
 } from '../contracts/conversation-store.js'
 import type { CapStoreDb } from '../db.js'
@@ -154,14 +151,14 @@ export class ConversationStoreImpl implements ConversationStore {
 
   async createConversation(input: ConversationInput): Promise<ConversationRow> {
     const now = Date.now()
-    
+
     // For history-synced conversations, providerSessionId can be null
     let sessionId = input.providerSessionId
     if (!sessionId && input.source !== 'history-sync') {
       const sess = await this.db.ensureProviderSession({ providerId: input.providerId })
       sessionId = sess.id
     }
-    
+
     try {
       const row = await this.db.prisma.conversation.create({
         data: {
@@ -384,14 +381,19 @@ export class ConversationStoreImpl implements ConversationStore {
 
   // ── History Sync Methods ──────────────────────────────────────────────────
 
-  async getConversationByExternalId(externalId: string, providerId: string): Promise<ConversationRow | null> {
+  async getConversationByExternalId(
+    externalId: string,
+    providerId: string,
+  ): Promise<ConversationRow | null> {
     const row = await this.db.prisma.conversation.findFirst({
       where: { externalId, providerId },
     })
     return row ? toConversationRow(row as unknown as PrismaConversation) : null
   }
 
-  async upsertConversationByExternalId(input: ConversationInput & { externalId: string }): Promise<ConversationRow> {
+  async upsertConversationByExternalId(
+    input: ConversationInput & { externalId: string },
+  ): Promise<ConversationRow> {
     const existing = await this.getConversationByExternalId(input.externalId, input.providerId)
     if (existing) {
       await this.updateConversation(existing.id, {
@@ -407,11 +409,11 @@ export class ConversationStoreImpl implements ConversationStore {
 
   async listConversationsByAccountId(
     accountId: string,
-    opts?: { limit?: number; offset?: number; source?: string }
+    opts?: { limit?: number; offset?: number; source?: string },
   ): Promise<ConversationRow[]> {
     const where: Record<string, unknown> = { accountId }
     if (opts?.source) where.source = opts.source
-    
+
     const rows = await this.db.prisma.conversation.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
@@ -424,7 +426,7 @@ export class ConversationStoreImpl implements ConversationStore {
   async createMessages(inputs: MessageInput[]): Promise<ConversationMessageRow[]> {
     const now = Date.now()
     const results: ConversationMessageRow[] = []
-    
+
     // Batch create in chunks of 100
     const chunkSize = 100
     for (let i = 0; i < inputs.length; i += chunkSize) {
@@ -444,12 +446,12 @@ export class ConversationStoreImpl implements ConversationStore {
         metadataJson: input.metadataJson ?? '{}',
         createdAt: now,
       }))
-      
+
       const rows = await this.db.prisma.conversationMessage.createMany({ data })
       // Note: createMany doesn't return rows in SQLite, so we query them back
       // This is acceptable for sync operations
     }
-    
+
     // Query back the created messages
     if (inputs.length > 0 && inputs[0]) {
       const conversationId = inputs[0].conversationId
@@ -459,7 +461,7 @@ export class ConversationStoreImpl implements ConversationStore {
       })
       return rows.map((r) => toMessageRow(r as unknown as PrismaMessage))
     }
-    
+
     return results
   }
 }

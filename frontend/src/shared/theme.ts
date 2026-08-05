@@ -5,7 +5,7 @@
  * Persisted to localStorage; CSS variables drive the UI.
  */
 
-export type ThemeMode = 'light' | 'dark' | 'auto';
+export type ThemeMode = 'light' | 'dark' | 'auto'
 
 export type AccentColor =
   | 'amber' // default (matches v2)
@@ -13,17 +13,17 @@ export type AccentColor =
   | 'emerald'
   | 'sky'
   | 'violet'
-  | 'slate';
+  | 'slate'
 
 export interface ThemePreference {
-  mode: ThemeMode;
-  accent: AccentColor;
+  mode: ThemeMode
+  accent: AccentColor
   /** Reduced motion preference (accessibility). */
-  reducedMotion: boolean;
+  reducedMotion: boolean
   /** Font scale (1.0 = default, 0.875 = compact, 1.125 = comfortable). */
-  fontScale: number;
+  fontScale: number
   /** High contrast mode (accessibility). Increases border and text contrast. */
-  highContrast: boolean;
+  highContrast: boolean
 }
 
 export const DEFAULT_THEME: ThemePreference = {
@@ -32,7 +32,7 @@ export const DEFAULT_THEME: ThemePreference = {
   reducedMotion: false,
   fontScale: 1.0,
   highContrast: false,
-};
+}
 
 export const ACCENT_COLORS: Array<{ id: AccentColor; label: string; hex: string }> = [
   { id: 'amber', label: 'Amber', hex: '#f59e0b' },
@@ -41,29 +41,29 @@ export const ACCENT_COLORS: Array<{ id: AccentColor; label: string; hex: string 
   { id: 'sky', label: 'Sky', hex: '#0ea5e9' },
   { id: 'violet', label: 'Violet', hex: '#8b5cf6' },
   { id: 'slate', label: 'Slate', hex: '#64748b' },
-];
+]
 
 /** CSS variable name → value map for a given theme. */
 export interface ThemeTokens {
-  '--bg': string;
-  '--bg-elevated': string;
-  '--bg-subtle': string;
-  '--border': string;
-  '--border-strong': string;
-  '--text': string;
-  '--text-muted': string;
-  '--text-subtle': string;
-  '--accent': string;
-  '--accent-fg': string;
-  '--accent-subtle': string;
-  '--shadow': string;
-  '--font-scale': string;
+  '--bg': string
+  '--bg-elevated': string
+  '--bg-subtle': string
+  '--border': string
+  '--border-strong': string
+  '--text': string
+  '--text-muted': string
+  '--text-subtle': string
+  '--accent': string
+  '--accent-fg': string
+  '--accent-subtle': string
+  '--shadow': string
+  '--font-scale': string
 }
 
 export function resolveTokens(pref: ThemePreference, systemDark: boolean): ThemeTokens {
-  const dark = pref.mode === 'dark' || (pref.mode === 'auto' && systemDark);
-  const accent = ACCENT_COLORS.find((a) => a.id === pref.accent) ?? ACCENT_COLORS[0]!;
-  const hc = pref.highContrast;
+  const dark = pref.mode === 'dark' || (pref.mode === 'auto' && systemDark)
+  const accent = ACCENT_COLORS.find((a) => a.id === pref.accent) ?? ACCENT_COLORS[0]!
+  const hc = pref.highContrast
   if (dark) {
     return {
       '--bg': hc ? '#000000' : '#0f172a',
@@ -79,7 +79,7 @@ export function resolveTokens(pref: ThemePreference, systemDark: boolean): Theme
       '--accent-subtle': `${accent.hex}22`,
       '--shadow': '0 8px 32px -8px rgba(0,0,0,0.6)',
       '--font-scale': String(pref.fontScale),
-    };
+    }
   }
   return {
     '--bg': hc ? '#ffffff' : '#fafafa',
@@ -95,5 +95,5 @@ export function resolveTokens(pref: ThemePreference, systemDark: boolean): Theme
     '--accent-subtle': `${accent.hex}1a`,
     '--shadow': '0 8px 32px -8px rgba(0,0,0,0.18)',
     '--font-scale': String(pref.fontScale),
-  };
+  }
 }

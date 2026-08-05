@@ -11,91 +11,91 @@
  * frames + a fake transcript so the canvas renders without a binary.
  */
 
-export type MediaKind = 'video' | 'audio' | 'image' | 'stream';
+export type MediaKind = 'video' | 'audio' | 'image' | 'stream'
 
-export type MediaEngine = 'vlc' | 'html5' | 'webcodecs' | 'image';
+export type MediaEngine = 'vlc' | 'html5' | 'webcodecs' | 'image'
 
 export interface MediaCard {
-  id: string;
-  slug: string;
-  title: string;
-  kind: MediaKind;
-  engine: MediaEngine | string;
-  sourceUrl: string;
+  id: string
+  slug: string
+  title: string
+  kind: MediaKind
+  engine: MediaEngine | string
+  sourceUrl: string
   /** Duration in seconds (0 if unknown). */
-  durationSec: number;
+  durationSec: number
   /** Current playback position in seconds. */
-  positionSec: number;
+  positionSec: number
   /** Mime type (video/mp4, audio/mpeg, etc.). */
-  mimeType: string;
+  mimeType: string
   /** Whether the media is currently playing. */
-  isPlaying: boolean;
+  isPlaying: boolean
   /** Volume 0..1. */
-  volume: number;
+  volume: number
   /** Playback rate (1 = normal). */
-  rate: number;
+  rate: number
   /** Transcript blocks (from ASR via MediaEngine.transcribe). */
-  transcript: TranscriptBlock[];
+  transcript: TranscriptBlock[]
   /** Frame thumbnails (extracted via MediaEngine.extractFrame). */
-  thumbnails: FrameThumb[];
+  thumbnails: FrameThumb[]
   /** Workspace this media belongs to. */
-  workspaceId: string | null;
+  workspaceId: string | null
   /** Engine reference — plugins can hot-swap. */
-  engineRef: string; // e.g. 'engine:media:vlc'
-  capabilities: string[];
-  annotations: string[];
-  createdAt: number;
-  updatedAt: number;
+  engineRef: string // e.g. 'engine:media:vlc'
+  capabilities: string[]
+  annotations: string[]
+  createdAt: number
+  updatedAt: number
 }
 
 export interface TranscriptBlock {
-  index: number;
-  startSec: number;
-  endSec: number;
-  text: string;
+  index: number
+  startSec: number
+  endSec: number
+  text: string
   /** Confidence 0..1 (from ASR). */
-  confidence?: number;
+  confidence?: number
   /** Optional speaker label (diarization). */
-  speaker?: string;
+  speaker?: string
 }
 
 export interface FrameThumb {
-  index: number;
-  timeSec: number;
-  dataUrl: string; // base64 PNG/JPEG
-  width: number;
-  height: number;
+  index: number
+  timeSec: number
+  dataUrl: string // base64 PNG/JPEG
+  width: number
+  height: number
 }
 
 export interface MediaPlayInput {
-  mediaId: string;
-  positionSec?: number;
-  rate?: number;
-  volume?: number;
+  mediaId: string
+  positionSec?: number
+  rate?: number
+  volume?: number
 }
 
 export interface MediaSeekInput {
-  mediaId: string;
-  positionSec: number;
+  mediaId: string
+  positionSec: number
 }
 
 export interface MediaExtractFrameInput {
-  mediaId: string;
-  timeSec: number;
-  width?: number;
-  height?: number;
+  mediaId: string
+  timeSec: number
+  width?: number
+  height?: number
 }
 
 export interface MediaTranscribeInput {
-  mediaId: string;
-  language?: string;
+  mediaId: string
+  language?: string
   /** Diarize speakers when true. */
-  diarize?: boolean;
+  diarize?: boolean
 }
 
 export interface MediaTranscribeOutput {
-  mediaId: string;
-  blocks: TranscriptBlock[];
+  mediaId: string
+  blocks: TranscriptBlock[]
   /** StreamBlock ids created in the ConversationMessage store. */
-  streamBlockIds: string[];
+  streamBlockIds: string[]
 }

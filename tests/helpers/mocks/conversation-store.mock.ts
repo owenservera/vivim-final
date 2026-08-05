@@ -5,7 +5,6 @@ import type {
   ConversationMessageRow,
   ConversationRow,
   ConversationStore,
-  MessageAttachmentRow,
 } from '../../../src/storage/contracts/conversation-store.js'
 
 export function createMockConversationStore(

@@ -8,13 +8,13 @@
 // Parser: DAG message mapping (ChatGPT uses parent-child tree, not linear list)
 
 import type {
-  ProviderConversationAdapter,
+  AuthContext,
+  ConversationArtifact,
+  ConversationFull,
   ConversationHeader,
   ConversationMessage,
-  ConversationFull,
-  ConversationArtifact,
   PaginatedResult,
-  AuthContext,
+  ProviderConversationAdapter,
 } from '../provider-conversation-adapter.js'
 import { AdapterError } from '../provider-conversation-adapter.js'
 
@@ -174,7 +174,7 @@ export class ChatGPTAdapter implements ProviderConversationAdapter {
         this.providerId,
         'RATE_LIMITED',
         true,
-        retryAfter ? parseInt(retryAfter, 10) * 1000 : 60_000,
+        retryAfter ? Number.parseInt(retryAfter, 10) * 1000 : 60_000,
       )
     }
 
@@ -202,7 +202,7 @@ export class ChatGPTAdapter implements ProviderConversationAdapter {
     auth: AuthContext,
     opts?: { cursor?: string; limit?: number },
   ): Promise<PaginatedResult<ConversationHeader>> {
-    const offset = opts?.cursor ? parseInt(opts.cursor, 10) : 0
+    const offset = opts?.cursor ? Number.parseInt(opts.cursor, 10) : 0
     const limit = opts?.limit ?? 100
 
     const data = (await this.chatgptFetch(
@@ -334,10 +334,7 @@ function parseConversation(raw: RawConversationItem): ConversationFull {
 /**
  * Parse a single ChatGPT mapping node into a ConversationMessage.
  */
-function parseMessageNode(
-  id: string,
-  node: RawMappingNode,
-): ConversationMessage | null {
+function parseMessageNode(id: string, node: RawMappingNode): ConversationMessage | null {
   const msg = node.message
   if (!msg?.content) return null
 
@@ -350,9 +347,7 @@ function parseMessageNode(
     case 'code': {
       const c = msg.content
       content = c.parts
-        ? (c.parts as unknown[])
-            .filter((p): p is string => typeof p === 'string')
-            .join('')
+        ? (c.parts as unknown[]).filter((p): p is string => typeof p === 'string').join('')
         : c.text || ''
       break
     }
@@ -361,7 +356,7 @@ function parseMessageNode(
       const c = msg.content
       if (c.parts) {
         const textParts: string[] = []
-        let imgSeq = 0
+        const imgSeq = 0
 
         for (const p of c.parts as unknown[]) {
           if (typeof p === 'string') {
@@ -371,7 +366,10 @@ function parseMessageNode(
 
             if (part.content_type === 'text' && typeof part.text === 'string') {
               textParts.push(part.text)
-            } else if (part.content_type === 'audio_transcription' && typeof part.text === 'string') {
+            } else if (
+              part.content_type === 'audio_transcription' &&
+              typeof part.text === 'string'
+            ) {
               textParts.push(part.text)
             } else if (part.content_type === 'image_asset_pointer') {
               const meta = (part.metadata as Record<string, unknown>) ?? {}

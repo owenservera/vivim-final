@@ -19,68 +19,71 @@ export type AutomationNodeKind =
   | 'transform'
   | 'wait'
   | 'hitl' // human-in-the-loop gate
-  | 'output';
+  | 'output'
 
 export interface AutomationNode {
-  id: string;
-  kind: AutomationNodeKind;
+  id: string
+  kind: AutomationNodeKind
   /** Capability slug this node invokes (e.g. cap:document:summarize). */
-  capabilityId?: string;
-  label: string;
+  capabilityId?: string
+  label: string
   /** Input template (placeholders {{trigger.X}} resolved at runtime). */
-  inputTemplate?: Record<string, unknown>;
+  inputTemplate?: Record<string, unknown>
   /** Position on the visual DAG canvas. */
-  position: { x: number; y: number };
+  position: { x: number; y: number }
   /** HitlGate id (if kind='hitl'). */
-  hitlGateId?: string;
+  hitlGateId?: string
 }
 
 export interface AutomationEdge {
-  id: string;
-  fromNodeId: string;
-  toNodeId: string;
+  id: string
+  fromNodeId: string
+  toNodeId: string
   /** Optional condition expression for branching. */
-  condition?: string;
-  label?: string;
+  condition?: string
+  label?: string
 }
 
-export type AutomationStatus = 'draft' | 'published' | 'deprecated' | 'running' | 'paused';
+export type AutomationStatus = 'draft' | 'published' | 'deprecated' | 'running' | 'paused'
 
 export interface AutomationDefinition {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  workspaceId: string; // automation workspace
-  nodes: AutomationNode[];
-  edges: AutomationEdge[];
+  id: string
+  slug: string
+  name: string
+  description: string
+  workspaceId: string // automation workspace
+  nodes: AutomationNode[]
+  edges: AutomationEdge[]
   /** Trigger spec (cron / event / webhook / manual). */
   trigger: {
-    kind: 'cron' | 'event' | 'webhook' | 'manual' | 'schedule';
-    spec?: string; // cron expression / event name / webhook path
-  };
-  status: AutomationStatus;
+    kind: 'cron' | 'event' | 'webhook' | 'manual' | 'schedule'
+    spec?: string // cron expression / event name / webhook path
+  }
+  status: AutomationStatus
   /** The capability id registered for this automation. */
-  capabilityId: string;
+  capabilityId: string
   /** Execution policy (reuse PolicyRule). */
-  policyRuleId?: string;
-  version: number;
-  author: 'system' | 'user' | 'agent';
-  tags: string[];
-  createdAt: number;
-  updatedAt: number;
+  policyRuleId?: string
+  version: number
+  author: 'system' | 'user' | 'agent'
+  tags: string[]
+  createdAt: number
+  updatedAt: number
 }
 
 export interface AutomationExecution {
-  id: string;
-  automationId: string;
-  traceId: string;
-  status: 'pending' | 'running' | 'hitl' | 'completed' | 'failed' | 'cancelled';
-  startedAt: number;
-  completedAt?: number;
+  id: string
+  automationId: string
+  traceId: string
+  status: 'pending' | 'running' | 'hitl' | 'completed' | 'failed' | 'cancelled'
+  startedAt: number
+  completedAt?: number
   /** Per-node execution state. */
-  nodeStates: Record<string, { status: string; startedAt?: number; completedAt?: number; output?: unknown; error?: string }>;
+  nodeStates: Record<
+    string,
+    { status: string; startedAt?: number; completedAt?: number; output?: unknown; error?: string }
+  >
   /** Final output (if completed). */
-  output?: unknown;
-  error?: string;
+  output?: unknown
+  error?: string
 }

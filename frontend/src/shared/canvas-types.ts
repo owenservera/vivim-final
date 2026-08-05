@@ -12,7 +12,7 @@ export type PrimitiveKind =
   | 'knowledge'
   | 'agents'
   | 'providers'
-  | 'conversations';
+  | 'conversations'
 
 export type LayerCategory =
   | 'system'
@@ -22,67 +22,67 @@ export type LayerCategory =
   | 'projects'
   | 'knowledge'
   | 'designer'
-  | 'plugin';
+  | 'plugin'
 
-export type LayerAuthor = 'system' | 'user' | 'agent';
-export type LayerStatus = 'draft' | 'published' | 'deprecated';
-export type InstanceStatus = 'mounting' | 'live' | 'dismissed' | 'error';
+export type LayerAuthor = 'system' | 'user' | 'agent'
+export type LayerStatus = 'draft' | 'published' | 'deprecated'
+export type InstanceStatus = 'mounting' | 'live' | 'dismissed' | 'error'
 
 /**
  * P8 sandbox policy. `allowInlineScript` is a literal `false` so that any
  * attempt to override it to `true` fails type-check AND schema validation.
  */
 export interface SandboxPolicy {
-  csp: string;
-  allowNetwork: boolean;
-  allowCapabilities: string[];
-  budgetMs: number;
-  allowInlineScript: false;
+  csp: string
+  allowNetwork: boolean
+  allowCapabilities: string[]
+  budgetMs: number
+  allowInlineScript: false
 }
 
 export interface CanvasLayout {
-  x: number;
-  y: number;
-  z: number;
-  w: number;
-  h: number;
-  minimized?: boolean;
-  detailZoom?: number;
+  x: number
+  y: number
+  z: number
+  w: number
+  h: number
+  minimized?: boolean
+  detailZoom?: number
 }
 
 export interface LayerBinding {
-  regionId: string;
-  role: string;
-  selector: string;
-  primitive?: PrimitiveKind;
-  capabilitySlug?: string;
-  direction: 'read' | 'write' | 'bidirectional';
+  regionId: string
+  role: string
+  selector: string
+  primitive?: PrimitiveKind
+  capabilitySlug?: string
+  direction: 'read' | 'write' | 'bidirectional'
 }
 
 export interface CanvasDefinition {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  category: LayerCategory;
-  version: number;
-  html: string;
-  css: string;
-  scriptUrl?: string;
-  bindings: LayerBinding[];
-  layout: CanvasLayout;
-  author: LayerAuthor;
-  sandbox: SandboxPolicy;
-  status: LayerStatus;
-  tags: string[];
-  createdAt: number;
-  updatedAt: number;
+  id: string
+  slug: string
+  name: string
+  description: string
+  category: LayerCategory
+  version: number
+  html: string
+  css: string
+  scriptUrl?: string
+  bindings: LayerBinding[]
+  layout: CanvasLayout
+  author: LayerAuthor
+  sandbox: SandboxPolicy
+  status: LayerStatus
+  tags: string[]
+  createdAt: number
+  updatedAt: number
 }
 
 export interface LayerHost {
-  mount(instanceId: string, def: CanvasDefinition): Promise<{ hostNodeId: string }>;
-  unmount(instanceId: string): Promise<void>;
-  isMounted(instanceId: string): boolean;
+  mount(instanceId: string, def: CanvasDefinition): Promise<{ hostNodeId: string }>
+  unmount(instanceId: string): Promise<void>
+  isMounted(instanceId: string): boolean
 }
 
 /**
@@ -91,14 +91,14 @@ export interface LayerHost {
  * too). Inline scripts are NEVER allowed (P8).
  */
 export const DEFAULT_SANDBOX_CSP =
-  "default-src 'none'; script-src 'self' blob:; style-src 'unsafe-inline' blob:; img-src 'self' data: blob:; connect-src 'none';";
+  "default-src 'none'; script-src 'self' blob:; style-src 'unsafe-inline' blob:; img-src 'self' data: blob:; connect-src 'none';"
 
 /** Build a sandbox policy that always forces `allowInlineScript: false`. */
 export function buildSandboxPolicy(input: {
-  allowCapabilities?: string[];
-  allowNetwork?: boolean;
-  budgetMs?: number;
-  csp?: string;
+  allowCapabilities?: string[]
+  allowNetwork?: boolean
+  budgetMs?: number
+  csp?: string
 }): SandboxPolicy {
   return {
     csp: input.csp ?? DEFAULT_SANDBOX_CSP,
@@ -107,5 +107,5 @@ export function buildSandboxPolicy(input: {
     budgetMs: input.budgetMs ?? 5_000,
     // Hard-coded — never overridable. S93 invariant.
     allowInlineScript: false,
-  };
+  }
 }

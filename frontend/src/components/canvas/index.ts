@@ -137,8 +137,22 @@ export type { CanvasSessionState, SessionAction, LayerState } from './SessionSta
 export { TabBar } from './TabBar'
 export { LayerSwitcher } from './LayerSwitcher'
 export { UnifiedEntry } from './UnifiedEntry'
-export { getLayerConfig, getTabsForLayer, getPanelType, getPanelConfig, listPanels } from './TabConfig'
-export type { LayerConfig, TabConfig, LayerId, PanelType, PanelSize, PanelDock, TabCategory } from './TabConfig'
+export {
+  getLayerConfig,
+  getTabsForLayer,
+  getPanelType,
+  getPanelConfig,
+  listPanels,
+} from './TabConfig'
+export type {
+  LayerConfig,
+  TabConfig,
+  LayerId,
+  PanelType,
+  PanelSize,
+  PanelDock,
+  TabCategory,
+} from './TabConfig'
 
 // Update notification
 export { UpdateNotification } from './UpdateNotification'

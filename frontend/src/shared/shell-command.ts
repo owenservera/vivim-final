@@ -13,39 +13,39 @@
 
 export interface ShellCommandInput {
   /** Raw command line, e.g. "admin db status" or "list conversations --provider=chatgpt". */
-  command: string;
+  command: string
   /** Workspace context (so the command knows where it's running). */
-  workspaceId?: string;
+  workspaceId?: string
   /** User invoking the command. */
-  userId?: string;
+  userId?: string
   /** Abort the previous invocation when true. */
-  abort?: boolean;
+  abort?: boolean
 }
 
 export interface ShellCommandOutputChunk {
-  traceId: string;
-  sequence: number;
-  kind: 'stdout' | 'stderr' | 'status' | 'complete' | 'error';
-  text?: string;
+  traceId: string
+  sequence: number
+  kind: 'stdout' | 'stderr' | 'status' | 'complete' | 'error'
+  text?: string
   status?: {
-    exitCode: number | null;
-    durationMs: number;
-    capabilityId?: string;
-  };
-  timestamp: number;
+    exitCode: number | null
+    durationMs: number
+    capabilityId?: string
+  }
+  timestamp: number
 }
 
 export interface ShellCommandResult {
-  traceId: string;
-  ok: boolean;
-  exitCode: number;
+  traceId: string
+  ok: boolean
+  exitCode: number
   /** Full stdout (concatenated). */
-  stdout: string;
+  stdout: string
   /** Full stderr (concatenated). */
-  stderr: string;
-  durationMs: number;
+  stderr: string
+  durationMs: number
   /** The capability id the command resolved to (for audit). */
-  capabilityId?: string;
+  capabilityId?: string
 }
 
 /**
@@ -54,19 +54,19 @@ export interface ShellCommandResult {
  */
 export interface CommandSpec {
   /** Command path, e.g. ['admin', 'db', 'status']. */
-  path: string[];
+  path: string[]
   /** Short description. */
-  description: string;
+  description: string
   /** Capability id to dispatch. */
-  capabilityId: string;
+  capabilityId: string
   /** Argument schema (Zod or plain). */
-  argSchema?: Record<string, unknown>;
+  argSchema?: Record<string, unknown>
   /** Handler invoked when the command matches. */
-  handler: (args: string[], ctx: ShellCommandContext) => Promise<ShellCommandResult>;
+  handler: (args: string[], ctx: ShellCommandContext) => Promise<ShellCommandResult>
 }
 
 export interface ShellCommandContext {
-  workspaceId: string;
-  userId: string;
-  traceId: string;
+  workspaceId: string
+  userId: string
+  traceId: string
 }

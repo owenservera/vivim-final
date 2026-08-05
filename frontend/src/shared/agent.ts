@@ -19,107 +19,110 @@ export type AgentStepKind =
   | 'hitl' // human-in-the-loop gate
   | 'memory' // read/write memory store
   | 'tool' // call an external tool
-  | 'output'; // final response
+  | 'output' // final response
 
 export interface AgentStep {
-  id: string;
-  kind: AgentStepKind;
-  label: string;
+  id: string
+  kind: AgentStepKind
+  label: string
   /** Capability slug (for 'act' / 'tool' steps). */
-  capabilityId?: string;
+  capabilityId?: string
   /** Prompt template (for 'think' / 'reflect' steps). */
-  promptTemplate?: string;
+  promptTemplate?: string
   /** Model id (for 'think' steps). */
-  modelId?: string;
+  modelId?: string
   /** Memory op (for 'memory' steps): read | write | search. */
-  memoryOp?: 'read' | 'write' | 'search';
+  memoryOp?: 'read' | 'write' | 'search'
   /** Memory key (for 'memory' steps). */
-  memoryKey?: string;
+  memoryKey?: string
   /** HitlGate id (for 'hitl' steps). */
-  hitlGateId?: string;
-  position: { x: number; y: number };
+  hitlGateId?: string
+  position: { x: number; y: number }
   /** Inputs from previous steps (DAG edges). */
-  inputs?: string[];
+  inputs?: string[]
 }
 
 export interface AgentEdge {
-  id: string;
-  fromStepId: string;
-  toStepId: string;
-  condition?: string;
-  label?: string;
+  id: string
+  fromStepId: string
+  toStepId: string
+  condition?: string
+  label?: string
 }
 
-export type AgentStatus = 'draft' | 'published' | 'deprecated' | 'running' | 'paused';
+export type AgentStatus = 'draft' | 'published' | 'deprecated' | 'running' | 'paused'
 
 export interface AgentDefinition {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-  workspaceId: string; // agents workspace
-  steps: AgentStep[];
-  edges: AgentEdge[];
+  id: string
+  slug: string
+  name: string
+  description: string
+  workspaceId: string // agents workspace
+  steps: AgentStep[]
+  edges: AgentEdge[]
   /** Entry step id. */
-  entryStepId: string;
+  entryStepId: string
   /** Model preference (may be overridden per-step). */
-  defaultModelId?: string;
+  defaultModelId?: string
   /** Max loop iterations (AgentLoopRun cap). */
-  maxLoopIterations: number;
+  maxLoopIterations: number
   /** PolicyRule guardrail. */
-  policyRuleId?: string;
+  policyRuleId?: string
   /** HitlGates referenced by steps. */
-  hitlGateIds: string[];
-  status: AgentStatus;
+  hitlGateIds: string[]
+  status: AgentStatus
   /** The capability id registered for this agent. */
-  capabilityId: string;
-  version: number;
-  author: 'system' | 'user' | 'agent';
-  tags: string[];
-  createdAt: number;
-  updatedAt: number;
+  capabilityId: string
+  version: number
+  author: 'system' | 'user' | 'agent'
+  tags: string[]
+  createdAt: number
+  updatedAt: number
 }
 
 export interface AgentRun {
-  id: string;
-  agentId: string;
-  traceId: string;
-  status: 'pending' | 'running' | 'hitl' | 'completed' | 'failed' | 'cancelled';
-  iteration: number; // current loop iteration
-  startedAt: number;
-  completedAt?: number;
+  id: string
+  agentId: string
+  traceId: string
+  status: 'pending' | 'running' | 'hitl' | 'completed' | 'failed' | 'cancelled'
+  iteration: number // current loop iteration
+  startedAt: number
+  completedAt?: number
   /** Per-step state. */
-  stepStates: Record<string, { status: string; startedAt?: number; completedAt?: number; output?: unknown; error?: string }>;
-  finalOutput?: unknown;
-  error?: string;
+  stepStates: Record<
+    string,
+    { status: string; startedAt?: number; completedAt?: number; output?: unknown; error?: string }
+  >
+  finalOutput?: unknown
+  error?: string
 }
 
 /** HitlGate row (mirrors prisma HitlGate). */
 export interface HitlGate {
-  id: string;
-  slug: string;
-  label: string;
-  description?: string;
+  id: string
+  slug: string
+  label: string
+  description?: string
   /** Approval required from these roles. */
-  approverRoles: string[];
+  approverRoles: string[]
   /** Auto-approve after this many ms (optional). */
-  autoApproveMs?: number;
+  autoApproveMs?: number
   /** Reject policy: 'block' | 'skip' | 'escalate'. */
-  onReject: 'block' | 'skip' | 'escalate';
-  createdAt: number;
-  updatedAt: number;
+  onReject: 'block' | 'skip' | 'escalate'
+  createdAt: number
+  updatedAt: number
 }
 
 /** PolicyRule row (mirrors prisma PolicyRule). */
 export interface PolicyRule {
-  id: string;
-  slug: string;
-  label: string;
-  description?: string;
+  id: string
+  slug: string
+  label: string
+  description?: string
   /** Rules engine expression (e.g. "rate <= 10/min"). */
-  expression: string;
+  expression: string
   /** Action on violation: 'block' | 'warn' | 'throttle'. */
-  action: 'block' | 'warn' | 'throttle';
-  createdAt: number;
-  updatedAt: number;
+  action: 'block' | 'warn' | 'throttle'
+  createdAt: number
+  updatedAt: number
 }
