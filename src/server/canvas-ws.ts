@@ -13,6 +13,7 @@ import type { PrimitiveKind, PrimitiveProvider } from '../canvas/primitives.js'
 import { fnPrimitive } from '../canvas/primitives.js'
 import type { CanvasDefinition, LayerInstance, OracleReadProvider } from '../canvas/types.js'
 import type { CapabilityExecutor } from '../canvas/types.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import type { CapStoreDb } from '../storage/db.js'
 
@@ -50,8 +51,8 @@ export function corePrimitiveProviders(db: CapStoreDb): PrimitiveProvider[] {
     try {
       const m = prisma[model] as { count?: () => Promise<number> } | undefined
       if (m?.count) return await m.count()
-    } catch {
-      /* model unavailable — report 0 */
+    } catch (e) {
+      catchDebug(e, 'canvas-ws: model count unavailable')
     }
     return 0
   }
@@ -127,8 +128,8 @@ class CanvasWsPort {
   postMessage(msg: unknown): void {
     try {
       this.ws.send(JSON.stringify(msg))
-    } catch {
-      /* socket mid-close — drop */
+    } catch (e) {
+      catchDebug(e, 'canvas-ws: WS send failed')
     }
   }
 
@@ -139,8 +140,8 @@ class CanvasWsPort {
   handleRaw(raw: string): void {
     try {
       this.cb?.(JSON.parse(raw))
-    } catch {
-      /* malformed frame — ignore */
+    } catch (e) {
+      catchDebug(e, 'canvas-ws: malformed frame')
     }
   }
 
@@ -162,8 +163,8 @@ export function attachCanvasWs(engine: CanvasEngine): (ws: WsLike, raw: string) 
     if (ws) {
       try {
         ws.send(JSON.stringify({ type: 'canvas:state', instanceId, regionId, state }))
-      } catch {
-        /* drop */
+      } catch (e) {
+        catchDebug(e, 'canvas-ws: broadcast state failed')
       }
     }
   }
@@ -172,7 +173,8 @@ export function attachCanvasWs(engine: CanvasEngine): (ws: WsLike, raw: string) 
     let msg: Record<string, unknown>
     try {
       msg = JSON.parse(raw)
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'canvas-ws: message parse failed')
       return
     }
 
