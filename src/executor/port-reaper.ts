@@ -1,6 +1,8 @@
 // src/executor/port-reaper.ts
 // Cleans up orphaned Chrome processes and their debug ports.
 
+import { catchDebug } from '../lib/catch-logger.js'
+
 export class PortReaperError extends Error {
   constructor(message: string) {
     super(message)
@@ -63,7 +65,8 @@ export class PortReaper {
         } else {
           failed++
         }
-      } catch {
+      } catch (e) {
+        catchDebug(e, 'port-reaper: kill attempt failed')
         failed++
       }
     }
@@ -90,7 +93,8 @@ export class PortReaper {
     // Unix: SIGTERM, then SIGKILL after 2s
     try {
       process.kill(pid, 'SIGTERM')
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'port-reaper: SIGTERM failed')
       return false
     }
 
@@ -103,7 +107,8 @@ export class PortReaper {
     try {
       process.kill(pid, 'SIGKILL')
       return true
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'port-reaper: SIGKILL failed')
       return false
     }
   }
@@ -158,8 +163,8 @@ export class PortReaper {
           const pid = Number.parseInt(parts[parts.length - 1] ?? '', 10)
           if (Number.isFinite(pid) && pid > 0) return pid
         }
-      } catch {
-        /* ignore */
+      } catch (e) {
+        catchDebug(e, 'port-reaper: scan netstat failed')
       }
       return null
     }
@@ -177,8 +182,8 @@ export class PortReaper {
         const pid = Number.parseInt(firstPid, 10)
         if (Number.isFinite(pid) && pid > 0) return pid
       }
-    } catch {
-      /* ignore */
+    } catch (e) {
+      catchDebug(e, 'port-reaper: PowerShell command failed')
     }
     return null
   }
@@ -199,7 +204,8 @@ export class PortReaper {
         })
         const output = (await new Response(proc.stdout).text()).trim()
         return output || ''
-      } catch {
+      } catch (e) {
+        catchDebug(e, 'port-reaper: shell command failed')
         return ''
       }
     }
@@ -212,7 +218,8 @@ export class PortReaper {
       })
       const output = (await new Response(proc.stdout).text()).trim()
       return output.replace(/\0/g, ' ')
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'port-reaper: PowerShell output failed')
       return ''
     }
   }
@@ -226,7 +233,8 @@ export class PortReaper {
     try {
       process.kill(pid, 0)
       return true
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'port-reaper: process running check failed')
       return false
     }
   }
