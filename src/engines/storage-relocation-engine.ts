@@ -21,6 +21,7 @@ import { join, dirname, relative, resolve } from 'node:path'
 import { closePrisma, getPrisma, initPrismaWal } from '../storage/prisma.js'
 import { getDataDir, getDbPath, setStoragePaths } from '../config.js'
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 
 const log = getLogger('storage-relocation')
@@ -134,8 +135,8 @@ function readMarker(dir: string): MigrationMarker | null {
     if (existsSync(p)) {
       return JSON.parse(readFileSync(p, 'utf-8')) as MigrationMarker
     }
-  } catch {
-    // corrupt marker — treat as no marker
+  } catch (e) {
+    catchDebug(e, 'storage-relocation: corrupt marker treated as no marker')
   }
   return null
 }
@@ -144,8 +145,8 @@ function clearMarker(dir: string): void {
   try {
     const p = join(dir, MARKER_FILE)
     if (existsSync(p)) unlinkSync(p)
-  } catch {
-    // non-fatal
+  } catch (e) {
+    catchDebug(e, 'storage-relocation: unlink failed (non-fatal)')
   }
 }
 
@@ -324,8 +325,8 @@ export class StorageRelocationEngine {
           'Large data directory — ensure target has enough space',
         )
       }
-    } catch {
-      // best-effort
+    } catch (e) {
+      catchDebug(e, 'storage-relocation: source size check failed')
     }
 
     // Detect network/removable drive warnings
@@ -646,8 +647,8 @@ export class StorageRelocationEngine {
           size += this.fileSize(p)
         }
       }
-    } catch {
-      // best-effort
+    } catch (e) {
+      catchDebug(e, 'storage-relocation: dirSize failed')
     }
     return size
   }
@@ -655,7 +656,8 @@ export class StorageRelocationEngine {
   private fileSize(file: string): number {
     try {
       return statSync(file).size
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'storage-relocation: fileSize failed')
       return 0
     }
   }
