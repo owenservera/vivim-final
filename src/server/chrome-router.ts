@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
 import type { SurfaceSpec } from '../reprogrammability/schema/spec.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -58,11 +58,7 @@ export function createChromeRouter() {
           surfaces: seed.surfaces.map((s) => ({ id: s.id, spec: s.spec })),
         })
       } catch (err) {
-        return errorResponse(
-          `Failed to load factory seed: ${err instanceof Error ? err.message : String(err)}`,
-          'INTERNAL_ERROR',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 
@@ -89,11 +85,7 @@ export function createChromeRouter() {
         const result = await mutationExecutor.applyPlan(plan)
         return json({ ok: result.ok, applied: result.records.length, result })
       } catch (err) {
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'INTERNAL_ERROR',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 

@@ -49,14 +49,18 @@ export interface IOResponse<T> {
 }
 
 export class IOError extends Error {
+  public readonly code?: string
+
   constructor(
     message: string,
     public readonly status: number,
     public readonly traceId: string,
     public readonly cause?: unknown,
+    code?: string,
   ) {
     super(message)
     this.name = 'IOError'
+    this.code = code
   }
 }
 

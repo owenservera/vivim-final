@@ -7,7 +7,7 @@
 import { z } from 'zod'
 import type { CostOptimizer } from '../engines/cost-optimizer.js'
 import type { ProviderMuxEngine } from '../engines/provider-mux.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
 export interface MuxRouterContext {
@@ -143,8 +143,7 @@ export function createMuxRouter(ctx: MuxRouterContext) {
 
       return errorResponse('Not found', 'NotFound', 404)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err)
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

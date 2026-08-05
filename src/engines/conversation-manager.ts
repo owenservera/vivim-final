@@ -1031,11 +1031,19 @@ export class ConversationManager {
   // ── CRUD ─────────────────────────────────────────────────────────────────
 
   async createConversation(providerId: string, title?: string): Promise<ConversationRow> {
-    return this.store.createConversation({
+    const created = await this.store.createConversation({
       providerSessionId: `session_${providerId}_${Date.now()}`,
       providerId,
       title: title ?? null,
     })
+    // P3-6: Emit conversation:created event so subscribers are notified.
+    this.eventBus.emit({
+      type: 'conversation:created',
+      conversationId: created.id,
+      providerId: created.providerId,
+      accountId: created.accountId ?? '',
+    })
+    return created
   }
 
   async getConversation(id: string): Promise<ConversationRow> {

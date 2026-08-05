@@ -16,7 +16,7 @@
 
 import { z } from 'zod'
 import { getUpdateEngine } from '../../engines/update-engine.js'
-import { errorResponse, json } from '../response.js'
+import { appErrorResponse, errorResponse, json } from '../response.js'
 
 export function createUpdateRouter() {
   return async function updateRouter(req: Request, url: URL): Promise<Response | null> {
@@ -34,11 +34,7 @@ export function createUpdateRouter() {
           update: updateInfo,
         })
       } catch (error) {
-        return errorResponse(
-          error instanceof Error ? error.message : 'Failed to check for updates',
-          'UPDATE_CHECK_FAILED',
-          500,
-        )
+        return appErrorResponse(error)
       }
     }
 
@@ -56,11 +52,7 @@ export function createUpdateRouter() {
           update: providerUpdate,
         })
       } catch (error) {
-        return errorResponse(
-          error instanceof Error ? error.message : 'Failed to check provider updates',
-          'PROVIDER_UPDATE_CHECK_FAILED',
-          500,
-        )
+        return appErrorResponse(error)
       }
     }
 
@@ -78,11 +70,7 @@ export function createUpdateRouter() {
           ...status,
         })
       } catch (error) {
-        return errorResponse(
-          error instanceof Error ? error.message : 'Failed to get provider status',
-          'PROVIDER_STATUS_FAILED',
-          500,
-        )
+        return appErrorResponse(error)
       }
     }
 
@@ -105,11 +93,7 @@ export function createUpdateRouter() {
           providers: providersWithStatus,
         })
       } catch (error) {
-        return errorResponse(
-          error instanceof Error ? error.message : 'Failed to list providers',
-          'PROVIDERS_LIST_FAILED',
-          500,
-        )
+        return appErrorResponse(error)
       }
     }
 
@@ -128,11 +112,7 @@ export function createUpdateRouter() {
 
         return json({ ok: true, filePath })
       } catch (error) {
-        return errorResponse(
-          error instanceof Error ? error.message : 'Download failed',
-          'DOWNLOAD_FAILED',
-          500,
-        )
+        return appErrorResponse(error)
       }
     }
 
@@ -155,7 +135,7 @@ export function createUpdateRouter() {
           if (!body.parserCode || !body.capabilities) {
             return errorResponse(
               'parserCode and capabilities are required for provider updates',
-              'VALIDATION_ERROR',
+              'ValidationError',
               400,
             )
           }
@@ -170,7 +150,7 @@ export function createUpdateRouter() {
         }
         // App update
         if (!body.filePath) {
-          return errorResponse('filePath is required for app updates', 'VALIDATION_ERROR', 400)
+          return errorResponse('filePath is required for app updates', 'ValidationError', 400)
         }
 
         const engine = getUpdateEngine()
@@ -182,11 +162,7 @@ export function createUpdateRouter() {
           message: 'Update installation started. Application will restart.',
         })
       } catch (error) {
-        return errorResponse(
-          error instanceof Error ? error.message : 'Installation failed',
-          'INSTALL_FAILED',
-          500,
-        )
+        return appErrorResponse(error)
       }
     }
 
@@ -220,11 +196,7 @@ export function createUpdateRouter() {
           message: 'Update installation started. Application will restart.',
         })
       } catch (error) {
-        return errorResponse(
-          error instanceof Error ? error.message : 'Update failed',
-          'UPDATE_FAILED',
-          500,
-        )
+        return appErrorResponse(error)
       }
     }
 

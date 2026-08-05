@@ -134,7 +134,7 @@ export function createAutomationRouter() {
         return json({ ok: true, detail: 'Automator reset' })
       }
 
-      return errorResponse('Not found', 'NotFoundError', 404)
+      return errorResponse('Not found', 'NotFound', 404)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Internal error'
       return errorResponse(message, 'InternalError', 500)

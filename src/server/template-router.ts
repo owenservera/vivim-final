@@ -66,14 +66,14 @@ export function createTemplateRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = FromGraphInputSchema.safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -102,7 +102,7 @@ export function createTemplateRouter() {
     if (getMatch && req.method === 'GET') {
       const id = getMatch[1]!
       const tpl = templates.get(id)
-      if (!tpl) return errorResponse(`Template not found: ${id}`, 'NOT_FOUND', 404)
+      if (!tpl) return errorResponse(`Template not found: ${id}`, 'NotFound', 404)
       return json({ ok: true, template: tpl })
     }
 
@@ -113,7 +113,7 @@ export function createTemplateRouter() {
     if (instMatch && req.method === 'POST') {
       const id = instMatch[1]!
       const tpl = templates.get(id)
-      if (!tpl) return errorResponse(`Template not found: ${id}`, 'NOT_FOUND', 404)
+      if (!tpl) return errorResponse(`Template not found: ${id}`, 'NotFound', 404)
 
       const graph = tpl.graphJson as {
         nodes?: Array<Record<string, unknown>>
@@ -129,7 +129,7 @@ export function createTemplateRouter() {
       if (!graph || !Array.isArray(graph.edges)) {
         return errorResponse(
           'Template graph has no edges; nothing to instantiate',
-          'VALIDATION_ERROR',
+          'ValidationError',
           422,
         )
       }
@@ -180,7 +180,7 @@ export function createTemplateRouter() {
     if (delMatch && req.method === 'DELETE') {
       const id = delMatch[1]!
       if (!templates.has(id)) {
-        return errorResponse(`Template not found: ${id}`, 'NOT_FOUND', 404)
+        return errorResponse(`Template not found: ${id}`, 'NotFound', 404)
       }
       templates.delete(id)
       return json({ ok: true, deleted: id })

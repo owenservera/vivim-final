@@ -1,5 +1,23 @@
 // src/server/response.ts
 // CORS middleware + JSON response helpers + ETag cache (Unit 1.5)
+// + canonical error response helper (Work Items 01/03)
+
+import { AppError } from './errors.js'
+import type { ErrorCode } from './errors.js'
+
+/**
+ * Response shape conventions:
+ * - Simple list endpoints (GET /api/conversations, GET /api/providers):
+ *   Return raw arrays: T[]
+ * - Paginated list endpoints (GET /api/nodes, GET /api/knowledge/search):
+ *   Return wrapped shape: { items: T[], total: number } or { nodes: T[], total: number }
+ * - Single resource endpoints (GET /api/capabilities/:id):
+ *   Return the resource directly: T
+ * - Action endpoints (POST /api/conversations/:id/send):
+ *   Return wrapped: { ok: boolean, ... }
+ * - Error responses (all):
+ *   Return: { error: string, code: ErrorCode, details?: unknown }
+ */
 
 // Unit 1.5 — Map-backed cache for safe reads
 type CacheEntry = { etag: string; body: unknown; expires: number }
@@ -81,9 +99,22 @@ export function bustCache(cacheKey: string): void {
 
 export function errorResponse(
   message: string,
-  code: string,
+  code: ErrorCode,
   status = 500,
   details?: unknown,
 ): Response {
   return json({ error: message, code, details }, status)
+}
+
+/**
+ * Convert an AppError (or any thrown value) into a standardized error Response.
+ * This is the single place that turns server-side errors into HTTP responses,
+ * ensuring every error has a consistent `{ error, code, details }` shape.
+ */
+export function appErrorResponse(err: unknown): Response {
+  if (err instanceof AppError) {
+    return errorResponse(err.message, err.code, err.status, err.details)
+  }
+  const message = err instanceof Error ? err.message : 'Internal error'
+  return errorResponse(message, 'InternalError', 500)
 }

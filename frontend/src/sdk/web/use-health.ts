@@ -2,6 +2,7 @@
 
 import { useIO } from '@/components/canvas/UnifiedIOProvider'
 import type { HealthStatus } from '@/types/api'
+import { HealthDashboardResponseSchema } from '@/api/schemas'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useHealth() {
@@ -22,7 +23,9 @@ export function useHealth() {
     setLoading(true)
     setError(null)
     try {
-      const res = await io.get<HealthStatus>('/api/health')
+      const res = await io.get<HealthStatus>('/api/health', {
+        responseSchema: HealthDashboardResponseSchema,
+      })
       if (!mountedRef.current) return
       setHealth(res.data)
     } catch (e) {

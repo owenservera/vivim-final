@@ -1175,7 +1175,13 @@ export { detectProvider as _detectProvider }
 /** Returns true if no provider accounts exist on disk (first run). */
 export async function checkNeedsSetup(): Promise<boolean> {
   try {
-    const res = await fetch('/api/setup/profiles');
+    // P2-4: Use getApiBase for proper base URL resolution instead of raw fetch.
+    // The function runs outside React tree (from page.tsx), so we can't use useIO().
+    const { getApiBase } = await import('@/lib/ws-url');
+    const res = await fetch(`${getApiBase()}/api/setup/profiles`, {
+      headers: { 'X-Source': 'frontend' },
+      signal: AbortSignal.timeout(5000),
+    });
     const data = await res.json();
     return !data?.profiles || data.profiles.length === 0;
   } catch {

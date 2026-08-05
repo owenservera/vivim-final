@@ -40,14 +40,14 @@ export function createPluginBuilderRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = BuildInputSchema.safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }

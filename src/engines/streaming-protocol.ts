@@ -3,6 +3,7 @@
 
 import type { ContentBlock } from '../schema/streaming.js'
 import type { StreamBlockStoreContract } from '../storage/contracts/stream-block-store.js'
+import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -33,11 +34,15 @@ export class StreamingProtocol {
   private blockBuffer: ContentBlock[] = []
   private currentConversationId = ''
   private currentMessageId = ''
+  private eventBus: CapabilityEventBus | null = null
 
   constructor(
     private readonly parser: ParserModule,
     private readonly store?: StreamBlockStoreContract,
-  ) {}
+    eventBus?: CapabilityEventBus,
+  ) {
+    this.eventBus = eventBus ?? null
+  }
 
   onEvent(handler: StreamingEventHandler): () => void {
     this.handlers.push(handler)
@@ -49,6 +54,15 @@ export class StreamingProtocol {
   private emit(event: StreamingEvent): void {
     for (const handler of this.handlers) {
       handler(event)
+    }
+    // Bridge conversation events to CapabilityEventBus (P0-3)
+    // This allows the WebSocket forwarder in websocket.ts to deliver them
+    if (this.eventBus && ['conversation:block', 'conversation:complete', 'conversation:error'].includes(event.type as string)) {
+      try {
+        this.eventBus.emit(event as unknown as { type: string; [key: string]: unknown })
+      } catch {
+        // Non-fatal: best-effort bridge
+      }
     }
   }
 

@@ -13,7 +13,9 @@ export type WsStatus = "connecting" | "connected" | "disconnected" | "error"
 export interface WsMessage {
   type: string
   payload?: unknown
-  timestamp?: string
+  timestamp?: string | number
+  /** All other event fields are spread at the top level */
+  [key: string]: unknown
 }
 
 interface UseWebSocketOptions {
@@ -73,11 +75,22 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
     ws.onmessage = (event) => {
       try {
-        const msg: WsMessage = JSON.parse(event.data)
+        const raw = JSON.parse(event.data)
+        // P0-1: Normalize event envelope — if backend sends flat event
+        // (no payload wrapper), create payload from all fields except type/timestamp
+        // so both msg.payload.* and msg.field access patterns work
+        const msg: WsMessage = raw.payload !== undefined
+          ? raw
+          : {
+              ...raw,
+              payload: Object.fromEntries(
+                Object.entries(raw).filter(([k]) => k !== 'type' && k !== 'timestamp'),
+              ),
+            }
         onMessage?.(msg)
       } catch {
         // Non-JSON message — treat as raw text
-        onMessage?.({ type: "raw", payload: event.data })
+        onMessage?.({ type: 'raw', payload: event.data })
       }
     }
 

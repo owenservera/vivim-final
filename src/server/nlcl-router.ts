@@ -16,7 +16,7 @@ import {
   NlclInterpretSchema,
 } from '../schema/api-validators.js'
 import { wrapCommandResultAsInterpretResponse } from './interpret-router.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 export function createNLCLRouter(engine: NLCLEngine) {
   return async function nlclRouter(req: Request): Promise<Response> {
@@ -54,11 +54,7 @@ export function createNLCLRouter(engine: NLCLEngine) {
           )
           return json(response)
         } catch (err) {
-          return errorResponse(
-            err instanceof Error ? err.message : 'Interpretation failed',
-            'NLCLError',
-            500,
-          )
+          return appErrorResponse(err)
         }
       }
 
@@ -79,7 +75,7 @@ export function createNLCLRouter(engine: NLCLEngine) {
             // 410 Gone — token was expired, already consumed, or HMAC-invalid.
             return errorResponse(
               'Confirmation token is invalid, expired, or already consumed',
-              'Gone',
+              'NotFound',
               410,
             )
           }
@@ -141,11 +137,7 @@ export function createNLCLRouter(engine: NLCLEngine) {
           const response = wrapCommandResultAsInterpretResponse(result, Date.now() - start)
           return json(response)
         } catch (err) {
-          return errorResponse(
-            err instanceof Error ? err.message : 'Confirmation failed',
-            'NLCLError',
-            500,
-          )
+          return appErrorResponse(err)
         }
       }
 
@@ -244,11 +236,7 @@ export function createNLCLRouter(engine: NLCLEngine) {
           // Parse endpoint returns the same InterpretResponse union — same shape as /interpret.
           return json(wrapCommandResultAsInterpretResponse(result, Date.now() - start))
         } catch (err) {
-          return errorResponse(
-            err instanceof Error ? err.message : 'Parse failed',
-            'NLCLError',
-            500,
-          )
+          return appErrorResponse(err)
         }
       }
 

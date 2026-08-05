@@ -24,7 +24,7 @@ import {
 import { getLogger } from '../lib/logger.js'
 import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
 import { SurfaceMutationPlanSchema } from '../reprogrammability/mutation-schema.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 const log = getLogger('llm-harness-router')
 
@@ -110,14 +110,14 @@ export function createLlmHarnessRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = PlanInputSchema.safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -126,7 +126,7 @@ export function createLlmHarnessRouter() {
       if (!a) {
         return errorResponse(
           'LLM harness agent is not configured (no LLM provider available)',
-          'AGENT_NOT_CONFIGURED',
+          'NotAvailable',
           503,
         )
       }
@@ -177,14 +177,14 @@ export function createLlmHarnessRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = ApplyInputSchema.safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -193,7 +193,7 @@ export function createLlmHarnessRouter() {
       const store = getConfirmationStore()
       const confirmed = store.consume(parsed.data.confirmationToken)
       if (!confirmed) {
-        return errorResponse('Invalid or expired confirmation token', 'CONFIRMATION_INVALID', 403)
+        return errorResponse('Invalid or expired confirmation token', 'ValidationError', 403)
       }
 
       // Verify the plan id matches.
@@ -201,7 +201,7 @@ export function createLlmHarnessRouter() {
       if (confirmedPlanId !== parsed.data.plan.id) {
         return errorResponse(
           'Confirmation token does not match plan id',
-          'CONFIRMATION_MISMATCH',
+          'ValidationError',
           403,
         )
       }
@@ -215,7 +215,7 @@ export function createLlmHarnessRouter() {
         )
         return json({ ok: result.ok, result })
       } catch (err) {
-        return errorResponse(err instanceof Error ? err.message : String(err), 'APPLY_FAILED', 500)
+        return appErrorResponse(err)
       }
     }
 
@@ -228,7 +228,7 @@ export function createLlmHarnessRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = z
@@ -240,14 +240,14 @@ export function createLlmHarnessRouter() {
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
 
       const a = getAgent()
       if (!a) {
-        return errorResponse('LLM harness agent is not configured', 'AGENT_NOT_CONFIGURED', 503)
+        return errorResponse('LLM harness agent is not configured', 'NotAvailable', 503)
       }
 
       const result = await a.producePlan(parsed.data.userRequest)
@@ -279,7 +279,7 @@ export function createLlmHarnessRouter() {
       if (!consumed) {
         return errorResponse(
           'Failed to consume freshly-minted confirmation token',
-          'CONFIRMATION_INVALID',
+          'ValidationError',
           500,
         )
       }

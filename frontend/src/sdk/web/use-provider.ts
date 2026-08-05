@@ -1,7 +1,8 @@
 'use client'
 
 import { useIO } from '@/components/canvas/UnifiedIOProvider'
-import type { Provider } from '@/types/api'
+import type { Provider, ProviderListResponse } from '@/types/api'
+import { ProviderListResponseSchema } from '@/api/schemas'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useProvider() {
@@ -22,7 +23,9 @@ export function useProvider() {
     setLoading(true)
     setError(null)
     try {
-      const res = await io.get<unknown>('/api/providers')
+      const res = await io.get<ProviderListResponse>('/api/providers', {
+        responseSchema: ProviderListResponseSchema,
+      })
       if (!mountedRef.current) return
       // Backend returns either a raw array or { providers: [...] }
       const raw = res.data

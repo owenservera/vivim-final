@@ -1,0 +1,97 @@
+bun test v1.3.14 (0d9b296a)
+
+tests\e2e\canvas-native.spec.ts:
+
+# Unhandled error between tests
+-------------------------------
+2252 |     this.test = test;
+2253 |   }
+2254 |   _currentSuite(location, title) {
+2255 |     const suite = (0, import_globals2.currentlyLoadingFileSuite)();
+2256 |     if (!suite) {
+2257 |       throw new Error([
+                       ^
+error: Playwright Test did not expect test.describe() to be called here.
+Most common reasons include:
+- You are calling test.describe() in a configuration file.
+- You are calling test.describe() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test.describe() from an async test.describe() block. Only sync ones are supported.
+      at _currentSuite (C:\0-BlackBoxProject-0\vivim-final\frontend\node_modules\playwright\lib\common\index.js:2257:17)
+      at _describe (C:\0-BlackBoxProject-0\vivim-final\frontend\node_modules\playwright\lib\common\index.js:2298:24)
+      at C:\0-BlackBoxProject-0\vivim-final\frontend\tests\e2e\canvas-native.spec.ts:3:6
+-------------------------------
+
+
+src\sdk\web\web-hooks.test.ts:
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+tests\unit\components\canvas\Truncate.test.tsx:
+In HTML, <td> cannot be a child of <td>.
+This will cause a hydration error.
+
+  <table>
+    <tbody>
+      <tr>
+>       <td>
+          <Truncate as="td">
+>           <td style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={undefined}>
+
+<td> cannot contain a nested <td>.
+See this log for the ancestor stack trace.
+
+ 280 pass
+ 1 fail
+ 1 error
+ 671 expect() calls
+Ran 281 tests across 24 files. [5.61s]

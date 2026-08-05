@@ -9,6 +9,8 @@
 
 import type { useIO } from '@/components/canvas/UnifiedIOProvider'
 import type { ComposerBehavior } from '@/types/api'
+import { classify } from '@/lib/errorClassifier'
+import { IOError } from '@/shared/unified-io'
 
 export type Behavior = ComposerBehavior
 export type BehaviorResult = { ok: boolean; error?: string; data?: unknown }
@@ -29,8 +31,9 @@ export async function dispatchBehavior(
           { content: text },
         )
         return { ok: res.data?.ok ?? true, error: res.data?.error }
-      } catch {
-        return { ok: false, error: 'Send failed (network error)' }
+      } catch (err) {
+        const classified = classify(err, err instanceof IOError ? err.code : undefined)
+        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
       }
     }
     case 'prompt': {
@@ -40,8 +43,9 @@ export async function dispatchBehavior(
           { text },
         )
         return { ok: res.data?.ok ?? true, error: res.data?.error }
-      } catch {
-        return { ok: false, error: 'Interpret failed (network error)' }
+      } catch (err) {
+        const classified = classify(err, err instanceof IOError ? err.code : undefined)
+        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
       }
     }
     case 'command': {
@@ -51,8 +55,9 @@ export async function dispatchBehavior(
           { text },
         )
         return { ok: res.data?.ok ?? true, error: res.data?.error }
-      } catch {
-        return { ok: false, error: 'Command failed (network error)' }
+      } catch (err) {
+        const classified = classify(err, err instanceof IOError ? err.code : undefined)
+        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
       }
     }
     case 'search': {
@@ -65,8 +70,9 @@ export async function dispatchBehavior(
           limit: searchParams.limit ?? 30,
         })
         return { ok: true, error: res.data?.error, data: res.data }
-      } catch {
-        return { ok: false, error: 'Search failed (network error)' }
+      } catch (err) {
+        const classified = classify(err, err instanceof IOError ? err.code : undefined)
+        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
       }
     }
     case 'execute': {
@@ -77,8 +83,9 @@ export async function dispatchBehavior(
           { text, mode: 'execute' },
         )
         return { ok: res.data?.ok ?? true, error: res.data?.error }
-      } catch {
-        return { ok: false, error: 'Execute failed (network error)' }
+      } catch (err) {
+        const classified = classify(err, err instanceof IOError ? err.code : undefined)
+        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
       }
     }
     case 'comment': {
@@ -98,8 +105,9 @@ export async function dispatchBehavior(
           confirmation?: unknown
         }>('/api/interpret', { text, classifyOnly: true })
         return { ok: res.data?.ok ?? true, error: res.data?.error, data: res.data }
-      } catch {
-        return { ok: false, error: 'Help classification failed (network error)' }
+      } catch (err) {
+        const classified = classify(err, err instanceof IOError ? err.code : undefined)
+        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
       }
     }
     case 'nl-inject': {
@@ -110,8 +118,9 @@ export async function dispatchBehavior(
           { text },
         )
         return { ok: res.data?.ok ?? true, error: res.data?.error }
-      } catch {
-        return { ok: false, error: 'NL inject failed (network error)' }
+      } catch (err) {
+        const classified = classify(err, err instanceof IOError ? err.code : undefined)
+        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
       }
     }
     default: {

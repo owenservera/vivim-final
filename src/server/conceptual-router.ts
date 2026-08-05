@@ -1,11 +1,11 @@
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 export function createConceptualRouter(ctx: ServerContext) {
   const svc = ctx.conceptualModel
   if (!svc) {
     return async (_req: Request, _url: URL) =>
-      errorResponse('Conceptual model not initialized', 'ConceptualUnavailable', 503)
+      errorResponse('Conceptual model not initialized', 'NotAvailable', 503)
   }
 
   return async (req: Request, url: URL): Promise<Response> => {
@@ -14,7 +14,7 @@ export function createConceptualRouter(ctx: ServerContext) {
       try {
         return json({ ok: true, families: await svc.listFamilies() })
       } catch (e) {
-        return errorResponse((e as Error).message, 'ListFamiliesFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -26,7 +26,7 @@ export function createConceptualRouter(ctx: ServerContext) {
         if (!family) return errorResponse('Family not found', 'NotFound', 404)
         return json({ ok: true, family })
       } catch (e) {
-        return errorResponse((e as Error).message, 'GetFamilyFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -37,7 +37,7 @@ export function createConceptualRouter(ctx: ServerContext) {
         const familyId = url.searchParams.get('familyId') ?? ''
         const primitiveId = url.searchParams.get('primitiveId') ?? ''
         const variant = url.searchParams.get('variant') ?? null
-        if (!primitiveId) return errorResponse('primitiveId is required', 'BadRequest', 400)
+        if (!primitiveId) return errorResponse('primitiveId is required', 'ValidationError', 400)
         const resolved = await svc.resolveComponent({
           providerId,
           familyId,
@@ -46,7 +46,7 @@ export function createConceptualRouter(ctx: ServerContext) {
         })
         return json({ ok: true, component: resolved })
       } catch (e) {
-        return errorResponse((e as Error).message, 'ResolveFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -54,7 +54,7 @@ export function createConceptualRouter(ctx: ServerContext) {
     if (url.pathname === '/api/conceptual/surface' && req.method === 'GET') {
       try {
         const providerId = url.searchParams.get('providerId') ?? ''
-        if (!providerId) return errorResponse('providerId is required', 'BadRequest', 400)
+        if (!providerId) return errorResponse('providerId is required', 'ValidationError', 400)
         const family = await svc.resolveFamilyForProvider(providerId)
         if (!family) return errorResponse('Provider has no family', 'NotFound', 404)
         const slots = await svc.resolveSurface(providerId, family.id)
@@ -77,7 +77,7 @@ export function createConceptualRouter(ctx: ServerContext) {
           ),
         })
       } catch (e) {
-        return errorResponse((e as Error).message, 'SurfaceResolveFailed', 500)
+        return appErrorResponse(e)
       }
     }
 

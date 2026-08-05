@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { AGENT_ROLES } from '../engines/automation/agents.js'
 import type { AutomationOrchestrator } from '../engines/automation/orchestrator.js'
 import { EngineError } from '../errors.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 export interface AutomationRouterDeps {
   orchestrator: AutomationOrchestrator
@@ -66,9 +66,7 @@ export function createAutomationRouter(deps: AutomationRouterDeps) {
 
       return errorResponse(`Unknown automation route: ${url.pathname}`, 'NotFound', 404)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      const code = err instanceof EngineError ? 422 : 500
-      return errorResponse(msg, 'AutomationError', code)
+      return appErrorResponse(err)
     }
   }
 }

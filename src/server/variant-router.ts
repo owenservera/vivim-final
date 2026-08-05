@@ -7,7 +7,7 @@ import {
   UpsertSurfaceVariantInputSchema,
 } from '../reprogrammability/variant-schema.js'
 import type { SurfaceVariant } from '../reprogrammability/variant-schema.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 const log = getLogger('variant-router')
 
@@ -41,7 +41,7 @@ export function createVariantRouter() {
     if (path === '/api/variant' && req.method === 'GET') {
       const surfaceId = url.searchParams.get('surfaceId')
       if (!surfaceId) {
-        return errorResponse('Missing required query param: surfaceId', 'VALIDATION_ERROR', 400)
+        return errorResponse('Missing required query param: surfaceId', 'ValidationError', 400)
       }
       const variants = surfaceRegistry.listVariants(surfaceId)
       return json({ ok: true, surfaceId, variants, count: variants.length })
@@ -51,7 +51,7 @@ export function createVariantRouter() {
     if (path === '/api/variant/_active' && req.method === 'GET') {
       const surfaceId = url.searchParams.get('surfaceId')
       if (!surfaceId) {
-        return errorResponse('Missing required query param: surfaceId', 'VALIDATION_ERROR', 400)
+        return errorResponse('Missing required query param: surfaceId', 'ValidationError', 400)
       }
       const active = surfaceRegistry.getActiveVariant(surfaceId)
       return json({ ok: true, surfaceId, active: active ?? null })
@@ -63,14 +63,14 @@ export function createVariantRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = UpsertSurfaceVariantInputSchema.safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -95,7 +95,7 @@ export function createVariantRouter() {
       if (!variantParsed.success) {
         return errorResponse(
           `Constructed variant failed schema validation: ${variantParsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           500,
         )
       }
@@ -114,24 +114,24 @@ export function createVariantRouter() {
       const variantId = putMatch[1]!
       const existing = findVariantById(variantId)
       if (!existing) {
-        return errorResponse(`Variant not found: ${variantId}`, 'NOT_FOUND', 404)
+        return errorResponse(`Variant not found: ${variantId}`, 'NotFound', 404)
       }
       if (existing.variant.isLocked) {
-        return errorResponse(`Cannot edit locked variant: ${variantId}`, 'LOCKED', 423)
+        return errorResponse(`Cannot edit locked variant: ${variantId}`, 'Locked', 423)
       }
 
       let body: unknown
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = UpsertSurfaceVariantInputSchema.safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -148,7 +148,7 @@ export function createVariantRouter() {
       if (!updatedParsed.success) {
         return errorResponse(
           `Updated variant failed schema validation: ${updatedParsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           500,
         )
       }
@@ -164,15 +164,15 @@ export function createVariantRouter() {
       const variantId = delMatch[1]!
       const existing = findVariantById(variantId)
       if (!existing) {
-        return errorResponse(`Variant not found: ${variantId}`, 'NOT_FOUND', 404)
+        return errorResponse(`Variant not found: ${variantId}`, 'NotFound', 404)
       }
       if (existing.variant.isLocked) {
-        return errorResponse(`Cannot delete locked variant: ${variantId}`, 'LOCKED', 423)
+        return errorResponse(`Cannot delete locked variant: ${variantId}`, 'Locked', 423)
       }
       try {
         surfaceRegistry.deleteVariant(existing.surfaceId, variantId)
       } catch (err) {
-        return errorResponse(err instanceof Error ? err.message : String(err), 'LOCKED', 423)
+        return appErrorResponse(err)
       }
       log.info({ surfaceId: existing.surfaceId, variantId }, '[variant-router] variant deleted')
       return json({ ok: true, deleted: variantId })
@@ -184,7 +184,7 @@ export function createVariantRouter() {
       const variantId = actMatch[1]!
       const existing = findVariantById(variantId)
       if (!existing) {
-        return errorResponse(`Variant not found: ${variantId}`, 'NOT_FOUND', 404)
+        return errorResponse(`Variant not found: ${variantId}`, 'NotFound', 404)
       }
 
       // Mark active in registry first.
@@ -212,7 +212,7 @@ export function createVariantRouter() {
           { err, surfaceId: existing.surfaceId, variantId },
           '[variant-router] activation apply failed',
         )
-        return errorResponse(err instanceof Error ? err.message : String(err), 'APPLY_FAILED', 500)
+        return appErrorResponse(err)
       }
     }
 
@@ -222,7 +222,7 @@ export function createVariantRouter() {
       const variantId = getMatch[1]!
       const existing = findVariantById(variantId)
       if (!existing) {
-        return errorResponse(`Variant not found: ${variantId}`, 'NOT_FOUND', 404)
+        return errorResponse(`Variant not found: ${variantId}`, 'NotFound', 404)
       }
       return json({ ok: true, variant: existing.variant })
     }

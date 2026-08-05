@@ -1,5 +1,6 @@
 // src/server/conversation-router.ts
 // REST API router — core endpoints
+// Work Items 01/03: Consistent error handling with AppError, standardized error codes
 
 import { z } from 'zod'
 import type {
@@ -8,7 +9,8 @@ import type {
   ResolvedCapability,
 } from '../engines/capability-resolution.js'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { AppError } from './errors.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 /** Flatten grouped ResolvedCapabilities into a single ordered array. */
 function flattenResolved(resolved: ResolvedCapabilities): ResolvedCapability[] {
@@ -38,7 +40,7 @@ export function createConversationRouter(ctx: ServerContext) {
         const id = pathname.split('/')[3]
         if (!id) return errorResponse('Invalid provider id', 'ValidationError', 400)
         const provider = await ctx.db.getProvider(id)
-        if (!provider) return errorResponse('Provider not found', 'NotFoundError', 404)
+        if (!provider) return errorResponse('Provider not found', 'NotFound', 404)
         return json(provider)
       }
 
@@ -60,7 +62,7 @@ export function createConversationRouter(ctx: ServerContext) {
         if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
         if (!ctx.resolutionEngine) return errorResponse('Engine not wired', 'InternalError', 500)
         const conversation = await ctx.db.getConversation(conversationId)
-        if (!conversation) return errorResponse('Conversation not found', 'NotFoundError', 404)
+        if (!conversation) return errorResponse('Conversation not found', 'NotFound', 404)
         const providerId = (conversation as { providerId: string }).providerId
         const planTier = (url.searchParams.get('planTier') ?? 'free') as PlanTier
         const resolved = await ctx.resolutionEngine.resolve(providerId, planTier)
@@ -79,12 +81,12 @@ export function createConversationRouter(ctx: ServerContext) {
         }
         if (!ctx.resolutionEngine) return errorResponse('Engine not wired', 'InternalError', 500)
         const conversation = await ctx.db.getConversation(conversationId)
-        if (!conversation) return errorResponse('Conversation not found', 'NotFoundError', 404)
+        if (!conversation) return errorResponse('Conversation not found', 'NotFound', 404)
         const providerId = (conversation as { providerId: string }).providerId
 
         const resolved = await ctx.resolutionEngine.resolve(providerId, 'free')
         const capability = flattenResolved(resolved).find((c) => c.slug === slug)
-        if (!capability) return errorResponse('Capability not found', 'NotFoundError', 404)
+        if (!capability) return errorResponse('Capability not found', 'NotFound', 404)
 
         const traceId = crypto.randomUUID()
         ctx.eventBus.emit({
@@ -366,10 +368,9 @@ export function createConversationRouter(ctx: ServerContext) {
         return json({ ok: true, note: 'Restart required for fleet config changes' })
       }
 
-      return errorResponse('Not found', 'NotFoundError', 404)
+      return errorResponse('Not found', 'NotFound', 404)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Internal error'
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

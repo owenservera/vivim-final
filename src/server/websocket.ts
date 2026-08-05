@@ -170,6 +170,12 @@ export const handleWebSocket = {
           session.sessionId = msg.sessionId
           session.role = msg.role
           sessions.set(msg.sessionId, session)
+          // Send hello:ack so the frontend knows the connection is established
+          ws.send(JSON.stringify({
+            type: 'hello:ack',
+            sessionId: msg.sessionId,
+            timestamp: Date.now(),
+          }))
           return
         }
       }
@@ -242,11 +248,50 @@ export const handleWebSocket = {
         return
       }
 
-      // Standard subscribe/unsubscribe
-      if (msg.type === 'subscribe' && msg.entityType && msg.entityId) {
-        eventBus.subscribe(ws as unknown as WebSocket, msg.entityType, msg.entityId)
-      } else if (msg.type === 'unsubscribe' && msg.entityType && msg.entityId) {
-        eventBus.unsubscribe(ws as unknown as WebSocket, msg.entityType, msg.entityId)
+      // Standard subscribe/unsubscribe — supports both formats:
+      //   - { type: 'subscribe', entityType, entityId } (original)
+      //   - { type: 'subscribe', topic: 'conversation:xxx' } (frontend useWebSocket)
+      if (msg.type === 'subscribe') {
+        const session = wsToSession.get(ws)
+        if (msg.topic) {
+          // Frontend useWebSocket format: subscribe by topic string
+          if (session) {
+            session.subscriptions.add(msg.topic)
+          }
+          // Also register with EventBus if the topic is entity-shaped
+          const topicParts = String(msg.topic).split(':')
+          if (topicParts.length >= 2 && topicParts[0]) {
+            const entityType = topicParts[0]
+            const entityId = topicParts.slice(1).join(':')
+            eventBus.subscribe(ws as unknown as WebSocket, entityType, entityId)
+          }
+        }
+        if (msg.entityType && msg.entityId) {
+          // Original format: explicit entityType + entityId
+          const topic = `${msg.entityType}:${msg.entityId}`
+          if (session) {
+            session.subscriptions.add(topic)
+          }
+          eventBus.subscribe(ws as unknown as WebSocket, msg.entityType, msg.entityId)
+        }
+      } else if (msg.type === 'unsubscribe') {
+        const session = wsToSession.get(ws)
+        if (msg.topic) {
+          if (session) {
+            session.subscriptions.delete(msg.topic)
+          }
+          const topicParts = String(msg.topic).split(':')
+          if (topicParts.length >= 2 && topicParts[0]) {
+            eventBus.unsubscribe(ws as unknown as WebSocket, topicParts[0], topicParts.slice(1).join(':'))
+          }
+        }
+        if (msg.entityType && msg.entityId) {
+          const topic = `${msg.entityType}:${msg.entityId}`
+          if (session) {
+            session.subscriptions.delete(topic)
+          }
+          eventBus.unsubscribe(ws as unknown as WebSocket, msg.entityType, msg.entityId)
+        }
       }
 
       // Dev firehose: subscribe to EVERY emitted event (SOTA live dev console).

@@ -4,7 +4,7 @@
 
 import { z } from 'zod'
 import type { StorageRelocationEngine } from '../engines/storage-relocation-engine.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 export interface StorageRouterDeps {
   relocationEngine: StorageRelocationEngine
@@ -21,11 +21,7 @@ export function createStorageRouter(deps: StorageRouterDeps) {
         const status = await relocationEngine.getStorageStatus()
         return json(status)
       } catch (err) {
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'StorageStatusError',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 
@@ -35,11 +31,7 @@ export function createStorageRouter(deps: StorageRouterDeps) {
         const status = relocationEngine.getStatus()
         return json(status)
       } catch (err) {
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'StorageProgressError',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 
@@ -52,11 +44,7 @@ export function createStorageRouter(deps: StorageRouterDeps) {
         const result = await relocationEngine.relocate(parsed.data.targetDir)
         return json(result, result.ok ? 200 : 500)
       } catch (err) {
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'StorageMoveError',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 
@@ -66,11 +54,7 @@ export function createStorageRouter(deps: StorageRouterDeps) {
         const result = await relocationEngine.rollback()
         return json(result)
       } catch (err) {
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'StorageRollbackError',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 
@@ -80,11 +64,7 @@ export function createStorageRouter(deps: StorageRouterDeps) {
         const cleaned = await relocationEngine.cleanupExpiredArchives()
         return json({ cleaned, count: cleaned.length })
       } catch (err) {
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'StorageCleanupError',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 

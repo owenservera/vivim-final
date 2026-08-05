@@ -1,56 +1,41 @@
+// frontend/src/types/api.ts
+// Re-exports canonical types from shared contracts.
+// UI components should import from this file for convenience.
+// The actual definitions live in frontend/src/types/shared/*.ts
+// to maintain a single source of truth aligned with the backend.
+//
+// Work Items 01/03/04: Aligned with backend api-types.ts and storage contracts.
+
+// ── Domain models (what UI components use) ───────────────────────────────────
+export type { Conversation, Message, Capability, Provider } from './shared/domain'
+
+// ── API contract types (raw backend responses) ────────────────────────────────
+export type {
+  CapabilityDetail,
+  CapabilityListResponse,
+  CapabilityExecuteResponse,
+  ConversationDetail,
+  ConversationMessageDetail,
+  SendMessageSuccessResponse,
+  SendMessageErrorResponse,
+  SendMessageResponse,
+  ProviderDetail,
+  ProviderListResponse,
+  ApiSuccessResponse,
+  ApiErrorResponse,
+  ApiResponse,
+  ErrorResponse,
+  HealthDashboardResponse,
+  ProviderHealthDetail,
+} from './shared/api-contract'
+
+// ── Error types ─────────────────────────────────────────────────────────────
+export type { ErrorCode, ApiErrorResponse as ServerErrorResponse } from './shared/errors'
+export { getUserMessage, isRetryable, ERROR_MESSAGES } from './shared/errors'
+
+// ── Composer UI types (keep existing, these are UI-only) ─────────────────────
+
 import type { ZLayerId } from '@/shared/z-layer'
-
-export interface Conversation {
-  id: string
-  title?: string
-  providerId?: string
-  createdAt: string
-  updatedAt?: string
-}
-
-export interface Message {
-  id: string
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  createdAt: string
-  metadata?: Record<string, unknown>
-}
-
-export interface SendResult {
-  ok: boolean
-  messageId: string
-  blocks: Array<Record<string, unknown>>
-  text: string
-  latencyMs: number
-  timing?: Record<string, unknown>
-  error?: string
-}
-
-export interface Capability {
-  id: string
-  slug: string
-  name: string
-  description?: string
-  surfaces?: string[]
-  category?: string
-  action?: string
-}
-
-export interface Provider {
-  id: string
-  name: string
-  slug: string
-  status?: string
-  capabilities?: string[]
-}
-
-export interface HealthStatus {
-  status: string
-  version?: string
-  uptime?: number
-}
-
-// ── Composer Instance Scope (stateful role context) ──────────────────────
 
 export type ComposerBehavior =
   | 'chat'
@@ -70,8 +55,6 @@ export interface ComposerInstanceScope {
   instanceId: string
   behavior: ComposerBehavior
 }
-
-// ── Composer Add-on model ────────────────────────────────────────────────
 
 export type ComposerAddOnPosition = 'top' | 'bottom' | 'inline'
 
@@ -144,4 +127,25 @@ export interface ComposerShellContext {
 export interface ComposerUserConfig {
   enabledAddOns: string[]
   showToggleMenu: boolean
+}
+
+// ── Health status (lightweight for UI) ───────────────────────────────────────
+
+export interface HealthStatus {
+  status: string
+  version?: string
+  uptime?: number
+}
+
+// ── Legacy SendResult (deprecated — use SendMessageResponse from shared) ─────
+/** @deprecated Use SendMessageResponse from shared/api-contract instead. */
+export interface SendResult {
+  ok: boolean
+  messageId: string
+  blocks: Array<Record<string, unknown>>
+  text: string
+  latencyMs: number
+  traceId?: string
+  timing?: Record<string, unknown>
+  error?: string
 }

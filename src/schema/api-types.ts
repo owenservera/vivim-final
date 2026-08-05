@@ -240,20 +240,28 @@ export interface WsBaseEvent {
   timestamp: number
 }
 
+export interface WsHelloAckEvent extends WsBaseEvent {
+  type: 'hello:ack'
+  sessionId: string
+}
+
 export interface WsCapabilityExecutedEvent extends WsBaseEvent {
   type: 'capability:executed'
   capabilityId: string
+  providerId: string
+  traceId: string
+  ok: boolean
   latencyMs: number
+  bindingId?: string
 }
 
-export interface WsStreamBlockEvent extends WsBaseEvent {
-  type: 'stream:block'
-  conversationId: string
-  messageId: string
-  blockIndex: number
-  blockKind: string
-  blockData: string
-  blockMeta: string
+export interface WsCapabilityProgressEvent extends WsBaseEvent {
+  type: 'capability:progress'
+  step: number
+  total: number
+  description: string
+  moduleId: string
+  slaveId: string
 }
 
 export interface WsGenericEvent extends WsBaseEvent {
@@ -261,7 +269,11 @@ export interface WsGenericEvent extends WsBaseEvent {
   [key: string]: unknown
 }
 
-export type WsEvent = WsCapabilityExecutedEvent | WsStreamBlockEvent | WsGenericEvent
+export type WsEvent =
+  | WsHelloAckEvent
+  | WsCapabilityExecutedEvent
+  | WsCapabilityProgressEvent
+  | WsGenericEvent
 
 // ── Health Response Types ────────────────────────────────────────────────────
 

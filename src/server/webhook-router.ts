@@ -3,6 +3,7 @@
 
 import type { WorkflowEngine } from '../engines/workflow-engine.js'
 import type { CapStoreDb } from '../storage/db.js'
+import { appErrorResponse, errorResponse } from './response.js'
 
 export interface WebhookStore {
   getWebhookByPath(path: string): Promise<{
@@ -24,26 +25,17 @@ export class WebhookRouter {
   async handle(request: Request, path: string): Promise<Response> {
     const webhook = await this.lookupWebhook(path)
     if (!webhook) {
-      return new Response(JSON.stringify({ error: 'Webhook not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return errorResponse('Webhook not found', 'NotFound', 404)
     }
 
     if (!webhook.active) {
-      return new Response(JSON.stringify({ error: 'Webhook is inactive' }), {
-        status: 410,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return errorResponse('Webhook is inactive', 'NotAvailable', 410)
     }
 
     if (webhook.method !== request.method) {
-      return new Response(
-        JSON.stringify({ error: `Method not allowed (expected ${webhook.method})` }),
-        {
-          status: 405,
-          headers: { 'Content-Type': 'application/json' },
-        },
+      return errorResponse(
+        `Method not allowed (expected ${webhook.method})`,
+        'MethodNotAllowed', 405,
       )
     }
 
@@ -52,10 +44,7 @@ export class WebhookRouter {
       const headerSig =
         request.headers.get('X-Webhook-Secret') || request.headers.get('X-Signature')
       if (headerSig !== webhook.secret) {
-        return new Response(JSON.stringify({ error: 'Invalid secret' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse('Invalid secret', 'AuthError', 401)
       }
     }
 
@@ -86,16 +75,7 @@ export class WebhookRouter {
         },
       )
     } catch (err) {
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          error: err instanceof Error ? err.message : String(err),
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
+      return appErrorResponse(err)
     }
   }
 

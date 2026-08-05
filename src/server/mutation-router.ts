@@ -25,7 +25,7 @@ import {
   SurfaceMutationSchema,
 } from '../reprogrammability/mutation-schema.js'
 import { SurfaceNotFoundError } from '../reprogrammability/registry.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 const log = getLogger('mutation-router')
 
@@ -58,14 +58,14 @@ export function createMutationRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = ApplyInputSchema.safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -96,7 +96,7 @@ export function createMutationRouter() {
           return json({ ok: records.every((r) => r.ok), records })
         }
         // Unreachable — Zod union exhaustively matched above.
-        return errorResponse('Unreachable', 'INTERNAL_ERROR', 500)
+        return errorResponse('Unreachable', 'InternalError', 500)
       } catch (err) {
         return handleExecutorError(err)
       }
@@ -108,14 +108,14 @@ export function createMutationRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
 
       const parsed = PreviewInputSchema.safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -139,7 +139,7 @@ export function createMutationRouter() {
             provenance: mutations[0]?.provenance ?? 'manual',
           }
         } else {
-          return errorResponse('Unreachable', 'INTERNAL_ERROR', 500)
+          return errorResponse('Unreachable', 'InternalError', 500)
         }
 
         const preview = await mutationExecutor.previewPlan(plan)
@@ -201,18 +201,14 @@ export function createMutationRouter() {
 
 function handleExecutorError(err: unknown): Response {
   if (err instanceof DslParseError) {
-    return errorResponse(`DSL parse error: ${err.message}`, 'DSL_PARSE_ERROR', 400)
+    return errorResponse(`DSL parse error: ${err.message}`, 'ValidationError', 400)
   }
   if (err instanceof SurfaceNotFoundError) {
-    return errorResponse(err.message, 'SURFACE_NOT_FOUND', 404)
+    return errorResponse(err.message, 'NotFound', 404)
   }
   if (err instanceof UnsupportedMutationError) {
-    return errorResponse(err.message, 'UNSUPPORTED_MUTATION', 422)
+    return errorResponse(err.message, 'ValidationError', 422)
   }
   log.error({ err }, '[mutation-router] unexpected error')
-  return errorResponse(
-    err instanceof Error ? err.message : 'Internal server error',
-    'INTERNAL_ERROR',
-    500,
-  )
+  return appErrorResponse(err)
 }

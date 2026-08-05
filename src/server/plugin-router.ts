@@ -15,7 +15,7 @@ import { newId } from '../ids.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import { UiComponentInputSchema } from '../schema/conceptual-model.js'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 async function computeFileHash(filePath: string): Promise<string> {
   const content = await readFile(filePath)
@@ -134,7 +134,7 @@ export function createPluginRouter(ctx: ServerContext) {
         } catch (e) {
           catchDebug(e, 'plugin-router: manifest.json not found')
           await rm(extractDir, { recursive: true, force: true })
-          return errorResponse('manifest.json not found in plugin archive', 'InvalidPlugin', 400)
+          return errorResponse('manifest.json not found in plugin archive', 'ValidationError', 400)
         }
 
         let manifest: Record<string, unknown>
@@ -143,7 +143,7 @@ export function createPluginRouter(ctx: ServerContext) {
         } catch (e) {
           catchDebug(e, 'plugin-router: manifest.json parse failed')
           await rm(extractDir, { recursive: true, force: true })
-          return errorResponse('manifest.json is not valid JSON', 'InvalidPlugin', 400)
+          return errorResponse('manifest.json is not valid JSON', 'ValidationError', 400)
         }
 
         const pluginName = (manifest.provider as Record<string, unknown>)?.slug as string
@@ -152,7 +152,7 @@ export function createPluginRouter(ctx: ServerContext) {
 
         if (!pluginName) {
           await rm(extractDir, { recursive: true, force: true })
-          return errorResponse('manifest.provider.slug is required', 'InvalidPlugin', 400)
+          return errorResponse('manifest.provider.slug is required', 'ValidationError', 400)
         }
 
         const dependsOn = (manifest.depends_on as string[]) ?? []
@@ -189,7 +189,7 @@ export function createPluginRouter(ctx: ServerContext) {
           })
           if (!dep || dep.isActive !== 1) {
             await rm(extractDir, { recursive: true, force: true })
-            return errorResponse(`Missing dependency: ${depPluginId}`, 'MissingDependency', 400)
+            return errorResponse(`Missing dependency: ${depPluginId}`, 'Conflict', 400)
           }
         }
 
@@ -463,7 +463,7 @@ export function createPluginRouter(ctx: ServerContext) {
         } catch (e) {
           catchDebug(e, 'plugin-router: manifest.json not found (upgrade)')
           await rm(extractDir, { recursive: true, force: true })
-          return errorResponse('manifest.json not found', 'InvalidPlugin', 400)
+          return errorResponse('manifest.json not found', 'ValidationError', 400)
         }
 
         const manifest = JSON.parse(manifestRaw)
@@ -492,7 +492,7 @@ export function createPluginRouter(ctx: ServerContext) {
             await rm(extractDir, { recursive: true, force: true })
             return errorResponse(
               `Migration script failed: ${err instanceof Error ? err.message : String(err)}`,
-              'MigrationFailed',
+              'InternalError',
               500,
             )
           }
@@ -654,8 +654,7 @@ export function createPluginRouter(ctx: ServerContext) {
 
       return errorResponse('Not found', 'NotFound', 404)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      return errorResponse(msg, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }
