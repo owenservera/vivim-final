@@ -6,8 +6,7 @@ dist/
 build/
 .build-test/
 
-# Environment
-.env
+# Environment (local overrides only)
 .env.local
 .env.*.local
 
@@ -67,10 +66,7 @@ web/*/scripts/
 devops/.gate-baseline.json
 tests/fixtures/node-store-test.db
 
-# Dev database (never commit SQLite dev DB)
-prisma/dev.db
-prisma/dev.db-wal
-prisma/dev.db-shm
+# Dev database backups
 prisma/dev.db.bak-*
 prisma/prisma/dev.db
 
@@ -84,7 +80,6 @@ prov_claude/
 uploads/
 .playwright-mcp/
 .archive/
-.runtime/
 C0-BlackBoxProject-0/
 nil/
 agent-brief/
