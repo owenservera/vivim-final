@@ -3,6 +3,7 @@
 // Assembles context from memory, search, and history before sending to provider.
 
 import { newId } from '../ids.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { ContextAssemblyStore } from '../storage/contracts/context-assembly-store.js'
 import type { CapStoreDb } from '../storage/db.js'
 import type { MemoryEngine } from './memory-engine.js'
@@ -446,8 +447,8 @@ export class ContextAssemblyEngine {
           sources: entities.map((e) => e.id),
         })
       }
-    } catch {
-      // Search failure is best-effort
+    } catch (e) {
+      catchDebug(e, 'context-assembly: search recall failed')
     }
 
     // Recent episodes layer
@@ -465,8 +466,8 @@ export class ContextAssemblyEngine {
           sources: episodes.map((e) => e.id),
         })
       }
-    } catch {
-      // Episode recall failure is best-effort
+    } catch (e) {
+      catchDebug(e, 'context-assembly: episode recall failed')
     }
 
     // Project state layer
@@ -507,7 +508,8 @@ export class ContextAssemblyEngine {
           sources: facts.map((f) => f.id),
         },
       ]
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'context-assembly: recallEntityProfiles failed')
       return []
     }
   }
@@ -526,7 +528,8 @@ export class ContextAssemblyEngine {
           sources: rules.map((r) => r.id),
         },
       ]
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'context-assembly: recallPreferences failed')
       return []
     }
   }
@@ -545,7 +548,8 @@ export class ContextAssemblyEngine {
           sources: rules.map((r) => r.id),
         },
       ]
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'context-assembly: recallProjectState failed')
       return []
     }
   }
@@ -621,8 +625,8 @@ export class ContextAssemblyEngine {
           assembledAt: Date.now(),
         })
       }
-    } catch {
-      // Best-effort
+    } catch (e) {
+      catchDebug(e, 'context-assembly: injectLayer failed')
     }
   }
 }
@@ -668,8 +672,8 @@ export async function buildConversationHistoryLayer(
       take: MAX_HISTORY_MESSAGES,
     })
     messages = raw as unknown as ConversationMessage[]
-  } catch {
-    // If the query fails (e.g. table doesn't exist yet), return null
+  } catch (e) {
+    catchDebug(e, 'context-assembly: fetchMessages failed')
     return null
   }
 
@@ -693,8 +697,8 @@ export async function buildConversationHistoryLayer(
             textContent += (textContent ? '\n' : '') + block.text
           }
         }
-      } catch {
-        // blocksJson may be malformed — fall back to raw content
+      } catch (e) {
+        catchDebug(e, 'context-assembly: blocksJson parse failed')
       }
     }
 
