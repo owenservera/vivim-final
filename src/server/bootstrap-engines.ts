@@ -4,7 +4,6 @@
 
 import { connectCapabilityRegistry } from '../cli/index.js'
 import { config } from '../config.js'
-import { catchDebug } from '../lib/catch-logger.js'
 import { registerGeneratedCapabilities } from '../engines/capability-bootstrap-generated.js'
 import {
   registerDefaultCapabilities,
@@ -35,6 +34,7 @@ import type { RetryEngine } from '../engines/retry-engine.js'
 import type { EmbeddingProvider, SemanticSearchEngine } from '../engines/semantic-search.js'
 import { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import type { UserIdentityEngine } from '../engines/user-identity.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { runIndividualSeeds } from './bootstrap-seeds.js'
@@ -369,9 +369,9 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
     const noopLlm = { synthesize: async () => ({ text: 'LLM not configured', confidence: 0 }) }
     if (semanticSearch)
       synthesizer = new CrossConversationSynthesizer(synthStore, semanticSearch, noopLlm)
-    } catch (e) {
-      catchDebug(e, 'bootstrap: synthesizer not available')
-    }
+  } catch (e) {
+    catchDebug(e, 'bootstrap: synthesizer not available')
+  }
 
   try {
     const { ExportEngine } = await import('../engines/export.js')

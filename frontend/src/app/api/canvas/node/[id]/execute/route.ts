@@ -9,27 +9,24 @@
  * Returns: { ok, output }
  */
 
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { getEngineBag } from '@/lib/canvas-engine-bootstrap';
+import { getEngineBag } from '@/lib/canvas-engine-bootstrap'
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 const REQUEST_SCHEMA = z.object({
   capability: z.string(),
   input: z.record(z.string(), z.unknown()).default({}),
-});
+})
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const body = (await req.json()) as unknown;
-  const parsed = REQUEST_SCHEMA.safeParse(body);
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const body = (await req.json()) as unknown
+  const parsed = REQUEST_SCHEMA.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 });
+    return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 })
   }
 
-  const bag = getEngineBag();
+  const bag = getEngineBag()
 
   // Invariant 5 (One Entry Point): every action is a UnifiedCapability.
   // Here we emit a capability:executed event for traceability. A
@@ -42,7 +39,7 @@ export async function POST(
     traceId: `exec-${Date.now().toString(36)}`,
     ok: true,
     latencyMs: 0,
-  });
+  })
 
   // Echo back the input as a stub output — real capability execution
   // would dispatch to a provider plugin or CDP governor.
@@ -51,5 +48,5 @@ export async function POST(
     nodeId: id,
     capability: parsed.data.capability,
     output: { acknowledged: true, input: parsed.data.input },
-  });
+  })
 }

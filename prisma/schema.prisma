@@ -592,8 +592,9 @@ model ProfileSession {
 
 model Conversation {
   id                String  @id
-  providerSessionId String  @map("provider_session_id")
+  providerSessionId String? @map("provider_session_id") // Nullable for history-synced conversations
   providerId        String  @map("provider_id")
+  accountId         String? @map("account_id") // Direct account link for sync queries
   title             String?
   state             String  @default("active")
   messageCount      Int     @default(0) @map("message_count")
@@ -603,20 +604,23 @@ model Conversation {
   updatedAt         BigInt  @map("updated_at")
   projectId         String? @map("project_id")
   topicId           String? @map("topic_id")
-  source            String  @default("live")
+  source            String  @default("live") // 'live' | 'history-sync' | 'import'
   externalId        String? @map("external_id")
   importJobId       String? @map("import_job_id")
+  syncedAt          BigInt? @map("synced_at") // Last sync timestamp for history-synced conversations
 
-  providerSession ProviderSession       @relation(fields: [providerSessionId], references: [id], onDelete: Cascade)
+  providerSession ProviderSession?      @relation(fields: [providerSessionId], references: [id], onDelete: SetNull)
   provider        ProviderDefinition    @relation(fields: [providerId], references: [id], onDelete: Cascade)
   messages        ConversationMessage[]
   streamBlocks    StreamBlock[]
 
   @@index([providerSessionId], map: "idx_conv_session")
   @@index([providerId], map: "idx_conv_provider")
+  @@index([accountId], map: "idx_conv_account")
   @@index([source])
   @@index([externalId])
   @@index([importJobId])
+  @@index([syncedAt])
   @@map("conversation")
 }
 
@@ -3757,4 +3761,51 @@ model NotionPageMeta {
   @@index([databaseId], map: "idx_npm_database")
   @@index([pageId], map: "idx_npm_page")
   @@map("notion_page_meta")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// L4: Conversation History Sync
+// ═══════════════════════════════════════════════════════════════════
+
+model ConversationSyncState {
+  id                  String  @id
+  providerId          String  @map("provider_id")
+  accountId           String  @map("account_id")
+  syncType            String  @default("incremental") @map("sync_type") // full | incremental | selective
+  status              String  @default("pending") // pending | running | completed | failed | cancelled
+  cursorJson          String  @default("{}") @map("cursor_json") // opaque cursor for incremental sync
+  totalConversations  Int     @default(0) @map("total_conversations")
+  syncedConversations Int     @default(0) @map("synced_conversations")
+  failedConversations Int     @default(0) @map("failed_conversations")
+  lastSyncedAt        BigInt? @map("last_synced_at")
+  nextSyncAt          BigInt? @map("next_sync_at") // scheduled next sync time
+  errorJson           String? @map("error_json") // last error details
+  configJson          String  @default("{}") @map("config_json") // sync configuration
+  createdAt           BigInt  @map("created_at")
+  updatedAt           BigInt  @map("updated_at")
+
+  @@unique([providerId, accountId])
+  @@index([status], map: "idx_csync_status")
+  @@index([nextSyncAt], map: "idx_csync_next")
+  @@map("conversation_sync_state")
+}
+
+model ConversationSyncLog {
+  id                   String  @id
+  providerId           String  @map("provider_id")
+  accountId            String  @map("account_id")
+  syncType             String  @map("sync_type") // full | incremental | selective
+  status               String  // started | completed | failed | cancelled
+  startedAt            BigInt  @map("started_at")
+  completedAt          BigInt? @map("completed_at")
+  durationMs           Int?    @map("duration_ms")
+  conversationsFound   Int     @default(0) @map("conversations_found")
+  conversationsSynced  Int     @default(0) @map("conversations_synced")
+  conversationsFailed  Int     @default(0) @map("conversations_failed")
+  errorJson            String? @map("error_json") // error details if failed
+  metadataJson         String  @default("{}") @map("metadata_json") // additional metadata
+
+  @@index([providerId, accountId], map: "idx_cslog_account")
+  @@index([startedAt], map: "idx_cslog_time")
+  @@map("conversation_sync_log")
 }

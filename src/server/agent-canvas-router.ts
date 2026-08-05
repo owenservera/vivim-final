@@ -20,10 +20,10 @@ import { ulid } from 'ulid'
 import { getLogger } from '../lib/logger.js'
 import {
   AgentCanvasCommandSchema,
-  AgentCanvasPolicySchema,
   AgentCanvasPlanSchema,
+  AgentCanvasPolicySchema,
 } from '../schema/api-validators.js'
-import type { AgentCanvasCommand, AgentCanvasPolicy } from '../shared/agent-canvas.js'
+import type { AgentCanvasPolicy } from '../shared/agent-canvas.js'
 import { DEFAULT_POLICY } from '../shared/agent-canvas.js'
 import type { ServerContext } from './index.js'
 

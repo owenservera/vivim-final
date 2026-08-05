@@ -5,18 +5,18 @@
  * Returns the workspace visual taxonomy (parent + children).
  */
 
-import { NextResponse } from 'next/server';
-import { getEngineBag } from '@/lib/canvas-engine-bootstrap';
+import { getEngineBag } from '@/lib/canvas-engine-bootstrap'
+import { NextResponse } from 'next/server'
 
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const parentId = url.searchParams.get('parentId') ?? undefined;
-  const kind = url.searchParams.get('kind') ?? undefined;
+  const url = new URL(req.url)
+  const parentId = url.searchParams.get('parentId') ?? undefined
+  const kind = url.searchParams.get('kind') ?? undefined
 
-  const bag = getEngineBag();
+  const bag = getEngineBag()
   const workspaces = await bag.workspaceEngine.list({
     parentId,
     kind,
-  });
-  return NextResponse.json({ ok: true, workspaces });
+  })
+  return NextResponse.json({ ok: true, workspaces })
 }

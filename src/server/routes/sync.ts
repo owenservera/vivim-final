@@ -1,24 +1,38 @@
 // src/server/routes/sync.ts
 // REST API routes for sync state tracking.
 
+import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
-import { z } from 'zod'
 
 export function createSyncRouter(ctx: ServerContext) {
   return async function syncRouter(req: Request): Promise<Response | undefined> {
     const url = new URL(req.url)
     const path = url.pathname
 
-    const store = (ctx as unknown as { syncStore?: {
-      upsertSyncState(input: unknown): Promise<unknown>
-      getSyncState(providerId: string, accountId: string, entityType: string, entityId: string): Promise<unknown>
-      getSyncStatesByAccount(accountId: string): Promise<unknown[]>
-      getSyncStatesPending(): Promise<unknown[]>
-      updateSyncStatus(id: string, status: string, error?: string): Promise<unknown>
-      incrementSyncStats(id: string, itemsSynced: number, itemsFailed: number, bytesSynced: number): Promise<unknown>
-      deleteSyncState(id: string): Promise<void>
-    }}).syncStore
+    const store = (
+      ctx as unknown as {
+        syncStore?: {
+          upsertSyncState(input: unknown): Promise<unknown>
+          getSyncState(
+            providerId: string,
+            accountId: string,
+            entityType: string,
+            entityId: string,
+          ): Promise<unknown>
+          getSyncStatesByAccount(accountId: string): Promise<unknown[]>
+          getSyncStatesPending(): Promise<unknown[]>
+          updateSyncStatus(id: string, status: string, error?: string): Promise<unknown>
+          incrementSyncStats(
+            id: string,
+            itemsSynced: number,
+            itemsFailed: number,
+            bytesSynced: number,
+          ): Promise<unknown>
+          deleteSyncState(id: string): Promise<void>
+        }
+      }
+    ).syncStore
 
     if (!store) {
       return errorResponse('SyncStore not available', 'EngineUnavailable', 503)
@@ -83,7 +97,11 @@ export function createSyncRouter(ctx: ServerContext) {
         })
         const parsed = schema.safeParse(await req.json())
         if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
-        const state = await store.updateSyncStatus(parsed.data.id, 'failed', parsed.data.errorMessage)
+        const state = await store.updateSyncStatus(
+          parsed.data.id,
+          'failed',
+          parsed.data.errorMessage,
+        )
         return json({ state })
       }
 
@@ -91,7 +109,11 @@ export function createSyncRouter(ctx: ServerContext) {
       const stateMatch = path.match(/^\/api\/sync\/([^/]+)$/)
       if (req.method === 'GET' && stateMatch && stateMatch[1]) {
         // This is a simplified lookup — in practice, you'd look up by composite key
-        return errorResponse('Use /api/sync?accountId=X for account-level listing', 'NotImplemented', 501)
+        return errorResponse(
+          'Use /api/sync?accountId=X for account-level listing',
+          'NotImplemented',
+          501,
+        )
       }
 
       // DELETE /api/sync/:id

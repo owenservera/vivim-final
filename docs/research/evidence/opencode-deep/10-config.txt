@@ -1,4 +1,0 @@
-=== run from scratch dir (model override via opencode.json) ===
-SCRATCH_OUTPUT='MODELOK'
-SCRATCH_EXIT=0
-SCRATCH_EVENT_TYPES=step_finish,step_start,text

@@ -198,7 +198,10 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
     const url = `${this.healthBase()}/doc`
     while (Date.now() < deadline) {
       try {
-        const res = await fetch(url, { headers: { Authorization: auth }, signal: AbortSignal.timeout(3_000) })
+        const res = await fetch(url, {
+          headers: { Authorization: auth },
+          signal: AbortSignal.timeout(3_000),
+        })
         if (res.ok) return
       } catch {
         // server not up yet — retry

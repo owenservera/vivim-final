@@ -43,6 +43,9 @@ export { RbacManager } from './RbacManager'
 export { TemplatesGallery } from './TemplatesGallery'
 export { DevConsole } from './DevConsole'
 
+// Phase 5 — Conversation History Sync
+export { ConversationSyncPanel } from './ConversationSyncPanel'
+
 // Phase 4 — doc suite, z-layers, drawers, unified IO
 export { UnifiedIOProvider, useIO, useIOEvents, IOError } from './UnifiedIOProvider'
 export type { UnifiedIO, IORequestInit, IOResponse, IOEvent } from './UnifiedIOProvider'

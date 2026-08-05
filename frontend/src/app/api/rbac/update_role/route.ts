@@ -1,19 +1,24 @@
+import { getEngineBag } from '@/lib/canvas-engine-bootstrap'
 /** POST /api/rbac/update_role */
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { getEngineBag } from '@/lib/canvas-engine-bootstrap';
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
 
 const SCHEMA = z.object({
   workspaceId: z.string(),
   userId: z.string(),
   role: z.enum(['viewer', 'member', 'editor', 'admin']),
-});
+})
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as unknown;
-  const parsed = SCHEMA.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 });
-  const bag = getEngineBag();
-  const m = await bag.rbacEngine.updateRole(parsed.data.workspaceId, parsed.data.userId, parsed.data.role);
-  return NextResponse.json({ ok: true, membership: m });
+  const body = (await req.json()) as unknown
+  const parsed = SCHEMA.safeParse(body)
+  if (!parsed.success)
+    return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 })
+  const bag = getEngineBag()
+  const m = await bag.rbacEngine.updateRole(
+    parsed.data.workspaceId,
+    parsed.data.userId,
+    parsed.data.role,
+  )
+  return NextResponse.json({ ok: true, membership: m })
 }

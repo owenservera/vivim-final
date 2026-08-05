@@ -1,26 +1,39 @@
 // src/server/routes/contacts.ts
 // REST API routes for contact management with identity merging.
 
+import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
-import { z } from 'zod'
 
 export function createContactsRouter(ctx: ServerContext) {
   return async function contactsRouter(req: Request): Promise<Response | undefined> {
     const url = new URL(req.url)
     const path = url.pathname
 
-    const store = (ctx as unknown as { contactStore?: {
-      getContactById(id: string): Promise<unknown>
-      getContactsByAccount(accountId: string): Promise<unknown[]>
-      getContactByNativeId(providerId: string, accountId: string, providerNativeId: string): Promise<unknown>
-      searchContacts(query: string, accountId?: string): Promise<unknown[]>
-      createContact(input: unknown): Promise<unknown>
-      updateContact(id: string, updates: unknown): Promise<unknown>
-      deleteContact(id: string): Promise<void>
-      mergeContacts(canonicalId: string, mergedId: string, method: string, confidence: number): Promise<unknown>
-      getMergedContacts(contactId: string): Promise<unknown[]>
-    }}).contactStore
+    const store = (
+      ctx as unknown as {
+        contactStore?: {
+          getContactById(id: string): Promise<unknown>
+          getContactsByAccount(accountId: string): Promise<unknown[]>
+          getContactByNativeId(
+            providerId: string,
+            accountId: string,
+            providerNativeId: string,
+          ): Promise<unknown>
+          searchContacts(query: string, accountId?: string): Promise<unknown[]>
+          createContact(input: unknown): Promise<unknown>
+          updateContact(id: string, updates: unknown): Promise<unknown>
+          deleteContact(id: string): Promise<void>
+          mergeContacts(
+            canonicalId: string,
+            mergedId: string,
+            method: string,
+            confidence: number,
+          ): Promise<unknown>
+          getMergedContacts(contactId: string): Promise<unknown[]>
+        }
+      }
+    ).contactStore
 
     if (!store) {
       return errorResponse('ContactStore not available', 'EngineUnavailable', 503)
@@ -87,11 +100,23 @@ export function createContactsRouter(ctx: ServerContext) {
 
       // POST /api/contacts/lookup
       if (req.method === 'POST' && path === '/api/contacts/lookup') {
-        const body = (await req.json()) as { providerId?: string; accountId?: string; providerNativeId?: string }
-        if (!body.providerId || !body.accountId || !body.providerNativeId) {
-          return errorResponse('providerId, accountId, and providerNativeId are required', 'ValidationError', 400)
+        const body = (await req.json()) as {
+          providerId?: string
+          accountId?: string
+          providerNativeId?: string
         }
-        const contact = await store.getContactByNativeId(body.providerId, body.accountId, body.providerNativeId)
+        if (!body.providerId || !body.accountId || !body.providerNativeId) {
+          return errorResponse(
+            'providerId, accountId, and providerNativeId are required',
+            'ValidationError',
+            400,
+          )
+        }
+        const contact = await store.getContactByNativeId(
+          body.providerId,
+          body.accountId,
+          body.providerNativeId,
+        )
         if (!contact) return errorResponse('Contact not found', 'NotFound', 404)
         return json({ contact })
       }

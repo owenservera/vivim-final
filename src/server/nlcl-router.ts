@@ -7,10 +7,14 @@
 // GET  /api/nlcl/audit     — get audit log
 // POST /api/nlcl/parse     — parse-only (no execute)
 
-import { NlclInterpretSchema, NlclConfirmSchema, NlclExecuteSchema } from '../schema/api-validators.js'
 import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
 import type { InterpretResponse } from '../schema/api-types.js'
+import {
+  NlclConfirmSchema,
+  NlclExecuteSchema,
+  NlclInterpretSchema,
+} from '../schema/api-validators.js'
 import { wrapCommandResultAsInterpretResponse } from './interpret-router.js'
 import { errorResponse, json } from './response.js'
 

@@ -11,35 +11,44 @@
  * Latency becomes a feature — the canvas shows thinking.
  */
 
-import { getEngineBag, isSeeded, markSeeded } from '@/lib/canvas-engine-bootstrap';
-import { seedCanvasModel } from '@/lib/seed-canvas-model';
-import { ulid } from '@/lib/ulid';
+import { getEngineBag, isSeeded, markSeeded } from '@/lib/canvas-engine-bootstrap'
+import { seedCanvasModel } from '@/lib/seed-canvas-model'
+import { ulid } from '@/lib/ulid'
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as { nodeId: string; capabilityId: string; input?: Record<string, unknown> };
-  const bag = getEngineBag();
-  if (!isSeeded()) { await seedCanvasModel(bag); markSeeded(); }
+  const body = (await req.json()) as {
+    nodeId: string
+    capabilityId: string
+    input?: Record<string, unknown>
+  }
+  const bag = getEngineBag()
+  if (!isSeeded()) {
+    await seedCanvasModel(bag)
+    markSeeded()
+  }
 
-  const traceId = ulid();
+  const traceId = ulid()
   const stream = new ReadableStream({
     async start(controller) {
-      const encoder = new TextEncoder();
+      const encoder = new TextEncoder()
       const send = (event: Record<string, unknown>) => {
-        controller.enqueue(encoder.encode(JSON.stringify({ ...event, traceId, timestamp: Date.now() }) + '\n'));
-      };
+        controller.enqueue(
+          encoder.encode(JSON.stringify({ ...event, traceId, timestamp: Date.now() }) + '\n'),
+        )
+      }
 
       // Simulate a streaming response (production wires to real LLM/provider).
-      send({ kind: 'thinking', content: 'Processing your request…', index: 0 });
+      send({ kind: 'thinking', content: 'Processing your request…', index: 0 })
 
       // Simulate thinking delay.
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 400))
 
       // Stream text tokens.
-      const fullText = `Hello from ${body.nodeId}! I'm a streaming node executing capability ${body.capabilityId}. The canvas is alive — you can watch me grow this response token by token. This is the V6 living canvas: streaming-native, agent-driven, and observable.`;
-      const words = fullText.split(' ');
+      const fullText = `Hello from ${body.nodeId}! I'm a streaming node executing capability ${body.capabilityId}. The canvas is alive — you can watch me grow this response token by token. This is the V6 living canvas: streaming-native, agent-driven, and observable.`
+      const words = fullText.split(' ')
       for (let i = 0; i < words.length; i++) {
-        send({ kind: 'text', content: words[i]! + (i < words.length - 1 ? ' ' : ''), index: i + 1 });
-        await new Promise((r) => setTimeout(r, 60));
+        send({ kind: 'text', content: words[i]! + (i < words.length - 1 ? ' ' : ''), index: i + 1 })
+        await new Promise((r) => setTimeout(r, 60))
       }
 
       // Cost update.
@@ -49,14 +58,14 @@ export async function POST(req: Request) {
         tokensOut: words.length * 2,
         costUsd: 0.0003,
         index: words.length + 1,
-      });
+      })
 
       // Complete.
-      send({ kind: 'complete', index: words.length + 2 });
+      send({ kind: 'complete', index: words.length + 2 })
 
-      controller.close();
+      controller.close()
     },
-  });
+  })
 
   return new Response(stream, {
     headers: {
@@ -64,5 +73,5 @@ export async function POST(req: Request) {
       'Cache-Control': 'no-cache',
       'X-Trace-Id': traceId,
     },
-  });
+  })
 }

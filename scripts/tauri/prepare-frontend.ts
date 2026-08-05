@@ -1,18 +1,31 @@
 import { execSync } from 'node:child_process'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const root = join(import.meta.dir, '..', '..')
 const frontendDir = join(root, 'frontend')
 const outDir = join(frontendDir, 'out')
+const configPath = join(frontendDir, 'next.config.mjs')
 
-// Build Next.js as a static export.
-// frontend/next.config.mjs already has output: "export" (set during the Tauri V2 upgrade),
-// so no config patching is needed — the build produces a complete static site directly
-// to frontend/out/ with all HTML, JS, CSS, and assets.
+// Temporarily inject output: "export" for static HTML export (Tauri needs static files).
+const originalConfig = readFileSync(configPath, 'utf8')
+if (!originalConfig.includes('output:')) {
+  const patched = originalConfig.replace(
+    'const nextConfig = {',
+    'const nextConfig = {\n  output: "export",',
+  )
+  writeFileSync(configPath, patched, 'utf8')
+  console.log('[prepare] Patched next.config.mjs with output: "export"')
+}
 
-console.log('[prepare] Building Next.js static export...')
-execSync('bun run build', { cwd: frontendDir, stdio: 'inherit' })
+try {
+  console.log('[prepare] Building Next.js static export...')
+  execSync('bun run build', { cwd: frontendDir, stdio: 'inherit' })
+} finally {
+  // Restore original config.
+  writeFileSync(configPath, originalConfig, 'utf8')
+  console.log('[prepare] Restored next.config.mjs')
+}
 
 if (existsSync(outDir)) {
   const countFiles = (dir: string): number => {

@@ -201,9 +201,12 @@ export class ChromeSetupWizard {
       }
     }
 
-    const navResp = await fetch(`http://127.0.0.1:${debugPort}/json/new?${encodeURIComponent(url)}`, {
-      signal: AbortSignal.timeout(5_000),
-    })
+    const navResp = await fetch(
+      `http://127.0.0.1:${debugPort}/json/new?${encodeURIComponent(url)}`,
+      {
+        signal: AbortSignal.timeout(5_000),
+      },
+    )
     if (!navResp.ok) throw new EngineError(`Failed to create tab: ${navResp.status}`)
 
     // Wait for the page to load

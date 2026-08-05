@@ -14,9 +14,9 @@
  *   GET  /api/update/provider/:slug/status — Get provider status
  */
 
+import { z } from 'zod'
 import { getUpdateEngine } from '../../engines/update-engine.js'
 import { errorResponse, json } from '../response.js'
-import { z } from 'zod'
 
 export function createUpdateRouter() {
   return async function updateRouter(req: Request, url: URL): Promise<Response | null> {

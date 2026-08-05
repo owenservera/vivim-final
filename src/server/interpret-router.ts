@@ -9,7 +9,6 @@ import { z } from 'zod'
 import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
 import type {
-  InterpretBody,
   InterpretClarificationResponse,
   InterpretConfirmationResponse,
   InterpretErrorResponse,
@@ -34,13 +33,15 @@ export function createInterpretRouter(nlclEngine: NLCLEngine) {
 
     const bodySchema = z.object({
       text: z.string().min(1),
-      ctx: z.object({
-        conversationId: z.string().optional(),
-        providerId: z.string().optional(),
-        slaveId: z.string().optional(),
-        userId: z.string().optional(),
-        metadata: z.record(z.unknown()).optional(),
-      }).optional(),
+      ctx: z
+        .object({
+          conversationId: z.string().optional(),
+          providerId: z.string().optional(),
+          slaveId: z.string().optional(),
+          userId: z.string().optional(),
+          metadata: z.record(z.unknown()).optional(),
+        })
+        .optional(),
     })
     let body: z.infer<typeof bodySchema>
     try {

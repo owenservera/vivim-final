@@ -1,4 +1,5 @@
 export { useConversation } from './use-conversation'
+export { useConversationSync } from './use-conversation-sync'
 export { useCapability } from './use-capability'
 export { useProvider } from './use-provider'
 export { useSession } from './use-session'

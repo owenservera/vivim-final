@@ -1,26 +1,30 @@
 // src/server/routes/media.ts
 // REST API routes for media attachment management.
 
+import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
-import { z } from 'zod'
 
 export function createMediaRouter(ctx: ServerContext) {
   return async function mediaRouter(req: Request): Promise<Response | undefined> {
     const url = new URL(req.url)
     const path = url.pathname
 
-    const store = (ctx as unknown as { mediaStore?: {
-      getMediaById(id: string): Promise<unknown>
-      getMediaByContentItem(contentItemId: string): Promise<unknown[]>
-      getMediaByType(mediaType: string): Promise<unknown[]>
-      getUndownloaded(): Promise<unknown[]>
-      createMedia(input: unknown): Promise<unknown>
-      updateMedia(id: string, updates: unknown): Promise<unknown>
-      updateDownloadProgress(id: string, progress: number): Promise<unknown>
-      markDownloaded(id: string, localPath: string): Promise<unknown>
-      deleteMedia(id: string): Promise<void>
-    }}).mediaStore
+    const store = (
+      ctx as unknown as {
+        mediaStore?: {
+          getMediaById(id: string): Promise<unknown>
+          getMediaByContentItem(contentItemId: string): Promise<unknown[]>
+          getMediaByType(mediaType: string): Promise<unknown[]>
+          getUndownloaded(): Promise<unknown[]>
+          createMedia(input: unknown): Promise<unknown>
+          updateMedia(id: string, updates: unknown): Promise<unknown>
+          updateDownloadProgress(id: string, progress: number): Promise<unknown>
+          markDownloaded(id: string, localPath: string): Promise<unknown>
+          deleteMedia(id: string): Promise<void>
+        }
+      }
+    ).mediaStore
 
     if (!store) {
       return errorResponse('MediaStore not available', 'EngineUnavailable', 503)

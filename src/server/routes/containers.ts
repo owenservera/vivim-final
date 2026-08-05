@@ -1,25 +1,29 @@
 // src/server/routes/containers.ts
 // REST API routes for entity container management.
 
+import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
-import { z } from 'zod'
 
 export function createContainersRouter(ctx: ServerContext) {
   return async function containersRouter(req: Request): Promise<Response | undefined> {
     const url = new URL(req.url)
     const path = url.pathname
 
-    const store = (ctx as unknown as { containerStore?: {
-      getContainerById(id: string): Promise<unknown>
-      listContainers(query: unknown): Promise<unknown[]>
-      createContainer(input: unknown): Promise<unknown>
-      updateContainer(id: string, updates: unknown): Promise<unknown>
-      deleteContainer(id: string): Promise<void>
-      getMemberships(containerId: string): Promise<unknown[]>
-      addMembership(input: unknown): Promise<unknown>
-      removeMembership(containerId: string, userRole: string): Promise<void>
-    }}).containerStore
+    const store = (
+      ctx as unknown as {
+        containerStore?: {
+          getContainerById(id: string): Promise<unknown>
+          listContainers(query: unknown): Promise<unknown[]>
+          createContainer(input: unknown): Promise<unknown>
+          updateContainer(id: string, updates: unknown): Promise<unknown>
+          deleteContainer(id: string): Promise<void>
+          getMemberships(containerId: string): Promise<unknown[]>
+          addMembership(input: unknown): Promise<unknown>
+          removeMembership(containerId: string, userRole: string): Promise<void>
+        }
+      }
+    ).containerStore
 
     if (!store) {
       return errorResponse('ContainerStore not available', 'EngineUnavailable', 503)

@@ -5,10 +5,10 @@
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
 
+import { z } from 'zod'
 import type { ConfigUniversalSurface } from '../engines/config-universal-surface.js'
 import type { ServerContext } from './index.js'
 import { extractSource } from './source-middleware.js'
-import { z } from 'zod'
 
 export interface KernelRouterDeps {
   kernel: ServerContext['kernel']

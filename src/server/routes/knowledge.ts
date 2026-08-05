@@ -1,10 +1,10 @@
 // src/server/routes/knowledge.ts
 // REST API routes for Phase 0 memory intelligence — entities, topics, projects, preferences.
 
+import { z } from 'zod'
+import type { MemoryIntelligenceStoreImpl } from '../../storage/impl/memory-intelligence-store-impl.js'
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
-import type { MemoryIntelligenceStoreImpl } from '../../storage/impl/memory-intelligence-store-impl.js'
-import { z } from 'zod'
 
 export function createKnowledgeRouter(ctx: ServerContext) {
   return async function knowledgeRouter(req: Request): Promise<Response | undefined> {
@@ -12,7 +12,8 @@ export function createKnowledgeRouter(ctx: ServerContext) {
     const path = url.pathname
 
     // Get the intelligence store from context
-    const store = (ctx as unknown as { intelligenceStore?: MemoryIntelligenceStoreImpl }).intelligenceStore
+    const store = (ctx as unknown as { intelligenceStore?: MemoryIntelligenceStoreImpl })
+      .intelligenceStore
     if (!store) {
       return errorResponse('MemoryIntelligenceStore not available', 'EngineUnavailable', 503)
     }
@@ -26,7 +27,9 @@ export function createKnowledgeRouter(ctx: ServerContext) {
       if (req.method === 'GET' && path === '/api/knowledge/entities/search') {
         const name = url.searchParams.get('name') ?? undefined
         const type = url.searchParams.get('type') ?? undefined
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
         const entities = await store.listEntities({ name, type, limit })
         return json({ entities, count: entities.length })
       }
@@ -34,7 +37,9 @@ export function createKnowledgeRouter(ctx: ServerContext) {
       // GET /api/knowledge/entities
       if (req.method === 'GET' && path === '/api/knowledge/entities') {
         const type = url.searchParams.get('type') ?? undefined
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
         const entities = await store.listEntities({ type, limit })
         return json({ entities, count: entities.length })
       }
@@ -87,15 +92,21 @@ export function createKnowledgeRouter(ctx: ServerContext) {
       // GET /api/knowledge/topics/search
       if (req.method === 'GET' && path === '/api/knowledge/topics/search') {
         const name = url.searchParams.get('name') ?? undefined
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
         const topics = await store.listTopics({ limit })
-        const filtered = name ? topics.filter((t) => t.name.toLowerCase().includes(name.toLowerCase())) : topics
+        const filtered = name
+          ? topics.filter((t) => t.name.toLowerCase().includes(name.toLowerCase()))
+          : topics
         return json({ topics: filtered, count: filtered.length })
       }
 
       // GET /api/knowledge/topics
       if (req.method === 'GET' && path === '/api/knowledge/topics') {
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
         const topics = await store.listTopics({ limit })
         return json({ topics, count: topics.length })
       }
@@ -150,16 +161,22 @@ export function createKnowledgeRouter(ctx: ServerContext) {
       // GET /api/knowledge/projects/search
       if (req.method === 'GET' && path === '/api/knowledge/projects/search') {
         const name = url.searchParams.get('name') ?? undefined
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
         const projects = await store.listProjects({ limit })
-        const filtered = name ? projects.filter((p) => p.name.toLowerCase().includes(name.toLowerCase())) : projects
+        const filtered = name
+          ? projects.filter((p) => p.name.toLowerCase().includes(name.toLowerCase()))
+          : projects
         return json({ projects: filtered, count: filtered.length })
       }
 
       // GET /api/knowledge/projects
       if (req.method === 'GET' && path === '/api/knowledge/projects') {
         const status = url.searchParams.get('status') ?? undefined
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
         const projects = await store.listProjects({ status, limit })
         return json({ projects, count: projects.length })
       }
@@ -214,7 +231,9 @@ export function createKnowledgeRouter(ctx: ServerContext) {
       // GET /api/knowledge/preferences
       if (req.method === 'GET' && path === '/api/knowledge/preferences') {
         const userId = url.searchParams.get('userId') ?? undefined
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
         const preferences = await store.listUserPreferences({ userId, limit })
         return json({ preferences, count: preferences.length })
       }
@@ -270,7 +289,6 @@ export function createKnowledgeRouter(ctx: ServerContext) {
         await store.softDeleteUserPreference(prefMatch[1])
         return json({ ok: true })
       }
-
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       return errorResponse(message, 'KnowledgeError', 400)

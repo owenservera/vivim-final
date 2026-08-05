@@ -1,9 +1,9 @@
 // src/server/routes/users.ts
 // REST API routes for user identity management (CAP-003).
 
+import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
-import { z } from 'zod'
 
 export function createUserRouter(ctx: ServerContext) {
   return async function userRouter(req: Request): Promise<Response | undefined> {

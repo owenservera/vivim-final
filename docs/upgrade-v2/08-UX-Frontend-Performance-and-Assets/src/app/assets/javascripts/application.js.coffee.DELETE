@@ -1,4 +1,0 @@
-# UX8-01: DELETE this file.
-# Its contents have been transpiled to app/assets/javascripts/application.js (vanilla ES6+).
-# Run: rm app/assets/javascripts/application.js.coffee
-# Also remove from Gemfile: gem 'coffee-rails'

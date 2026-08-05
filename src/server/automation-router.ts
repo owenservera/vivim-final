@@ -3,11 +3,11 @@
 // ChromeGovernor via the AutomationOrchestrator — never touches CDP directly
 // (Governor Canon). Replaces the legacy src/automation/automation-router.ts.
 
+import { z } from 'zod'
 import { AGENT_ROLES } from '../engines/automation/agents.js'
 import type { AutomationOrchestrator } from '../engines/automation/orchestrator.js'
 import { EngineError } from '../errors.js'
 import { errorResponse, json } from './response.js'
-import { z } from 'zod'
 
 export interface AutomationRouterDeps {
   orchestrator: AutomationOrchestrator

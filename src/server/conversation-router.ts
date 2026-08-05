@@ -2,7 +2,6 @@
 // REST API router — core endpoints
 
 import { z } from 'zod'
-import { config } from '../config.js'
 import type {
   PlanTier,
   ResolvedCapabilities,

@@ -1,7 +1,0 @@
-# WEB-04 fix: real rules instead of all-commented-out.
-User-agent: *
-Allow: /
-Disallow: /up
-Disallow: /contact
-
-Sitemap: https://vivim.net/sitemap.xml

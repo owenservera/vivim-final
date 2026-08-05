@@ -1,23 +1,27 @@
 // src/server/routes/content.ts
 // REST API routes for content item management.
 
+import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
-import { z } from 'zod'
 
 export function createContentRouter(ctx: ServerContext) {
   return async function contentRouter(req: Request): Promise<Response | undefined> {
     const url = new URL(req.url)
     const path = url.pathname
 
-    const store = (ctx as unknown as { contentStore?: {
-      getItemById(id: string): Promise<unknown>
-      queryItems(query: unknown): Promise<unknown[]>
-      createItem(input: unknown): Promise<unknown>
-      updateItem(id: string, updates: unknown): Promise<unknown>
-      deleteItem(id: string): Promise<void>
-      searchItems(query: string, opts?: unknown): Promise<unknown[]>
-    }}).contentStore
+    const store = (
+      ctx as unknown as {
+        contentStore?: {
+          getItemById(id: string): Promise<unknown>
+          queryItems(query: unknown): Promise<unknown[]>
+          createItem(input: unknown): Promise<unknown>
+          updateItem(id: string, updates: unknown): Promise<unknown>
+          deleteItem(id: string): Promise<void>
+          searchItems(query: string, opts?: unknown): Promise<unknown[]>
+        }
+      }
+    ).contentStore
 
     if (!store) {
       return errorResponse('ContentStore not available', 'EngineUnavailable', 503)
@@ -39,9 +43,20 @@ export function createContentRouter(ctx: ServerContext) {
         const providerId = url.searchParams.get('providerId') ?? undefined
         const accountId = url.searchParams.get('accountId') ?? undefined
         const contentType = url.searchParams.get('contentType') ?? undefined
-        const limit = url.searchParams.get('limit') ? Number(url.searchParams.get('limit')) : undefined
-        const offset = url.searchParams.get('offset') ? Number(url.searchParams.get('offset')) : undefined
-        const items = await store.queryItems({ containerId, providerId, accountId, contentType, limit, offset })
+        const limit = url.searchParams.get('limit')
+          ? Number(url.searchParams.get('limit'))
+          : undefined
+        const offset = url.searchParams.get('offset')
+          ? Number(url.searchParams.get('offset'))
+          : undefined
+        const items = await store.queryItems({
+          containerId,
+          providerId,
+          accountId,
+          contentType,
+          limit,
+          offset,
+        })
         return json({ items, count: (items as unknown[]).length })
       }
 

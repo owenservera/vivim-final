@@ -90,7 +90,7 @@ describe('HealthMonitor', () => {
     hm.registerService('tunnel')
     hm.updateServiceStatus('tunnel', 'running')
     const status = hm.getStatus()
-    expect(status.services.tunnel.status).toBe('running')
+    expect(status.services.tunnel!.status).toBe('running')
   })
 
   it('updateServiceStatus with error', () => {
@@ -98,8 +98,8 @@ describe('HealthMonitor', () => {
     hm.registerService('tunnel')
     hm.updateServiceStatus('tunnel', 'error', 'connection lost')
     const status = hm.getStatus()
-    expect(status.services.tunnel.status).toBe('error')
-    expect(status.services.tunnel.lastError).toBe('connection lost')
+    expect(status.services.tunnel!.status).toBe('error')
+    expect(status.services.tunnel!.lastError).toBe('connection lost')
   })
 
   it('start and stop without error', () => {

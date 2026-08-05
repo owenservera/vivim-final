@@ -53,6 +53,7 @@ import { createKnowledgeRouter } from './routes/knowledge.js'
 import { createMediaRouter } from './routes/media.js'
 import { createNotificationsRouter } from './routes/notifications.js'
 import { createSyncRouter } from './routes/sync.js'
+import { createConversationSyncRouter } from './conversation-sync-router.js'
 import { createTunnelRouter } from './routes/tunnel.js'
 import { createUpdateRouter } from './routes/update.js'
 import { createSetupRouter } from './setup-router.js'
@@ -229,6 +230,7 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   const notificationsRouter = createNotificationsRouter(ctx)
   const contactsRouter = createContactsRouter(ctx)
   const syncRouter = createSyncRouter(ctx)
+  const conversationSyncRouter = createConversationSyncRouter(ctx)
   const mediaRouter = createMediaRouter(ctx)
 
   // NodeStoreImpl for the minimal server context (node graph queries)
@@ -368,6 +370,9 @@ export async function createServer(port = 9420): Promise<ServerContext> {
         }
         if (url.pathname.startsWith('/api/sync/')) {
           return syncRouter(req)
+        }
+        if (url.pathname.startsWith('/api/conversations/sync/')) {
+          return conversationSyncRouter(req)
         }
         if (url.pathname.startsWith('/api/media/')) {
           return mediaRouter(req)

@@ -23,7 +23,7 @@ export class CapStoreDb {
    * Use this instead of `(db.prisma as any).modelName` in store impls.
    */
   get loose(): PrismaLoose {
-    return this.prisma as unknown as PrismaLoose
+    return { prisma: this.prisma } as unknown as PrismaLoose
   }
 
   constructor(_path?: string) {

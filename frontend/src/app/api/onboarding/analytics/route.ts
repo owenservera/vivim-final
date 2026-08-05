@@ -1,3 +1,4 @@
+import type { TourAnalyticsEvent } from '@/shared/onboarding'
 /**
  * POST /api/onboarding/analytics
  *
@@ -5,35 +6,36 @@
  * the help system. Persists to an in-memory ring buffer (last 10,000 events)
  * and logs at info level.
  */
-import { NextRequest, NextResponse } from 'next/server';
-import type { TourAnalyticsEvent } from '@/shared/onboarding';
+import { type NextRequest, NextResponse } from 'next/server'
 
-export const dynamic = "force-static";
+export const dynamic = 'force-static'
 
-const BUFFER_MAX = 10_000;
-const buffer: TourAnalyticsEvent[] = [];
+const BUFFER_MAX = 10_000
+const buffer: TourAnalyticsEvent[] = []
 
 function pushEvent(event: TourAnalyticsEvent): void {
-  buffer.push(event);
+  buffer.push(event)
   if (buffer.length > BUFFER_MAX) {
-    buffer.shift();
+    buffer.shift()
   }
-  console.log(JSON.stringify({
-    level: 'info',
-    msg: 'onboarding-analytics',
-    event,
-  }));
+  console.log(
+    JSON.stringify({
+      level: 'info',
+      msg: 'onboarding-analytics',
+      event,
+    }),
+  )
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.json()
 
     if (!body || typeof body.type !== 'string' || typeof body.userId !== 'string') {
       return NextResponse.json(
         { ok: false, error: 'Invalid event: missing type or userId' },
         { status: 400 },
-      );
+      )
     }
 
     const validTypes = new Set([
@@ -43,35 +45,34 @@ export async function POST(req: NextRequest) {
       'step_action_clicked',
       'tour_completed',
       'tour_dismissed',
-    ]);
+    ])
 
     if (!validTypes.has(body.type)) {
       return NextResponse.json(
         { ok: false, error: `Invalid event type: ${body.type}` },
         { status: 400 },
-      );
+      )
     }
 
-    const event = body as TourAnalyticsEvent;
-    pushEvent(event);
+    const event = body as TourAnalyticsEvent
+    pushEvent(event)
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }
 
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const limit = Number(url.searchParams.get('limit') ?? 100);
-  const userId = url.searchParams.get('userId');
+  const url = new URL(req.url)
+  const limit = Number(url.searchParams.get('limit') ?? 100)
+  const userId = url.searchParams.get('userId')
 
-  let events = buffer.slice(-Math.min(limit, BUFFER_MAX));
+  let events = buffer.slice(-Math.min(limit, BUFFER_MAX))
   if (userId) {
-    events = events.filter((e) => e.userId === userId);
+    events = events.filter((e) => e.userId === userId)
   }
 
-  return NextResponse.json({ ok: true, events, total: buffer.length });
+  return NextResponse.json({ ok: true, events, total: buffer.length })
 }
-
