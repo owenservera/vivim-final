@@ -5,6 +5,7 @@
 // effect on the next cycle (no restart required).
 
 import { z } from 'zod'
+import { catchDebug } from '../lib/catch-logger.js'
 import type {
   CrossProviderSummary,
   DailySummaryRow,
@@ -325,8 +326,8 @@ export class TelemetryAggregator {
         configSchema,
         DEFAULT_TELEMETRY_PIPELINE as unknown as Record<string, unknown>,
       )
-    } catch {
-      // Already registered (e.g. reused ConfigManager across engines) — ignore.
+    } catch (e) {
+      catchDebug(e, 'telemetry-aggregator: tunable registration skipped')
     }
   }
 
@@ -334,7 +335,8 @@ export class TelemetryAggregator {
     try {
       const stored = this.configManager.getConfig<Record<string, unknown>>(TELEMETRY_ENGINE_ID)
       return (stored as unknown as TelemetryPipelineConfig) ?? DEFAULT_TELEMETRY_PIPELINE
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'telemetry-aggregator: config load failed, using defaults')
       return DEFAULT_TELEMETRY_PIPELINE
     }
   }
@@ -364,8 +366,8 @@ export class TelemetryAggregator {
         newConfig as unknown as Record<string, unknown>,
         'TelemetryAggregator',
       )
-    } catch {
-      // ConfigManager not pre-registered; keep in-memory config authoritative.
+    } catch (e) {
+      catchDebug(e, 'telemetry-aggregator: configManager not pre-registered')
     }
     return { schedulesChanged, retentionChanged, triggerModeChanged }
   }
