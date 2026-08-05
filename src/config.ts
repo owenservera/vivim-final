@@ -4,6 +4,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { catchDebug } from './lib/catch-logger.js'
 
 // ── Platform detection ──────────────────────────────────────────────────────
 
@@ -27,8 +28,8 @@ export function getServerPort(): number {
       const v = readFileSync(p, 'utf8').trim()
       if (/^\d+$/.test(v)) return Number.parseInt(v, 10)
     }
-  } catch {
-    // ignore — fall through to default
+  } catch (e) {
+    catchDebug(e, 'config: port file read failed, using default')
   }
   return 9420
 }
@@ -38,8 +39,8 @@ export function writeServerPortFile(port: number): void {
     const dir = join(process.cwd(), '.runtime')
     if (!existsSync(dir)) return
     writeFileSync(join(dir, 'backend.port'), String(port), 'utf8')
-  } catch {
-    // non-fatal — clients fall back to env/default
+  } catch (e) {
+    catchDebug(e, 'config: port file write failed (non-fatal)')
   }
 }
 
@@ -56,8 +57,8 @@ function defaultDataDir(): string {
   // Ensure the data directory exists (safe on repeated calls).
   try {
     if (dir !== '.') mkdirSync(dir, { recursive: true })
-  } catch {
-    // best-effort — callers may still fail with EACCES if dir is read-only
+  } catch (e) {
+    catchDebug(e, 'config: runtime dir creation failed')
   }
   return dir
 }
@@ -171,8 +172,8 @@ function loadTunables(): Record<string, unknown> {
       const raw = JSON.parse(readFileSync(TUNABLE_FILE, 'utf-8')) as Record<string, unknown>
       return raw ?? {}
     }
-  } catch {
-    // ignore corrupt file — fall back to defaults
+  } catch (e) {
+    catchDebug(e, 'config: tunable file parse failed, using defaults')
   }
   return {}
 }
@@ -210,7 +211,8 @@ export function setTunable(key: string, value: unknown): void {
       // best-effort; callers ensure .runtime exists
     }
     writeFileSync(TUNABLE_FILE, JSON.stringify(next, null, 2), 'utf-8')
-  } catch {
+  } catch (e) {
+    catchDebug(e, 'config: tunable persist failed')
     throw new Error(`Failed to persist tunable ${key} (cannot write ${TUNABLE_FILE})`)
   }
   tunableOverrides[key] = value
@@ -370,8 +372,8 @@ export const config = {
 try {
   mkdirSync(config.dataDir, { recursive: true })
   mkdirSync(config.profileBaseDir, { recursive: true })
-} catch {
-  // best-effort — sidecar-entry.ts has its own fallback path creation
+} catch (e) {
+  catchDebug(e, 'config: profileBaseDir creation failed')
 }
 
 /**
