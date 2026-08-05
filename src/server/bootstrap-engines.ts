@@ -4,6 +4,7 @@
 
 import { connectCapabilityRegistry } from '../cli/index.js'
 import { config } from '../config.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { registerGeneratedCapabilities } from '../engines/capability-bootstrap-generated.js'
 import {
   registerDefaultCapabilities,
@@ -329,8 +330,8 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
       extractor,
       eventBus,
     )
-  } catch {
-    /* knowledge ingestion not available */
+  } catch (e) {
+    catchDebug(e, 'bootstrap: knowledge ingestion not available')
   }
 
   try {
@@ -346,14 +347,15 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
       const provider = new OllamaEmbeddingProvider()
       await provider.embed('ping')
       embedding = provider
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'bootstrap: embedding provider fallback to MiniLM')
       const { MiniLmEmbeddingProvider } = await import('../engines/embedding-minilm.js')
       embedding = new MiniLmEmbeddingProvider()
     }
 
     semanticSearch = new SemanticSearchEngine(ssStore, embedding, db)
-  } catch {
-    /* semantic search not available */
+  } catch (e) {
+    catchDebug(e, 'bootstrap: semantic search not available')
   }
 
   try {
@@ -367,9 +369,9 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
     const noopLlm = { synthesize: async () => ({ text: 'LLM not configured', confidence: 0 }) }
     if (semanticSearch)
       synthesizer = new CrossConversationSynthesizer(synthStore, semanticSearch, noopLlm)
-  } catch {
-    /* synthesizer not available */
-  }
+    } catch (e) {
+      catchDebug(e, 'bootstrap: synthesizer not available')
+    }
 
   try {
     const { ExportEngine } = await import('../engines/export.js')
@@ -429,8 +431,8 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
         })
       },
     })
-  } catch {
-    /* export engine not available */
+  } catch (e) {
+    catchDebug(e, 'bootstrap: export engine not available')
   }
 
   // Mux engines (optional — wired if stores are available)
@@ -442,8 +444,8 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
     const { CostStoreImpl } = await import('../storage/impl/cost-store-impl.js')
     const costStore = new CostStoreImpl(db)
     costOptimizer = new CostOptimizer(costStore)
-  } catch {
-    /* cost optimizer not available */
+  } catch (e) {
+    catchDebug(e, 'bootstrap: cost optimizer not available')
   }
 
   try {
@@ -521,8 +523,8 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
     const noopDispatcher = { dispatch: async () => ({ ok: true }) }
     const router = new Router(routerStore, noopDispatcher)
     providerMux = new ProviderMuxEngine(muxStore, muxDispatcher, router, eventBus)
-  } catch {
-    /* provider mux not available */
+  } catch (e) {
+    catchDebug(e, 'bootstrap: provider mux not available')
   }
 
   // Autonomous execution (optional — wired if stores are available)
@@ -770,7 +772,8 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
         try {
           await mcpServer.start({ port: mcpPort, hostname: '127.0.0.1' })
           break
-        } catch {
+        } catch (e) {
+          catchDebug(e, `bootstrap: MCP port ${mcpPort} in use, trying next`)
           if (attempt === 19) throw new Error(`MCP port ${mcpStartPort} and next 19 ports in use`)
           mcpPort++
         }
@@ -937,8 +940,8 @@ export async function bootstrapEngines(port: number): Promise<BootstrapEnginesRe
       governor,
       eventBus,
     )
-  } catch {
-    /* autonomous execution not available */
+  } catch (e) {
+    catchDebug(e, 'bootstrap: autonomous execution not available')
   }
 
   // NLCL — Natural Language Command Layer (the "comms system")
