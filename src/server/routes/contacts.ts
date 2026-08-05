@@ -3,6 +3,7 @@
 
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
+import { z } from 'zod'
 
 export function createContactsRouter(ctx: ServerContext) {
   return async function contactsRouter(req: Request): Promise<Response | undefined> {
@@ -44,32 +45,22 @@ export function createContactsRouter(ctx: ServerContext) {
 
       // POST /api/contacts
       if (req.method === 'POST' && path === '/api/contacts') {
-        const body = (await req.json()) as {
-          providerId?: string
-          accountId?: string
-          providerNativeId?: string
-          displayName?: string
-          username?: string
-          avatarUrl?: string
-          phoneNumber?: string
-          email?: string
-          relationship?: string
-          notes?: string
-          metadataJson?: string
-        }
-        if (!body.displayName || typeof body.displayName !== 'string') {
-          return errorResponse('displayName is required', 'ValidationError', 400)
-        }
-        if (!body.providerId || typeof body.providerId !== 'string') {
-          return errorResponse('providerId is required', 'ValidationError', 400)
-        }
-        if (!body.accountId || typeof body.accountId !== 'string') {
-          return errorResponse('accountId is required', 'ValidationError', 400)
-        }
-        if (!body.providerNativeId || typeof body.providerNativeId !== 'string') {
-          return errorResponse('providerNativeId is required', 'ValidationError', 400)
-        }
-        const contact = await store.createContact(body)
+        const schema = z.object({
+          providerId: z.string().min(1, 'providerId is required'),
+          accountId: z.string().min(1, 'accountId is required'),
+          providerNativeId: z.string().min(1, 'providerNativeId is required'),
+          displayName: z.string().min(1, 'displayName is required'),
+          username: z.string().optional(),
+          avatarUrl: z.string().optional(),
+          phoneNumber: z.string().optional(),
+          email: z.string().optional(),
+          relationship: z.string().optional(),
+          notes: z.string().optional(),
+          metadataJson: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const contact = await store.createContact(parsed.data)
         return json({ contact }, 201)
       }
 
@@ -108,15 +99,18 @@ export function createContactsRouter(ctx: ServerContext) {
       // POST /api/contacts/:id/merge
       const mergeMatch = path.match(/^\/api\/contacts\/([^/]+)\/merge$/)
       if (req.method === 'POST' && mergeMatch && mergeMatch[1]) {
-        const body = (await req.json()) as { mergedContactId?: string; method?: string; confidence?: number }
-        if (!body.mergedContactId || typeof body.mergedContactId !== 'string') {
-          return errorResponse('mergedContactId is required', 'ValidationError', 400)
-        }
+        const schema = z.object({
+          mergedContactId: z.string().min(1, 'mergedContactId is required'),
+          method: z.string().optional(),
+          confidence: z.number().min(0).max(1).optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
         const identity = await store.mergeContacts(
           mergeMatch[1],
-          body.mergedContactId,
-          body.method ?? 'manual',
-          body.confidence ?? 1.0,
+          parsed.data.mergedContactId,
+          parsed.data.method ?? 'manual',
+          parsed.data.confidence ?? 1.0,
         )
         return json({ identity }, 201)
       }

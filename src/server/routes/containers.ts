@@ -3,6 +3,7 @@
 
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
+import { z } from 'zod'
 
 export function createContainersRouter(ctx: ServerContext) {
   return async function containersRouter(req: Request): Promise<Response | undefined> {
@@ -36,33 +37,20 @@ export function createContainersRouter(ctx: ServerContext) {
 
       // POST /api/containers
       if (req.method === 'POST' && path === '/api/containers') {
-        const body = (await req.json()) as {
-          providerId?: string
-          accountId?: string
-          containerType?: string
-          providerNativeId?: string
-          name?: string
-          description?: string
-          iconUrl?: string
-          metadataJson?: string
-          parentContainerId?: string
-        }
-        if (!body.name || typeof body.name !== 'string') {
-          return errorResponse('name is required', 'ValidationError', 400)
-        }
-        if (!body.containerType || typeof body.containerType !== 'string') {
-          return errorResponse('containerType is required', 'ValidationError', 400)
-        }
-        if (!body.providerId || typeof body.providerId !== 'string') {
-          return errorResponse('providerId is required', 'ValidationError', 400)
-        }
-        if (!body.accountId || typeof body.accountId !== 'string') {
-          return errorResponse('accountId is required', 'ValidationError', 400)
-        }
-        if (!body.providerNativeId || typeof body.providerNativeId !== 'string') {
-          return errorResponse('providerNativeId is required', 'ValidationError', 400)
-        }
-        const container = await store.createContainer(body)
+        const schema = z.object({
+          providerId: z.string().min(1, 'providerId is required'),
+          accountId: z.string().min(1, 'accountId is required'),
+          containerType: z.string().min(1, 'containerType is required'),
+          providerNativeId: z.string().min(1, 'providerNativeId is required'),
+          name: z.string().min(1, 'name is required'),
+          description: z.string().optional(),
+          iconUrl: z.string().optional(),
+          metadataJson: z.string().optional(),
+          parentContainerId: z.string().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const container = await store.createContainer(parsed.data)
         return json({ container }, 201)
       }
 

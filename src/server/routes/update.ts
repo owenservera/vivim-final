@@ -16,6 +16,7 @@
 
 import { getUpdateEngine } from '../../engines/update-engine.js'
 import { errorResponse, json } from '../response.js'
+import { z } from 'zod'
 
 export function createUpdateRouter() {
   return async function updateRouter(req: Request, url: URL): Promise<Response | null> {
@@ -115,14 +116,15 @@ export function createUpdateRouter() {
     // ── POST /api/update/download ──────────────────────────────────────────
     if (path === '/api/update/download' && req.method === 'POST') {
       try {
-        const body = (await req.json()) as { url?: string; filename?: string }
-
-        if (!body.url || !body.filename) {
-          return errorResponse('url and filename are required', 'VALIDATION_ERROR', 400)
-        }
+        const schema = z.object({
+          url: z.string().url('url must be a valid URL'),
+          filename: z.string().min(1, 'filename is required'),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
 
         const engine = getUpdateEngine()
-        const filePath = await engine.downloadUpdate(body.url, body.filename)
+        const filePath = await engine.downloadUpdate(parsed.data.url, parsed.data.filename)
 
         return json({ ok: true, filePath })
       } catch (error) {
@@ -137,13 +139,16 @@ export function createUpdateRouter() {
     // ── POST /api/update/install ───────────────────────────────────────────
     if (path === '/api/update/install' && req.method === 'POST') {
       try {
-        const body = (await req.json()) as {
-          filePath?: string
-          type?: 'app' | 'provider'
-          provider?: string
-          parserCode?: string
-          capabilities?: Record<string, unknown>[]
-        }
+        const schema = z.object({
+          filePath: z.string().min(1, 'filePath is required'),
+          type: z.enum(['app', 'provider']),
+          provider: z.string().optional(),
+          parserCode: z.string().optional(),
+          capabilities: z.array(z.record(z.unknown())).optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const body = parsed.data
 
         if (body.type === 'provider' && body.provider) {
           // Provider update

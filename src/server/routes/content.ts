@@ -3,6 +3,7 @@
 
 import type { ServerContext } from '../index.js'
 import { errorResponse, json } from '../response.js'
+import { z } from 'zod'
 
 export function createContentRouter(ctx: ServerContext) {
   return async function contentRouter(req: Request): Promise<Response | undefined> {
@@ -46,35 +47,28 @@ export function createContentRouter(ctx: ServerContext) {
 
       // POST /api/content
       if (req.method === 'POST' && path === '/api/content') {
-        const body = (await req.json()) as {
-          providerId?: string
-          accountId?: string
-          containerId?: string
-          parentItemId?: string
-          conversationId?: string
-          providerNativeId?: string
-          contentType?: string
-          authorName?: string
-          authorAvatarUrl?: string
-          authorProviderId?: string
-          title?: string
-          bodyText?: string
-          bodyRichJson?: string
-          summaryText?: string
-          url?: string
-          metadataJson?: string
-          sortTimestamp?: number
-        }
-        if (!body.contentType || typeof body.contentType !== 'string') {
-          return errorResponse('contentType is required', 'ValidationError', 400)
-        }
-        if (!body.providerId || typeof body.providerId !== 'string') {
-          return errorResponse('providerId is required', 'ValidationError', 400)
-        }
-        if (!body.accountId || typeof body.accountId !== 'string') {
-          return errorResponse('accountId is required', 'ValidationError', 400)
-        }
-        const item = await store.createItem(body)
+        const schema = z.object({
+          providerId: z.string().min(1, 'providerId is required'),
+          accountId: z.string().min(1, 'accountId is required'),
+          containerId: z.string().optional(),
+          parentItemId: z.string().optional(),
+          conversationId: z.string().optional(),
+          providerNativeId: z.string().optional(),
+          contentType: z.string().min(1, 'contentType is required'),
+          authorName: z.string().optional(),
+          authorAvatarUrl: z.string().optional(),
+          authorProviderId: z.string().optional(),
+          title: z.string().optional(),
+          bodyText: z.string().optional(),
+          bodyRichJson: z.string().optional(),
+          summaryText: z.string().optional(),
+          url: z.string().optional(),
+          metadataJson: z.string().optional(),
+          sortTimestamp: z.number().optional(),
+        })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const item = await store.createItem(parsed.data)
         return json({ item }, 201)
       }
 
