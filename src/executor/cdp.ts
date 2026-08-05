@@ -2,6 +2,7 @@
 // Real WebSocket CDP client with auto-reconnect, session management, per-command timeouts, and event subscription.
 
 import { CdpConnectionError, CdpTimeoutError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { CdpClientOptions, CommandOptions } from './cdp-types.ts'
 
 export type { CdpClientOptions, CommandOptions }
@@ -110,7 +111,8 @@ export class BunCdpClient {
     let msg: Record<string, unknown>
     try {
       msg = JSON.parse(data)
-    } catch {
+    } catch (e) {
+      catchDebug(e, 'cdp: message parse failed')
       return
     }
 
@@ -125,8 +127,8 @@ export class BunCdpClient {
           for (const handler of handlers) {
             try {
               handler(msg.params)
-            } catch {
-              /* isolate handler errors */
+            } catch (e) {
+              catchDebug(e, 'cdp: event handler error')
             }
           }
         }
@@ -219,8 +221,8 @@ export class BunCdpClient {
     if (this.ws) {
       try {
         this.ws.close(1000, 'Client disconnect')
-      } catch {
-        /* ignore close errors */
+      } catch (e) {
+        catchDebug(e, 'cdp: WS close failed')
       }
       this.ws = null
     }
@@ -242,7 +244,8 @@ export class BunCdpClient {
         this._connected = true
         this.retryCount = 0
         this.startPing()
-      } catch {
+      } catch (e) {
+        catchDebug(e, 'cdp: connect failed, scheduling reconnect')
         this.scheduleReconnect()
       }
     }, delay)
