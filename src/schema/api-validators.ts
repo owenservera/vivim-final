@@ -212,3 +212,18 @@ export const MutationSchema = z.object({
   operation: z.enum(['update', 'delete', 'restore']),
   data: z.record(z.unknown()).optional(),
 })
+
+// ── Capability execution schemas (Work Item 05) ──────────────────────────────
+
+export const CapabilityExecuteBodySchema = z.object({
+  input: z.record(z.unknown()).optional(),
+  ctx: z
+    .object({
+      conversationId: OptionalString,
+      providerId: OptionalString,
+      slaveId: OptionalString,
+      userId: OptionalString,
+      metadata: MetadataRecord,
+    })
+    .optional(),
+})

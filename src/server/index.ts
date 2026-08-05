@@ -284,9 +284,9 @@ export async function createServer(port = 9420): Promise<ServerContext> {
                 headers: { 'Content-Type': 'application/yaml; charset=utf-8' },
               })
             }
-            return json({ error: 'OpenAPI spec not found', code: 'NotFound' }, 404)
+            return errorResponse('OpenAPI spec not found', 'NotFound', 404)
           } catch {
-            return json({ error: 'Failed to load OpenAPI spec', code: 'InternalError' }, 500)
+            return errorResponse('Failed to load OpenAPI spec', 'InternalError', 500)
           }
         }
 
@@ -323,12 +323,12 @@ export async function createServer(port = 9420): Promise<ServerContext> {
           const ok = server.upgrade(req, { data: {} })
           return ok
             ? new Response(null, { status: 101 })
-            : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+            : errorResponse('WebSocket upgrade failed', 'ValidationError', 400)
         }
 
         // Reject requests during shutdown
         if (isShuttingDown) {
-          return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
+          return errorResponse('Server shutting down', 'ServiceUnavailable', 503)
         }
 
         // Auth gate
@@ -620,7 +620,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     if (path === '/api/opencode/send' && req.method === 'POST') {
       const body = (await req.json()) as { prompt?: string; sessionId?: string; model?: string }
       if (!body.prompt?.trim()) {
-        return json({ error: 'prompt is required' }, 400)
+        return errorResponse('prompt is required', 'ValidationError', 400)
       }
       try {
         let sessionId = body.sessionId
@@ -632,7 +632,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         await client.sendPrompt(sessionId, body.prompt)
         return json({ ok: true, sessionId, text: `Prompt sent to session ${sessionId}` })
       } catch (err) {
-        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+        return errorResponse(err instanceof Error ? err.message : String(err), 'InternalError', 500)
       }
     }
 
@@ -642,7 +642,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         const { sessionId } = await client.createSession({ model: body.model, cwd: body.cwd })
         return json({ ok: true, sessionId })
       } catch (err) {
-        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+        return errorResponse(err instanceof Error ? err.message : String(err), 'InternalError', 500)
       }
     }
 
@@ -654,7 +654,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       const permissionId = path.split('/').pop()
       const body = (await req.json()) as { sessionId?: string; decision?: string }
       if (!body.sessionId || !permissionId || !body.decision) {
-        return json({ error: 'sessionId, permissionId, and decision are required' }, 400)
+        return errorResponse('sessionId, permissionId, and decision are required', 'ValidationError', 400)
       }
       try {
         await client.respondPermission(
@@ -664,11 +664,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         )
         return json({ ok: true, sessionId: body.sessionId, permissionId, decision: body.decision })
       } catch (err) {
-        return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+        return errorResponse(err instanceof Error ? err.message : String(err), 'InternalError', 500)
       }
     }
 
-    return json({ error: 'Not found', code: 'NotFound' }, 404)
+    return errorResponse('Not found', 'NotFound', 404)
   }
 
   const { boundPort } = startOnFreePort(
@@ -707,11 +707,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
           const ok = server.upgrade(req, { data: {} })
           return ok
             ? new Response(null, { status: 101 })
-            : errorResponse('WebSocket upgrade failed', 'UpgradeFailed', 400)
+            : errorResponse('WebSocket upgrade failed', 'ValidationError', 400)
         }
 
         if (isShuttingDown) {
-          return json({ error: 'Server shutting down', code: 'ShuttingDown' }, 503)
+          return errorResponse('Server shutting down', 'ServiceUnavailable', 503)
         }
 
         const authResult = auth(req)
@@ -733,7 +733,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
               }
             | undefined
           if (!serve) {
-            return json({ error: 'OpenCode serve not enabled', code: 'OPENCODE_DISABLED' }, 503)
+            return errorResponse('OpenCode serve not enabled', 'NotAvailable', 503)
           }
           return handleOpenCodeRoutes(req, url, serve)
         }
@@ -799,7 +799,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
             })
           } catch (err) {
             log.error({ err }, '[system] Failed to refresh provider snapshot')
-            return json({ error: err instanceof Error ? err.message : String(err) }, 500)
+            return errorResponse(err instanceof Error ? err.message : String(err), 'InternalError', 500)
           }
         }
 

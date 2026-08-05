@@ -1,7 +1,10 @@
 'use client'
 
 import { useIO } from '@/components/canvas/UnifiedIOProvider'
+import type { ConversationDetail } from '@/types/shared/api-contract'
 import type { Conversation } from '@/types/api'
+import { transformConversation } from '@/api/transformers'
+import { ConversationArraySchema, ConversationDetailSchema } from '@/api/schemas'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useConversation() {
@@ -22,13 +25,16 @@ export function useConversation() {
     setLoading(true)
     setError(null)
     try {
-      const res = await io.get<Conversation[]>('/api/conversations')
+      const res = await io.get<ConversationDetail[]>('/api/conversations', {
+        responseSchema: ConversationArraySchema,
+      })
       if (!mountedRef.current) return
+      // Backend returns ConversationDetail[] (array directly) — transform to domain models
       const raw = res.data
       setConversations(
         Array.isArray(raw)
-          ? raw
-          : ((raw as { conversations?: Conversation[] }).conversations ?? []),
+          ? raw.map(transformConversation)
+          : ((raw as { conversations?: ConversationDetail[] }).conversations ?? []).map(transformConversation),
       )
     } catch (e) {
       if (!mountedRef.current) return
@@ -38,7 +44,7 @@ export function useConversation() {
     }
   }, [io])
 
-  // R3-05: Auto-fetch conversations on mount
+  // Auto-fetch conversations on mount
   useEffect(() => {
     refresh()
   }, [refresh])
@@ -48,21 +54,19 @@ export function useConversation() {
       setLoading(true)
       setError(null)
       try {
-        const res = await io.post<Conversation>('/api/conversations', { providerId })
+        const res = await io.post<ConversationDetail>('/api/conversations', { providerId }, {
+          responseSchema: ConversationDetailSchema,
+        })
         if (!mountedRef.current) return null
-        const conv = res.data
-        // R3-09: Defensive parsing — ensure response has required fields
-        if (
-          !conv ||
-          typeof conv !== 'object' ||
-          !('id' in conv) ||
-          typeof (conv as Conversation).id !== 'string'
-        ) {
+        const row = res.data
+        // Defensive parsing — ensure response has required fields
+        if (!row || typeof row !== 'object' || !('id' in row) || typeof row.id !== 'string') {
           setError('Invalid conversation response from server')
           return null
         }
-        setConversations((prev) => [conv as Conversation, ...prev])
-        return conv as Conversation
+        const conv = transformConversation(row)
+        setConversations((prev) => [conv, ...prev])
+        return conv
       } catch (e) {
         if (!mountedRef.current) return null
         setError(e instanceof Error ? e.message : 'Failed to create conversation')

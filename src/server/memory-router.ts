@@ -6,7 +6,7 @@
 
 import { z } from 'zod'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
 export function createMemoryRouter(ctx: ServerContext) {
@@ -49,10 +49,9 @@ export function createMemoryRouter(ctx: ServerContext) {
         return json(result)
       }
 
-      return errorResponse('Not found', 'NotFoundError', 404)
+      return errorResponse('Not found', 'NotFound', 404)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Internal error'
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

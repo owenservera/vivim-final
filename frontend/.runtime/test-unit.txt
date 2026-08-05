@@ -1,0 +1,20 @@
+bun test v1.3.14 (0d9b296a)
+
+tests\unit\components\canvas\Truncate.test.tsx:
+In HTML, <td> cannot be a child of <td>.
+This will cause a hydration error.
+
+  <table>
+    <tbody>
+      <tr>
+>       <td>
+          <Truncate as="td">
+>           <td style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={undefined}>
+
+<td> cannot contain a nested <td>.
+See this log for the ancestor stack trace.
+
+ 79 pass
+ 0 fail
+ 173 expect() calls
+Ran 79 tests across 13 files. [2.80s]

@@ -7,7 +7,7 @@ import { killChrome, launchChrome } from '../executor/launcher.js'
 import { ProfileAllocator } from '../executor/profile-allocator.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 // Provider login URLs (consumer-friendly names in UI) — loaded from DB via ProviderRegistry
 import { getProviderRegistry } from '../config/provider-registry.js'
@@ -283,7 +283,7 @@ export function createSetupRouter(ctx: ServerContext) {
           return json({ ok: true, ...result })
         } catch (err) {
           await client.disconnect().catch(() => {})
-          return errorResponse(`Verify failed: ${String(err)}`, 'VerificationError', 500)
+          return errorResponse(`Verify failed: ${String(err)}`, 'ExecutionError', 500)
         }
       }
 
@@ -485,10 +485,9 @@ export function createSetupRouter(ctx: ServerContext) {
         return json({ ok: true, pid })
       }
 
-      return errorResponse('Not found', 'NotFoundError', 404)
+      return errorResponse('Not found', 'NotFound', 404)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Internal error'
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

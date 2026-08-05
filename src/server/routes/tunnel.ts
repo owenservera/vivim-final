@@ -2,7 +2,7 @@
 // REST API routes for tunnel and P2P subsystem management.
 
 import type { ServerContext } from '../index.js'
-import { errorResponse, json } from '../response.js'
+import { appErrorResponse, errorResponse, json } from '../response.js'
 
 export function createTunnelRouter(ctx: ServerContext) {
   return async function tunnelRouter(req: Request): Promise<Response | undefined> {
@@ -46,18 +46,18 @@ export function createTunnelRouter(ctx: ServerContext) {
 
         // POST /api/tunnel/start
         if (req.method === 'POST' && path === '/api/tunnel/start') {
-          return errorResponse('ServiceManager not initialized — start the orchestrator first', 'ServiceUnavailable', 503)
+          return errorResponse('ServiceManager not initialized — start the orchestrator first', 'NotAvailable', 503)
         }
 
         // POST /api/tunnel/stop
         if (req.method === 'POST' && path === '/api/tunnel/stop') {
-          return errorResponse('ServiceManager not initialized', 'ServiceUnavailable', 503)
+          return errorResponse('ServiceManager not initialized', 'NotAvailable', 503)
         }
 
         // For all other routes, return 404 when no service manager
-        return errorResponse('Tunnel subsystem not available', 'ServiceUnavailable', 503)
+        return errorResponse('Tunnel subsystem not available', 'NotAvailable', 503)
       } catch {
-        return errorResponse('Config unavailable', 'ServiceUnavailable', 503)
+        return errorResponse('Config unavailable', 'NotAvailable', 503)
       }
     }
 
@@ -139,8 +139,7 @@ export function createTunnelRouter(ctx: ServerContext) {
 
       return undefined
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

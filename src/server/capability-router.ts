@@ -5,15 +5,21 @@
 //
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
+//
+// Work Items 01/03/05: Added Zod validation for request bodies, consistent error
+// codes, and traceId propagation aligned with api-types.ts contract.
 
+import { z } from 'zod'
 import type { CapabilityContext, UnifiedCapability } from '../engines/unified-registry.js'
 import type {
   CapabilityDetail,
   CapabilityExecuteResponse,
   CapabilityListResponse,
 } from '../schema/api-types.js'
+import { CapabilityExecuteBodySchema } from '../schema/api-validators.js'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { AppError } from './errors.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
 function toDetail(cap: UnifiedCapability): CapabilityDetail {
@@ -70,16 +76,20 @@ export function createCapabilityRouter(ctx: ServerContext) {
         return errorResponse(`Capability ${id} not found`, 'NotFound', 404)
       }
 
-      let body: { input?: Record<string, unknown>; ctx?: Partial<CapabilityContext> } = {}
+      // Work Item 05: Zod-validated request body parsing
+      let body: z.infer<typeof CapabilityExecuteBodySchema>
       try {
-        const parsed = await req.json()
-        if (parsed && typeof parsed === 'object') {
-          body = parsed as typeof body
+        const raw = await req.json()
+        const parsed = CapabilityExecuteBodySchema.safeParse(raw)
+        if (!parsed.success) {
+          return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
+        body = parsed.data
       } catch {
         body = {}
       }
-      const input = (body.input ?? {}) as Record<string, unknown>
+
+      const input = body.input ?? {}
 
       const required = (cap.inputSchema?.required as string[] | undefined) ?? []
       for (const key of required) {
@@ -93,18 +103,19 @@ export function createCapabilityRouter(ctx: ServerContext) {
         providerId: body.ctx?.providerId,
         slaveId: body.ctx?.slaveId,
         userId: body.ctx?.userId,
-        metadata: (body.ctx?.metadata as Record<string, unknown>) ?? {},
+        metadata: body.ctx?.metadata ?? {},
       }
 
       try {
         const start = Date.now()
         const output = await registry.execute(cap.id, input, capCtx)
         const latencyMs = Date.now() - start
+        const traceId = globalThis.crypto?.randomUUID?.() ?? 'n/a'
         ctx.eventBus?.emit({
           type: 'capability:executed',
           capabilityId: cap.id,
           providerId: (cap as { providerId?: string }).providerId ?? 'local',
-          traceId: globalThis.crypto?.randomUUID?.() ?? 'n/a',
+          traceId,
           ok: true,
           latencyMs,
         })
@@ -112,14 +123,12 @@ export function createCapabilityRouter(ctx: ServerContext) {
           ok: true,
           capabilityId: cap.id,
           output,
-          traceId: globalThis.crypto?.randomUUID?.() ?? 'n/a',
+          traceId,
           latencyMs,
         }
         return json(response)
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        const isValidation = message.startsWith('Missing required input')
-        return errorResponse(message, 'ExecutionError', isValidation ? 400 : 500)
+        return appErrorResponse(AppError.from(err, 'ExecutionError'))
       }
     }
 

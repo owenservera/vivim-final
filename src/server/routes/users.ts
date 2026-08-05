@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
-import { errorResponse, json } from '../response.js'
+import { appErrorResponse, errorResponse, json } from '../response.js'
 
 export function createUserRouter(ctx: ServerContext) {
   return async function userRouter(req: Request): Promise<Response | undefined> {
@@ -11,7 +11,7 @@ export function createUserRouter(ctx: ServerContext) {
     const path = url.pathname
 
     if (!ctx.userIdentity) {
-      return errorResponse('UserIdentityEngine not available', 'EngineUnavailable', 503)
+      return errorResponse('UserIdentityEngine not available', 'NotAvailable', 503)
     }
 
     try {
@@ -86,8 +86,7 @@ export function createUserRouter(ctx: ServerContext) {
         return json({ ok: true, userId, role: body.role })
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      return errorResponse(message, 'UserError', 400)
+      return appErrorResponse(err)
     }
 
     return undefined

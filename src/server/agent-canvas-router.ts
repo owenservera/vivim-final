@@ -28,7 +28,7 @@ import { DEFAULT_POLICY } from '../shared/agent-canvas.js'
 import type { ServerContext } from './index.js'
 
 const log = getLogger('agent-canvas-router')
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 // In-memory policy store (replace with DB in production)
 const policyStore = new Map<string, AgentCanvasPolicy>()
@@ -54,7 +54,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
       try {
         const parsed = AgentCanvasCommandSchema.safeParse(await req.json())
         if (!parsed.success) {
-          return errorResponse(parsed.error.message, 'VALIDATION_ERROR', 400)
+          return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
         const { agentId, workspaceId, command } = parsed.data
 
@@ -99,7 +99,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
         })
       } catch (err) {
         log.error({ err }, '[AgentCanvasRouter] Error executing command')
-        return errorResponse('Internal server error', 'INTERNAL_ERROR', 500)
+        return appErrorResponse(err)
       }
     }
 
@@ -109,7 +109,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
       const workspaceId = url.searchParams.get('workspaceId')
 
       if (!agentId || !workspaceId) {
-        return errorResponse('Missing agentId or workspaceId', 'VALIDATION_ERROR', 400)
+        return errorResponse('Missing agentId or workspaceId', 'ValidationError', 400)
       }
 
       const policy = await getPolicy(agentId, workspaceId)
@@ -121,7 +121,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
       try {
         const parsed = AgentCanvasPolicySchema.safeParse(await req.json())
         if (!parsed.success) {
-          return errorResponse(parsed.error.message, 'VALIDATION_ERROR', 400)
+          return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
         const { agentId, workspaceId, policy } = parsed.data
 
@@ -133,7 +133,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
         return json(updated)
       } catch (err) {
         log.error({ err }, '[AgentCanvasRouter] Error updating policy')
-        return errorResponse('Internal server error', 'INTERNAL_ERROR', 500)
+        return appErrorResponse(err)
       }
     }
 
@@ -142,7 +142,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
       try {
         const parsed = AgentCanvasPlanSchema.safeParse(await req.json())
         if (!parsed.success) {
-          return errorResponse(parsed.error.message, 'VALIDATION_ERROR', 400)
+          return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
         const prompt = parsed.data.prompt
 
@@ -159,7 +159,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
         // translation from CommandResult.output → SurfaceMutation[].
         const nlcl = ctx.nlclEngine
         if (!nlcl) {
-          return errorResponse('NLCL engine not initialized on server', 'NLCL_UNAVAILABLE', 500)
+          return errorResponse('NLCL engine not initialized on server', 'NotAvailable', 500)
         }
 
         const traceId = ulid()
@@ -208,7 +208,7 @@ export function createAgentCanvasRouter(ctx: ServerContext) {
         return json({ ok: true, plan })
       } catch (err) {
         log.error({ err }, '[AgentCanvasRouter] Error creating plan')
-        return errorResponse('Internal server error', 'INTERNAL_ERROR', 500)
+        return appErrorResponse(err)
       }
     }
 

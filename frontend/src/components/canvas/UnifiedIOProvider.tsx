@@ -144,8 +144,12 @@ class BrowserUnifiedIO implements UnifiedIO {
           data = text;
         }
         if (!res.ok) {
-          const errMsg = (data as { error?: string })?.error ?? `HTTP ${res.status}`;
-          throw new IOError(errMsg, res.status, traceId);
+          // Work Item 03: Extract backend error code for programmatic handling
+          const errorBody = data as { error?: string; code?: string; details?: unknown };
+          const errMsg = errorBody?.error ?? `HTTP ${res.status}`;
+          const errCode = errorBody?.code;
+          const ioError = new IOError(errMsg, res.status, traceId, errorBody, errCode);
+          throw ioError;
         }
         // Validate with Zod schema if provided.
         if (init?.responseSchema) {
@@ -184,7 +188,11 @@ class BrowserUnifiedIO implements UnifiedIO {
       } catch (err) {
         clearTimeout(timeoutHandle);
         const isAbort = err instanceof Error && err.name === 'AbortError';
-        if (attempt < retries && !isAbort) {
+        // P1-8: Only retry transient/server errors, NOT 4xx client errors
+        const transientStatuses = new Set([408, 429, 500, 502, 503, 504]);
+        const status = err instanceof IOError ? err.status : 0;
+        const isTransient = status === 0 || transientStatuses.has(status);
+        if (attempt < retries && !isAbort && isTransient) {
           // Exponential backoff.
           const backoff = Math.min(1000 * 2 ** attempt, 8000);
           await new Promise((r) => setTimeout(r, backoff));

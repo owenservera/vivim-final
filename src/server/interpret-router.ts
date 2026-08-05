@@ -49,7 +49,7 @@ export function createInterpretRouter(nlclEngine: NLCLEngine) {
       if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
       body = parsed.data
     } catch {
-      return errorResponse('Invalid JSON body', 'BadRequest', 400)
+      return errorResponse('Invalid JSON body', 'ValidationError', 400)
     }
 
     const start = Date.now()

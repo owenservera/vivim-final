@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
-import { errorResponse, json } from '../response.js'
+import { appErrorResponse, errorResponse, json } from '../response.js'
 
 export function createContainersRouter(ctx: ServerContext) {
   return async function containersRouter(req: Request): Promise<Response | undefined> {
@@ -26,7 +26,7 @@ export function createContainersRouter(ctx: ServerContext) {
     ).containerStore
 
     if (!store) {
-      return errorResponse('ContainerStore not available', 'EngineUnavailable', 503)
+      return errorResponse('ContainerStore not available', 'NotAvailable', 503)
     }
 
     try {
@@ -111,8 +111,7 @@ export function createContainersRouter(ctx: ServerContext) {
 
       return undefined
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

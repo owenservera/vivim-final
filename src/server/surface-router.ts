@@ -16,7 +16,7 @@
 
 import type { SurfaceKind } from '../reprogrammability/contract.js'
 import { SurfaceNotFoundError, surfaceRegistry } from '../reprogrammability/registry.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 export function createSurfaceRouter() {
   return async function surfaceRouter(req: Request, url: URL): Promise<Response | null> {
@@ -55,13 +55,9 @@ export function createSurfaceRouter() {
         return json({ ok: true, surfaceId, spec: surface.getSpec() })
       } catch (err) {
         if (err instanceof SurfaceNotFoundError) {
-          return errorResponse(err.message, 'SURFACE_NOT_FOUND', 404)
+          return errorResponse(err.message, 'NotFound', 404)
         }
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'INTERNAL_ERROR',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 
@@ -85,13 +81,9 @@ export function createSurfaceRouter() {
         })
       } catch (err) {
         if (err instanceof SurfaceNotFoundError) {
-          return errorResponse(err.message, 'SURFACE_NOT_FOUND', 404)
+          return errorResponse(err.message, 'NotFound', 404)
         }
-        return errorResponse(
-          err instanceof Error ? err.message : String(err),
-          'INTERNAL_ERROR',
-          500,
-        )
+        return appErrorResponse(err)
       }
     }
 

@@ -1,0 +1,30 @@
+bun test v1.3.14 (0d9b296a)
+
+tests\e2e\canvas-native.spec.ts:
+
+# Unhandled error between tests
+-------------------------------
+2252 |     this.test = test;
+2253 |   }
+2254 |   _currentSuite(location, title) {
+2255 |     const suite = (0, import_globals2.currentlyLoadingFileSuite)();
+2256 |     if (!suite) {
+2257 |       throw new Error([
+                       ^
+error: Playwright Test did not expect test.describe() to be called here.
+Most common reasons include:
+- You are calling test.describe() in a configuration file.
+- You are calling test.describe() in a file that is imported by the configuration file.
+- You have two different versions of @playwright/test. This usually happens
+  when one of the dependencies in your package.json depends on @playwright/test.
+- You are calling test.describe() from an async test.describe() block. Only sync ones are supported.
+      at _currentSuite (C:\0-BlackBoxProject-0\vivim-final\frontend\node_modules\playwright\lib\common\index.js:2257:17)
+      at _describe (C:\0-BlackBoxProject-0\vivim-final\frontend\node_modules\playwright\lib\common\index.js:2298:24)
+      at C:\0-BlackBoxProject-0\vivim-final\frontend\tests\e2e\canvas-native.spec.ts:3:6
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [4.02s]

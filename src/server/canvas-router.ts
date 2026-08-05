@@ -8,8 +8,9 @@
 
 import { z } from 'zod'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import type { CapabilityEventBus } from '../engines/capability-event-bus.js'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
 export interface CanvasRouterDeps {
@@ -41,7 +42,7 @@ export function createCanvasRouter(ctx: ServerContext) {
   const conceptualModel = (ctx as unknown as { conceptualModel?: unknown }).conceptualModel
   if (!registry) {
     return async (_req: Request, _url: URL) =>
-      errorResponse('Canvas not initialized', 'CanvasUnavailable', 503)
+      errorResponse('Canvas not initialized', 'NotAvailable', 503)
   }
 
   return async (req: Request, url: URL): Promise<Response> => {
@@ -54,7 +55,7 @@ export function createCanvasRouter(ctx: ServerContext) {
       try {
         return json({ ok: true, result: await cap('cap:canvas:list', {}) })
       } catch (e) {
-        return errorResponse((e as Error).message, 'CanvasListFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -64,7 +65,7 @@ export function createCanvasRouter(ctx: ServerContext) {
         const body = z.record(z.unknown()).parse(await req.json())
         return json({ ok: true, result: await cap('cap:canvas:define', body) })
       } catch (e) {
-        return errorResponse((e as Error).message, 'CanvasDefineFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -74,7 +75,7 @@ export function createCanvasRouter(ctx: ServerContext) {
         const body = z.record(z.unknown()).parse(await req.json())
         return json({ ok: true, result: await cap('cap:canvas:spawn', body) })
       } catch (e) {
-        return errorResponse((e as Error).message, 'CanvasSpawnFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -130,6 +131,7 @@ export function createCanvasRouter(ctx: ServerContext) {
     // with periodic comments so the browser doesn't treat it as a dead stream.
     if (url.pathname === '/api/canvas/events' && req.method === 'GET') {
       const workspaceId = url.searchParams.get('workspaceId') ?? 'ws:global'
+      const eventBus = (ctx as unknown as { eventBus?: CapabilityEventBus }).eventBus
       const encoder = new TextEncoder()
       let interval: ReturnType<typeof setInterval> | null = null
       const stream = new ReadableStream({
@@ -142,6 +144,28 @@ export function createCanvasRouter(ctx: ServerContext) {
           interval = setInterval(() => {
             controller.enqueue(encoder.encode(`:keepalive ${Date.now()}\n\n`))
           }, 15_000)
+
+          // P0-4: Bridge EventBus canvas events to SSE stream
+          if (eventBus) {
+            const canvasEvents = [
+              'canvas:layer:spawned',
+              'canvas:layer:dismissed',
+              'canvas:def:updated',
+              'canvas:mutated',
+              'canvas:node',
+            ] as const
+            for (const eventType of canvasEvents) {
+              eventBus.on(eventType, (evt: { type: string; [key: string]: unknown }) => {
+                try {
+                  controller.enqueue(
+                    encoder.encode(`event: ${evt.type}\ndata: ${JSON.stringify(evt)}\n\n`),
+                  )
+                } catch {
+                  // Stream may have closed
+                }
+              })
+            }
+          }
         },
         cancel() {
           if (interval) clearInterval(interval)
@@ -164,7 +188,7 @@ export function createCanvasRouter(ctx: ServerContext) {
         const op = url.searchParams.get('op') ?? 'oracle'
         return json({ ok: true, result: await cap('cap:canvas:observe', { op }) })
       } catch (e) {
-        return errorResponse((e as Error).message, 'CanvasObserveFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -177,7 +201,7 @@ export function createCanvasRouter(ctx: ServerContext) {
           result: await cap('cap:canvas:dismiss', { instanceId: dismissMatch[1] }),
         })
       } catch (e) {
-        return errorResponse((e as Error).message, 'CanvasDismissFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -195,7 +219,7 @@ export function createCanvasRouter(ctx: ServerContext) {
           }),
         })
       } catch (e) {
-        return errorResponse((e as Error).message, 'CanvasMutateFailed', 500)
+        return appErrorResponse(e)
       }
     }
 
@@ -204,7 +228,7 @@ export function createCanvasRouter(ctx: ServerContext) {
       try {
         return json({ ok: true, result: await cap('cap:canvas:observe', { op: 'manifest' }) })
       } catch (e) {
-        return errorResponse((e as Error).message, 'CanvasManifestFailed', 500)
+        return appErrorResponse(e)
       }
     }
 

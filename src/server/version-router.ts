@@ -25,7 +25,7 @@ import {
   versionStore,
 } from '../engines/reprogrammability/version-store.js'
 import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 export function createVersionRouter() {
   return async function versionRouter(req: Request, url: URL): Promise<Response | null> {
@@ -35,7 +35,7 @@ export function createVersionRouter() {
     if (path === '/api/version' && req.method === 'GET') {
       const surfaceId = url.searchParams.get('surfaceId')
       if (!surfaceId) {
-        return errorResponse('Missing required query param: surfaceId', 'VALIDATION_ERROR', 400)
+        return errorResponse('Missing required query param: surfaceId', 'ValidationError', 400)
       }
       const limitParam = url.searchParams.get('limit')
       const limit = limitParam ? Number.parseInt(limitParam, 10) : undefined
@@ -58,7 +58,7 @@ export function createVersionRouter() {
       if (!a || !b) {
         return errorResponse(
           'Missing required query params: a, b (version ids)',
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -66,7 +66,7 @@ export function createVersionRouter() {
       if (!diff) {
         return errorResponse(
           'Could not diff — one or both versions not found, or they belong to different surfaces',
-          'NOT_FOUND',
+          'NotFound',
           404,
         )
       }
@@ -79,7 +79,7 @@ export function createVersionRouter() {
       const id = getMatch[1]!
       const v = versionStore.getVersion(id)
       if (!v) {
-        return errorResponse(`Version not found: ${id}`, 'NOT_FOUND', 404)
+        return errorResponse(`Version not found: ${id}`, 'NotFound', 404)
       }
       return json({
         ok: true,
@@ -93,7 +93,7 @@ export function createVersionRouter() {
       const versionId = restoreMatch[1]!
       const v = versionStore.getVersion(versionId)
       if (!v) {
-        return errorResponse(`Version not found: ${versionId}`, 'NOT_FOUND', 404)
+        return errorResponse(`Version not found: ${versionId}`, 'NotFound', 404)
       }
 
       // Apply the old spec as a `replace` mutation. This rides the standard
@@ -111,7 +111,7 @@ export function createVersionRouter() {
         })
         return json({ ok: record.ok, record, restoredFrom: v })
       } catch (err) {
-        return errorResponse(err instanceof Error ? err.message : String(err), 'APPLY_FAILED', 500)
+        return appErrorResponse(err)
       }
     }
 
@@ -141,7 +141,7 @@ export function createVersionRouter() {
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
@@ -168,19 +168,19 @@ export function createVersionRouter() {
       try {
         body = await req.json()
       } catch {
-        return errorResponse('Invalid JSON body', 'VALIDATION_ERROR', 400)
+        return errorResponse('Invalid JSON body', 'ValidationError', 400)
       }
       const parsed = z.object({ backupId: z.string().min(1) }).safeParse(body)
       if (!parsed.success) {
         return errorResponse(
           `Invalid input: ${parsed.error.issues.map((i) => i.message).join('; ')}`,
-          'VALIDATION_ERROR',
+          'ValidationError',
           400,
         )
       }
       const restored = versionStore.restoreBackup(parsed.data.backupId)
       if (!restored) {
-        return errorResponse(`Backup not found: ${parsed.data.backupId}`, 'NOT_FOUND', 404)
+        return errorResponse(`Backup not found: ${parsed.data.backupId}`, 'NotFound', 404)
       }
       return json({ ok: true, backupId: parsed.data.backupId, snapshot: restored })
     }

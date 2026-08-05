@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { InterpretResponseSchema } from '@/api/schemas';
 
 export interface InterpretResult {
   ok?: boolean;
@@ -26,7 +27,9 @@ export function useInterpret() {
     setLoading(true);
     setError(null);
     try {
-      const res = await io.post<InterpretResult>('/api/nlcl/interpret', { input: nl, surface: 'ui', ...context });
+      const res = await io.post<InterpretResult>('/api/nlcl/interpret', { input: nl, surface: 'ui', ...context }, {
+        responseSchema: InterpretResponseSchema,
+      });
       if (!mountedRef.current) return null;
       return res.data;
     } catch (e) {

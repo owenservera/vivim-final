@@ -6,7 +6,15 @@
 // EventRecord outbox when a EventRecordStore is attached — so cross-surface replay
 // (OpenCode ingest, browser fleet, capability layer) has a single source of truth.
 
+import { isEventDeprecated } from '../cleanup/deprecated-events.js'
+import { getLogger } from '../lib/logger.js'
 import type { EventRecordStore } from './event-record-store.js'
+
+const log = getLogger('capability-event-bus')
+
+// Track which deprecated event types have already been warned about
+// so we only log once per type and avoid spamming.
+const DEPRECATION_WARNED = new Set<string>()
 
 // ── Event types (v1) ──────────────────────────────────────────────────────
 
@@ -28,21 +36,21 @@ export type CapabilityEvent =
       error: string
       recoveryBehavior: string
       bindingId?: string
-    }
+    } /** @deprecated Never emitted — kept for future use. */
   | {
       type: 'capability:confidence_changed'
       capabilityId: string
       providerId: string
       from: number
       to: number
-    }
+    } /** @deprecated Never emitted — kept for future use. */
   | {
       type: 'capability:selector_drifted'
       capabilityId: string
       providerId: string
       selector: string
       missCount: number
-    }
+    } /** @deprecated Never emitted — kept for future use. */
   | {
       type: 'capability:status_changed'
       capabilityId: string
@@ -57,30 +65,45 @@ export type CapabilityEvent =
       description: string
       moduleId: string
       slaveId: string
-    }
-  | { type: 'account:login_state'; accountId: string; providerId: string; from: string; to: string }
+    } /** @deprecated Never emitted — kept for future use. */
+  | {
+      type: 'account:login_state'
+      accountId: string
+      providerId: string
+      from: string
+      to: string
+    } /** @deprecated Never emitted — kept for future use. */
   | {
       type: 'account:plan_tier_changed'
       accountId: string
       providerId: string
       from: string
       to: string
-    }
-  | { type: 'account:created'; accountId: string; providerId: string; email: string }
-  | { type: 'account:removed'; accountId: string; providerId: string }
+    } /** @deprecated Never emitted — kept for future use. */
+  | {
+      type: 'account:created'
+      accountId: string
+      providerId: string
+      email: string
+    } /** @deprecated Never emitted — kept for future use. */
+  | {
+      type: 'account:removed'
+      accountId: string
+      providerId: string
+    } /** @deprecated Still emitted by ChromeGovernor. Migrate to EventRecord outbox. */
   | {
       type: 'fleet:slave_status'
       slaveId: string
       providerId: string
       status: string
       superState: string
-    }
+    } /** @deprecated Still emitted by ChromeGovernor. Migrate to ErrorTracker. */
   | {
       type: 'fleet:crash_detected'
       slaveId: string
       providerId: string
       consecutiveFailures: number
-    }
+    } /** @deprecated Still emitted by ChromeGovernor. Migrate to GovernorStore. */
   | { type: 'fleet:circuit_changed'; slaveId: string; providerId: string; from: string; to: string }
   | { type: 'conversation:complete'; conversationId: string; message: unknown }
   | { type: 'conversation:error'; conversationId: string; error: string }
@@ -169,6 +192,13 @@ export class CapabilityEventBus {
 
   emit<T extends EngineEvent>(event: T): void {
     const type = event.type
+
+    // Check for deprecated events and warn once
+    const depEvent = isEventDeprecated(event.type)
+    if (depEvent && !DEPRECATION_WARNED.has(event.type)) {
+      DEPRECATION_WARNED.add(event.type)
+      log.warn(`Deprecated event emitted: "${event.type}" — ${depEvent.migration}`)
+    }
 
     // Mirror into the durable outbox (best-effort; never blocks the bus).
     if (this.durable) {

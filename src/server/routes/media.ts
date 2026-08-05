@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
-import { errorResponse, json } from '../response.js'
+import { appErrorResponse, errorResponse, json } from '../response.js'
 
 export function createMediaRouter(ctx: ServerContext) {
   return async function mediaRouter(req: Request): Promise<Response | undefined> {
@@ -27,7 +27,7 @@ export function createMediaRouter(ctx: ServerContext) {
     ).mediaStore
 
     if (!store) {
-      return errorResponse('MediaStore not available', 'EngineUnavailable', 503)
+      return errorResponse('MediaStore not available', 'NotAvailable', 503)
     }
 
     try {
@@ -129,8 +129,7 @@ export function createMediaRouter(ctx: ServerContext) {
 
       return undefined
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

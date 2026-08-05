@@ -13,7 +13,7 @@ import {
   KnowledgeTopicSchema,
 } from '../schema/api-validators.js'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
 export function createKnowledgeRouter(ctx: ServerContext) {
@@ -82,15 +82,15 @@ export function createKnowledgeRouter(ctx: ServerContext) {
         return json(result)
       }
 
-      // GET /api/knowledge/entities?type=X
-      if (pathname === '/api/knowledge/entities' && method === 'GET') {
-        const entityType = url.searchParams.get('type') ?? undefined
-        const entities = await ctx.db.prisma.entity.findMany({
-          where: entityType ? { type: entityType } : undefined,
-          take: 100,
-        })
-        return json(entities)
-      }
+      // P3-4: Duplicate — see routes/knowledge.ts for primary /api/knowledge/entities implementation
+      // if (pathname === '/api/knowledge/entities' && method === 'GET') {
+      //   const entityType = url.searchParams.get('type') ?? undefined
+      //   const entities = await ctx.db.prisma.entity.findMany({
+      //     where: entityType ? { type: entityType } : undefined,
+      //     take: 100,
+      //   })
+      //   return json(entities)
+      // }
 
       // GET /api/knowledge/decisions?conversationId=X
       if (pathname === '/api/knowledge/decisions' && method === 'GET') {
@@ -102,11 +102,11 @@ export function createKnowledgeRouter(ctx: ServerContext) {
         return json(decisions)
       }
 
-      // GET /api/knowledge/topics
-      if (pathname === '/api/knowledge/topics' && method === 'GET') {
-        const topics = await ctx.db.prisma.topic.findMany({ take: 100 })
-        return json(topics)
-      }
+      // P3-4: Duplicate — see routes/knowledge.ts for primary /api/knowledge/topics implementation
+      // if (pathname === '/api/knowledge/topics' && method === 'GET') {
+      //   const topics = await ctx.db.prisma.topic.findMany({ take: 100 })
+      //   return json(topics)
+      // }
 
       // POST /api/knowledge/topics
       if (pathname === '/api/knowledge/topics' && method === 'POST') {
@@ -142,14 +142,13 @@ export function createKnowledgeRouter(ctx: ServerContext) {
         const jobId = jobMatch[1]
         if (!jobId) return errorResponse('Invalid job id', 'ValidationError', 400)
         const job = await ctx.db.prisma.importJob.findUnique({ where: { id: jobId } })
-        if (!job) return errorResponse('Job not found', 'NotFoundError', 404)
+        if (!job) return errorResponse('Job not found', 'NotFound', 404)
         return json(job)
       }
 
-      return errorResponse('Not found', 'NotFoundError', 404)
+      return errorResponse('Not found', 'NotFound', 404)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Internal error'
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

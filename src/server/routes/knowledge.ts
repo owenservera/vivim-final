@@ -4,7 +4,7 @@
 import { z } from 'zod'
 import type { MemoryIntelligenceStoreImpl } from '../../storage/impl/memory-intelligence-store-impl.js'
 import type { ServerContext } from '../index.js'
-import { errorResponse, json } from '../response.js'
+import { appErrorResponse, errorResponse, json } from '../response.js'
 
 export function createKnowledgeRouter(ctx: ServerContext) {
   return async function knowledgeRouter(req: Request): Promise<Response | undefined> {
@@ -15,7 +15,7 @@ export function createKnowledgeRouter(ctx: ServerContext) {
     const store = (ctx as unknown as { intelligenceStore?: MemoryIntelligenceStoreImpl })
       .intelligenceStore
     if (!store) {
-      return errorResponse('MemoryIntelligenceStore not available', 'EngineUnavailable', 503)
+      return errorResponse('MemoryIntelligenceStore not available', 'NotAvailable', 503)
     }
 
     try {
@@ -290,8 +290,7 @@ export function createKnowledgeRouter(ctx: ServerContext) {
         return json({ ok: true })
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      return errorResponse(message, 'KnowledgeError', 400)
+      return appErrorResponse(err)
     }
 
     return undefined

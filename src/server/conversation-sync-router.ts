@@ -9,7 +9,7 @@ import type {
   ConversationSyncStateStore,
 } from '../storage/contracts/conversation-store.js'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 
 const log = getLogger('conversation-sync-router')
 
@@ -98,9 +98,8 @@ export function createConversationSyncRouter(ctx: ServerContext) {
 
         return json(result)
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err)
-        log.error({ providerId, error: msg }, 'Sync failed')
-        return errorResponse(msg, 'SyncError', 500)
+        log.error({ providerId, error: err instanceof Error ? err.message : String(err) }, 'Sync failed')
+        return appErrorResponse(err)
       }
     }
 
@@ -162,14 +161,13 @@ export function createConversationSyncRouter(ctx: ServerContext) {
         const result = await engine.fetchConversation(body.accountId, body.slaveId, conversationId)
 
         if (!result) {
-          return errorResponse('Conversation not found', 'NotFoundError', 404)
+          return errorResponse('Conversation not found', 'NotFound', 404)
         }
 
         return json(result)
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err)
-        log.error({ providerId, conversationId, error: msg }, 'Fetch conversation failed')
-        return errorResponse(msg, 'FetchError', 500)
+        log.error({ providerId, conversationId, error: err instanceof Error ? err.message : String(err) }, 'Fetch conversation failed')
+        return appErrorResponse(err)
       }
     }
 

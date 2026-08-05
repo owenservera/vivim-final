@@ -6,7 +6,7 @@
 
 import { z } from 'zod'
 import type { ServerContext } from './index.js'
-import { errorResponse, json } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
 /** Parse a Node DB row into an API-friendly shape: dataJson → parsed object, epoch → ISO. */
@@ -88,7 +88,7 @@ export function createNodeRouter(ctx: ServerContext) {
       if (aliasMatch && method === 'GET') {
         const aliasId = decodeURIComponent(aliasMatch[1]!)
         const canonicalId = await ns.resolveAlias(aliasId)
-        if (!canonicalId) return errorResponse('Alias not found', 'NotFoundError', 404)
+        if (!canonicalId) return errorResponse('Alias not found', 'NotFound', 404)
         return json({ aliasId, canonicalId })
       }
 
@@ -140,12 +140,12 @@ export function createNodeRouter(ctx: ServerContext) {
         const sub = nodeMatch[2] ?? ''
 
         const node = await ns.getNode(id)
-        if (!node) return errorResponse('Node not found', 'NotFoundError', 404)
+        if (!node) return errorResponse('Node not found', 'NotFound', 404)
 
         // GET /api/nodes/:id/raw
         if (sub === 'raw') {
           const raw = await ns.getRawSource(id)
-          if (!raw) return errorResponse('rawSource not available', 'NotFoundError', 404)
+          if (!raw) return errorResponse('rawSource not available', 'NotFound', 404)
           return json({ raw })
         }
 
@@ -227,7 +227,7 @@ export function createNodeRouter(ctx: ServerContext) {
           if (Number.isNaN(version))
             return errorResponse('Invalid version number', 'ValidationError', 400)
           const snapshot = await ns.getNodeAtVersion(id, version)
-          if (!snapshot) return errorResponse('Version not found', 'NotFoundError', 404)
+          if (!snapshot) return errorResponse('Version not found', 'NotFound', 404)
           return json(snapshot)
         }
 
@@ -246,13 +246,12 @@ export function createNodeRouter(ctx: ServerContext) {
           )
         }
 
-        return errorResponse('Not found', 'NotFoundError', 404)
+        return errorResponse('Not found', 'NotFound', 404)
       }
 
-      return errorResponse('Not found', 'NotFoundError', 404)
+      return errorResponse('Not found', 'NotFound', 404)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Internal error'
-      return errorResponse(message, 'InternalError', 500)
+      return appErrorResponse(err)
     }
   }
 }

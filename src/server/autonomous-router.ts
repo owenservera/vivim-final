@@ -9,6 +9,7 @@ import {
   GateResolveSchema,
   ReplaySchema,
 } from '../schema/api-validators.js'
+import { errorResponse } from './response.js'
 
 export interface AutonomousRouterDeps {
   autonomousEngine: AutonomousExecutionEngine
@@ -22,10 +23,6 @@ function json(data: unknown, status = 200): Response {
   })
 }
 
-function error(message: string, status = 400): Response {
-  return json({ error: message }, status)
-}
-
 export function createAutonomousRouter(deps: AutonomousRouterDeps) {
   const { autonomousEngine } = deps
 
@@ -35,7 +32,7 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     // POST /api/autonomous/execute
     if (path === '/api/autonomous/execute' && req.method === 'POST') {
       const parsed = AutonomousExecuteSchema.safeParse(await req.json())
-      if (!parsed.success) return error(parsed.error.message)
+      if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
       // Fill required fields with defaults — Zod schema allows partial input,
       // but AutonomousGoal type requires all fields.
       const goal: AutonomousGoal = {
@@ -80,7 +77,7 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     if (gateResolveMatch && req.method === 'POST') {
       const gateId = gateResolveMatch[1] ?? ''
       const parsed = GateResolveSchema.safeParse(await req.json())
-      if (!parsed.success) return error(parsed.error.message)
+      if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
       await autonomousEngine.resolveGate(gateId, parsed.data.response, parsed.data.resolvedBy)
       return json({ ok: true, gateId, response: parsed.data.response })
     }
@@ -89,7 +86,7 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     const statusMatch = path.match(/^\/api\/autonomous\/status\/([^/]+)$/)
     if (statusMatch && req.method === 'GET') {
       const task = await autonomousEngine.getStatus(statusMatch[1] ?? '')
-      if (!task) return error('Task not found', 404)
+      if (!task) return errorResponse('Task not found', 'NotFound', 404)
       return json({ task })
     }
 
@@ -118,7 +115,7 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     const traceMatch = path.match(/^\/api\/autonomous\/([^/]+)\/trace$/)
     if (traceMatch && req.method === 'GET') {
       const task = await autonomousEngine.getStatus(traceMatch[1] ?? '')
-      if (!task) return error('Task not found', 404)
+      if (!task) return errorResponse('Task not found', 'NotFound', 404)
       const trace = task.steps.map((s) => ({
         stepId: s.id,
         stepIndex: s.stepIndex,

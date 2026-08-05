@@ -9,6 +9,7 @@ import { z } from 'zod'
 import type { ConfigUniversalSurface } from '../engines/config-universal-surface.js'
 import type { ServerContext } from './index.js'
 import { extractSource } from './source-middleware.js'
+import { appErrorResponse, errorResponse } from './response.js'
 
 export interface KernelRouterDeps {
   kernel: ServerContext['kernel']
@@ -78,18 +79,12 @@ export function createKernelRouter(
       })
       const parsed = schema.safeParse(await req.json().catch(() => ({})))
       if (!parsed.success) {
-        return new Response(JSON.stringify({ error: parsed.error.message }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse(parsed.error.message, 'ValidationError', 400)
       }
       const { op, filter, limit } = parsed.data
 
       if (!kernel?.context()?.oracle?.query) {
-        return new Response(JSON.stringify({ error: 'Oracle not available' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse('Oracle not available', 'NotAvailable', 503)
       }
 
       const result = await kernel.context()?.oracle?.query?.query({
@@ -108,17 +103,11 @@ export function createKernelRouter(
       const schema = z.object({ issueId: z.string().min(1, 'issueId is required') })
       const parsed = schema.safeParse(await req.json().catch(() => ({})))
       if (!parsed.success) {
-        return new Response(JSON.stringify({ error: parsed.error.message }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse(parsed.error.message, 'ValidationError', 400)
       }
 
       if (!kernel?.context()?.oracle?.actuator) {
-        return new Response(JSON.stringify({ error: 'Actuator not available' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse('Actuator not available', 'NotAvailable', 503)
       }
 
       const result = await kernel.context()?.oracle?.actuator?.heal(parsed.data.issueId)
@@ -131,10 +120,7 @@ export function createKernelRouter(
     // Oracle scan endpoint
     if (url.pathname === '/api/kernel/oracle/scan' && req.method === 'POST') {
       if (!kernel?.context()?.oracle?.diagnostic) {
-        return new Response(JSON.stringify({ error: 'Diagnostic not available' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse('Diagnostic not available', 'NotAvailable', 503)
       }
 
       const result = await kernel.context()?.oracle?.diagnostic?.scan()
@@ -149,10 +135,7 @@ export function createKernelRouter(
       const limit = Number(url.searchParams.get('limit') ?? '50')
 
       if (!kernel?.context()?.oracle?.events) {
-        return new Response(JSON.stringify({ error: 'Events not available' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse('Events not available', 'NotAvailable', 503)
       }
 
       const events = await kernel.context()?.oracle?.events?.getRecentEvents(limit)
@@ -165,10 +148,7 @@ export function createKernelRouter(
     // Oracle visibility endpoint
     if (url.pathname === '/api/kernel/oracle/visibility' && req.method === 'GET') {
       if (!kernel?.context()?.oracle?.query) {
-        return new Response(JSON.stringify({ error: 'Query not available' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse('Query not available', 'NotAvailable', 503)
       }
 
       const result = await kernel.context()?.oracle?.query?.query({ type: 'all' })
@@ -205,10 +185,7 @@ export function createKernelRouter(
         })
         const parsed = schema.safeParse(await req.json().catch(() => ({})))
         if (!parsed.success) {
-          return new Response(JSON.stringify({ error: parsed.error.message }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          })
+          return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
         return new Response(JSON.stringify(parsed.data as AutoHealPolicy), {
           status: 200,
@@ -237,10 +214,7 @@ export function createKernelRouter(
       const key = parts[3]
 
       if (!scope || !key) {
-        return new Response(JSON.stringify({ error: 'scope.key required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse('scope.key required', 'ValidationError', 400)
       }
 
       const value = configSurface.get(scope, key)
@@ -262,17 +236,11 @@ export function createKernelRouter(
       const schema = z.object({ value: z.unknown() })
       const parsed = schema.safeParse(await req.json().catch(() => ({})))
       if (!parsed.success) {
-        return new Response(JSON.stringify({ error: parsed.error.message }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse(parsed.error.message, 'ValidationError', 400)
       }
 
       if (!scope || !key) {
-        return new Response(JSON.stringify({ error: 'scope.key required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse('scope.key required', 'ValidationError', 400)
       }
 
       try {
@@ -282,10 +250,7 @@ export function createKernelRouter(
           headers: { 'Content-Type': 'application/json' },
         })
       } catch (err) {
-        return new Response(
-          JSON.stringify({ error: err instanceof Error ? err.message : String(err) }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } },
-        )
+        return appErrorResponse(err)
       }
     }
 
@@ -303,10 +268,7 @@ export function createKernelRouter(
       const schema = z.object({ id: z.string().min(1, 'id is required') })
       const parsed = schema.safeParse(await req.json().catch(() => ({})))
       if (!parsed.success) {
-        return new Response(JSON.stringify({ error: parsed.error.message }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return errorResponse(parsed.error.message, 'ValidationError', 400)
       }
 
       configSurface.rollback(parsed.data.id)

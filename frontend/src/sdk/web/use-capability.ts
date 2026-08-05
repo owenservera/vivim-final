@@ -1,7 +1,10 @@
 'use client'
 
 import { useIO } from '@/components/canvas/UnifiedIOProvider'
+import type { CapabilityListResponse, CapabilityExecuteResponse } from '@/types/shared/api-contract'
 import type { Capability } from '@/types/api'
+import { transformCapabilities } from '@/api/transformers'
+import { CapabilityListResponseSchema, CapabilityExecuteResponseSchema } from '@/api/schemas'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useCapability(surface?: string) {
@@ -19,15 +22,18 @@ export function useCapability(surface?: string) {
     [],
   )
 
-  // R3-06: Auto-fetch on mount
+  // Auto-fetch on mount — backend returns { capabilities: [...], total: N }
   const refresh = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
       const qs = surface ? `?surface=${encodeURIComponent(surface)}` : ''
-      const res = await io.get<{ capabilities: Capability[] }>(`/api/capabilities${qs}`)
+      const res = await io.get<CapabilityListResponse>(`/api/capabilities${qs}`, {
+        responseSchema: CapabilityListResponseSchema,
+      })
       if (!mountedRef.current) return
-      setCapabilities(res.data.capabilities ?? [])
+      // Transform backend CapabilityDetail[] to frontend Capability[] domain models
+      setCapabilities(transformCapabilities(res.data.capabilities))
     } catch (e) {
       if (!mountedRef.current) return
       setError(e instanceof Error ? e.message : 'Failed to load capabilities')
@@ -40,17 +46,18 @@ export function useCapability(surface?: string) {
     refresh()
   }, [refresh])
 
-  // R3-07: Separate executing state (doesn't block refresh)
+  // Execute a capability — backend returns { ok, capabilityId, output, traceId, latencyMs }
   const execute = useCallback(
     async (capabilityId: string, input?: Record<string, unknown>) => {
       setExecuting(true)
       setError(null)
       try {
-        const res = await io.post<{ success?: boolean; result?: unknown; error?: string }>(
+        const res = await io.post<CapabilityExecuteResponse>(
           `/api/capabilities/${encodeURIComponent(capabilityId)}/execute`,
-          input ?? {},
+          { input: input ?? {} },
+          { responseSchema: CapabilityExecuteResponseSchema },
         )
-        if (!mountedRef.current) return null
+        if (!mountedRef.current) return res.data
         return res.data
       } catch (e) {
         if (!mountedRef.current) return null
