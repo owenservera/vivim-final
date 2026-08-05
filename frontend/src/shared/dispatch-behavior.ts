@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 /**
  * shared/dispatch-behavior.ts
@@ -7,11 +7,11 @@
  * Used by both UnifiedEntry and ComposerShell.
  */
 
-import type { useIO } from '@/components/canvas/UnifiedIOProvider';
-import type { ComposerBehavior } from '@/types/api';
+import type { useIO } from '@/components/canvas/UnifiedIOProvider'
+import type { ComposerBehavior } from '@/types/api'
 
-export type Behavior = ComposerBehavior;
-export type BehaviorResult = { ok: boolean; error?: string; data?: unknown };
+export type Behavior = ComposerBehavior
+export type BehaviorResult = { ok: boolean; error?: string; data?: unknown }
 
 export async function dispatchBehavior(
   behavior: Behavior,
@@ -22,15 +22,15 @@ export async function dispatchBehavior(
 ): Promise<BehaviorResult> {
   switch (behavior) {
     case 'chat': {
-      if (!conversationId) return { ok: false, error: 'No active conversation' };
+      if (!conversationId) return { ok: false, error: 'No active conversation' }
       try {
         const res = await io.post<{ ok?: boolean; error?: string }>(
           `/api/conversations/${encodeURIComponent(conversationId)}/send`,
           { content: text },
-        );
-        return { ok: res.data?.ok ?? true, error: res.data?.error };
+        )
+        return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch {
-        return { ok: false, error: 'Send failed (network error)' };
+        return { ok: false, error: 'Send failed (network error)' }
       }
     }
     case 'prompt': {
@@ -38,10 +38,10 @@ export async function dispatchBehavior(
         const res = await io.post<{ ok?: boolean; error?: string; data?: unknown }>(
           '/api/interpret',
           { text },
-        );
-        return { ok: res.data?.ok ?? true, error: res.data?.error };
+        )
+        return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch {
-        return { ok: false, error: 'Interpret failed (network error)' };
+        return { ok: false, error: 'Interpret failed (network error)' }
       }
     }
     case 'command': {
@@ -49,23 +49,24 @@ export async function dispatchBehavior(
         const res = await io.post<{ ok?: boolean; error?: string; data?: unknown }>(
           '/api/admin/command',
           { text },
-        );
-        return { ok: res.data?.ok ?? true, error: res.data?.error };
+        )
+        return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch {
-        return { ok: false, error: 'Command failed (network error)' };
+        return { ok: false, error: 'Command failed (network error)' }
       }
     }
     case 'search': {
       // Search behavior: route to /api/search with workspace context
       try {
-        const searchParams = (params as { workspaceId?: string; limit?: number } | null) ?? {};
-        const res = await io.post<{ hits?: unknown[]; error?: string }>(
-          '/api/search',
-          { text, workspaceId: searchParams.workspaceId, limit: searchParams.limit ?? 30 },
-        );
-        return { ok: true, error: res.data?.error, data: res.data };
+        const searchParams = (params as { workspaceId?: string; limit?: number } | null) ?? {}
+        const res = await io.post<{ hits?: unknown[]; error?: string }>('/api/search', {
+          text,
+          workspaceId: searchParams.workspaceId,
+          limit: searchParams.limit ?? 30,
+        })
+        return { ok: true, error: res.data?.error, data: res.data }
       } catch {
-        return { ok: false, error: 'Search failed (network error)' };
+        return { ok: false, error: 'Search failed (network error)' }
       }
     }
     case 'execute': {
@@ -74,26 +75,31 @@ export async function dispatchBehavior(
         const res = await io.post<{ ok?: boolean; error?: string; data?: unknown }>(
           '/api/interpret',
           { text, mode: 'execute' },
-        );
-        return { ok: res.data?.ok ?? true, error: res.data?.error };
+        )
+        return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch {
-        return { ok: false, error: 'Execute failed (network error)' };
+        return { ok: false, error: 'Execute failed (network error)' }
       }
     }
     case 'comment': {
       // Comment behavior: no-op (comments don't dispatch)
-      return { ok: true };
+      return { ok: true }
     }
     case 'help': {
       // Help behavior: route through interpret for intent resolution (no execution)
       try {
-        const res = await io.post<{ ok?: boolean; error?: string; classification?: string; capabilityId?: string; text?: string; clarification?: unknown; confirmation?: unknown }>(
-          '/api/interpret',
-          { text, classifyOnly: true },
-        );
-        return { ok: res.data?.ok ?? true, error: res.data?.error, data: res.data };
+        const res = await io.post<{
+          ok?: boolean
+          error?: string
+          classification?: string
+          capabilityId?: string
+          text?: string
+          clarification?: unknown
+          confirmation?: unknown
+        }>('/api/interpret', { text, classifyOnly: true })
+        return { ok: res.data?.ok ?? true, error: res.data?.error, data: res.data }
       } catch {
-        return { ok: false, error: 'Help classification failed (network error)' };
+        return { ok: false, error: 'Help classification failed (network error)' }
       }
     }
     case 'nl-inject': {
@@ -102,14 +108,14 @@ export async function dispatchBehavior(
         const res = await io.post<{ ok?: boolean; error?: string; data?: unknown }>(
           '/api/interpret',
           { text },
-        );
-        return { ok: res.data?.ok ?? true, error: res.data?.error };
+        )
+        return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch {
-        return { ok: false, error: 'NL inject failed (network error)' };
+        return { ok: false, error: 'NL inject failed (network error)' }
       }
     }
     default: {
-      return { ok: true };
+      return { ok: true }
     }
   }
 }

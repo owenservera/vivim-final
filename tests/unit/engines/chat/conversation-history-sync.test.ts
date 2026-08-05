@@ -1,32 +1,55 @@
 // tests/unit/engines/chat/conversation-history-sync.test.ts
 // Unit tests for ConversationHistorySyncEngine — orchestrates provider adapters + DB sync.
 
-import { describe, expect, test, mock, beforeEach } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 import { ConversationHistorySyncEngine } from '../../../../src/engines/conversation-history-sync.js'
-import type { ProviderConversationAdapter, AuthContext, ConversationHeader, ConversationFull } from '../../../../src/engines/provider-conversation-adapter.js'
+import type {
+  AuthContext,
+  ConversationHeader,
+  ProviderConversationAdapter,
+} from '../../../../src/engines/provider-conversation-adapter.js'
 import { AdapterError } from '../../../../src/engines/provider-conversation-adapter.js'
-import type { ConversationStore, ConversationSyncStateStore, ConversationSyncStateRow, ConversationSyncLogRow } from '../../../../src/storage/contracts/conversation-store.js'
+import type {
+  ConversationStore,
+  ConversationSyncStateStore,
+} from '../../../../src/storage/contracts/conversation-store.js'
 
 // ── Mock adapter ─────────────────────────────────────────────────────────────
 
-function createMockAdapter(overrides: Partial<ProviderConversationAdapter> = {}): ProviderConversationAdapter & { getAuthContext: (slaveId: string) => Promise<AuthContext> } {
+function createMockAdapter(
+  overrides: Partial<ProviderConversationAdapter> = {},
+): ProviderConversationAdapter & { getAuthContext: (slaveId: string) => Promise<AuthContext> } {
   return {
     providerId: 'chatgpt',
-    listConversations: mock(async (_accountId: string, _auth: AuthContext, _opts?: { cursor?: string; limit?: number }) => ({
-      items: [
-        { id: 'conv-1', title: 'Chat 1', updatedAt: 1700001000, createdAt: 1700000000 },
-        { id: 'conv-2', title: 'Chat 2', updatedAt: 1699001000, createdAt: 1699000000 },
-      ] as ConversationHeader[],
-      total: 2,
-    })),
-    getConversation: mock(async (_accountId: string, _auth: AuthContext, conversationId: string) => ({
-      id: conversationId,
-      title: `Full ${conversationId}`,
-      messages: [
-        { id: 'msg-1', parentId: null, role: 'user', content: 'Hello', timestamp: 1700000000 },
-        { id: 'msg-2', parentId: 'msg-1', role: 'assistant', content: 'Hi!', timestamp: 1700000001 },
-      ],
-    })) as ProviderConversationAdapter['getConversation'],
+    listConversations: mock(
+      async (
+        _accountId: string,
+        _auth: AuthContext,
+        _opts?: { cursor?: string; limit?: number },
+      ) => ({
+        items: [
+          { id: 'conv-1', title: 'Chat 1', updatedAt: 1700001000, createdAt: 1700000000 },
+          { id: 'conv-2', title: 'Chat 2', updatedAt: 1699001000, createdAt: 1699000000 },
+        ] as ConversationHeader[],
+        total: 2,
+      }),
+    ),
+    getConversation: mock(
+      async (_accountId: string, _auth: AuthContext, conversationId: string) => ({
+        id: conversationId,
+        title: `Full ${conversationId}`,
+        messages: [
+          { id: 'msg-1', parentId: null, role: 'user', content: 'Hello', timestamp: 1700000000 },
+          {
+            id: 'msg-2',
+            parentId: 'msg-1',
+            role: 'assistant',
+            content: 'Hi!',
+            timestamp: 1700000001,
+          },
+        ],
+      }),
+    ) as ProviderConversationAdapter['getConversation'],
     searchConversations: mock(async () => []),
     getAuthContext: mock(async (_slaveId: string) => ({ bearerToken: 'test-token' })),
     ...overrides,
@@ -38,21 +61,77 @@ function createMockAdapter(overrides: Partial<ProviderConversationAdapter> = {})
 function createMockConversationStore(): ConversationStore {
   return {
     getConversation: mock(async () => null),
-    createConversation: mock(async () => ({ id: 'conv-new', providerSessionId: null, providerId: 'chatgpt', accountId: null, title: null, state: 'active', messageCount: 0, lastMessageAt: null, contextJson: '{}', createdAt: 1700000000, updatedAt: 1700000000, source: 'live', externalId: null, importJobId: null, syncedAt: null })),
+    createConversation: mock(async () => ({
+      id: 'conv-new',
+      providerSessionId: null,
+      providerId: 'chatgpt',
+      accountId: null,
+      title: null,
+      state: 'active',
+      messageCount: 0,
+      lastMessageAt: null,
+      contextJson: '{}',
+      createdAt: 1700000000,
+      updatedAt: 1700000000,
+      source: 'live',
+      externalId: null,
+      importJobId: null,
+      syncedAt: null,
+    })),
     updateConversation: mock(async () => {}),
     deleteConversation: mock(async () => {}),
     listConversations: mock(async () => []),
     getConversationByExternalId: mock(async () => null),
-    upsertConversationByExternalId: mock(async () => ({ id: 'conv-upserted', providerSessionId: null, providerId: 'chatgpt', accountId: null, title: null, state: 'active', messageCount: 0, lastMessageAt: null, contextJson: '{}', createdAt: 1700000000, updatedAt: 1700000000, source: 'provider_sync', externalId: null, importJobId: null, syncedAt: null })),
+    upsertConversationByExternalId: mock(async () => ({
+      id: 'conv-upserted',
+      providerSessionId: null,
+      providerId: 'chatgpt',
+      accountId: null,
+      title: null,
+      state: 'active',
+      messageCount: 0,
+      lastMessageAt: null,
+      contextJson: '{}',
+      createdAt: 1700000000,
+      updatedAt: 1700000000,
+      source: 'provider_sync',
+      externalId: null,
+      importJobId: null,
+      syncedAt: null,
+    })),
     listConversationsByAccountId: mock(async () => []),
     createMessages: mock(async () => []),
-    createMessage: mock(async () => ({ id: 'msg-new', conversationId: 'conv', role: 'user', content: null, blocksJson: '[]', blockCount: 0, parentMessageId: null, sequenceIndex: 0, latencyMs: null, tokenCount: null, model: null, metadataJson: '{}', createdAt: 1700000000 })),
+    createMessage: mock(async () => ({
+      id: 'msg-new',
+      conversationId: 'conv',
+      role: 'user',
+      content: null,
+      blocksJson: '[]',
+      blockCount: 0,
+      parentMessageId: null,
+      sequenceIndex: 0,
+      latencyMs: null,
+      tokenCount: null,
+      model: null,
+      metadataJson: '{}',
+      createdAt: 1700000000,
+    })),
     getMessage: mock(async () => null),
     getMessages: mock(async () => []),
     getLastMessage: mock(async () => null),
     updateMessage: mock(async () => {}),
     getAccount: mock(async () => null),
-    createAttachment: mock(async () => ({ id: 'att', messageId: 'msg', filename: 'f', mimeType: 'text', sizeBytes: 0, storagePath: '', thumbnailPath: null, metadataJson: '{}', createdAt: 1700000000 })),
+    createAttachment: mock(async () => ({
+      id: 'att',
+      messageId: 'msg',
+      filename: 'f',
+      mimeType: 'text',
+      sizeBytes: 0,
+      storagePath: '',
+      thumbnailPath: null,
+      metadataJson: '{}',
+      createdAt: 1700000000,
+    })),
     getAttachments: mock(async () => []),
     getAttachment: mock(async () => null),
     deleteAttachment: mock(async () => {}),
@@ -80,8 +159,40 @@ function createMockSyncStateStore(): ConversationSyncStateStore {
       createdAt: 1700000000,
       updatedAt: 1700000000,
     })) as unknown as ConversationSyncStateStore['upsertSyncState'],
-    updateSyncStatus: mock(async () => ({ id: 'state-1', providerId: 'chatgpt', accountId: 'acc', syncType: 'incremental', status: 'running', cursorJson: '{}', totalConversations: 0, syncedConversations: 0, failedConversations: 0, lastSyncedAt: null, nextSyncAt: null, errorJson: null, configJson: '{}', createdAt: 1700000000, updatedAt: 1700000000 })) as unknown as ConversationSyncStateStore['updateSyncStatus'],
-    incrementSyncProgress: mock(async () => ({ id: 'state-1', providerId: 'chatgpt', accountId: 'acc', syncType: 'incremental', status: 'running', cursorJson: '{}', totalConversations: 0, syncedConversations: 0, failedConversations: 0, lastSyncedAt: null, nextSyncAt: null, errorJson: null, configJson: '{}', createdAt: 1700000000, updatedAt: 1700000000 })) as unknown as ConversationSyncStateStore['incrementSyncProgress'],
+    updateSyncStatus: mock(async () => ({
+      id: 'state-1',
+      providerId: 'chatgpt',
+      accountId: 'acc',
+      syncType: 'incremental',
+      status: 'running',
+      cursorJson: '{}',
+      totalConversations: 0,
+      syncedConversations: 0,
+      failedConversations: 0,
+      lastSyncedAt: null,
+      nextSyncAt: null,
+      errorJson: null,
+      configJson: '{}',
+      createdAt: 1700000000,
+      updatedAt: 1700000000,
+    })) as unknown as ConversationSyncStateStore['updateSyncStatus'],
+    incrementSyncProgress: mock(async () => ({
+      id: 'state-1',
+      providerId: 'chatgpt',
+      accountId: 'acc',
+      syncType: 'incremental',
+      status: 'running',
+      cursorJson: '{}',
+      totalConversations: 0,
+      syncedConversations: 0,
+      failedConversations: 0,
+      lastSyncedAt: null,
+      nextSyncAt: null,
+      errorJson: null,
+      configJson: '{}',
+      createdAt: 1700000000,
+      updatedAt: 1700000000,
+    })) as unknown as ConversationSyncStateStore['incrementSyncProgress'],
     getPendingSyncs: mock(async () => []),
     deleteSyncState: mock(async () => {}),
     createSyncLog: mock(async (input) => ({
@@ -99,7 +210,21 @@ function createMockSyncStateStore(): ConversationSyncStateStore {
       errorJson: null,
       metadataJson: '{}',
     })) as unknown as ConversationSyncStateStore['createSyncLog'],
-    updateSyncLog: mock(async () => ({ id: 'log-1', providerId: 'chatgpt', accountId: 'acc', syncType: 'incremental', status: 'completed', startedAt: 1700000000, completedAt: 1700000001, durationMs: 1, conversationsFound: 0, conversationsSynced: 0, conversationsFailed: 0, errorJson: null, metadataJson: '{}' })) as unknown as ConversationSyncStateStore['updateSyncLog'],
+    updateSyncLog: mock(async () => ({
+      id: 'log-1',
+      providerId: 'chatgpt',
+      accountId: 'acc',
+      syncType: 'incremental',
+      status: 'completed',
+      startedAt: 1700000000,
+      completedAt: 1700000001,
+      durationMs: 1,
+      conversationsFound: 0,
+      conversationsSynced: 0,
+      conversationsFailed: 0,
+      errorJson: null,
+      metadataJson: '{}',
+    })) as unknown as ConversationSyncStateStore['updateSyncLog'],
     getSyncLogs: mock(async () => []),
   }
 }
@@ -120,7 +245,12 @@ describe('ConversationHistorySyncEngine', () => {
       const syncStateStore = createMockSyncStateStore()
       const governor = createMockGovernor()
 
-      const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+      const engine = new ConversationHistorySyncEngine(
+        adapter,
+        conversationStore,
+        syncStateStore,
+        governor,
+      )
 
       const result = await engine.sync('account-1', 'slave-1')
 
@@ -142,7 +272,12 @@ describe('ConversationHistorySyncEngine', () => {
       const syncStateStore = createMockSyncStateStore()
       const governor = createMockGovernor()
 
-      const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+      const engine = new ConversationHistorySyncEngine(
+        adapter,
+        conversationStore,
+        syncStateStore,
+        governor,
+      )
 
       await engine.sync('account-1', 'slave-1')
 
@@ -152,13 +287,20 @@ describe('ConversationHistorySyncEngine', () => {
 
     test('handles adapter errors gracefully', async () => {
       const adapter = createMockAdapter({
-        listConversations: mock(async () => { throw new AdapterError('Auth expired', 'chatgpt', 'AUTH_EXPIRED') }),
+        listConversations: mock(async () => {
+          throw new AdapterError('Auth expired', 'chatgpt', 'AUTH_EXPIRED')
+        }),
       })
       const conversationStore = createMockConversationStore()
       const syncStateStore = createMockSyncStateStore()
       const governor = createMockGovernor()
 
-      const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+      const engine = new ConversationHistorySyncEngine(
+        adapter,
+        conversationStore,
+        syncStateStore,
+        governor,
+      )
 
       const result = await engine.sync('account-1', 'slave-1')
 
@@ -167,7 +309,12 @@ describe('ConversationHistorySyncEngine', () => {
       expect(result.error).toContain('Auth expired')
 
       // Sync state should be marked as failed
-      expect(syncStateStore.updateSyncStatus).toHaveBeenCalledWith('chatgpt', 'account-1', 'failed', expect.any(String))
+      expect(syncStateStore.updateSyncStatus).toHaveBeenCalledWith(
+        'chatgpt',
+        'account-1',
+        'failed',
+        expect.any(String),
+      )
     })
   })
 
@@ -178,7 +325,12 @@ describe('ConversationHistorySyncEngine', () => {
       const syncStateStore = createMockSyncStateStore()
       const governor = createMockGovernor()
 
-      const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+      const engine = new ConversationHistorySyncEngine(
+        adapter,
+        conversationStore,
+        syncStateStore,
+        governor,
+      )
 
       const result = await engine.sync('account-1', 'slave-1', {
         syncType: 'selective',
@@ -201,7 +353,12 @@ describe('ConversationHistorySyncEngine', () => {
       const syncStateStore = createMockSyncStateStore()
       const governor = createMockGovernor()
 
-      const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+      const engine = new ConversationHistorySyncEngine(
+        adapter,
+        conversationStore,
+        syncStateStore,
+        governor,
+      )
 
       const result = await engine.sync('account-1', 'slave-1', { headersOnly: true })
 
@@ -223,7 +380,12 @@ describe('ConversationHistorySyncEngine', () => {
       const syncStateStore = createMockSyncStateStore()
       const governor = createMockGovernor()
 
-      const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+      const engine = new ConversationHistorySyncEngine(
+        adapter,
+        conversationStore,
+        syncStateStore,
+        governor,
+      )
 
       const result = await engine.fetchConversation('account-1', 'slave-1', 'conv-1')
 
@@ -240,7 +402,12 @@ describe('ConversationHistorySyncEngine', () => {
       const syncStateStore = createMockSyncStateStore()
       const governor = createMockGovernor()
 
-      const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+      const engine = new ConversationHistorySyncEngine(
+        adapter,
+        conversationStore,
+        syncStateStore,
+        governor,
+      )
 
       const result = await engine.fetchConversation('account-1', 'slave-1', 'nonexistent')
 
@@ -255,7 +422,12 @@ describe('ConversationHistorySyncEngine', () => {
       const syncStateStore = createMockSyncStateStore()
       const governor = createMockGovernor()
 
-      const engine = new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governor)
+      const engine = new ConversationHistorySyncEngine(
+        adapter,
+        conversationStore,
+        syncStateStore,
+        governor,
+      )
 
       await engine.sync('account-1', 'slave-1')
 
@@ -263,7 +435,11 @@ describe('ConversationHistorySyncEngine', () => {
       expect(conversationStore.createMessages).toHaveBeenCalledTimes(2)
       const firstCall = (conversationStore.createMessages as ReturnType<typeof mock>).mock.calls[0]
       expect(firstCall).toBeDefined()
-      const messages = firstCall![0] as Array<{ conversationId: string; role: string; content: string }>
+      const messages = firstCall![0] as Array<{
+        conversationId: string
+        role: string
+        content: string
+      }>
       expect(messages).toHaveLength(2)
       const msg0 = messages[0]
       const msg1 = messages[1]

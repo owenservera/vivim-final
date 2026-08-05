@@ -62,14 +62,11 @@ export function useConversationSync() {
       setSyncing(true)
       setError(null)
       try {
-        const res = await io.post<SyncResult>(
-          `/api/conversations/sync/${providerId}`,
-          {
-            accountId,
-            slaveId,
-            ...opts,
-          },
-        )
+        const res = await io.post<SyncResult>(`/api/conversations/sync/${providerId}`, {
+          accountId,
+          slaveId,
+          ...opts,
+        })
         if (!mountedRef.current) return null
         const result = res.data as SyncResult
         setLastResult(result)

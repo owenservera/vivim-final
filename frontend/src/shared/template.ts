@@ -6,28 +6,28 @@
  */
 
 export interface WorkspaceTemplate {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
+  id: string
+  slug: string
+  name: string
+  description: string
   /** Icon (emoji). */
-  icon: string;
+  icon: string
   /** Category for grouping in the gallery. */
-  category: 'team' | 'studio' | 'pipeline' | 'support' | 'personal';
+  category: 'team' | 'studio' | 'pipeline' | 'support' | 'personal'
   /** Surfaces to seed (subset of chat/docs/media/automation/agents/shell). */
-  surfaces: string[];
+  surfaces: string[]
   /** Automation slugs from the 100 core automations to enable. */
-  automationSlugs: string[];
+  automationSlugs: string[]
   /** Agent slugs to enable. */
-  agentSlugs: string[];
+  agentSlugs: string[]
   /** Sample documents to seed (title + mime). */
-  sampleDocs: Array<{ title: string; mimeType: string; inlineContent?: string }>;
+  sampleDocs: Array<{ title: string; mimeType: string; inlineContent?: string }>
   /** Sample media to seed. */
-  sampleMedia: Array<{ title: string; kind: string; sourceUrl: string; mimeType: string }>;
+  sampleMedia: Array<{ title: string; kind: string; sourceUrl: string; mimeType: string }>
   /** Default role for the creator. */
-  defaultRole: 'admin' | 'editor';
+  defaultRole: 'admin' | 'editor'
   /** Whether this is a featured template. */
-  featured: boolean;
+  featured: boolean
 }
 
 export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
@@ -39,10 +39,20 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     icon: 'compass',
     category: 'team',
     surfaces: ['chat', 'docs', 'media', 'automation', 'agents'],
-    automationSlugs: ['daily-digest', 'research-topic', 'research-competitor', 'summarize-new-doc', 'extract-entities'],
+    automationSlugs: [
+      'daily-digest',
+      'research-topic',
+      'research-competitor',
+      'summarize-new-doc',
+      'extract-entities',
+    ],
     agentSlugs: ['research-assistant'],
     sampleDocs: [
-      { title: 'Research Plan Q1', mimeType: 'text/markdown', inlineContent: '# Q1 Research Plan\n\n## Goals\n- ...\n## Methodology\n- ...' },
+      {
+        title: 'Research Plan Q1',
+        mimeType: 'text/markdown',
+        inlineContent: '# Q1 Research Plan\n\n## Goals\n- ...\n## Methodology\n- ...',
+      },
       { title: 'Literature Review', mimeType: 'text/markdown' },
     ],
     sampleMedia: [],
@@ -57,14 +67,25 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     icon: '',
     category: 'studio',
     surfaces: ['chat', 'docs', 'media', 'automation', 'agents'],
-    automationSlugs: ['draft-blog', 'draft-social', 'draft-newsletter', 'transcribe-and-clip-video', 'extract-thumbnails'],
+    automationSlugs: [
+      'draft-blog',
+      'draft-social',
+      'draft-newsletter',
+      'transcribe-and-clip-video',
+      'extract-thumbnails',
+    ],
     agentSlugs: ['content-curator'],
     sampleDocs: [
       { title: 'Editorial Calendar', mimeType: 'text/markdown' },
       { title: 'Brand Voice Guide', mimeType: 'text/markdown' },
     ],
     sampleMedia: [
-      { title: 'Intro Video', kind: 'video', sourceUrl: 'https://example.com/intro.mp4', mimeType: 'video/mp4' },
+      {
+        title: 'Intro Video',
+        kind: 'video',
+        sourceUrl: 'https://example.com/intro.mp4',
+        mimeType: 'video/mp4',
+      },
     ],
     defaultRole: 'editor',
     featured: true,
@@ -77,11 +98,15 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     icon: '',
     category: 'pipeline',
     surfaces: ['chat', 'automation', 'agents', 'shell'],
-    automationSlugs: ['monitor-uptime', 'monitor-sentiment', 'backup-db', 'maintenance-cleanup-inactive', 'maintenance-verify-invariants'],
-    agentSlugs: ['inbox-triager'],
-    sampleDocs: [
-      { title: 'Runbook', mimeType: 'text/markdown' },
+    automationSlugs: [
+      'monitor-uptime',
+      'monitor-sentiment',
+      'backup-db',
+      'maintenance-cleanup-inactive',
+      'maintenance-verify-invariants',
     ],
+    agentSlugs: ['inbox-triager'],
+    sampleDocs: [{ title: 'Runbook', mimeType: 'text/markdown' }],
     sampleMedia: [],
     defaultRole: 'admin',
     featured: true,
@@ -94,7 +119,12 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     icon: 'audio',
     category: 'support',
     surfaces: ['chat', 'docs', 'automation', 'agents'],
-    automationSlugs: ['route-message-to-slack', 'route-message-to-email', 'monitor-sentiment', 'daily-digest'],
+    automationSlugs: [
+      'route-message-to-slack',
+      'route-message-to-email',
+      'monitor-sentiment',
+      'daily-digest',
+    ],
     agentSlugs: ['inbox-triager'],
     sampleDocs: [
       { title: 'Knowledge Base', mimeType: 'text/markdown' },
@@ -140,4 +170,4 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
     defaultRole: 'editor',
     featured: false,
   },
-];
+]

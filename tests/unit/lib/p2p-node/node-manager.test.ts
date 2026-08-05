@@ -15,7 +15,14 @@ const mockNode = {
   peerStore: { getPeers: mock(() => Promise.resolve([])) },
   peerRouting: {},
   contentRouting: {},
-  logger: { forComponent: mock(() => ({ warn: mock(() => {}), error: mock(() => {}), info: mock(() => {}), debug: mock(() => {}) })) },
+  logger: {
+    forComponent: mock(() => ({
+      warn: mock(() => {}),
+      error: mock(() => {}),
+      info: mock(() => {}),
+      debug: mock(() => {}),
+    })),
+  },
   dial: mock(() => Promise.resolve(null)),
   hangUp: mock(() => Promise.resolve()),
   getProtocols: mock(() => []),

@@ -15,37 +15,37 @@
  * One Entry Point invariant (5): no component calls fetch() directly.
  */
 
-import type { z } from 'zod';
+import type { z } from 'zod'
 
-export type IOMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+export type IOMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
 
 export interface IORequestInit {
-  method?: IOMethod;
-  body?: unknown;
-  headers?: Record<string, string>;
-  query?: Record<string, string | number | boolean | undefined>;
+  method?: IOMethod
+  body?: unknown
+  headers?: Record<string, string>
+  query?: Record<string, string | number | boolean | undefined>
   /** Zod schema for validating the response. */
-  responseSchema?: z.ZodType<unknown>;
+  responseSchema?: z.ZodType<unknown>
   /** Abort signal. */
-  signal?: AbortSignal;
+  signal?: AbortSignal
   /** Retry count (default 2). */
-  retries?: number;
+  retries?: number
   /** Whether to deduplicate GET requests (default true). */
-  dedupe?: boolean;
+  dedupe?: boolean
   /** Trace id (auto-generated if omitted). */
-  traceId?: string;
+  traceId?: string
   /** Timeout in ms (default 30_000). */
-  timeoutMs?: number;
+  timeoutMs?: number
 }
 
 export interface IOResponse<T> {
-  ok: boolean;
-  status: number;
-  data: T;
-  traceId: string;
-  durationMs: number;
+  ok: boolean
+  status: number
+  data: T
+  traceId: string
+  durationMs: number
   /** Original response headers. */
-  headers: Record<string, string>;
+  headers: Record<string, string>
 }
 
 export class IOError extends Error {
@@ -55,29 +55,36 @@ export class IOError extends Error {
     public readonly traceId: string,
     public readonly cause?: unknown,
   ) {
-    super(message);
-    this.name = 'IOError';
+    super(message)
+    this.name = 'IOError'
   }
 }
 
 export interface IOEvent {
-  type: 'request:start' | 'request:success' | 'request:error' | 'sse:open' | 'sse:event' | 'sse:close' | 'sse:error';
-  traceId: string;
-  method?: IOMethod;
-  url?: string;
-  status?: number;
-  durationMs?: number;
-  error?: string;
-  data?: unknown;
-  timestamp: number;
+  type:
+    | 'request:start'
+    | 'request:success'
+    | 'request:error'
+    | 'sse:open'
+    | 'sse:event'
+    | 'sse:close'
+    | 'sse:error'
+  traceId: string
+  method?: IOMethod
+  url?: string
+  status?: number
+  durationMs?: number
+  error?: string
+  data?: unknown
+  timestamp: number
 }
 
-export type IOEventListener = (event: IOEvent) => void;
+export type IOEventListener = (event: IOEvent) => void
 
 export interface SSESubscription {
-  url: string;
-  traceId: string;
-  close: () => void;
+  url: string
+  traceId: string
+  close: () => void
 }
 
 /**
@@ -86,35 +93,51 @@ export interface SSESubscription {
  */
 export interface UnifiedIO {
   /** Single entry point for all HTTP requests. */
-  request<T>(url: string, init?: IORequestInit): Promise<IOResponse<T>>;
+  request<T>(url: string, init?: IORequestInit): Promise<IOResponse<T>>
 
   /** Convenience: GET. */
-  get<T>(url: string, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>>;
+  get<T>(url: string, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>>
 
   /** Convenience: POST. */
-  post<T>(url: string, body?: unknown, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>>;
+  post<T>(
+    url: string,
+    body?: unknown,
+    init?: Omit<IORequestInit, 'method' | 'body'>,
+  ): Promise<IOResponse<T>>
 
   /** Convenience: PATCH. */
-  patch<T>(url: string, body?: unknown, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>>;
+  patch<T>(
+    url: string,
+    body?: unknown,
+    init?: Omit<IORequestInit, 'method' | 'body'>,
+  ): Promise<IOResponse<T>>
 
   /** Convenience: PUT. */
-  put<T>(url: string, body?: unknown, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>>;
+  put<T>(
+    url: string,
+    body?: unknown,
+    init?: Omit<IORequestInit, 'method' | 'body'>,
+  ): Promise<IOResponse<T>>
 
   /** Convenience: DELETE. */
-  delete<T>(url: string, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>>;
+  delete<T>(url: string, init?: Omit<IORequestInit, 'method' | 'body'>): Promise<IOResponse<T>>
 
   /** Subscribe to a Server-Sent Events stream. */
-  subscribeSSE(url: string, onEvent: (data: unknown) => void, onError?: (err: Error) => void): SSESubscription;
+  subscribeSSE(
+    url: string,
+    onEvent: (data: unknown) => void,
+    onError?: (err: Error) => void,
+  ): SSESubscription
 
   /** PostMessage bridge to a sandboxed iframe. */
-  postToSandbox(instanceId: string, message: unknown): void;
+  postToSandbox(instanceId: string, message: unknown): void
 
   /** Listen for IO events (audit/debug). */
-  on(event: IOEventListener): () => void;
+  on(event: IOEventListener): () => void
 
   /** Generate a fresh traceId. */
-  newTraceId(): string;
+  newTraceId(): string
 
   /** Set or clear the auth token (injected as Authorization header). */
-  setAuthToken(token: string | null): void;
+  setAuthToken(token: string | null): void
 }

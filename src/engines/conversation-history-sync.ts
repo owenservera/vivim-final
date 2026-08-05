@@ -1,21 +1,16 @@
-// src/engines/conversation-history-sync.ts
-// Conversation History Sync Engine — orchestrates fetching conversations from
-// provider adapters, upserting into the DB, and tracking sync state/progress.
-
-import { ulid } from '../ids.js'
 import { getLogger } from '../lib/logger.js'
 import type {
-  ProviderConversationAdapter,
+  ConversationStore,
+  ConversationSyncStateRow,
+  ConversationSyncStateStore,
+} from '../storage/contracts/conversation-store.js'
+import type {
   AuthContext,
-  ConversationHeader,
   ConversationFull,
+  ConversationHeader,
+  ProviderConversationAdapter,
 } from './provider-conversation-adapter.js'
 import { AdapterError } from './provider-conversation-adapter.js'
-import type {
-  ConversationStore,
-  ConversationSyncStateStore,
-  ConversationSyncStateRow,
-} from '../storage/contracts/conversation-store.js'
 
 const log = getLogger('conversation-history-sync')
 
@@ -68,7 +63,9 @@ export class ConversationHistorySyncEngine {
     private readonly adapter: ProviderConversationAdapter,
     private readonly conversationStore: ConversationStore,
     private readonly syncStateStore: ConversationSyncStateStore,
-    private readonly governorHandle: { send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown> },
+    private readonly governorHandle: {
+      send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown>
+    },
   ) {}
 
   get providerId(): string {
@@ -78,11 +75,7 @@ export class ConversationHistorySyncEngine {
   /**
    * Run a sync for the given account. Supports full, incremental, and selective sync.
    */
-  async sync(
-    accountId: string,
-    slaveId: string,
-    opts: SyncOptions = {},
-  ): Promise<SyncResult> {
+  async sync(accountId: string, slaveId: string, opts: SyncOptions = {}): Promise<SyncResult> {
     const syncType = opts.syncType ?? 'incremental'
     const batchSize = opts.batchSize ?? 50
     const maxConversations = opts.maxConversations ?? 500
@@ -100,12 +93,14 @@ export class ConversationHistorySyncEngine {
 
     // Get or create sync state
     const existingState = await this.syncStateStore.getSyncState(this.providerId, accountId)
-    const state = existingState ?? await this.syncStateStore.upsertSyncState({
-      providerId: this.providerId,
-      accountId,
-      syncType,
-      status: 'running',
-    })
+    const state =
+      existingState ??
+      (await this.syncStateStore.upsertSyncState({
+        providerId: this.providerId,
+        accountId,
+        syncType,
+        status: 'running',
+      }))
 
     // Update status to running
     await this.syncStateStore.updateSyncStatus(this.providerId, accountId, 'running')
@@ -118,7 +113,14 @@ export class ConversationHistorySyncEngine {
       let result: SyncResult
 
       if (syncType === 'selective' && opts.conversationIds?.length) {
-        result = await this.syncSelective(accountId, auth, opts.conversationIds, opts, startTime, syncLog.id)
+        result = await this.syncSelective(
+          accountId,
+          auth,
+          opts.conversationIds,
+          opts,
+          startTime,
+          syncLog.id,
+        )
       } else {
         result = await this.syncPaginated(accountId, auth, state, opts, startTime, syncLog.id)
       }
@@ -142,13 +144,16 @@ export class ConversationHistorySyncEngine {
         errorJson: result.error,
       })
 
-      log.info({
-        providerId: this.providerId,
-        accountId,
-        synced: result.synced,
-        failed: result.failed,
-        durationMs: result.durationMs,
-      }, 'Conversation sync completed')
+      log.info(
+        {
+          providerId: this.providerId,
+          accountId,
+          synced: result.synced,
+          failed: result.failed,
+          durationMs: result.durationMs,
+        },
+        'Conversation sync completed',
+      )
 
       return result
     } catch (err) {
@@ -162,7 +167,10 @@ export class ConversationHistorySyncEngine {
         errorJson: errorMsg,
       })
 
-      log.error({ providerId: this.providerId, accountId, error: errorMsg }, 'Conversation sync failed')
+      log.error(
+        { providerId: this.providerId, accountId, error: errorMsg },
+        'Conversation sync failed',
+      )
 
       return {
         totalFound: 0,
@@ -194,7 +202,9 @@ export class ConversationHistorySyncEngine {
   private async extractAuth(slaveId: string): Promise<AuthContext> {
     // The adapter handles auth extraction via CDP — delegate to it
     if ('getAuthContext' in this.adapter) {
-      return (this.adapter as { getAuthContext(slaveId: string): Promise<AuthContext> }).getAuthContext(slaveId)
+      return (
+        this.adapter as { getAuthContext(slaveId: string): Promise<AuthContext> }
+      ).getAuthContext(slaveId)
     }
     throw new AdapterError(
       `Adapter ${this.providerId} does not support inline auth extraction`,
@@ -221,7 +231,9 @@ export class ConversationHistorySyncEngine {
       try {
         const parsed = JSON.parse(state.cursorJson) as { cursor?: string }
         cursor = parsed.cursor
-      } catch { /* ignore invalid cursor */ }
+      } catch {
+        /* ignore invalid cursor */
+      }
     }
 
     let totalFound = 0
@@ -260,12 +272,20 @@ export class ConversationHistorySyncEngine {
           synced++
         } catch (err) {
           failed++
-          log.warn({ providerId: this.providerId, conversationId: header.id, error: err }, 'Failed to sync conversation')
+          log.warn(
+            { providerId: this.providerId, conversationId: header.id, error: err },
+            'Failed to sync conversation',
+          )
         }
       }
 
       // Update progress
-      await this.syncStateStore.incrementSyncProgress(this.providerId, accountId, synced - (synced + failed - failed), failed)
+      await this.syncStateStore.incrementSyncProgress(
+        this.providerId,
+        accountId,
+        synced - (synced + failed - failed),
+        failed,
+      )
 
       // Save cursor for next batch
       currentCursor = page.nextCursor
@@ -311,11 +331,17 @@ export class ConversationHistorySyncEngine {
           synced++
         } else {
           failed++
-          log.warn({ providerId: this.providerId, conversationId: convId }, 'Conversation not found')
+          log.warn(
+            { providerId: this.providerId, conversationId: convId },
+            'Conversation not found',
+          )
         }
       } catch (err) {
         failed++
-        log.warn({ providerId: this.providerId, conversationId: convId, error: err }, 'Failed to sync conversation')
+        log.warn(
+          { providerId: this.providerId, conversationId: convId, error: err },
+          'Failed to sync conversation',
+        )
       }
     }
 
@@ -329,7 +355,10 @@ export class ConversationHistorySyncEngine {
     }
   }
 
-  private async upsertConversationFromHeader(accountId: string, header: ConversationHeader): Promise<void> {
+  private async upsertConversationFromHeader(
+    accountId: string,
+    header: ConversationHeader,
+  ): Promise<void> {
     await this.conversationStore.upsertConversationByExternalId({
       externalId: header.id,
       providerId: this.providerId,
@@ -341,7 +370,10 @@ export class ConversationHistorySyncEngine {
     })
   }
 
-  private async upsertConversationFromFull(accountId: string, full: ConversationFull): Promise<void> {
+  private async upsertConversationFromFull(
+    accountId: string,
+    full: ConversationFull,
+  ): Promise<void> {
     // Upsert the conversation
     const conv = await this.conversationStore.upsertConversationByExternalId({
       externalId: full.id,

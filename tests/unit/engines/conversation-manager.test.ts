@@ -160,7 +160,9 @@ function mockStore(overrides?: Partial<ConversationStore>): ConversationStore {
     getAttachment: mock(() => Promise.resolve(null)),
     deleteAttachment: mock(() => Promise.resolve()),
     getConversationByExternalId: mock(() => Promise.resolve(null)),
-    upsertConversationByExternalId: mock((input) => Promise.resolve(makeConv({ id: 'conv_upsert', ...input }))),
+    upsertConversationByExternalId: mock((input) =>
+      Promise.resolve(makeConv({ id: 'conv_upsert', ...input })),
+    ),
     listConversationsByAccountId: mock(() => Promise.resolve([])),
     createMessages: mock(() => Promise.resolve([])),
     ...overrides,

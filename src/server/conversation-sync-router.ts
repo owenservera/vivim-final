@@ -1,12 +1,15 @@
 // src/server/conversation-sync-router.ts
 // REST API router — conversation history sync endpoints.
 
+import { ChatGPTAdapter } from '../engines/adapters/chatgpt-adapter.js'
+import { ConversationHistorySyncEngine } from '../engines/conversation-history-sync.js'
+import { getLogger } from '../lib/logger.js'
+import type {
+  ConversationStore,
+  ConversationSyncStateStore,
+} from '../storage/contracts/conversation-store.js'
 import type { ServerContext } from './index.js'
 import { errorResponse, json } from './response.js'
-import { ConversationHistorySyncEngine } from '../engines/conversation-history-sync.js'
-import { ChatGPTAdapter } from '../engines/adapters/chatgpt-adapter.js'
-import { getLogger } from '../lib/logger.js'
-import type { ConversationStore, ConversationSyncStateStore } from '../storage/contracts/conversation-store.js'
 
 const log = getLogger('conversation-sync-router')
 
@@ -14,7 +17,10 @@ const log = getLogger('conversation-sync-router')
  * Get or create a sync engine for a provider.
  * TODO: Support multiple providers (Gemini, Claude, DeepSeek) via adapter registry.
  */
-function getSyncEngine(providerId: string, ctx: ServerContext): ConversationHistorySyncEngine | null {
+function getSyncEngine(
+  providerId: string,
+  ctx: ServerContext,
+): ConversationHistorySyncEngine | null {
   if (!ctx.governor) {
     log.warn('Governor not available — sync engines not wired')
     return null
@@ -33,7 +39,12 @@ function getSyncEngine(providerId: string, ctx: ServerContext): ConversationHist
     const conversationStore = ctx.db as unknown as ConversationStore
     const syncStateStore = ctx.db as unknown as ConversationSyncStateStore
 
-    return new ConversationHistorySyncEngine(adapter, conversationStore, syncStateStore, governorHandle)
+    return new ConversationHistorySyncEngine(
+      adapter,
+      conversationStore,
+      syncStateStore,
+      governorHandle,
+    )
   }
 
   log.warn({ providerId }, 'Provider not yet supported for sync')

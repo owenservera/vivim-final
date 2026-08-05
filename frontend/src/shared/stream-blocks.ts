@@ -13,8 +13,8 @@ export type ContentBlock =
   | { kind: 'citation'; content: string; source?: string; index: number }
   | { kind: 'tool_use'; toolName: string; input: Record<string, unknown>; index: number }
   | { kind: 'error'; message: string; code?: string; index: number }
-  | { kind: 'meta'; key: string; value: unknown; index: number };
+  | { kind: 'meta'; key: string; value: unknown; index: number }
 
 export function blockKindOf(b: ContentBlock): string {
-  return b.kind;
+  return b.kind
 }

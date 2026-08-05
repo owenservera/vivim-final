@@ -34,143 +34,151 @@ export type DocumentMimeType =
   | 'text/javascript'
   | 'text/python'
   | 'text/css'
-  | 'text/yaml';
+  | 'text/yaml'
 
-export type DocumentEngine = 'pdf' | 'docx' | 'pptx' | 'xlsx' | 'markdown' | 'code' | 'text' | 'html';
+export type DocumentEngine =
+  | 'pdf'
+  | 'docx'
+  | 'pptx'
+  | 'xlsx'
+  | 'markdown'
+  | 'code'
+  | 'text'
+  | 'html'
 
 export interface DocumentCard {
-  id: string;
-  slug: string;
-  title: string;
-  mimeType: DocumentMimeType | string;
-  engine: DocumentEngine | string;
+  id: string
+  slug: string
+  title: string
+  mimeType: DocumentMimeType | string
+  engine: DocumentEngine | string
   /** Blob URL or data URL the renderer fetches. */
-  sourceUrl?: string;
+  sourceUrl?: string
   /** Inline content (for short docs, code snippets, markdown). */
-  inlineContent?: string;
+  inlineContent?: string
   /** Programming language hint for code documents. */
-  language?: string;
+  language?: string
   /** Page count (PDFs, slides). */
-  pageCount?: number;
+  pageCount?: number
   /** Word count (text docs). */
-  wordCount?: number;
+  wordCount?: number
   /** Page currently open (PDFs). */
-  currentPage?: number;
+  currentPage?: number
   /** SHA-256 of content (dedupe + integrity check). */
-  contentHash?: string;
+  contentHash?: string
   /** WorkspaceId this doc belongs to (null = global). */
-  workspaceId: string | null;
+  workspaceId: string | null
   /** Engine reference — plugins can hot-swap the renderer. */
-  engineRef: string; // e.g. 'engine:document:pdf'
+  engineRef: string // e.g. 'engine:document:pdf'
   /** Capabilities this document card may invoke. */
-  capabilities: string[];
-  annotations: string[]; // annotation ids
+  capabilities: string[]
+  annotations: string[] // annotation ids
   /** Document version (bumped on each save). */
-  version: number;
-  createdAt: number;
-  updatedAt: number;
+  version: number
+  createdAt: number
+  updatedAt: number
 }
 
 export interface DocumentOpenInput {
-  title: string;
-  mimeType: DocumentMimeType | string;
-  sourceUrl?: string;
-  inlineContent?: string;
-  language?: string;
-  workspaceId?: string;
+  title: string
+  mimeType: DocumentMimeType | string
+  sourceUrl?: string
+  inlineContent?: string
+  language?: string
+  workspaceId?: string
 }
 
 export interface DocumentSearchHit {
-  documentId: string;
-  page?: number;
-  snippet: string;
-  score: number;
+  documentId: string
+  page?: number
+  snippet: string
+  score: number
 }
 
 // Import the filetype system (E1) for use in editorCapabilitiesFor below.
-import { filetypeByMime } from './document-types';
+import { filetypeByMime } from './document-types'
 
 // ── E1: Full editing support ──────────────────────────────────────────
 
-export type DocumentEditState = 'clean' | 'dirty' | 'saving' | 'saved' | 'error';
+export type DocumentEditState = 'clean' | 'dirty' | 'saving' | 'saved' | 'error'
 
 export interface DocumentEditSession {
-  id: string;
-  documentId: string;
-  userId: string;
+  id: string
+  documentId: string
+  userId: string
   /** Current content (edited). */
-  content: string;
+  content: string
   /** Last-saved content (for diff). */
-  savedContent: string;
+  savedContent: string
   /** Cursor position (char offset). */
-  cursorOffset: number;
+  cursorOffset: number
   /** Selection range [start, end]. */
-  selection?: [number, number];
+  selection?: [number, number]
   /** Edit state. */
-  state: DocumentEditState;
+  state: DocumentEditState
   /** Last error (if state='error'). */
-  error?: string;
+  error?: string
   /** Undo/redo stacks (command refs). */
-  undoStack: DocumentEditOp[];
-  redoStack: DocumentEditOp[];
+  undoStack: DocumentEditOp[]
+  redoStack: DocumentEditOp[]
   /** Collaborators (presence) on this doc. */
-  collaborators: string[];
-  startedAt: number;
-  lastEditAt: number;
-  savedAt?: number;
+  collaborators: string[]
+  startedAt: number
+  lastEditAt: number
+  savedAt?: number
 }
 
 export interface DocumentEditOp {
-  id: string;
-  kind: 'insert' | 'delete' | 'replace' | 'format';
-  offset: number;
-  length: number;
+  id: string
+  kind: 'insert' | 'delete' | 'replace' | 'format'
+  offset: number
+  length: number
   /** Inserted text (for 'insert'/'replace'). */
-  text?: string;
+  text?: string
   /** Format hint (for 'format'). */
-  format?: 'bold' | 'italic' | 'underline' | 'code' | 'strike';
-  timestamp: number;
+  format?: 'bold' | 'italic' | 'underline' | 'code' | 'strike'
+  timestamp: number
 }
 
 export interface DocumentSaveInput {
-  documentId: string;
-  content: string;
+  documentId: string
+  content: string
   /** Optional: patch ops instead of full content. */
-  ops?: DocumentEditOp[];
+  ops?: DocumentEditOp[]
 }
 
 export interface DocumentSaveResult {
-  ok: boolean;
-  documentId: string;
-  version: number;
-  contentHash: string;
-  savedAt: number;
+  ok: boolean
+  documentId: string
+  version: number
+  contentHash: string
+  savedAt: number
 }
 
 /** Editor capability set per filetype. */
 export interface EditorCapabilities {
   /** Can edit content inline. */
-  canEdit: boolean;
+  canEdit: boolean
   /** Can format text (bold/italic/etc). */
-  canFormat: boolean;
+  canFormat: boolean
   /** Can insert images. */
-  canInsertImages: boolean;
+  canInsertImages: boolean
   /** Can insert tables. */
-  canInsertTables: boolean;
+  canInsertTables: boolean
   /** Can insert code blocks. */
-  canInsertCode: boolean;
+  canInsertCode: boolean
   /** Can comment/annotate. */
-  canAnnotate: boolean;
+  canAnnotate: boolean
   /** Can track changes. */
-  canTrackChanges: boolean;
+  canTrackChanges: boolean
   /** Supports find & replace. */
-  canFindReplace: boolean;
+  canFindReplace: boolean
   /** Supports multi-cursor (collab). */
-  canMultiCursor: boolean;
+  canMultiCursor: boolean
 }
 
 export function editorCapabilitiesFor(mime: string): EditorCapabilities {
-  const ft = filetypeByMime(mime);
+  const ft = filetypeByMime(mime)
   if (!ft) {
     return {
       canEdit: false,
@@ -182,11 +190,12 @@ export function editorCapabilitiesFor(mime: string): EditorCapabilities {
       canTrackChanges: false,
       canFindReplace: false,
       canMultiCursor: false,
-    };
+    }
   }
-  const canEdit = ft.editable;
-  const isRichText = ft.editor === 'contenteditable' || ft.editor === 'structured' || ft.editor === 'slides';
-  const isCode = ft.editor === 'code';
+  const canEdit = ft.editable
+  const isRichText =
+    ft.editor === 'contenteditable' || ft.editor === 'structured' || ft.editor === 'slides'
+  const isCode = ft.editor === 'code'
   return {
     canEdit,
     canFormat: isRichText,
@@ -197,7 +206,7 @@ export function editorCapabilitiesFor(mime: string): EditorCapabilities {
     canTrackChanges: isRichText,
     canFindReplace: canEdit,
     canMultiCursor: canEdit,
-  };
+  }
 }
 
 // Re-export the filetype system (E1).
@@ -208,9 +217,9 @@ export {
   filetypeByFilename,
   detectFiletype,
   filetypesByCategory,
-} from './document-types';
+} from './document-types'
 export type {
   DocumentFiletypeSpec,
   DocumentEngineKind,
   EditorKind,
-} from './document-types';
+} from './document-types'

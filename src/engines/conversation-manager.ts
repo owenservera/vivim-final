@@ -377,7 +377,8 @@ export class ConversationManager {
       let t0 = Date.now()
       const conv = await this.store.getConversation(conversationId)
       if (!conv) throw new EngineError(`Conversation not found: ${conversationId}`)
-      if (!conv.providerSessionId) throw new EngineError(`No provider session for conversation: ${conversationId}`)
+      if (!conv.providerSessionId)
+        throw new EngineError(`No provider session for conversation: ${conversationId}`)
       const account = await this.store.getAccount(conv.providerSessionId)
       if (!account) throw new EngineError(`Account not found: ${conv.providerSessionId}`)
       timing.resolve = Date.now() - t0
@@ -714,7 +715,8 @@ export class ConversationManager {
     // [1] RESOLVE
     const conv = await this.store.getConversation(conversationId)
     if (!conv) throw new EngineError(`Conversation not found: ${conversationId}`)
-    if (!conv.providerSessionId) throw new EngineError(`No provider session for conversation: ${conversationId}`)
+    if (!conv.providerSessionId)
+      throw new EngineError(`No provider session for conversation: ${conversationId}`)
     const account = await this.store.getAccount(conv.providerSessionId)
     if (!account) throw new EngineError(`Account not found: ${conv.providerSessionId}`)
 

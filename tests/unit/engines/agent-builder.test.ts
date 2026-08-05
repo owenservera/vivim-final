@@ -1,5 +1,5 @@
 // tests/unit/engines/agent-builder.test.ts
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { AgentBuilderEngine } from '../../../src/engines/agent-builder.js'
 import type { AgenticStoreContract } from '../../../src/storage/contracts/agentic-store.js'
 
@@ -11,7 +11,11 @@ describe('AgentBuilderEngine', () => {
   beforeEach(() => {
     nodesMap = new Map()
     mockStore = {
-      startBuilderRun: async (intent: Record<string, unknown>, mode: string, initiator: { kind: string; id: string }) => {
+      startBuilderRun: async (
+        intent: Record<string, unknown>,
+        mode: string,
+        initiator: { kind: string; id: string },
+      ) => {
         return { id: 'builder-run-1' }
       },
       spawnFromBuilder: async (builderRunId: string) => {
@@ -30,11 +34,10 @@ describe('AgentBuilderEngine', () => {
   })
 
   it('starts a builder run', async () => {
-    const res = await engine.startBuilderRun(
-      { goal: 'build agent' },
-      'human_led',
-      { id: 'user-1', kind: 'user' },
-    )
+    const res = await engine.startBuilderRun({ goal: 'build agent' }, 'human_led', {
+      id: 'user-1',
+      kind: 'user',
+    })
     expect(res.id).toBe('builder-run-1')
   })
 

@@ -1,7 +1,7 @@
 // tests/unit/engines/chat/chatgpt-adapter.test.ts
 // Unit tests for ChatGPTAdapter — inline auth extraction, API calls, DAG parser.
 
-import { describe, expect, test, mock, beforeEach } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 import { ChatGPTAdapter } from '../../../../src/engines/adapters/chatgpt-adapter.js'
 import type { AuthContext } from '../../../../src/engines/provider-conversation-adapter.js'
 import { AdapterError } from '../../../../src/engines/provider-conversation-adapter.js'
@@ -14,8 +14,24 @@ const mockFetch = (fn: (url: string | URL | Request) => Promise<Response>) =>
 
 function createMockGovernor(cookieValue = 'test-session-token') {
   const cookies = [
-    { name: '__Secure-next-auth.session-token', value: cookieValue, domain: '.chatgpt.com', path: '/', expires: Date.now() / 1000 + 3600, httpOnly: true, secure: true },
-    { name: '__cf_bm', value: 'cf-bm-val', domain: '.chatgpt.com', path: '/', expires: Date.now() / 1000 + 3600, httpOnly: true, secure: true },
+    {
+      name: '__Secure-next-auth.session-token',
+      value: cookieValue,
+      domain: '.chatgpt.com',
+      path: '/',
+      expires: Date.now() / 1000 + 3600,
+      httpOnly: true,
+      secure: true,
+    },
+    {
+      name: '__cf_bm',
+      value: 'cf-bm-val',
+      domain: '.chatgpt.com',
+      path: '/',
+      expires: Date.now() / 1000 + 3600,
+      httpOnly: true,
+      secure: true,
+    },
   ]
 
   return {
@@ -32,7 +48,19 @@ function createMockGovernorNoSession() {
   return {
     send: mock(async (_slaveId: string, method: string) => {
       if (method === 'Network.getCookies') {
-        return { cookies: [{ name: 'other_cookie', value: 'x', domain: '.chatgpt.com', path: '/', expires: 0, httpOnly: false, secure: false }] }
+        return {
+          cookies: [
+            {
+              name: 'other_cookie',
+              value: 'x',
+              domain: '.chatgpt.com',
+              path: '/',
+              expires: 0,
+              httpOnly: false,
+              secure: false,
+            },
+          ],
+        }
       }
       return null
     }),
@@ -98,13 +126,26 @@ describe('ChatGPTAdapter', () => {
       globalThis.fetch = mockFetch(async (url: string | URL | Request) => {
         const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
         if (urlStr.includes('/conversations?')) {
-          return new Response(JSON.stringify({
-            items: [
-              { id: 'conv-1', title: 'Test Chat', create_time: 1700000000, update_time: 1700001000 },
-              { id: 'conv-2', title: 'Another Chat', create_time: 1699000000, update_time: 1699001000 },
-            ],
-            total: 2,
-          }), { status: 200, headers: { 'content-type': 'application/json' } })
+          return new Response(
+            JSON.stringify({
+              items: [
+                {
+                  id: 'conv-1',
+                  title: 'Test Chat',
+                  create_time: 1700000000,
+                  update_time: 1700001000,
+                },
+                {
+                  id: 'conv-2',
+                  title: 'Another Chat',
+                  create_time: 1699000000,
+                  update_time: 1699001000,
+                },
+              ],
+              total: 2,
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
         }
         return new Response('Not Found', { status: 404 })
       })
@@ -127,10 +168,15 @@ describe('ChatGPTAdapter', () => {
       const auth: AuthContext = { bearerToken: 'token' }
 
       globalThis.fetch = mockFetch(async () => {
-        return new Response(JSON.stringify({
-          items: [{ id: 'c1', title: 'Chat 1', create_time: 1700000000, update_time: 1700001000 }],
-          total: 200,
-        }), { status: 200, headers: { 'content-type': 'application/json' } })
+        return new Response(
+          JSON.stringify({
+            items: [
+              { id: 'c1', title: 'Chat 1', create_time: 1700000000, update_time: 1700001000 },
+            ],
+            total: 200,
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        )
       })
 
       const result = await adapter.listConversations('account-1', auth, { limit: 100 })
@@ -144,13 +190,22 @@ describe('ChatGPTAdapter', () => {
       const auth: AuthContext = { bearerToken: 'token' }
 
       globalThis.fetch = mockFetch(async () => {
-        return new Response(JSON.stringify({
-          items: [
-            { id: 'conv-1', title: 'Active', create_time: 1700000000, update_time: 1700001000 },
-            { id: 'conv-2', title: 'Archived', create_time: 1700000000, update_time: 1700001000, is_archived: true },
-          ],
-          total: 2,
-        }), { status: 200, headers: { 'content-type': 'application/json' } })
+        return new Response(
+          JSON.stringify({
+            items: [
+              { id: 'conv-1', title: 'Active', create_time: 1700000000, update_time: 1700001000 },
+              {
+                id: 'conv-2',
+                title: 'Archived',
+                create_time: 1700000000,
+                update_time: 1700001000,
+                is_archived: true,
+              },
+            ],
+            total: 2,
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        )
       })
 
       const result = await adapter.listConversations('account-1', auth)
@@ -172,16 +227,43 @@ describe('ChatGPTAdapter', () => {
       const auth: AuthContext = { bearerToken: 'token' }
 
       globalThis.fetch = mockFetch(async () => {
-        return new Response(JSON.stringify({
-          title: 'My Chat',
-          mapping: {
-            'node-root': { id: 'node-root', parent: null, message: { author: { role: 'system' }, content: { content_type: 'text', parts: ['You are helpful.'] }, create_time: 1700000000 } },
-            'node-1': { id: 'node-1', parent: 'node-root', message: { author: { role: 'user' }, content: { content_type: 'text', parts: ['Hello'] }, create_time: 1700000001 } },
-            'node-2': { id: 'node-2', parent: 'node-1', message: { author: { role: 'assistant' }, content: { content_type: 'text', parts: ['Hi there!'] }, create_time: 1700000002 } },
-          },
-          create_time: 1700000000,
-          update_time: 1700000002,
-        }), { status: 200, headers: { 'content-type': 'application/json' } })
+        return new Response(
+          JSON.stringify({
+            title: 'My Chat',
+            mapping: {
+              'node-root': {
+                id: 'node-root',
+                parent: null,
+                message: {
+                  author: { role: 'system' },
+                  content: { content_type: 'text', parts: ['You are helpful.'] },
+                  create_time: 1700000000,
+                },
+              },
+              'node-1': {
+                id: 'node-1',
+                parent: 'node-root',
+                message: {
+                  author: { role: 'user' },
+                  content: { content_type: 'text', parts: ['Hello'] },
+                  create_time: 1700000001,
+                },
+              },
+              'node-2': {
+                id: 'node-2',
+                parent: 'node-1',
+                message: {
+                  author: { role: 'assistant' },
+                  content: { content_type: 'text', parts: ['Hi there!'] },
+                  create_time: 1700000002,
+                },
+              },
+            },
+            create_time: 1700000000,
+            update_time: 1700000002,
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        )
       })
 
       const result = await adapter.getConversation('account-1', auth, 'conv-1')
@@ -205,27 +287,34 @@ describe('ChatGPTAdapter', () => {
       const auth: AuthContext = { bearerToken: 'token' }
 
       globalThis.fetch = mockFetch(async () => {
-        return new Response(JSON.stringify({
-          title: 'Image Chat',
-          mapping: {
-            'n1': {
-              id: 'n1', parent: null,
-              message: {
-                author: { role: 'user' },
-                content: {
-                  content_type: 'multimodal_text',
-                  parts: [
-                    'What is this?',
-                    { content_type: 'image_asset_pointer', metadata: { dalle: { prompt: 'a cat' } } },
-                  ],
+        return new Response(
+          JSON.stringify({
+            title: 'Image Chat',
+            mapping: {
+              n1: {
+                id: 'n1',
+                parent: null,
+                message: {
+                  author: { role: 'user' },
+                  content: {
+                    content_type: 'multimodal_text',
+                    parts: [
+                      'What is this?',
+                      {
+                        content_type: 'image_asset_pointer',
+                        metadata: { dalle: { prompt: 'a cat' } },
+                      },
+                    ],
+                  },
+                  create_time: 1700000000,
                 },
-                create_time: 1700000000,
               },
             },
-          },
-          create_time: 1700000000,
-          update_time: 1700000000,
-        }), { status: 200, headers: { 'content-type': 'application/json' } })
+            create_time: 1700000000,
+            update_time: 1700000000,
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        )
       })
 
       const result = await adapter.getConversation('account-1', auth, 'conv-1')
@@ -244,15 +333,34 @@ describe('ChatGPTAdapter', () => {
       const auth: AuthContext = { bearerToken: 'token' }
 
       globalThis.fetch = mockFetch(async () => {
-        return new Response(JSON.stringify({
-          title: 'Orphan Chat',
-          mapping: {
-            'n1': { id: 'n1', parent: 'nonexistent', message: { author: { role: 'user' }, content: { content_type: 'text', parts: ['Hello'] }, create_time: 1700000000 } },
-            'n2': { id: 'n2', parent: 'n1', message: { author: { role: 'assistant' }, content: { content_type: 'text', parts: ['Hi'] }, create_time: 1700000001 } },
-          },
-          create_time: 1700000000,
-          update_time: 1700000001,
-        }), { status: 200, headers: { 'content-type': 'application/json' } })
+        return new Response(
+          JSON.stringify({
+            title: 'Orphan Chat',
+            mapping: {
+              n1: {
+                id: 'n1',
+                parent: 'nonexistent',
+                message: {
+                  author: { role: 'user' },
+                  content: { content_type: 'text', parts: ['Hello'] },
+                  create_time: 1700000000,
+                },
+              },
+              n2: {
+                id: 'n2',
+                parent: 'n1',
+                message: {
+                  author: { role: 'assistant' },
+                  content: { content_type: 'text', parts: ['Hi'] },
+                  create_time: 1700000001,
+                },
+              },
+            },
+            create_time: 1700000000,
+            update_time: 1700000001,
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        )
       })
 
       const result = await adapter.getConversation('account-1', auth, 'conv-1')
@@ -282,12 +390,15 @@ describe('ChatGPTAdapter', () => {
       const auth: AuthContext = { bearerToken: 'token' }
 
       globalThis.fetch = mockFetch(async () => {
-        return new Response(JSON.stringify({
-          items: [
-            { conversation_id: 'c1', title: 'TypeScript help', update_time: 1700001000 },
-            { conversation_id: 'c2', title: 'Python help', update_time: 1700000500 },
-          ],
-        }), { status: 200, headers: { 'content-type': 'application/json' } })
+        return new Response(
+          JSON.stringify({
+            items: [
+              { conversation_id: 'c1', title: 'TypeScript help', update_time: 1700001000 },
+              { conversation_id: 'c2', title: 'Python help', update_time: 1700000500 },
+            ],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        )
       })
 
       const results = await adapter.searchConversations('account-1', auth, 'help')
@@ -327,9 +438,7 @@ describe('ChatGPTAdapter', () => {
 
       globalThis.fetch = mockFetch(async () => new Response('Unauthorized', { status: 401 }))
 
-      await expect(
-        adapter.listConversations('account-1', auth),
-      ).rejects.toThrow(AdapterError)
+      await expect(adapter.listConversations('account-1', auth)).rejects.toThrow(AdapterError)
     })
 
     test('throws RATE_LIMITED on 429', async () => {
@@ -337,16 +446,15 @@ describe('ChatGPTAdapter', () => {
       const adapter = new ChatGPTAdapter(governor)
       const auth: AuthContext = { bearerToken: 'token' }
 
-      globalThis.fetch = mockFetch(async () =>
-        new Response('Rate Limited', {
-          status: 429,
-          headers: { 'Retry-After': '30' },
-        }),
+      globalThis.fetch = mockFetch(
+        async () =>
+          new Response('Rate Limited', {
+            status: 429,
+            headers: { 'Retry-After': '30' },
+          }),
       )
 
-      await expect(
-        adapter.listConversations('account-1', auth),
-      ).rejects.toThrow(AdapterError)
+      await expect(adapter.listConversations('account-1', auth)).rejects.toThrow(AdapterError)
     })
   })
 })

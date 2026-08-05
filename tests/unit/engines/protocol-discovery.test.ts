@@ -4,11 +4,14 @@ import { ProtocolDiscoveryEngine } from '../../../src/engines/protocol-discovery
 
 describe('ProtocolDiscoveryEngine', () => {
   it('instantiates protocol discovery engine', () => {
-    const engine = new ProtocolDiscoveryEngine({
-      send: async () => ({}),
-      on: () => {},
-      off: () => {},
-    } as never, 'test-session')
+    const engine = new ProtocolDiscoveryEngine(
+      {
+        send: async () => ({}),
+        on: () => {},
+        off: () => {},
+      } as never,
+      'test-session',
+    )
     expect(engine).toBeDefined()
   })
 })
