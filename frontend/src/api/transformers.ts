@@ -4,9 +4,14 @@
 //
 // Work Item 04: Storage contract alignment + transformation layer.
 
-import type { ConversationDetail, ConversationMessageDetail, CapabilityDetail, ProviderDetail } from '@/types/shared/api-contract'
-import type { Conversation, Message, Capability, Provider } from '@/types/shared/domain'
 import { toISO } from '@/lib/timestamp'
+import type {
+  CapabilityDetail,
+  ConversationDetail,
+  ConversationMessageDetail,
+  ProviderDetail,
+} from '@/types/shared/api-contract'
+import type { Capability, Conversation, Message, Provider } from '@/types/shared/domain'
 
 // ── Conversation transformers ───────────────────────────────────────────────
 

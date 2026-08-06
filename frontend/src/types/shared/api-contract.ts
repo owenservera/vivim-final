@@ -185,5 +185,3 @@ export interface HealthDashboardResponse {
   providers: ProviderHealthDetail[]
   timestamp: number
 }
-
-

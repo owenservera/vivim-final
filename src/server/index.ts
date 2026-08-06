@@ -654,7 +654,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       const permissionId = path.split('/').pop()
       const body = (await req.json()) as { sessionId?: string; decision?: string }
       if (!body.sessionId || !permissionId || !body.decision) {
-        return errorResponse('sessionId, permissionId, and decision are required', 'ValidationError', 400)
+        return errorResponse(
+          'sessionId, permissionId, and decision are required',
+          'ValidationError',
+          400,
+        )
       }
       try {
         await client.respondPermission(
@@ -799,7 +803,11 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
             })
           } catch (err) {
             log.error({ err }, '[system] Failed to refresh provider snapshot')
-            return errorResponse(err instanceof Error ? err.message : String(err), 'InternalError', 500)
+            return errorResponse(
+              err instanceof Error ? err.message : String(err),
+              'InternalError',
+              500,
+            )
           }
         }
 

@@ -82,15 +82,15 @@ export function createKnowledgeRouter(ctx: ServerContext) {
         return json(result)
       }
 
-      // P3-4: Duplicate — see routes/knowledge.ts for primary /api/knowledge/entities implementation
-      // if (pathname === '/api/knowledge/entities' && method === 'GET') {
-      //   const entityType = url.searchParams.get('type') ?? undefined
-      //   const entities = await ctx.db.prisma.entity.findMany({
-      //     where: entityType ? { type: entityType } : undefined,
-      //     take: 100,
-      //   })
-      //   return json(entities)
-      // }
+      // GET /api/knowledge/entities
+      if (pathname === '/api/knowledge/entities' && method === 'GET') {
+        const entityType = url.searchParams.get('type') ?? undefined
+        const entities = await ctx.db.prisma.entity.findMany({
+          where: entityType ? { type: entityType } : undefined,
+          take: 100,
+        })
+        return json(entities)
+      }
 
       // GET /api/knowledge/decisions?conversationId=X
       if (pathname === '/api/knowledge/decisions' && method === 'GET') {
@@ -102,11 +102,11 @@ export function createKnowledgeRouter(ctx: ServerContext) {
         return json(decisions)
       }
 
-      // P3-4: Duplicate — see routes/knowledge.ts for primary /api/knowledge/topics implementation
-      // if (pathname === '/api/knowledge/topics' && method === 'GET') {
-      //   const topics = await ctx.db.prisma.topic.findMany({ take: 100 })
-      //   return json(topics)
-      // }
+      // GET /api/knowledge/topics
+      if (pathname === '/api/knowledge/topics' && method === 'GET') {
+        const topics = await ctx.db.prisma.topic.findMany({ take: 100 })
+        return json(topics)
+      }
 
       // POST /api/knowledge/topics
       if (pathname === '/api/knowledge/topics' && method === 'POST') {

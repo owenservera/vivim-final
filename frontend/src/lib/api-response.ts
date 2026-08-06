@@ -13,8 +13,5 @@ export function apiSuccess<T>(data: T, status = 200) {
  * Standard error response shape for in-process routes.
  */
 export function apiError(message: string, status = 500, details?: unknown) {
-  return Response.json(
-    { ok: false, error: message, details },
-    { status },
-  )
+  return Response.json({ ok: false, error: message, details }, { status })
 }

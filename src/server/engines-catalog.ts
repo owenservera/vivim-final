@@ -530,7 +530,12 @@ export const ENGINE_MODULES: ModuleDefinition[] = [
       const { Router } = await import('../router/router.js')
       const noopDispatcher = { dispatch: async () => ({ ok: true }) }
       const router = new Router(deps.routerStore, noopDispatcher)
-      return new ProviderMuxEngine(deps.muxStore, undefined as unknown as import('../engines/provider-mux.js').MuxDispatcher, router, deps.eventBus)
+      return new ProviderMuxEngine(
+        deps.muxStore,
+        undefined as unknown as import('../engines/provider-mux.js').MuxDispatcher,
+        router,
+        deps.eventBus,
+      )
     },
   },
   {
@@ -735,7 +740,10 @@ export const ENGINE_MODULES: ModuleDefinition[] = [
         entityStore: new DiscoveredDomEntityStoreImpl(db),
         parserCandidateStore: new ParserCandidateStoreImpl(db),
         bindingStore: new CapabilityBindingStoreImpl(db),
-        captureEvents: () => Promise.resolve([] as import('../engines/onboarding/webapp-fingerprint.js').NetworkEvent[]),
+        captureEvents: () =>
+          Promise.resolve(
+            [] as import('../engines/onboarding/webapp-fingerprint.js').NetworkEvent[],
+          ),
       })
     },
   },

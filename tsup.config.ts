@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm'],
-  dts: true,
+  dts: false, // Disabled: rollup-plugin-dts@6.1.1 crashes with TS 5.7+; use tsc --noEmit for type safety
   splitting: false,
   sourcemap: true,
   clean: true,

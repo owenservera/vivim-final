@@ -9,7 +9,6 @@ import type {
   ResolvedCapability,
 } from '../engines/capability-resolution.js'
 import type { ServerContext } from './index.js'
-import { AppError } from './errors.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
 
 /** Flatten grouped ResolvedCapabilities into a single ordered array. */

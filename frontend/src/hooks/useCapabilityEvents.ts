@@ -2,11 +2,8 @@
 // P2-7: Callback registration for capability execution events.
 // Use inside a component that already has WebSocket access.
 
+import type { WsCapabilityFailedEvent, WsCapabilityProgressEvent } from '@/types/shared/ws-events'
 import { useCallback } from 'react'
-import type {
-  WsCapabilityFailedEvent,
-  WsCapabilityProgressEvent,
-} from '@/types/shared/ws-events'
 
 interface CapabilityEventHandlers {
   onFailed?: (event: WsCapabilityFailedEvent) => void

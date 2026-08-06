@@ -98,7 +98,10 @@ export function createConversationSyncRouter(ctx: ServerContext) {
 
         return json(result)
       } catch (err) {
-        log.error({ providerId, error: err instanceof Error ? err.message : String(err) }, 'Sync failed')
+        log.error(
+          { providerId, error: err instanceof Error ? err.message : String(err) },
+          'Sync failed',
+        )
         return appErrorResponse(err)
       }
     }
@@ -166,7 +169,10 @@ export function createConversationSyncRouter(ctx: ServerContext) {
 
         return json(result)
       } catch (err) {
-        log.error({ providerId, conversationId, error: err instanceof Error ? err.message : String(err) }, 'Fetch conversation failed')
+        log.error(
+          { providerId, conversationId, error: err instanceof Error ? err.message : String(err) },
+          'Fetch conversation failed',
+        )
         return appErrorResponse(err)
       }
     }

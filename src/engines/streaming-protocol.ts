@@ -57,7 +57,12 @@ export class StreamingProtocol {
     }
     // Bridge conversation events to CapabilityEventBus (P0-3)
     // This allows the WebSocket forwarder in websocket.ts to deliver them
-    if (this.eventBus && ['conversation:block', 'conversation:complete', 'conversation:error'].includes(event.type as string)) {
+    if (
+      this.eventBus &&
+      ['conversation:block', 'conversation:complete', 'conversation:error'].includes(
+        event.type as string,
+      )
+    ) {
       try {
         this.eventBus.emit(event as unknown as { type: string; [key: string]: unknown })
       } catch {

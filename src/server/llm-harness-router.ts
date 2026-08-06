@@ -199,11 +199,7 @@ export function createLlmHarnessRouter() {
       // Verify the plan id matches.
       const confirmedPlanId = (confirmed.input as { planId?: string }).planId
       if (confirmedPlanId !== parsed.data.plan.id) {
-        return errorResponse(
-          'Confirmation token does not match plan id',
-          'ValidationError',
-          403,
-        )
+        return errorResponse('Confirmation token does not match plan id', 'ValidationError', 403)
       }
 
       // Apply the plan via the executor.

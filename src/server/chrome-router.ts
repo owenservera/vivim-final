@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
 import type { SurfaceSpec } from '../reprogrammability/schema/spec.js'
-import { appErrorResponse, errorResponse, json } from './response.js'
+import { appErrorResponse, json } from './response.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 

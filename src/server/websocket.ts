@@ -171,11 +171,13 @@ export const handleWebSocket = {
           session.role = msg.role
           sessions.set(msg.sessionId, session)
           // Send hello:ack so the frontend knows the connection is established
-          ws.send(JSON.stringify({
-            type: 'hello:ack',
-            sessionId: msg.sessionId,
-            timestamp: Date.now(),
-          }))
+          ws.send(
+            JSON.stringify({
+              type: 'hello:ack',
+              sessionId: msg.sessionId,
+              timestamp: Date.now(),
+            }),
+          )
           return
         }
       }
@@ -282,7 +284,11 @@ export const handleWebSocket = {
           }
           const topicParts = String(msg.topic).split(':')
           if (topicParts.length >= 2 && topicParts[0]) {
-            eventBus.unsubscribe(ws as unknown as WebSocket, topicParts[0], topicParts.slice(1).join(':'))
+            eventBus.unsubscribe(
+              ws as unknown as WebSocket,
+              topicParts[0],
+              topicParts.slice(1).join(':'),
+            )
           }
         }
         if (msg.entityType && msg.entityId) {

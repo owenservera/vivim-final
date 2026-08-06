@@ -8,9 +8,9 @@
  */
 
 import type { useIO } from '@/components/canvas/UnifiedIOProvider'
-import type { ComposerBehavior } from '@/types/api'
 import { classify } from '@/lib/errorClassifier'
 import { IOError } from '@/shared/unified-io'
+import type { ComposerBehavior } from '@/types/api'
 
 export type Behavior = ComposerBehavior
 export type BehaviorResult = { ok: boolean; error?: string; data?: unknown }
@@ -33,7 +33,10 @@ export async function dispatchBehavior(
         return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch (err) {
         const classified = classify(err, err instanceof IOError ? err.code : undefined)
-        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
+        return {
+          ok: false,
+          error: classified.retryable ? `${classified.message} (retryable)` : classified.message,
+        }
       }
     }
     case 'prompt': {
@@ -45,7 +48,10 @@ export async function dispatchBehavior(
         return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch (err) {
         const classified = classify(err, err instanceof IOError ? err.code : undefined)
-        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
+        return {
+          ok: false,
+          error: classified.retryable ? `${classified.message} (retryable)` : classified.message,
+        }
       }
     }
     case 'command': {
@@ -57,7 +63,10 @@ export async function dispatchBehavior(
         return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch (err) {
         const classified = classify(err, err instanceof IOError ? err.code : undefined)
-        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
+        return {
+          ok: false,
+          error: classified.retryable ? `${classified.message} (retryable)` : classified.message,
+        }
       }
     }
     case 'search': {
@@ -72,7 +81,10 @@ export async function dispatchBehavior(
         return { ok: true, error: res.data?.error, data: res.data }
       } catch (err) {
         const classified = classify(err, err instanceof IOError ? err.code : undefined)
-        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
+        return {
+          ok: false,
+          error: classified.retryable ? `${classified.message} (retryable)` : classified.message,
+        }
       }
     }
     case 'execute': {
@@ -85,7 +97,10 @@ export async function dispatchBehavior(
         return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch (err) {
         const classified = classify(err, err instanceof IOError ? err.code : undefined)
-        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
+        return {
+          ok: false,
+          error: classified.retryable ? `${classified.message} (retryable)` : classified.message,
+        }
       }
     }
     case 'comment': {
@@ -107,7 +122,10 @@ export async function dispatchBehavior(
         return { ok: res.data?.ok ?? true, error: res.data?.error, data: res.data }
       } catch (err) {
         const classified = classify(err, err instanceof IOError ? err.code : undefined)
-        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
+        return {
+          ok: false,
+          error: classified.retryable ? `${classified.message} (retryable)` : classified.message,
+        }
       }
     }
     case 'nl-inject': {
@@ -120,7 +138,10 @@ export async function dispatchBehavior(
         return { ok: res.data?.ok ?? true, error: res.data?.error }
       } catch (err) {
         const classified = classify(err, err instanceof IOError ? err.code : undefined)
-        return { ok: false, error: classified.retryable ? `${classified.message} (retryable)` : classified.message }
+        return {
+          ok: false,
+          error: classified.retryable ? `${classified.message} (retryable)` : classified.message,
+        }
       }
     }
     default: {

@@ -47,7 +47,9 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
  * Get a user-friendly error message for a backend error code.
  * Falls back to the raw error string if the code is unknown.
  */
-export function getUserMessage(error: ApiErrorResponse | { error?: string; code?: string }): string {
+export function getUserMessage(
+  error: ApiErrorResponse | { error?: string; code?: string },
+): string {
   const code = error.code as ErrorCode | undefined
   if (code && code in ERROR_MESSAGES) {
     return ERROR_MESSAGES[code]

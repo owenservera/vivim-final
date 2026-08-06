@@ -1,10 +1,10 @@
 'use client'
 
-import { useIO } from '@/components/canvas/UnifiedIOProvider'
-import type { CapabilityListResponse, CapabilityExecuteResponse } from '@/types/shared/api-contract'
-import type { Capability } from '@/types/api'
+import { CapabilityExecuteResponseSchema, CapabilityListResponseSchema } from '@/api/schemas'
 import { transformCapabilities } from '@/api/transformers'
-import { CapabilityListResponseSchema, CapabilityExecuteResponseSchema } from '@/api/schemas'
+import { useIO } from '@/components/canvas/UnifiedIOProvider'
+import type { Capability } from '@/types/api'
+import type { CapabilityExecuteResponse, CapabilityListResponse } from '@/types/shared/api-contract'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useCapability(surface?: string) {

@@ -39,7 +39,7 @@ export async function runArchTests() {
     const cleanupResult = await runCleanupAnalysis(rootDir)
     console.log(`   Deprecated events: ${cleanupResult.deprecatedEvents.length}`)
     for (const evt of cleanupResult.deprecatedEvents.slice(0, 10)) {
-      console.log(`   [DEPRECATED] ${evt.eventName} — ${evt.reason}`)
+      console.log(`   [DEPRECATED] ${evt.deprecated} — ${evt.migration}`)
     }
     console.log(`   Potentially unused exports: ${cleanupResult.unusedExports.length}`)
     for (const u of cleanupResult.unusedExports.slice(0, 10)) {

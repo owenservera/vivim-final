@@ -2774,14 +2774,4 @@ CREATE INDEX "idx_wv_wf" ON "workflow_version"("workflow_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "uq_wv_wf_ver" ON "workflow_version"("workflow_id", "version");
-┌─────────────────────────────────────────────────────────┐
-│  Update available 6.19.3 -> 7.8.0                       │
-│                                                         │
-│  This is a major update - please follow the guide at    │
-│  https://pris.ly/d/major-version-upgrade                │
-│                                                         │
-│  Run the following to update                            │
-│    npm i --save-dev prisma@latest                       │
-│    npm i @prisma/client@latest                          │
-└─────────────────────────────────────────────────────────┘
 

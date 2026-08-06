@@ -35,7 +35,8 @@ export class WebhookRouter {
     if (webhook.method !== request.method) {
       return errorResponse(
         `Method not allowed (expected ${webhook.method})`,
-        'MethodNotAllowed', 405,
+        'MethodNotAllowed',
+        405,
       )
     }
 

@@ -1,8 +1,8 @@
 'use client'
 
+import { ProviderListResponseSchema } from '@/api/schemas'
 import { useIO } from '@/components/canvas/UnifiedIOProvider'
 import type { Provider, ProviderListResponse } from '@/types/api'
-import { ProviderListResponseSchema } from '@/api/schemas'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useProvider() {

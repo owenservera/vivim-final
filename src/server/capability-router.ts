@@ -9,7 +9,7 @@
 // Work Items 01/03/05: Added Zod validation for request bodies, consistent error
 // codes, and traceId propagation aligned with api-types.ts contract.
 
-import { z } from 'zod'
+import type { z } from 'zod'
 import type { CapabilityContext, UnifiedCapability } from '../engines/unified-registry.js'
 import type {
   CapabilityDetail,
@@ -17,8 +17,8 @@ import type {
   CapabilityListResponse,
 } from '../schema/api-types.js'
 import { CapabilityExecuteBodySchema } from '../schema/api-validators.js'
-import type { ServerContext } from './index.js'
 import { AppError } from './errors.js'
+import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
