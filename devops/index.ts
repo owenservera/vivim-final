@@ -25,6 +25,7 @@ import { runAuditArch } from './audit-arch/index.ts'
 import { runAuditCode } from './audit-code/index.ts'
 import { audit } from './audit.ts'
 import { captureBaseline } from './baseline.ts'
+import { runDeepScan } from './deep-scan/index.ts'
 import { formatContextReport, getContext } from './context.ts'
 import {
   addReview,
@@ -1338,6 +1339,10 @@ async function main() {
     }
     case 'audit-arch': {
       await runAuditArch(args)
+      break
+    }
+    case 'deep-scan': {
+      await runDeepScan(args)
       break
     }
     case 'context': {
