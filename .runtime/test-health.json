@@ -1,0 +1,1428 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-06T16:48:31.589Z",
+    "generator": "docs/review-system/scripts/metrics.ts"
+  },
+  "scope": {
+    "files": 1347,
+    "totalLoc": 203289,
+    "avgFileLoc": 151,
+    "largestFile": {
+      "file": "src/engines/capability-bootstrap.ts",
+      "lines": 1651
+    }
+  },
+  "typeCleanliness": {
+    "any": 254,
+    "tsIgnore": 0,
+    "tsExpectError": 0,
+    "nonNullAssertions": 98,
+    "per1000Loc": 1.73
+  },
+  "todoDebt": {
+    "todo": 10,
+    "fixme": 0,
+    "total": 10
+  },
+  "structure": {
+    "deepNestingOver5": [
+      {
+        "file": "src/arch/boundary-scanner.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/automation/automation-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/canvas/canvas-agent-tools.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/canvas/capability-bridge.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/canvas/primitives.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/cli/commands/automate.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/cli/commands/onboard-provider.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/cli/commands/registry-bridge.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/cli/discovery-stack.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/config/provider-registry.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/actor/browser-actor.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/adapters/chatgpt-adapter.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/engines/agentic-loop.ts",
+        "maxDepth": 10
+      },
+      {
+        "file": "src/engines/airgap.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/api-provider-adapter.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/automation/orchestrator.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/autonomous-execution.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/autonomous-replay.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/browser-automation/agentic-loop.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/browser-automation/defs/input.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/browser-automation/harness-actions.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/browser-automation/registry.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/browser-automation/selector-healer.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/browser-automation/semantic-grounding.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/capability-bootstrap-generated.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/capability-bootstrap.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/capability-event-bus.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/cdp-capability-registrar.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/cdp-watchdog.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/chrome-governor.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/engines/chrome-setup-wizard.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/command-language/args.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/context-assembly.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/conversation-history-sync.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/conversation-manager.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/conversation-organizer.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/cross-conversation-synthesis.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/error-tracker.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/events/event-bus.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/execution-policy.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/export.ts",
+        "maxDepth": 10
+      },
+      {
+        "file": "src/engines/harness/harness-executor-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/harness-protocol-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/harness-repair-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/harness-runtime.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/intent-decomposer.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/kernel/kernel-bootstrap.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/kernel/oracle-actuator.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/kernel/oracle-diagnostic.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/kernel/oracle-event-stream.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/kernel/oracle-query.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/knowledge-extractor-continuous.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/knowledge-extractor.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/knowledge-ingestion.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/live-capability-registry.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/live-capture-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/local-agent/local-agent-executor.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/local-model-adapter.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/local-server/index.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/lock-manager.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/mcp-client-adapter.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/mcp-server-adapter.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/engines/memory/memory-fabric.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/memory/memory-oracle.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/memory-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/metrics.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/mirror-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/nlcl/dynamic-entity-linker.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/nlcl/executors/file-executor.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/nlcl/executors/provider-llm-executor.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/nlcl/executors/system-executor.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/nlcl/executors/workflow-executor.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/nlcl/fuzzy-resolver.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/nlcl/intent-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/nlcl/llm-slave-resolver.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/nlcl/nl-parser.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/nlcl/nlcl-engine.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/nlcl/semantic-resolver.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/nlcl/workflow-synthesis-resolver.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/onboarding/live-network-capturer.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/onboarding/protocol-sniffer.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/onboarding/provider-onboarding-orchestrator.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/engines/opencode/opencode-client.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/opencode/opencode-executor.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/opencode/opencode-supervisor.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/otel-sink.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/p2p-node/crdt-sync.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/p2p-node/file-sync.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/p2p-node/node-manager.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/parser-repair.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/plugin-system.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/protocol-discovery.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/provider-discovery.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/provider-protocol-generator.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/provider-registrar.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/providers/plugin-registry.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/registration-auditor.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/reprogrammability/llm-harness-agent.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/reprogrammability/plugin-builder.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/request-queue.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/retry-engine.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/selector-healer.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/semantic-grounding.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/semantic-search.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/send-capability.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/send-resilience.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/session-caps.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/session-lifecycle-manager.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/session-state-persistence.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/sla-monitor.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/stealth/canvas-noise-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/stealth/cdp-artifact-cleaner.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/engines/stealth/extension-bridge-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/stealth/font-screen-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/stealth/human-mouse-engine.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/stealth/human-scroll-engine.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/stealth/navigator-patch-module.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/stealth/network-fingerprint-engine.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/stealth/stealth-module-engine.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/storage-relocation-engine.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/stream-align.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/stream-parser.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/streaming-protocol.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/streaming-response-analyzer.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/sync.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/transfer-accelerator.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/tunnel-client/connection-manager.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/workflow-compiler.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/engines/workflow-engine.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/engines/workflow-templates/cleanup-inactive.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/workflow-templates/daily-digest.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/workflow-templates/health-report.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/engines/workflow-templates/reindex-memory.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/executor/cdp-transport.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/executor/cdp.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/executor/fleet-supervisor.ts",
+        "maxDepth": 10
+      },
+      {
+        "file": "src/executor/port-reaper.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/executor/profile-allocator.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/fleet/fleet-manager.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/framing/adapters/stub-chatgpt.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/framing/engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/integration/flag-registry.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/lib/local-server/index.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/lib/orchestrator/service-manager.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/lib/p2p-node/crdt-sync.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/lib/p2p-node/file-sync.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/lib/p2p-node/node-manager.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/lib/tunnel-client/connection-manager.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/mcp/server.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/observability/metrics.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/observability/tracing.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/reprogrammability/canonical-surfaces.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/reprogrammability/dsl/executor.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/reprogrammability/dsl/parser.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/resilience/resilience-pipeline.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/router/router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/schema/rich-text.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/agent-canvas-router.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/server/automation-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/bootstrap/phases/capabilities.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/server/bootstrap/phases/knowledge.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/server/canvas-router.ts",
+        "maxDepth": 10
+      },
+      {
+        "file": "src/server/capability-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/chrome-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/conceptual-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/conversation-router.ts",
+        "maxDepth": 10
+      },
+      {
+        "file": "src/server/engines-catalog.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/server/index.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/server/kernel-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/knowledge-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/memory-router.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/server/memory-viz-router.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/server/middleware/pipeline.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/module-registry.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/mutation-router.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/server/mux-router.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/server/nlcl-router.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/server/node-router.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/server/onboarding-boot.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/server/plugin-builder-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/plugin-router.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/server/routes/media.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/routes/tunnel.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/server/routes/update.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/server/setup-router.ts",
+        "maxDepth": 15
+      },
+      {
+        "file": "src/server/surface-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/template-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/variant-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/version-router.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/server/websocket.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/db.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/impl/agentic-store-impl.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/impl/capability-store-impl.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/storage/impl/content-item-store-impl.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/impl/conversation-store-impl.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/storage/impl/conversation-sync-store-impl.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/impl/local-agent-store-impl.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/impl/memory-intelligence-store-impl.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/impl/node-store-impl.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/storage/impl/program-store-impl.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/impl/provider-store-impl.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/impl/version-store-impl.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "src/storage/migration/migration-runner.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "src/transform/transform-engine.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "src/__generated__/provider-protocol.dev.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "src/__generated__/provider-protocol.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "frontend/src/app/api/agent/canvas/route.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/app/api/help/agent/route.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/app/api/help/search/route.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/app/page.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/canvas/store.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/canvas/templates.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/cli/commands/shell.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/builder/BuilderSurface.tsx",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/components/builder/SurfaceNode.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/AuditDashboard.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/CapabilityCatalog.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/cards/DocEditor.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/cards/MediaCard.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/cards/ShellCard.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/CommandPalette.tsx",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/components/canvas/ConnectionLayer.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/canvas/ConversationSyncPanel.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/DevConsole.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/DrawerSystem.tsx",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/components/canvas/ErrorBanner.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/FleetStatus.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/InfiniteCanvas.tsx",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/components/canvas/LivingCanvas.tsx",
+        "maxDepth": 9
+      },
+      {
+        "file": "frontend/src/components/canvas/MainMenu.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/NotificationsCenter.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/canvas/OnboardingTour.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/PanelPalette.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/panels/ProvidersPanel.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/ProviderSetupWizard.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/ProviderStatusBadges.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/RbacManager.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/RelatedNodes.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/ReprogramModal.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/SandboxedNode.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/canvas/SearchPanel.tsx",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/components/canvas/SessionStateProvider.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/canvas/StorageSettings.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/TabBar.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/TaskManager.tsx",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/components/canvas/TimeMachinePanel.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/UnifiedEntry.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/UnifiedIOProvider.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/canvas/UpdateNotification.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/use-canvas-events.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/use-stream-slot.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/canvas/VCardMenu.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/canvas/WorkspaceSwitcher.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/chat/ChatSidebar.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/chat/Composer.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/chat/ConversationList.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/chat/DevConsole.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/components/chat/HealthDashboard.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/chat/SurfaceContent.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/chat/WorkspaceSettings.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/chrome/ChromeSurface.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/ErrorBoundary.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/ui/calendar.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/components/ui/chart.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/engines/audit-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/engines/automation-builder.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/engines/canvas-command-executor.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/engines/capability-event-bus.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/engines/notification-engine.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/engines/plugin-hot-reload.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/engines/route-sync.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/engines/ui-engine.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/features/guided-landing.tsx",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/features/help-system/AIChat.tsx",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/features/help-system/HelpWidget.tsx",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/features/help-system/SearchBar.tsx",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/hooks/use-performance-monitor.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/hooks/useSlotOverrides.ts",
+        "maxDepth": 8
+      },
+      {
+        "file": "frontend/src/lib/prisma-write-guard.ts",
+        "maxDepth": 9
+      },
+      {
+        "file": "frontend/src/ml/capabilities.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/sdk/canvas/unified-io-client.ts",
+        "maxDepth": 7
+      },
+      {
+        "file": "frontend/src/sdk/web/use-provider.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/shared/dispatch-behavior.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/shared/layout-intent.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/shared/ui-language.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/shared/universal-registry.ts",
+        "maxDepth": 6
+      },
+      {
+        "file": "frontend/src/ui/registry.ts",
+        "maxDepth": 6
+      }
+    ],
+    "longBlocksOver75": [
+      {
+        "file": "src/engines/adaptive-workspace.ts",
+        "blockLoc": 77
+      },
+      {
+        "file": "src/engines/browser-automation/harness-actions.ts",
+        "blockLoc": 89
+      },
+      {
+        "file": "src/engines/capability-bootstrap.ts",
+        "blockLoc": 192
+      },
+      {
+        "file": "src/engines/capability-event-bus.ts",
+        "blockLoc": 129
+      },
+      {
+        "file": "src/engines/capability-shape-registry.ts",
+        "blockLoc": 205
+      },
+      {
+        "file": "src/engines/cdp-discovery.ts",
+        "blockLoc": 113
+      },
+      {
+        "file": "src/engines/command-language/colors.ts",
+        "blockLoc": 86
+      },
+      {
+        "file": "src/engines/command-language/devops-specs.ts",
+        "blockLoc": 168
+      },
+      {
+        "file": "src/engines/command-language/mention-specs.ts",
+        "blockLoc": 81
+      },
+      {
+        "file": "src/engines/command-language/nlp-matcher.ts",
+        "blockLoc": 146
+      },
+      {
+        "file": "src/engines/command-language/slash-specs.ts",
+        "blockLoc": 381
+      },
+      {
+        "file": "src/engines/content-unit-decomposer.ts",
+        "blockLoc": 102
+      },
+      {
+        "file": "src/engines/context-assembly.ts",
+        "blockLoc": 92
+      },
+      {
+        "file": "src/engines/harness/recipe-compiler.ts",
+        "blockLoc": 198
+      },
+      {
+        "file": "src/engines/mcp-server-adapter.ts",
+        "blockLoc": 99
+      },
+      {
+        "file": "src/engines/messaging-archetypes.ts",
+        "blockLoc": 78
+      },
+      {
+        "file": "src/engines/nlcl/categories/automation.ts",
+        "blockLoc": 87
+      },
+      {
+        "file": "src/engines/nlcl/text-normalizer.ts",
+        "blockLoc": 105
+      },
+      {
+        "file": "src/engines/provider-protocol-generator.ts",
+        "blockLoc": 80
+      },
+      {
+        "file": "src/engines/safe-expression.ts",
+        "blockLoc": 121
+      },
+      {
+        "file": "src/engines/situation-detector.ts",
+        "blockLoc": 213
+      },
+      {
+        "file": "src/engines/telemetry-aggregator.ts",
+        "blockLoc": 130
+      },
+      {
+        "file": "src/reprogrammability/canonical-surfaces.ts",
+        "blockLoc": 138
+      },
+      {
+        "file": "src/server/bootstrap/phases/capabilities.ts",
+        "blockLoc": 112
+      },
+      {
+        "file": "src/server/engines-catalog.ts",
+        "blockLoc": 316
+      },
+      {
+        "file": "src/storage/impl/provider-store-impl.ts",
+        "blockLoc": 77
+      },
+      {
+        "file": "src/__generated__/provider-protocol.dev.ts",
+        "blockLoc": 828
+      },
+      {
+        "file": "src/__generated__/provider-protocol.ts",
+        "blockLoc": 1122
+      },
+      {
+        "file": "frontend/src/canvas/config.ts",
+        "blockLoc": 104
+      },
+      {
+        "file": "frontend/src/canvas/templates.ts",
+        "blockLoc": 83
+      },
+      {
+        "file": "frontend/src/components/canvas/AgentOverlay.tsx",
+        "blockLoc": 82
+      },
+      {
+        "file": "frontend/src/components/canvas/cards/DocEditor.tsx",
+        "blockLoc": 79
+      },
+      {
+        "file": "frontend/src/components/canvas/ConnectionLayer.tsx",
+        "blockLoc": 93
+      },
+      {
+        "file": "frontend/src/components/canvas/DrawerSystem.tsx",
+        "blockLoc": 87
+      },
+      {
+        "file": "frontend/src/components/canvas/Icon.tsx",
+        "blockLoc": 139
+      },
+      {
+        "file": "frontend/src/components/canvas/InfiniteCanvas.tsx",
+        "blockLoc": 79
+      },
+      {
+        "file": "frontend/src/components/canvas/LivingCanvas.tsx",
+        "blockLoc": 96
+      },
+      {
+        "file": "frontend/src/components/canvas/MutationHistoryPanel.tsx",
+        "blockLoc": 92
+      },
+      {
+        "file": "frontend/src/components/canvas/panels/ConversationsPanel.tsx",
+        "blockLoc": 88
+      },
+      {
+        "file": "frontend/src/components/canvas/register-all.ts",
+        "blockLoc": 112
+      },
+      {
+        "file": "frontend/src/components/canvas/ReprogramModal.tsx",
+        "blockLoc": 93
+      },
+      {
+        "file": "frontend/src/components/canvas/TabConfig.ts",
+        "blockLoc": 219
+      },
+      {
+        "file": "frontend/src/components/canvas/TimeMachinePanel.tsx",
+        "blockLoc": 103
+      },
+      {
+        "file": "frontend/src/components/canvas/VCardMenu.tsx",
+        "blockLoc": 88
+      },
+      {
+        "file": "frontend/src/components/chat/AgentPlanCard.tsx",
+        "blockLoc": 81
+      },
+      {
+        "file": "frontend/src/components/chat/CapabilityCatalog.tsx",
+        "blockLoc": 105
+      },
+      {
+        "file": "frontend/src/components/chat/ConversationList.tsx",
+        "blockLoc": 91
+      },
+      {
+        "file": "frontend/src/components/chat/DevConsole.tsx",
+        "blockLoc": 91
+      },
+      {
+        "file": "frontend/src/components/chat/HealthDashboard.tsx",
+        "blockLoc": 99
+      },
+      {
+        "file": "frontend/src/components/chat/MessageBlock.tsx",
+        "blockLoc": 149
+      },
+      {
+        "file": "frontend/src/components/chat/SurfaceContent.tsx",
+        "blockLoc": 93
+      },
+      {
+        "file": "frontend/src/components/ui/calendar.tsx",
+        "blockLoc": 116
+      },
+      {
+        "file": "frontend/src/features/guided-landing.tsx",
+        "blockLoc": 121
+      },
+      {
+        "file": "frontend/src/features/help-system/AIChat.tsx",
+        "blockLoc": 155
+      },
+      {
+        "file": "frontend/src/features/help-system/HelpWidget.tsx",
+        "blockLoc": 94
+      },
+      {
+        "file": "frontend/src/features/help-system/SearchBar.tsx",
+        "blockLoc": 117
+      },
+      {
+        "file": "frontend/src/features/onboarding/StepRenderer.tsx",
+        "blockLoc": 77
+      },
+      {
+        "file": "frontend/src/shared/document-types.ts",
+        "blockLoc": 154
+      },
+      {
+        "file": "frontend/src/shared/template.ts",
+        "blockLoc": 141
+      },
+      {
+        "file": "frontend/src/shared/ui-language.ts",
+        "blockLoc": 82
+      },
+      {
+        "file": "frontend/src/storage/impl/memory-workspace-store.ts",
+        "blockLoc": 83
+      }
+    ]
+  },
+  "dependency": {
+    "localEdges": 3926
+  }
+}

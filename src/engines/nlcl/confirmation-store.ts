@@ -4,6 +4,7 @@
 // See FINAL-UPGRADE-DESIGN.md §1.1 for design rationale.
 
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { getConfirmationSecret } from '../../config.js'
 
 /** Payload persisted for each pending confirmation. JSON-safe (NLCContext is serialized). */
 export interface PendingConfirmation {
@@ -38,8 +39,7 @@ export interface ConfirmationStore {
 const DEFAULT_TTL_MS = 5 * 60 * 1000
 
 function getSecret(): string {
-  // Dev fallback is intentionally insecure — production deployments MUST set the env var.
-  return process.env.VIVIM_CONFIRMATION_SECRET ?? 'dev-insecure-do-not-use-in-prod'
+  return getConfirmationSecret()
 }
 
 function encodePayload(pc: Omit<PendingConfirmation, 'token'>): string {

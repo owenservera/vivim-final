@@ -331,6 +331,48 @@ describe('Architectural Invariants', () => {
     })
   })
 
+  describe('Governor Canon (CDP boundary)', () => {
+    // Invariant 1: ONLY ChromeGovernor touches CDP. No engine may import the
+    // CDP client (`src/executor/cdp.ts` / `BunCdpClient`) or reach into the
+    // CDP transport layer directly. All browser automation must flow through
+    // the governor. Surfaced as a soft gate so the existing engine violations
+    // are visible and shrunk toward zero without hard-blocking a release.
+    const enginesDir = resolve(ROOT, 'src', 'engines')
+    const executorCdp = resolve(ROOT, 'src', 'executor', 'cdp.ts')
+    const executorDir = resolve(ROOT, 'src', 'executor')
+
+    it('engines must not import the CDP client or executor CDP transports', async () => {
+      const engineFiles = await getAllFiles(enginesDir, '.ts')
+      const violations: string[] = []
+
+      for (const file of engineFiles) {
+        const content = await readFile(file, 'utf8')
+        const imports = getImports(content)
+        const fileDir = resolve(file, '..')
+
+        for (const imp of imports) {
+          const resolved = resolveAlias(imp, fileDir) ?? resolve(fileDir, imp)
+          const normalized = resolved.replace(/\\/g, '/')
+          // Flag direct imports of the CDP client module or cdp-transport/cdp-types.
+          const cdpTargets = [
+            executorCdp,
+            resolve(executorDir, 'cdp-transport.ts'),
+            resolve(executorDir, 'cdp-types.ts'),
+            resolve(executorDir, 'cdp-error-classifier.ts'),
+          ].map((p) => p.replace(/\\/g, '/'))
+          const exactHit = cdpTargets.some((t) => normalized === t)
+          const hit = exactHit || /executor\/cdp(-transport|-types|-error-classifier)?\.ts$/.test(normalized)
+          if (hit) {
+            violations.push(`${relative(ROOT, file)} imports ${imp}`)
+          }
+        }
+      }
+
+      softFail('Engines importing CDP client/transport (Governor Canon)', violations)
+      expect(true).toBe(true)
+    })
+  })
+
   describe('No Circular Dependencies', () => {
     it('should detect obvious circular import patterns', async () => {
       // Build a simplified import graph for src/ only

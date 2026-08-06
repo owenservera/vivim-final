@@ -31,9 +31,6 @@ yarn-error.log*
 # Kilo
 .kilo/
 
-# All docs (stale, agent uses AGENT-QUICKSTART.md + AGENTS.md only)
-docs/
-
 # Test artifacts
 tests/**/.tmp-export-test/
 
@@ -54,6 +51,9 @@ harvest-targets/
 # Temporary files
 tmp-debug.ts
 ho1.md
+
+# Windows reserved device-name artifact
+NUL
 
 # Web workspace artifacts
 web/*/node_modules/
@@ -113,3 +113,6 @@ frontend/frontend/
 
 # embedded research clones (scratch, not source)
 research-clones/
+
+# Review system run artifacts (regenerable)
+docs/review-system/runs/

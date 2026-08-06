@@ -23,6 +23,7 @@
 
 import { MiniLmEmbeddingProvider } from '../embedding-minilm.js'
 import type { EmbeddingProvider } from '../semantic-search.js'
+import { EngineError } from '../../errors.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { buildIntentFromPattern } from './pattern-match.js'
 import { type SparseVector, Tfidf, cosineSimilarity } from './tfidf.js'
@@ -225,8 +226,8 @@ function buildPatternDocument(pattern: CommandPattern): string {
 /** Dense cosine similarity (number[] × number[]). Throws on length mismatch per audit ❌-6. */
 function denseCosine(a: number[], b: number[]): number {
   if (a.length !== b.length) {
-    throw new Error(
-      `denseCosine: length mismatch (a=${a.length}, b=${b.length}) — vector corruption`,
+    throw new EngineError(
+      `denseCosine: length mismatch (a=${a.length}, b=${b.length}) - vector corruption`,
     )
   }
   let dot = 0

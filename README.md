@@ -68,6 +68,9 @@ Open `http://localhost:3000` in your browser. The Next.js frontend proxies `/api
 
 ## Documentation
 
+The live documentation set lives in [`docs/`](docs/README.md) (single source of
+truth — anything stale is archived, never deleted).
+
 ### Quick Start
 
 1. **Install** the Windows installer or clone the repository
@@ -75,27 +78,26 @@ Open `http://localhost:3000` in your browser. The Next.js frontend proxies `/api
 3. **Launch** Vivim Desktop from Start Menu or run `bun run dev`
 4. **Access** the web interface at `http://localhost:3000`
 
-### User Guide
-
-- **[Getting Started](docs/USER-GUIDE.md#getting-started)** — First-time setup and configuration
-- **[Providers](docs/USER-GUIDE.md#providers)** — Connect to AI providers (ChatGPT, Claude, Gemini, etc.)
-- **[Conversations](docs/USER-GUIDE.md#conversations)** — Manage chat sessions and history
-- **[Capabilities](docs/USER-GUIDE.md#capabilities)** — Use built-in and custom capabilities
-- **[Desktop App](docs/USER-GUIDE.md#desktop-app)** — Using the Windows desktop application
-
 ### Developer Documentation
 
-- **[Architecture](docs/ARCHITECTURE.md)** — System design and engine overview
-- **[API Reference](docs/API.md)** — REST API endpoints and WebSocket protocol
-- **[Provider Integration](docs/PROVIDERS.md)** — Adding new AI providers
-- **[Engine Development](docs/ENGINES.md)** — Building custom engines
-- **[Frontend Development](docs/FRONTEND.md)** — React component development
+- **[Architecture — Overview](docs/architecture/OVERVIEW.md)** — The 30-second mental model of the system
+- **[Architecture — Engines](docs/architecture/ENGINES.md)** — What each engine does and where its code lives
+- **[Architecture — Data](docs/architecture/DATA.md)** — Schema, migrations, stores, Node model
+- **[Architecture — API & Surface Map](docs/architecture/API.md)** — Routes, entry points, event stream
+- **[Architecture — Frontend](docs/architecture/FRONTEND.md)** — React UI consuming the backend
+- **[Alpha scope](docs/ALPHA.md)** — What ships in alpha vs what waits
+- **[Decisions](docs/decisions/README.md)** — ADR log
 
-### Operations
+### Operations & Runbooks
 
-- **[Deployment](docs/DEPLOYMENT.md)** — Production deployment guide
-- **[Configuration](docs/CONFIGURATION.md)** — Environment variables and settings
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** — Common issues and solutions
+- **[Dev loop](docs/runbooks/DEV.md)** — How to run it locally, port gotchas
+- **[Desktop build/test](docs/runbooks/DESKTOP.md)** — Tauri build + verified desktop loop
+- **[Providers](docs/runbooks/PROVIDERS.md)** — Set up and test chatgpt/claude/gemini/…
+
+> **Note:** the older user-facing `docs/` files linked here before (USER-GUIDE,
+> ARCHITECTURE, API, PROVIDERS, ENGINES, FRONTEND, DEPLOYMENT, CONFIGURATION,
+> TROUBLESHOOTING, DESKTOP-BUILD) were archived during the 2026-08-06 cleanup.
+> The current set is documented in `docs/README.md`.
 
 ---
 
@@ -174,7 +176,9 @@ Connect to multiple AI providers simultaneously:
 
 ### Engine Architecture
 
-Vivim uses a 13-engine architecture organized in layers:
+The original **13-engine architecture** is organized in layers (see
+[`docs/architecture/ENGINES.md`](docs/architecture/ENGINES.md) for every engine,
+its job, and its code path — the surface has since grown well beyond 13):
 
 | Layer | Engines | Purpose |
 |-------|---------|---------|
@@ -235,7 +239,7 @@ Providers are configured via seed files in `seeds/providers/`:
 }
 ```
 
-See [Provider Documentation](docs/PROVIDERS.md) for detailed configuration.
+See [Provider Documentation](docs/runbooks/PROVIDERS.md) for detailed configuration.
 
 ---
 
@@ -286,7 +290,7 @@ bun run scripts/tauri/compile-sidecar.ts
 pwsh scripts/tauri/build-installer.ps1
 ```
 
-See [Desktop Build Guide](docs/DESKTOP-BUILD.md) for details.
+See [Desktop Build Guide](docs/runbooks/DESKTOP.md) for details.
 
 ---
 
@@ -361,9 +365,9 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ### Documentation
 
-- **[User Guide](docs/USER-GUIDE.md)** — End-user documentation
-- **[Developer Docs](docs/ARCHITECTURE.md)** — Technical documentation
-- **[API Reference](docs/API.md)** — API documentation
+- **[Doc set / map](docs/README.md)** — the live documentation home
+- **[Developer Docs](docs/architecture/OVERVIEW.md)** — Technical documentation
+- **[API / Surface Map](docs/architecture/API.md)** — API documentation
 
 ### Community
 

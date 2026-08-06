@@ -4,6 +4,7 @@
 
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
+import { EngineError } from '../../errors.js'
 import type { FailureClass, RecoveryStrategy } from '../actor/messages.js'
 import type { EventBus, FleetEvent } from '../events/event-bus.js'
 import { classifyFailure } from './classifier.js'
@@ -63,7 +64,7 @@ export class RecoveryOrchestrator {
     }
 
     // Classify the failure
-    const classification = classifyFailure(new Error(cause))
+    const classification = classifyFailure(new EngineError(String(cause)))
     this.logger.info('Classified failure', {
       slaveId,
       failureClass: classification.failureClass,

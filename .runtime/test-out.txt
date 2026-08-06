@@ -1,0 +1,583 @@
+bun test v1.3.14 (0d9b296a)
+
+tests\arch\api-contract.test.ts:
+
+  [SOFT FAIL] Error code drift (1 issues):
+    - Stale in frontend: NotAvailable, NotFound, ValidationError, ExecutionError, InternalError, TimeoutError, AuthError, Forbidden, Conflict, RateLimited, PayloadTooLarge, NotImplemented
+
+  [SOFT FAIL] Missing WS event interfaces (3 issues):
+    - hello:ack ΓåÆ expected WsHelloAckEvent
+    - agent:subscribed ΓåÆ expected WsAgentSubscribedEvent
+    - fleet:crash_detected ΓåÆ expected WsFleetCrashDetectedEvent
+
+tests\arch\arch-invariants.test.ts:
+
+  [SOFT FAIL] Contracts importing impl (2 issues):
+    - src\storage\contracts\memory-intelligence-store.ts imports ../impl/memory-intelligence-store-impl.js
+    - src\storage\contracts\memory-intelligence-store.ts imports ../impl/memory-intelligence-store-impl.js (resolves to impl)
+
+  [SOFT FAIL] Contracts importing outside shared/schema (6 issues):
+    - src\storage\contracts\agent-loop-store.ts imports disallowed path: ../../engines/browser-automation/types.js
+    - src\storage\contracts\canvas-store.ts imports disallowed path: ../../canvas/types.js
+    - src\storage\contracts\fleet-supervisor.ts imports disallowed path: ../../executor/slave-states.js
+    - src\storage\contracts\intent-template-store.ts imports disallowed path: ../../engines/intent-decomposer.js
+    - src\storage\contracts\memory-intelligence-store.ts imports disallowed path: ../impl/memory-intelligence-store-impl.js
+    - src\storage\contracts\sandbox-audit-store.ts imports disallowed path: ../../engines/sandbox-runner.js
+
+  [SOFT FAIL] Missing contracts for impls (64 issues):
+    - src\storage\impl\agentic-store-impl.ts ΓÇö expected contract at src\storage\impl\agentic-store.ts
+    - src\storage\impl\alert-store-impl.ts ΓÇö expected contract at src\storage\impl\alert-store.ts
+    - src\storage\impl\automation-store-impl.ts ΓÇö expected contract at src\storage\impl\automation-store.ts
+    - src\storage\impl\autonomous-store-impl.ts ΓÇö expected contract at src\storage\impl\autonomous-store.ts
+    - src\storage\impl\capability-macro-store-impl.ts ΓÇö expected contract at src\storage\impl\capability-macro-store.ts
+    - src\storage\impl\capability-resolution-store-impl.ts ΓÇö expected contract at src\storage\impl\capability-resolution-store.ts
+    - src\storage\impl\capability-store-impl.ts ΓÇö expected contract at src\storage\impl\capability-store.ts
+    - src\storage\impl\channel-store-impl.ts ΓÇö expected contract at src\storage\impl\channel-store.ts
+    - src\storage\impl\contact-store-impl.ts ΓÇö expected contract at src\storage\impl\contact-store.ts
+    - src\storage\impl\content-item-store-impl.ts ΓÇö expected contract at src\storage\impl\content-item-store.ts
+    ... and 54 more
+
+  [SOFT FAIL] Engine files with no exports (6 issues):
+    - src\engines\onboarding\index.ts
+    - src\engines\providers\abstract-provider-plugin.ts
+    - src\engines\reprogrammability\__tests__\llm-harness-agent.test.ts
+    - src\engines\reprogrammability\__tests__\plugin-builder.test.ts
+    - src\engines\reprogrammability\__tests__\version-store.test.ts
+    - src\engines\stealth\stealth-profile-store.ts
+
+tests\arch\code-quality.test.ts:
+
+  [SOFT FAIL] console.log in production code (80 issues):
+    - src\cli\commands\automate.ts:55
+    - src\cli\commands\automate.ts:70
+    - src\cli\commands\automate.ts:83
+    - src\cli\commands\automate.ts:96
+    - src\cli\commands\automate.ts:109
+    - src\cli\commands\automate.ts:121
+    - src\cli\commands\automate.ts:130
+    - src\cli\commands\automate.ts:131
+    - src\cli\commands\automate.ts:132
+    - src\cli\commands\automate.ts:133
+    ... and 70 more
+
+  [SOFT FAIL] TODOs without issue references (10 issues):
+    - src\cli\commands\onboard-provider.ts:12 ΓÇö // (TODO ΓÇö for now thin-client mode is unsupported; the command requires the
+    - src\engines\streaming-channel-caps.ts:136 ΓÇö // TODO: Integrate with auth flow 27.5
+    - src\server\conversation-sync-router.ts:18 ΓÇö * TODO: Support multiple providers (Gemini, Claude, DeepSeek) via adapter registry.
+    - src\server\conversation-sync-router.ts:124 ΓÇö // TODO: Wire sync state store to get actual status
+    - src\server\conversation-sync-router.ts:138 ΓÇö // TODO: Wire sync log store to get actual logs
+    - frontend\src\app\api\agent\canvas\command\route.ts:29 ΓÇö // TODO: Add proper auth when session is available
+    - frontend\src\app\api\agent\canvas\command\route.ts:54 ΓÇö // TODO: Audit log when DB is available
+    - frontend\src\app\api\agent\canvas\command\route.ts:66 ΓÇö // TODO: Add proper auth
+    - frontend\src\app\api\agent\canvas\command\route.ts:90 ΓÇö // TODO: Add proper auth
+    - frontend\src\components\canvas\UpdateNotification.tsx:232 ΓÇö // TODO: Get parser code and capabilities from update
+
+  [SOFT FAIL] Files over 500 lines (51 issues):
+    - src\engines\nlcl\catalog.ts (1783 lines)
+    - src\engines\capability-bootstrap.ts (1651 lines)
+    - src\engines\chrome-governor.ts (1519 lines)
+    - src\engines\autonomous-execution.ts (1478 lines)
+    - frontend\src\features\guided-landing.tsx (1191 lines)
+    - src\storage\impl\agentic-store-impl.ts (1123 lines)
+    - src\server\bootstrap-engines.ts (1088 lines)
+    - src\engines\conversation-manager.ts (1072 lines)
+    - frontend\src\components\canvas\ReprogramModal.tsx (967 lines)
+    - src\storage\impl\memory-intelligence-store-impl.ts (945 lines)
+    ... and 41 more
+
+  [SOFT FAIL] Empty barrel index.ts files (1 issues):
+    - src\lib\orchestrator\index.ts
+
+  [SOFT FAIL] Hardcoded localhost URLs (14 issues):
+    - src\automation\ui-automator.ts:56
+    - src\cli\commands\automate.ts:37
+    - src\config.ts:101
+    - src\config.ts:268
+    - src\config.ts:355
+    - src\engines\embedding-ollama.ts:13
+    - src\lib\tunnel-shared\constants.ts:55
+    - src\observability\tracing.ts:75
+    - frontend\src\app\layout.tsx:34
+    - frontend\src\app\robots.ts:5
+    ... and 4 more
+
+tests\arch\layer-dependency.test.ts:
+
+  [SOFT FAIL] Layer src/storage/contracts dependency violations (18 issues):
+    - src\storage\contracts\agent-loop-store.ts ΓåÆ ../../engines/browser-automation/types.js (layer: src/foundation)
+    - src\storage\contracts\agentic-store.ts ΓåÆ ../../schema/agentic.js (layer: src/foundation)
+    - src\storage\contracts\agentic-store.ts ΓåÆ ./node-store.js (layer: src/foundation)
+    - src\storage\contracts\canvas-store.ts ΓåÆ ../../canvas/types.js (layer: src/foundation)
+    - src\storage\contracts\fleet-supervisor.ts ΓåÆ ../../executor/slave-states.js (layer: src/foundation)
+    - src\storage\contracts\health-store.ts ΓåÆ ../../schema/health.js (layer: src/foundation)
+    - src\storage\contracts\health-store.ts ΓåÆ ../../schema/types.js (layer: src/foundation)
+    - src\storage\contracts\health-store.ts ΓåÆ ./governor-store.js (layer: src/foundation)
+    - src\storage\contracts\intent-template-store.ts ΓåÆ ../../engines/intent-decomposer.js (layer: src/foundation)
+    - src\storage\contracts\local-agent-store.ts ΓåÆ ../../schema/streaming.js (layer: src/foundation)
+    ... and 8 more
+
+  [SOFT FAIL] Layer frontend dependency violations (174 issues):
+    - frontend\src\api\client.ts ΓåÆ @/types/shared/api-contract (layer: src/foundation)
+    - frontend\src\api\transformers.ts ΓåÆ @/lib/timestamp (layer: src/foundation)
+    - frontend\src\api\transformers.ts ΓåÆ @/types/shared/api-contract (layer: src/foundation)
+    - frontend\src\api\transformers.ts ΓåÆ @/types/shared/domain (layer: src/foundation)
+    - frontend\src\app\api\agent\canvas\command\route.ts ΓåÆ @/engines/canvas-command-executor (layer: src/foundation)
+    - frontend\src\app\api\agent\canvas\command\route.ts ΓåÆ @/shared/agent-canvas (layer: src/foundation)
+    - frontend\src\app\api\agent\canvas\command\route.ts ΓåÆ @/shared/agent-canvas (layer: src/foundation)
+    - frontend\src\app\api\agent\canvas\route.ts ΓåÆ @/lib/ulid (layer: src/foundation)
+    - frontend\src\app\api\agent\canvas\route.ts ΓåÆ @/shared/agent-canvas (layer: src/foundation)
+    - frontend\src\app\api\agent\invoke\route.ts ΓåÆ @/lib/canvas-engine-bootstrap (layer: src/foundation)
+    ... and 164 more
+
+tests\arch\store-contract-parity.test.ts:
+
+  [SOFT FAIL] Missing contracts for impls (19 issues):
+    - capability-macro-store-impl ΓåÆ expected capability-macro-store.ts
+    - contact-store-impl ΓåÆ expected contact-store.ts
+    - content-item-store-impl ΓåÆ expected content-item-store.ts
+    - conversation-sync-store-impl ΓåÆ expected conversation-sync-store.ts
+    - cross-conversation-synth-store-impl ΓåÆ expected cross-conversation-synth-store.ts
+    - entity-container-store-impl ΓåÆ expected entity-container-store.ts
+    - episodic-memory-store-impl ΓåÆ expected episodic-memory-store.ts
+    - harness-checkpoint-store-impl ΓåÆ expected harness-checkpoint-store.ts
+    - hitl-gate-store-impl ΓåÆ expected hitl-gate-store.ts
+    - media-store-impl ΓåÆ expected media-store.ts
+    ... and 9 more
+
+  [SOFT FAIL] Missing implementations for contracts (10 issues):
+    - agent-loop-store ΓåÆ expected agent-loop-store-impl.ts in impl/
+    - canvas-store ΓåÆ expected canvas-store-impl.ts in impl/
+    - command-description-store ΓåÆ expected command-description-store-impl.ts in impl/
+    - command-store ΓåÆ expected command-store-impl.ts in impl/
+    - config-store ΓåÆ expected config-store-impl.ts in impl/
+    - cross-conversation-synthesis-store ΓåÆ expected cross-conversation-synthesis-store-impl.ts in impl/
+    - kernel-store ΓåÆ expected kernel-store-impl.ts in impl/
+    - organization-store ΓåÆ expected organization-store-impl.ts in impl/
+    - selector-heal-store ΓåÆ expected selector-heal-store-impl.ts in impl/
+    - workspace-store ΓåÆ expected workspace-store-impl.ts in impl/
+
+  [SOFT FAIL] Contracts without methods (2 issues):
+    - mirror-store
+    - mux-store
+
+tests\chaos\chrome-kill.test.ts:
+[INFO] [RecoveryOrchestrator] Starting recovery orchestrator {
+  msg: "[RecoveryOrchestrator] Starting recovery orchestrator",
+}
+[INFO] [RecoveryOrchestrator] Classified failure {
+  msg: "[RecoveryOrchestrator] Classified failure",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  confidence: 0.3,
+  signals: [ "no_pattern_match" ],
+}
+[INFO] [RecoveryStrategy] Executing recovery strategy {
+  msg: "[RecoveryStrategy] Executing recovery strategy",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  strategy: "circuit_breaker",
+}
+[INFO] [RecoveryOrchestrator] Stopped recovery orchestrator {
+  msg: "[RecoveryOrchestrator] Stopped recovery orchestrator",
+}
+[INFO] [RecoveryOrchestrator] Starting recovery orchestrator {
+  msg: "[RecoveryOrchestrator] Starting recovery orchestrator",
+}
+[INFO] [RecoveryOrchestrator] Classified failure {
+  msg: "[RecoveryOrchestrator] Classified failure",
+  slaveId: "test-slave",
+  failureClass: "RendererCrash",
+  confidence: 0.95,
+  signals: [ "target_crashed" ],
+}
+[INFO] [RecoveryStrategy] Executing recovery strategy {
+  msg: "[RecoveryStrategy] Executing recovery strategy",
+  slaveId: "test-slave",
+  failureClass: "RendererCrash",
+  strategy: "renavigate_only",
+}
+[INFO] [RecoveryOrchestrator] Stopped recovery orchestrator {
+  msg: "[RecoveryOrchestrator] Stopped recovery orchestrator",
+}
+[INFO] [RecoveryOrchestrator] Starting recovery orchestrator {
+  msg: "[RecoveryOrchestrator] Starting recovery orchestrator",
+}
+[INFO] [RecoveryOrchestrator] Classified failure {
+  msg: "[RecoveryOrchestrator] Classified failure",
+  slaveId: "test-slave",
+  failureClass: "OOM",
+  confidence: 0.9,
+  signals: [ "high_rss_or_memory_excess" ],
+}
+[INFO] [RecoveryStrategy] Executing recovery strategy {
+  msg: "[RecoveryStrategy] Executing recovery strategy",
+  slaveId: "test-slave",
+  failureClass: "OOM",
+  strategy: "kill_disable_gpu",
+}
+[INFO] [RecoveryOrchestrator] Stopped recovery orchestrator {
+  msg: "[RecoveryOrchestrator] Stopped recovery orchestrator",
+}
+[INFO] [RecoveryOrchestrator] Starting recovery orchestrator {
+  msg: "[RecoveryOrchestrator] Starting recovery orchestrator",
+}
+[INFO] [RecoveryOrchestrator] Classified failure {
+  msg: "[RecoveryOrchestrator] Classified failure",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  confidence: 0.3,
+  signals: [ "no_pattern_match" ],
+}
+[INFO] [RecoveryStrategy] Executing recovery strategy {
+  msg: "[RecoveryStrategy] Executing recovery strategy",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  strategy: "circuit_breaker",
+}
+[INFO] [RecoveryOrchestrator] Classified failure {
+  msg: "[RecoveryOrchestrator] Classified failure",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  confidence: 0.3,
+  signals: [ "no_pattern_match" ],
+}
+[WARN] [RecoveryOrchestrator] Max retries exceeded {
+  msg: "[RecoveryOrchestrator] Max retries exceeded",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  attempts: 1,
+  maxRetries: 1,
+}
+[INFO] [RecoveryOrchestrator] Classified failure {
+  msg: "[RecoveryOrchestrator] Classified failure",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  confidence: 0.3,
+  signals: [ "no_pattern_match" ],
+}
+[WARN] [RecoveryOrchestrator] Max retries exceeded {
+  msg: "[RecoveryOrchestrator] Max retries exceeded",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  attempts: 1,
+  maxRetries: 1,
+}
+[INFO] [RecoveryOrchestrator] Classified failure {
+  msg: "[RecoveryOrchestrator] Classified failure",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  confidence: 0.3,
+  signals: [ "no_pattern_match" ],
+}
+[WARN] [RecoveryOrchestrator] Max retries exceeded {
+  msg: "[RecoveryOrchestrator] Max retries exceeded",
+  slaveId: "test-slave",
+  failureClass: "Unknown",
+  attempts: 1,
+  maxRetries: 1,
+}
+[INFO] [RecoveryOrchestrator] Stopped recovery orchestrator {
+  msg: "[RecoveryOrchestrator] Stopped recovery orchestrator",
+}
+
+tests\e2e\import-export.test.ts:
+ 5 | import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+ 6 | 
+ 7 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+ 8 | 
+ 9 | async function post(path: string, body: unknown) {
+10 |   const res = await fetch(`${BASE}${path}`, {
+                         ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/conversations",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async post (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\import-export.test.ts:10:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\import-export.test.ts:31:28)
+(fail) Import/Export E2E > (unnamed) [1014.77ms]
+
+tests\e2e\send-pipeline.test.ts:
+15 |   })
+16 |   return { status: res.status, body: (await res.json().catch(() => null)) as any }
+17 | }
+18 | 
+19 | async function get(path: string) {
+20 |   const res = await fetch(`${BASE}${path}`, {
+                         ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/conversations",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async get (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\send-pipeline.test.ts:20:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\send-pipeline.test.ts:51:36)
+(fail) Send Pipeline E2E > GET /api/conversations returns non-empty list [12.98ms]
+
+tests\e2e\setup-wizard.test.ts:
+4 | import { describe, expect, it } from 'bun:test'
+5 | 
+6 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+7 | 
+8 | async function get(path: string) {
+9 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/setup/profiles",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async get (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:9:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:29:36)
+(fail) Setup Wizard E2E > GET /api/setup/profiles returns profiles array [3.23ms]
+4 | import { describe, expect, it } from 'bun:test'
+5 | 
+6 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+7 | 
+8 | async function get(path: string) {
+9 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/providers",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async get (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:9:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:35:36)
+(fail) Setup Wizard E2E > GET /api/providers returns non-empty provider list [19.16ms]
+4 | import { describe, expect, it } from 'bun:test'
+5 | 
+6 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+7 | 
+8 | async function get(path: string) {
+9 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/health/providers",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async get (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:9:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:42:36)
+(fail) Setup Wizard E2E > GET /api/health/providers returns health object [3.95ms]
+12 |   const body = await res.json().catch(() => null)
+13 |   return { status: res.status, body: body as any }
+14 | }
+15 | 
+16 | async function post(path: string, body: unknown) {
+17 |   const res = await fetch(`${BASE}${path}`, {
+                         ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/capabilities/system_version/execute",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async post (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:17:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:48:36)
+(fail) Setup Wizard E2E > POST /api/capabilities/system_version/execute returns version info [19.16ms]
+4 | import { describe, expect, it } from 'bun:test'
+5 | 
+6 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+7 | 
+8 | async function get(path: string) {
+9 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/nlcl/help",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async get (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:9:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\setup-wizard.test.ts:54:36)
+(fail) Setup Wizard E2E > GET /api/nlcl/help returns command help [3.19ms]
+
+tests\e2e\smoke.test.ts:
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/health",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:23:36)
+(fail) Smoke Test > GET /health returns status ok [6.10ms]
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/readyz",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:30:36)
+(fail) Smoke Test > GET /readyz returns status [2.71ms]
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/providers",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:58:36)
+(fail) Smoke Test > GET /api/providers returns provider list [2.79ms]
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/nlcl/help",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:67:36)
+(fail) Smoke Test > GET /api/nlcl/help returns help [6.44ms]
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/nlcl/commands",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:74:36)
+(fail) Smoke Test > GET /api/nlcl/commands returns command list [10.94ms]
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/setup/profiles",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:92:36)
+(fail) Smoke Test > GET /api/setup/profiles returns profiles [6.29ms]
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/health/providers",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:98:36)
+(fail) Smoke Test > GET /api/health/providers returns provider health [3.12ms]
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/capabilities/system_health/execute",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:104:36)
+(fail) Smoke Test > POST /api/capabilities/system_health/execute works [2.97ms]
+3 | 
+4 | import { beforeAll, describe, expect, it } from 'bun:test'
+5 | const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
+6 | 
+7 | async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
+8 |   const res = await fetch(`${BASE}${path}`, {
+                        ^
+error: Unable to connect. Is the computer able to access the url?
+  path: "http://127.0.0.1:9420/api/capabilities/system_version/execute",
+ errno: 0,
+  code: "ConnectionRefused"
+
+      at async fetchJson (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:8:21)
+      at async <anonymous> (C:\0-BlackBoxProject-0\vivim-final\tests\e2e\smoke.test.ts:114:36)
+(fail) Smoke Test > POST /api/capabilities/system_version/execute returns version [2.78ms]
+
+tests\e2e\tauri-sidecar.test.ts:
+[tauri-sidecar] probing http://127.0.0.1:9421
+[2026-08-06 11:05:37.115 +0000] [32mINFO[39m: [36mStarting conversation sync[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msyncType[39m: "incremental"
+[2026-08-06 11:05:37.134 +0000] [32mINFO[39m: [36mConversation sync completed[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msynced[39m: 2
+    [35mfailed[39m: 0
+    [35mdurationMs[39m: 20
+[2026-08-06 11:05:37.135 +0000] [32mINFO[39m: [36mStarting conversation sync[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msyncType[39m: "incremental"
+[2026-08-06 11:05:37.136 +0000] [32mINFO[39m: [36mConversation sync completed[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msynced[39m: 3
+    [35mfailed[39m: 0
+    [35mdurationMs[39m: 1
+[2026-08-06 11:05:37.138 +0000] [32mINFO[39m: [36mStarting conversation sync[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msyncType[39m: "selective"
+[2026-08-06 11:05:37.139 +0000] [32mINFO[39m: [36mConversation sync completed[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msynced[39m: 1
+    [35mfailed[39m: 0
+    [35mdurationMs[39m: 1
+[2026-08-06 11:05:37.140 +0000] [32mINFO[39m: [36mStarting conversation sync[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msyncType[39m: "incremental"
+[2026-08-06 11:05:37.141 +0000] [32mINFO[39m: [36mConversation sync completed[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msynced[39m: 1
+    [35mfailed[39m: 0
+    [35mdurationMs[39m: 1
+[2026-08-06 11:05:37.141 +0000] [32mINFO[39m: [36mStarting conversation sync[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    [35msyncType[39m: "incremental"
+[2026-08-06 11:05:37.142 +0000] [31mERROR[39m: [36mConversation sync failed[39m
+    [35mproviderId[39m: "chatgpt"
+    [35maccountId[39m: "account-1"
+    error: "Auth expired"
+
+tests\integration\speckit-converge.test.ts:
+sidecar did not become healthy within 30000ms at http://127.0.0.1:9421

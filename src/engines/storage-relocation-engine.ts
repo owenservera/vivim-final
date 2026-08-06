@@ -18,7 +18,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
-import { getDataDir, getDbPath, setStoragePaths } from '../config.js'
+import { getDataDir, getDbPath, setDatabaseUrl, setStoragePaths } from '../config.js'
 import { EngineError } from '../errors.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
@@ -484,7 +484,7 @@ export class StorageRelocationEngine {
 
     // 3. Create fresh Prisma client pointing to new DB
     //    Override DATABASE_URL so getPrisma() picks up the new path
-    process.env.DATABASE_URL = `file:${targetDbPath}`
+    setDatabaseUrl(`file:${targetDbPath}`)
 
     // 4. Create new Prisma client and apply WAL pragmas
     const newPrisma = getPrisma()
@@ -571,7 +571,7 @@ export class StorageRelocationEngine {
     setStoragePaths(previousDir, previousDbPath)
 
     // Reconnect Prisma
-    process.env.DATABASE_URL = `file:${previousDbPath}`
+    setDatabaseUrl(`file:${previousDbPath}`)
     const newPrisma = getPrisma()
     await initPrismaWal(newPrisma)
 

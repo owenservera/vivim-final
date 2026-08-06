@@ -5,6 +5,7 @@
 // session-caps.ts, chrome-governor.ts, and conversation-manager.ts.
 
 import { deriveId } from '../executor/ids.js'
+import { EngineError } from '../errors.js'
 import { getLogger } from '../lib/logger.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import { SessionStatePersistence } from './session-state-persistence.js'
@@ -164,7 +165,7 @@ export class SessionLifecycleManager {
     // Check concurrency limit
     const activeCount = this.countActiveSessions()
     if (activeCount >= this.options.maxConcurrentSessions) {
-      throw new Error(`Max concurrent sessions reached (${this.options.maxConcurrentSessions})`)
+      throw new EngineError(`Max concurrent sessions reached (${this.options.maxConcurrentSessions})`)
     }
 
     const sessionId = deriveId('sess')
@@ -291,14 +292,14 @@ export class SessionLifecycleManager {
   async transitionState(sessionId: string, targetState: SessionState): Promise<void> {
     const record = this.sessions.get(sessionId)
     if (!record) {
-      throw new Error(`Session not found: ${sessionId}`)
+      throw new EngineError(`Session not found: ${sessionId}`)
     }
 
     const fromState = record.state
 
     // Validate transition
     if (!VALID_TRANSITIONS[fromState]?.includes(targetState)) {
-      throw new Error(
+      throw new EngineError(
         `Invalid state transition: ${fromState} -> ${targetState} for session ${sessionId}`,
       )
     }

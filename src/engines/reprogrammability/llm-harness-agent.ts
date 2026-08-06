@@ -31,6 +31,7 @@ import {
 import { surfaceRegistry } from '../../reprogrammability/registry.js'
 import type { ProviderLLMAdapter } from '../nlcl/llm-slave-resolver.js'
 import { type LlmPromptInput, buildLlmHarnessPrompt } from './llm-prompt.js'
+import { EngineError } from '../../errors.js'
 
 const log = getLogger('llm-harness-agent')
 
@@ -193,7 +194,7 @@ export class LlmHarnessAgent {
   private async callLlmWithTimeout(prompt: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const timer = setTimeout(() => {
-        reject(new Error(`LLM call timed out after ${LLM_TIMEOUT_MS}ms`))
+        reject(new EngineError(`LLM call timed out after ${LLM_TIMEOUT_MS}ms`))
       }, LLM_TIMEOUT_MS)
 
       this.deps.providerLLM

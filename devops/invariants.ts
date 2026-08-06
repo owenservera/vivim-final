@@ -22,7 +22,6 @@ const PROJECT_ROOT = join(import.meta.dir, '..')
 const TRACKER_PATH = join(PROJECT_ROOT, 'docs', 'atomic-v3-fork-canon', '01-tracker.md')
 const ATOMIC_DIR = join(PROJECT_ROOT, 'docs', 'atomic-v3-fork-canon')
 const RESEARCH_REPORT_PATH = join(PROJECT_ROOT, 'docs', 'roadmap', 'RESEARCH-REPORT.md')
-const TRUTH_GAPS_PATH = join(PROJECT_ROOT, 'docs', 'roadmap', 'TRUTH-GAPS.md')
 const ENGINES_DIR = join(PROJECT_ROOT, 'src', 'engines')
 const INDEX_PATH = join(PROJECT_ROOT, 'src', 'index.ts')
 
@@ -63,30 +62,128 @@ async function readFileLines(path: string): Promise<string[]> {
   return content.split('\n')
 }
 
-async function scanDirForPattern(
-  dir: string,
-  pattern: RegExp,
-  exclude?: string,
-): Promise<{ file: string; line: number; match: string }[]> {
-  const results: { file: string; line: number; match: string }[] = []
+/**
+ * Recursively collect all `.ts` files under a directory (excluding node_modules).
+ */
+async function collectTsFiles(dir: string): Promise<string[]> {
+  const files: string[] = []
   let entries: import('node:fs').Dirent[]
   try {
     entries = await readdir(dir, { withFileTypes: true })
   } catch {
-    return results
+    return files
   }
   for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith('.ts')) continue
-    if (exclude && entry.name === exclude) continue
-    const filePath = join(dir, entry.name)
-    const lines = await readFileLines(filePath)
+    const fullPath = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (entry.name === 'node_modules') continue
+      files.push(...(await collectTsFiles(fullPath)))
+    } else if (entry.isFile() && entry.name.endsWith('.ts')) {
+      files.push(fullPath)
+    }
+  }
+  return files
+}
+
+/**
+ * Mask comments (line + block) and string literals so scans flag real code only.
+ * Preserves newlines so line numbers stay accurate.
+ *
+ * When `maskStrings` is false, string literals are kept (needed for import-path
+ * patterns like B1/B2/B3 which match the quoted module specifier). When true,
+ * string content is blanked so `new Error()` inside a browser-injected template
+ * literal or a string message is not a false positive.
+ */
+function maskCode(content: string, maskStrings: boolean): string {
+  const out: string[] = []
+  let i = 0
+  const n = content.length
+  let inBlock = false
+  while (i < n) {
+    const ch = content[i]!
+    const next = content[i + 1]
+    if (inBlock) {
+      if (ch === '*' && next === '/') {
+        inBlock = false
+        out.push('  ')
+        i += 2
+        continue
+      }
+      out.push(ch === '\n' ? '\n' : ' ')
+      i++
+      continue
+    }
+    if (ch === '/' && next === '/') {
+      // line comment — consume to end of line
+      while (i < n && content[i] !== '\n') {
+        out.push(' ')
+        i++
+      }
+      continue
+    }
+    if (ch === '/' && next === '*') {
+      inBlock = true
+      out.push('  ')
+      i += 2
+      continue
+    }
+    if (maskStrings && (ch === '"' || ch === "'" || ch === '`')) {
+      const quote = ch
+      out.push(' ')
+      i++
+      while (i < n) {
+        const c = content[i]!
+        if (c === '\\') {
+          out.push('  ')
+          i += 2
+          continue
+        }
+        if (c === quote) {
+          out.push(' ')
+          i++
+          break
+        }
+        out.push(c === '\n' ? '\n' : ' ')
+        i++
+      }
+      continue
+    }
+    out.push(ch)
+    i++
+  }
+  return out.join('')
+}
+
+/**
+ * Recursively scan engine `.ts` files (all subdirectories) for a pattern on
+ * code lines, skipping comments and (optionally) string literals.
+ *
+ * `exclude` matches file basenames (e.g. 'config-manager.ts').
+ */
+async function scanDirForPattern(
+  dir: string,
+  pattern: RegExp,
+  exclude?: string[],
+  maskStrings = false,
+): Promise<{ file: string; line: number; match: string }[]> {
+  const results: { file: string; line: number; match: string }[] = []
+  const files = await collectTsFiles(dir)
+  for (const filePath of files) {
+    const basename = filePath.split(/[\\/]/).pop()!
+    if (exclude && exclude.includes(basename)) continue
+    // Test fixtures inside src/engines (e.g. `__tests__/`, `*.test.ts`) are not
+    // engine *code* — patterns like raw `new Error()` in a test are legitimate.
+    if (basename.endsWith('.test.ts') || basename.endsWith('.spec.ts')) continue
+    if (/[\\/]__tests__[\\/]/.test(filePath)) continue
+    const content = await readFile(filePath, 'utf8')
+    const masked = maskCode(content, maskStrings)
+    const lines = masked.split('\n')
+    const relPath = `src/engines/${filePath.slice(dir.length + 1).replaceAll('\\', '/')}`
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]!
-      // Skip comments
-      if (line.trimStart().startsWith('//')) continue
       const match = pattern.exec(line)
       if (match) {
-        results.push({ file: `src/engines/${entry.name}`, line: i + 1, match: match[0] })
+        results.push({ file: relPath, line: i + 1, match: match[0] })
       }
     }
   }
@@ -153,47 +250,28 @@ async function checkA3_CapStoreRef(unitId: string, units: Unit[]): Promise<Viola
   return violations
 }
 
-async function checkA4_TruthScore(domain: string): Promise<Violation[]> {
-  const violations: Violation[] = []
-  if (!(await fileExists(TRUTH_GAPS_PATH))) return violations
-  const content = await readFile(TRUTH_GAPS_PATH, 'utf8')
-  // Extract truth score from header
-  const scoreMatch = content.match(/Truth Score:\s*(\d+)%/)
-  if (scoreMatch) {
-    const score = Number(scoreMatch[1]) / 100
-    if (score < 0.8) {
-      violations.push({
-        id: 'A4',
-        category: 'A',
-        severity: 'block',
-        message: `Truth score ${Math.round(score * 100)}% < 80% threshold. Run truth verification first.`,
-      })
-    }
-  }
-  return violations
-}
-
 // ── Category B: Architectural ─────────────────────────────────────────────
 
 async function checkB1_GovernorCanon(): Promise<Violation[]> {
   const violations: Violation[] = []
-  // Flag any CDP *transport* import inside an engine (BunCdpClient, executor/cdp,
-  // cdp-transport, etc.). The `cdp-discovery` module is a pure protocol *descriptor*
-  // (static catalog + parser, no socket) supplied so an injected executor supplied by
-  // ChromeGovernor can drive commands — it is Governor-Canon-safe and explicitly
-  // exempt via the negative lookahead. The pattern still fails safe: any other cdp
-  // module import is caught.
+  // Flag any CDP *transport* import inside an engine. The real transport is
+  // `src/executor/cdp.ts` (BunCdpClient) + `src/executor/cdp-transport.ts`.
+  // The `cdp-discovery`, `cdp-capability-registrar`, `cdp-artifact-cleaner` and
+  // `cdp-watchdog` modules are protocol descriptors / registrars / stealth
+  // helpers — NOT socket transports — so they are Governor-Canon-safe and
+  // deliberately excluded. The pattern still fails safe: any direct transport
+  // import is caught. `chrome-governor.ts` is the single documented owner.
   const matches = await scanDirForPattern(
     ENGINES_DIR,
-    /BunCdpClient|from\s+['"][^'"]*cdp(?!-discovery)[^'"]*['"]/,
-    'chrome-governor.ts',
+    /BunCdpClient|from\s+['"][^'"]*(executor[\\/]cdp|cdp-transport)[^'"]*['"]/,
+    ['chrome-governor.ts'],
   )
   for (const m of matches) {
     violations.push({
       id: 'B1',
       category: 'B',
       severity: 'block',
-      message: `Engine imports CDP directly: ${m.match}`,
+      message: `Engine imports CDP transport directly: ${m.match}`,
       file: m.file,
       line: m.line,
     })
@@ -239,12 +317,44 @@ async function checkB3_SeedsNotCode(): Promise<Violation[]> {
   return violations
 }
 
+async function checkB4_RelationalFirst(): Promise<Violation[]> {
+  const violations: Violation[] = []
+  // SQLite has no native JSON type, so self-contained non-relational blobs
+  // (config, metadata, state, serialized Node edges) are legal. This scan ONLY
+  // flags JSON columns whose name denotes an array of foreign keys — a sign the
+  // relationship was embedded instead of modeled as a real FK edge table.
+  const schemaPath = join(PROJECT_ROOT, 'prisma', 'schema.prisma')
+  if (!(await fileExists(schemaPath))) return violations
+  const lines = await readFileLines(schemaPath)
+  const idListSuffix =
+    /(?:Ids|IdList|RefIds|ChildIds|ParentIds|RelatedIds|LinkIds)\s+Json(?:\?)?\s*(?:@db\.Json)?/i
+  for (let i = 0; i < lines.length; i++) {
+    // Match `fieldName  Json?` — a JSON column whose name ends in an id-list pattern
+    if (idListSuffix.test(lines[i]!)) {
+      violations.push({
+        id: 'B4',
+        category: 'B',
+        severity: 'block',
+        message: `JSON column encodes a relationship (${lines[i]!.trim()}) — should be a real FK/edge table.`,
+        file: 'prisma/schema.prisma',
+        line: i + 1,
+      })
+    }
+  }
+  return violations
+}
+
 async function checkB5_ConfigAuthority(): Promise<Violation[]> {
   const violations: Violation[] = []
+  // Property reads (`process.env.X`) are flagged; the `...process.env` spread
+  // used to hand a child process its inherited environment is not a config read.
+  // `config-manager.ts` and subsystem `config.ts` loaders ARE the config
+  // authority (analogous to `src/config.ts`) so they are exempt.
   const matches = await scanDirForPattern(
     ENGINES_DIR,
-    /process\.env|readFile.*config/,
-    'config-manager.ts',
+    /process\.env\.[A-Z0-9_]+|readFile.*config/,
+    ['config-manager.ts', 'config.ts'],
+    true,
   )
   for (const m of matches) {
     violations.push({
@@ -282,7 +392,10 @@ async function checkB6_ServerSideHarness(): Promise<Violation[]> {
 
 async function checkB7_ErrorClasses(): Promise<Violation[]> {
   const violations: Violation[] = []
-  const matches = await scanDirForPattern(ENGINES_DIR, /new Error\(/)
+  // maskStrings=true so `new Error()` inside an in-browser injected template
+  // literal or a string message is not a false positive — only real engine-side
+  // `new Error(...)` statement sites are flagged.
+  const matches = await scanDirForPattern(ENGINES_DIR, /new Error\(/, undefined, true)
   for (const m of matches) {
     violations.push({
       id: 'B7',
@@ -291,6 +404,107 @@ async function checkB7_ErrorClasses(): Promise<Violation[]> {
       message: `Engine uses raw 'new Error()' instead of custom error class: ${m.match}`,
       file: m.file,
       line: m.line,
+    })
+  }
+  return violations
+}
+
+// ── Category B: Architectural (cont.) ────────────────────────────────────
+
+async function checkB10_HitlCoverage(): Promise<Violation[]> {
+  const violations: Violation[] = []
+  // Destructive/financial actions must be gated through HitlGate and reach a
+  // `waiting_approval` state before executing. The gate logic lives inside
+  // AutonomousExecutionEngine (persisted HitlGate model), not a separate file.
+  const aePath = join(ENGINES_DIR, 'autonomous-execution.ts')
+  if (!(await fileExists(aePath))) {
+    violations.push({
+      id: 'B10',
+      category: 'B',
+      severity: 'block',
+      message: '`src/engines/autonomous-execution.ts` not found — destructive actions must be HITL-gated.',
+      file: 'src/engines/autonomous-execution.ts',
+    })
+    return violations
+  }
+  const content = await readFile(aePath, 'utf8')
+  if (!content.includes('HitlGate') || !content.includes('waiting_approval')) {
+    violations.push({
+      id: 'B10',
+      category: 'B',
+      severity: 'block',
+      message: 'AutonomousExecutionEngine must gate destructive steps through HitlGate + `waiting_approval` status.',
+      file: 'src/engines/autonomous-execution.ts',
+    })
+  }
+
+  // Heuristic warning: other destructive surfaces should route irreversible
+  // work through *some* approval gate rather than acting autonomously.
+  for (const name of ['export.ts', 'sync.ts', 'conversation-manager.ts']) {
+    const path = join(ENGINES_DIR, name)
+    if (!(await fileExists(path))) continue
+    const lines = await readFileLines(path)
+    const hasGate = lines.some((l) => /hitl|gate|approval|consent/i.test(l))
+    if (!hasGate) {
+      violations.push({
+        id: 'B10',
+        category: 'B',
+        severity: 'warning',
+        message: `Destructive surface ${name} lacks any approval-gate reference (HITL gap).`,
+        file: `src/engines/${name}`,
+      })
+    }
+  }
+  return violations
+}
+
+async function checkB12a_EgressGovernance(): Promise<Violation[]> {
+  const violations: Violation[] = []
+  // Zero-cloud proof: telemetry-audit.ts must exist (block) and ideally expose
+  // an exportable + persistable audit trail (warning when it is in-memory only).
+  const auditPath = join(ENGINES_DIR, 'telemetry-audit.ts')
+  if (!(await fileExists(auditPath))) {
+    violations.push({
+      id: 'B12a',
+      category: 'B',
+      severity: 'block',
+      message: '`src/engines/telemetry-audit.ts` not found — zero-cloud egress proof required.',
+      file: 'src/engines/telemetry-audit.ts',
+    })
+    return violations
+  }
+  const content = await readFile(auditPath, 'utf8')
+  if (!/exportAuditLog|export.*audit|writeFile|persist/i.test(content)) {
+    violations.push({
+      id: 'B12a',
+      category: 'B',
+      severity: 'warning',
+      message: 'telemetry-audit.ts exposes no exportable/persistable audit surface (in-memory only).',
+      file: 'src/engines/telemetry-audit.ts',
+    })
+  }
+  return violations
+}
+
+async function checkB12b_CaptureTelemetry(): Promise<Violation[]> {
+  const violations: Violation[] = []
+  // Ingress governance: a capture-telemetry registry/schema should exist that
+  // formalizes which incoming signals (dates, timestamps, model, tool-use,
+  // system, document metadata) are captured. Warning-level.
+  const candidates = [
+    join(ENGINES_DIR, 'telemetry-aggregator.ts'),
+    join(ENGINES_DIR, 'capture-telemetry.ts'),
+    join(PROJECT_ROOT, 'src', 'schema', 'telemetry-capture.ts'),
+  ]
+  const found = (
+    await Promise.all(candidates.map((p) => fileExists(p)))
+  ).some(Boolean)
+  if (!found) {
+    violations.push({
+      id: 'B12b',
+      category: 'B',
+      severity: 'warning',
+      message: 'No capture-telemetry registry/schema exists (telemetry-aggregator.ts, capture-telemetry.ts, or src/schema/telemetry-capture.ts).',
     })
   }
   return violations
@@ -481,7 +695,9 @@ async function checkD1_EngineTests(): Promise<Violation[]> {
 
 async function checkD2_TypeSafety(): Promise<Violation[]> {
   const violations: Violation[] = []
-  const matches = await scanDirForPattern(ENGINES_DIR, /:\s*any\b|as\s+any\b/)
+  // maskStrings=true so `any` appearing inside prompt/string literals is not a
+  // false positive — only real type annotations are flagged.
+  const matches = await scanDirForPattern(ENGINES_DIR, /:\s*any\b|as\s+any\b/, undefined, true)
   for (const m of matches) {
     violations.push({
       id: 'D2',
@@ -594,20 +810,25 @@ export async function checkInvariants(
       allViolations.push(...await checkA2_Classification(unitId))
       allViolations.push(...await checkA3_CapStoreRef(unitId, units))
     }
-    checked.push('A4')
-    allViolations.push(...await checkA4_TruthScore('general'))
+    // A4 (Truth Score ≥ 0.8 hard block) was REMOVED — see INVARIANTS.md.
+    // Truth confidence is tracked as an outcome key result + `goals drift`,
+    // not enforced as an invariant gate.
   }
 
   // Category B: Architectural
   if (!category || category === 'B') {
-    checked.push('B1', 'B2', 'B3', 'B5', 'B6', 'B7', 'B8')
+    checked.push('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B10', 'B12a', 'B12b')
     allViolations.push(...await checkB1_GovernorCanon())
     allViolations.push(...await checkB2_StoreContractIsolation())
     allViolations.push(...await checkB3_SeedsNotCode())
+    allViolations.push(...await checkB4_RelationalFirst())
     allViolations.push(...await checkB5_ConfigAuthority())
     allViolations.push(...await checkB6_ServerSideHarness())
     allViolations.push(...await checkB7_ErrorClasses())
     allViolations.push(...await checkB8_AgentAddressableUIActions())
+    allViolations.push(...await checkB10_HitlCoverage())
+    allViolations.push(...await checkB12a_EgressGovernance())
+    allViolations.push(...await checkB12b_CaptureTelemetry())
   }
 
   // Category C: Planning

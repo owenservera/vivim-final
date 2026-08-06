@@ -101,7 +101,7 @@ export class ConnectionManager extends EventEmitter {
       log.info("WebSocket connection established, waiting for assignment");
     } catch (err) {
       this.setState("disconnected");
-      const error = err instanceof Error ? err : new Error(String(err));
+      const error = err instanceof Error ? err : new TunnelConnectionError(String(err));
       this.emit("error", error);
 
       // Start reconnection if not auth error

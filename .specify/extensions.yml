@@ -1,7 +1,0 @@
-# .specify/extensions.yml
-# Extension hooks for the speckit planning workflow.
-# No hooks registered — all phases execute inline.
-
-hooks:
-  before_plan: []
-  after_plan: []
