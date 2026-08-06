@@ -17,6 +17,7 @@
 //  - F-5: DOM ready wait before probing.
 
 import { createHash } from 'node:crypto'
+import { EngineError } from '../../errors.js'
 import type { GovernorHandleLike, WebAppFingerprintVector } from './types.js'
 
 // Tier E F-4 — WAI-ARIA 1.2 landmark + role vocabulary. Filter arbitrary
@@ -334,7 +335,7 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length || a.length === 0) {
     // Audit ❌-6 — throw on length mismatch instead of silently returning 0
     // (which masked the all-zero WFV symptom of the observeNetworkShape stub).
-    throw new Error(`cosineSimilarity: length mismatch (${a.length} vs ${b.length})`)
+    throw new EngineError(`cosineSimilarity: length mismatch (${a.length} vs ${b.length})`)
   }
   let dot = 0
   let magA = 0

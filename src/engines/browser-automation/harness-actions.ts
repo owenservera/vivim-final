@@ -5,6 +5,7 @@
 // lean and the logic shared with the capability handlers.
 
 import type { ChromeGovernor } from '../chrome-governor.js'
+import { EngineError } from '../../errors.js'
 
 type ActionParams = Record<string, unknown>
 
@@ -80,7 +81,7 @@ export class BrowserHarnessActions {
       case 'assert': {
         const cond = String(params.condition ?? 'true')
         const ok = (await this.governor.evaluate(slaveId, cond)) as boolean
-        if (!ok) throw new Error(`assert failed: ${cond}`)
+        if (!ok) throw new EngineError(`assert failed: ${cond}`)
         return
       }
       case 'mock_request': {

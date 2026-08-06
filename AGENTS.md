@@ -22,7 +22,9 @@
 - **Cross-cutting:** CapabilityEventBus, ConfigManager, StreamParserEngine
 - **Lifecycle:** RegistrationAuditor, VersionManager, TelemetryAggregator
 
-Design docs are in `docs/merged-design-v2/`. Read in order 00-08 for v1, then SOTA-00 through SOTA-09.
+Design docs are in `docs/` (fresh set: `docs/README.md` map, `docs/architecture/`,
+`docs/runbooks/`, `docs/decisions/`). The old `docs/merged-design-v2/` set is
+archived in `.archive/`.
 
 ## Binary Size Optimization (CRITICAL)
 
@@ -380,7 +382,7 @@ frontend/
 
 ## When Implementing Engines
 
-1. Read the engine spec from `docs/merged-design-v2/04-merged-engines.md` or `05-merged-lifecycles.md`
+1. Understand the current architecture from `docs/architecture/OVERVIEW.md` (mental model) and `docs/architecture/ENGINES.md` (each engine, its job, its code path).
 2. Define TypeScript interface first (match spec exactly)
 3. Define Store Contract (what the engine needs from storage)
 4. Implement with proper error handling
@@ -389,7 +391,8 @@ frontend/
 
 ## Invariants (Boundary Conditions)
 
-**Full document:** `docs/roadmap/INVARIANTS.md`
+**Full document:** the invariants below are the canonical boundary conditions (the
+old `docs/roadmap/INVARIANTS.md` doc was archived with the 2026-08-06 cleanup).
 
 Non-negotiable constraints enforced by `bun run devops invariants check`.
 
@@ -714,7 +717,8 @@ bun test tests/unit/lib/ledger-client/ tests/unit/lib/tunnel-client/ tests/unit/
 - **agentic** — Limited-context agentic dev loop
 
 #### DevOps Loop Commands (atomic unit pipeline)
-The `devops` CLI drives the atomic-unit tracker (`docs/atomic-v3-fork-canon/01-tracker.md`):
+The `devops` CLI drives the atomic-unit tracker (archived with the docs cleanup;
+restore/point to a fresh tracker under `docs/` if needed):
 ```bash
 bun run devops select                 # next implementable unit as JSON
 bun run devops mark <id> <state>      # pending|in_progress|done|blocked
@@ -800,8 +804,8 @@ Locally-indexed, offline code retrieval for agents. **Prefer `code-index search`
 grep+read for code discovery** — it returns ranked `path:line` chunks within a token budget
 instead of forcing full-file reads (cuts the ~60–70% exploration tax). Native
 (`devops/code-index.ts`, Bun `Bun.sqlite` FTS5), zero runtime deps, fully offline. See
-`docs/decisions/ADR-017.md` and the A5 research brief
-(`docs/research/briefs/local-code-indexing-llm-brief.md`).
+`docs/decisions/README.md` (ADR index — ADR-017 archived, re-record if still load-bearing) and the A5 research brief
+(archived: `.archive/docs-stale-2026-08-06/research/briefs/local-code-indexing-llm-brief.md`).
 
 ```bash
 bun run devops code-index build            # index code-only roots (src, devops, frontend, scripts, seeds, prisma); watch by default
@@ -895,7 +899,8 @@ The empty `web/sandbox/` dir remains (stale file lock from bun watcher, harmless
 
 ## Node-Layer v2 (Universal Node DB — completed)
 
-Full documentation: `docs/node-layer-v2/`.
+Full documentation: `docs/architecture/DATA.md` (Node model section — the old
+`docs/node-layer-v2/` was archived with the 2026-08-06 cleanup).
 
 ### What was built
 - **ACU-proven fields** on `Node` model (`contentHash`, `version`, `state`, `securityLevel`, `contentType`, `authorDid`, `signature`, `acl`, `quality`, `validFrom`/`validUntil`, `parentVersion`)

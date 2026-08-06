@@ -3,7 +3,7 @@
 // Phase 2: Extracted from ChromeGovernor. B1 preserved: BrowserRuntime is a
 // private collaborator of Governor, not a peer.
 
-import { EngineError } from '../../errors.js'
+import { EngineError, CdpTimeoutError } from '../../errors.js'
 import type { SlaveLifecycle } from '../../executor/slave-states.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
@@ -178,7 +178,7 @@ export class HealthMonitor {
       const _result = await Promise.race([
         cdp.send('Browser.getVersion'),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Health probe timeout')), this.timeoutMs),
+          setTimeout(() => reject(new CdpTimeoutError('Health probe timeout')), this.timeoutMs),
         ),
       ])
       const latencyMs = Date.now() - start

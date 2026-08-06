@@ -3,6 +3,7 @@
 // All engines read config through this module; no scattered process.env reads.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { catchDebug } from './lib/catch-logger.js'
 
@@ -395,6 +396,23 @@ export function getOtelConfig(): { endpoint: string | null; serviceName: string 
   return { endpoint: config.otel.endpoint, serviceName: config.otel.serviceName }
 }
 
+/**
+ * HMAC secret for NLCL confirmation tokens.
+ * Dev fallback is intentionally insecure — production deployments MUST set the env var.
+ * Engines must read this through the config authority, never `process.env` directly (B5).
+ */
+export function getConfirmationSecret(): string {
+  return process.env.VIVIM_CONFIRMATION_SECRET ?? 'dev-insecure-do-not-use-in-prod'
+}
+
+/**
+ * Effective user home directory (engines must read it here, never `process.env`
+ * directly so B5 config-authority stays satisfied).
+ */
+export function getHomeDir(): string {
+  return homedir() || process.env.USERPROFILE || process.env.HOME || '.'
+}
+
 // ── Storage path mutation (used by migration engine Phase 4) ────────────────
 //
 // Updates config.dataDir + config.dbPath in-memory AND persists to tunables.
@@ -425,6 +443,15 @@ export function setStoragePaths(dataDir: string, dbPath: string): void {
   _mutableDbPath = dbPath
   setTunable('storage.dataDir', dataDir)
   setTunable('storage.dbPath', dbPath)
+}
+
+/**
+ * Override the effective Prisma DATABASE_URL (used by the storage relocation
+ * engine to repoint Prisma at a moved database). Centralized here so engines
+ * never touch process.env directly (invariant B5).
+ */
+export function setDatabaseUrl(url: string): void {
+  process.env.DATABASE_URL = url
 }
 
 export function isAuthenticated(): boolean {

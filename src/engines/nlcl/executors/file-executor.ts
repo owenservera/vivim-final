@@ -7,6 +7,7 @@ import { platform } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import { newId } from '../../../ids.js'
 import { getLogger } from '../../../lib/logger.js'
+import { getHomeDir } from '../../../config.js'
 import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 const log = getLogger('file-executor')
@@ -289,7 +290,7 @@ export class FileExecutor implements CommandExecutor {
   // ── Helpers ─────────────────────────────────────────────────────────────
 
   private getHomeDir(): string {
-    return process.env.HOME ?? process.env.USERPROFILE ?? '.'
+    return getHomeDir()
   }
 
   private resolvePath(path: string, ctx: NLCContext): string {
