@@ -5,7 +5,12 @@
 // can block a commit/push when the repo is in a state that would leak orphans or
 // half-migrated schema:
 //   - any `.runtime/*.pid` present  => servers still running (orphan risk)
-//   - `prisma migrate status` != 0  => pending migration not applied
+//   - schema drift detected        => prisma schema != applied DB schema
+//
+// NOTE: this repo manages the SQLite schema via `prisma db push` (no
+// `_prisma_migrations` table), so `prisma migrate status` is meaningless and always
+// reports "pending". We instead compare the schema model against the live datasource
+// with `prisma migrate diff` — the DB is only a blocker when there is real drift.
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync } from 'node:fs'
@@ -32,14 +37,23 @@ export function runGuard(): GuardResult {
     // ignore
   }
 
-  // 2) Pending Prisma migration
-  const mig = spawnSync('bun', ['x', 'prisma', 'migrate', 'status'], {
-    encoding: 'utf8',
-    timeout: 30_000,
-  })
-  const out = `${mig.stdout ?? ''}${mig.stderr ?? ''}`
-  if (mig.status !== 0 || /pending/i.test(out)) {
-    violations.push('prisma migration pending (run "devops runtime-test migrate --name=<x>")')
+  // 2) Prisma schema drift (DB sync). This repo pushes schema with `prisma db push`
+  // (no `_prisma_migrations` table), so `migrate status` is not a valid signal.
+  // Diff the schema model against the live datasource; block only on real drift.
+  const diff = spawnSync(
+    'bun',
+    ['x', 'prisma', 'migrate', 'diff', '--from-schema-datasource', 'prisma/schema.prisma', '--to-schema-datamodel', 'prisma/schema.prisma'],
+    {
+      encoding: 'utf8',
+      timeout: 45_000,
+    },
+  )
+  const diffOut = `${diff.stdout ?? ''}${diff.stderr ?? ''}`.trim()
+  const noDrift = diff.status === 0 && /no difference/i.test(diffOut)
+  if (diff.status === 0 && !noDrift && diffOut.length > 0) {
+    violations.push(`prisma schema drift detected (run "bunx prisma db push")`)
+  } else if (diff.status !== 0 && diffOut.length > 0) {
+    violations.push(`prisma schema drift check failed (${diffOut.split('\n')[0]})`)
   }
 
   return { ok: violations.length === 0, violations }
