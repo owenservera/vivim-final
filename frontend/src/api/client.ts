@@ -3,15 +3,15 @@
 // P1-7: Migrated to use UnifiedIO for retry, auth, traceId, and Zod validation.
 // P3-8: Added responseSchema passthrough for runtime validation.
 
-import type { z } from 'zod'
-import type { UnifiedIO } from '../shared/unified-io'
 import type {
-  CapabilityListResponse,
-  CapabilityExecuteResponse,
   CapabilityDetail,
+  CapabilityExecuteResponse,
+  CapabilityListResponse,
 } from '@/types/shared/api-contract'
-import { CapabilityListResponseSchema, CapabilityExecuteResponseSchema } from './schemas'
+import type { z } from 'zod'
 import { getApiBase } from '../lib/ws-url'
+import type { UnifiedIO } from '../shared/unified-io'
+import { CapabilityExecuteResponseSchema, CapabilityListResponseSchema } from './schemas'
 
 /** Optional IO instance — injected by consumers who have useIO() */
 let _io: UnifiedIO | null = null
@@ -38,7 +38,11 @@ async function request<T>(path: string, init?: RequestOpts): Promise<T> {
     const url = path.startsWith('http') ? path : `${getApiBase()}${path}`
     const resp = await io.request<T>(url, {
       method: method as 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE',
-      body: init?.body ? (typeof init.body === 'string' ? JSON.parse(init.body) : init.body) : undefined,
+      body: init?.body
+        ? typeof init.body === 'string'
+          ? JSON.parse(init.body)
+          : init.body
+        : undefined,
       headers: init?.headers as Record<string, string> | undefined,
       responseSchema: init?.responseSchema,
     })
@@ -50,7 +54,11 @@ async function request<T>(path: string, init?: RequestOpts): Promise<T> {
   const url = `${getApiBase()}${path}`
   const resp = await fetch(url, {
     ...init,
-    body: init?.body ? (typeof init.body === 'string' ? init.body : JSON.stringify(init.body)) : undefined,
+    body: init?.body
+      ? typeof init.body === 'string'
+        ? init.body
+        : JSON.stringify(init.body)
+      : undefined,
     headers,
     signal: init?.signal ?? AbortSignal.timeout(15000),
   })

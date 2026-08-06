@@ -8,8 +8,8 @@
 import { z } from 'zod'
 import type { ConfigUniversalSurface } from '../engines/config-universal-surface.js'
 import type { ServerContext } from './index.js'
-import { extractSource } from './source-middleware.js'
 import { appErrorResponse, errorResponse } from './response.js'
+import { extractSource } from './source-middleware.js'
 
 export interface KernelRouterDeps {
   kernel: ServerContext['kernel']

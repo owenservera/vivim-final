@@ -1,8 +1,8 @@
 'use client'
 
+import { HealthDashboardResponseSchema } from '@/api/schemas'
 import { useIO } from '@/components/canvas/UnifiedIOProvider'
 import type { HealthStatus } from '@/types/api'
-import { HealthDashboardResponseSchema } from '@/api/schemas'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useHealth() {

@@ -1,0 +1,3 @@
+[test]
+# Prevent indefinite hangs from CDP/Chrome-dependent tests
+timeout = 15000

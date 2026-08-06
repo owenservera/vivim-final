@@ -67,8 +67,10 @@ function classifyByStatus(status: number | undefined): ErrorType | null {
 function classifyByMessage(error: unknown): ErrorType | null {
   const msg = error instanceof Error ? error.message : String(error)
   if (NETWORK_PATTERNS.some((p) => p.test(msg))) return 'network'
-  if (/unauthorized|forbidden|invalid.*token|token.*expired|session.*expired/i.test(msg)) return 'auth'
-  if (/validation.*error|invalid.*request|bad.*request|unprocessable|conflict/i.test(msg)) return 'validation'
+  if (/unauthorized|forbidden|invalid.*token|token.*expired|session.*expired/i.test(msg))
+    return 'auth'
+  if (/validation.*error|invalid.*request|bad.*request|unprocessable|conflict/i.test(msg))
+    return 'validation'
   return null
 }
 
@@ -78,7 +80,8 @@ function classifyError(error: unknown, code?: string): ErrorType {
     classifyByCode(code) ??
     classifyByStatus(
       error && typeof error === 'object'
-        ? ((error as Record<string, unknown>).status ?? (error as Record<string, unknown>).statusCode) as number | undefined
+        ? (((error as Record<string, unknown>).status ??
+            (error as Record<string, unknown>).statusCode) as number | undefined)
         : undefined,
     ) ??
     classifyByMessage(error) ??

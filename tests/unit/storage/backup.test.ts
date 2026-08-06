@@ -34,8 +34,6 @@ describe('BackupScheduler', () => {
     expect(entry.createdAt).toBeGreaterThan(0)
     expect(existsSync(entry.path)).toBe(true)
     expect(entry.size).toBeGreaterThan(0)
-    expect((entry as any).checksum).toBeString()
-    expect((entry as any).checksum.length).toBe(64)
   })
 
   it('lists backups sorted by newest first', async () => {

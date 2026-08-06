@@ -10,14 +10,29 @@ export function createTunnelRouter(ctx: ServerContext) {
     const path = url.pathname
 
     // Get the service manager from context
-    const rawCtx = ctx as unknown as { serviceManager?: {
-      getStatus: () => Record<string, unknown>
-      getTunnelClient: () => { isConnected: () => boolean; getSubdomain: () => string | null; getMetrics: () => Record<string, unknown> }
-      getP2PNode: () => { isRunning: () => boolean; getPeerId: () => string | null; getPeers: () => unknown[]; getMetrics: () => Record<string, unknown> }
-      getLocalServer: () => { isRunning: () => boolean; getPort: () => number; getRequestCount: () => number }
-      start: () => Promise<void>
-      stop: () => Promise<void>
-    }}
+    const rawCtx = ctx as unknown as {
+      serviceManager?: {
+        getStatus: () => Record<string, unknown>
+        getTunnelClient: () => {
+          isConnected: () => boolean
+          getSubdomain: () => string | null
+          getMetrics: () => Record<string, unknown>
+        }
+        getP2PNode: () => {
+          isRunning: () => boolean
+          getPeerId: () => string | null
+          getPeers: () => unknown[]
+          getMetrics: () => Record<string, unknown>
+        }
+        getLocalServer: () => {
+          isRunning: () => boolean
+          getPort: () => number
+          getRequestCount: () => number
+        }
+        start: () => Promise<void>
+        stop: () => Promise<void>
+      }
+    }
     const serviceManager = rawCtx.serviceManager
 
     // Fallback: if no service manager, return basic status from config
@@ -46,7 +61,11 @@ export function createTunnelRouter(ctx: ServerContext) {
 
         // POST /api/tunnel/start
         if (req.method === 'POST' && path === '/api/tunnel/start') {
-          return errorResponse('ServiceManager not initialized — start the orchestrator first', 'NotAvailable', 503)
+          return errorResponse(
+            'ServiceManager not initialized — start the orchestrator first',
+            'NotAvailable',
+            503,
+          )
         }
 
         // POST /api/tunnel/stop
@@ -78,14 +97,14 @@ export function createTunnelRouter(ctx: ServerContext) {
         const tunnelStatus = status.tunnel as { connected: boolean }
         const p2pStatus = status.p2p as { running: boolean }
         const localStatus = status.localServer as { running: boolean }
-        const allRunning =
-          tunnelStatus.connected &&
-          p2pStatus.running &&
-          localStatus.running
-        return json({
-          healthy: allRunning,
-          ...status,
-        }, allRunning ? 200 : 503)
+        const allRunning = tunnelStatus.connected && p2pStatus.running && localStatus.running
+        return json(
+          {
+            healthy: allRunning,
+            ...status,
+          },
+          allRunning ? 200 : 503,
+        )
       }
 
       // ═══════════════════════════════════════════════════════════════════

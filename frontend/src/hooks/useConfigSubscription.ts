@@ -4,13 +4,15 @@
 
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 
 /**
  * Hook that subscribes to config:changed WebSocket events.
  * Returns a ref that holds the latest config event data.
  */
-export function useConfigSubscription(onConfigChanged?: (event: { type: string; [key: string]: unknown }) => void) {
+export function useConfigSubscription(
+  onConfigChanged?: (event: { type: string; [key: string]: unknown }) => void,
+) {
   const callbackRef = useRef(onConfigChanged)
   callbackRef.current = onConfigChanged
 

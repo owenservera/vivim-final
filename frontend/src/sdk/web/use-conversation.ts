@@ -1,10 +1,10 @@
 'use client'
 
-import { useIO } from '@/components/canvas/UnifiedIOProvider'
-import type { ConversationDetail } from '@/types/shared/api-contract'
-import type { Conversation } from '@/types/api'
-import { transformConversation } from '@/api/transformers'
 import { ConversationArraySchema, ConversationDetailSchema } from '@/api/schemas'
+import { transformConversation } from '@/api/transformers'
+import { useIO } from '@/components/canvas/UnifiedIOProvider'
+import type { Conversation } from '@/types/api'
+import type { ConversationDetail } from '@/types/shared/api-contract'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useConversation() {
@@ -34,7 +34,9 @@ export function useConversation() {
       setConversations(
         Array.isArray(raw)
           ? raw.map(transformConversation)
-          : ((raw as { conversations?: ConversationDetail[] }).conversations ?? []).map(transformConversation),
+          : ((raw as { conversations?: ConversationDetail[] }).conversations ?? []).map(
+              transformConversation,
+            ),
       )
     } catch (e) {
       if (!mountedRef.current) return
@@ -54,9 +56,13 @@ export function useConversation() {
       setLoading(true)
       setError(null)
       try {
-        const res = await io.post<ConversationDetail>('/api/conversations', { providerId }, {
-          responseSchema: ConversationDetailSchema,
-        })
+        const res = await io.post<ConversationDetail>(
+          '/api/conversations',
+          { providerId },
+          {
+            responseSchema: ConversationDetailSchema,
+          },
+        )
         if (!mountedRef.current) return null
         const row = res.data
         // Defensive parsing — ensure response has required fields

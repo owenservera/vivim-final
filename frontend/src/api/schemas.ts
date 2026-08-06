@@ -149,14 +149,16 @@ export const MutationApplyResponseSchema = z.object({
 })
 
 export const MutationListResponseSchema = z.object({
-  mutations: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string().nullable(),
-    state: z.string(),
-    createdAt: z.number(),
-    updatedAt: z.number(),
-  })),
+  mutations: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().nullable(),
+      state: z.string(),
+      createdAt: z.number(),
+      updatedAt: z.number(),
+    }),
+  ),
   total: z.number(),
 })
 
@@ -304,8 +306,10 @@ export const SetupStatusResponseSchema = z.object({
   step: z.number().optional(),
 })
 
-export const ProfileListResponseSchema = z.array(z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-}))
+export const ProfileListResponseSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+  }),
+)

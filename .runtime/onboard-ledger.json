@@ -1,0 +1,44 @@
+{
+  "goal": "onboard chatgpt.com",
+  "provider": "chatgpt",
+  "url": "https://chatgpt.com",
+  "phases": [
+    {
+      "phase": "discover",
+      "status": "failed",
+      "startedAt": 1785973032713,
+      "detail": "No live Chrome slave found for provider 'chatgpt'. Run: bun run devops agentic adopt --provider=chatgpt (after bun run devops runtime-test setup --provider=chatgpt --account=<email> for first-time login)",
+      "finishedAt": 1785973032852
+    },
+    {
+      "phase": "infer",
+      "status": "pending"
+    },
+    {
+      "phase": "test-selectors",
+      "status": "pending"
+    },
+    {
+      "phase": "test-parse",
+      "status": "pending"
+    },
+    {
+      "phase": "test-cap",
+      "status": "pending"
+    },
+    {
+      "phase": "test-frontend",
+      "status": "pending"
+    },
+    {
+      "phase": "verify",
+      "status": "pending"
+    },
+    {
+      "phase": "converge",
+      "status": "pending"
+    }
+  ],
+  "createdAt": 1785973032705,
+  "updatedAt": 1785973032852
+}

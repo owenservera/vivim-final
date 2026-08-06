@@ -254,7 +254,10 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
     // POST /api/memory/curate  { id, memoryType, memoryId, action }
     if (path === '/api/memory/curate' && req.method === 'POST') {
       if (!curatedStore) {
-        return { status: 501, body: { error: 'curation store not configured', code: 'NotImplemented' } }
+        return {
+          status: 501,
+          body: { error: 'curation store not configured', code: 'NotImplemented' },
+        }
       }
       let body: { id?: string; memoryType?: string; memoryId?: string; action?: string }
       try {
@@ -316,7 +319,10 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
         }
         return {
           status: 400,
-          body: { error: 'no valid patch fields (verified, object, predicate)', code: 'ValidationError' },
+          body: {
+            error: 'no valid patch fields (verified, object, predicate)',
+            code: 'ValidationError',
+          },
         }
       } catch (_err) {
         return { status: 404, body: { error: `fact not found: ${id}`, code: 'NotFound' } }

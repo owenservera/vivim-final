@@ -3,12 +3,12 @@
  * Auto-reconnects with exponential backoff.
  * Provides typed message handling.
  */
-"use client"
+'use client'
 
-import { useEffect, useRef, useCallback, useState } from "react"
-import { getWsUrl } from "@/lib/ws-url"
+import { getWsUrl } from '@/lib/ws-url'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-export type WsStatus = "connecting" | "connected" | "disconnected" | "error"
+export type WsStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
 
 export interface WsMessage {
   type: string
@@ -26,23 +26,21 @@ interface UseWebSocketOptions {
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
-  const {
-    onMessage,
-    onStatusChange,
-    autoConnect = true,
-    maxReconnectAttempts = 10,
-  } = options
+  const { onMessage, onStatusChange, autoConnect = true, maxReconnectAttempts = 10 } = options
 
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectAttempts = useRef(0)
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [status, setStatus] = useState<WsStatus>("disconnected")
+  const [status, setStatus] = useState<WsStatus>('disconnected')
   const subscribedTopics = useRef<Set<string>>(new Set())
 
-  const updateStatus = useCallback((s: WsStatus) => {
-    setStatus(s)
-    onStatusChange?.(s)
-  }, [onStatusChange])
+  const updateStatus = useCallback(
+    (s: WsStatus) => {
+      setStatus(s)
+      onStatusChange?.(s)
+    },
+    [onStatusChange],
+  )
 
   // Use ref to break circular dependency between connect and scheduleReconnect
   const connectRef = useRef<() => void>(() => {})
@@ -61,15 +59,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return
 
-    updateStatus("connecting")
+    updateStatus('connecting')
     const ws = new WebSocket(getWsUrl())
 
     ws.onopen = () => {
       reconnectAttempts.current = 0
-      updateStatus("connected")
+      updateStatus('connected')
       // Re-subscribe to all topics after reconnect
       for (const topic of subscribedTopics.current) {
-        ws.send(JSON.stringify({ type: "subscribe", topic }))
+        ws.send(JSON.stringify({ type: 'subscribe', topic }))
       }
     }
 
@@ -79,14 +77,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // P0-1: Normalize event envelope — if backend sends flat event
         // (no payload wrapper), create payload from all fields except type/timestamp
         // so both msg.payload.* and msg.field access patterns work
-        const msg: WsMessage = raw.payload !== undefined
-          ? raw
-          : {
-              ...raw,
-              payload: Object.fromEntries(
-                Object.entries(raw).filter(([k]) => k !== 'type' && k !== 'timestamp'),
-              ),
-            }
+        const msg: WsMessage =
+          raw.payload !== undefined
+            ? raw
+            : {
+                ...raw,
+                payload: Object.fromEntries(
+                  Object.entries(raw).filter(([k]) => k !== 'type' && k !== 'timestamp'),
+                ),
+              }
         onMessage?.(msg)
       } catch {
         // Non-JSON message — treat as raw text
@@ -95,12 +94,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
 
     ws.onclose = () => {
-      updateStatus("disconnected")
+      updateStatus('disconnected')
       scheduleReconnect()
     }
 
     ws.onerror = () => {
-      updateStatus("error")
+      updateStatus('error')
       ws.close()
     }
 
@@ -120,7 +119,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     reconnectAttempts.current = maxReconnectAttempts // prevent reconnect
     wsRef.current?.close()
     wsRef.current = null
-    updateStatus("disconnected")
+    updateStatus('disconnected')
   }, [updateStatus, maxReconnectAttempts])
 
   const send = useCallback((msg: WsMessage) => {
@@ -132,14 +131,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const subscribe = useCallback((topic: string) => {
     subscribedTopics.current.add(topic)
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: "subscribe", topic }))
+      wsRef.current.send(JSON.stringify({ type: 'subscribe', topic }))
     }
   }, [])
 
   const unsubscribe = useCallback((topic: string) => {
     subscribedTopics.current.delete(topic)
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: "unsubscribe", topic }))
+      wsRef.current.send(JSON.stringify({ type: 'unsubscribe', topic }))
     }
   }, [])
 
