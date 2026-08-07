@@ -186,8 +186,8 @@ function startOnFreePort(
         const runtimeDir = join(process.cwd(), '.runtime')
         mkdirSync(runtimeDir, { recursive: true })
         writeFileSync(join(runtimeDir, 'backend.port'), String(port), 'utf-8')
-      } catch {
-        catchDebug(_err, 'server:index:188')
+      } catch (err) {
+        catchDebug(err, 'server:index:188')
         /* best-effort */
       }
       return { server, boundPort: port }
@@ -522,33 +522,35 @@ export async function createServer(port = 9420): Promise<ServerContext> {
                 return new Response(Bun.file(indexPath))
               }
             }
-          } catch {
-            catchDebug(_err, 'server:index:496')
+          } catch (err) {
+            catchDebug(err, 'server:index:496')
             // Fall through to conversationRouter
           }
         }
 
         // Session 2: global error safety net + trace-ID on final response.
-        return withTrace(conversationRouter(req)).catch((err: unknown) => {
-          log.error(
-            {
-              traceId,
-              pathname: url.pathname,
-              err: err instanceof Error ? err.message : String(err),
-            },
-            'unhandled error in request routing',
-          )
-          return withTrace(
-            json(
+        return conversationRouter(req)
+          .then((res: Response) => withTrace(res))
+          .catch((err: unknown) => {
+            log.error(
               {
-                error: err instanceof Error ? err.message : 'Internal Server Error',
-                code: 'InternalError',
                 traceId,
+                pathname: url.pathname,
+                err: err instanceof Error ? err.message : String(err),
               },
-              500,
-            ),
-          )
-        })
+              'unhandled error in request routing',
+            )
+            return withTrace(
+              json(
+                {
+                  error: err instanceof Error ? err.message : 'Internal Server Error',
+                  code: 'InternalError',
+                  traceId,
+                },
+                500,
+              ),
+            )
+          })
       },
       websocket: {
         open(ws) {
@@ -942,33 +944,35 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
                 return new Response(Bun.file(indexPath))
               }
             }
-          } catch {
-            catchDebug(_err, 'server:index:909')
+          } catch (err) {
+            catchDebug(err, 'server:index:909')
             // Fall through to conversationRouter
           }
         }
 
         // Session 2: global error safety net + trace-ID on final response.
-        return withTrace(conversationRouter(req)).catch((err: unknown) => {
-          log.error(
-            {
-              traceId,
-              pathname: url.pathname,
-              err: err instanceof Error ? err.message : String(err),
-            },
-            'unhandled error in request routing',
-          )
-          return withTrace(
-            json(
+        return conversationRouter(req)
+          .then((res: Response) => withTrace(res))
+          .catch((err: unknown) => {
+            log.error(
               {
-                error: err instanceof Error ? err.message : 'Internal Server Error',
-                code: 'InternalError',
                 traceId,
+                pathname: url.pathname,
+                err: err instanceof Error ? err.message : String(err),
               },
-              500,
-            ),
-          )
-        })
+              'unhandled error in request routing',
+            )
+            return withTrace(
+              json(
+                {
+                  error: err instanceof Error ? err.message : 'Internal Server Error',
+                  code: 'InternalError',
+                  traceId,
+                },
+                500,
+              ),
+            )
+          })
       },
       websocket: {
         open(ws) {

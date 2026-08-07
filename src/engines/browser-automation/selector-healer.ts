@@ -36,8 +36,8 @@ export class SelectorHealer {
         const r = await this.grounding.resolveBySelector(slaveId, existing.selectorFormat)
         await this.store.recordUse(targetKey)
         return { ...r, healed: true }
-      } catch {
-        catchDebug(_err, 'engines:browser-automation:selector-healer:38')
+      } catch (err) {
+        catchDebug(err, 'engines:browser-automation:selector-healer:38')
         // stale — fall through
       }
     }
@@ -54,8 +54,8 @@ export class SelectorHealer {
           semanticData: { original, healedFrom: 'rule-based' },
         })
         return { ...r, healed: true }
-      } catch {
-        catchDebug(_err, 'engines:browser-automation:selector-healer:55')
+      } catch (err) {
+        catchDebug(err, 'engines:browser-automation:selector-healer:55')
         // try next
       }
     }
@@ -82,8 +82,8 @@ export class SelectorHealer {
           })
           await this.store.bumpHealCount(targetKey)
           return { ...r, healed: true }
-        } catch {
-          catchDebug(_err, 'engines:browser-automation:selector-healer:82')
+        } catch (err) {
+          catchDebug(err, 'engines:browser-automation:selector-healer:82')
           // candidate invalid
         }
       }

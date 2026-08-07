@@ -241,7 +241,6 @@ export class FleetSupervisor {
               '-NoProfile',
               '-Command',
               'Get-Process chrome -ErrorAction SilentlyContinue | ForEach-Object { try { $_.Path } catch {} }',
-              catchDebug(_err, 'executor:fleet-supervisor:243'),
             ]
           : ['pgrep', '-f', 'chrome'],
         { stdout: 'pipe', stderr: 'pipe' },

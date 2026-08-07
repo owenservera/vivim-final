@@ -74,8 +74,8 @@ export class ApiProviderAdapter {
               onToken(token)
               allTokens.push(token)
             }
-          } catch {
-            catchDebug(_err, 'engines:api-provider-adapter:76')
+          } catch (err) {
+            catchDebug(err, 'engines:api-provider-adapter:76')
             // ignore parse errors
           }
         }

@@ -233,8 +233,8 @@ export class ConversationHistorySyncEngine {
       try {
         const parsed = JSON.parse(state.cursorJson) as { cursor?: string }
         cursor = parsed.cursor
-      } catch {
-        catchDebug(_err, 'engines:conversation-history-sync:234')
+      } catch (err) {
+        catchDebug(err, 'engines:conversation-history-sync:234')
         /* ignore invalid cursor */
       }
     }

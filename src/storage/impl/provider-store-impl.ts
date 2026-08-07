@@ -128,7 +128,7 @@ export class ProviderStoreImpl {
       where,
       orderBy: { displayName: 'asc' },
     })
-    return rows.map((r) => ({
+    return rows.map((r: any) => ({
       id: r.id as string,
       slug: r.slug as string,
       display_name: r.displayName as string,

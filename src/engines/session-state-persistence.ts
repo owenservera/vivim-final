@@ -133,8 +133,8 @@ export class SessionStatePersistence {
     if (this.persistenceDir && this.dirty.size > 0) {
       try {
         this.flushToDisk()
-      } catch {
-        catchDebug(_err, 'engines:session-state-persistence:135')
+      } catch (err) {
+        catchDebug(err, 'engines:session-state-persistence:135')
         // ignore
       }
     }

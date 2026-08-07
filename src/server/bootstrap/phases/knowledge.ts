@@ -218,11 +218,11 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
           }
 
           return {
-            ok: result.ok,
-            response: result.text || '',
+            ok: result?.ok ?? false,
+            response: result?.text || '',
             latencyMs,
             costCents: estCost,
-            error: result.error,
+            error: result?.error,
           }
         } catch (err: unknown) {
           return {

@@ -94,7 +94,7 @@ export class BackupScheduler {
     if (!match) throw new EngineError(`Backup snapshot not found: ${snapshotId}`)
     const blob = safeJsonParse<Parameters<DbEncryptionEngine['decryptBytes']>[0]>(
       readFileSync(match.path, 'utf8'),
-      null,
+      {} as Parameters<DbEncryptionEngine['decryptBytes']>[0],
     )
     const plain = this.crypto.decryptBytes(blob)
     writeFileSync(destPath, Buffer.from(plain))

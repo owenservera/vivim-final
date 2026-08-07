@@ -120,8 +120,8 @@ export class HarnessRepairEngine {
     let value: unknown
     try {
       value = JSON.parse(raw)
-    } catch {
-      catchDebug(_err, 'engines:harness-repair-engine:121')
+    } catch (err) {
+      catchDebug(err, 'engines:harness-repair-engine:121')
       // The target is a bare string (e.g. repairString()): the LLM returned a
       // plain value, not JSON. Return it verbatim — NEVER rewrite interior
       // apostrophes (defect fix: blind `'`->`"` corrupts "O'Brien").

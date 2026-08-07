@@ -1,8 +1,11 @@
 // src/storage/impl/sync-store-impl.ts
 // Prisma-backed SyncStore — CRUD + lifecycle for SyncState.
 
+import type { Prisma, PrismaClient } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type { CapStoreDb } from '../db.js'
+
+type SyncStatePrismaRow = Prisma.SyncStateGetPayload<Record<string, never>>
 
 // ── Domain types ────────────────────────────────────────────────────────────
 
@@ -14,7 +17,7 @@ export interface SyncStateRow {
   entityId: string
   syncDirection: string
   syncStatus: string
-  syncVersion: string | null
+  syncVersion: number
   cursorJson: string | null
   lastSyncedAt: number | null
   nextSyncAt: number | null
@@ -30,7 +33,7 @@ export interface SyncStateRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class SyncStoreImpl {
-  protected readonly prisma: any
+  protected readonly prisma: PrismaClient
 
   constructor(private readonly db: CapStoreDb) {
     this.prisma = db.prisma
@@ -77,8 +80,8 @@ export class SyncStoreImpl {
         entityId: input.entityId,
         syncDirection: input.syncDirection ?? 'pull',
         syncStatus: input.syncStatus ?? 'pending',
-        syncVersion: null,
-        cursorJson: input.cursorJson ?? null,
+        syncVersion: 0,
+        cursorJson: input.cursorJson ?? '{}',
         lastSyncedAt: null,
         nextSyncAt: null,
         errorCount: 0,
@@ -161,8 +164,7 @@ export class SyncStoreImpl {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
-
-  private toRow(r: Record<string, unknown>): SyncStateRow {
+  private toRow(r: SyncStatePrismaRow): SyncStateRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -173,15 +175,15 @@ export class SyncStoreImpl {
       syncStatus: r.syncStatus,
       syncVersion: r.syncVersion,
       cursorJson: r.cursorJson,
-      lastSyncedAt: r.lastSyncedAt,
-      nextSyncAt: r.nextSyncAt,
+      lastSyncedAt: r.lastSyncedAt === null ? null : Number(r.lastSyncedAt),
+      nextSyncAt: r.nextSyncAt === null ? null : Number(r.nextSyncAt),
       errorCount: r.errorCount,
       lastError: r.lastError,
       itemsSynced: r.itemsSynced,
       itemsFailed: r.itemsFailed,
       bytesSynced: r.bytesSynced,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }
   }
 }

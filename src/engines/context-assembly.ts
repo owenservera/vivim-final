@@ -692,7 +692,7 @@ export async function buildConversationHistoryLayer(
     let textContent = msg.content ?? ''
     if (msg.blocksJson && msg.blocksJson !== '[]') {
       try {
-        const blocks = safeJsonParse<Array<{ text?: string; type?: string }>>(msg.blocksJson, null)
+        const blocks = safeJsonParse<Array<{ text?: string; type?: string }>>(msg.blocksJson, [])
         for (const block of blocks) {
           if (block.text) {
             textContent += (textContent ? '\n' : '') + block.text

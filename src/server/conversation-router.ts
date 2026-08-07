@@ -178,8 +178,8 @@ export function createConversationRouter(ctx: ServerContext) {
         if (!ctx.governor) return json({ ok: true })
         try {
           await ctx.governor.kill(slaveId)
-        } catch {
-          catchDebug(_err, 'server:conversation-router:180')
+        } catch (err) {
+          catchDebug(err, 'server:conversation-router:180')
           // best-effort kill; return success
         }
         return json({ ok: true })

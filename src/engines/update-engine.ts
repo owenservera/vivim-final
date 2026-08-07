@@ -99,8 +99,8 @@ export class UpdateEngine {
         const match = output.match(/(\d+\.\d+\.\d+)/)
         if (match?.[1]) return match[1]
       }
-    } catch {
-      catchDebug(_err, 'engines:update-engine:101')
+    } catch (err) {
+      catchDebug(err, 'engines:update-engine:101')
       // Ignore errors
     }
 

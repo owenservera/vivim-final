@@ -531,8 +531,8 @@ export class SessionLifecycleManager {
     for (const session of activeSessions) {
       try {
         await this.terminateSession(session.sessionId, 'manager destroyed')
-      } catch {
-        catchDebug(_err, 'engines:session-lifecycle-manager:533')
+      } catch (err) {
+        catchDebug(err, 'engines:session-lifecycle-manager:533')
         // best-effort
       }
     }

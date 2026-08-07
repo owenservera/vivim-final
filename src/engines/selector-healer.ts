@@ -298,8 +298,14 @@ Return only JSON: { "type": "aria"|"text"|"css", ... }`
       })) as { text?: string } | string
 
       const text = typeof response === 'string' ? response : (response?.text ?? '')
-      const parsed = safeJsonParse<SemanticSelector>(text, null)
-      if (parsed) return { selector: parsed, confidence: 0.7, strategy: 'llm' }
+      const parsed = safeJsonParse<SemanticSelector>(text, {} as SemanticSelector)
+      if (parsed)
+        return {
+          healed: parsed,
+          confidence: 0.7,
+          strategy: 'llm_proposal',
+          originalSelector: selector,
+        }
     } catch (e) {
       catchDebug(e, 'engines:selector-healer:303')
     }
@@ -334,5 +340,20 @@ Return only JSON: { "type": "aria"|"text"|"css", ... }`
   private estimateRegion(selector: SemanticSelector): ScreenshotRegion | null {
     if (selector.type === 'visual') return selector.screenshotRegion
     return { x: 0, y: 0, width: 800, height: 600 }
+  }
+
+  // Render a compact, truncated one-line-per-node view of the a11y tree for
+  // the LLM proposal prompt.
+  private treeToSnippet(root: AccessibilityNode, depth: number): string {
+    const lines: string[] = []
+    const walk = (node: AccessibilityNode, level: number): void => {
+      const pad = '  '.repeat(level)
+      lines.push(`${pad}${node.role}${node.name ? ` "${node.name}"` : ''}`)
+      if (level < depth) {
+        for (const child of node.children) walk(child, level + 1)
+      }
+    }
+    walk(root, 0)
+    return lines.slice(0, 200).join('\n')
   }
 }

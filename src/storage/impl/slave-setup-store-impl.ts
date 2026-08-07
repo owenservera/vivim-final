@@ -19,8 +19,8 @@ const CONFIG_FILE = join(CONFIG_DIR, 'setup-config.json')
 async function ensureConfigDir(): Promise<void> {
   try {
     await mkdir(CONFIG_DIR, { recursive: true })
-  } catch {
-    catchDebug(_err, 'storage:impl:slave-setup-store-impl:21')
+  } catch (err) {
+    catchDebug(err, 'storage:impl:slave-setup-store-impl:21')
     // Race or exists
   }
 }

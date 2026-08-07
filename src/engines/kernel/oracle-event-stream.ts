@@ -77,16 +77,16 @@ export class OracleEventStream {
     for (const cb of this.subscribers) {
       try {
         cb(full)
-      } catch {
-        catchDebug(_err, 'engines:kernel:oracle-event-stream:79')
+      } catch (err) {
+        catchDebug(err, 'engines:kernel:oracle-event-stream:79')
         /* ignore subscriber errors */
       }
     }
     if (this.eventBus) {
       try {
         this.eventBus.emit({ type: 'kernel:oracle', ...full })
-      } catch {
-        catchDebug(_err, 'engines:kernel:oracle-event-stream:86')
+      } catch (err) {
+        catchDebug(err, 'engines:kernel:oracle-event-stream:86')
         /* ignore */
       }
     }

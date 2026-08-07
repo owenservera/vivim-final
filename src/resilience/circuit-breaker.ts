@@ -164,16 +164,16 @@ export class CircuitBreaker {
     for (const listener of this.listeners.values()) {
       try {
         listener(state)
-      } catch {
-        catchDebug(_err, 'resilience:circuit-breaker:166')
+      } catch (err) {
+        catchDebug(err, 'resilience:circuit-breaker:166')
         // Swallow listener errors so they don't break the state machine.
       }
     }
     // Notify optional external handler (e.g. CapabilityEventBus)
     try {
       this.onTransition?.(from, state)
-    } catch {
-      catchDebug(_err, 'resilience:circuit-breaker:173')
+    } catch (err) {
+      catchDebug(err, 'resilience:circuit-breaker:173')
       // Swallow
     }
   }

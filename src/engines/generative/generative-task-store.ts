@@ -250,8 +250,8 @@ export class InMemoryGenerativeTaskStore implements GenerativeTaskStore {
     for (const sub of set) {
       try {
         sub(event)
-      } catch {
-        catchDebug(_err, 'engines:generative:generative-task-store:252')
+      } catch (err) {
+        catchDebug(err, 'engines:generative:generative-task-store:252')
         // subscriber errors are non-fatal
       }
     }

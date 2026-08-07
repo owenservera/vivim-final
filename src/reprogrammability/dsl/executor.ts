@@ -338,7 +338,7 @@ export class MutationExecutor {
         })
       } catch (err) {
         // Best-effort rollback; log and continue.
-        log.error(`[MutationExecutor] rollback failed for ${record.mutation.target}:`, err)
+        log.error({ err }, `[MutationExecutor] rollback failed for ${record.mutation.target}:`)
       }
       // Remove from undo stack.
       const idx = this.undoStack.indexOf(record)

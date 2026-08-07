@@ -98,8 +98,8 @@ export async function resolveChromeBinary(channel: ChromeChannel = 'system'): Pr
     for (const fam of ['chrome', 'chromium', 'edge'] as const) {
       try {
         return await resolveChromeBinary(fam)
-      } catch {
-        catchDebug(_err, 'executor:chrome-instance-profile:100')
+      } catch (err) {
+        catchDebug(err, 'executor:chrome-instance-profile:100')
         /* try next */
       }
     }
@@ -119,8 +119,8 @@ async function probePath(cmd: string): Promise<string | null> {
       const out = result.stdout.toString().trim().split('\n')[0]?.trim()
       if (out) return out
     }
-  } catch {
-    catchDebug(_err, 'executor:chrome-instance-profile:120')
+  } catch (err) {
+    catchDebug(err, 'executor:chrome-instance-profile:120')
     /* ignore */
   }
   return null

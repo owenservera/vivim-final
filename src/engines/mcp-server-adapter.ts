@@ -209,8 +209,8 @@ export class McpServerAdapter {
                 }),
               )
             }
-          } catch {
-            catchDebug(_err, 'engines:mcp-server-adapter:211')
+          } catch (err) {
+            catchDebug(err, 'engines:mcp-server-adapter:211')
             // Ignore malformed messages
           }
         },

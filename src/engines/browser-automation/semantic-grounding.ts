@@ -39,8 +39,8 @@ export class SemanticGroundingEngine {
         try {
           const r = await this.resolve(slaveId, sub)
           return { ...r, healed: r.healed }
-        } catch {
-          catchDebug(_err, 'engines:browser-automation:semantic-grounding:41')
+        } catch (err) {
+          catchDebug(err, 'engines:browser-automation:semantic-grounding:41')
           // try next
         }
       }

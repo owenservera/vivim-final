@@ -266,8 +266,8 @@ export async function importDataToDb(
                     data: normalizeMessageRow(msg) as never,
                   })
                   totalMsgs++
-                } catch {
-                  catchDebug(_err, 'engines:export:268')
+                } catch (err) {
+                  catchDebug(err, 'engines:export:268')
                   // Skip invalid messages
                 }
               }
@@ -282,8 +282,8 @@ export async function importDataToDb(
               try {
                 await importRow(tx, tableName, row)
                 count++
-              } catch {
-                catchDebug(_err, 'engines:export:283')
+              } catch (err) {
+                catchDebug(err, 'engines:export:283')
                 // Skip duplicate or invalid rows
               }
             }

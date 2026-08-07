@@ -128,11 +128,11 @@ export class ContactStoreImpl {
         isOnline: 0,
         statusText: null,
         lastSeenAt: null,
-        relationship: input.relationship ?? null,
+        relationship: input.relationship ?? 'contact',
         isFavorite: 0,
         isBlocked: 0,
         notes: input.notes ?? null,
-        metadataJson: input.metadataJson ?? null,
+        metadataJson: input.metadataJson ?? '{}',
         createdAt: now,
         updatedAt: now,
       },
@@ -214,14 +214,14 @@ export class ContactStoreImpl {
       email: r.email,
       isOnline: r.isOnline,
       statusText: r.statusText,
-      lastSeenAt: r.lastSeenAt,
+      lastSeenAt: r.lastSeenAt === null ? null : Number(r.lastSeenAt),
       relationship: r.relationship,
       isFavorite: r.isFavorite,
       isBlocked: r.isBlocked,
       notes: r.notes,
       metadataJson: r.metadataJson,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }
   }
 
@@ -233,7 +233,7 @@ export class ContactStoreImpl {
       mergeConfidence: r.mergeConfidence,
       mergeMethod: r.mergeMethod,
       isConfirmed: r.isConfirmed,
-      createdAt: r.createdAt,
+      createdAt: Number(r.createdAt),
     }
   }
 }

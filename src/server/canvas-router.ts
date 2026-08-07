@@ -161,8 +161,8 @@ export function createCanvasRouter(ctx: ServerContext) {
                   controller.enqueue(
                     encoder.encode(`event: ${evt.type}\ndata: ${JSON.stringify(evt)}\n\n`),
                   )
-                } catch {
-                  catchDebug(_err, 'server:canvas-router:163')
+                } catch (err) {
+                  catchDebug(err, 'server:canvas-router:163')
                   // Stream may have closed
                 }
               })

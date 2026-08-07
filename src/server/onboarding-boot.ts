@@ -13,11 +13,14 @@
 import type { ChromeGovernor } from '../engines/chrome-governor.js'
 import { LiveNetworkCapturer } from '../engines/onboarding/live-network-capturer.js'
 import { ProviderOnboardingOrchestrator } from '../engines/onboarding/provider-onboarding-orchestrator.js'
+import { getLogger } from '../lib/logger.js'
 import type { CapStoreDb } from '../storage/db.js'
 import { CapabilityBindingStoreImpl } from '../storage/impl/onboarding/capability-binding-store-impl.js'
 import { DiscoveredDomEntityStoreImpl } from '../storage/impl/onboarding/discovered-dom-entity-store-impl.js'
 import { OnboardingSessionStoreImpl } from '../storage/impl/onboarding/onboarding-session-store-impl.js'
 import { ParserCandidateStoreImpl } from '../storage/impl/onboarding/parser-candidate-store-impl.js'
+
+const log = getLogger('server:onboarding-boot')
 import { ProtocolFingerprintStoreImpl } from '../storage/impl/onboarding/protocol-fingerprint-store-impl.js'
 import { WebAppTaxonomyStoreImpl } from '../storage/impl/onboarding/webapp-taxonomy-store-impl.js'
 import { serviceContainer } from './service-container.js'
@@ -81,7 +84,7 @@ export async function bootOnboardingPipeline(
   } catch (err) {
     // Best-effort — onboarding is optional. If construction fails (e.g. a
     // store impl throws), log and continue without the orchestrator.
-    log.warn('[boot] onboarding pipeline not available:', err)
+    log.warn({ err }, '[boot] onboarding pipeline not available:')
     return null
   }
 }

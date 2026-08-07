@@ -1,8 +1,11 @@
 // src/storage/impl/content-item-store-impl.ts
 // Prisma-backed ContentItemStore — CRUD + FTS for ContentItem.
 
+import type { Prisma, PrismaClient } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type { CapStoreDb } from '../db.js'
+
+type ContentItemPrismaRow = Prisma.ContentItemGetPayload<Record<string, never>>
 
 // ── Domain types ────────────────────────────────────────────────────────────
 
@@ -34,11 +37,11 @@ export interface ContentItemRow {
   isPinned: number
   isDeleted: number
   isBookmarked: number
-  voteScore: number
-  voteDirection: number
+  voteScore: number | null
+  voteDirection: string | null
   replyCount: number
   shareCount: number
-  viewCount: number
+  viewCount: number | null
   sequenceIndex: number | null
   sortTimestamp: number | null
   deletedAt: number | null
@@ -49,7 +52,7 @@ export interface ContentItemRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class ContentItemStoreImpl {
-  protected readonly prisma: any
+  protected readonly prisma: PrismaClient
 
   constructor(private readonly db: CapStoreDb) {
     this.prisma = db.prisma
@@ -117,27 +120,27 @@ export class ContentItemStoreImpl {
         authorProviderId: input.authorProviderId ?? null,
         title: input.title ?? null,
         bodyText: input.bodyText ?? null,
-        bodyRichJson: input.bodyRichJson ?? null,
+        bodyRichJson: input.bodyRichJson ?? '{}',
         summaryText: input.summaryText ?? null,
         url: input.url ?? null,
-        metadataJson: input.metadataJson ?? null,
-        mediaAttachmentsJson: null,
-        reactionsJson: null,
-        tagsJson: null,
-        mentionsJson: null,
-        linksJson: null,
-        editHistoryJson: null,
+        metadataJson: input.metadataJson ?? '{}',
+        mediaAttachmentsJson: '[]',
+        reactionsJson: '[]',
+        tagsJson: '[]',
+        mentionsJson: '[]',
+        linksJson: '[]',
+        editHistoryJson: '[]',
         isEdited: 0,
         isPinned: 0,
         isDeleted: 0,
         isBookmarked: 0,
         voteScore: 0,
-        voteDirection: 0,
+        voteDirection: null,
         replyCount: 0,
         shareCount: 0,
         viewCount: 0,
-        sequenceIndex: null,
-        sortTimestamp: input.sortTimestamp ?? null,
+        sequenceIndex: 0,
+        sortTimestamp: input.sortTimestamp ?? now,
         deletedAt: null,
         createdAt: now,
         updatedAt: now,
@@ -216,8 +219,7 @@ export class ContentItemStoreImpl {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
-
-  private toRow(r: Record<string, unknown>): ContentItemRow {
+  private toRow(r: ContentItemPrismaRow): ContentItemRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -252,10 +254,10 @@ export class ContentItemStoreImpl {
       shareCount: r.shareCount,
       viewCount: r.viewCount,
       sequenceIndex: r.sequenceIndex,
-      sortTimestamp: r.sortTimestamp,
-      deletedAt: r.deletedAt,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+      sortTimestamp: r.sortTimestamp === null ? null : Number(r.sortTimestamp),
+      deletedAt: r.deletedAt === null ? null : Number(r.deletedAt),
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }
   }
 }

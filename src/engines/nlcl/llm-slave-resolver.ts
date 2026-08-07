@@ -146,8 +146,8 @@ export class LLMSlaveResolver implements IntentResolver {
       if (this.budgetGuard) {
         try {
           await this.budgetGuard.accrue(1, 500)
-        } catch {
-          catchDebug(_err, 'engines:nlcl:llm-slave-resolver:148')
+        } catch (err) {
+          catchDebug(err, 'engines:nlcl:llm-slave-resolver:148')
           // Best-effort accrual.
         }
       }
@@ -312,8 +312,8 @@ JSON:`
         if (result.ok && result.data) {
           parsed = result.data as { capabilityId?: string; input?: Record<string, unknown> }
         }
-      } catch {
-        catchDebug(_err, 'engines:nlcl:llm-slave-resolver:313')
+      } catch (err) {
+        catchDebug(err, 'engines:nlcl:llm-slave-resolver:313')
         // Fall through to direct JSON.parse.
       }
     }

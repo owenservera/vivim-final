@@ -93,7 +93,7 @@ export class VersionStore {
     // Version number is monotonically increasing — read from the last entry,
     // not from `existing.length`, so capping at maxVersionsPerSurface doesn't
     // restart the counter.
-    const version = existing.length > 0 ? existing[existing.length - 1]?.version + 1 : 1
+    const version = existing.length > 0 ? existing[existing.length - 1]!.version + 1 : 1
     const specJson = JSON.stringify(input.spec)
     const v: SurfaceVersion = {
       id: ulid(),

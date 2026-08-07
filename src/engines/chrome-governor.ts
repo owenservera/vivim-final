@@ -6,7 +6,6 @@ import { join } from 'node:path'
 import { EngineError } from '../errors.js'
 import { FleetSupervisor } from '../executor/fleet-supervisor.js'
 import type { FleetSuperState } from '../executor/slave-states.js'
-import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type { FleetSupervisor as FleetSupervisorContract } from '../storage/contracts/fleet-supervisor.js'
 import type {
@@ -302,7 +301,6 @@ export class ChromeGovernor {
 
       const marker = markers[slave.providerId] ?? 'document.readyState === "complete"'
       const expression = `(() => { try { return ${marker} } catch { return false } })()`
-      catchDebug(_err, 'engines:chrome-governor:1020')
 
       const result = (await this.cdp.send(slaveId, 'Runtime.evaluate', {
         expression,

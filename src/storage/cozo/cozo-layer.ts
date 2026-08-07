@@ -280,8 +280,8 @@ export class CozoLayer {
     if (this.db) {
       try {
         this.db.close()
-      } catch {
-        catchDebug(_err, 'storage:cozo:cozo-layer:282')
+      } catch (err) {
+        catchDebug(err, 'storage:cozo:cozo-layer:282')
         // best-effort
       }
       this.db = null

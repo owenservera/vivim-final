@@ -133,7 +133,7 @@ const CLASSIFICATION_PRIORITY: Record<ActionClassification, number> = {
   financial: 5,
 }
 
-function classificationAtLeast(
+export function classificationAtLeast(
   classification: ActionClassification,
   threshold: ActionClassification,
 ): boolean {
@@ -142,7 +142,7 @@ function classificationAtLeast(
 
 // The nlcl resolver uses a superset classification ('system' extra); map it
 // onto the autonomous engine's classification space.
-function toAutonomousClassification(c: string): ActionClassification {
+export function toAutonomousClassification(c: string): ActionClassification {
   return c === 'system' ? 'read' : (c as ActionClassification)
 }
 

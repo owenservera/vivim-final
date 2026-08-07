@@ -295,8 +295,8 @@ function extractJsonRecords(body: string): Json[] {
       if (!t) continue
       try {
         records.push(JSON.parse(t))
-      } catch {
-        catchDebug(_err, 'engines:streaming-response-analyzer:295')
+      } catch (err) {
+        catchDebug(err, 'engines:streaming-response-analyzer:295')
         /* ignore */
       }
     }

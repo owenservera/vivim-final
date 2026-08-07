@@ -130,8 +130,8 @@ export class OpenCodeClient {
             nl = buf.indexOf('\n')
           }
         }
-      } catch {
-        catchDebug(_err, 'engines:opencode:opencode-client:132')
+      } catch (err) {
+        catchDebug(err, 'engines:opencode:opencode-client:132')
         // stream closed / aborted — ignore
       }
     }

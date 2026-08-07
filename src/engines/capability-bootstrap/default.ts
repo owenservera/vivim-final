@@ -1,7 +1,8 @@
-import type { OpenCodeClient } from './opencode/opencode-client.js'
-import type { OpenCodeIngest } from './opencode/opencode-ingest.js'
+import type { OpenCodeClient } from '../opencode/opencode-client.js'
+import type { OpenCodeIngest } from '../opencode/opencode-ingest.js'
+import type { UnifiedCapability, UnifiedCapabilityRegistry } from '../unified-registry.js'
+import { seedLocalAgentProvider } from './seed.js'
 import { type BootstrapServices, makeCapability } from './types.js'
-import type { UnifiedCapability, UnifiedCapabilityRegistry } from './unified-registry.js'
 
 export async function registerDefaultCapabilities(
   registry: UnifiedCapabilityRegistry,
@@ -1019,15 +1020,3 @@ export async function registerDefaultCapabilities(
     registry.register(cap)
   }
 }
-
-/**
- * Seed the `local-agent` provider (`slug: opencode`) with the 4 verified Zen free
- * models (opencode v1.17.15, 2026-07-19). Idempotent via the store's upsert.
- * `nemotron-3-ultra-free` is intentionally excluded (>5 min cold timeout in test).
- */
-const LOCAL_AGENT_FREE_MODELS: Array<{ slug: string; displayName: string }> = [
-  { slug: 'opencode/deepseek-v4-flash-free', displayName: 'DeepSeek V4 Flash (free)' },
-  { slug: 'opencode/hy3-free', displayName: 'HY3 (free)' },
-  { slug: 'opencode/mimo-v2.5-free', displayName: 'Mimo 2.5 (free)' },
-  { slug: 'opencode/north-mini-code-free', displayName: 'North Mini Code (free)' },
-]

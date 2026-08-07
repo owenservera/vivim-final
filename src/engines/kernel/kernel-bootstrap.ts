@@ -246,13 +246,15 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
     actuator.registerReconnectable('chrome-governor', {
       reconnect: async (providerId: string) => {
         // Kill any errored slave for this provider, then relaunch.
-        const slaves = deps.governor?.getAllSlaves({ providerId })
+        const governor = deps.governor
+        if (!governor) return
+        const slaves = governor.getAllSlaves({ providerId })
         for (const slave of slaves) {
           if (slave.status === 'error') {
-            await deps.governor?.kill(slave.slaveId).catch(() => {})
+            await governor.kill(slave.slaveId).catch(() => {})
           }
         }
-        await deps.governor?.launch(providerId)
+        await governor.launch(providerId)
       },
     })
   }
@@ -297,8 +299,8 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
             })
           }
         }
-      } catch {
-        catchDebug(_err, 'engines:kernel:kernel-bootstrap:299')
+      } catch (err) {
+        catchDebug(err, 'engines:kernel:kernel-bootstrap:299')
         // Diagnostic loop must never crash the server.
       }
     })()

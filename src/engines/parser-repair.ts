@@ -47,7 +47,6 @@ function parse(rawBody) {
         i++
         continue
       } catch { /* not valid JSON — fall through to text block */ }
-        catchDebug(_err, 'engines:parser-repair:49')
     }
     blocks.push({ kind: 'text', content: line, index: i })
     i++

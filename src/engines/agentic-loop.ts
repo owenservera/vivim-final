@@ -169,8 +169,8 @@ export class AgenticLoopEngine {
     for (const strategy of this.planningStrategies.sort((a, b) => a.priority - b.priority)) {
       try {
         return await strategy.plan(goal, context)
-      } catch {
-        catchDebug(_err, 'engines:agentic-loop:171')
+      } catch (err) {
+        catchDebug(err, 'engines:agentic-loop:171')
         // try next strategy
       }
     }

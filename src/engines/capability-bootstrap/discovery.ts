@@ -2,7 +2,10 @@
 // registerDiscoveryCapabilities — registers discovery/onboarding capabilities.
 // Session 7 (2026-08-07): Extracted from capability-bootstrap.ts.
 
-import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
+import { buildLocalDiscoveryStack, createPageEvalCapturer } from '../../cli/discovery-stack.js'
+import { type ComposerType, submitMessage, typeMessage } from '../composer-typing.js'
+import { DiscoverySessionRunner } from '../discovery-session-runner.js'
+import type { CapabilitySurface, UnifiedCapabilityRegistry } from '../unified-registry.js'
 import { makeCapability } from './types.js'
 
 export function registerDiscoveryCapabilities(registry: UnifiedCapabilityRegistry): void {

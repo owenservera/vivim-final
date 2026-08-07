@@ -66,8 +66,8 @@ export class BackgroundSyncQueue {
     ])
     try {
       await race
-    } catch {
-      catchDebug(_err, 'engines:memory:background-sync:68')
+    } catch (err) {
+      catchDebug(err, 'engines:memory:background-sync:68')
       // bounded: leave in-flight, report via drain
     }
   }

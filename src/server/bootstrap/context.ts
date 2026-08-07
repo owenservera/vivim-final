@@ -29,6 +29,7 @@ import type { CdpTransportImpl } from '../../executor/cdp-transport.js'
 import type { CapStoreDb } from '../../storage/db.js'
 import type { CapabilityStoreImpl } from '../../storage/impl/capability-store-impl.js'
 import type { ConversationStoreImpl } from '../../storage/impl/conversation-store-impl.js'
+import type { EntityContainerStoreImpl } from '../../storage/impl/entity-container-store-impl.js'
 import type { ProviderStoreImpl } from '../../storage/impl/provider-store-impl.js'
 
 /** Everything produced by any boot phase; phases fill in the fields they own. */
@@ -84,9 +85,7 @@ export interface BootstrapContext {
 
   // Phase: routers-facing stores
   nodeStore?: import('../../storage/contracts/node-store.js').NodeStoreContract
-  containerStore?: import(
-    '../../storage/impl/entity-container-store-impl.js',
-  ).EntityContainerStoreImpl
+  containerStore?: EntityContainerStoreImpl
   contentStore?: import('../../storage/impl/content-item-store-impl.js').ContentItemStoreImpl
   notificationStore?: import('../../storage/impl/notification-store-impl.js').NotificationStoreImpl
   contactStore?: import('../../storage/impl/contact-store-impl.js').ContactStoreImpl
@@ -131,9 +130,7 @@ export interface BootstrapEnginesResult {
   userIdentity?: UserIdentityEngine
   relocationEngine?: import('../../engines/storage-relocation-engine.js').StorageRelocationEngine
   nodeStore: import('../../storage/contracts/node-store.js').NodeStoreContract
-  containerStore: import(
-    '../../storage/impl/entity-container-store-impl.js',
-  ).EntityContainerStoreImpl
+  containerStore: EntityContainerStoreImpl
   contentStore: import('../../storage/impl/content-item-store-impl.js').ContentItemStoreImpl
   notificationStore: import('../../storage/impl/notification-store-impl.js').NotificationStoreImpl
   contactStore: import('../../storage/impl/contact-store-impl.js').ContactStoreImpl

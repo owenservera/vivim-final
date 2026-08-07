@@ -54,8 +54,8 @@ export class ProtocolLoopParser {
       try {
         const frame = JSON.parse(line) as ProtocolFrame
         this.emitFrame(frame)
-      } catch {
-        catchDebug(_err, 'engines:protocol-loop-parser:56')
+      } catch (err) {
+        catchDebug(err, 'engines:protocol-loop-parser:56')
         // Not a valid JSON frame — ignore
       }
     }

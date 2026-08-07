@@ -102,8 +102,8 @@ export async function extractParametersWithLinker(
           if (!base.ambiguous.includes(key)) base.ambiguous.push(key)
         }
       }
-    } catch {
-      catchDebug(_err, 'engines:nlcl:parameter-extraction:104')
+    } catch (err) {
+      catchDebug(err, 'engines:nlcl:parameter-extraction:104')
       // Linker failed — leave the sync-extracted value (if any) in place.
     }
   }

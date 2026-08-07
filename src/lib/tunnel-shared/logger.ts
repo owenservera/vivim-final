@@ -43,5 +43,8 @@ export function getLogger(module: string): pino.Logger {
   if (!rootLogger) {
     initLogger()
   }
-  return rootLogger?.child({ module })
+  if (!rootLogger) {
+    throw new Error('tunnel-shared: logger not initialized')
+  }
+  return rootLogger.child({ module })
 }

@@ -468,8 +468,8 @@ export class StreamParserEngine {
           }
           this.primedParsers.set(`${p.slug}/${pr.version}`, tagged)
           this.primedParsers.set(`${p.slug}/${pr.name.split('/')[1] ?? pr.version}`, tagged)
-        } catch {
-          catchDebug(_err, 'engines:stream-parser:471')
+        } catch (err) {
+          catchDebug(err, 'engines:stream-parser:471')
           // non-fatal: DB chain resolves it lazily on parse()
         }
       }

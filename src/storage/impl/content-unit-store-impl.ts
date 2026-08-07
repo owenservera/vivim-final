@@ -1,12 +1,15 @@
 // src/storage/impl/content-unit-store-impl.ts
 // Prisma-backed ContentUnitStore for decomposed content blocks.
 
+import type { Prisma } from '@prisma/client'
 import type { ContentUnitRow, ContentUnitStore } from '../contracts/content-unit-store.js'
 import type { CapStoreDb } from '../db.js'
 
 type PrismaLoose = any
 
-function toRow(r: Record<string, unknown>): ContentUnitRow {
+type ContentUnitPrismaRow = Prisma.ContentUnitGetPayload<Record<string, never>>
+
+function toRow(r: ContentUnitPrismaRow): ContentUnitRow {
   return {
     id: r.id,
     messageId: r.messageId,

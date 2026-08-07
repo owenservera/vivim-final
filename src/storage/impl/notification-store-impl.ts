@@ -1,8 +1,11 @@
 // src/storage/impl/notification-store-impl.ts
 // Prisma-backed NotificationStore — CRUD + read state for Notification.
 
+import type { Prisma, PrismaClient } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type { CapStoreDb } from '../db.js'
+
+type NotificationPrismaRow = Prisma.NotificationGetPayload<Record<string, never>>
 
 // ── Domain types ────────────────────────────────────────────────────────────
 
@@ -13,7 +16,7 @@ export interface NotificationRow {
   containerId: string | null
   contentItemId: string | null
   notificationType: string
-  title: string | null
+  title: string
   bodyText: string | null
   iconUrl: string | null
   actionUrl: string | null
@@ -21,7 +24,7 @@ export interface NotificationRow {
   senderAvatarUrl: string | null
   isRead: number
   isActioned: number
-  priority: string | null
+  priority: string
   expiresAt: number | null
   metadataJson: string | null
   createdAt: number
@@ -31,7 +34,7 @@ export interface NotificationRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class NotificationStoreImpl {
-  protected readonly prisma: any
+  protected readonly prisma: PrismaClient
 
   constructor(private readonly db: CapStoreDb) {
     this.prisma = db.prisma
@@ -87,7 +90,7 @@ export class NotificationStoreImpl {
         containerId: input.containerId ?? null,
         contentItemId: input.contentItemId ?? null,
         notificationType: input.notificationType,
-        title: input.title ?? null,
+        title: input.title ?? '',
         bodyText: input.bodyText ?? null,
         iconUrl: input.iconUrl ?? null,
         actionUrl: input.actionUrl ?? null,
@@ -95,9 +98,9 @@ export class NotificationStoreImpl {
         senderAvatarUrl: input.senderAvatarUrl ?? null,
         isRead: 0,
         isActioned: 0,
-        priority: input.priority ?? null,
+        priority: input.priority ?? 'normal',
         expiresAt: input.expiresAt ?? null,
-        metadataJson: input.metadataJson ?? null,
+        metadataJson: input.metadataJson ?? '{}',
         createdAt: now,
         updatedAt: now,
       },
@@ -156,8 +159,7 @@ export class NotificationStoreImpl {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
-
-  private toRow(r: Record<string, unknown>): NotificationRow {
+  private toRow(r: NotificationPrismaRow): NotificationRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -174,10 +176,10 @@ export class NotificationStoreImpl {
       isRead: r.isRead,
       isActioned: r.isActioned,
       priority: r.priority,
-      expiresAt: r.expiresAt,
+      expiresAt: r.expiresAt === null ? null : Number(r.expiresAt),
       metadataJson: r.metadataJson,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }
   }
 }

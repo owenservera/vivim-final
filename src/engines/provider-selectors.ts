@@ -101,8 +101,8 @@ export async function findWorkingSelector(
       if ((result as { result?: { value?: boolean } })?.result?.value === true) {
         return selector
       }
-    } catch {
-      catchDebug(_err, 'engines:provider-selectors:104')
+    } catch (err) {
+      catchDebug(err, 'engines:provider-selectors:104')
       // CDP error — skip
     }
   }
