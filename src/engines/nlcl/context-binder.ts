@@ -48,8 +48,8 @@ export async function bindContext(
         ctx.providerId = conv.providerId
         ctx.accountId = undefined // ConversationRow doesn't have accountId
       }
-    } catch {
-      catchDebug(_err, 'engines:nlcl:context-binder:50')
+    } catch (err) {
+      catchDebug(err, 'engines:nlcl:context-binder:50')
       // Silent fail - keep default ctx
     }
   }

@@ -37,7 +37,7 @@ function parseJson<T>(s: string | null | undefined, fallback: T): T {
 
 export class AgenticStoreImpl implements AgenticStoreContract {
   constructor(
-    private readonly nodes: NodeStoreContract,
+    readonly nodes: NodeStoreContract,
     private readonly prisma: PrismaClient,
   ) {}
 
@@ -66,6 +66,10 @@ export class AgenticStoreImpl implements AgenticStoreContract {
     )
     await this.nodes.putNode(node)
     return { id }
+  }
+
+  async putAgent(spec: AgentSpec): Promise<{ id: string }> {
+    return this.createAgent(spec)
   }
 
   async getAgent(id: string): Promise<unknown | null> {

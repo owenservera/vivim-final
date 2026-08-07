@@ -196,15 +196,15 @@ export class FileExecutor implements CommandExecutor {
             let size: number | undefined
             try {
               size = (await stat(fullPath)).size
-            } catch {
-              catchDebug(_err, 'engines:nlcl:executors:file-executor:198')
+            } catch (err) {
+              catchDebug(err, 'engines:nlcl:executors:file-executor:198')
               /* ignore */
             }
             results.push({ path: fullPath, name: entry.name, size })
           }
         }
-      } catch {
-        catchDebug(_err, 'engines:nlcl:executors:file-executor:204')
+      } catch (err) {
+        catchDebug(err, 'engines:nlcl:executors:file-executor:204')
         /* skip inaccessible dirs */
       }
     }
@@ -332,8 +332,8 @@ export class FileExecutor implements CommandExecutor {
             return join(dirPath, entry.name)
           }
         }
-      } catch {
-        catchDebug(_err, 'engines:nlcl:executors:file-executor:332')
+      } catch (err) {
+        catchDebug(err, 'engines:nlcl:executors:file-executor:332')
         /* skip inaccessible */
       }
     }

@@ -652,8 +652,8 @@ export class ProviderOnboardingOrchestrator {
           },
         })
       }
-    } catch {
-      catchDebug(_err, 'engines:onboarding:provider-onboarding-orchestrator:654')
+    } catch (err) {
+      catchDebug(err, 'engines:onboarding:provider-onboarding-orchestrator:654')
       // Best-effort — if the upsert fails, the bindingStore.create will
       // throw a clearer FK violation error.
     }
@@ -671,8 +671,8 @@ export class ProviderOnboardingOrchestrator {
       const sink = otel?.getOtelSink?.()
       // OtelSink.emit signature: (level, body, attributes?, resource?)
       sink?.emit?.('INFO', `onboarding span start: ${name}`)
-    } catch {
-      catchDebug(_err, 'engines:onboarding:provider-onboarding-orchestrator:672')
+    } catch (err) {
+      catchDebug(err, 'engines:onboarding:provider-onboarding-orchestrator:672')
       // Fall through — OTel is best-effort.
     }
     return fn()

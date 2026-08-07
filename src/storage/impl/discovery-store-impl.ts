@@ -98,7 +98,7 @@ export class DiscoveryStoreImpl implements DiscoveryStore {
       take: opts?.limit ?? 100,
     })
     return rows.map((r) => {
-      const data = safeJsonParse<Record<string, unknown>>(r.manifestJson ?? '{}', null) ?? {}
+      const data = safeJsonParse<Record<string, unknown>>(r.manifestJson ?? '{}', {}) ?? {}
       return {
         id: r.id,
         sessionId: r.sessionId,

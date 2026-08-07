@@ -7,13 +7,13 @@ import { makeCapability } from './types.js'
 
 export function registerKernelCapabilities(
   registry: UnifiedCapabilityRegistry,
-  kernel: import('./kernel/kernel-context.js').Kernel,
+  kernel: import('../kernel/kernel-context.js').Kernel,
 ): void {
   const ctx = kernel.context()
   const oracle = ctx.oracle
 
-  const readSurfaces: import('./unified-registry.js').CapabilitySurface[] = ['cli', 'ui', 'api']
-  const writeSurfaces: import('./unified-registry.js').CapabilitySurface[] = ['cli', 'api']
+  const readSurfaces: import('../unified-registry.js').CapabilitySurface[] = ['cli', 'ui', 'api']
+  const writeSurfaces: import('../unified-registry.js').CapabilitySurface[] = ['cli', 'api']
 
   registry.register(
     makeCapability(

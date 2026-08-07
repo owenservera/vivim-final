@@ -136,8 +136,8 @@ export class BrowserExecutor implements CommandExecutor {
         returnByValue: true,
       })
       bodyText = (result as { result?: { value?: string } })?.result?.value ?? ''
-    } catch {
-      catchDebug(_err, 'engines:nlcl:executors:browser-executor:138')
+    } catch (err) {
+      catchDebug(err, 'engines:nlcl:executors:browser-executor:138')
       /* extraction best-effort */
     }
 

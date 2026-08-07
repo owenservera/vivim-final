@@ -60,8 +60,8 @@ export function getPrisma(): PrismaClient {
         const dbFile = url.slice(5)
         const dir = dirname(dbFile)
         if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
-      } catch {
-        catchDebug(_err, 'storage:prisma:62')
+      } catch (err) {
+        catchDebug(err, 'storage:prisma:62')
         // best-effort — Prisma will throw a clearer error if directory is truly missing
       }
     }

@@ -94,7 +94,7 @@ describe('VersionStore', () => {
       provenance: 'manual',
     })
     const list = store.listVersions('panel:conversations')
-    const spec = store.getRestoreSpec(list[0]?.id)
+    const spec = store.getRestoreSpec(list[0]!.id)
     expect(spec).not.toBeNull()
     expect((spec as { title: string }).title).toBe('Original')
   })
@@ -111,7 +111,7 @@ describe('VersionStore', () => {
       provenance: 'manual',
     })
     const list = store.listVersions('panel:conversations')
-    const diff = store.diffVersions(list[0]?.id, list[1]?.id)
+    const diff = store.diffVersions(list[0]!.id, list[1]!.id)
     expect(diff).not.toBeNull()
     expect(diff?.versionA).toBe(1)
     expect(diff?.versionB).toBe(2)

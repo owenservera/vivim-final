@@ -93,10 +93,7 @@ export class ExtensionBridgeEngine {
   parseConsoleMessage(text: string): ExtensionCommand | null {
     if (!text.startsWith(MAGIC_INBOUND)) return null
     try {
-      return JSON.parse(
-        text.slice(MAGIC_INBOUND.length),
-        null as ExtensionCommand,
-      ) as ExtensionCommand
+      return JSON.parse(text.slice(MAGIC_INBOUND.length)) as ExtensionCommand
     } catch {
       return null
     }

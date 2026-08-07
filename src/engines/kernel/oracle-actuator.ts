@@ -153,8 +153,8 @@ export class OracleActuator {
     if (this.store) {
       try {
         await this.store.insertEvent('kernel:autoheal-policy', 'kernel', this.policy)
-      } catch {
-        catchDebug(_err, 'engines:kernel:oracle-actuator:155')
+      } catch (err) {
+        catchDebug(err, 'engines:kernel:oracle-actuator:155')
         /* non-fatal */
       }
     }
@@ -300,8 +300,8 @@ export class OracleActuator {
     for (const cb of this.healCallbacks) {
       try {
         cb(action)
-      } catch {
-        catchDebug(_err, 'engines:kernel:oracle-actuator:301')
+      } catch (err) {
+        catchDebug(err, 'engines:kernel:oracle-actuator:301')
         /* ignore subscriber errors */
       }
     }

@@ -31,8 +31,8 @@ function readMeta(row: { metaJson: string }): ScopedMeta | null {
     if (m.ownerAgentId && m.scope) {
       return { ownerAgentId: String(m.ownerAgentId), scope: String(m.scope) }
     }
-  } catch {
-    catchDebug(_err, 'engines:memory:memory-oracle:33')
+  } catch (err) {
+    catchDebug(err, 'engines:memory:memory-oracle:33')
     /* ignore */
   }
   return null

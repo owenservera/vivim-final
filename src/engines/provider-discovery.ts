@@ -259,7 +259,7 @@ export class ProviderDiscoveryEngine {
       returnByValue: true,
     })) as { result?: { value?: string } }
 
-    const data = safeJsonParse<Record<string, string>>(result?.result?.value ?? '{}', null) ?? {}
+    const data = safeJsonParse<Record<string, string>>(result?.result?.value ?? '{}', {}) ?? {}
     return {
       url: data.url ?? '',
       title: data.title ?? '',
@@ -307,7 +307,7 @@ export class ProviderDiscoveryEngine {
       returnByValue: true,
     })) as { result?: { value?: string } }
 
-    const data = safeJsonParse<Record<string, unknown>>(result?.result?.value ?? '{}', null) ?? {}
+    const data = safeJsonParse<Record<string, unknown>>(result?.result?.value ?? '{}', {}) ?? {}
     return {
       url: (data.url as string) ?? '',
       title: (data.title as string) ?? '',
@@ -732,8 +732,8 @@ export class ProviderDiscoveryEngine {
           expression: 'document.readyState',
         })) as { result?: { value?: string } }
         if (result?.result?.value === 'complete') return
-      } catch {
-        catchDebug(_err, 'engines:provider-discovery:733')
+      } catch (err) {
+        catchDebug(err, 'engines:provider-discovery:733')
         /* ignore */
       }
       await new Promise((r) => setTimeout(r, 200))

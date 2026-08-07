@@ -246,8 +246,8 @@ async function _collectNetworkPatterns(
 
   try {
     await client.send('Network.disable', {}, { sessionId })
-  } catch {
-    catchDebug(_err, 'engines:protocol-discovery:248')
+  } catch (err) {
+    catchDebug(err, 'engines:protocol-discovery:248')
     // best-effort disable
   }
 

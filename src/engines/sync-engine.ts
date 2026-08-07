@@ -1,7 +1,3 @@
-// src/engines/sync-engine.ts
-// SyncEngine — bidirectional sync state tracking across providers
-
-import { newId } from '../ids.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -51,11 +47,21 @@ export interface SyncStateInput {
 
 export interface SyncStateStore {
   upsertSyncState(input: SyncStateInput): Promise<SyncState>
-  getSyncState(providerId: string, accountId: string, entityType: string, entityId: string): Promise<SyncState | null>
+  getSyncState(
+    providerId: string,
+    accountId: string,
+    entityType: string,
+    entityId: string,
+  ): Promise<SyncState | null>
   getSyncStatesByAccount(accountId: string): Promise<SyncState[]>
   getSyncStatesPending(): Promise<SyncState[]>
   updateSyncStatus(id: string, status: string, error?: string): Promise<SyncState>
-  incrementSyncStats(id: string, itemsSynced: number, itemsFailed: number, bytesSynced: number): Promise<SyncState>
+  incrementSyncStats(
+    id: string,
+    itemsSynced: number,
+    itemsFailed: number,
+    bytesSynced: number,
+  ): Promise<SyncState>
   deleteSyncState(id: string): Promise<void>
 }
 
@@ -73,7 +79,12 @@ export class SyncEngine {
     return state
   }
 
-  async getSyncState(providerId: string, accountId: string, entityType: string, entityId: string): Promise<SyncState | null> {
+  async getSyncState(
+    providerId: string,
+    accountId: string,
+    entityType: string,
+    entityId: string,
+  ): Promise<SyncState | null> {
     return this.store.getSyncState(providerId, accountId, entityType, entityId)
   }
 
@@ -91,7 +102,12 @@ export class SyncEngine {
     return state
   }
 
-  async recordSyncProgress(id: string, itemsSynced: number, itemsFailed: number, bytesSynced: number): Promise<SyncState> {
+  async recordSyncProgress(
+    id: string,
+    itemsSynced: number,
+    itemsFailed: number,
+    bytesSynced: number,
+  ): Promise<SyncState> {
     return this.store.incrementSyncStats(id, itemsSynced, itemsFailed, bytesSynced)
   }
 

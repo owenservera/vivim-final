@@ -32,8 +32,8 @@ export class KernelRegistry {
     for (const cb of this.registerCallbacks) {
       try {
         cb(entry)
-      } catch {
-        catchDebug(_err, 'engines:kernel:kernel-registry:34')
+      } catch (err) {
+        catchDebug(err, 'engines:kernel:kernel-registry:34')
         /* callback error should not prevent registration */
       }
     }
@@ -159,8 +159,8 @@ export class KernelRegistry {
     for (const cb of this.statusChangeCallbacks) {
       try {
         cb(id, from, to)
-      } catch {
-        catchDebug(_err, 'engines:kernel:kernel-registry:160')
+      } catch (err) {
+        catchDebug(err, 'engines:kernel:kernel-registry:160')
         /* callback error should not prevent status update */
       }
     }

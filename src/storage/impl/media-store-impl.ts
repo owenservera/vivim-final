@@ -1,8 +1,11 @@
 // src/storage/impl/media-store-impl.ts
 // Prisma-backed MediaStore — CRUD + download tracking for MediaAttachment.
 
+import type { Prisma, PrismaClient } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type { CapStoreDb } from '../db.js'
+
+type MediaAttachmentPrismaRow = Prisma.MediaAttachmentGetPayload<Record<string, never>>
 
 // ── Domain types ────────────────────────────────────────────────────────────
 
@@ -24,7 +27,7 @@ export interface MediaAttachmentRow {
   isDownloaded: number
   isEncrypted: number
   encryptionKeyRef: string | null
-  downloadProgress: number
+  downloadProgress: number | null
   providerNativeId: string | null
   metadataJson: string | null
   createdAt: number
@@ -34,7 +37,7 @@ export interface MediaAttachmentRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class MediaStoreImpl {
-  protected readonly prisma: any
+  protected readonly prisma: PrismaClient
 
   constructor(private readonly db: CapStoreDb) {
     this.prisma = db.prisma
@@ -110,7 +113,7 @@ export class MediaStoreImpl {
         encryptionKeyRef: null,
         downloadProgress: input.localPath ? 100 : 0,
         providerNativeId: input.providerNativeId ?? null,
-        metadataJson: input.metadataJson ?? null,
+        metadataJson: input.metadataJson ?? '{}',
         createdAt: now,
         updatedAt: now,
       },
@@ -166,8 +169,7 @@ export class MediaStoreImpl {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
-
-  private toRow(r: Record<string, unknown>): MediaAttachmentRow {
+  private toRow(r: MediaAttachmentPrismaRow): MediaAttachmentRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -189,8 +191,8 @@ export class MediaStoreImpl {
       downloadProgress: r.downloadProgress,
       providerNativeId: r.providerNativeId,
       metadataJson: r.metadataJson,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }
   }
 }

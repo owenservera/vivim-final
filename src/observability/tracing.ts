@@ -125,7 +125,7 @@ export class OTLPTraceExporter implements SpanExporter {
       })
     } catch (err) {
       // Don't throw on export failure — observability should never break the system
-      log.error('[Tracing] Export failed:', err)
+      log.error({ err }, '[Tracing] Export failed:')
     }
   }
 

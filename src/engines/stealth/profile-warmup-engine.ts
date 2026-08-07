@@ -63,8 +63,8 @@ export class ProfileWarmupModule implements StealthModule {
       try {
         await ctx.cdp.send(ctx.slaveId, 'Page.navigate', { url: site.url })
         await new Promise((r) => setTimeout(r, warmupDelayMs))
-      } catch {
-        catchDebug(_err, 'engines:stealth:profile-warmup-engine:65')
+      } catch (err) {
+        catchDebug(err, 'engines:stealth:profile-warmup-engine:65')
         // Site may be unreachable — skip
       }
     }

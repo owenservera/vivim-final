@@ -143,8 +143,8 @@ export class ChromeSetupWizard {
           } else {
             process.kill(launchResult.pid, 'SIGTERM')
           }
-        } catch {
-          catchDebug(_err, 'engines:chrome-setup-wizard:145')
+        } catch (err) {
+          catchDebug(err, 'engines:chrome-setup-wizard:145')
           /* best-effort kill — process may already be gone */
         }
       }
@@ -247,8 +247,8 @@ export class ChromeSetupWizard {
             return true
           }
         }
-      } catch {
-        catchDebug(_err, 'engines:chrome-setup-wizard:248')
+      } catch (err) {
+        catchDebug(err, 'engines:chrome-setup-wizard:248')
         // Chrome might have been closed or CDP disconnected
       }
 

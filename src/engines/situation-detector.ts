@@ -312,8 +312,8 @@ export class SituationDetector {
           signalsJson: JSON.stringify(result.signals),
           timestamp: Date.now(),
         })
-      } catch {
-        catchDebug(_err, 'engines:situation-detector:314')
+      } catch (err) {
+        catchDebug(err, 'engines:situation-detector:314')
         // Best-effort logging
       }
     }
@@ -404,8 +404,8 @@ export class SituationDetector {
           entry.score *= 1 + count * 0.15
         }
       }
-    } catch {
-      catchDebug(_err, 'engines:situation-detector:405')
+    } catch (err) {
+      catchDebug(err, 'engines:situation-detector:405')
       // Best-effort preference boost
     }
   }

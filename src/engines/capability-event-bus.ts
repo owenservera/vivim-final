@@ -240,8 +240,8 @@ export class CapabilityEventBus {
         if (entityIds.has('*')) {
           try {
             ws.send(JSON.stringify(event))
-          } catch {
-            catchDebug(_err, 'engines:capability-event-bus:242')
+          } catch (err) {
+            catchDebug(err, 'engines:capability-event-bus:242')
             // WebSocket may be closed — ignore
           }
           continue
@@ -261,8 +261,8 @@ export class CapabilityEventBus {
         if (idField && entityIds.has(eventAny[idField] as string)) {
           try {
             ws.send(JSON.stringify(event))
-          } catch {
-            catchDebug(_err, 'engines:capability-event-bus:262')
+          } catch (err) {
+            catchDebug(err, 'engines:capability-event-bus:262')
             // WebSocket may be closed — ignore
           }
         }

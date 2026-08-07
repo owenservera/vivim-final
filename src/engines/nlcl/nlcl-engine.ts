@@ -180,7 +180,7 @@ export class NLCLEngine {
       if (agentMatch) {
         const escalatorInput = agentMatch[1]?.trim()
         try {
-          const escalation = await this.deps.llmHarnessEscalator(escalatorInput, ctx)
+          const escalation = await this.deps.llmHarnessEscalator(escalatorInput!, ctx)
           if (escalation.ok) {
             this.audit(rawInput, 'llm-harness', true, Date.now() - start)
             return {
@@ -246,7 +246,7 @@ export class NLCLEngine {
           if (pattern) {
             let confirmedCtx: NLCContext
             try {
-              confirmedCtx = safeJsonParse<NLCContext>(confirmed.contextJson, null)
+              confirmedCtx = safeJsonParse<NLCContext>(confirmed.contextJson, ctx)
               confirmedCtx = { ...confirmedCtx, ...ctx }
             } catch {
               confirmedCtx = ctx

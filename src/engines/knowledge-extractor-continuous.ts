@@ -62,8 +62,8 @@ export class KnowledgeExtractorContinuous {
             source: 'extraction',
           })
         }
-      } catch {
-        catchDebug(_err, 'engines:knowledge-extractor-continuous:64')
+      } catch (err) {
+        catchDebug(err, 'engines:knowledge-extractor-continuous:64')
         // Continue processing other messages even if one fails
       }
     }

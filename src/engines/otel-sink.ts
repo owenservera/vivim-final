@@ -109,7 +109,7 @@ export class OtelSink {
     } catch (err) {
       // Never throw from logging. Re-buffer on failure for a later retry.
       this.buffer.unshift(...batch)
-      log.error('[otel-sink] flush failed:', (err as Error).message)
+      log.error({ err: (err as Error).message }, '[otel-sink] flush failed:')
     }
   }
 

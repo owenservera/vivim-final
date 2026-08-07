@@ -170,8 +170,8 @@ export class ResponseExtractor {
         if (parsed && typeof parsed === 'object' && 'type' in parsed) {
           actions.push(parsed as HarnessAction)
         }
-      } catch {
-        catchDebug(_err, 'engines:harness-protocol-engine:172')
+      } catch (err) {
+        catchDebug(err, 'engines:harness-protocol-engine:172')
         // skip unparseable
       }
     }

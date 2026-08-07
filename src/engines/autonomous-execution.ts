@@ -4,6 +4,12 @@
 // Session 7 (2026-08-07): Types extracted to autonomous-types.ts.
 // This file now contains only the engine class + planner functions.
 
+import { BudgetExceededError, ConsentViolationError, EngineError } from '../errors.js'
+import { newId } from '../ids.js'
+import { catchDebug } from '../lib/catch-logger.js'
+import { safeJsonParse } from '../lib/safe-json.js'
+import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
+import { ReplayController, type ReplayResult } from './autonomous-replay.js'
 import type {
   ActionClassification,
   AutonomousGoal,
@@ -18,6 +24,14 @@ import type {
   StepStatus,
   TaskStatus,
 } from './autonomous-types.js'
+import { classificationAtLeast, toAutonomousClassification } from './autonomous-types.js'
+import type { CapabilityComposer } from './capability-composer.js'
+import type { CapabilityEventBus } from './capability-event-bus.js'
+import type { ChromeGovernor } from './chrome-governor.js'
+import type { ExecutionPolicyEngine, PolicyDecision } from './execution-policy.js'
+import type { IntentResolver, NLCContext, ParsedIntent } from './nlcl/types.js'
+import type { SelectorHealer } from './selector-healer.js'
+import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
 // Re-export types so existing imports continue to work
 export type {
@@ -1148,8 +1162,8 @@ export class AutonomousExecutionEngine {
       try {
         const state = await this.governor.cdp.getPageState(slaveId)
         if (state?.readyState === 'complete') return
-      } catch {
-        catchDebug(_err, 'engines:autonomous-execution:1278')
+      } catch (err) {
+        catchDebug(err, 'engines:autonomous-execution:1278')
         // ignore
       }
       await new Promise((r) => setTimeout(r, 200))

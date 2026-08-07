@@ -17,6 +17,22 @@ import pino from 'pino'
 
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'
 
+/**
+ * Structural logger contract used across engines. Kept as a structural
+ * interface (not `pino.Logger`) so both the pino-backed `getLogger` logger and
+ * the standalone `StructuredLogger` (src/engines/logger.ts) can be passed to
+ * engine constructors interchangeably. Engines only use the methods below.
+ */
+export interface Logger {
+  trace(msg: string, data?: Record<string, unknown>): void
+  debug(msg: string, data?: Record<string, unknown>): void
+  info(msg: string, data?: Record<string, unknown>): void
+  warn(msg: string, data?: Record<string, unknown>): void
+  error(msg: string, data?: Record<string, unknown>): void
+  fatal(msg: string, data?: Record<string, unknown>): void
+  child(bindings: Record<string, unknown>): Logger
+}
+
 const LEVEL = (process.env.LOG_LEVEL as LogLevel | undefined) ?? 'info'
 
 /**

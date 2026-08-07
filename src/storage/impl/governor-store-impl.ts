@@ -283,7 +283,7 @@ export class GovernorStoreImpl implements GovernorStore {
     })
     if (!def?.fleetConfigJson) return null
     try {
-      const raw = safeJsonParse<Record<string, unknown>>(def.fleetConfigJson, null) ?? {}
+      const raw = safeJsonParse<Record<string, unknown>>(def.fleetConfigJson, {}) ?? {}
       return {
         channel: (typeof raw.channel === 'string'
           ? raw.channel

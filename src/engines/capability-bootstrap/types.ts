@@ -1,18 +1,18 @@
-import type { ProfileAllocator } from '../executor/profile-allocator.js'
-import type { ConversationStore } from '../storage/contracts/conversation-store.js'
-import type { LocalAgentStore } from '../storage/contracts/local-agent-store.js'
-import type { CapStoreDb } from '../storage/db.js'
-import type { ChromeGovernor } from './chrome-governor.js'
-import type { ConversationManager } from './conversation-manager.js'
-import type { CrossConversationSynthesizer } from './cross-conversation-synthesis.js'
-import type { KnowledgeIngestionEngine } from './knowledge-ingestion.js'
-import type { LocalAgentProviderExecutor } from './local-agent/local-agent-executor.js'
-import type { MemoryEngine } from './memory-engine.js'
-import type { OpenCodeClient } from './opencode/opencode-client.js'
-import type { OpenCodeIngest } from './opencode/opencode-ingest.js'
-import type { SemanticSearchEngine } from './semantic-search.js'
-import type { StorageRelocationEngine } from './storage-relocation-engine.js'
-import type { CapabilitySurface, UnifiedCapability } from './unified-registry.js'
+import type { ProfileAllocator } from '../../executor/profile-allocator.js'
+import type { ConversationStore } from '../../storage/contracts/conversation-store.js'
+import type { LocalAgentStore } from '../../storage/contracts/local-agent-store.js'
+import type { CapStoreDb } from '../../storage/db.js'
+import type { ChromeGovernor } from '../chrome-governor.js'
+import type { ConversationManager } from '../conversation-manager.js'
+import type { CrossConversationSynthesizer } from '../cross-conversation-synthesis.js'
+import type { KnowledgeIngestionEngine } from '../knowledge-ingestion.js'
+import type { LocalAgentProviderExecutor } from '../local-agent/local-agent-executor.js'
+import type { MemoryEngine } from '../memory-engine.js'
+import type { OpenCodeClient } from '../opencode/opencode-client.js'
+import type { OpenCodeIngest } from '../opencode/opencode-ingest.js'
+import type { SemanticSearchEngine } from '../semantic-search.js'
+import type { StorageRelocationEngine } from '../storage-relocation-engine.js'
+import type { CapabilitySurface, UnifiedCapability } from '../unified-registry.js'
 
 export interface BootstrapServices {
   db: CapStoreDb
@@ -31,7 +31,7 @@ export interface BootstrapServices {
   relocationEngine?: StorageRelocationEngine
 }
 
-const ALL_SURFACES: CapabilitySurface[] = ['cli', 'ui', 'workflow', 'mcp', 'api']
+export const ALL_SURFACES: CapabilitySurface[] = ['cli', 'ui', 'workflow', 'mcp', 'api']
 
 export function makeCapability(
   partial: Omit<

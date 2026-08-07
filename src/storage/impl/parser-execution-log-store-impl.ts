@@ -1,6 +1,7 @@
 // src/storage/impl/parser-execution-log-store-impl.ts
 // Prisma-backed ParserExecutionLogStore for parser diagnostic logging.
 
+import type { Prisma } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type {
   ParserExecutionLogRow,
@@ -10,7 +11,9 @@ import type { CapStoreDb } from '../db.js'
 
 type PrismaLoose = any
 
-function toLogRow(r: Record<string, unknown>): ParserExecutionLogRow {
+type ParserExecutionLogPrismaRow = Prisma.ParserExecutionLogGetPayload<Record<string, never>>
+
+function toLogRow(r: ParserExecutionLogPrismaRow): ParserExecutionLogRow {
   return {
     id: r.id,
     providerId: r.providerId,
@@ -29,7 +32,7 @@ function toLogRow(r: Record<string, unknown>): ParserExecutionLogRow {
     wireFormat: r.wireFormat,
     fallbackUsed: r.fallbackUsed,
     metadataJson: r.metadataJson,
-    createdAt: r.createdAt,
+    createdAt: Number(r.createdAt),
   }
 }
 
@@ -105,10 +108,10 @@ export class ParserExecutionLogStoreImpl implements ParserExecutionLogStore {
     if (rows.length === 0) return null
     const total = rows.length
     const avgConf =
-      rows.reduce((s: number, r: Record<string, unknown>) => s + (r.confidence as number), 0) /
+      rows.reduce((s: number, r: { confidence: number | null }) => s + (r.confidence ?? 0), 0) /
       total
     const avgDur =
-      rows.reduce((s: number, r: Record<string, unknown>) => s + (r.durationMs as number), 0) /
+      rows.reduce((s: number, r: { durationMs: number | null }) => s + (r.durationMs ?? 0), 0) /
       total
     const fallbacks = rows.filter((r: any) => r.fallbackUsed).length
     return {

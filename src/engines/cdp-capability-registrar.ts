@@ -183,8 +183,8 @@ export function registerDiscoveredCdpMethods(
             })
             .catch(() => {})
           bound.push(desc.fullName)
-        } catch {
-          catchDebug(_err, 'engines:cdp-capability-registrar:185')
+        } catch (err) {
+          catchDebug(err, 'engines:cdp-capability-registrar:185')
           /* binding persistence is best-effort */
         }
       }

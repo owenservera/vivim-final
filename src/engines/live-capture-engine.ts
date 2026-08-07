@@ -71,8 +71,8 @@ function detectFormatFromBody(body: string): StreamTransport | 'json_stream' {
     try {
       JSON.parse(trimmed)
       return 'websocket'
-    } catch {
-      catchDebug(_err, 'engines:live-capture-engine:73')
+    } catch (err) {
+      catchDebug(err, 'engines:live-capture-engine:73')
       /* fall through */
     }
   }
@@ -225,8 +225,8 @@ export class LiveCaptureEngine {
       this.client.off('Network.dataReceived', onData)
       try {
         await this.client.send('Network.disable', {}, { sessionId: this.sessionId })
-      } catch {
-        catchDebug(_err, 'engines:live-capture-engine:225')
+      } catch (err) {
+        catchDebug(err, 'engines:live-capture-engine:225')
         // Best effort — don't fail if disable fails
       }
     }

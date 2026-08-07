@@ -178,8 +178,8 @@ export class StreamAlignmentEngine {
       try {
         JSON.parse(trimmed)
         return 'json'
-      } catch {
-        catchDebug(_err, 'engines:stream-align:180')
+      } catch (err) {
+        catchDebug(err, 'engines:stream-align:180')
         /* fall through */
       }
     }
@@ -274,8 +274,8 @@ export class StreamAlignmentEngine {
         try {
           JSON.parse(payload)
           return payload
-        } catch {
-          catchDebug(_err, 'engines:stream-align:275')
+        } catch (err) {
+          catchDebug(err, 'engines:stream-align:275')
           /* try next line */
         }
       }

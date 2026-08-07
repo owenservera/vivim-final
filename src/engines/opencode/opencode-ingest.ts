@@ -72,8 +72,8 @@ export class OpenCodeIngest {
     // ingestEvent() even if SSE connection fails (e.g. in tests with mock clients).
     try {
       await this.client.subscribe(sessionId, (ev) => this.onEvent(sessionId, ev))
-    } catch {
-      catchDebug(_err, 'engines:opencode:opencode-ingest:74')
+    } catch (err) {
+      catchDebug(err, 'engines:opencode:opencode-ingest:74')
       // SSE subscribe failed — ingestEvent() still works for direct injection.
     }
   }
@@ -127,8 +127,8 @@ export class OpenCodeIngest {
         default:
           break
       }
-    } catch {
-      catchDebug(_err, 'engines:opencode:opencode-ingest:128')
+    } catch (err) {
+      catchDebug(err, 'engines:opencode:opencode-ingest:128')
       // never crash ingest on one bad event
     }
   }
@@ -193,8 +193,8 @@ export class OpenCodeIngest {
     if (pid) {
       try {
         await this.client.respondPermission(sessionId, pid, decision)
-      } catch {
-        catchDebug(_err, 'engines:opencode:opencode-ingest:193')
+      } catch (err) {
+        catchDebug(err, 'engines:opencode:opencode-ingest:193')
         // best-effort POST back to OpenCode
       }
     }

@@ -84,8 +84,8 @@ export function createOracleVisibility(db: CapStoreDb): OracleReadProvider {
     try {
       const m = prisma[model] as { count?: () => Promise<number> } | undefined
       if (m?.count) return await m.count()
-    } catch {
-      catchDebug(_err, 'server:canvas-ws:87')
+    } catch (err) {
+      catchDebug(err, 'server:canvas-ws:87')
       /* model unavailable — report 0 */
     }
     return 0

@@ -90,8 +90,8 @@ export class PluginHotReload {
           await this.loadPlugin(join(this.directory, file))
         }
       }
-    } catch {
-      catchDebug(_err, 'engines:plugin-hot-reload:92')
+    } catch (err) {
+      catchDebug(err, 'engines:plugin-hot-reload:92')
       // Directory may not exist yet
     }
   }

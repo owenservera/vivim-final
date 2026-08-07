@@ -41,8 +41,8 @@ export class CommandPatternRegistry {
     for (const cb of this.registerCallbacks) {
       try {
         cb(pattern)
-      } catch {
-        catchDebug(_err, 'engines:nlcl:command-registry:43')
+      } catch (err) {
+        catchDebug(err, 'engines:nlcl:command-registry:43')
         /* callback errors are non-fatal */
       }
     }

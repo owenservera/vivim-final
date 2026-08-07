@@ -61,8 +61,8 @@ export class IndexingPipeline {
           entityId: b.id,
         })),
       )
-    } catch {
-      catchDebug(_err, 'engines:indexing-pipeline:63')
+    } catch (err) {
+      catchDebug(err, 'engines:indexing-pipeline:63')
       // Log error but don't crash — indexing is best-effort
     }
   }

@@ -95,8 +95,8 @@ export class EvictionManager {
           await this.evict(slave.slaveId)
         }
       }
-    } catch {
-      catchDebug(_err, 'engines:eviction-manager:97')
+    } catch (err) {
+      catchDebug(err, 'engines:eviction-manager:97')
       // Governor may not be ready yet
     }
   }
@@ -127,8 +127,8 @@ export class EvictionManager {
         await this.governor.kill(slaveId)
       }
       this.accessLog.delete(slaveId)
-    } catch {
-      catchDebug(_err, 'engines:eviction-manager:128')
+    } catch (err) {
+      catchDebug(err, 'engines:eviction-manager:128')
       // Slave may already be dead
     }
   }

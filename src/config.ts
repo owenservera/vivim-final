@@ -172,7 +172,7 @@ function loadTunables(): Record<string, unknown> {
   try {
     if (existsSync(TUNABLE_FILE)) {
       const raw =
-        safeJsonParse<Record<string, unknown>>(readFileSync(TUNABLE_FILE, 'utf-8'), null) ?? {}
+        safeJsonParse<Record<string, unknown>>(readFileSync(TUNABLE_FILE, 'utf-8'), {}) ?? {}
       return raw
     }
   } catch (e) {

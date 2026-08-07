@@ -230,8 +230,8 @@ export class ProviderProtocolGenerator {
         stderr: 'ignore',
       })
       await proc.exited
-    } catch {
-      catchDebug(_err, 'engines:provider-protocol-generator:232')
+    } catch (err) {
+      catchDebug(err, 'engines:provider-protocol-generator:232')
       // Non-fatal: generated output remains valid TypeScript even if formatting is skipped.
     }
   }

@@ -50,15 +50,20 @@ function assertLocalhostOrAuth(req: NextRequest): NextResponse | null {
   if (!isLocalhost) {
     return NextResponse.json(
       {
-        error:
-          'Remote access requires AUTH_TOKEN. Set AUTH_TOKEN env var or run on localhost.',
+        error: 'Remote access requires AUTH_TOKEN. Set AUTH_TOKEN env var or run on localhost.',
         code: 'RemoteAuthRequired',
       },
       { status: 401 },
     )
   }
   // x-forwarded-for presence means we're behind a proxy — be conservative.
-  if (xForwardedFor && !xForwardedFor.split(',')[0]!.trim().match(/^(127\.0\.0\.1|::1|localhost)$/)) {
+  if (
+    xForwardedFor &&
+    !xForwardedFor
+      .split(',')[0]!
+      .trim()
+      .match(/^(127\.0\.0\.1|::1|localhost)$/)
+  ) {
     return NextResponse.json(
       { error: 'Proxy origin not trusted in alpha dev mode', code: 'ProxyOrigin' },
       { status: 401 },

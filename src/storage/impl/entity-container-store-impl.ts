@@ -1,8 +1,14 @@
 // src/storage/impl/entity-container-store-impl.ts
 // Prisma-backed EntityContainerStore — CRUD for EntityContainer + EntityContainerMembership.
 
+import type { Prisma, PrismaClient } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type { CapStoreDb } from '../db.js'
+
+type EntityContainerPrismaRow = Prisma.EntityContainerGetPayload<Record<string, never>>
+type ContainerMembershipPrismaRow = Prisma.EntityContainerMembershipGetPayload<
+  Record<string, never>
+>
 
 // ── Domain types ────────────────────────────────────────────────────────────
 
@@ -43,7 +49,7 @@ export interface ContainerMembershipRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class EntityContainerStoreImpl {
-  protected readonly prisma: any
+  protected readonly prisma: PrismaClient
 
   constructor(private readonly db: CapStoreDb) {
     this.prisma = db.prisma
@@ -92,14 +98,14 @@ export class EntityContainerStoreImpl {
         name: input.name,
         description: input.description ?? null,
         iconUrl: input.iconUrl ?? null,
-        metadataJson: input.metadataJson ?? null,
+        metadataJson: input.metadataJson ?? '{}',
         parentContainerId: input.parentContainerId ?? null,
         sortOrder: 0,
         isCollapsed: 0,
         isMuted: 0,
         isSynced: 0,
         lastSyncedAt: null,
-        syncCursorJson: null,
+        syncCursorJson: '{}',
         unreadCount: 0,
         mentionCount: 0,
         isArchived: 0,
@@ -141,7 +147,7 @@ export class EntityContainerStoreImpl {
   }
 
   async getMemberships(containerId: string): Promise<ContainerMembershipRow[]> {
-    const rows = await this.prisma.containerMembership.findMany({
+    const rows = await this.prisma.entityContainerMembership.findMany({
       where: { containerId },
       orderBy: { joinedAt: 'desc' },
     })
@@ -155,7 +161,7 @@ export class EntityContainerStoreImpl {
     isFavorite?: number
   }): Promise<ContainerMembershipRow> {
     const now = Date.now()
-    const row = await this.prisma.containerMembership.create({
+    const row = await this.prisma.entityContainerMembership.create({
       data: {
         id: newId(),
         containerId: input.containerId,
@@ -163,6 +169,7 @@ export class EntityContainerStoreImpl {
         notificationPreference: input.notificationPreference ?? 'all',
         isFavorite: input.isFavorite ?? 0,
         joinedAt: now,
+        createdAt: now,
         updatedAt: now,
       },
     })
@@ -170,14 +177,13 @@ export class EntityContainerStoreImpl {
   }
 
   async removeMembership(containerId: string, userRole: string): Promise<void> {
-    await this.prisma.containerMembership.deleteMany({
+    await this.prisma.entityContainerMembership.deleteMany({
       where: { containerId, userRole },
     })
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
-
-  private toRow(r: Record<string, unknown>): EntityContainerRow {
+  private toRow(r: EntityContainerPrismaRow): EntityContainerRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -193,25 +199,25 @@ export class EntityContainerStoreImpl {
       isCollapsed: r.isCollapsed,
       isMuted: r.isMuted,
       isSynced: r.isSynced,
-      lastSyncedAt: r.lastSyncedAt,
+      lastSyncedAt: r.lastSyncedAt === null ? null : Number(r.lastSyncedAt),
       syncCursorJson: r.syncCursorJson,
       unreadCount: r.unreadCount,
       mentionCount: r.mentionCount,
       isArchived: r.isArchived,
-      createdAt: r.createdAt,
-      updatedAt: r.updatedAt,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }
   }
 
-  private toMembershipRow(r: Record<string, unknown>): ContainerMembershipRow {
+  private toMembershipRow(r: ContainerMembershipPrismaRow): ContainerMembershipRow {
     return {
       id: r.id,
       containerId: r.containerId,
       userRole: r.userRole,
       notificationPreference: r.notificationPreference,
       isFavorite: r.isFavorite,
-      joinedAt: r.joinedAt,
-      updatedAt: r.updatedAt,
+      joinedAt: Number(r.joinedAt),
+      updatedAt: Number(r.updatedAt),
     }
   }
 }
