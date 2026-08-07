@@ -64,8 +64,8 @@ describe('ConversationOrganizer', () => {
     const projectNode = tree[0]
     expect(projectNode).toBeDefined()
     expect(projectNode?.type).toBe('project')
-    const topicNodes = projectNode!.children.filter((c: any) => c.type === 'topic')
-    const convNodes = projectNode!.children.filter((c: any) => c.type === 'conversation')
+    const topicNodes = projectNode?.children.filter((c: any) => c.type === 'topic')
+    const convNodes = projectNode?.children.filter((c: any) => c.type === 'conversation')
     expect(topicNodes.length).toBe(1)
     expect(topicNodes[0]?.children[0]?.id).toBe('conv1')
     expect(convNodes[0]?.id).toBe('conv2')

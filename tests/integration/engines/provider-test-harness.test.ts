@@ -55,8 +55,8 @@ describe('ProviderTestHarness', () => {
   it('runAll iterates bindings and reports outcomes', async () => {
     const outcomes = await store.listBindings([])
     expect(outcomes.length).toBe(2)
-    expect(outcomes[0]!.providerId).toBe('prov_claude')
-    expect(outcomes[1]!.capabilitySlug).toBe('send_message')
+    expect(outcomes[0]?.providerId).toBe('prov_claude')
+    expect(outcomes[1]?.capabilitySlug).toBe('send_message')
   })
 
   it('recordDrift creates drift event', async () => {

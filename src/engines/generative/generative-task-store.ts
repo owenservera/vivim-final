@@ -27,6 +27,7 @@
 //   • The /api/generative/subscribe/:taskId endpoint opens a WS for push.
 
 import { newId } from '../../ids.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 
 export type GenerativeTaskStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
 
@@ -250,6 +251,7 @@ export class InMemoryGenerativeTaskStore implements GenerativeTaskStore {
       try {
         sub(event)
       } catch {
+        catchDebug(_err, 'engines:generative:generative-task-store:252')
         // subscriber errors are non-fatal
       }
     }

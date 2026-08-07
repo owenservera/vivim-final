@@ -4,6 +4,7 @@
 // IS the dependency order. `BootstrapEnginesResult` is the fixed public shape
 // returned once all phases complete.
 
+import type { ProviderRegistry } from '../../config/provider-registry.js'
 import type { CapabilityEventBus } from '../../engines/capability-event-bus.js'
 import type { CapabilityResolutionEngine } from '../../engines/capability-resolution.js'
 import type { ChromeGovernor } from '../../engines/chrome-governor.js'
@@ -24,12 +25,11 @@ import type { RetryEngine } from '../../engines/retry-engine.js'
 import type { SemanticSearchEngine } from '../../engines/semantic-search.js'
 import type { UnifiedCapabilityRegistry } from '../../engines/unified-registry.js'
 import type { UserIdentityEngine } from '../../engines/user-identity.js'
-import type { CapStoreDb } from '../../storage/db.js'
-import type { ConversationStoreImpl } from '../../storage/impl/conversation-store-impl.js'
-import type { CapabilityStoreImpl } from '../../storage/impl/capability-store-impl.js'
-import type { ProviderStoreImpl } from '../../storage/impl/provider-store-impl.js'
-import type { ProviderRegistry } from '../../config/provider-registry.js'
 import type { CdpTransportImpl } from '../../executor/cdp-transport.js'
+import type { CapStoreDb } from '../../storage/db.js'
+import type { CapabilityStoreImpl } from '../../storage/impl/capability-store-impl.js'
+import type { ConversationStoreImpl } from '../../storage/impl/conversation-store-impl.js'
+import type { ProviderStoreImpl } from '../../storage/impl/provider-store-impl.js'
 
 /** Everything produced by any boot phase; phases fill in the fields they own. */
 export interface BootstrapContext {
@@ -84,7 +84,9 @@ export interface BootstrapContext {
 
   // Phase: routers-facing stores
   nodeStore?: import('../../storage/contracts/node-store.js').NodeStoreContract
-  containerStore?: import('../../storage/impl/entity-container-store-impl.js').EntityContainerStoreImpl
+  containerStore?: import(
+    '../../storage/impl/entity-container-store-impl.js',
+  ).EntityContainerStoreImpl
   contentStore?: import('../../storage/impl/content-item-store-impl.js').ContentItemStoreImpl
   notificationStore?: import('../../storage/impl/notification-store-impl.js').NotificationStoreImpl
   contactStore?: import('../../storage/impl/contact-store-impl.js').ContactStoreImpl
@@ -129,7 +131,9 @@ export interface BootstrapEnginesResult {
   userIdentity?: UserIdentityEngine
   relocationEngine?: import('../../engines/storage-relocation-engine.js').StorageRelocationEngine
   nodeStore: import('../../storage/contracts/node-store.js').NodeStoreContract
-  containerStore: import('../../storage/impl/entity-container-store-impl.js').EntityContainerStoreImpl
+  containerStore: import(
+    '../../storage/impl/entity-container-store-impl.js',
+  ).EntityContainerStoreImpl
   contentStore: import('../../storage/impl/content-item-store-impl.js').ContentItemStoreImpl
   notificationStore: import('../../storage/impl/notification-store-impl.js').NotificationStoreImpl
   contactStore: import('../../storage/impl/contact-store-impl.js').ContactStoreImpl

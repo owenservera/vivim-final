@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { catchDebug } from './lib/catch-logger.js'
+import { safeJsonParse } from './lib/safe-json.js'
 
 // ── Platform detection ──────────────────────────────────────────────────────
 
@@ -170,8 +171,9 @@ const TUNABLE_FILE = join(process.cwd(), '.runtime', 'config.tunables.json')
 function loadTunables(): Record<string, unknown> {
   try {
     if (existsSync(TUNABLE_FILE)) {
-      const raw = JSON.parse(readFileSync(TUNABLE_FILE, 'utf-8')) as Record<string, unknown>
-      return raw ?? {}
+      const raw =
+        safeJsonParse<Record<string, unknown>>(readFileSync(TUNABLE_FILE, 'utf-8'), null) ?? {}
+      return raw
     }
   } catch (e) {
     catchDebug(e, 'config: tunable file parse failed, using defaults')

@@ -148,7 +148,7 @@ describe('KnowledgeStore', () => {
 
     const q = store.getPriorities()
     expect(q.length).toBe(1)
-    expect(q[0]!.capability).toBe('oracle_query')
+    expect(q[0]?.capability).toBe('oracle_query')
   })
 
   it('should merge delta', () => {

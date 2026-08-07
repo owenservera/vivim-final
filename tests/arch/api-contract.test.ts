@@ -247,7 +247,7 @@ describe('API Contract Consistency', () => {
 
     if (messagesMatch) {
       for (const code of errorCodes) {
-        if (!messagesMatch[1]!.includes(code)) {
+        if (!messagesMatch[1]?.includes(code)) {
           missingMessages.push(code)
         }
       }

@@ -5,6 +5,7 @@
 // Pluggable IntentResolver: deterministic by default, local LLM swappable.
 
 import { newId } from '../../ids.js'
+import { safeJsonParse } from '../../lib/safe-json.js'
 import type { ConversationStore } from '../../storage/contracts/conversation-store.js'
 import type { CapStoreDb } from '../../storage/db.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
@@ -177,7 +178,7 @@ export class NLCLEngine {
     if (this.deps.llmHarnessEscalator) {
       const agentMatch = rawInput.match(/^\/agent\s+(.+)$/i)
       if (agentMatch) {
-        const escalatorInput = agentMatch[1]!.trim()
+        const escalatorInput = agentMatch[1]?.trim()
         try {
           const escalation = await this.deps.llmHarnessEscalator(escalatorInput, ctx)
           if (escalation.ok) {
@@ -245,7 +246,7 @@ export class NLCLEngine {
           if (pattern) {
             let confirmedCtx: NLCContext
             try {
-              confirmedCtx = JSON.parse(confirmed.contextJson) as NLCContext
+              confirmedCtx = safeJsonParse<NLCContext>(confirmed.contextJson, null)
               confirmedCtx = { ...confirmedCtx, ...ctx }
             } catch {
               confirmedCtx = ctx

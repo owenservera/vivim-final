@@ -7,21 +7,21 @@
 // data modules) and flows through the shared builder in categories/builder.ts.
 // Add a new category by adding a file in categories/ and a line here.
 
-import { filePatterns } from './categories/file.ts'
-import { browserPatterns } from './categories/browser.ts'
-import { llmPatterns } from './categories/llm.ts'
-import { emailPatterns } from './categories/email.ts'
 import { appPatterns } from './categories/app.ts'
-import { conversationPatterns } from './categories/conversation.ts'
-import { systemPatterns } from './categories/system.ts'
+import { automationPatterns } from './categories/automation.ts'
+import { browserPatterns } from './categories/browser.ts'
 import { canvasPatterns } from './categories/canvas.ts'
 import { channelPatterns } from './categories/channel.ts'
-import { workflowPatterns } from './categories/workflow.ts'
-import { sessionPatterns } from './categories/session.ts'
+import { conversationPatterns } from './categories/conversation.ts'
+import { emailPatterns } from './categories/email.ts'
+import { filePatterns } from './categories/file.ts'
+import { llmPatterns } from './categories/llm.ts'
 import { memoryPatterns } from './categories/memory.ts'
-import { automationPatterns } from './categories/automation.ts'
 import { opencodePatterns } from './categories/opencode.ts'
 import { providerCapPatterns } from './categories/provider-cap.ts'
+import { sessionPatterns } from './categories/session.ts'
+import { systemPatterns } from './categories/system.ts'
+import { workflowPatterns } from './categories/workflow.ts'
 
 import type { CommandPattern } from './types.js'
 

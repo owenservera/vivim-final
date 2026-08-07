@@ -39,7 +39,7 @@ describe('detectCombo', () => {
     const intents: CommandIntent[] = [cmd()]
     const combo = detectCombo(intents, mockCtx)
     expect(combo.steps).toHaveLength(1)
-    expect(combo.steps[0]!.intent.commandId).toBe('/health')
+    expect(combo.steps[0]?.intent.commandId).toBe('/health')
     expect(combo.executionMode).toBe('sequential')
   })
 
@@ -56,8 +56,8 @@ describe('detectCombo', () => {
     const combo = detectCombo(intents, mockCtx)
     expect(combo.steps).toHaveLength(2)
     expect(combo.executionMode).toBe('sequential')
-    expect(combo.steps[0]!.intent.commandId).toBe('/switch')
-    expect(combo.steps[1]!.intent.commandId).toBe('/send')
+    expect(combo.steps[0]?.intent.commandId).toBe('/switch')
+    expect(combo.steps[1]?.intent.commandId).toBe('/send')
   })
 
   it('detects parallel combo with "and"', () => {
@@ -92,7 +92,7 @@ describe('detectCombo', () => {
       }),
     ]
     const combo = detectCombo(intents, mockCtx)
-    expect(combo.steps[1]!.dependsOn).toContain('step-0')
+    expect(combo.steps[1]?.dependsOn).toContain('step-0')
   })
 
   it('detects mixed sequential and parallel', () => {

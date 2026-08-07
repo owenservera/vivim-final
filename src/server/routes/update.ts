@@ -16,8 +16,10 @@
 
 import { z } from 'zod'
 import { getUpdateEngine } from '../../engines/update-engine.js'
+import { getLogger } from '../../lib/logger.js'
 import { appErrorResponse, errorResponse, json } from '../response.js'
 
+const log = getLogger('server:routes:update')
 export function createUpdateRouter() {
   return async function updateRouter(req: Request, url: URL): Promise<Response | null> {
     const path = url.pathname
@@ -155,7 +157,9 @@ export function createUpdateRouter() {
 
         const engine = getUpdateEngine()
         // Install in background - app will restart
-        engine.installAppUpdate(body.filePath).catch(console.error)
+        engine
+          .installAppUpdate(body.filePath)
+          .catch((e: unknown) => log.error({ err: e }, 'update install failed'))
 
         return json({
           ok: true,
@@ -186,7 +190,9 @@ export function createUpdateRouter() {
         const filePath = await engine.downloadUpdate(updateInfo.downloadUrl, filename)
 
         // Install (app will restart)
-        engine.installAppUpdate(filePath).catch(console.error)
+        engine
+          .installAppUpdate(filePath)
+          .catch((e: unknown) => log.error({ err: e }, 'update install failed'))
 
         return json({
           ok: true,

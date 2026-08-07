@@ -21,6 +21,7 @@ import { UnsupportedMutationError } from '../reprogrammability/contract.js'
 import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
 import { DslParseError, parseMutation, parseMutationList } from '../reprogrammability/dsl/parser.js'
 import {
+  type SurfaceMutationPlan,
   SurfaceMutationPlanSchema,
   SurfaceMutationSchema,
 } from '../reprogrammability/mutation-schema.js'
@@ -122,7 +123,7 @@ export function createMutationRouter() {
 
       try {
         const input = parsed.data
-        let plan
+        let plan: SurfaceMutationPlan
         if ('plan' in input) plan = input.plan
         else if ('dsl' in input) {
           const m = parseMutation(input.dsl)
@@ -174,7 +175,7 @@ export function createMutationRouter() {
       try {
         const record = await mutationExecutor.undo()
         if (!record) {
-          return json({ ok: false, error: 'Nothing to undo' }, 400)
+          return errorResponse('Nothing to undo', 'ValidationError', 400)
         }
         return json({ ok: true, record })
       } catch (err) {
@@ -187,7 +188,7 @@ export function createMutationRouter() {
       try {
         const record = await mutationExecutor.redo()
         if (!record) {
-          return json({ ok: false, error: 'Nothing to redo' }, 400)
+          return errorResponse('Nothing to redo', 'ValidationError', 400)
         }
         return json({ ok: true, record })
       } catch (err) {

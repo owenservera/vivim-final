@@ -1,0 +1,49 @@
+# docker-compose.yml — vivim-final local production stack
+# Session 2 (2026-08-07): created for one-command local deployment.
+#
+# Usage:
+#   docker compose up -d           # build + start
+#   docker compose logs -f         # tail logs
+#   docker compose down            # stop + remove containers
+#
+# The backend SQLite DB is persisted to a named volume mounted at /app/data.
+# The frontend serves on http://localhost:3000, backend on http://localhost:9420.
+
+services:
+  vivim:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vivim-final:latest
+    container_name: vivim-final
+    restart: unless-stopped
+    ports:
+      - "9420:9420"   # backend REST + WebSocket
+      - "3000:3000"   # frontend Next.js
+    volumes:
+      # Persist the SQLite DB across container restarts.
+      - vivim-data:/app/data
+      # Optionally mount a .env file (create one from .env.example).
+      - ./.env:/app/.env:ro
+    environment:
+      - NODE_ENV=production
+      - CAP_STORE_HOST=0.0.0.0
+      - CAP_STORE_PORT=9420
+      - DATABASE_URL=file:/app/data/vivim.db
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      # Pass through any provider API keys set in the host env.
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9420/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  vivim-data:
+    driver: local

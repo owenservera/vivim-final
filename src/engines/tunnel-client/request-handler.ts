@@ -130,7 +130,7 @@ export class RequestHandler {
       contentType.includes('text/event-stream') || contentType.includes('application/octet-stream')
 
     let body: string | null = null
-    let bodySize = 0
+    let _bodySize = 0
     let chunked = false
 
     if (isStreaming) {
@@ -140,7 +140,7 @@ export class RequestHandler {
       body = null
     } else {
       const bodyBuffer = await response.arrayBuffer()
-      bodySize = bodyBuffer.byteLength
+      _bodySize = bodyBuffer.byteLength
       body = Buffer.from(bodyBuffer).toString('base64')
     }
 

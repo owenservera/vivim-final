@@ -173,7 +173,7 @@ function isAllowedDependency(fromLayer: string, toLayer: string): boolean {
 
   // Prefix match: if 'src/storage' is allowed, 'src/storage/contracts' is also allowed
   for (const dep of allowed) {
-    if (toLayer.startsWith(dep + '/') || dep.startsWith(toLayer + '/')) {
+    if (toLayer.startsWith(`${dep}/`) || dep.startsWith(`${toLayer}/`)) {
       return true
     }
   }
@@ -205,9 +205,9 @@ function classifyFile(filePath: string): string | undefined {
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe('Layer Dependency Graph', () => {
-  for (const [layer, allowedDeps] of Object.entries(DEPENDENCY_GRAPH)) {
+  for (const [layer, _allowedDeps] of Object.entries(DEPENDENCY_GRAPH)) {
     describe(`Layer: ${layer}`, () => {
-      it(`should only import from allowed layers`, async () => {
+      it('should only import from allowed layers', async () => {
         const layerDir = LAYER_DIRS[layer]
         if (!layerDir || !existsSync(layerDir)) return
 
@@ -270,7 +270,7 @@ describe('Layer Dependency Graph', () => {
     for (const [layer, deps] of adjacency) {
       for (const dep of deps) {
         const depDeps = adjacency.get(dep)
-        if (depDeps && depDeps.has(layer)) {
+        if (depDeps?.has(layer)) {
           cycles.push(`${layer} ↔ ${dep}`)
         }
       }
@@ -280,7 +280,7 @@ describe('Layer Dependency Graph', () => {
   })
 
   it('shared layer should have no in-repo dependencies', () => {
-    const sharedDeps = DEPENDENCY_GRAPH['shared']
+    const sharedDeps = DEPENDENCY_GRAPH.shared
     expect(sharedDeps).toEqual([])
   })
 
@@ -298,7 +298,7 @@ describe('Layer Dependency Graph', () => {
   })
 
   it('frontend should only depend on shared', () => {
-    const frontendDeps = DEPENDENCY_GRAPH['frontend']
+    const frontendDeps = DEPENDENCY_GRAPH.frontend
     expect(frontendDeps).toEqual(['shared'])
   })
 })

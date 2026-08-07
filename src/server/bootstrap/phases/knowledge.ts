@@ -5,12 +5,12 @@
 // Writes: knowledgeIngestion, semanticSearch, synthesizer, exportEngine,
 //         providerMux, costOptimizer on ctx.
 
+import type { EmbeddingProvider } from '../../../engines/semantic-search.js'
 import { catchDebug } from '../../../lib/catch-logger.js'
 import { getLogger } from '../../../lib/logger.js'
-import type { EmbeddingProvider } from '../../../engines/semantic-search.js'
 import type { BootstrapContext } from '../context.js'
 
-const log = getLogger('bootstrap:knowledge')
+const _log = getLogger('bootstrap:knowledge')
 
 export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<void> {
   const db = ctx.db!
@@ -208,7 +208,7 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
             convId = conv.id
           }
 
-          const result = await ctx.conversationManager!.send(convId, message)
+          const result = await ctx.conversationManager?.send(convId, message)
 
           const latencyMs = Date.now() - start
           const estCost = await estimateCost(providerId, latencyMs)

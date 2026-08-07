@@ -241,6 +241,7 @@ export class FleetSupervisor {
               '-NoProfile',
               '-Command',
               'Get-Process chrome -ErrorAction SilentlyContinue | ForEach-Object { try { $_.Path } catch {} }',
+              catchDebug(_err, 'executor:fleet-supervisor:243'),
             ]
           : ['pgrep', '-f', 'chrome'],
         { stdout: 'pipe', stderr: 'pipe' },
@@ -580,6 +581,7 @@ export class FleetSupervisor {
 
       return { ok: true, latencyMs, status: 'running' }
     } catch (err) {
+      catchDebug(err, 'executor:fleet-supervisor:582')
       const latencyMs = Date.now() - start
       instance.consecutiveFailures++
       instance.lastHealthCheck = Date.now()

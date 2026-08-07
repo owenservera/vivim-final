@@ -1,51 +1,32 @@
 ---
 name: devops-generators
 description: >
-  Autonomous + interactive taxonomy generation. Builds ProviderCapabilityTaxonomy
-  library via LLM-driven pipeline (skeleton → drill-down → UI slot mapping →
-  cross-surface binding). Use when expanding platform coverage or generating
-  capability taxonomies.
 ---
 # devops-generators
 
-Autonomous + interactive taxonomy generation. Builds a `ProviderCapabilityTaxonomy`
+Autonomous + interactive taxonomy generation. Builds a massive `ProviderCapabilityTaxonomy`
 library by pinging LLMs with structured prompts in a Ralph loop. Two rounds: skeleton
-(`PlatformCatalog`) then drill-down (deep per-platform taxonomy).
-
-> **CANONICAL TRACKER:** `docs/atomic-v3-fork-canon/01-tracker.md` (127 units).
-> This skill drives taxonomy-generation work; it does NOT own the 127-unit plan.
-> Deprecated references: `docs/atomic-v3/`, `docs/atomic-v4/`, `docs/atomic-v5/`,
-> and any `atomic-v8` phrasing — the taxonomy generation pipeline was consolidated
-> into the fork-canon tracker.
-
-## Provider reality
-
-The live system supports **6 providers**: `chatgpt`, `claude`, `gemini`,
-`deepseek`, `qwen`, `grok` (see `seeds/providers/*.json`). The taxonomy pipeline
-extends beyond these toward additional platforms (social, agentic, IDE, etc.), but
-every generated capability MUST eventually resolve through the same
-`UnifiedCapability` → `surfaces: ['cli','ui','api']` contract used by the 6 seeded
-providers. Do NOT invent a second capability transport.
+(PlatformCatalog) then drill-down (deep per-platform taxonomy).
 
 ## When to Load
 
 **Load this skill when:**
 1. User says "generate taxonomy for X", "build provider library", "taxonomy session"
 2. User asks "what platforms should we cover" or "where do I start" → run `recommend`
-3. User wants to extend the taxonomy beyond the 6 seeded providers
+3. User wants to extend the taxonomy beyond the 6 seeded platforms (FB/IG/LI/WA/TG/X)
 4. User says "find existing taxonomy libraries" → use web-search research
 5. User has doubts about a platform's selectors/capabilities → use web-search research
 
 **Do NOT load when:**
-- Just implementing atomic units from `docs/atomic-v3-fork-canon/` (use the atomic specs directly)
+- Just implementing atomic-v8 units (use the atomic specs directly)
 - Pure conversation, no taxonomy generation intent
 
 ## Two-Round Flow
 
 ### Round 1 — Skeleton (`PlatformCatalog`)
-Build a master catalog of platforms across 10 categories. Curated ~150-200 (not
-literal 1000 — deeper, higher confidence). Each entry: `slug`, `displayName`,
-`category`, `url`, `description`, `catalogStatus: skeleton`.
+Build a master catalog of platforms across 10 categories. Curated ~150-200 (not literal
+1000 — deeper, higher confidence). Each entry: `slug`, `displayName`, `category`, `url`,
+`description`, `catalogStatus: skeleton`.
 
 Categories:
 1. **social_messaging** — WhatsApp, Telegram, Messenger, Signal, WeChat, Line, Viber
@@ -60,7 +41,7 @@ Categories:
 10. **forum** — Reddit, StackOverflow, Discourse, HackerNews
 
 ### Round 2 — Drill-down (`ProviderCapabilityTaxonomy`)
-For each platform, run section prompts in order, accumulate into the output JSON:
+For each platform, run section prompts in order, accumulate into `taxonomy.json`:
 `meta → capabilities → intents → selectors → constraints → validate`.
 
 ## Library-State Awareness (MANDATORY before each session)
@@ -76,7 +57,7 @@ This prints:
 - Existing seed files (seeds/)
 - Existing `ProviderCapabilityTaxonomy` rows (if DB present)
 - Current `PlatformCatalog` state (what's skeleton/drilling/complete)
-- Existing resolver capabilities
+- Existing `ProviderTaxonomyResolver` capabilities
 
 The agent uses this to avoid duplication and to know what's already covered.
 
@@ -89,11 +70,13 @@ bun run taxonomy-gen recommend
 ```
 
 This scores each platform by **value** (capabilities/intents unlocked × coverage gap) ÷
-**effort** (how much is already known) and suggests the top 3 with rationale.
+**effort** (how much is already known) and suggests the top 3 with rationale. The agent
+presents these and asks the user to pick, or proceeds with the top suggestion.
 
 ## Web-Search Research (during any session)
 
 The agent MAY use web-search at any point to:
+
 ### A. Find existing taxonomy libraries to reuse
 Search GitHub/npm for:
 - "platform capability taxonomy github"
@@ -127,13 +110,13 @@ The orchestrator:
 4. Agent (you) reads the prompt, generates the section JSON, writes it to
    `scripts/taxonomy-gen/output/providers/<slug>/sections/<section>.json`
 5. Orchestrator validates against Zod schema, saves, advances to next section
-6. Loop until all sections done → merges into the output JSON, marks `complete`
+6. Loop until all sections done → merges into `taxonomy.json`, marks `complete`
 
 ### Prompt Template Contract
+
 Each `prompts/*.prompt.md` is rendered with vars: `{platform}`, `{category}`,
 `{prior}` (prior section output), `{discoveryHints}` (if known). Output MUST be strict JSON
-conforming to the Zod schema in `scripts/taxonomy-gen/lib/<section>-schema.ts` (or the
-equivalent schema module under `scripts/taxonomy-gen/lib/`).
+conforming to the Zod schema in `lib/<section>-schema.ts`.
 
 ### Section order + schemas
 
@@ -154,8 +137,8 @@ After drill-downs complete:
 bun run taxonomy-gen merge
 ```
 
-Produces the generated seed file (same shape as the v8.4 seed spec referenced by the
-taxonomy generator). Imported by the seed runner → loads into `ProviderCapabilityTaxonomy`.
+Produces `seeds/taxonomy/generated.seed.ts` (same shape as `atomic-v8/v8.4`). Imported by
+the seed runner → loads into `ProviderCapabilityTaxonomy` via `PrismaProviderTaxonomyStore`.
 
 ## Commands
 
@@ -171,9 +154,9 @@ taxonomy generator). Imported by the seed runner → loads into `ProviderCapabil
 
 ## Integration with DevOps
 
-- Extends the taxonomy-generation units in `docs/atomic-v3-fork-canon/`. This skill
-  automates the seed-generation step for the taxonomy pipeline.
-- Output conforms to the provider taxonomy store contract.
+- Extends `atomic-v8` (v8.1 schema + v8.4 seeds). This skill automates v8.4 seed generation.
+- `PlatformCatalog` model added to `prisma/schema.prisma` (new table, no break).
+- Output conforms to `ProviderTaxonomyStore` contract (v8.2).
 - After merge: `bun run devops gate` must pass.
 
 ## Quality Rules
@@ -184,5 +167,3 @@ taxonomy generator). Imported by the seed runner → loads into `ProviderCapabil
 4. Confidence scoring — mark `sourceConfidence` per platform.
 5. Reuse over regenerate — prefer existing libraries found via web search.
 6. Fail-forward — if a section is uncertain, mark `confidence: Low` and continue.
-7. Cross-surface parity — every generated capability must resolve across CLI/API/MCP/UI.
-   Run `bun run devops verify-cross-surface` after integration.

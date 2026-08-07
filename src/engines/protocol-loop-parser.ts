@@ -2,6 +2,7 @@
 // ProtocolLoopParser — loop-mode streaming parse for autonomous agent workflows.
 // Processes protocol frames from stdin/buffer and emits typed events.
 
+import { catchDebug } from '../lib/catch-logger.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
@@ -54,6 +55,7 @@ export class ProtocolLoopParser {
         const frame = JSON.parse(line) as ProtocolFrame
         this.emitFrame(frame)
       } catch {
+        catchDebug(_err, 'engines:protocol-loop-parser:56')
         // Not a valid JSON frame — ignore
       }
     }

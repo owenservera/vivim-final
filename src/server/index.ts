@@ -1,9 +1,29 @@
 // src/server/index.ts
 // Bun.serve — REST API + WebSocket server entry point
 //
-// Minimal shell: mounts response helpers, auth gate, conversation router,
-// and WebSocket bridge. Engine wiring is deferred to the full bootstrap
-// (units 5.1-5.5 are bundled; full wiring comes after all stubs exist).
+// ── BOOT GRAPH (FIX-A1-2, session 1) ────────────────────────────────────────
+// This file exposes exactly TWO entry points:
+//   - `createServer(port)`            — minimal stub path (db-only). Used by
+//                                       tooling, tests, and the boot phase
+//                                       tracker. Does NOT call bootstrapEngines.
+//   - `createServerWithEngines(port)` — full production boot. The ONLY caller
+//                                       of `bootstrapEngines` (which itself is
+//                                       a thin re-export of the canonical
+//                                       `orchestrateBootstrap` in
+//                                       `src/server/bootstrap/orchestrator.ts`).
+//
+// The boot phase order (config → stores → engines → caps → routes) is enforced
+// by `orchestrateBootstrap` and verified by invariant B13
+// (`devops/invariants.ts:checkB13_BootGraphCanon`). Any other module that
+// imports `bootstrapEngines` is a regression and will fail the arch test
+// (`tests/arch/boundary-cdp.test.ts`).
+//
+// `BootPhase` type below tracks how far the boot has progressed:
+//   - `db-only`       — only `db` is guaranteed
+//   - `seeds-done`    — seed data loaded
+//   - `engines-ready` — all stores, engines, and capability registrations complete
+//   - `fully-booted`  — kernel boot, health kernel, onboarding pipeline done
+// ─────────────────────────────────────────────────────────────────────────────
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -27,6 +47,7 @@ import type { RetryEngine } from '../engines/retry-engine.js'
 import type { SemanticSearchEngine } from '../engines/semantic-search.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import type { UserIdentityEngine } from '../engines/user-identity.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { createAuthMiddleware } from './auth-gate.js'
@@ -46,7 +67,7 @@ import { createMuxRouter } from './mux-router.js'
 import { createNLCLRouter } from './nlcl-router.js'
 import { createNodeRouter } from './node-router.js'
 import { createPluginBuilderRouter } from './plugin-builder-router.js'
-import { errorResponse, json } from './response.js'
+import { dispatch, errorResponse, json } from './response.js'
 import { createContactsRouter } from './routes/contacts.js'
 import { createContainersRouter } from './routes/containers.js'
 import { createContentRouter } from './routes/content.js'
@@ -166,6 +187,7 @@ function startOnFreePort(
         mkdirSync(runtimeDir, { recursive: true })
         writeFileSync(join(runtimeDir, 'backend.port'), String(port), 'utf-8')
       } catch {
+        catchDebug(_err, 'server:index:188')
         /* best-effort */
       }
       return { server, boundPort: port }
@@ -249,21 +271,46 @@ export async function createServer(port = 9420): Promise<ServerContext> {
       fetch(req, server) {
         const url = new URL(req.url)
 
-        // CORS preflight — allow all origins, methods, headers
-        if (req.method === 'OPTIONS') {
-          return new Response(null, {
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
-              'Access-Control-Allow-Headers':
-                'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
-              'Access-Control-Max-Age': '86400',
-            },
+        // ── Session 2: trace-ID for log correlation ──────────────────────────
+        // Every response gets an X-Trace-Id header so logs across the stack can
+        // be correlated. If the client sends X-Trace-Id, we honor it; otherwise
+        // we generate one. This is a minimal inline implementation of what the
+        // dead middleware pipeline (src/server/middleware/trace-propagation.ts)
+        // was supposed to do — wired here to avoid a risky handler refactor.
+        const traceId =
+          req.headers.get('X-Trace-Id') ??
+          `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+
+        /** Wrap a Response with the X-Trace-Id + CORS headers. */
+        const withTrace = (res: Response): Response => {
+          const headers = new Headers(res.headers)
+          if (!headers.has('X-Trace-Id')) headers.set('X-Trace-Id', traceId)
+          headers.set('Access-Control-Allow-Origin', '*')
+          headers.set('Access-Control-Expose-Headers', 'X-Trace-Id')
+          return new Response(res.body, {
+            status: res.status,
+            statusText: res.statusText,
+            headers,
           })
         }
 
+        // CORS preflight — allow all origins, methods, headers
+        if (req.method === 'OPTIONS') {
+          return withTrace(
+            new Response(null, {
+              headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
+                'Access-Control-Allow-Headers':
+                  'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
+                'Access-Control-Max-Age': '86400',
+              },
+            }),
+          )
+        }
+
         if (url.pathname === '/health') {
-          return json({ status: 'ok', version: '1.0.0' })
+          return withTrace(json({ status: 'ok', version: '1.0.0' }))
         }
 
         // Readiness — 200 only when server is ready to accept traffic (no auth)
@@ -385,7 +432,10 @@ export async function createServer(port = 9420): Promise<ServerContext> {
 
         // Chrome automation routes
         if (url.pathname.startsWith('/api/chrome/')) {
-          return chromeRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => chromeRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Generative engine routes
@@ -395,42 +445,66 @@ export async function createServer(port = 9420): Promise<ServerContext> {
 
         // LLM harness routes
         if (url.pathname.startsWith('/api/harness/')) {
-          return llmHarnessRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => llmHarnessRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Mutation routes
         if (url.pathname.startsWith('/api/mutation/')) {
-          return mutationRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => mutationRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Plugin builder routes
         if (url.pathname.startsWith('/api/plugins/')) {
-          return pluginBuilderRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => pluginBuilderRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Surface routes
         if (url.pathname.startsWith('/api/surface/')) {
-          return surfaceRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => surfaceRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Template routes
         if (url.pathname.startsWith('/api/template/')) {
-          return templateRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => templateRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Variant routes
         if (url.pathname.startsWith('/api/variant/')) {
-          return variantRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => variantRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Version routes
         if (url.pathname.startsWith('/api/version/')) {
-          return versionRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => versionRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Update routes
         if (url.pathname.startsWith('/api/update/')) {
-          return updateRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => updateRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
 
         // Static file serving (env-gated: FRONTEND_DIR)
@@ -449,11 +523,32 @@ export async function createServer(port = 9420): Promise<ServerContext> {
               }
             }
           } catch {
+            catchDebug(_err, 'server:index:496')
             // Fall through to conversationRouter
           }
         }
 
-        return conversationRouter(req)
+        // Session 2: global error safety net + trace-ID on final response.
+        return withTrace(conversationRouter(req)).catch((err: unknown) => {
+          log.error(
+            {
+              traceId,
+              pathname: url.pathname,
+              err: err instanceof Error ? err.message : String(err),
+            },
+            'unhandled error in request routing',
+          )
+          return withTrace(
+            json(
+              {
+                error: err instanceof Error ? err.message : 'Internal Server Error',
+                code: 'InternalError',
+                traceId,
+              },
+              500,
+            ),
+          )
+        })
       },
       websocket: {
         open(ws) {
@@ -680,20 +775,39 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
       async fetch(req, server) {
         const url = new URL(req.url)
 
-        if (req.method === 'OPTIONS') {
-          return new Response(null, {
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
-              'Access-Control-Allow-Headers':
-                'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
-              'Access-Control-Max-Age': '86400',
-            },
+        // ── Session 2: trace-ID for log correlation (production handler) ──────
+        const traceId =
+          req.headers.get('X-Trace-Id') ??
+          `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+
+        const withTrace = (res: Response): Response => {
+          const headers = new Headers(res.headers)
+          if (!headers.has('X-Trace-Id')) headers.set('X-Trace-Id', traceId)
+          headers.set('Access-Control-Allow-Origin', '*')
+          headers.set('Access-Control-Expose-Headers', 'X-Trace-Id')
+          return new Response(res.body, {
+            status: res.status,
+            statusText: res.statusText,
+            headers,
           })
         }
 
+        if (req.method === 'OPTIONS') {
+          return withTrace(
+            new Response(null, {
+              headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
+                'Access-Control-Allow-Headers':
+                  'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
+                'Access-Control-Max-Age': '86400',
+              },
+            }),
+          )
+        }
+
         if (url.pathname === '/health') {
-          return json({ status: 'ok', version: '1.0.0' })
+          return withTrace(json({ status: 'ok', version: '1.0.0' }))
         }
 
         if (url.pathname === '/readyz') {
@@ -723,7 +837,10 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
         if (url.pathname.startsWith('/api/route/')) return muxRouter(req)
         if (url.pathname.startsWith('/api/autonomous/') && autonomousRouter) {
-          return autonomousRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => autonomousRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
         if (url.pathname.startsWith('/api/nlcl/')) return nlclRouter(req)
         if (url.pathname === '/api/interpret' && req.method === 'POST') {
@@ -742,7 +859,10 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
           return handleOpenCodeRoutes(req, url, serve)
         }
         if (url.pathname.startsWith('/api/automate/')) {
-          return automationRouter(req, url).then((r) => r ?? conversationRouter(req))
+          return dispatch(
+            () => automationRouter(req, url),
+            () => conversationRouter(req),
+          )
         }
         if (url.pathname.startsWith('/api/knowledge/')) return knowledgeRouter(req)
         if (url.pathname.startsWith('/api/tunnel/')) return tunnelRouter(req)
@@ -755,14 +875,8 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         if (url.pathname.startsWith('/api/nodes/')) return nodeRouter(req)
         if (url.pathname.startsWith('/api/storage/') && storageRouter) return storageRouter(req)
         if (url.pathname.startsWith('/api/memory/') && memoryRouter) {
-          const bodyText = req.method === 'GET' ? undefined : await req.text()
-          return memoryRouter({ url: req.url, method: req.method, body: bodyText }).then(
-            (r) =>
-              new Response(JSON.stringify(r.body), {
-                status: r.status,
-                headers: { 'Content-Type': 'application/json' },
-              }),
-          )
+          // Session 3: memory-viz-router now returns Response directly (was {status, body}).
+          return memoryRouter(req)
         }
         if (url.pathname.startsWith('/api/canvas/') && canvasRouter) {
           return canvasRouter(req, url)
@@ -829,11 +943,32 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
               }
             }
           } catch {
+            catchDebug(_err, 'server:index:909')
             // Fall through to conversationRouter
           }
         }
 
-        return conversationRouter(req)
+        // Session 2: global error safety net + trace-ID on final response.
+        return withTrace(conversationRouter(req)).catch((err: unknown) => {
+          log.error(
+            {
+              traceId,
+              pathname: url.pathname,
+              err: err instanceof Error ? err.message : String(err),
+            },
+            'unhandled error in request routing',
+          )
+          return withTrace(
+            json(
+              {
+                error: err instanceof Error ? err.message : 'Internal Server Error',
+                code: 'InternalError',
+                traceId,
+              },
+              500,
+            ),
+          )
+        })
       },
       websocket: {
         open(ws) {

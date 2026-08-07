@@ -6,6 +6,7 @@
 // per-MemoryFabric-instance and shared across all agent subsystems.
 
 import { MemoryError } from '../../errors.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 
 export const _SYNC_DRAIN_TIMEOUT_MS = 5000
 export const _EXTERNAL_PREFETCH_TIMEOUT_MS = 8000
@@ -66,6 +67,7 @@ export class BackgroundSyncQueue {
     try {
       await race
     } catch {
+      catchDebug(_err, 'engines:memory:background-sync:68')
       // bounded: leave in-flight, report via drain
     }
   }

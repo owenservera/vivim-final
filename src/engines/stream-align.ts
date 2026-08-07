@@ -7,6 +7,7 @@
 
 import { createHash } from 'node:crypto'
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { StreamParserEngine } from './stream-parser.js'
 
 export type StreamFormat = 'sse' | 'json' | 'html' | 'websocket' | 'custom'
@@ -178,6 +179,7 @@ export class StreamAlignmentEngine {
         JSON.parse(trimmed)
         return 'json'
       } catch {
+        catchDebug(_err, 'engines:stream-align:180')
         /* fall through */
       }
     }
@@ -273,6 +275,7 @@ export class StreamAlignmentEngine {
           JSON.parse(payload)
           return payload
         } catch {
+          catchDebug(_err, 'engines:stream-align:275')
           /* try next line */
         }
       }

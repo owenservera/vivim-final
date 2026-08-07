@@ -2,8 +2,8 @@
 // Maps command categories to HSL color triples (light/medium/dark shades).
 // WCAG AA compliant: light shade on white bg, dark shade on dark bg.
 
-import type { CommandCategory } from './types.js'
 import { CommandLanguageError } from '../../errors.js'
+import type { CommandCategory } from './types.js'
 
 export interface HslColor {
   h: number // 0-360
@@ -110,7 +110,7 @@ export const CATEGORY_COLORS: Record<CommandCategory, CategoryColor> = {
 export function getShade(category: CommandCategory, shade: 'light' | 'medium' | 'dark'): HslColor {
   const colors = CATEGORY_COLORS[category]
   if (!colors) {
-    throw new CommandLanguageError(`Unknown category: ${category}`)
+    throw new CommandLanguageError('UNKNOWN_CATEGORY', `Unknown category: ${category}`)
   }
   return colors[shade]
 }
@@ -235,7 +235,7 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 export function hexToHsl(hex: string): HslColor {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (!result) {
-    throw new CommandLanguageError(`Invalid hex color: ${hex}`)
+    throw new CommandLanguageError('INVALID_HEX_COLOR', `Invalid hex color: ${hex}`)
   }
 
   const r = Number.parseInt(result[1] as string, 16) / 255

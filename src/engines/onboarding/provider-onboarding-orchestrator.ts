@@ -28,6 +28,7 @@
 //    triage.
 
 import { ulid } from 'ulid'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { CapabilityBindingStoreContract } from '../../storage/contracts/onboarding/capability-binding-store.js'
 import type { DiscoveredDomEntityStoreContract } from '../../storage/contracts/onboarding/discovered-dom-entity-store.js'
 import type { OnboardingSessionStoreContract } from '../../storage/contracts/onboarding/onboarding-session-store.js'
@@ -652,6 +653,7 @@ export class ProviderOnboardingOrchestrator {
         })
       }
     } catch {
+      catchDebug(_err, 'engines:onboarding:provider-onboarding-orchestrator:654')
       // Best-effort — if the upsert fails, the bindingStore.create will
       // throw a clearer FK violation error.
     }
@@ -670,6 +672,7 @@ export class ProviderOnboardingOrchestrator {
       // OtelSink.emit signature: (level, body, attributes?, resource?)
       sink?.emit?.('INFO', `onboarding span start: ${name}`)
     } catch {
+      catchDebug(_err, 'engines:onboarding:provider-onboarding-orchestrator:672')
       // Fall through — OTel is best-effort.
     }
     return fn()

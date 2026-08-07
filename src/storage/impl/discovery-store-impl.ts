@@ -1,3 +1,4 @@
+import { safeJsonParse } from '../../lib/safe-json.js'
 import type {
   DiscoveryObservationRow,
   DiscoverySessionRow,
@@ -97,7 +98,7 @@ export class DiscoveryStoreImpl implements DiscoveryStore {
       take: opts?.limit ?? 100,
     })
     return rows.map((r) => {
-      const data = JSON.parse(r.manifestJson ?? '{}') as Record<string, unknown>
+      const data = safeJsonParse<Record<string, unknown>>(r.manifestJson ?? '{}', null) ?? {}
       return {
         id: r.id,
         sessionId: r.sessionId,

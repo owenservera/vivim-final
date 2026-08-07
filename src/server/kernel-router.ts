@@ -8,7 +8,7 @@
 import { z } from 'zod'
 import type { ConfigUniversalSurface } from '../engines/config-universal-surface.js'
 import type { ServerContext } from './index.js'
-import { appErrorResponse, errorResponse } from './response.js'
+import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
 
 export interface KernelRouterDeps {
@@ -92,10 +92,7 @@ export function createKernelRouter(
         filter,
         limit,
       })
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json(result)
     }
 
     // Oracle heal endpoint
@@ -111,10 +108,7 @@ export function createKernelRouter(
       }
 
       const result = await kernel.context()?.oracle?.actuator?.heal(parsed.data.issueId)
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json(result)
     }
 
     // Oracle scan endpoint
@@ -124,10 +118,7 @@ export function createKernelRouter(
       }
 
       const result = await kernel.context()?.oracle?.diagnostic?.scan()
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json(result)
     }
 
     // Oracle events endpoint
@@ -139,10 +130,7 @@ export function createKernelRouter(
       }
 
       const events = await kernel.context()?.oracle?.events?.getRecentEvents(limit)
-      return new Response(JSON.stringify(events), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json(events)
     }
 
     // Oracle visibility endpoint
@@ -152,28 +140,19 @@ export function createKernelRouter(
       }
 
       const result = await kernel.context()?.oracle?.query?.query({ type: 'all' })
-      return new Response(JSON.stringify(result), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json(result)
     }
 
     // Oracle manifest endpoint
     if (url.pathname === '/api/kernel/oracle/manifest' && req.method === 'GET') {
       const registry = kernel?.context()?.registry?.describe()
-      return new Response(JSON.stringify({ manifest: registry }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json({ manifest: registry })
     }
 
     // Oracle policy endpoints
     if (url.pathname === '/api/kernel/oracle/policy') {
       if (req.method === 'GET') {
-        return new Response(JSON.stringify(DEFAULT_POLICY), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return json(DEFAULT_POLICY)
       }
 
       if (req.method === 'PUT') {
@@ -187,20 +166,14 @@ export function createKernelRouter(
         if (!parsed.success) {
           return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
-        return new Response(JSON.stringify(parsed.data as AutoHealPolicy), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return json(parsed.data as AutoHealPolicy)
       }
     }
 
     // Config scopes endpoint
     if (configSurface && url.pathname === '/api/kernel/config/scopes' && req.method === 'GET') {
       const scopes = configSurface.listScopes()
-      return new Response(JSON.stringify(scopes), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json(scopes)
     }
 
     // Config get endpoint
@@ -218,10 +191,7 @@ export function createKernelRouter(
       }
 
       const value = configSurface.get(scope, key)
-      return new Response(JSON.stringify({ value }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json({ value })
     }
 
     // Config set endpoint
@@ -245,10 +215,7 @@ export function createKernelRouter(
 
       try {
         const result = configSurface.set(scope, key, parsed.data.value as unknown)
-        return new Response(JSON.stringify(result), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return json(result)
       } catch (err) {
         return appErrorResponse(err)
       }
@@ -257,10 +224,7 @@ export function createKernelRouter(
     // Config snapshot endpoint
     if (configSurface && url.pathname === '/api/kernel/config/snapshot' && req.method === 'POST') {
       const id = configSurface.snapshot()
-      return new Response(JSON.stringify({ id }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json({ id })
     }
 
     // Config rollback endpoint
@@ -272,10 +236,7 @@ export function createKernelRouter(
       }
 
       configSurface.rollback(parsed.data.id)
-      return new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return json({ ok: true })
     }
 
     return null

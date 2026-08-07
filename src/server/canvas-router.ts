@@ -9,6 +9,7 @@
 import { z } from 'zod'
 import type { CapabilityEventBus } from '../engines/capability-event-bus.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
@@ -161,6 +162,7 @@ export function createCanvasRouter(ctx: ServerContext) {
                     encoder.encode(`event: ${evt.type}\ndata: ${JSON.stringify(evt)}\n\n`),
                   )
                 } catch {
+                  catchDebug(_err, 'server:canvas-router:163')
                   // Stream may have closed
                 }
               })

@@ -102,7 +102,7 @@ describe('command-registry', () => {
       registry.onRegister((p) => received.push(p))
       registry.register(makePattern())
       expect(received).toHaveLength(1)
-      expect(received[0]!.id).toBe('test_pattern_1')
+      expect(received[0]?.id).toBe('test_pattern_1')
     })
 
     it('returns unsubscribe function', () => {

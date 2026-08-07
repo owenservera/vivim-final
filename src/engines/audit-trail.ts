@@ -2,7 +2,7 @@
 // Unit 9.4 — Audit trail for all user + system actions.
 
 import { newId } from '../ids.js'
-import type { StructuredLogger } from './logger.js'
+import type { Logger } from '../lib/logger.js'
 
 export interface AuditSink {
   name: string
@@ -44,7 +44,7 @@ export class AuditTrail {
 
   constructor(
     policy?: Partial<AuditPolicy>,
-    private logger?: StructuredLogger,
+    private logger?: Logger,
   ) {
     if (policy) this.policy = { ...DEFAULT_POLICY, ...policy }
   }

@@ -17,6 +17,7 @@ import type { ReprogrammableSurface, SurfaceKind } from './contract.js'
 import type { SurfaceVariant } from './variant-schema.js'
 
 /**
+const log = getLogger('reprogrammability:registry')
  * Error thrown when a surface is not found in the registry.
  */
 export class SurfaceNotFoundError extends Error {
@@ -218,7 +219,7 @@ export class SurfaceRegistry {
         listener(event)
       } catch (err) {
         // Listener errors must not break the registry.
-        console.error('[SurfaceRegistry] listener error:', err)
+        log.error('[SurfaceRegistry] listener error:', err)
       }
     }
   }

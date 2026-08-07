@@ -4,6 +4,7 @@
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { SetupAccount, SlaveSetupStore } from '../contracts/slave-setup-store.js'
 import type { CapStoreDb } from '../db.js'
 
@@ -19,6 +20,7 @@ async function ensureConfigDir(): Promise<void> {
   try {
     await mkdir(CONFIG_DIR, { recursive: true })
   } catch {
+    catchDebug(_err, 'storage:impl:slave-setup-store-impl:21')
     // Race or exists
   }
 }

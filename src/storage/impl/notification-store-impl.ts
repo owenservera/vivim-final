@@ -31,10 +31,14 @@ export interface NotificationRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class NotificationStoreImpl {
-  constructor(private readonly db: CapStoreDb) {}
+  protected readonly prisma: any
+
+  constructor(private readonly db: CapStoreDb) {
+    this.prisma = db.prisma
+  }
 
   async getNotificationById(id: string): Promise<NotificationRow | null> {
-    const row = await this.db.loose.notification.findUnique({ where: { id } })
+    const row = await this.prisma.notification.findUnique({ where: { id } })
     return row ? this.toRow(row) : null
   }
 
@@ -50,12 +54,12 @@ export class NotificationStoreImpl {
     if (query.providerId) where.providerId = query.providerId
     if (query.notificationType) where.notificationType = query.notificationType
     if (query.isRead !== undefined) where.isRead = query.isRead ? 1 : 0
-    const rows = await this.db.loose.notification.findMany({
+    const rows = await this.prisma.notification.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: query.limit ?? 50,
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async createNotification(input: {
@@ -75,7 +79,7 @@ export class NotificationStoreImpl {
     metadataJson?: string
   }): Promise<NotificationRow> {
     const now = Date.now()
-    const row = await this.db.loose.notification.create({
+    const row = await this.prisma.notification.create({
       data: {
         id: newId(),
         providerId: input.providerId,
@@ -120,17 +124,17 @@ export class NotificationStoreImpl {
     for (const key of allowed) {
       if (key in updates) data[key] = updates[key]
     }
-    const row = await this.db.loose.notification.update({ where: { id }, data })
+    const row = await this.prisma.notification.update({ where: { id }, data })
     return this.toRow(row)
   }
 
   async deleteNotification(id: string): Promise<void> {
-    await this.db.loose.notification.delete({ where: { id } })
+    await this.prisma.notification.delete({ where: { id } })
   }
 
   async markAsRead(id: string): Promise<NotificationRow> {
     const now = Date.now()
-    const row = await this.db.loose.notification.update({
+    const row = await this.prisma.notification.update({
       where: { id },
       data: { isRead: 1, updatedAt: now },
     })
@@ -138,7 +142,7 @@ export class NotificationStoreImpl {
   }
 
   async markAllAsRead(accountId: string): Promise<number> {
-    const result = await this.db.loose.notification.updateMany({
+    const result = await this.prisma.notification.updateMany({
       where: { accountId, isRead: 0 },
       data: { isRead: 1, updatedAt: Date.now() },
     })
@@ -146,14 +150,14 @@ export class NotificationStoreImpl {
   }
 
   async getUnreadCount(accountId: string): Promise<number> {
-    return this.db.loose.notification.count({
+    return this.prisma.notification.count({
       where: { accountId, isRead: 0 },
     })
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: any): NotificationRow {
+  private toRow(r: Record<string, unknown>): NotificationRow {
     return {
       id: r.id,
       providerId: r.providerId,

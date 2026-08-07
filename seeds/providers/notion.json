@@ -29,7 +29,12 @@
     }
   ],
   "parsers": [
-    { "name": "notion-json", "version": 1, "is_active": true, "fallback": "generic-format-agnostic" }
+    {
+      "name": "notion-json",
+      "version": 1,
+      "is_active": true,
+      "fallback": "generic-format-agnostic"
+    }
   ],
   "models": [],
   "capabilities_config": [],

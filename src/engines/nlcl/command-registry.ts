@@ -4,6 +4,7 @@
 // Patterns auto-derive from UnifiedCapabilityRegistry + explicit consumer catalog.
 
 import { EngineError } from '../../errors.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { CommandPattern, NLCLSurface } from './types.js'
 
 type RegisterCallback = (pattern: CommandPattern) => void
@@ -41,6 +42,7 @@ export class CommandPatternRegistry {
       try {
         cb(pattern)
       } catch {
+        catchDebug(_err, 'engines:nlcl:command-registry:43')
         /* callback errors are non-fatal */
       }
     }

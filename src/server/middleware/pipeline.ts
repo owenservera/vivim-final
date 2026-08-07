@@ -15,6 +15,7 @@
 //   const response = await pipeline.execute(request, (ctx) => json({ ok: true }))
 
 import { getLogger } from '@/lib/logger.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type {
   Middleware,
   MiddlewareContext,
@@ -47,7 +48,7 @@ function globToRegex(pattern: string): RegExp {
     if (ch === '*' || ch === '?') {
       escaped += ch
     } else if (REGEX_META.has(ch)) {
-      escaped += '\\' + ch
+      escaped += `\\${ch}`
     } else {
       escaped += ch
     }
@@ -110,21 +111,21 @@ export class MiddlewarePipeline {
   /** Remove a middleware by name (from both global and path-specific) */
   remove(name: string): void {
     for (let i = this.globalMiddleware.length - 1; i >= 0; i--) {
-      if (this.globalMiddleware[i]!.name === name) {
+      if (this.globalMiddleware[i]?.name === name) {
         this.globalMiddleware.splice(i, 1)
         log.debug({ middleware: name }, 'removed global middleware')
       }
     }
     for (const pm of this.pathMiddleware) {
       for (let i = pm.entries.length - 1; i >= 0; i--) {
-        if (pm.entries[i]!.name === name) {
+        if (pm.entries[i]?.name === name) {
           pm.entries.splice(i, 1)
           log.debug({ middleware: name }, 'removed path-specific middleware')
         }
       }
     }
     for (let i = this.pathMiddleware.length - 1; i >= 0; i--) {
-      if (this.pathMiddleware[i]!.entries.length === 0) {
+      if (this.pathMiddleware[i]?.entries.length === 0) {
         this.pathMiddleware.splice(i, 1)
       }
     }
@@ -176,6 +177,7 @@ export class MiddlewarePipeline {
       // Should not reach here if handler ran inside the chain
       return await handler(ctx)
     } catch (err) {
+      catchDebug(err, 'server:middleware:pipeline:178')
       ctx.error = err instanceof Error ? err : new Error(String(err))
 
       // If error-handler middleware caught the error and set a response, use it

@@ -1,6 +1,13 @@
 // src/storage/impl/contact-store-impl.ts
 // Prisma-backed ContactStore — CRUD + merge for Contact + ContactIdentity.
+//
+// Session 5 (2026-08-07): Migrated from `this.prisma.contact` (untyped `any`)
+// to `this.db.prisma.contact` (typed Prisma client). This eliminates all 5
+// `r: any` annotations and gives compile-time field checking — a column rename
+// in schema.prisma will now fail at build time instead of silently returning
+// `undefined` at runtime.
 
+import type { Prisma, PrismaClient } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type { CapStoreDb } from '../db.js'
 
@@ -38,22 +45,30 @@ export interface ContactIdentityRow {
   createdAt: number
 }
 
+// Prisma row types (from the generated client)
+type ContactPrismaRow = Prisma.ContactGetPayload<Record<string, never>>
+type ContactIdentityPrismaRow = Prisma.ContactIdentityGetPayload<Record<string, never>>
+
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class ContactStoreImpl {
-  constructor(private readonly db: CapStoreDb) {}
+  private readonly prisma: PrismaClient
+
+  constructor(private readonly db: CapStoreDb) {
+    this.prisma = db.prisma
+  }
 
   async getContactById(id: string): Promise<ContactRow | null> {
-    const row = await this.db.loose.contact.findUnique({ where: { id } })
+    const row = await this.prisma.contact.findUnique({ where: { id } })
     return row ? this.toRow(row) : null
   }
 
   async getContactsByAccount(accountId: string): Promise<ContactRow[]> {
-    const rows = await this.db.loose.contact.findMany({
+    const rows = await this.prisma.contact.findMany({
       where: { accountId },
       orderBy: { updatedAt: 'desc' },
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async getContactByNativeId(
@@ -61,7 +76,7 @@ export class ContactStoreImpl {
     accountId: string,
     providerNativeId: string,
   ): Promise<ContactRow | null> {
-    const row = await this.db.loose.contact.findFirst({
+    const row = await this.prisma.contact.findFirst({
       where: { providerId, accountId, providerNativeId },
     })
     return row ? this.toRow(row) : null
@@ -77,12 +92,12 @@ export class ContactStoreImpl {
       ],
     }
     if (accountId) where.accountId = accountId
-    const rows = await this.db.loose.contact.findMany({
+    const rows = await this.prisma.contact.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
       take: 50,
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async createContact(input: {
@@ -99,7 +114,7 @@ export class ContactStoreImpl {
     metadataJson?: string
   }): Promise<ContactRow> {
     const now = Date.now()
-    const row = await this.db.loose.contact.create({
+    const row = await this.prisma.contact.create({
       data: {
         id: newId(),
         providerId: input.providerId,
@@ -146,12 +161,12 @@ export class ContactStoreImpl {
     for (const key of allowed) {
       if (key in updates) data[key] = updates[key]
     }
-    const row = await this.db.loose.contact.update({ where: { id }, data })
+    const row = await this.prisma.contact.update({ where: { id }, data })
     return this.toRow(row)
   }
 
   async deleteContact(id: string): Promise<void> {
-    await this.db.loose.contact.delete({ where: { id } })
+    await this.prisma.contact.delete({ where: { id } })
   }
 
   async mergeContacts(
@@ -160,7 +175,7 @@ export class ContactStoreImpl {
     method: string,
     confidence: number,
   ): Promise<ContactIdentityRow> {
-    const row = await this.db.loose.contactIdentity.create({
+    const row = await this.prisma.contactIdentity.create({
       data: {
         id: newId(),
         canonicalContactId: canonicalId,
@@ -175,18 +190,18 @@ export class ContactStoreImpl {
   }
 
   async getMergedContacts(contactId: string): Promise<ContactIdentityRow[]> {
-    const rows = await this.db.loose.contactIdentity.findMany({
+    const rows = await this.prisma.contactIdentity.findMany({
       where: {
         OR: [{ canonicalContactId: contactId }, { mergedContactId: contactId }],
       },
       orderBy: { createdAt: 'desc' },
     })
-    return rows.map((r: any) => this.toIdentityRow(r))
+    return rows.map((r) => this.toIdentityRow(r))
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: any): ContactRow {
+  private toRow(r: ContactPrismaRow): ContactRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -210,7 +225,7 @@ export class ContactStoreImpl {
     }
   }
 
-  private toIdentityRow(r: any): ContactIdentityRow {
+  private toIdentityRow(r: ContactIdentityPrismaRow): ContactIdentityRow {
     return {
       id: r.id,
       canonicalContactId: r.canonicalContactId,

@@ -3,8 +3,9 @@
 // corrective (self-healing) actions. Auto-heal respects AutoHealPolicy.
 
 import { NotFoundError } from '../../errors.js'
-import type { CapabilityEventBus } from '../capability-event-bus.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { KernelStore } from '../../storage/contracts/kernel-store.js'
+import type { CapabilityEventBus } from '../capability-event-bus.js'
 import type { KernelRegistry } from './kernel-registry.js'
 import type { DiagnosticIssue, OracleDiagnosticEngine } from './oracle-diagnostic.js'
 
@@ -153,6 +154,7 @@ export class OracleActuator {
       try {
         await this.store.insertEvent('kernel:autoheal-policy', 'kernel', this.policy)
       } catch {
+        catchDebug(_err, 'engines:kernel:oracle-actuator:155')
         /* non-fatal */
       }
     }
@@ -299,6 +301,7 @@ export class OracleActuator {
       try {
         cb(action)
       } catch {
+        catchDebug(_err, 'engines:kernel:oracle-actuator:301')
         /* ignore subscriber errors */
       }
     }

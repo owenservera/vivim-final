@@ -206,7 +206,7 @@ export function classifyPath(
   let bestLen = 0
   for (const rule of rules) {
     const prefix = rule.prefix.replace(/\\/g, '/')
-    if (normalized.startsWith(prefix + '/') || normalized === prefix) {
+    if (normalized.startsWith(`${prefix}/`) || normalized === prefix) {
       if (prefix.length > bestLen) {
         bestLen = prefix.length
         bestLayer = rule.layer

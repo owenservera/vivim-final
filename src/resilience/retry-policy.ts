@@ -3,6 +3,7 @@
 // WP-06 — replaces the scattered retry logic in retry-engine.ts with a reusable,
 // standalone class that can be composed into the ResiliencePipeline.
 
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type { RetryConfig } from './types.js'
 import { RetryExhaustedError } from './types.js'
@@ -61,6 +62,7 @@ export class RetryPolicy {
       try {
         return await fn()
       } catch (err) {
+        catchDebug(err, 'resilience:retry-policy:63')
         lastError = err instanceof Error ? err : new Error(String(err))
 
         const shouldRetry = this.shouldRetry(attempt, err)

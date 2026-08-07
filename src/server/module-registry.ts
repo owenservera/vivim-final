@@ -116,7 +116,7 @@ export class ModuleRegistry {
             `ModuleRegistry: module '${def.name}' depends on '${dep}', which is not defined`,
           )
         }
-        adjacency.get(dep)!.push(def.name)
+        adjacency.get(dep)?.push(def.name)
         inDegree.set(def.name, (inDegree.get(def.name) ?? 0) + 1)
       }
     }
@@ -190,9 +190,9 @@ export class ModuleRegistry {
       container.register(name, instance, {
         lifecycle: def.lifecycle
           ? {
-              init: def.lifecycle.init ? () => def.lifecycle!.init!(instance) : undefined,
-              start: def.lifecycle.start ? () => def.lifecycle!.start!(instance) : undefined,
-              stop: def.lifecycle.stop ? () => def.lifecycle!.stop!(instance) : undefined,
+              init: def.lifecycle.init ? () => def.lifecycle?.init?.(instance) : undefined,
+              start: def.lifecycle.start ? () => def.lifecycle?.start?.(instance) : undefined,
+              stop: def.lifecycle.stop ? () => def.lifecycle?.stop?.(instance) : undefined,
             }
           : undefined,
         tags: def.tags,

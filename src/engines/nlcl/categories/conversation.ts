@@ -3,9 +3,9 @@
 // categories/_generate.ts). Keep this a pure data module: build patterns
 // through the shared builder in ./builder.ts.
 
-import { pattern } from './builder.js'
 import { z } from 'zod'
 import type { CommandPattern } from '../types.js'
+import { pattern } from './builder.js'
 
 export const conversationPatterns: CommandPattern[] = [
   pattern('conversation.create', 'conversation.create', 'Create a new conversation', {

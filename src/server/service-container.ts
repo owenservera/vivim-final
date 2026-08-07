@@ -90,7 +90,7 @@ export class ServiceContainer {
     if (!this.registry.has(name)) {
       throw new Error(`ServiceContainer: '${name}' not registered`)
     }
-    return this.registry.get(name)!.instance as T
+    return this.registry.get(name)?.instance as T
   }
 
   /** Test-only / safe — check whether a service is registered without throwing. */

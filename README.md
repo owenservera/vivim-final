@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Bun](https://img.shields.io/badge/Bun-1.3.14-%23000000?logo=bun)](https://bun.sh)
 [![Next.js](https://img.shields.io/badge/Next.js-16-%23000000?logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-%23007ACC?logo=typescript)](https://www.typescriptlang.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0-%23007ACC?logo=typescript)](https://www.typescriptlang.org)
 
 [Download](#download) • [Documentation](#documentation) • [Features](#features) • [Architecture](#architecture) • [Contributing](#contributing)
 
@@ -48,8 +48,10 @@ cp .env.example .env
 # Generate Prisma client
 bun run prisma:generate
 
-# Apply schema to the database (REQUIRED — creates tables)
-bun x prisma db push
+# Apply migrations (REQUIRED — creates tables)
+# Use `prisma migrate dev` for development (creates new migrations if schema changes)
+# Use `prisma migrate deploy` for production (applies pending migrations only)
+bun x prisma migrate dev
 
 # Seed the database (boots server once, runs all seeds)
 bun run seed
@@ -280,17 +282,25 @@ bun run dev
 | `bun run lint` | Lint with Biome |
 | `bun run format` | Format code with Biome |
 
-### Building Desktop App
+### Building for Production
 
 ```bash
-# Build sidecar with UPX compression
-bun run scripts/tauri/compile-sidecar.ts
+# Build the backend (tsup → dist/index.js)
+bun run build
 
-# Build full installer
-pwsh scripts/tauri/build-installer.ps1
+# Build the frontend (Next.js standalone)
+cd frontend && bun run build
+
+# Or build + run via Docker (recommended for deployment)
+docker compose up -d --build
 ```
 
-See [Desktop Build Guide](docs/runbooks/DESKTOP.md) for details.
+See [Deploy Runbook](docs/runbooks/DEPLOY.md) for the full deployment guide
+(Docker, docker-compose, bare-metal, env vars, health, backups, upgrading).
+
+> **Desktop build:** The Tauri/NSIS desktop installer is owned by the
+> downstream Tauri shell repo. See [docs/runbooks/DESKTOP.md](docs/runbooks/DESKTOP.md)
+> for the manual build procedure.
 
 ---
 

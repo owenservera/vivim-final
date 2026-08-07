@@ -223,8 +223,7 @@ describe('ProviderPluginRegistry', () => {
         slug: 'nostart',
       })
       // Delete the start property entirely to test the optional hook
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (noStart as any).start
+      ;(noStart as Partial<ProviderPlugin>).start = undefined
 
       registry.registerPlugin(noStart)
       await registry.initAll(eventBus, {})

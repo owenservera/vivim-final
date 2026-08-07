@@ -187,7 +187,7 @@ export class NodeStoreImpl implements NodeStoreContract {
 
   async getOutgoingEdges(sourceId: string): Promise<Edge[]> {
     const rows = await this.prisma.nodeEdge.findMany({ where: { sourceId } })
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       type: r.edgeType,
       targetId: r.targetId,
       label: r.label ?? undefined,
@@ -197,7 +197,7 @@ export class NodeStoreImpl implements NodeStoreContract {
 
   async getIncomingEdges(targetId: string): Promise<Edge[]> {
     const rows = await this.prisma.nodeEdge.findMany({ where: { targetId } })
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       type: r.edgeType,
       targetId: r.sourceId,
       label: r.label ?? undefined,

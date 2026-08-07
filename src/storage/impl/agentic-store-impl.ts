@@ -37,13 +37,11 @@ function parseJson<T>(s: string | null | undefined, fallback: T): T {
 
 export class AgenticStoreImpl implements AgenticStoreContract {
   constructor(
-    readonly nodes: NodeStoreContract,
+    private readonly nodes: NodeStoreContract,
     private readonly prisma: PrismaClient,
   ) {}
 
-  // ── Agents ────────────────────────────────────────────────────────────
-
-  async putAgent(spec: AgentSpec): Promise<{ id: string }> {
+  async createAgent(spec: AgentSpec): Promise<{ id: string }> {
     const id = newId()
     const node = createNode(
       'cap-store.agent',

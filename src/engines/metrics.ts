@@ -1,7 +1,7 @@
 // src/engines/metrics.ts
 // Unit 9.2 — Metrics export pipeline (Prometheus/OTLP).
 
-import type { StructuredLogger } from './logger.js'
+import type { Logger } from '../lib/logger.js'
 
 export interface MetricsExporter {
   name: string
@@ -56,7 +56,7 @@ export class MetricsRegistry {
 
   constructor(
     policy?: Partial<MetricsPolicy>,
-    private logger?: StructuredLogger,
+    private logger?: Logger,
   ) {
     if (policy) this.policy = { ...DEFAULT_POLICY, ...policy }
   }

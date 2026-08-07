@@ -10,7 +10,7 @@ describe('MESSAGING_ARCHETYPES', () => {
 
   describe('whatsapp', () => {
     it('normalizes message with all fields', () => {
-      const msg = MESSAGING_ARCHETYPES.whatsapp!.normalize({
+      const msg = MESSAGING_ARCHETYPES.whatsapp?.normalize({
         from: 'Alice',
         body: 'Hello!',
         timestamp: 1234567890,
@@ -24,7 +24,7 @@ describe('MESSAGING_ARCHETYPES', () => {
     })
 
     it('handles missing fields gracefully', () => {
-      const msg = MESSAGING_ARCHETYPES.whatsapp!.normalize({})
+      const msg = MESSAGING_ARCHETYPES.whatsapp?.normalize({})
       expect(msg.author).toBe('unknown')
       expect(msg.text).toBe('')
     })
@@ -32,7 +32,7 @@ describe('MESSAGING_ARCHETYPES', () => {
 
   describe('facebook', () => {
     it('normalizes message', () => {
-      const msg = MESSAGING_ARCHETYPES.facebook!.normalize({
+      const msg = MESSAGING_ARCHETYPES.facebook?.normalize({
         from: 'Bob',
         message: 'Hey there',
         time: 9999,
@@ -46,7 +46,7 @@ describe('MESSAGING_ARCHETYPES', () => {
 
   describe('telegram', () => {
     it('normalizes message with chat.id', () => {
-      const msg = MESSAGING_ARCHETYPES.telegram!.normalize({
+      const msg = MESSAGING_ARCHETYPES.telegram?.normalize({
         chat: { id: 12345 },
         from: { username: 'charlie' },
         text: 'Hi',
@@ -57,7 +57,7 @@ describe('MESSAGING_ARCHETYPES', () => {
     })
 
     it('falls back to first_name when username missing', () => {
-      const msg = MESSAGING_ARCHETYPES.telegram!.normalize({
+      const msg = MESSAGING_ARCHETYPES.telegram?.normalize({
         chat: { id: 1 },
         from: { first_name: 'Dave' },
         text: 'yo',
@@ -68,7 +68,7 @@ describe('MESSAGING_ARCHETYPES', () => {
 
   describe('slack', () => {
     it('normalizes message', () => {
-      const msg = MESSAGING_ARCHETYPES.slack!.normalize({
+      const msg = MESSAGING_ARCHETYPES.slack?.normalize({
         channel: 'C123',
         user: 'U456',
         text: 'slack msg',

@@ -9,10 +9,13 @@
  */
 
 import { parseArgs } from 'node:util'
-import { getLogger, initLogger } from '../tunnel-shared/logger.js'
+import { getLogger } from '../../lib/logger.js'
+import { initLogger } from '../tunnel-shared/logger.js'
 import type { VivimConfig } from '../tunnel-shared/types.js'
 import { loadConfig } from './config.js'
 import { ServiceManager } from './service-manager.js'
+
+const log = getLogger('orchestrator')
 
 // Parse CLI arguments
 const { values } = parseArgs({
@@ -24,7 +27,7 @@ const { values } = parseArgs({
 })
 
 if (values.help) {
-  console.log(`
+  log.info(`
 VIVIM Tunnel + P2P Orchestrator
 
 Usage:
@@ -48,7 +51,6 @@ const config: VivimConfig = loadConfig(values.config as string | undefined)
 
 // Initialize logger
 const _logger = initLogger(config.logging)
-const log = getLogger('orchestrator')
 
 log.info('VIVIM Tunnel + P2P Orchestrator starting')
 

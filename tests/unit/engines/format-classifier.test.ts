@@ -26,12 +26,12 @@ describe('FormatClassifier', () => {
   })
 
   it('classifies SSE format from markdown-wrapped JSON', async () => {
-    const llmResponse = '```json\n' + JSON.stringify({
+    const llmResponse = `\`\`\`json\n${JSON.stringify({
       transport: 'sse',
       confidence: 0.85,
       schemaDescription: 'Anthropic SSE',
       rationale: 'event: prefix pattern',
-    }) + '\n```'
+    })}\n\`\`\``
     const client = createMockLlmClient(llmResponse)
     const classifier = new FormatClassifier(client)
     const result = await classifier.classify('event: content_block_delta\ndata: {"text":"Hi"}')
@@ -98,7 +98,7 @@ describe('FormatClassifier', () => {
       detectCompletion(rawBody) { return rawBody.includes('[DONE]') },
       getConfidence() { return 0.8 }
     }`
-    const client = createMockLlmClient('```javascript\n' + code + '\n```')
+    const client = createMockLlmClient(`\`\`\`javascript\n${code}\n\`\`\``)
     const classifier = new FormatClassifier(client)
     const result = await classifier.generateParser(
       'data: [DONE]',
@@ -125,7 +125,11 @@ describe('FormatClassifier', () => {
     const client = createMockLlmClient('{}')
     const classifier = new FormatClassifier(client)
     await expect(
-      classifier.generateParser('', { transport: 'sse', confidence: 0.5, schemaDescription: '', rationale: '' }, 'test'),
+      classifier.generateParser(
+        '',
+        { transport: 'sse', confidence: 0.5, schemaDescription: '', rationale: '' },
+        'test',
+      ),
     ).rejects.toThrow('FormatClassifierError')
   })
 
@@ -133,7 +137,11 @@ describe('FormatClassifier', () => {
     const client = createMockLlmClient('   ')
     const classifier = new FormatClassifier(client)
     await expect(
-      classifier.generateParser('data', { transport: 'sse', confidence: 0.5, schemaDescription: '', rationale: '' }, 'test'),
+      classifier.generateParser(
+        'data',
+        { transport: 'sse', confidence: 0.5, schemaDescription: '', rationale: '' },
+        'test',
+      ),
     ).rejects.toThrow('FormatClassifierError')
   })
 })

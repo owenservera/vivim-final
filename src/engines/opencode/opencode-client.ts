@@ -3,6 +3,7 @@
 // Reuses parseOpencodeJson (verified grammar) to map SSE frames -> ContentBlock[].
 
 import { OpenCodeServeError } from '../../errors.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { ContentBlock } from '../../schema/streaming.js'
 import { parseOpencodeJson } from '../local-agent/local-agent-executor.js'
 import type { OpencodeEvent, PermissionDecision } from './types.js'
@@ -130,6 +131,7 @@ export class OpenCodeClient {
           }
         }
       } catch {
+        catchDebug(_err, 'engines:opencode:opencode-client:132')
         // stream closed / aborted — ignore
       }
     }

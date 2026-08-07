@@ -7,6 +7,7 @@
 // appendAgentMessage) -> ConversationMessage/StreamBlock.
 // Governor owns permission decisions in-process (tier > 3 auto-denied).
 
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { ContentBlock } from '../../schema/streaming.js'
 import type { AgenticStoreContract } from '../../storage/contracts/agentic-store.js'
 import type { EventRecordStore } from '../event-record-store.js'
@@ -72,6 +73,7 @@ export class OpenCodeIngest {
     try {
       await this.client.subscribe(sessionId, (ev) => this.onEvent(sessionId, ev))
     } catch {
+      catchDebug(_err, 'engines:opencode:opencode-ingest:74')
       // SSE subscribe failed — ingestEvent() still works for direct injection.
     }
   }
@@ -126,6 +128,7 @@ export class OpenCodeIngest {
           break
       }
     } catch {
+      catchDebug(_err, 'engines:opencode:opencode-ingest:128')
       // never crash ingest on one bad event
     }
   }
@@ -191,6 +194,7 @@ export class OpenCodeIngest {
       try {
         await this.client.respondPermission(sessionId, pid, decision)
       } catch {
+        catchDebug(_err, 'engines:opencode:opencode-ingest:193')
         // best-effort POST back to OpenCode
       }
     }

@@ -510,6 +510,122 @@ async function checkB12b_CaptureTelemetry(): Promise<Violation[]> {
   return violations
 }
 
+/**
+ * B13 — Boot Graph Canon (session 1, FIX-A1-2).
+ *
+ * The boot pipeline has exactly ONE canonical owner: `orchestrateBootstrap`
+ * exported from `src/server/bootstrap/orchestrator.ts`. The public facade is
+ * `bootstrapEngines` in `src/server/bootstrap-engines.ts` (a 11-LOC re-export).
+ *
+ * This invariant enforces three rules:
+ *  1. `bootstrap-engines.ts` MUST be a thin facade — its `bootstrapEngines`
+ *     export MUST resolve to `orchestrateBootstrap` (no shadow implementation).
+ *  2. The orchestrator's phase order MUST be documented in a header comment
+ *     (so future editors can't silently reorder phases).
+ *  3. Only `src/server/index.ts` may import `bootstrapEngines` from the server
+ *     layer. Any other importer is a regression of the "two-layer bootstrap
+ *     duplication" finding (FIX-A1-2).
+ *
+ * Violations are blocking — boot-graph regressions cause silent phase-order
+ * bugs that are extremely hard to diagnose.
+ */
+async function checkB13_BootGraphCanon(): Promise<Violation[]> {
+  const violations: Violation[] = []
+  const facadePath = join(PROJECT_ROOT, 'src', 'server', 'bootstrap-engines.ts')
+  const orchestratorPath = join(PROJECT_ROOT, 'src', 'server', 'bootstrap', 'orchestrator.ts')
+
+  // Rule 1: facade must re-export orchestrateBootstrap as bootstrapEngines.
+  if (await fileExists(facadePath)) {
+    const facade = await readFile(facadePath, 'utf8')
+    const reExportsOrchestrator = /orchestrateBootstrap\s+as\s+bootstrapEngines/.test(facade)
+    if (!reExportsOrchestrator) {
+      violations.push({
+        id: 'B13',
+        category: 'B',
+        severity: 'block',
+        message:
+          "src/server/bootstrap-engines.ts no longer re-exports `orchestrateBootstrap as bootstrapEngines`. " +
+          'A shadow bootstrap implementation reintroduces the two-layer duplication (FIX-A1-2).',
+        file: 'src/server/bootstrap-engines.ts',
+      })
+    }
+    // Facade should be small (<30 LOC) — a god-facade is still a god-module.
+    const facadeLOC = facade.split('\n').filter((l) => l.trim() && !l.trim().startsWith('//')).length
+    if (facadeLOC > 30) {
+      violations.push({
+        id: 'B13',
+        category: 'B',
+        severity: 'warning',
+        message: `src/server/bootstrap-engines.ts has grown to ${facadeLOC} non-comment LOC — facade should stay thin (<30).`,
+        file: 'src/server/bootstrap-engines.ts',
+      })
+    }
+  } else {
+    violations.push({
+      id: 'B13',
+      category: 'B',
+      severity: 'block',
+      message: 'src/server/bootstrap-engines.ts is missing — the public boot facade was deleted.',
+      file: 'src/server/bootstrap-engines.ts',
+    })
+  }
+
+  // Rule 2: orchestrator header must document phase order.
+  if (await fileExists(orchestratorPath)) {
+    const orch = await readFile(orchestratorPath, 'utf8')
+    const documentsPhaseOrder =
+      /seeds.*stores.*knowledge.*capabilities.*lifecycle/s.test(orch) ||
+      /bootstrapSeedsPhase.*bootstrapStoresPhase.*bootstrapKnowledgePhase.*bootstrapCapabilitiesPhase.*bootstrapLifecyclePhase/s.test(
+        orch,
+      )
+    if (!documentsPhaseOrder) {
+      violations.push({
+        id: 'B13',
+        category: 'B',
+        severity: 'warning',
+        message:
+          'src/server/bootstrap/orchestrator.ts no longer documents the boot phase order in code. ' +
+          'Phase order must be explicit so reorders are reviewed.',
+        file: 'src/server/bootstrap/orchestrator.ts',
+      })
+    }
+  } else {
+    violations.push({
+      id: 'B13',
+      category: 'B',
+      severity: 'block',
+      message:
+        'src/server/bootstrap/orchestrator.ts is missing — the canonical boot graph was deleted.',
+      file: 'src/server/bootstrap/orchestrator.ts',
+    })
+  }
+
+  // Rule 3: scan the server layer for direct `bootstrapEngines` imports outside
+  // of `index.ts`. Any other importer is a regression.
+  const serverDir = join(PROJECT_ROOT, 'src', 'server')
+  const serverFiles = await collectTsFiles(serverDir)
+  for (const filePath of serverFiles) {
+    const basename = filePath.split(/[\\/]/).pop()!
+    if (basename === 'index.ts') continue // canonical consumer
+    if (basename === 'bootstrap-engines.ts') continue // the facade itself
+    if (basename.endsWith('.test.ts') || basename.endsWith('.spec.ts')) continue
+    const content = await readFile(filePath, 'utf8')
+    // Match `from './bootstrap-engines.js'` or `from '../server/bootstrap-engines.js'`
+    if (/from\s+['"][^'"]*bootstrap-engines(\.js)?['"]/.test(content)) {
+      const relPath = `src/server/${filePath.slice(serverDir.length + 1).replaceAll('\\', '/')}`
+      violations.push({
+        id: 'B13',
+        category: 'B',
+        severity: 'block',
+        message: `Server module imports bootstrapEngines directly — only src/server/index.ts may do this. Move the wiring into the orchestrator or index.ts.`,
+        file: relPath,
+      })
+    }
+  }
+
+  return violations
+}
+
 async function checkB8_AgentAddressableUIActions(): Promise<Violation[]> {
   const violations: Violation[] = []
   const wsPath = join(PROJECT_ROOT, 'src', 'server', 'websocket.ts')
@@ -817,7 +933,7 @@ export async function checkInvariants(
 
   // Category B: Architectural
   if (!category || category === 'B') {
-    checked.push('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B10', 'B12a', 'B12b')
+    checked.push('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B10', 'B12a', 'B12b', 'B13')
     allViolations.push(...await checkB1_GovernorCanon())
     allViolations.push(...await checkB2_StoreContractIsolation())
     allViolations.push(...await checkB3_SeedsNotCode())
@@ -829,6 +945,7 @@ export async function checkInvariants(
     allViolations.push(...await checkB10_HitlCoverage())
     allViolations.push(...await checkB12a_EgressGovernance())
     allViolations.push(...await checkB12b_CaptureTelemetry())
+    allViolations.push(...await checkB13_BootGraphCanon())
   }
 
   // Category C: Planning

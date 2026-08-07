@@ -5,9 +5,10 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { platform } from 'node:os'
 import { basename, extname, join } from 'node:path'
-import { newId } from '../../../ids.js'
-import { getLogger } from '../../../lib/logger.js'
 import { getHomeDir } from '../../../config.js'
+import { newId } from '../../../ids.js'
+import { catchDebug } from '../../../lib/catch-logger.js'
+import { getLogger } from '../../../lib/logger.js'
 import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 const log = getLogger('file-executor')
@@ -196,12 +197,14 @@ export class FileExecutor implements CommandExecutor {
             try {
               size = (await stat(fullPath)).size
             } catch {
+              catchDebug(_err, 'engines:nlcl:executors:file-executor:198')
               /* ignore */
             }
             results.push({ path: fullPath, name: entry.name, size })
           }
         }
       } catch {
+        catchDebug(_err, 'engines:nlcl:executors:file-executor:204')
         /* skip inaccessible dirs */
       }
     }
@@ -330,6 +333,7 @@ export class FileExecutor implements CommandExecutor {
           }
         }
       } catch {
+        catchDebug(_err, 'engines:nlcl:executors:file-executor:332')
         /* skip inaccessible */
       }
     }

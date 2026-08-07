@@ -5,7 +5,6 @@ import {
   AutonomousExecutionEngine,
   type AutonomousGoal,
 } from '../../../src/engines/autonomous-execution.js'
-import { BudgetExceededError } from '../../../src/errors.js'
 import { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
 import { ExecutionPolicyEngine, type PolicyStore } from '../../../src/engines/execution-policy.js'
 
@@ -141,7 +140,7 @@ function makeGoal(overrides?: Partial<AutonomousGoal>): AutonomousGoal {
     description: 'Test task',
     maxSteps: 10,
     maxDurationMs: 60_000,
-    requireApprovalAbove: 'financial',  // Only financial actions need approval
+    requireApprovalAbove: 'financial', // Only financial actions need approval
     allowBrowser: false,
     costBudgetCents: 100,
     tokenBudget: 10_000,
@@ -189,7 +188,7 @@ describe('AutonomousExecutionEngine — Unit 8.6: Per-task budgets', () => {
     // Budget usage should track iterations
     const usage = engine.getBudgetUsage(task.id)
     expect(usage).toBeDefined()
-    expect(usage!.iterations).toBeGreaterThanOrEqual(1)
+    expect(usage?.iterations).toBeGreaterThanOrEqual(1)
   })
 
   it('pauses task when tokenBudget exceeded', async () => {

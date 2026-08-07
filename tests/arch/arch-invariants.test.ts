@@ -93,7 +93,7 @@ function classifyImport(imp: string): { type: 'relative' | 'absolute' | 'externa
 }
 
 /** Resolve a path alias to a filesystem path. */
-function resolveAlias(specifier: string, fromDir: string): string | null {
+function resolveAlias(specifier: string, _fromDir: string): string | null {
   if (specifier.startsWith('@/')) {
     return resolve(ROOT, 'src', specifier.slice(2))
   }
@@ -361,7 +361,8 @@ describe('Architectural Invariants', () => {
             resolve(executorDir, 'cdp-error-classifier.ts'),
           ].map((p) => p.replace(/\\/g, '/'))
           const exactHit = cdpTargets.some((t) => normalized === t)
-          const hit = exactHit || /executor\/cdp(-transport|-types|-error-classifier)?\.ts$/.test(normalized)
+          const hit =
+            exactHit || /executor\/cdp(-transport|-types|-error-classifier)?\.ts$/.test(normalized)
           if (hit) {
             violations.push(`${relative(ROOT, file)} imports ${imp}`)
           }

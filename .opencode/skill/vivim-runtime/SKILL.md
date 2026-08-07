@@ -37,9 +37,9 @@ description: Agent becomes the runtime of its own dev loop (launch→engage→di
 
 ## Failure Playbook
 
-1. Read `DebugReport` from `.runtime/vivim-debug/` (or check `devops/runtime-test` output)
+1. Read `DebugReport` from `/tmp/vivim-debug/`
 2. Apply fix, re-run loop
 
 ## Build Ledger
 
-See `docs/atomic-v3-fork-canon/01-tracker.md` for atomic unit status (127 units, single source of truth).
+See `docs/atomic-v12/01-tracker.md` for atomic unit status.

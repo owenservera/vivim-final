@@ -1,7 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Session 2 (2026-08-07): enabled standalone output so `bun run start`
+  // (which runs `bun .next/standalone/server.js`) actually works. Without
+  // this, the start script fails with ENOENT because the standalone server
+  // is never produced by `next build`.
+  output: 'standalone',
   typescript: {
+    // TODO(session 3): remove this once frontend typecheck is clean.
+    // Currently ignored because the WP-10 upgrade left ~30 frontend type
+    // errors that don't block the build but should be fixed.
     ignoreBuildErrors: true,
   },
   images: {

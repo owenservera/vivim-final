@@ -1,7 +1,8 @@
 // src/engines/error-tracker.ts
 // Unit 9.3 — Error tracking with dedup and pluggable reporters.
 
-import type { StructuredLogger } from './logger.js'
+import { catchDebug } from '../lib/catch-logger.js'
+import type { Logger } from '../lib/logger.js'
 
 export interface ErrorReporter {
   name: string
@@ -47,7 +48,7 @@ export class ErrorTracker {
 
   constructor(
     policy?: Partial<ErrorTrackingPolicy>,
-    private logger?: StructuredLogger,
+    private logger?: Logger,
   ) {
     if (policy) this.policy = { ...DEFAULT_POLICY, ...policy }
     this.flushTimer = setInterval(() => void this.flush(), 5000)
@@ -102,6 +103,7 @@ export class ErrorTracker {
           try {
             await reporter.report(error)
           } catch {
+            catchDebug(_err, 'engines:error-tracker:104')
             /* best-effort reporter — don't crash flush loop */
           }
         }

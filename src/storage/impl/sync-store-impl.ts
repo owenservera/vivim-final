@@ -30,7 +30,11 @@ export interface SyncStateRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class SyncStoreImpl {
-  constructor(private readonly db: CapStoreDb) {}
+  protected readonly prisma: any
+
+  constructor(private readonly db: CapStoreDb) {
+    this.prisma = db.prisma
+  }
 
   async upsertSyncState(input: {
     providerId: string
@@ -43,7 +47,7 @@ export class SyncStoreImpl {
   }): Promise<SyncStateRow> {
     const now = Date.now()
     // Try to find existing
-    const existing = await this.db.loose.syncState.findFirst({
+    const existing = await this.prisma.syncState.findFirst({
       where: {
         providerId: input.providerId,
         accountId: input.accountId,
@@ -52,7 +56,7 @@ export class SyncStoreImpl {
       },
     })
     if (existing) {
-      const row = await this.db.loose.syncState.update({
+      const row = await this.prisma.syncState.update({
         where: { id: existing.id },
         data: {
           syncDirection: input.syncDirection ?? existing.syncDirection,
@@ -64,7 +68,7 @@ export class SyncStoreImpl {
       })
       return this.toRow(row)
     }
-    const row = await this.db.loose.syncState.create({
+    const row = await this.prisma.syncState.create({
       data: {
         id: newId(),
         providerId: input.providerId,
@@ -95,27 +99,27 @@ export class SyncStoreImpl {
     entityType: string,
     entityId: string,
   ): Promise<SyncStateRow | null> {
-    const row = await this.db.loose.syncState.findFirst({
+    const row = await this.prisma.syncState.findFirst({
       where: { providerId, accountId, entityType, entityId },
     })
     return row ? this.toRow(row) : null
   }
 
   async getSyncStatesByAccount(accountId: string): Promise<SyncStateRow[]> {
-    const rows = await this.db.loose.syncState.findMany({
+    const rows = await this.prisma.syncState.findMany({
       where: { accountId },
       orderBy: { updatedAt: 'desc' },
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async getSyncStatesPending(): Promise<SyncStateRow[]> {
-    const rows = await this.db.loose.syncState.findMany({
+    const rows = await this.prisma.syncState.findMany({
       where: { syncStatus: 'pending' },
       orderBy: { updatedAt: 'asc' },
       take: 100,
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async updateSyncStatus(id: string, status: string, error?: string): Promise<SyncStateRow> {
@@ -128,7 +132,7 @@ export class SyncStoreImpl {
     if (status === 'synced') {
       data.lastSyncedAt = now
     }
-    const row = await this.db.loose.syncState.update({ where: { id }, data })
+    const row = await this.prisma.syncState.update({ where: { id }, data })
     return this.toRow(row)
   }
 
@@ -139,7 +143,7 @@ export class SyncStoreImpl {
     bytesSynced: number,
   ): Promise<SyncStateRow> {
     const now = Date.now()
-    const row = await this.db.loose.syncState.update({
+    const row = await this.prisma.syncState.update({
       where: { id },
       data: {
         itemsSynced: { increment: itemsSynced },
@@ -153,12 +157,12 @@ export class SyncStoreImpl {
   }
 
   async deleteSyncState(id: string): Promise<void> {
-    await this.db.loose.syncState.delete({ where: { id } })
+    await this.prisma.syncState.delete({ where: { id } })
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: any): SyncStateRow {
+  private toRow(r: Record<string, unknown>): SyncStateRow {
     return {
       id: r.id,
       providerId: r.providerId,

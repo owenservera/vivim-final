@@ -31,7 +31,7 @@ function getSyncEngine(
     // Create a governor handle that wraps the CDP proxy
     const governorHandle = {
       send: async (slaveId: string, method: string, params?: Record<string, unknown>) => {
-        return ctx.governor!.cdp.send(slaveId, method, params)
+        return ctx.governor?.cdp.send(slaveId, method, params)
       },
     }
 
@@ -121,8 +121,22 @@ export function createConversationSyncRouter(ctx: ServerContext) {
         return errorResponse(`Provider ${providerId} not supported`, 'NotSupported', 400)
       }
 
-      // TODO: Wire sync state store to get actual status
-      return json({ status: 'not_implemented', providerId, accountId })
+      // Session 1 (2026-08-07): Alpha stub. The sync-state store contract
+      // exists (`ConversationSyncStateStore` in
+      // `src/storage/contracts/conversation-store.ts`) but the SQLite impl
+      // returns no rows in alpha. Wired as 501 Not Implemented so callers
+      // can distinguish "not yet built" from "sync not running".
+      // Post-alpha: wire to `engine.getStatus(accountId)` once the store impl
+      // is complete (tracked as unit 2.3 in `docs/atomic-v3-fork-canon/01-tracker.md`).
+      return json(
+        {
+          status: 'not_implemented',
+          providerId,
+          accountId,
+          detail: 'Sync status endpoint is an alpha stub — wired in post-alpha (see tracker 2.3).',
+        },
+        501,
+      )
     }
 
     // GET /api/conversations/sync/:provider/logs — get sync logs for an account
@@ -135,8 +149,18 @@ export function createConversationSyncRouter(ctx: ServerContext) {
         return errorResponse('providerId and accountId are required', 'ValidationError', 400)
       }
 
-      // TODO: Wire sync log store to get actual logs
-      return json({ logs: [], providerId, accountId })
+      // Session 1 (2026-08-07): Alpha stub — see note above. Was previously
+      // returning `{ logs: [], ... }` which masqueraded as "no logs found".
+      // 501 makes the not-implemented state explicit.
+      return json(
+        {
+          logs: [],
+          providerId,
+          accountId,
+          detail: 'Sync logs endpoint is an alpha stub — wired in post-alpha (see tracker 2.3).',
+        },
+        501,
+      )
     }
 
     // POST /api/conversations/sync/:provider/fetch/:conversationId — fetch a single conversation

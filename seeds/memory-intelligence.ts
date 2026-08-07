@@ -23,31 +23,36 @@ const SEED_ENTITIES = [
   {
     name: 'React',
     type: 'technology',
-    description: 'A JavaScript library for building user interfaces with component-based architecture and virtual DOM',
+    description:
+      'A JavaScript library for building user interfaces with component-based architecture and virtual DOM',
     confidence: 0.95,
   },
   {
     name: 'TypeScript',
     type: 'technology',
-    description: 'A typed superset of JavaScript that compiles to plain JavaScript, providing static type checking',
+    description:
+      'A typed superset of JavaScript that compiles to plain JavaScript, providing static type checking',
     confidence: 0.95,
   },
   {
     name: 'PostgreSQL',
     type: 'technology',
-    description: 'An advanced open-source relational database system with support for JSON, full-text search, and extensions',
+    description:
+      'An advanced open-source relational database system with support for JSON, full-text search, and extensions',
     confidence: 0.9,
   },
   {
     name: 'Docker',
     type: 'technology',
-    description: 'A platform for containerizing applications, enabling consistent environments across development and production',
+    description:
+      'A platform for containerizing applications, enabling consistent environments across development and production',
     confidence: 0.9,
   },
   {
     name: 'Vitest',
     type: 'technology',
-    description: 'A blazing-fast Vite-native unit test framework with TypeScript support, ESM, and out-of-the-box coverage',
+    description:
+      'A blazing-fast Vite-native unit test framework with TypeScript support, ESM, and out-of-the-box coverage',
     confidence: 0.85,
   },
 ]
@@ -55,17 +60,20 @@ const SEED_ENTITIES = [
 const SEED_TOPICS = [
   {
     name: 'Frontend Development',
-    description: 'Building user interfaces, component architecture, state management, and client-side rendering',
+    description:
+      'Building user interfaces, component architecture, state management, and client-side rendering',
     color: '#3B82F6', // blue
   },
   {
     name: 'Backend Architecture',
-    description: 'Server-side design, database modeling, API design, authentication, and infrastructure',
+    description:
+      'Server-side design, database modeling, API design, authentication, and infrastructure',
     color: '#10B981', // green
   },
   {
     name: 'Testing',
-    description: 'Unit testing, integration testing, end-to-end testing, test-driven development, and quality assurance',
+    description:
+      'Unit testing, integration testing, end-to-end testing, test-driven development, and quality assurance',
     color: '#F59E0B', // amber
   },
 ]
@@ -73,12 +81,14 @@ const SEED_TOPICS = [
 const SEED_PROJECTS = [
   {
     name: 'Main Web App',
-    description: 'The primary web application built with React and TypeScript, serving as the main user-facing product',
+    description:
+      'The primary web application built with React and TypeScript, serving as the main user-facing product',
     status: 'active',
   },
   {
     name: 'API Service',
-    description: 'The backend API service providing REST and WebSocket endpoints, powered by PostgreSQL and Docker',
+    description:
+      'The backend API service providing REST and WebSocket endpoints, powered by PostgreSQL and Docker',
     status: 'active',
   },
 ]

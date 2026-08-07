@@ -4,10 +4,10 @@
 
 import { PrismaClient } from '@prisma/client'
 import { DISCORD_CAPABILITY_TAXONOMY } from './taxonomy-discord.js'
+import { NOTION_CAPABILITY_TAXONOMY } from './taxonomy-notion.js'
+import { REDDIT_CAPABILITY_TAXONOMY } from './taxonomy-reddit.js'
 import { SLACK_CAPABILITY_TAXONOMY } from './taxonomy-slack.js'
 import { WHATSAPP_CAPABILITY_TAXONOMY } from './taxonomy-whatsapp.js'
-import { REDDIT_CAPABILITY_TAXONOMY } from './taxonomy-reddit.js'
-import { NOTION_CAPABILITY_TAXONOMY } from './taxonomy-notion.js'
 
 async function main() {
   const prisma = new PrismaClient()
@@ -51,7 +51,10 @@ async function main() {
       })
       created++
     } catch (err) {
-      console.error(`Failed to upsert ${entry.providerId}/${entry.platformCategory}/${entry.interactionPattern}:`, err)
+      console.error(
+        `Failed to upsert ${entry.providerId}/${entry.platformCategory}/${entry.interactionPattern}:`,
+        err,
+      )
       skipped++
     }
   }

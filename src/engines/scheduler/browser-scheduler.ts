@@ -3,6 +3,7 @@
 // Phase 5: Replaces single-mailbox execution with dependency-aware scheduling.
 
 import { ValidationError } from '../../errors.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
 import { SchedulerPolicy } from './policy.js'
@@ -216,6 +217,7 @@ export class BrowserScheduler {
 
       return { taskId: task.id, success: true, result, durationMs }
     } catch (err) {
+      catchDebug(err, 'engines:scheduler:browser-scheduler:218')
       const durationMs = Date.now() - start
       this.logger.error('Task failed', {
         taskId: task.id,

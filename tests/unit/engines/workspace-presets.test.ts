@@ -52,7 +52,7 @@ describe('WorkspacePresets', () => {
     const presets = new WorkspacePresets(mgr, new MockSpawner())
     const layout = await presets.apply('u1', 'chat')
     expect(mgr.lastSetPanelCount).toBe(1)
-    expect(layout.panels[0]!.kind).toBe('builtin')
+    expect(layout.panels[0]?.kind).toBe('builtin')
     expect((layout.panels[0] as any).builtinSurfaceId).toBe('conversation-list')
   })
 

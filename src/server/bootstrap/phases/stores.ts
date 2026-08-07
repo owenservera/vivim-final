@@ -22,7 +22,9 @@ export async function bootstrapStoresPhase(ctx: BootstrapContext): Promise<void>
   const { ChromeGovernor } = await import('../../../engines/chrome-governor.js')
   const { StreamParserEngine } = await import('../../../engines/stream-parser.js')
   const { SandboxRunner } = await import('../../../engines/sandbox-runner.js')
-  const { SandboxAuditStoreImpl } = await import('../../../storage/impl/sandbox-audit-store-impl.js')
+  const { SandboxAuditStoreImpl } = await import(
+    '../../../storage/impl/sandbox-audit-store-impl.js'
+  )
   const { StreamBlockStore } = await import('../../../engines/stream-block-store.js')
   const { NodeStoreImpl } = await import('../../../storage/impl/node-store-impl.js')
   const { ExecutionMemoizer } = await import('../../../engines/execution-memoizer.js')
@@ -38,8 +40,12 @@ export async function bootstrapStoresPhase(ctx: BootstrapContext): Promise<void>
   )
   const { ContentUnitStoreImpl } = await import('../../../storage/impl/content-unit-store-impl.js')
   const { CapabilityStoreImpl } = await import('../../../storage/impl/capability-store-impl.js')
-  const { EpisodicMemoryStoreImpl } = await import('../../../storage/impl/episodic-memory-store-impl.js')
-  const { SemanticMemoryStoreImpl } = await import('../../../storage/impl/semantic-memory-store-impl.js')
+  const { EpisodicMemoryStoreImpl } = await import(
+    '../../../storage/impl/episodic-memory-store-impl.js'
+  )
+  const { SemanticMemoryStoreImpl } = await import(
+    '../../../storage/impl/semantic-memory-store-impl.js'
+  )
   const { ProceduralMemoryStoreImpl } = await import(
     '../../../storage/impl/procedural-memory-store-impl.js'
   )
@@ -51,7 +57,7 @@ export async function bootstrapStoresPhase(ctx: BootstrapContext): Promise<void>
   const parserStore = new ParserStoreImpl(db)
   const parserExecLogStore = new ParserExecutionLogStoreImpl(db.prisma as never)
   const contentUnitStore = new ContentUnitStoreImpl(db.prisma as never)
-  const capabilityStore = new CapabilityStoreImpl(db)
+  const _capabilityStore = new CapabilityStoreImpl(db)
   const episodicStore = new EpisodicMemoryStoreImpl(db)
   const semanticStore = new SemanticMemoryStoreImpl(db)
   const proceduralStore = new ProceduralMemoryStoreImpl(db)
@@ -107,7 +113,7 @@ export async function bootstrapStoresPhase(ctx: BootstrapContext): Promise<void>
   )
 
   let memoryFabric: import('../../../engines/memory/memory-fabric.js').MemoryFabric | undefined
-  let agentBuilder: import('../../../engines/agent-builder.js').AgentBuilderEngine | undefined
+  let _agentBuilder: import('../../../engines/agent-builder.js').AgentBuilderEngine | undefined
 
   const conversationManager = new ConversationManager(
     governor,

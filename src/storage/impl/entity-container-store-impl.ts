@@ -43,10 +43,14 @@ export interface ContainerMembershipRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class EntityContainerStoreImpl {
-  constructor(private readonly db: CapStoreDb) {}
+  protected readonly prisma: any
+
+  constructor(private readonly db: CapStoreDb) {
+    this.prisma = db.prisma
+  }
 
   async getContainerById(id: string): Promise<EntityContainerRow | null> {
-    const row = await this.db.loose.entityContainer.findUnique({ where: { id } })
+    const row = await this.prisma.entityContainer.findUnique({ where: { id } })
     return row ? this.toRow(row) : null
   }
 
@@ -59,11 +63,11 @@ export class EntityContainerStoreImpl {
     if (query.type) where.containerType = query.type
     if (query.providerId) where.providerId = query.providerId
     if (query.accountId) where.accountId = query.accountId
-    const rows = await this.db.loose.entityContainer.findMany({
+    const rows = await this.prisma.entityContainer.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async createContainer(input: {
@@ -78,7 +82,7 @@ export class EntityContainerStoreImpl {
     parentContainerId?: string
   }): Promise<EntityContainerRow> {
     const now = Date.now()
-    const row = await this.db.loose.entityContainer.create({
+    const row = await this.prisma.entityContainer.create({
       data: {
         id: newId(),
         providerId: input.providerId,
@@ -128,20 +132,20 @@ export class EntityContainerStoreImpl {
     for (const key of allowed) {
       if (key in updates) data[key] = updates[key]
     }
-    const row = await this.db.loose.entityContainer.update({ where: { id }, data })
+    const row = await this.prisma.entityContainer.update({ where: { id }, data })
     return this.toRow(row)
   }
 
   async deleteContainer(id: string): Promise<void> {
-    await this.db.loose.entityContainer.delete({ where: { id } })
+    await this.prisma.entityContainer.delete({ where: { id } })
   }
 
   async getMemberships(containerId: string): Promise<ContainerMembershipRow[]> {
-    const rows = await this.db.loose.containerMembership.findMany({
+    const rows = await this.prisma.containerMembership.findMany({
       where: { containerId },
       orderBy: { joinedAt: 'desc' },
     })
-    return rows.map((r: any) => this.toMembershipRow(r))
+    return rows.map((r) => this.toMembershipRow(r))
   }
 
   async addMembership(input: {
@@ -151,7 +155,7 @@ export class EntityContainerStoreImpl {
     isFavorite?: number
   }): Promise<ContainerMembershipRow> {
     const now = Date.now()
-    const row = await this.db.loose.containerMembership.create({
+    const row = await this.prisma.containerMembership.create({
       data: {
         id: newId(),
         containerId: input.containerId,
@@ -166,14 +170,14 @@ export class EntityContainerStoreImpl {
   }
 
   async removeMembership(containerId: string, userRole: string): Promise<void> {
-    await this.db.loose.containerMembership.deleteMany({
+    await this.prisma.containerMembership.deleteMany({
       where: { containerId, userRole },
     })
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: any): EntityContainerRow {
+  private toRow(r: Record<string, unknown>): EntityContainerRow {
     return {
       id: r.id,
       providerId: r.providerId,
@@ -199,7 +203,7 @@ export class EntityContainerStoreImpl {
     }
   }
 
-  private toMembershipRow(r: any): ContainerMembershipRow {
+  private toMembershipRow(r: Record<string, unknown>): ContainerMembershipRow {
     return {
       id: r.id,
       containerId: r.containerId,

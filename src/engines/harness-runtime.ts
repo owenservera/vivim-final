@@ -349,7 +349,7 @@ export async function evaluateConditionImpl(
       }
       const selector = condExt.selector ?? cond.value
       const elements = await ctx.queryAll(selector)
-      const threshold = condExt.expectedCount ?? parseInt(cond.value, 10)
+      const threshold = condExt.expectedCount ?? Number.parseInt(cond.value, 10)
       return elements.length > threshold
     }
 
@@ -362,7 +362,7 @@ export async function evaluateConditionImpl(
       const el = await ctx.query(selector)
       if (!el) return false
       const className = condExt.className ?? cond.value
-      const classAttr = el.attributes['class'] ?? ''
+      const classAttr = el.attributes.class ?? ''
       return classAttr.split(/\s+/).includes(className)
     }
 
@@ -444,7 +444,7 @@ export async function evaluatePreconditions(
             type: 'element_count_gt',
             value,
             selector: value.slice(0, secondColon),
-            expectedCount: parseInt(value.slice(secondColon + 1), 10),
+            expectedCount: Number.parseInt(value.slice(secondColon + 1), 10),
           } as HarnessCondition & { selector: string; expectedCount: number }
         }
         break

@@ -1,6 +1,8 @@
 // src/engines/selector-healer.ts
 // SelectorHealer — LLM-powered selector repair when a selector misses
 
+import { catchDebug } from '../lib/catch-logger.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import { SelectorCache } from './selector-cache.js'
 import type { AccessibilityNode, ScreenshotRegion, SemanticSelector } from './semantic-grounding.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
@@ -296,36 +298,12 @@ Return only JSON: { "type": "aria"|"text"|"css", ... }`
       })) as { text?: string } | string
 
       const text = typeof response === 'string' ? response : (response?.text ?? '')
-      const parsed = JSON.parse(text) as SemanticSelector
-
-      if (parsed && typeof parsed === 'object' && 'type' in parsed) {
-        const result = await this.grounding.resolve(slaveId, parsed)
-        if (result) {
-          return {
-            healed: parsed,
-            strategy: 'llm_proposal',
-            confidence: result.confidence * 0.7,
-            originalSelector: selector,
-          }
-        }
-      }
-    } catch {
-      // LLM failed, continue
+      const parsed = safeJsonParse<SemanticSelector>(text, null)
+      if (parsed) return { selector: parsed, confidence: 0.7, strategy: 'llm' }
+    } catch (e) {
+      catchDebug(e, 'engines:selector-healer:303')
     }
-
     return null
-  }
-
-  private treeToSnippet(node: AccessibilityNode, maxDepth: number): string {
-    if (maxDepth <= 0) return ''
-    const lines: string[] = []
-    const indent = '  '.repeat(3 - maxDepth)
-    lines.push(`${indent}${node.role}${node.name ? ` "${node.name}"` : ''}`)
-    for (const child of node.children.slice(0, 5)) {
-      lines.push(this.treeToSnippet(child, maxDepth - 1))
-    }
-    if (node.children.length > 5) lines.push(`${indent}  ... ${node.children.length - 5} more`)
-    return lines.join('\n')
   }
 
   // ── Strategy 5: Visual match ───────────────────────────────────────────

@@ -8,6 +8,7 @@ import { dirname, join, resolve } from 'node:path'
 import { env } from 'node:process'
 import { PrismaClient } from '@prisma/client'
 import { config } from '../config.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 
 const log = getLogger('prisma')
@@ -60,6 +61,7 @@ export function getPrisma(): PrismaClient {
         const dir = dirname(dbFile)
         if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
       } catch {
+        catchDebug(_err, 'storage:prisma:62')
         // best-effort — Prisma will throw a clearer error if directory is truly missing
       }
     }

@@ -4,8 +4,8 @@
 // through the passed ChromeGovernor (Governor Canon). Keeps the governor switch
 // lean and the logic shared with the capability handlers.
 
-import type { ChromeGovernor } from '../chrome-governor.js'
 import { EngineError } from '../../errors.js'
+import type { ChromeGovernor } from '../chrome-governor.js'
 
 type ActionParams = Record<string, unknown>
 

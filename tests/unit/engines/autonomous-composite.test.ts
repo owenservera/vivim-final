@@ -161,8 +161,8 @@ describe('AutonomousExecutionEngine — Unit 8.9: Composite step execution', () 
     // The task should have sub-steps from the composite
     const compositeSteps = task.steps.filter((s) => s.parentStepId !== null)
     expect(compositeSteps.length).toBe(2)
-    expect(compositeSteps[0]!.description).toContain('extract_content')
-    expect(compositeSteps[1]!.description).toContain('summarize_text')
+    expect(compositeSteps[0]?.description).toContain('extract_content')
+    expect(compositeSteps[1]?.description).toContain('summarize_text')
 
     // Sub-steps should have parentStepId set
     for (const s of compositeSteps) {
@@ -214,7 +214,7 @@ describe('AutonomousExecutionEngine — Unit 8.9: Composite step execution', () 
     // Only the first sub-step should have been created (second never reached)
     const subSteps = task.steps.filter((s) => s.parentStepId !== null)
     expect(subSteps.length).toBe(1)
-    expect(subSteps[0]!.status).toBe('failed')
+    expect(subSteps[0]?.status).toBe('failed')
   })
 
   it('non-composite steps pass through to regular execution', async () => {
@@ -260,7 +260,7 @@ describe('AutonomousExecutionEngine — Unit 8.9: Composite step execution', () 
     // Find the composite root step (the one with isCompositeRoot=true)
     const roots = task.steps.filter((s) => s.isCompositeRoot)
     expect(roots.length).toBe(1)
-    expect(roots[0]!.action).toBe('composite:simple_composite')
+    expect(roots[0]?.action).toBe('composite:simple_composite')
   })
 
   it('missing composite throws EngineError', async () => {

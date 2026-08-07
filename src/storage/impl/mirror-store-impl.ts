@@ -178,7 +178,7 @@ export class MirrorStoreImpl implements MirrorStore {
       orderBy: { timestamp: 'desc' },
       take: opts?.limit ?? 100,
     })
-    return rows.map((r: any) => ({
+    return rows.map((r) => ({
       id: r.id as string,
       conversationId: r.conversationId as string,
       trigger: r.trigger as string,

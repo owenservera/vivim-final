@@ -4,6 +4,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type { SessionRecord } from './session-lifecycle-manager.js'
 
@@ -133,6 +134,7 @@ export class SessionStatePersistence {
       try {
         this.flushToDisk()
       } catch {
+        catchDebug(_err, 'engines:session-state-persistence:135')
         // ignore
       }
     }

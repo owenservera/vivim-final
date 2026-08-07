@@ -5,7 +5,9 @@
 // forwarder that the logger can push to when OTEL_EXPORTER_OTLP_ENDPOINT is set.
 
 import { getOtelConfig } from '../config.js'
+import { getLogger } from '../lib/logger.js'
 
+const log = getLogger('engines:otel sink')
 export interface OtelLogRecord {
   timestamp: string // ISO
   severity: 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL'
@@ -107,7 +109,7 @@ export class OtelSink {
     } catch (err) {
       // Never throw from logging. Re-buffer on failure for a later retry.
       this.buffer.unshift(...batch)
-      console.error('[otel-sink] flush failed:', (err as Error).message)
+      log.error('[otel-sink] flush failed:', (err as Error).message)
     }
   }
 

@@ -26,7 +26,7 @@ describe('ModuleRegistry', () => {
       }
       registry.define(def)
       expect(registry.get('eventBus')).toBe(def)
-      expect(registry.get('eventBus')!.name).toBe('eventBus')
+      expect(registry.get('eventBus')?.name).toBe('eventBus')
     })
 
     it('returns undefined for unknown module', () => {

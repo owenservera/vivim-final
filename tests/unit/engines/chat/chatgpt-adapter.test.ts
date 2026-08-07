@@ -269,10 +269,10 @@ describe('ChatGPTAdapter', () => {
       const result = await adapter.getConversation('account-1', auth, 'conv-1')
 
       expect(result).not.toBeNull()
-      expect(result!.title).toBe('My Chat')
-      expect(result!.messages).toHaveLength(3)
+      expect(result?.title).toBe('My Chat')
+      expect(result?.messages).toHaveLength(3)
       // Messages sorted by timestamp
-      const msgs = result!.messages
+      const msgs = result?.messages
       expect(msgs[0]?.role).toBe('system')
       expect(msgs[0]?.content).toBe('You are helpful.')
       expect(msgs[1]?.role).toBe('user')
@@ -319,8 +319,8 @@ describe('ChatGPTAdapter', () => {
 
       const result = await adapter.getConversation('account-1', auth, 'conv-1')
 
-      expect(result!.messages).toHaveLength(1)
-      const msg = result!.messages[0]
+      expect(result?.messages).toHaveLength(1)
+      const msg = result?.messages[0]
       expect(msg?.content).toContain('What is this?')
       expect(msg?.content).toContain('[Image: a cat]')
       expect(msg?.artifacts).toHaveLength(1)
@@ -366,7 +366,7 @@ describe('ChatGPTAdapter', () => {
       const result = await adapter.getConversation('account-1', auth, 'conv-1')
 
       // n1's parent 'nonexistent' should be resolved to null
-      expect(result!.messages[0]?.parentId).toBeNull()
+      expect(result?.messages[0]?.parentId).toBeNull()
     })
 
     test('returns null for 404', async () => {

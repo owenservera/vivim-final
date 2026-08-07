@@ -1,6 +1,7 @@
 // src/engines/stealth/profile-warmup-engine.ts
 // Unit 14.1 — ProfileWarmupEngine: history/cookie/trust building.
 
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { StealthContext, StealthModule } from './stealth-module-engine.js'
 
 interface HistorySite {
@@ -63,6 +64,7 @@ export class ProfileWarmupModule implements StealthModule {
         await ctx.cdp.send(ctx.slaveId, 'Page.navigate', { url: site.url })
         await new Promise((r) => setTimeout(r, warmupDelayMs))
       } catch {
+        catchDebug(_err, 'engines:stealth:profile-warmup-engine:65')
         // Site may be unreachable — skip
       }
     }

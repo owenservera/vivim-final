@@ -1,3 +1,4 @@
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { ConversationRow } from '../../storage/contracts/conversation-store.js'
 import type { NLCContext } from './types.js'
 
@@ -48,6 +49,7 @@ export async function bindContext(
         ctx.accountId = undefined // ConversationRow doesn't have accountId
       }
     } catch {
+      catchDebug(_err, 'engines:nlcl:context-binder:50')
       // Silent fail - keep default ctx
     }
   }

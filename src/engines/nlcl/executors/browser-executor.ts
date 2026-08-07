@@ -3,6 +3,7 @@
 // navigate, search, extract content, screenshot, type, click.
 
 import { newId } from '../../../ids.js'
+import { catchDebug } from '../../../lib/catch-logger.js'
 import { getLogger } from '../../../lib/logger.js'
 import type { ChromeGovernor } from '../../chrome-governor.js'
 import type { ConversationManager } from '../../conversation-manager.js'
@@ -136,6 +137,7 @@ export class BrowserExecutor implements CommandExecutor {
       })
       bodyText = (result as { result?: { value?: string } })?.result?.value ?? ''
     } catch {
+      catchDebug(_err, 'engines:nlcl:executors:browser-executor:138')
       /* extraction best-effort */
     }
 

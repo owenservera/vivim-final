@@ -13,6 +13,7 @@
 import { EngineError } from '../errors.js'
 import { launchChrome } from '../executor/launcher.js'
 import type { ProfileAllocator } from '../executor/profile-allocator.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { CapStoreDb } from '../storage/db.js'
 import { PROVIDER_URL_PATTERNS, getProviderLoginUrl } from './provider-selectors.js'
 
@@ -143,6 +144,7 @@ export class ChromeSetupWizard {
             process.kill(launchResult.pid, 'SIGTERM')
           }
         } catch {
+          catchDebug(_err, 'engines:chrome-setup-wizard:145')
           /* best-effort kill — process may already be gone */
         }
       }
@@ -246,6 +248,7 @@ export class ChromeSetupWizard {
           }
         }
       } catch {
+        catchDebug(_err, 'engines:chrome-setup-wizard:248')
         // Chrome might have been closed or CDP disconnected
       }
 

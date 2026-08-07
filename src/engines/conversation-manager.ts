@@ -319,6 +319,7 @@ export class ConversationManager {
       try {
         return await this.sendInternal(conversationId, message)
       } catch (err) {
+        catchDebug(err, 'engines:conversation-manager:321')
         const msg = err instanceof Error ? err.message : String(err)
         const recoverable =
           msg.includes('Slave not running') ||
@@ -650,6 +651,7 @@ export class ConversationManager {
         timing,
       }
     } catch (err) {
+      catchDebug(err, 'engines:conversation-manager:652')
       const error = err instanceof Error ? err.message : String(err)
       this.eventBus.emit({
         type: 'conversation:error',
@@ -676,6 +678,7 @@ export class ConversationManager {
       try {
         return await this.sendStreamingInternal(conversationId, message, start)
       } catch (err) {
+        catchDebug(err, 'engines:conversation-manager:678')
         const msg = err instanceof Error ? err.message : String(err)
         const recoverable =
           msg.includes('Slave not running') ||

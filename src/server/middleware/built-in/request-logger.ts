@@ -15,7 +15,7 @@ export function createRequestLoggerMiddleware(opts?: {
 }): Middleware {
   const logger = getLogger('request-logger')
   const exclude = new Set<string>(opts?.excludePaths ?? ['/health'])
-  const logBody = opts?.logBody ?? false
+  const _logBody = opts?.logBody ?? false
 
   return async (ctx, next) => {
     // Skip excluded paths

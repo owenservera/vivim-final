@@ -10,8 +10,8 @@
 import { bootstrapKernel } from '../../../engines/kernel/kernel-bootstrap.js'
 import { NLCLEngine } from '../../../engines/nlcl/nlcl-engine.js'
 import { getLogger } from '../../../lib/logger.js'
-import type { BootstrapContext } from '../context.js'
 import { onShutdown } from '../../index.js'
+import type { BootstrapContext } from '../context.js'
 
 const log = getLogger('bootstrap:lifecycle')
 
@@ -115,16 +115,20 @@ export async function bootstrapLifecyclePhase(ctx: BootstrapContext): Promise<vo
   const retryEngine = new RetryEngine()
 
   // NodeStoreImpl — lightweight Prisma wrapper for the Universal Node Layer.
-  const nodeStoreForRouter = new (await import('../../../storage/impl/node-store-impl.js')).NodeStoreImpl(
-    db.prisma as never,
-  )
+  const nodeStoreForRouter = new (
+    await import('../../../storage/impl/node-store-impl.js')
+  ).NodeStoreImpl(db.prisma as never)
 
   // Phase 1 stores — entity containers, content, notifications, contacts, sync, media
   const { EntityContainerStoreImpl: ECS } = await import(
     '../../../storage/impl/entity-container-store-impl.js'
   )
-  const { ContentItemStoreImpl: CIS } = await import('../../../storage/impl/content-item-store-impl.js')
-  const { NotificationStoreImpl: NS } = await import('../../../storage/impl/notification-store-impl.js')
+  const { ContentItemStoreImpl: CIS } = await import(
+    '../../../storage/impl/content-item-store-impl.js'
+  )
+  const { NotificationStoreImpl: NS } = await import(
+    '../../../storage/impl/notification-store-impl.js'
+  )
   const { ContactStoreImpl: CS } = await import('../../../storage/impl/contact-store-impl.js')
   const { SyncStoreImpl: SS } = await import('../../../storage/impl/sync-store-impl.js')
   const { MediaStoreImpl: MS } = await import('../../../storage/impl/media-store-impl.js')

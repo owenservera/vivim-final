@@ -114,6 +114,7 @@ function generateAnthropicSseLogicCode(name: string, providerId: string): string
         if (last3 && last3.type !== 'meta') blocks.push({ type: 'meta', key: 'stopped', value: 'message_stop' });
       }
     } catch (_e) { /* Intentional: malformed SSE lines are skipped; fallback at line 116 handles empty blocks */ }
+      catchDebug(_e, 'engines:streaming-response-analyzer:116')
   }
   if (blocks.length === 0 && rawBody.length > 0) blocks.push({ type: 'text', text: rawBody });
   return blocks;
@@ -159,6 +160,7 @@ function generateOpenAiSseLogicCode(name: string, providerId: string): string {
         blocks.push({ type: 'meta', key: 'finish_reason', value: json.choices[0].finish_reason });
       }
     } catch (_e) { /* Intentional: malformed JSON lines are skipped; fallback at line 161 handles empty blocks */ }
+      catchDebug(_e, 'engines:streaming-response-analyzer:161')
   }
   if (blocks.length === 0 && rawBody.length > 0) blocks.push({ type: 'text', text: rawBody });
   return blocks;
@@ -180,6 +182,7 @@ function generateGeminiBatchExecuteLogicCode(name: string, providerId: string): 
   return `function decodeEnvelope(body) {
   var cleaned = String(body).replace(/^\\]\\}'\\n?/, '');
   try { return JSON.parse(cleaned); } catch (_e) { return null; }
+    catchDebug(_e, 'engines:streaming-response-analyzer:182')
 }
 function parse(rawBody) {
   var blocks = []; var parsed = decodeEnvelope(rawBody);
@@ -293,6 +296,7 @@ function extractJsonRecords(body: string): Json[] {
       try {
         records.push(JSON.parse(t))
       } catch {
+        catchDebug(_err, 'engines:streaming-response-analyzer:295')
         /* ignore */
       }
     }

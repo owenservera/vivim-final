@@ -1,6 +1,6 @@
 ---
 name: source-audit
-description: P0-P3 source-code audit with 4 depth tiers (surface/standard/deep/full). Runs via `bun run devops audit-code <scope>`. Finds security, correctness, architecture, quality, performance, and testing issues with fix instructions.
+description: >
 ---
 # source-audit
 

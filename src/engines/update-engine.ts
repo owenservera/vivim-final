@@ -13,6 +13,7 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { config } from '../config.js'
 import { UpdateError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 
 const log = getLogger('updater')
@@ -99,6 +100,7 @@ export class UpdateEngine {
         if (match?.[1]) return match[1]
       }
     } catch {
+      catchDebug(_err, 'engines:update-engine:101')
       // Ignore errors
     }
 

@@ -2,6 +2,7 @@
 // Unit 7.7 — Configurable retry policy engine.
 
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 
 const log = getLogger('retry-engine')
@@ -58,6 +59,7 @@ export class RetryEngine {
       try {
         return await fn()
       } catch (err) {
+        catchDebug(err, 'engines:retry-engine:60')
         lastError = err instanceof Error ? err : new EngineError(String(err))
         const errorMsg = lastError.message
 

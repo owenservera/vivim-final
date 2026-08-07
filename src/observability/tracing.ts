@@ -2,8 +2,10 @@
 // OpenTelemetry SDK initialization with OTLP exporter.
 // Phase 1: Distributed tracing for all CDP commands.
 
+import { getLogger } from '../lib/logger.js'
 import type { TraceContext } from './context.js'
 
+const log = getLogger('observability:tracing')
 export interface SpanExporter {
   export(spans: SpanData[]): Promise<void>
   shutdown(): Promise<void>
@@ -123,7 +125,7 @@ export class OTLPTraceExporter implements SpanExporter {
       })
     } catch (err) {
       // Don't throw on export failure — observability should never break the system
-      console.error('[Tracing] Export failed:', err)
+      log.error('[Tracing] Export failed:', err)
     }
   }
 

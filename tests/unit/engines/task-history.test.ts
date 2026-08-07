@@ -97,8 +97,8 @@ describe('TaskHistoryService — Unit 8.11: Task search + history', () => {
 
     const results = await service.search('auth')
     expect(results.length).toBe(1)
-    expect(results[0]!.id).toBe('t1')
-    expect(results[0]!.goal).toBe('Refactor auth module')
+    expect(results[0]?.id).toBe('t1')
+    expect(results[0]?.goal).toBe('Refactor auth module')
   })
 
   it('search is case-insensitive', async () => {
@@ -115,7 +115,7 @@ describe('TaskHistoryService — Unit 8.11: Task search + history', () => {
 
     const failed = await service.search('', { status: 'failed' })
     expect(failed.length).toBe(1)
-    expect(failed[0]!.id).toBe('t2')
+    expect(failed[0]?.id).toBe('t2')
   })
 
   it('filter by date range', async () => {
@@ -125,7 +125,7 @@ describe('TaskHistoryService — Unit 8.11: Task search + history', () => {
 
     const results = await service.search('', { from: 1500, to: 2500 })
     expect(results.length).toBe(1)
-    expect(results[0]!.id).toBe('t2')
+    expect(results[0]?.id).toBe('t2')
   })
 
   it('timeline returns dag + gates', async () => {
@@ -167,8 +167,8 @@ describe('TaskHistoryService — Unit 8.11: Task search + history', () => {
     addTask(store, 't3', 'Task 3', 'complete', 2000)
 
     const results = await service.search('')
-    expect(results[0]!.id).toBe('t2')
-    expect(results[1]!.id).toBe('t3')
-    expect(results[2]!.id).toBe('t1')
+    expect(results[0]?.id).toBe('t2')
+    expect(results[1]?.id).toBe('t3')
+    expect(results[2]?.id).toBe('t1')
   })
 })

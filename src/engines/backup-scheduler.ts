@@ -9,6 +9,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { join } from 'node:path'
 import { EngineError } from '../errors.js'
 import { ulid } from '../ids.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import { DbEncryptionEngine } from './db-encryption.js'
 
 export type BackupCadence = 'daily' | 'weekly'
@@ -91,9 +92,10 @@ export class BackupScheduler {
   restore(snapshotId: string, destPath: string): void {
     const match = this.list().find((e) => e.id === snapshotId || e.path === snapshotId)
     if (!match) throw new EngineError(`Backup snapshot not found: ${snapshotId}`)
-    const blob = JSON.parse(readFileSync(match.path, 'utf8')) as Parameters<
-      DbEncryptionEngine['decryptBytes']
-    >[0]
+    const blob = safeJsonParse<Parameters<DbEncryptionEngine['decryptBytes']>[0]>(
+      readFileSync(match.path, 'utf8'),
+      null,
+    )
     const plain = this.crypto.decryptBytes(blob)
     writeFileSync(destPath, Buffer.from(plain))
   }

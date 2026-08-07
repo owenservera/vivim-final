@@ -1,7 +1,8 @@
 // src/engines/stealth/stealth-module-engine.ts
 // Unit 11.2 — StealthModuleEngine: registry + CDP injection pipeline.
 
-import type { StructuredLogger } from '../logger.js'
+import type { Logger } from '../../lib/logger.js'
+import { safeJsonParse } from '../../lib/safe-json.js'
 import type { StealthCdpProxy } from './stealth-module.js'
 import type { StealthProfileStore } from './stealth-profile-store.js'
 
@@ -17,7 +18,7 @@ export interface StealthModule {
 export interface StealthContext {
   cdp: StealthCdpProxy
   slaveId: string
-  logger?: StructuredLogger
+  logger?: Logger
 }
 
 export interface StealthModuleConfig {
@@ -39,7 +40,7 @@ export class StealthModuleEngine {
 
   constructor(
     private store: StealthProfileStore,
-    private logger?: StructuredLogger,
+    private logger?: Logger,
   ) {
     void this.loadProfiles()
   }
@@ -47,7 +48,7 @@ export class StealthModuleEngine {
   private async loadProfiles(): Promise<void> {
     const rows = await this.store.getAllModuleProfiles()
     for (const row of rows) {
-      const modules = JSON.parse(row.modulesJson) as StealthModuleConfig[]
+      const modules = safeJsonParse<StealthModuleConfig[]>(row.modulesJson, [])
       this.profiles.set(row.id, { id: row.id, name: row.name, modules })
     }
   }

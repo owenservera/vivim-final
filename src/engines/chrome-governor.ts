@@ -3,9 +3,10 @@
 // Manages ChromeSlave lifecycle, CDP proxy, trace logging, and health monitoring.
 
 import { join } from 'node:path'
-import { ChromeGovernorError, EngineError } from '../errors.js'
+import { EngineError } from '../errors.js'
 import { FleetSupervisor } from '../executor/fleet-supervisor.js'
-import type { FleetSuperState, SlaveLifecycle } from '../executor/slave-states.js'
+import type { FleetSuperState } from '../executor/slave-states.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type { FleetSupervisor as FleetSupervisorContract } from '../storage/contracts/fleet-supervisor.js'
 import type {
@@ -13,11 +14,8 @@ import type {
   TraceEntryInput,
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
-import { injectAntiDetection } from './anti-detection.js'
-import type { BrowserHarnessActions } from './browser-automation/harness-actions.js'
 import type { CapabilitySnapshot, CapabilitySnapshotEntry } from './capability-snapshot.js'
-import { type CdpWatchdog, setupWatchdog } from './cdp-watchdog.js'
-import { submitMessage, typeMessage } from './composer-typing.js'
+import type { CdpWatchdog } from './cdp-watchdog.js'
 import { configToProgram } from './harness/program-schema.js'
 import { registerDefaultStealthModules } from './stealth/register-defaults.js'
 import { StealthModuleEngine } from './stealth/stealth-module-engine.js'
@@ -68,773 +66,59 @@ function createInMemoryStealthStore(): StealthProfileStore {
   }
 }
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
-// Canonical slave lifecycle (atomic-v13 / FR-3). Single source of truth shared
-// with FleetSupervisor and the fleet-supervisor store contract.
-export type SlaveStatus = SlaveLifecycle
-export type SuperState = 'idle' | 'sending' | 'capturing' | 'parsing' | 'authenticating' | 'error'
-export type CircuitState = 'closed' | 'half_open' | 'open'
-
-export interface FleetConfig {
-  chromePath?: string
-  profileBaseDir?: string
-  portRange: [number, number]
-  healthProbeIntervalMs: number
-  healthProbeTimeoutMs: number
-  autoRestart: boolean
-  maxRestarts: number
-  circuitBreakerThreshold: number
-  circuitBreakerResetMs: number
-  // ── admission control (SOTA: browserless Limiter) ──
-  maxConcurrent?: number // active slave cap; default = port range span
-  maxQueued?: number // queue depth; default = maxConcurrent * 2
-  queueTimeoutMs?: number // reject if no slot within window; default 30000
-  // ── pre-spawn pressure gate (SOTA: browserless priority cascade) ──
-  cpuOverloadPct?: number // reject/defer above this; default 100 (disabled)
-  memOverloadPct?: number // default 100 (disabled)
-  // ── launch-time crash recovery (SOTA: puppeteer-cluster) ──
-  spawnRetryLimit?: number // launch retries; default 0 (preserve single-attempt)
-  spawnRetryDelayMs?: number // exp-backoff base; default 1000
-}
-
-export interface LaunchOptions {
-  visible?: boolean
-  profileDir?: string
-  debugPort?: number
-  extraArgs?: string[]
-}
-
-export interface ChromeSlave {
-  slaveId: string
-  providerId: string
-  accountId: string
-  debugPort: number
-  profileDir: string
-  status: SlaveStatus
-  superState: SuperState
-  pid: number | null
-  consecutiveFailures: number
-  circuitState: CircuitState
-  lastHealthCheck: number
-  channel?: 'system' | 'chrome' | 'chromium' | 'edge'
-  mode?: 'headless-new' | 'headless' | 'headed'
-  firstRun?: boolean
-}
-
-export interface CaptureResult {
-  body: string
-  url?: string
-  headers?: Record<string, string>
-  status?: number
-  durationMs?: number
-  capturedAt?: number
-}
-
-export interface PageState {
-  url: string
-  title: string
-  readyState: string
-}
-
-export interface HarnessResult {
-  success: boolean
-  stepsCompleted: number
-  error?: string
-  /** Body captured by a `capture` action, if any (feeds the harness content pipeline). */
-  capturedBody?: string
-}
-
-export interface HarnessDAG {
-  nodes: HarnessNode[]
-  edges: HarnessEdge[]
-}
-
-export interface HarnessNode {
-  type: 'action' | 'sequence' | 'branch' | 'parallel' | 'retry' | 'precondition' | 'step'
-  action?: string
-  selector?: string
-  params?: Record<string, unknown>
-  moduleId?: string
-  input?: Record<string, unknown>
-  outputKey?: string
-  /** Optional branch condition (set by the recipe compiler). */
-  condition?: { outputKey: string; equals?: string; truthy?: boolean }
-}
-
-export interface HarnessEdge {
-  from: number
-  to: number
-}
-
-export interface SlaveHealth {
-  slaveId: string
-  status: SlaveStatus
-  circuitState: CircuitState
-  consecutiveFailures: number
-  lastHealthCheck: number
-  uptimeMs: number
-}
-
-// ── Event bus ──────────────────────────────────────────────────────────────
-
-export interface GovernorEventBus {
-  emit(event: string, data: unknown): void
-}
-
-// ── Async mutex (simplified) ──────────────────────────────────────────────
-
-export class AsyncMutex {
-  private locked = false
-  private queue: Array<() => void> = []
-
-  async acquire(): Promise<void> {
-    if (!this.locked) {
-      this.locked = true
-      return
-    }
-    return new Promise<void>((resolve) => {
-      this.queue.push(resolve)
-    })
-  }
-
-  release(): void {
-    const next = this.queue.shift()
-    if (next) {
-      next()
-    } else {
-      this.locked = false
-    }
-  }
-}
-
-// ── CDP Transport (injected dependency) ────────────────────────────────────
-
-export interface CDPTransport {
-  /** Attach a CDP client for a slave. The transport is responsible for
-   *  resolving the correct page-target websocket from debugPort. Optional on
-   *  the contract (mocks/tests omit it); the real CdpTransportImpl provides it. */
-  connect?(slaveId: string, debugPort: number): Promise<void>
-  isConnected?(slaveId: string): boolean
-  send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown>
-  capture(slaveId: string, pattern: RegExp, timeoutMs?: number): Promise<CaptureResult>
-  // captureStream is optional on the transport contract — the governor itself
-  // never invokes it (streaming is driven via StreamingProtocol). Only the real
-  // CdpTransportImpl provides it; tests/mocks may omit it.
-  captureStream?(
-    slaveId: string,
-    pattern: RegExp,
-    timeoutMs?: number,
-  ): Promise<{ body: string; chunks: string[] }>
-  getPageState(slaveId: string): Promise<PageState>
-  captureScreenshot(slaveId: string, format?: 'png' | 'jpeg'): Promise<string>
-}
-
-// ── CDP Proxy (3.3) ───────────────────────────────────────────────────────
-
-export class CDPProxy {
-  /** Watchdog instances per slave for dialog/crash recovery. */
-  private watchdogs = new Map<string, CdpWatchdog>()
-
-  constructor(
-    private slaveGetter: () => Map<string, ChromeSlave>,
-    private mutexes: Map<string, AsyncMutex>,
-    private transport?: CDPTransport,
-    private eventBus?: GovernorEventBus,
-    private browserHarness?: BrowserHarnessActions,
-  ) {}
-
-  /** Live slaves map — always reads fresh data from FleetSupervisor. */
-  private get slaves(): Map<string, ChromeSlave> {
-    return this.slaveGetter()
-  }
-
-  /** 019 — in-memory snapshot of DB-backed capabilities, loaded at boot. */
-  private capabilitySnapshot?: CapabilitySnapshot
-
-  /** Wire the boot-loaded capability snapshot (source of truth for execution). */
-  setCapabilitySnapshot(snapshot: CapabilitySnapshot): void {
-    this.capabilitySnapshot = snapshot
-  }
-
-  async send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown> {
-    const slave = await this.ensureConnected(slaveId)
-    if (slave.circuitState === 'open')
-      throw new EngineError(`Circuit breaker open for slave: ${slaveId}`)
-
-    const mutex = this.getMutex(slaveId)
-    await mutex.acquire()
-    try {
-      const start = Date.now()
-      const result = await this.transport?.send(slaveId, method, params)
-      this.eventBus?.emit('cdp:executed', {
-        slaveId,
-        method,
-        durationMs: Date.now() - start,
-      })
-      return result
-    } finally {
-      mutex.release()
-    }
-  }
-
-  async capture(slaveId: string, pattern: RegExp, timeoutMs?: number): Promise<CaptureResult> {
-    const _slave = await this.ensureConnected(slaveId)
-
-    const mutex = this.getMutex(slaveId)
-    await mutex.acquire()
-    try {
-      const result = await this.transport?.capture(slaveId, pattern, timeoutMs)
-      if (!result) throw new EngineError('CDP transport not configured')
-      return result
-    } finally {
-      mutex.release()
-    }
-  }
-
-  async executeHarnessPlan(slaveId: string, dag: HarnessDAG): Promise<HarnessResult> {
-    const slave = await this.ensureConnected(slaveId)
-    if (slave.circuitState === 'open')
-      throw new EngineError(`Circuit breaker open for slave: ${slaveId}`)
-    if (!this.transport) throw new EngineError('CDP transport not configured')
-
-    const mutex = this.getMutex(slaveId)
-    await mutex.acquire()
-    try {
-      // Topological walk over node edges; fall back to declaration order.
-      const order = this.orderNodes(dag)
-      let stepsCompleted = 0
-      let capturedBody: string | undefined
-
-      for (const idx of order) {
-        const node = dag.nodes[idx]
-        if (!node) continue
-
-        const action = node.action ?? node.moduleId ?? node.type
-        const params = { ...(node.params ?? {}), ...(node.input ?? {}) }
-
-        switch (action) {
-          case 'type_text': {
-            const selector = typeof params.selector === 'string' ? params.selector : 'textarea'
-            const text = typeof params.text === 'string' ? params.text : ''
-            const composerType = (
-              typeof params.composerType === 'string' ? params.composerType : 'textarea'
-            ) as 'textarea' | 'contenteditable' | 'quill' | 'codemirror'
-            const typeStart = Date.now()
-            let typeSuccess = true
-            let typeError: string | undefined
-            try {
-              await typeMessage(this.transport, slaveId, selector, text, composerType)
-            } catch (err) {
-              typeSuccess = false
-              typeError = err instanceof Error ? err.message : String(err)
-            }
-            const typeMs = Date.now() - typeStart
-            log.info(
-              `[governor] type_text ${slaveId}: ${typeMs}ms, success=${typeSuccess}, error=${typeError ?? 'none'}`,
-            )
-            if (!typeSuccess) {
-              throw new ChromeGovernorError(
-                `Type failed: ${typeError ?? 'text did not land in composer'}`,
-              )
-            }
-            stepsCompleted++
-            break
-          }
-          case 'submit': {
-            const sendSelector =
-              typeof params.sendSelector === 'string' ? params.sendSelector : undefined
-            const key = typeof params.key === 'string' ? params.key : 'Enter'
-            const submitStart = Date.now()
-            let submitSuccess = true
-            let submitError: string | undefined
-            try {
-              await submitMessage(this.transport, slaveId, sendSelector, key)
-            } catch (err) {
-              submitSuccess = false
-              submitError = err instanceof Error ? err.message : String(err)
-            }
-            const submitMs = Date.now() - submitStart
-            log.info(
-              `[governor] submit ${slaveId}: ${submitMs}ms, confirmed=${submitSuccess}, error=${submitError ?? 'none'}`,
-            )
-            if (!submitSuccess) {
-              throw new ChromeGovernorError(
-                `Submit failed: ${submitError ?? 'no button clicked and Enter not confirmed'}`,
-              )
-            }
-            stepsCompleted++
-            break
-          }
-          case 'click': {
-            const selector = typeof params.selector === 'string' ? params.selector : 'button'
-            await this.transport?.send(slaveId, 'Runtime.evaluate', {
-              expression: `document.querySelector(${JSON.stringify(selector)})?.click()`,
-              returnByValue: true,
-            })
-            stepsCompleted++
-            break
-          }
-          case 'wait': {
-            const ms = typeof params.timeoutMs === 'number' ? params.timeoutMs : 1000
-            await new Promise((r) => setTimeout(r, ms))
-            stepsCompleted++
-            break
-          }
-          case 'navigate': {
-            const url = typeof params.url === 'string' ? params.url : ''
-            if (url) {
-              // Inject anti-detection scripts before navigating to provider pages
-              const slave = this.slaves.get(slaveId)
-              if (this.transport && slave?.providerId) {
-                await injectAntiDetection(this.transport, slaveId, slave.providerId)
-              }
-              await this.transport?.send(slaveId, 'Runtime.evaluate', {
-                expression: `window.location.href = ${JSON.stringify(url)}`,
-                returnByValue: true,
-              })
-            }
-            stepsCompleted++
-            break
-          }
-          case 'capture': {
-            const pattern = params.pattern instanceof RegExp ? params.pattern : undefined
-            const timeoutMs = typeof params.timeoutMs === 'number' ? params.timeoutMs : 5000
-            const captureStart = Date.now()
-            const cap = await this.capture(slaveId, pattern ?? /.*/s, timeoutMs)
-            const captureMs = Date.now() - captureStart
-            log.info(
-              `[governor] capture ${slaveId}: ${captureMs}ms, bodyLen=${cap?.body?.length ?? 0}`,
-            )
-            if (cap?.body) capturedBody = cap.body
-            stepsCompleted++
-            break
-          }
-          case 'evaluate': {
-            const expression =
-              typeof params.expression === 'string' ? params.expression : 'undefined'
-            await this.transport?.send(slaveId, 'Runtime.evaluate', {
-              expression,
-              returnByValue: true,
-            })
-            stepsCompleted++
-            break
-          }
-          // ── Extended browser-automation vocabulary (recipe-compiler) ──
-          case 'scroll': {
-            const x = typeof params.x === 'number' ? params.x : 0
-            const y = typeof params.y === 'number' ? params.y : 0
-            const expr =
-              typeof params.selector === 'string'
-                ? `document.querySelector(${JSON.stringify(params.selector)})?.scrollIntoView()`
-                : `window.scrollBy(${x},${y})`
-            await this.transport?.send(slaveId, 'Runtime.evaluate', {
-              expression: expr,
-              returnByValue: true,
-            })
-            stepsCompleted++
-            break
-          }
-          case 'hover':
-          case 'select':
-          case 'press':
-          case 'upload':
-          case 'wait_selector':
-          case 'wait_text':
-          case 'screenshot':
-          case 'assert':
-          case 'mock_request':
-          case 'cookie_set':
-          case 'observe': {
-            // Delegate to the browser-automation harness action handler so all
-            // CDP stays Governor-Canon-safe and the logic isn't duplicated here.
-            if (this.browserHarness) {
-              await this.browserHarness.runAction(slaveId, action, params)
-            }
-            stepsCompleted++
-            break
-          }
-          case 'tab_open': {
-            await this.transport?.send(slaveId, 'Target.createTarget', {
-              url: (params.url as string) ?? 'about:blank',
-            })
-            stepsCompleted++
-            break
-          }
-          case 'tab_close': {
-            if (params.targetId)
-              await this.transport?.send(slaveId, 'Target.closeTarget', {
-                targetId: params.targetId,
-              })
-            else await this.transport?.send(slaveId, 'Page.close', {})
-            stepsCompleted++
-            break
-          }
-          case 'tab_switch': {
-            await this.transport
-              ?.send(slaveId, 'Target.activateTarget', { targetId: params.targetId })
-              .catch(() => {})
-            stepsCompleted++
-            break
-          }
-          case 'extract_markdown': {
-            await this.transport?.send(slaveId, 'Runtime.evaluate', {
-              expression: `document.body.innerText.replace(/\\n{3,}/g,'\\n\\n').trim()`,
-              returnByValue: true,
-            })
-            stepsCompleted++
-            break
-          }
-          case 'human_gate': {
-            // In headless automation, human gates are logged and pass through.
-            this.eventBus?.emit('harness:human_gate', { slaveId, prompt: params.prompt })
-            stepsCompleted++
-            break
-          }
-          default:
-            // Unknown action — skip but count as attempted
-            stepsCompleted++
-        }
-
-        this.eventBus?.emit('harness:step', { slaveId, action, step: stepsCompleted })
-      }
-
-      return { success: true, stepsCompleted, capturedBody }
-    } catch (err) {
-      return {
-        success: false,
-        stepsCompleted: 0,
-        error: err instanceof Error ? err.message : String(err),
-      }
-    } finally {
-      mutex.release()
-    }
-  }
-
-  /** Returns node indices in dependency order (edges) or declaration order. */
-  private orderNodes(dag: HarnessDAG): number[] {
-    if (!dag.edges.length) return dag.nodes.map((_, i) => i)
-    const indeg = new Array(dag.nodes.length).fill(0)
-    const adj = new Map<number, number[]>()
-    for (const e of dag.edges) {
-      indeg[e.to] = (indeg[e.to] ?? 0) + 1
-      const list = adj.get(e.from) ?? []
-      list.push(e.to)
-      adj.set(e.from, list)
-    }
-    const queue: number[] = []
-    for (let i = 0; i < indeg.length; i++) if (indeg[i] === 0) queue.push(i)
-    const out: number[] = []
-    while (queue.length) {
-      const n = queue.shift()
-      if (n === undefined) break
-      out.push(n)
-      for (const m of adj.get(n) ?? []) {
-        indeg[m]--
-        if (indeg[m] === 0) queue.push(m)
-      }
-    }
-    return out.length === dag.nodes.length ? out : dag.nodes.map((_, i) => i)
-  }
-
-  async getPageState(slaveId: string): Promise<PageState> {
-    await this.ensureConnected(slaveId)
-    if (!this.transport) return { url: '', title: '', readyState: 'unavailable' }
-    return this.transport.getPageState(slaveId)
-  }
-
-  async captureScreenshot(slaveId: string, format?: 'png' | 'jpeg'): Promise<string> {
-    await this.ensureConnected(slaveId)
-    if (!this.transport) throw new EngineError('CDP transport not configured')
-    return this.transport.captureScreenshot(slaveId, format)
-  }
-
-  /**
-   * Resolve and (if needed) connect a slave's CDP client. The slaves map is a
-   * live view of the fleet, so this always reflects the current set — including
-   * instances spawned during this request.
-   */
-  private async ensureConnected(slaveId: string): Promise<ChromeSlave> {
-    const slave = this.slaves.get(slaveId)
-    if (!slave) throw new EngineError(`Slave not found: ${slaveId}`)
-    if (
-      this.transport?.connect &&
-      this.transport.isConnected &&
-      !this.transport.isConnected(slaveId)
-    ) {
-      await this.transport.connect(slaveId, slave.debugPort)
-      // Set up watchdog for this slave on first connection
-      if (!this.watchdogs.has(slaveId) && this.transport) {
-        const watchdog = setupWatchdog(
-          this.transport,
-          slaveId,
-          () => 'about:blank', // default URL for crash recovery
-        )
-        this.watchdogs.set(slaveId, watchdog)
-      }
-    }
-    return slave
-  }
-
-  private getMutex(slaveId: string): AsyncMutex {
-    let mutex = this.mutexes.get(slaveId)
-    if (!mutex) {
-      mutex = new AsyncMutex()
-      this.mutexes.set(slaveId, mutex)
-    }
-    return mutex
-  }
-}
-
-// ── TraceLog (3.4) ───────────────────────────────────────────────────────
-
-export class TraceLog {
-  constructor(private store: GovernorStore) {}
-
-  async record(entry: TraceEntryInput): Promise<TraceEntryRow> {
-    return this.store.createTraceEntry(entry)
-  }
-
-  async getTrace(slaveId: string, limit?: number): Promise<TraceEntryRow[]> {
-    return this.store.getTrace(slaveId, limit)
-  }
-
-  async getConversationTrace(conversationId: string): Promise<TraceEntryRow[]> {
-    // Store only supports getTrace by slaveId; scan is acceptable for v1
-    // Full implementation would add a conversationId index in Phase 6
-    const all = await this.store.getTrace('*', 1000)
-    return all.filter((e) => e.conversationId === conversationId)
-  }
-}
-
-// ── CircuitBreaker (3.4) ────────────────────────────────────────────────
-
-export interface CircuitBreaker {
-  state: CircuitState
-  failureCount: number
-  lastFailureAt: number | null
-  lastSuccessAt: number | null
-  openedAt: number | null
-}
-
-export function createCircuitBreaker(): CircuitBreaker {
-  return {
-    state: 'closed',
-    failureCount: 0,
-    lastFailureAt: null,
-    lastSuccessAt: null,
-    openedAt: null,
-  }
-}
-
-export function circuitRecordSuccess(cb: CircuitBreaker, threshold: number, resetMs: number): void {
-  const now = Date.now()
-  cb.lastSuccessAt = now
-  cb.failureCount = 0
-  if (cb.state === 'half_open') {
-    cb.state = 'closed'
-    cb.openedAt = null
-  }
-  void threshold
-  void resetMs
-}
-
-export function circuitRecordFailure(
-  cb: CircuitBreaker,
-  threshold: number,
-  _resetMs: number,
-): CircuitState {
-  const now = Date.now()
-  cb.failureCount++
-  cb.lastFailureAt = now
-
-  if (cb.state === 'half_open') {
-    cb.state = 'open'
-    cb.openedAt = now
-    return 'open'
-  }
-
-  if (cb.failureCount >= threshold) {
-    cb.state = 'open'
-    cb.openedAt = now
-    return 'open'
-  }
-
-  return cb.state
-}
-
-export function circuitTryAcquire(cb: CircuitBreaker, resetMs: number): boolean {
-  if (cb.state === 'closed') return true
-  if (cb.state === 'half_open') return true
-  // open → check if reset window has elapsed
-  if (cb.openedAt && Date.now() - cb.openedAt >= resetMs) {
-    cb.state = 'half_open'
-    return true
-  }
-  return false
-}
-
-// ── HealthMonitor (3.4) ─────────────────────────────────────────────────
-
-export class HealthMonitor {
-  private timerHandle: ReturnType<typeof setInterval> | null = null
-
-  constructor(
-    private store: GovernorStore,
-    private slaves: Map<string, ChromeSlave>,
-    private circuitBreakers: Map<string, CircuitBreaker>,
-    private cdpProxy: CDPProxy,
-    private config: FleetConfig,
-    private eventBus?: GovernorEventBus,
-  ) {}
-
-  start(intervalMs?: number): void {
-    this.stop()
-    const interval = intervalMs ?? this.config.healthProbeIntervalMs
-    this.timerHandle = setInterval(() => {
-      void this.probeAll()
-    }, interval)
-  }
-
-  stop(): void {
-    if (this.timerHandle !== null) {
-      clearInterval(this.timerHandle)
-      this.timerHandle = null
-    }
-  }
-
-  async probe(slaveId: string): Promise<boolean> {
-    const slave = this.slaves.get(slaveId)
-    if (!slave) return false
-
-    try {
-      await this.cdpProxy.send(slaveId, 'Browser.getVersion')
-      const prevStatus = slave.status
-      slave.status = 'running'
-      slave.lastHealthCheck = Date.now()
-      slave.consecutiveFailures = 0
-
-      const cb = this.getOrCreateCircuit(slaveId)
-      circuitRecordSuccess(
-        cb,
-        this.config.circuitBreakerThreshold,
-        this.config.circuitBreakerResetMs,
-      )
-      await this.store.upsertCircuitState({
-        id: `cb_${slaveId}`,
-        slaveId,
-        state: cb.state,
-        failureCount: cb.failureCount,
-        lastFailureAt: cb.lastFailureAt,
-        lastSuccessAt: cb.lastSuccessAt,
-        openedAt: cb.openedAt,
-      })
-
-      await this.store.createHealthTick({
-        slaveId,
-        providerId: slave.providerId,
-        status: 'running',
-        responseMs: Date.now() - slave.lastHealthCheck,
-        error: null,
-        ts: Date.now(),
-      })
-
-      if (prevStatus !== 'running') {
-        this.eventBus?.emit('fleet:slave_status', { slaveId, status: 'running' })
-      }
-      return true
-    } catch (err) {
-      const prevStatus = slave.status
-      slave.consecutiveFailures++
-      slave.lastHealthCheck = Date.now()
-      slave.status = 'error'
-
-      const cb = this.getOrCreateCircuit(slaveId)
-      const newState = circuitRecordFailure(
-        cb,
-        this.config.circuitBreakerThreshold,
-        this.config.circuitBreakerResetMs,
-      )
-      slave.circuitState = newState
-
-      await this.store.upsertCircuitState({
-        id: `cb_${slaveId}`,
-        slaveId,
-        state: cb.state,
-        failureCount: cb.failureCount,
-        lastFailureAt: cb.lastFailureAt,
-        lastSuccessAt: cb.lastSuccessAt,
-        openedAt: cb.openedAt,
-      })
-
-      await this.store.createHealthTick({
-        slaveId,
-        providerId: slave.providerId,
-        status: 'error',
-        responseMs: null,
-        error: err instanceof Error ? err.message : String(err),
-        ts: Date.now(),
-      })
-
-      if (prevStatus !== 'error') {
-        this.eventBus?.emit('fleet:slave_status', { slaveId, status: 'error' })
-      }
-
-      if (slave.consecutiveFailures >= this.config.circuitBreakerThreshold) {
-        this.eventBus?.emit('fleet:crash_detected', {
-          slaveId,
-          failures: slave.consecutiveFailures,
-        })
-      }
-
-      if (newState !== cb.state || newState === 'open') {
-        this.eventBus?.emit('fleet:circuit_changed', { slaveId, state: newState })
-      }
-
-      return false
-    }
-  }
-
-  async recalculateCircuit(slaveId: string): Promise<void> {
-    const cb = this.getOrCreateCircuit(slaveId)
-    const resetMs = this.config.circuitBreakerResetMs
-    if (cb.state === 'open' && cb.openedAt && Date.now() - cb.openedAt >= resetMs) {
-      cb.state = 'half_open'
-      const slave = this.slaves.get(slaveId)
-      if (slave) slave.circuitState = 'half_open'
-      this.eventBus?.emit('fleet:circuit_changed', { slaveId, state: 'half_open' })
-      await this.store.upsertCircuitState({
-        id: `cb_${slaveId}`,
-        slaveId,
-        state: cb.state,
-        failureCount: cb.failureCount,
-        lastFailureAt: cb.lastFailureAt,
-        lastSuccessAt: cb.lastSuccessAt,
-        openedAt: cb.openedAt,
-      })
-    }
-  }
-
-  private async probeAll(): Promise<void> {
-    const slaveIds = [...this.slaves.keys()]
-    await Promise.allSettled(slaveIds.map((id) => this.probe(id)))
-  }
-
-  private getOrCreateCircuit(slaveId: string): CircuitBreaker {
-    let cb = this.circuitBreakers.get(slaveId)
-    if (!cb) {
-      cb = createCircuitBreaker()
-      this.circuitBreakers.set(slaveId, cb)
-    }
-    return cb
-  }
-
-  get isRunning(): boolean {
-    return this.timerHandle !== null
-  }
-}
-
-// ── ChromeGovernor ─────────────────────────────────────────────────────────
+// Session 6 (2026-08-07): Types and helper classes extracted to src/engines/chrome/.
+// This file now contains only the main ChromeGovernor class + the in-memory
+// stealth store fallback (private helper).
+//
+// Re-export everything so existing `import { ... } from './chrome-governor.js'`
+// continues to work without changes.
+
+export type {
+  SlaveStatus,
+  SuperState,
+  CircuitState,
+  FleetConfig,
+  LaunchOptions,
+  ChromeSlave,
+  CaptureResult,
+  PageState,
+  HarnessResult,
+  HarnessDAG,
+  HarnessNode,
+  HarnessEdge,
+  SlaveHealth,
+  GovernorEventBus,
+  CDPTransport,
+} from './chrome/types.js'
+
+export { AsyncMutex } from './chrome/async-mutex.js'
+export {
+  type CircuitBreaker,
+  createCircuitBreaker,
+  circuitRecordSuccess,
+  circuitRecordFailure,
+  circuitTryAcquire,
+} from './chrome/circuit-breaker.js'
+export { TraceLog } from './chrome/trace-log.js'
+export { HealthMonitor } from './chrome/health-monitor.js'
+export { CDPProxy } from './chrome/cdp-proxy.js'
+
+import type { AsyncMutex } from './chrome/async-mutex.js'
+import { CDPProxy } from './chrome/cdp-proxy.js'
+import type { CircuitBreaker } from './chrome/circuit-breaker.js'
+import { HealthMonitor } from './chrome/health-monitor.js'
+import { TraceLog } from './chrome/trace-log.js'
+import type {
+  CDPTransport,
+  ChromeSlave,
+  FleetConfig,
+  GovernorEventBus,
+  HarnessDAG,
+  HarnessResult,
+  LaunchOptions,
+  SlaveHealth,
+  SlaveStatus,
+} from './chrome/types.js'
 
 const log = getLogger('chrome-governor')
 
@@ -1018,6 +302,7 @@ export class ChromeGovernor {
 
       const marker = markers[slave.providerId] ?? 'document.readyState === "complete"'
       const expression = `(() => { try { return ${marker} } catch { return false } })()`
+      catchDebug(_err, 'engines:chrome-governor:1020')
 
       const result = (await this.cdp.send(slaveId, 'Runtime.evaluate', {
         expression,

@@ -88,11 +88,11 @@ describe('MiddlewarePipeline', () => {
       })
 
       expect(capturedCtx).toBeDefined()
-      expect(capturedCtx!.method).toBe('POST')
-      expect(capturedCtx!.pathname).toBe('/api/foo')
-      expect(capturedCtx!.url.search).toBe('?bar=1')
-      expect(capturedCtx!.receivedAt).toBeGreaterThan(0)
-      expect(capturedCtx!.state).toBeInstanceOf(Map)
+      expect(capturedCtx?.method).toBe('POST')
+      expect(capturedCtx?.pathname).toBe('/api/foo')
+      expect(capturedCtx?.url.search).toBe('?bar=1')
+      expect(capturedCtx?.receivedAt).toBeGreaterThan(0)
+      expect(capturedCtx?.state).toBeInstanceOf(Map)
     })
   })
 

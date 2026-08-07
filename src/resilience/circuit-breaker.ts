@@ -3,6 +3,7 @@
 // WP-06 — state machine: closed → open → half_open → closed.
 // Emits state transitions to the CapabilityEventBus (if available) for observability.
 
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type { CircuitBreakerConfig, CircuitState } from './types.js'
 import { CircuitBreakerOpenError } from './types.js'
@@ -164,6 +165,7 @@ export class CircuitBreaker {
       try {
         listener(state)
       } catch {
+        catchDebug(_err, 'resilience:circuit-breaker:166')
         // Swallow listener errors so they don't break the state machine.
       }
     }
@@ -171,6 +173,7 @@ export class CircuitBreaker {
     try {
       this.onTransition?.(from, state)
     } catch {
+      catchDebug(_err, 'resilience:circuit-breaker:173')
       // Swallow
     }
   }

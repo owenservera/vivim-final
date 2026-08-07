@@ -22,6 +22,7 @@
 // CONTRACT_VERSION: 1
 
 import { ulid } from 'ulid'
+import { EngineError } from '../../errors.js'
 import { getLogger } from '../../lib/logger.js'
 import {
   type SurfaceMutation,
@@ -31,7 +32,6 @@ import {
 import { surfaceRegistry } from '../../reprogrammability/registry.js'
 import type { ProviderLLMAdapter } from '../nlcl/llm-slave-resolver.js'
 import { type LlmPromptInput, buildLlmHarnessPrompt } from './llm-prompt.js'
-import { EngineError } from '../../errors.js'
 
 const log = getLogger('llm-harness-agent')
 

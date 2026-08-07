@@ -1,11 +1,11 @@
 import { StreamAlignmentEngine } from '../../src/engines/stream-align.js'
+import type { ProviderStreamConfigRow } from '../../src/schema/types.js'
 // seeds/parsers/harvest.seed.ts
 // 020 — Harvest every parser variant found in the OG trees into DB inline rows,
 // then build real fallback chains (provider → generic → system).
 //
 // Governor Canon: this module only writes ProviderParserRow data; it never touches CDP.
 import type { ProviderStore } from '../../src/storage/contracts/provider-store.js'
-import type { ProviderStreamConfigRow } from '../../src/schema/types.js'
 import { LOGIC_CODE as CHATGPT } from './harvested/chatgpt-openai-delta.js'
 import { LOGIC_CODE as CLAUDE } from './harvested/claude-streaming-sse.js'
 import { LOGIC_CODE as DEEPSEEK } from './harvested/deepseek-reasoning-sse.js'

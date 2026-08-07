@@ -1,8 +1,8 @@
 // tests/unit/engines/selector-refiner.test.ts
 // SelectorRefiner — LLM-driven CSS selector refinement for chat UIs.
 import { describe, expect, it, mock } from 'bun:test'
-import { SelectorRefiner } from '../../../src/engines/selector-refiner.js'
 import type { LlmClient } from '../../../src/engines/format-classifier.js'
+import { SelectorRefiner } from '../../../src/engines/selector-refiner.js'
 
 function createMockLlmClient(response: string): LlmClient {
   return { complete: mock(() => Promise.resolve(response)) }
@@ -36,7 +36,7 @@ describe('SelectorRefiner', () => {
       responseContainer: '.response',
       rationale: 'Quill editor',
     })
-    const client = createMockLlmClient('```json\n' + inner + '\n```')
+    const client = createMockLlmClient(`\`\`\`json\n${inner}\n\`\`\``)
     const refiner = new SelectorRefiner(client)
     const result = await refiner.refine(
       'https://gemini.google.com',

@@ -8,17 +8,15 @@
 // Writes: registry, autonomousEngine, policyEngine, relocationEngine,
 //         memoryFabric, agentBuilder on ctx.
 
-import { config } from '../../../config.js'
 import { connectCapabilityRegistry } from '../../../cli/index.js'
+import { config } from '../../../config.js'
 import { registerGeneratedCapabilities } from '../../../engines/capability-bootstrap-generated.js'
-import {
-  registerDefaultCapabilities,
-} from '../../../engines/capability-bootstrap.js'
-import { CDP_PROTOCOL_CATALOG } from '../../../engines/cdp-discovery.js'
+import { registerDefaultCapabilities } from '../../../engines/capability-bootstrap.js'
 import {
   type CdpBindingStore,
   registerDiscoveredCdpMethods,
 } from '../../../engines/cdp-capability-registrar.js'
+import { CDP_PROTOCOL_CATALOG } from '../../../engines/cdp-discovery.js'
 import { catchDebug } from '../../../lib/catch-logger.js'
 import { getLogger } from '../../../lib/logger.js'
 import type { BootstrapContext } from '../context.js'
@@ -61,7 +59,9 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
     const autonomousStore = new AutonomousStoreImpl()
     const pStore = new PolicyStoreImpl()
     const profileAllocator = new ProfileAllocator(config.profileBaseDir)
-    registry = new (await import('../../../engines/unified-registry.js')).UnifiedCapabilityRegistry()
+    registry = new (
+      await import('../../../engines/unified-registry.js')
+    ).UnifiedCapabilityRegistry()
     const { LocalAgentStoreImpl } = await import('../../../storage/impl/local-agent-store-impl.js')
     const { LocalAgentProviderExecutor } = await import(
       '../../../engines/local-agent/local-agent-executor.js'
@@ -70,117 +70,120 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
     const localAgentExecutor = new LocalAgentProviderExecutor(localAgentStore, eventBus)
 
     // ── Storage Relocation Engine ──────────────────────────────────────────
-    const { StorageRelocationEngine } = await import('../../../engines/storage-relocation-engine.js')
-    const relocationStore: import('../../../engines/storage-relocation-engine.js').RelocationStore = {
-      async getStorageConfig() {
-        const row = await db.prisma.configEntry.findUnique({
-          where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
-          },
-        })
-        if (!row) return null
-        const parsed = JSON.parse(row.configJson) as Record<string, unknown>
-        return {
-          dataDir: (parsed.dataDir as string) ?? null,
-          dbPath: (parsed.dbPath as string) ?? null,
-          retainOldDays: (parsed.retainOldDays as number) ?? 7,
-        }
-      },
-      async setStorageConfig(config) {
-        const now = Date.now()
-        await db.prisma.configEntry.upsert({
-          where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
-          },
-          create: {
-            id: 'storage:global',
-            engineId: 'storage',
-            scopeType: 'global',
-            scopeId: '',
-            configJson: JSON.stringify(config),
-            schemaVersion: 1,
-            createdAt: now,
-            updatedAt: now,
-          },
-          update: {
-            configJson: JSON.stringify(config),
-            updatedAt: now,
-          },
-        })
-      },
-      async getArchivedLocations() {
-        const row = await db.prisma.configEntry.findUnique({
-          where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
-          },
-        })
-        if (!row) return []
-        const parsed = JSON.parse(row.configJson) as Record<string, unknown>
-        const archived =
-          (parsed.archivedLocations as Array<{
-            path: string
-            archivedAt: number
-            sizeBytes: number
-          }>) ?? []
-        return archived
-      },
-      async markArchived(path, archivedAt, sizeBytes) {
-        const row = await db.prisma.configEntry.findUnique({
-          where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
-          },
-        })
-        const parsed = row ? (JSON.parse(row.configJson) as Record<string, unknown>) : {}
-        const archived =
-          (parsed.archivedLocations as Array<{
-            path: string
-            archivedAt: number
-            sizeBytes: number
-          }>) ?? []
-        archived.push({ path, archivedAt, sizeBytes })
-        parsed.archivedLocations = archived
-        const now = Date.now()
-        await db.prisma.configEntry.upsert({
-          where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
-          },
-          create: {
-            id: 'storage:global',
-            engineId: 'storage',
-            scopeType: 'global',
-            scopeId: '',
-            configJson: JSON.stringify(parsed),
-            schemaVersion: 1,
-            createdAt: now,
-            updatedAt: now,
-          },
-          update: { configJson: JSON.stringify(parsed), updatedAt: now },
-        })
-      },
-      async removeArchived(path) {
-        const row = await db.prisma.configEntry.findUnique({
-          where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
-          },
-        })
-        if (!row) return
-        const parsed = JSON.parse(row.configJson) as Record<string, unknown>
-        const archived =
-          (parsed.archivedLocations as Array<{
-            path: string
-            archivedAt: number
-            sizeBytes: number
-          }>) ?? []
-        parsed.archivedLocations = archived.filter((a) => a.path !== path)
-        const now = Date.now()
-        await db.prisma.configEntry.update({
-          where: {
-            engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
-          },
-          data: { configJson: JSON.stringify(parsed), updatedAt: now },
-        })
-      },
-    }
+    const { StorageRelocationEngine } = await import(
+      '../../../engines/storage-relocation-engine.js'
+    )
+    const relocationStore: import('../../../engines/storage-relocation-engine.js').RelocationStore =
+      {
+        async getStorageConfig() {
+          const row = await db.prisma.configEntry.findUnique({
+            where: {
+              engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
+            },
+          })
+          if (!row) return null
+          const parsed = JSON.parse(row.configJson) as Record<string, unknown>
+          return {
+            dataDir: (parsed.dataDir as string) ?? null,
+            dbPath: (parsed.dbPath as string) ?? null,
+            retainOldDays: (parsed.retainOldDays as number) ?? 7,
+          }
+        },
+        async setStorageConfig(config) {
+          const now = Date.now()
+          await db.prisma.configEntry.upsert({
+            where: {
+              engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
+            },
+            create: {
+              id: 'storage:global',
+              engineId: 'storage',
+              scopeType: 'global',
+              scopeId: '',
+              configJson: JSON.stringify(config),
+              schemaVersion: 1,
+              createdAt: now,
+              updatedAt: now,
+            },
+            update: {
+              configJson: JSON.stringify(config),
+              updatedAt: now,
+            },
+          })
+        },
+        async getArchivedLocations() {
+          const row = await db.prisma.configEntry.findUnique({
+            where: {
+              engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
+            },
+          })
+          if (!row) return []
+          const parsed = JSON.parse(row.configJson) as Record<string, unknown>
+          const archived =
+            (parsed.archivedLocations as Array<{
+              path: string
+              archivedAt: number
+              sizeBytes: number
+            }>) ?? []
+          return archived
+        },
+        async markArchived(path, archivedAt, sizeBytes) {
+          const row = await db.prisma.configEntry.findUnique({
+            where: {
+              engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
+            },
+          })
+          const parsed = row ? (JSON.parse(row.configJson) as Record<string, unknown>) : {}
+          const archived =
+            (parsed.archivedLocations as Array<{
+              path: string
+              archivedAt: number
+              sizeBytes: number
+            }>) ?? []
+          archived.push({ path, archivedAt, sizeBytes })
+          parsed.archivedLocations = archived
+          const now = Date.now()
+          await db.prisma.configEntry.upsert({
+            where: {
+              engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
+            },
+            create: {
+              id: 'storage:global',
+              engineId: 'storage',
+              scopeType: 'global',
+              scopeId: '',
+              configJson: JSON.stringify(parsed),
+              schemaVersion: 1,
+              createdAt: now,
+              updatedAt: now,
+            },
+            update: { configJson: JSON.stringify(parsed), updatedAt: now },
+          })
+        },
+        async removeArchived(path) {
+          const row = await db.prisma.configEntry.findUnique({
+            where: {
+              engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
+            },
+          })
+          if (!row) return
+          const parsed = JSON.parse(row.configJson) as Record<string, unknown>
+          const archived =
+            (parsed.archivedLocations as Array<{
+              path: string
+              archivedAt: number
+              sizeBytes: number
+            }>) ?? []
+          parsed.archivedLocations = archived.filter((a) => a.path !== path)
+          const now = Date.now()
+          await db.prisma.configEntry.update({
+            where: {
+              engineId_scopeType_scopeId: { engineId: 'storage', scopeType: 'global', scopeId: '' },
+            },
+            data: { configJson: JSON.stringify(parsed), updatedAt: now },
+          })
+        },
+      }
     relocationEngine = new StorageRelocationEngine(relocationStore)
 
     // Check for crash recovery on boot
@@ -239,9 +242,9 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
         if (!program) return null
         const _recipe = configToProgram(program.configJson).recipe
         const cap = programToCapability(program, { executor: harness.executor })
-        ;(registry as import('../../../engines/unified-registry.js').UnifiedCapabilityRegistry).register(
-          cap,
-        )
+        ;(
+          registry as import('../../../engines/unified-registry.js').UnifiedCapabilityRegistry
+        ).register(cap)
         return cap
       })
     }
@@ -346,7 +349,9 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
       // ── OpenCode `serve` supervisor (feature 027, ADDITIVE, OFF by default) ──
       if (config.opencodeServeEnabled) {
         try {
-          const { OpenCodeSupervisor } = await import('../../../engines/opencode/opencode-supervisor.js')
+          const { OpenCodeSupervisor } = await import(
+            '../../../engines/opencode/opencode-supervisor.js'
+          )
           const { OpenCodeClient } = await import('../../../engines/opencode/opencode-client.js')
           const { OpenCodeIngest } = await import('../../../engines/opencode/opencode-ingest.js')
           const supervisor = new OpenCodeSupervisor({

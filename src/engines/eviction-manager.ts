@@ -1,6 +1,7 @@
 // src/engines/eviction-manager.ts
 // Unit 8.1 — Idle slave TTL + configurable eviction policy.
 
+import { catchDebug } from '../lib/catch-logger.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor, ChromeSlave } from './chrome-governor.js'
 
@@ -95,6 +96,7 @@ export class EvictionManager {
         }
       }
     } catch {
+      catchDebug(_err, 'engines:eviction-manager:97')
       // Governor may not be ready yet
     }
   }
@@ -126,6 +128,7 @@ export class EvictionManager {
       }
       this.accessLog.delete(slaveId)
     } catch {
+      catchDebug(_err, 'engines:eviction-manager:128')
       // Slave may already be dead
     }
   }
