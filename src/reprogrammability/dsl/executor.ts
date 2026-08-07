@@ -338,7 +338,7 @@ export class MutationExecutor {
         })
       } catch (err) {
         // Best-effort rollback; log and continue.
-        console.error(`[MutationExecutor] rollback failed for ${record.mutation.target}:`, err)
+        log.error(`[MutationExecutor] rollback failed for ${record.mutation.target}:`, err)
       }
       // Remove from undo stack.
       const idx = this.undoStack.indexOf(record)
@@ -347,8 +347,10 @@ export class MutationExecutor {
   }
 }
 
+import { getLogger } from '../../lib/logger.js'
 /**
  * Singleton instance — bound to the singleton surfaceRegistry.
  */
 import { surfaceRegistry } from '../registry.js'
+const log = getLogger('reprogrammability:dsl:executor')
 export const mutationExecutor = new MutationExecutor(surfaceRegistry)

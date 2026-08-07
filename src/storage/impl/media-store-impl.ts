@@ -34,37 +34,41 @@ export interface MediaAttachmentRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class MediaStoreImpl {
-  constructor(private readonly db: CapStoreDb) {}
+  protected readonly prisma: any
+
+  constructor(private readonly db: CapStoreDb) {
+    this.prisma = db.prisma
+  }
 
   async getMediaById(id: string): Promise<MediaAttachmentRow | null> {
-    const row = await this.db.loose.mediaAttachment.findUnique({ where: { id } })
+    const row = await this.prisma.mediaAttachment.findUnique({ where: { id } })
     return row ? this.toRow(row) : null
   }
 
   async getMediaByContentItem(contentItemId: string): Promise<MediaAttachmentRow[]> {
-    const rows = await this.db.loose.mediaAttachment.findMany({
+    const rows = await this.prisma.mediaAttachment.findMany({
       where: { contentItemId },
       orderBy: { createdAt: 'desc' },
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async getMediaByType(mediaType: string): Promise<MediaAttachmentRow[]> {
-    const rows = await this.db.loose.mediaAttachment.findMany({
+    const rows = await this.prisma.mediaAttachment.findMany({
       where: { mediaType },
       orderBy: { createdAt: 'desc' },
       take: 50,
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async getUndownloaded(): Promise<MediaAttachmentRow[]> {
-    const rows = await this.db.loose.mediaAttachment.findMany({
+    const rows = await this.prisma.mediaAttachment.findMany({
       where: { isDownloaded: 0 },
       orderBy: { createdAt: 'asc' },
       take: 100,
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async createMedia(input: {
@@ -85,7 +89,7 @@ export class MediaStoreImpl {
     metadataJson?: string
   }): Promise<MediaAttachmentRow> {
     const now = Date.now()
-    const row = await this.db.loose.mediaAttachment.create({
+    const row = await this.prisma.mediaAttachment.create({
       data: {
         id: newId(),
         providerId: input.providerId,
@@ -135,13 +139,13 @@ export class MediaStoreImpl {
     for (const key of allowed) {
       if (key in updates) data[key] = updates[key]
     }
-    const row = await this.db.loose.mediaAttachment.update({ where: { id }, data })
+    const row = await this.prisma.mediaAttachment.update({ where: { id }, data })
     return this.toRow(row)
   }
 
   async updateDownloadProgress(id: string, progress: number): Promise<MediaAttachmentRow> {
     const now = Date.now()
-    const row = await this.db.loose.mediaAttachment.update({
+    const row = await this.prisma.mediaAttachment.update({
       where: { id },
       data: { downloadProgress: progress, updatedAt: now },
     })
@@ -150,7 +154,7 @@ export class MediaStoreImpl {
 
   async markDownloaded(id: string, localPath: string): Promise<MediaAttachmentRow> {
     const now = Date.now()
-    const row = await this.db.loose.mediaAttachment.update({
+    const row = await this.prisma.mediaAttachment.update({
       where: { id },
       data: { localPath, isDownloaded: 1, downloadProgress: 100, updatedAt: now },
     })
@@ -158,12 +162,12 @@ export class MediaStoreImpl {
   }
 
   async deleteMedia(id: string): Promise<void> {
-    await this.db.loose.mediaAttachment.delete({ where: { id } })
+    await this.prisma.mediaAttachment.delete({ where: { id } })
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: any): MediaAttachmentRow {
+  private toRow(r: Record<string, unknown>): MediaAttachmentRow {
     return {
       id: r.id,
       providerId: r.providerId,

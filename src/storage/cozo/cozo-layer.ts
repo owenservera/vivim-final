@@ -10,6 +10,7 @@
 // Engine: "sqlite" for file-backed persistence, "mem" for tests.
 
 import type { CozoDb as CozoDbInstance } from 'cozo-node'
+import { catchDebug } from '../../lib/catch-logger.js'
 import { getLogger } from '../../lib/logger.js'
 
 const log = getLogger('cozo-layer')
@@ -280,6 +281,7 @@ export class CozoLayer {
       try {
         this.db.close()
       } catch {
+        catchDebug(_err, 'storage:cozo:cozo-layer:282')
         // best-effort
       }
       this.db = null

@@ -3,6 +3,7 @@
 // Complements Prisma schema migrations by handling DATA transformations
 // (column value reshaping, bulk updates, etc.).
 
+import { catchDebug } from '../../lib/catch-logger.js'
 import { getLogger } from '../../lib/logger.js'
 import { getDb } from '../db.js'
 import type {
@@ -275,6 +276,7 @@ export class MigrationRunner {
 
       return completedRecord
     } catch (err) {
+      catchDebug(err, 'storage:migration:migration-runner:277')
       const durationMs = Date.now() - startTime
       const failedRecord: MigrationRecord = {
         id: step.id,

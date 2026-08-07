@@ -1,10 +1,3 @@
-// src/engines/providers/plugin-registry.ts
-// Manages provider plugin lifecycle — registration, initialization, health checks.
-// WP-03: Central registry for the new ProviderPlugin interface.
-//
-// This is separate from the legacy ProviderRegistry (registry.ts) which manages
-// the older ProviderPlugin (plugin.ts) interface. Both coexist during migration.
-
 import { getLogger } from '../../observability/logger.js'
 import type { CapabilityEventBus } from '../capability-event-bus.js'
 import type {
@@ -214,13 +207,8 @@ export class ProviderPluginRegistry {
         // Emit health change event if status shifted
         const prev = this.healthResults.get(slug)
         if (prev && prev.status !== result.status) {
-          // Best-effort emit — don't let event bus errors break health checks
-          try {
-            // We don't hold a reference to the event bus here, so we skip
-            // emission. Callers who need events can compare before/after.
-          } catch {
-            // ignore
-          }
+          // We don't hold a reference to the event bus here, so we skip
+          // emission. Callers who need events can compare before/after.
         }
       } catch (err) {
         const errorResult: HealthCheckResult = {

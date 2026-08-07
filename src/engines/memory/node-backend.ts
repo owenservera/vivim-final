@@ -80,7 +80,7 @@ export class NodeBackend implements MemoryBackend {
       .catch(() => null)
     if (embedding) {
       const hits = await this.deps.semanticStore.searchByEmbedding(
-        JSON.parse(embedding.embedding) as number[],
+        JSON.parse(embedding.embedding, null as number[]) as number[],
         { entityType: 'cap-store.memory', limit: 5 },
       )
       for (const h of hits) parts.push(`[recall] ${h.entityId}`)

@@ -3,9 +3,9 @@
 // categories/_generate.ts). Keep this a pure data module: build patterns
 // through the shared builder in ./builder.ts.
 
-import { pattern, extractEmails, dayToCron } from './builder.js'
 import { z } from 'zod'
 import type { CommandPattern } from '../types.js'
+import { dayToCron, extractEmails, pattern } from './builder.js'
 
 export const workflowPatterns: CommandPattern[] = [
   pattern('workflow.newsletter', 'workflow.newsletter', 'Create a newsletter workflow', {

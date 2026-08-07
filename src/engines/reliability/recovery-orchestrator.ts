@@ -2,9 +2,9 @@
 // RecoveryOrchestrator — coordinates failure classification and recovery.
 // Phase 9: Subscribes to SlaveCrashed events and applies class-specific strategies.
 
+import { EngineError } from '../../errors.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'
-import { EngineError } from '../../errors.js'
 import type { FailureClass, RecoveryStrategy } from '../actor/messages.js'
 import type { EventBus, FleetEvent } from '../events/event-bus.js'
 import { classifyFailure } from './classifier.js'

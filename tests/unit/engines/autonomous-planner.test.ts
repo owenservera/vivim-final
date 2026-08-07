@@ -128,7 +128,7 @@ describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
     // Task should have steps from the resolver
     expect(task.steps.length).toBeGreaterThan(0)
     // Step action should be the capabilityId
-    expect(task.steps[0]!.action).toBe('cap:test:action')
+    expect(task.steps[0]?.action).toBe('cap:test:action')
   })
 
   it('planGoal falls back to local planner when no resolver', async () => {
@@ -146,7 +146,7 @@ describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
 
     // Should use local planner and create a navigate step
     expect(task.steps.length).toBeGreaterThan(0)
-    expect(task.steps[0]!.action).toBe('navigate')
+    expect(task.steps[0]?.action).toBe('navigate')
   })
 
   it('planGoal with empty intent returns empty steps', async () => {
@@ -204,7 +204,7 @@ describe('AutonomousExecutionEngine — Unit 8.1: LLM-backed planner', () => {
 
     // Destructive step should require approval when threshold is 'read'
     expect(steps.length).toBe(1)
-    expect(steps[0]!.requiresHumanApproval).toBe(true)
-    expect(steps[0]!.classification).toBe('destructive')
+    expect(steps[0]?.requiresHumanApproval).toBe(true)
+    expect(steps[0]?.classification).toBe('destructive')
   })
 })

@@ -2,6 +2,7 @@
 // IndexingPipeline — automatic indexing of messages and facts with debouncing.
 // Enqueues content for embedding and flushes in batches to avoid flooding the embedder.
 
+import { catchDebug } from '../lib/catch-logger.js'
 import type { SemanticSearchEngine } from './semantic-search.js'
 
 interface IndexJob {
@@ -61,6 +62,7 @@ export class IndexingPipeline {
         })),
       )
     } catch {
+      catchDebug(_err, 'engines:indexing-pipeline:63')
       // Log error but don't crash — indexing is best-effort
     }
   }

@@ -57,6 +57,7 @@ const PROVIDER_SCRIPTS: Record<string, string[]> = {
         return k.startsWith('$cdc_') || k.startsWith('$wdc_');
       });
       docKeys.forEach(function(k) { try { delete document[k]; } catch(e) {} });
+        catchDebug(e, 'engines:anti-detection:59')
     })()`,
   ],
   chatgpt: [

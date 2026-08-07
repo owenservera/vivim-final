@@ -28,6 +28,7 @@ export interface CdpBindingStore {
     reason?: string
   }): Promise<void>
 }
+import { catchDebug } from '../lib/catch-logger.js'
 import { makeHarnessCapability } from './harness/make-harness-capability.js'
 import { configToProgram } from './harness/program-schema.js'
 import type {
@@ -183,6 +184,7 @@ export function registerDiscoveredCdpMethods(
             .catch(() => {})
           bound.push(desc.fullName)
         } catch {
+          catchDebug(_err, 'engines:cdp-capability-registrar:185')
           /* binding persistence is best-effort */
         }
       }

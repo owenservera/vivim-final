@@ -189,12 +189,12 @@ export function createNodeRouter(ctx: ServerContext) {
           for (const e of outgoing) {
             const key = e.targetId
             if (!neighborMap.has(key)) neighborMap.set(key, { edges: [], node: null })
-            neighborMap.get(key)!.edges.push({ direction: 'outgoing', ...e })
+            neighborMap.get(key)?.edges.push({ direction: 'outgoing', ...e })
           }
           for (const e of incoming) {
             const key = e.targetId
             if (!neighborMap.has(key)) neighborMap.set(key, { edges: [], node: null })
-            neighborMap.get(key)!.edges.push({ direction: 'incoming', ...e })
+            neighborMap.get(key)?.edges.push({ direction: 'incoming', ...e })
           }
           // Fetch neighbor nodes in batch
           const ids = [...neighborMap.keys()]

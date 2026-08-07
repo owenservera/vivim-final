@@ -233,7 +233,7 @@ class Parser {
       this.peek()?.type === '>=' ||
       this.peek()?.type === '<='
     ) {
-      const op = this.advance()!.type as string
+      const op = this.advance()?.type as string
       const right = this.parseUnary()
       left = { kind: 'binary', op, left, right }
     }
@@ -344,9 +344,9 @@ function evaluate(node: ASTNode, vars: Record<string, unknown>): unknown {
       const right = evaluate(node.right, vars)
       switch (node.op) {
         case '==':
-          return left === right || left == right
+          return left === right || left === right
         case '!=':
-          return left !== right && left != right
+          return left !== right && left !== right
         case '>':
           return (left as number) > (right as number)
         case '<':

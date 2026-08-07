@@ -94,14 +94,14 @@ describe('S1/S2: ingest projection + thread render', () => {
       where: { agentSessionId: agentSession?.id },
     })
     expect(perms.length).toBe(1)
-    expect(perms[0]!.toolName).toBe('read')
-    expect(perms[0]!.decidedBy).toBe('governor')
+    expect(perms[0]?.toolName).toBe('read')
+    expect(perms[0]?.decidedBy).toBe('governor')
 
     const edits = await prisma.agentFileEdit.findMany({
       where: { agentSessionId: agentSession?.id },
     })
     expect(edits.length).toBe(1)
-    expect(JSON.parse(edits[0]!.patchJson)[0]!.op).toBe('add')
+    expect(JSON.parse(edits[0]?.patchJson)[0]?.op).toBe('add')
 
     const recs = await prisma.eventRecord.findMany({ where: { source: 'opencode' } })
     expect(recs.length).toBeGreaterThanOrEqual(4)

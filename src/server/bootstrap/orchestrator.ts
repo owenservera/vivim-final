@@ -12,15 +12,15 @@
 //   capabilities  capabilities.ts— OPTIONAL-but-central: registry + all cap sets + MCP + memory fabric
 //   lifecycle     lifecycle.ts   — NLCL + kernel + health kernel + reliability engines + router stores
 
+import { UnifiedCapabilityRegistry } from '../../engines/unified-registry.js'
+import { getLogger } from '../../lib/logger.js'
 import type { BootstrapContext, BootstrapEnginesResult } from './context.js'
 import { createBootstrapContext } from './context.js'
+import { bootstrapCapabilitiesPhase } from './phases/capabilities.js'
+import { bootstrapKnowledgePhase } from './phases/knowledge.js'
+import { bootstrapLifecyclePhase } from './phases/lifecycle.js'
 import { bootstrapSeedsPhase } from './phases/seeds.js'
 import { bootstrapStoresPhase } from './phases/stores.js'
-import { bootstrapKnowledgePhase } from './phases/knowledge.js'
-import { bootstrapCapabilitiesPhase } from './phases/capabilities.js'
-import { bootstrapLifecyclePhase } from './phases/lifecycle.js'
-import { getLogger } from '../../lib/logger.js'
-import { UnifiedCapabilityRegistry } from '../../engines/unified-registry.js'
 
 const log = getLogger('bootstrap:orchestrator')
 

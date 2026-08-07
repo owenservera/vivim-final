@@ -71,7 +71,7 @@ describe('IntentDecomposer — clarify flow', () => {
     )
     const result = await decomposer.clarify('confusing input', ctx, 0.3)
     expect(bus.events).toHaveLength(1)
-    expect(bus.events[0]!.type).toBe('intent:clarify')
+    expect(bus.events[0]?.type).toBe('intent:clarify')
     expect(result.options.length).toBeGreaterThanOrEqual(1)
     expect(result.question).toBeTruthy()
   })

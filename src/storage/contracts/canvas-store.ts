@@ -121,28 +121,6 @@ export function rowToDefinition(row: CanvasDefinitionRow): CanvasDefinition {
     sandbox: JSON.parse(row.sandboxJson) as CanvasDefinition['sandbox'],
     status: row.status,
     tags: JSON.parse(row.tagsJson) as string[],
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  }
-}
-
-export function definitionToRow(def: CanvasDefinition): CanvasDefinitionRow {
-  return {
-    id: def.id,
-    slug: def.slug,
-    name: def.name,
-    description: def.description,
-    category: def.category,
-    version: def.version,
-    html: def.html,
-    css: def.css,
-    scriptUrl: def.scriptUrl ?? null,
-    bindingsJson: JSON.stringify(def.bindings),
-    layoutJson: JSON.stringify(def.layout),
-    author: def.author,
-    sandboxJson: JSON.stringify(def.sandbox),
-    status: def.status,
-    tagsJson: JSON.stringify(def.tags),
     createdAt: def.createdAt,
     updatedAt: def.updatedAt,
   }

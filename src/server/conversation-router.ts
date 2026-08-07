@@ -8,6 +8,7 @@ import type {
   ResolvedCapabilities,
   ResolvedCapability,
 } from '../engines/capability-resolution.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
 
@@ -178,6 +179,7 @@ export function createConversationRouter(ctx: ServerContext) {
         try {
           await ctx.governor.kill(slaveId)
         } catch {
+          catchDebug(_err, 'server:conversation-router:180')
           // best-effort kill; return success
         }
         return json({ ok: true })
@@ -270,9 +272,21 @@ export function createConversationRouter(ctx: ServerContext) {
         return json({ ok: true })
       }
 
-      // GET /api/health — general liveness (local-first, single-user)
+      // GET /api/health — general liveness + DB readiness (local-first, single-user)
+      // Session 2 (2026-08-07): Added `db: 'ok'|'unreachable'` to the response
+      // so the frontend health route can distinguish backend-up from db-up.
+      // Returns 503 when the DB is unreachable so load balancers can route
+      // around a degraded instance.
       if (pathname === '/api/health' && method === 'GET') {
-        return json({ status: 'ok' })
+        let dbStatus: 'ok' | 'unreachable' = 'ok'
+        try {
+          // Cheap liveness probe — listProviders hits the provider table.
+          await ctx.db.listProviders()
+        } catch {
+          dbStatus = 'unreachable'
+        }
+        const status = dbStatus === 'ok' ? 'ok' : 'degraded'
+        return json({ status, db: dbStatus }, dbStatus === 'ok' ? 200 : 503)
       }
 
       // Session — local-first stub (no real auth; returns success for login)

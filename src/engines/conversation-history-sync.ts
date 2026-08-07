@@ -1,3 +1,4 @@
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type {
   ConversationStore,
@@ -77,8 +78,8 @@ export class ConversationHistorySyncEngine {
    */
   async sync(accountId: string, slaveId: string, opts: SyncOptions = {}): Promise<SyncResult> {
     const syncType = opts.syncType ?? 'incremental'
-    const batchSize = opts.batchSize ?? 50
-    const maxConversations = opts.maxConversations ?? 500
+    const _batchSize = opts.batchSize ?? 50
+    const _maxConversations = opts.maxConversations ?? 500
     const startTime = Date.now()
 
     log.info({ providerId: this.providerId, accountId, syncType }, 'Starting conversation sync')
@@ -157,6 +158,7 @@ export class ConversationHistorySyncEngine {
 
       return result
     } catch (err) {
+      catchDebug(err, 'engines:conversation-history-sync:159')
       const errorMsg = err instanceof Error ? err.message : String(err)
 
       await this.syncStateStore.updateSyncStatus(this.providerId, accountId, 'failed', errorMsg)
@@ -232,6 +234,7 @@ export class ConversationHistorySyncEngine {
         const parsed = JSON.parse(state.cursorJson) as { cursor?: string }
         cursor = parsed.cursor
       } catch {
+        catchDebug(_err, 'engines:conversation-history-sync:234')
         /* ignore invalid cursor */
       }
     }
@@ -316,7 +319,7 @@ export class ConversationHistorySyncEngine {
     accountId: string,
     auth: AuthContext,
     conversationIds: string[],
-    opts: SyncOptions,
+    _opts: SyncOptions,
     startTime: number,
     syncLogId: string,
   ): Promise<SyncResult> {

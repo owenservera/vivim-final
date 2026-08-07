@@ -2,6 +2,7 @@
 // SituationDetector — classify user's current task type from message + history.
 
 import { newId } from '../ids.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { SituationStore } from '../storage/contracts/situation-store.js'
 import type { MemoryEngine } from './memory-engine.js'
 
@@ -312,6 +313,7 @@ export class SituationDetector {
           timestamp: Date.now(),
         })
       } catch {
+        catchDebug(_err, 'engines:situation-detector:314')
         // Best-effort logging
       }
     }
@@ -403,6 +405,7 @@ export class SituationDetector {
         }
       }
     } catch {
+      catchDebug(_err, 'engines:situation-detector:405')
       // Best-effort preference boost
     }
   }

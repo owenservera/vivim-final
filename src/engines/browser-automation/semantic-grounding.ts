@@ -4,6 +4,7 @@
 // governor.evaluate (Governor Canon). No BunCdpClient import.
 
 import { EngineError } from '../../errors.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { AccessibilityNode, ResolvedElement, SemanticSelector } from './types.js'
 
@@ -39,6 +40,7 @@ export class SemanticGroundingEngine {
           const r = await this.resolve(slaveId, sub)
           return { ...r, healed: r.healed }
         } catch {
+          catchDebug(_err, 'engines:browser-automation:semantic-grounding:41')
           // try next
         }
       }

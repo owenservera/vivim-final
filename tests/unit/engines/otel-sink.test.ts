@@ -45,7 +45,7 @@ describe('OtelSink', () => {
     sink.emit('info', 'hello', { 'custom.key': 'value' }, { 'custom.res': 'res-val' })
     await sink.flush()
 
-    const body = JSON.parse(fetchMock.mock.calls[0]![1]!.body)
+    const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body)
     expect(body.resourceLogs).toHaveLength(1)
     expect(body.resourceLogs[0].resource.attributes).toEqual(
       expect.arrayContaining([
@@ -86,11 +86,11 @@ describe('OtelSink', () => {
     }
     await largeBatchSink.flush()
 
-    const body = JSON.parse(fetchMock.mock.calls[0]![1]!.body)
-    const records = body.resourceLogs[0]!.scopeLogs[0]!.logRecords
+    const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body)
+    const records = body.resourceLogs[0]?.scopeLogs[0]?.logRecords
     expect(records).toHaveLength(6)
     for (let i = 0; i < cases.length; i++) {
-      expect(records[i]!.severityNumber).toBe(cases[i]![1])
+      expect(records[i]?.severityNumber).toBe(cases[i]?.[1])
     }
     await largeBatchSink.close()
   })
@@ -99,7 +99,7 @@ describe('OtelSink', () => {
     sink.emit('custom_level', 'custom msg')
     await sink.flush()
 
-    const record = JSON.parse(fetchMock.mock.calls[0]![1]!.body).resourceLogs[0]!.scopeLogs[0]
+    const record = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body).resourceLogs[0]?.scopeLogs[0]
       .logRecords[0]
     expect(record.severityNumber).toBe(9)
   })
@@ -136,7 +136,7 @@ describe('OtelSink', () => {
     })
     await sink.flush()
 
-    const record = JSON.parse(fetchMock.mock.calls[0]![1]!.body).resourceLogs[0]!.scopeLogs[0]
+    const record = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body).resourceLogs[0]?.scopeLogs[0]
       .logRecords[0]
     expect(record.body.stringValue).toContain('gen_ai')
     expect(record.body.stringValue).toContain('cap:send_message')
@@ -153,7 +153,7 @@ describe('OtelSink', () => {
     })
     await sink.flush()
 
-    const record = JSON.parse(fetchMock.mock.calls[0]![1]!.body).resourceLogs[0]!.scopeLogs[0]
+    const record = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body).resourceLogs[0]?.scopeLogs[0]
       .logRecords[0]
     expect(record.severityText).toBe('ERROR')
   })
@@ -178,7 +178,7 @@ describe('OtelSink', () => {
     }
     await sink.flush()
 
-    const body = JSON.parse(fetchMock.mock.calls[0]![1]!.body)
+    const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body)
     expect(body.resourceLogs[0].scopeLogs[0].logRecords).toHaveLength(1)
 
     unsub()

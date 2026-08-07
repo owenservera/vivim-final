@@ -6,6 +6,7 @@ import type { MirrorEngine } from './mirror-engine.js'
 import type { ObservationTap } from './observation-tap.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
+import { catchDebug } from '../lib/catch-logger.js'
 import { LoopDetector } from './loop-detector.js'
 
 const log = getLogger('agentic-loop')
@@ -169,6 +170,7 @@ export class AgenticLoopEngine {
       try {
         return await strategy.plan(goal, context)
       } catch {
+        catchDebug(_err, 'engines:agentic-loop:171')
         // try next strategy
       }
     }

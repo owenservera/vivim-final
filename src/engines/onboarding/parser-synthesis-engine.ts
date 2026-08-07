@@ -241,7 +241,10 @@ export class ParserSynthesisEngine {
         if (expectedType === 'array') return Array.isArray(v)
         if (expectedType === 'object')
           return typeof v === 'object' && v !== null && !Array.isArray(v)
-        return typeof v === (expectedType as 'string' | 'number' | 'boolean')
+        if (expectedType === 'string') return typeof v === 'string'
+        if (expectedType === 'number') return typeof v === 'number'
+        if (expectedType === 'boolean') return typeof v === 'boolean'
+        return false
       }).length
       typeStabilitySum += stableCount / valuesFor.length
     }

@@ -248,7 +248,9 @@ export function createLlmHarnessRouter() {
 
       const result = await a.producePlan(parsed.data.userRequest)
       if (!result.ok || !result.plan) {
-        return json({ ok: false, error: result.error, retries: result.retries }, 500)
+        return errorResponse(result.error ?? 'Plan generation failed', 'ExecutionError', 500, {
+          retries: result.retries,
+        })
       }
 
       // Mint confirmation.

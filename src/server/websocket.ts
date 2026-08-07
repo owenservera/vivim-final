@@ -326,6 +326,7 @@ export const handleWebSocket = {
         return
       }
     } catch (_err) {
+      catchDebug(_err, 'server:websocket:328')
       // Malformed message — ignore
     }
   },

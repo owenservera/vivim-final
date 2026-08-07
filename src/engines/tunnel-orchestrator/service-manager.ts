@@ -5,151 +5,157 @@
  * Starts them in the correct order, monitors health, and handles restarts.
  */
 
-import { getLogger } from "../../lib/tunnel-shared/logger.js";
-import { HealthMonitor } from "./health-monitor.js";
-import { TunnelClient } from "../tunnel-client/index.js";
-import { P2PNode } from "../p2p-node/index.js";
-import { LocalServer } from "../local-server/index.js";
-import type { VivimConfig } from "../../lib/tunnel-shared/types.js";
+import { getLogger } from '../../lib/tunnel-shared/logger.js'
+import type { VivimConfig } from '../../lib/tunnel-shared/types.js'
+import { LocalServer } from '../local-server/index.js'
+import { P2PNode } from '../p2p-node/index.js'
+import { TunnelClient } from '../tunnel-client/index.js'
+import { HealthMonitor } from './health-monitor.js'
 
-const log = getLogger("service-manager");
+const log = getLogger('service-manager')
 
 export class ServiceManager {
-  private config: VivimConfig;
-  private tunnelClient: TunnelClient;
-  private p2pNode: P2PNode;
-  private localServer: LocalServer;
-  private healthMonitor: HealthMonitor;
-  private startedAt: number = 0;
+  private config: VivimConfig
+  private tunnelClient: TunnelClient
+  private p2pNode: P2PNode
+  private localServer: LocalServer
+  private healthMonitor: HealthMonitor
+  private startedAt = 0
 
   constructor(config: VivimConfig) {
-    this.config = config;
-    this.tunnelClient = new TunnelClient(config);
-    this.p2pNode = new P2PNode(config);
-    this.localServer = new LocalServer(config);
-    this.healthMonitor = new HealthMonitor(config);
+    this.config = config
+    this.tunnelClient = new TunnelClient(config)
+    this.p2pNode = new P2PNode(config)
+    this.localServer = new LocalServer(config)
+    this.healthMonitor = new HealthMonitor(config)
 
-    this.healthMonitor.registerService("tunnel-client");
-    this.healthMonitor.registerService("p2p-node");
-    this.healthMonitor.registerService("local-server");
+    this.healthMonitor.registerService('tunnel-client')
+    this.healthMonitor.registerService('p2p-node')
+    this.healthMonitor.registerService('local-server')
 
-    this.healthMonitor.on("restart", async (name: string, attempt: number) => {
-      log.info({ name, attempt }, "Restarting service");
-      await this.restartService(name);
-    });
+    this.healthMonitor.on('restart', async (name: string, attempt: number) => {
+      log.info({ name, attempt }, 'Restarting service')
+      await this.restartService(name)
+    })
 
-    this.healthMonitor.on("fatal", (error: Error) => {
-      log.error({ err: error.message }, "Fatal service error");
-    });
+    this.healthMonitor.on('fatal', (error: Error) => {
+      log.error({ err: error.message }, 'Fatal service error')
+    })
   }
 
   async start(): Promise<void> {
-    this.startedAt = Date.now();
-    log.info("Starting all services");
+    this.startedAt = Date.now()
+    log.info('Starting all services')
 
-    await this.startService("local-server", async () => {
-      await this.localServer.start();
-    });
+    await this.startService('local-server', async () => {
+      await this.localServer.start()
+    })
 
-    await this.startService("tunnel-client", async () => {
-      await this.tunnelClient.start();
-    });
+    await this.startService('tunnel-client', async () => {
+      await this.tunnelClient.start()
+    })
 
-    await this.startService("p2p-node", async () => {
-      await this.p2pNode.start();
-    });
+    await this.startService('p2p-node', async () => {
+      await this.p2pNode.start()
+    })
 
-    this.healthMonitor.start();
-    log.info("All services started");
+    this.healthMonitor.start()
+    log.info('All services started')
   }
 
   async stop(): Promise<void> {
-    log.info("Stopping all services");
-    this.healthMonitor.stop();
+    log.info('Stopping all services')
+    this.healthMonitor.stop()
 
-    await this.stopService("p2p-node", async () => {
-      await this.p2pNode.stop();
-    });
+    await this.stopService('p2p-node', async () => {
+      await this.p2pNode.stop()
+    })
 
-    await this.stopService("tunnel-client", async () => {
-      await this.tunnelClient.stop();
-    });
+    await this.stopService('tunnel-client', async () => {
+      await this.tunnelClient.stop()
+    })
 
-    await this.stopService("local-server", async () => {
-      await this.localServer.stop();
-    });
+    await this.stopService('local-server', async () => {
+      await this.localServer.stop()
+    })
 
-    log.info("All services stopped");
+    log.info('All services stopped')
   }
 
   private async startService(name: string, startFn: () => Promise<void>): Promise<void> {
-    this.healthMonitor.updateServiceStatus(name, "starting");
+    this.healthMonitor.updateServiceStatus(name, 'starting')
     try {
-      await startFn();
-      this.healthMonitor.updateServiceStatus(name, "running");
-      log.info({ service: name }, "Service started");
+      await startFn()
+      this.healthMonitor.updateServiceStatus(name, 'running')
+      log.info({ service: name }, 'Service started')
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      this.healthMonitor.updateServiceStatus(name, "error", errMsg);
-      log.error({ service: name, err: errMsg }, "Service failed to start");
+      const errMsg = err instanceof Error ? err.message : String(err)
+      this.healthMonitor.updateServiceStatus(name, 'error', errMsg)
+      log.error({ service: name, err: errMsg }, 'Service failed to start')
     }
   }
 
   private async stopService(name: string, stopFn: () => Promise<void>): Promise<void> {
-    this.healthMonitor.updateServiceStatus(name, "stopping");
+    this.healthMonitor.updateServiceStatus(name, 'stopping')
     try {
-      await stopFn();
-      this.healthMonitor.updateServiceStatus(name, "stopped");
-      log.info({ service: name }, "Service stopped");
+      await stopFn()
+      this.healthMonitor.updateServiceStatus(name, 'stopped')
+      log.info({ service: name }, 'Service stopped')
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      log.error({ service: name, err: errMsg }, "Service failed to stop");
+      const errMsg = err instanceof Error ? err.message : String(err)
+      log.error({ service: name, err: errMsg }, 'Service failed to stop')
     }
   }
 
   private async restartService(name: string): Promise<void> {
-    this.healthMonitor.updateServiceStatus(name, "stopping");
+    this.healthMonitor.updateServiceStatus(name, 'stopping')
     try {
       switch (name) {
-        case "tunnel-client":
-          await this.tunnelClient.stop();
-          await new Promise((resolve) => setTimeout(resolve, this.config.orchestrator.restartDelayMs));
-          await this.tunnelClient.start();
-          break;
-        case "p2p-node":
-          await this.p2pNode.stop();
-          await new Promise((resolve) => setTimeout(resolve, this.config.orchestrator.restartDelayMs));
-          await this.p2pNode.start();
-          break;
-        case "local-server":
-          await this.localServer.stop();
-          await new Promise((resolve) => setTimeout(resolve, this.config.orchestrator.restartDelayMs));
-          await this.localServer.start();
-          break;
+        case 'tunnel-client':
+          await this.tunnelClient.stop()
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.config.orchestrator.restartDelayMs),
+          )
+          await this.tunnelClient.start()
+          break
+        case 'p2p-node':
+          await this.p2pNode.stop()
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.config.orchestrator.restartDelayMs),
+          )
+          await this.p2pNode.start()
+          break
+        case 'local-server':
+          await this.localServer.stop()
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.config.orchestrator.restartDelayMs),
+          )
+          await this.localServer.start()
+          break
       }
-      this.healthMonitor.updateServiceStatus(name, "running");
-      log.info({ service: name }, "Service restarted");
+      this.healthMonitor.updateServiceStatus(name, 'running')
+      log.info({ service: name }, 'Service restarted')
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      this.healthMonitor.updateServiceStatus(name, "error", errMsg);
-      log.error({ service: name, err: errMsg }, "Service failed to restart");
+      const errMsg = err instanceof Error ? err.message : String(err)
+      this.healthMonitor.updateServiceStatus(name, 'error', errMsg)
+      log.error({ service: name, err: errMsg }, 'Service failed to restart')
     }
   }
 
   getTunnelClient(): TunnelClient {
-    return this.tunnelClient;
+    return this.tunnelClient
   }
 
   getP2PNode(): P2PNode {
-    return this.p2pNode;
+    return this.p2pNode
   }
 
   getLocalServer(): LocalServer {
-    return this.localServer;
+    return this.localServer
   }
 
   getHealthMonitor(): HealthMonitor {
-    return this.healthMonitor;
+    return this.healthMonitor
   }
 
   getStatus() {
@@ -171,6 +177,6 @@ export class ServiceManager {
         port: this.localServer.getPort(),
         requestCount: this.localServer.getRequestCount(),
       },
-    };
+    }
   }
 }

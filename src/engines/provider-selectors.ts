@@ -102,6 +102,7 @@ export async function findWorkingSelector(
         return selector
       }
     } catch {
+      catchDebug(_err, 'engines:provider-selectors:104')
       // CDP error — skip
     }
   }

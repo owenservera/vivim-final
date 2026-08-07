@@ -23,6 +23,7 @@ import { WebAppTaxonomyStoreImpl } from '../storage/impl/onboarding/webapp-taxon
 import { serviceContainer } from './service-container.js'
 
 /**
+const log = getLogger('server:onboarding boot')
  * Construct + register the onboarding orchestrator in the ServiceContainer.
  * Called once from src/server/index.ts boot.
  *
@@ -80,7 +81,7 @@ export async function bootOnboardingPipeline(
   } catch (err) {
     // Best-effort — onboarding is optional. If construction fails (e.g. a
     // store impl throws), log and continue without the orchestrator.
-    console.warn('[boot] onboarding pipeline not available:', err)
+    log.warn('[boot] onboarding pipeline not available:', err)
     return null
   }
 }

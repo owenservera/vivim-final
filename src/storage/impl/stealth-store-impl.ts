@@ -181,7 +181,7 @@ export class PrismaStealthStore implements StealthProfileStore {
     }
   }
   async upsertPolicy(data: Partial<StealthPolicyRow>): Promise<void> {
-    const existing = await this.getPolicy()
+    const _existing = await this.getPolicy()
     await this.prisma.stealthPolicy.upsert({
       where: { id: 'default' },
       create: {

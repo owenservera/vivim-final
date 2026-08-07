@@ -170,7 +170,7 @@ export class ChatGPTAdapter implements ProviderConversationAdapter {
     if (response.status === 429) {
       const retryAfter = response.headers.get('Retry-After')
       throw new AdapterError(
-        `ChatGPT rate limited`,
+        'ChatGPT rate limited',
         this.providerId,
         'RATE_LIMITED',
         true,
@@ -356,7 +356,7 @@ function parseMessageNode(id: string, node: RawMappingNode): ConversationMessage
       const c = msg.content
       if (c.parts) {
         const textParts: string[] = []
-        const imgSeq = 0
+        const _imgSeq = 0
 
         for (const p of c.parts as unknown[]) {
           if (typeof p === 'string') {

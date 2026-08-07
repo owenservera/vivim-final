@@ -6,9 +6,9 @@
 import { z } from 'zod'
 import type { CliCommand, CommandRegistry } from '../command-registry.js'
 import { runAutomate } from './automate.js'
+import { runMigrate } from './migrate.js'
 import { runMoments } from './moments.js'
 import { runSeed } from './seed.js'
-import { runMigrate } from './migrate.js'
 
 /**
  * Register the hand-written builtin commands. Called from src/cli/index.ts

@@ -151,8 +151,8 @@ describe('NodeManager', () => {
     await manager.start()
     const peers = manager.getPeers()
     expect(peers).toHaveLength(1)
-    expect(peers[0]!.peerId).toBe('peer-abc')
-    expect(peers[0]!.isRelayed).toBe(false)
+    expect(peers[0]?.peerId).toBe('peer-abc')
+    expect(peers[0]?.isRelayed).toBe(false)
   })
 
   it('getPeers detects relayed connections', async () => {
@@ -165,7 +165,7 @@ describe('NodeManager', () => {
 
     await manager.start()
     const peers = manager.getPeers()
-    expect(peers[0]!.isRelayed).toBe(true)
+    expect(peers[0]?.isRelayed).toBe(true)
   })
 
   it('getMetrics returns initial metrics when stopped', () => {

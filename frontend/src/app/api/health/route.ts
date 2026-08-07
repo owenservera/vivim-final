@@ -1,11 +1,16 @@
-/** GET /api/health — lightweight health check for load balancers and monitors. */
+/** GET /api/health — lightweight health check for load balancers and monitors.
+ *
+ * Session 2 (2026-08-07): Changed `dynamic` from `force-static` to
+ * `force-dynamic`. Previously this route was prerendered at build time, so
+ * uptime/backendOk/dbOk were frozen and never reflected runtime state.
+ */
 
 import { apiHandler } from '@/lib/api-error-handler'
 import { NextResponse } from 'next/server'
 
 const startedAt = Date.now()
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 
 export const GET = apiHandler(async () => {
   const uptime = Math.floor((Date.now() - startedAt) / 1000)
@@ -19,7 +24,7 @@ export const GET = apiHandler(async () => {
     })
     backendOk = res.ok
     if (backendOk) {
-      const data = (await res.json()) as { db?: string }
+      const data = (await res.json()) as { status?: string; db?: string }
       dbOk = data.db === 'ok'
     }
   } catch {

@@ -768,7 +768,7 @@ export function getModulesByLayer(): Record<string, string[]> {
     // Use the first non-'core' tag as the layer, or fall back to the first tag
     const layer = def.tags.find((t) => t !== 'core') ?? def.tags[0]!
     if (!layers[layer]) layers[layer] = []
-    layers[layer]!.push(def.name)
+    layers[layer]?.push(def.name)
   }
   return layers
 }

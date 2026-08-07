@@ -5,6 +5,7 @@ import { type FSWatcher, watch } from 'node:fs'
 import { readdir, stat } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ export class PluginHotReload {
         }
       }
     } catch {
+      catchDebug(_err, 'engines:plugin-hot-reload:92')
       // Directory may not exist yet
     }
   }

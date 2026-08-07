@@ -21,9 +21,9 @@
 //     score(d) = sum over retrievers of 1 / (k + rank_retriever(d))
 //     k=60 standard.
 
+import { EngineError } from '../../errors.js'
 import { MiniLmEmbeddingProvider } from '../embedding-minilm.js'
 import type { EmbeddingProvider } from '../semantic-search.js'
-import { EngineError } from '../../errors.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { buildIntentFromPattern } from './pattern-match.js'
 import { type SparseVector, Tfidf, cosineSimilarity } from './tfidf.js'

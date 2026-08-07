@@ -6,6 +6,7 @@
 // MemoryFabric. Depends only on store contracts (Store Contracts invariant).
 
 import { newId } from '../../ids.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import { createNode } from '../../schema/node.js'
 import type { KnowledgeExtractorStore } from '../../storage/contracts/knowledge-extractor-store.js'
 import type { NodeStoreContract } from '../../storage/contracts/node-store.js'
@@ -31,6 +32,7 @@ function readMeta(row: { metaJson: string }): ScopedMeta | null {
       return { ownerAgentId: String(m.ownerAgentId), scope: String(m.scope) }
     }
   } catch {
+    catchDebug(_err, 'engines:memory:memory-oracle:33')
     /* ignore */
   }
   return null

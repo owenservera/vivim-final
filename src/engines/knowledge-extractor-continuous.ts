@@ -2,6 +2,7 @@
 // KnowledgeExtractorContinuous — runs extraction on every assistant message in the background.
 // Subscribes to conversation:complete events and applies confidence boost for successful turns.
 
+import { catchDebug } from '../lib/catch-logger.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { KnowledgeExtractor } from './knowledge-extractor.js'
 import type { MemoryEngine } from './memory-engine.js'
@@ -62,6 +63,7 @@ export class KnowledgeExtractorContinuous {
           })
         }
       } catch {
+        catchDebug(_err, 'engines:knowledge-extractor-continuous:64')
         // Continue processing other messages even if one fails
       }
     }

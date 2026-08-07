@@ -4,6 +4,7 @@
 // registers the NLCL (Natural Language Command Layer) as a first-class kernel citizen.
 
 import { ulid } from '../../ids.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { ConfigStore } from '../../storage/contracts/config-store.js'
 import type { KernelStore } from '../../storage/contracts/kernel-store.js'
 import type { CapStoreDb } from '../../storage/db.js'
@@ -245,13 +246,13 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
     actuator.registerReconnectable('chrome-governor', {
       reconnect: async (providerId: string) => {
         // Kill any errored slave for this provider, then relaunch.
-        const slaves = deps.governor!.getAllSlaves({ providerId })
+        const slaves = deps.governor?.getAllSlaves({ providerId })
         for (const slave of slaves) {
           if (slave.status === 'error') {
-            await deps.governor!.kill(slave.slaveId).catch(() => {})
+            await deps.governor?.kill(slave.slaveId).catch(() => {})
           }
         }
-        await deps.governor!.launch(providerId)
+        await deps.governor?.launch(providerId)
       },
     })
   }
@@ -297,6 +298,7 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
           }
         }
       } catch {
+        catchDebug(_err, 'engines:kernel:kernel-bootstrap:299')
         // Diagnostic loop must never crash the server.
       }
     })()

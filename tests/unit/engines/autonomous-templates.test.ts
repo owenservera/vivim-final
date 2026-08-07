@@ -110,11 +110,11 @@ describe('AutonomousExecutionEngine — Unit 8.10: Task templates', () => {
     expect(id).toBeDefined()
     const row = await store.getTaskTemplate(id)
     expect(row).not.toBeNull()
-    expect(row!.name).toBe('Refactor Module')
-    expect(row!.planJson).toBe('Refactor {moduleName} to use {targetPattern}')
-    expect(JSON.parse(row!.paramsJson as string)).toEqual(['moduleName', 'targetPattern'])
-    expect(row!.version).toBe(1)
-    expect(row!.isShared).toBe(1)
+    expect(row?.name).toBe('Refactor Module')
+    expect(row?.planJson).toBe('Refactor {moduleName} to use {targetPattern}')
+    expect(JSON.parse(row?.paramsJson as string)).toEqual(['moduleName', 'targetPattern'])
+    expect(row?.version).toBe(1)
+    expect(row?.isShared).toBe(1)
   })
 
   it('spawnFromTemplate substitutes bindings and executes', async () => {
@@ -155,6 +155,6 @@ describe('AutonomousExecutionEngine — Unit 8.10: Task templates', () => {
 
     const shared = await store.listTaskTemplates({ isShared: true })
     expect(shared.length).toBe(1)
-    expect(shared[0]!.name).toBe('Shared')
+    expect(shared[0]?.name).toBe('Shared')
   })
 })

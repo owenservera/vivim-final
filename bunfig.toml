@@ -1,3 +1,20 @@
 [test]
 # Prevent indefinite hangs from CDP/Chrome-dependent tests
 timeout = 15000
+
+# Session 2 (2026-08-07): coverage configuration.
+# Targets defined in tests/coverage.config.ts (engines: 80, server: 85, storage: 80, overall: 75).
+# Run with: bun test --coverage
+[coverage]
+enabled = false  # opt-in via --coverage flag
+include = ["src/**"]
+exclude = [
+  "src/__generated__/**",
+  "src/**/*.test.ts",
+  "src/**/*.spec.ts",
+  "src/**/__tests__/**",
+  "src/index.ts",        # barrel export
+  "src/config.ts",       # env wiring, hard to unit-test
+]
+reporter = ["text", "lcov"]
+output = "coverage/"

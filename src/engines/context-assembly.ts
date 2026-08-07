@@ -4,6 +4,7 @@
 
 import { newId } from '../ids.js'
 import { catchDebug } from '../lib/catch-logger.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import type { ContextAssemblyStore } from '../storage/contracts/context-assembly-store.js'
 import type { CapStoreDb } from '../storage/db.js'
 import type { MemoryEngine } from './memory-engine.js'
@@ -691,7 +692,7 @@ export async function buildConversationHistoryLayer(
     let textContent = msg.content ?? ''
     if (msg.blocksJson && msg.blocksJson !== '[]') {
       try {
-        const blocks = JSON.parse(msg.blocksJson) as Array<{ text?: string; type?: string }>
+        const blocks = safeJsonParse<Array<{ text?: string; type?: string }>>(msg.blocksJson, null)
         for (const block of blocks) {
           if (block.text) {
             textContent += (textContent ? '\n' : '') + block.text
@@ -714,7 +715,7 @@ export async function buildConversationHistoryLayer(
       // Truncate the last message to fit
       const remaining = MAX_HISTORY_CHARS - totalChars
       if (remaining > 50) {
-        const truncated = formatted.slice(0, remaining - 1) + '…'
+        const truncated = `${formatted.slice(0, remaining - 1)}…`
         formattedParts.push(truncated)
         totalChars += truncated.length
       }

@@ -97,8 +97,8 @@ describe('getRule', () => {
   it('returns the rule for a known layer', () => {
     const rule = getRule('engines')
     expect(rule).toBeDefined()
-    expect(rule!.layer).toBe('engines')
-    expect(rule!.name).toBe('Engine Layer')
+    expect(rule?.layer).toBe('engines')
+    expect(rule?.name).toBe('Engine Layer')
   })
 
   it('returns undefined for unknown layer', () => {
@@ -318,8 +318,8 @@ describe('scanBoundaryViolations (mock filesystem)', () => {
 
     const result = await scanBoundaryViolations(TMP, mockRules, scanOpts)
     expect(result.violations).toHaveLength(1)
-    expect(result.violations[0]!.fromLayer).toBe('layer-a')
-    expect(result.violations[0]!.toLayer).toBe('layer-b')
+    expect(result.violations[0]?.fromLayer).toBe('layer-a')
+    expect(result.violations[0]?.toLayer).toBe('layer-b')
 
     rmSync(TMP, { recursive: true, force: true })
   })
@@ -442,7 +442,7 @@ import { B } from '../b/mod.js'
 
     const result = await scanBoundaryViolations(TMP, mockRules, scanOpts)
     expect(result.violations).toHaveLength(1)
-    expect(result.violations[0]!.line).toBe(3)
+    expect(result.violations[0]?.line).toBe(3)
 
     rmSync(TMP, { recursive: true, force: true })
   })

@@ -1,5 +1,5 @@
 // tests/unit/engines/update-engine.test.ts
-import { describe, expect, it, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { UpdateEngine } from '../../../src/engines/update-engine.js'
 
 describe('UpdateEngine', () => {
@@ -28,6 +28,8 @@ describe('UpdateEngine', () => {
   it('generates release URLs', () => {
     const getUrl = (updater as any).getReleaseUrl.bind(updater)
     expect(getUrl()).toBe('https://api.github.com/repos/test-owner/test-repo/releases/latest')
-    expect(getUrl('v1.1.0')).toBe('https://api.github.com/repos/test-owner/test-repo/releases/tags/v1.1.0')
+    expect(getUrl('v1.1.0')).toBe(
+      'https://api.github.com/repos/test-owner/test-repo/releases/tags/v1.1.0',
+    )
   })
 })

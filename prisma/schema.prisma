@@ -1,3 +1,17 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// prisma/schema.prisma — vivim-final data layer
+//
+// Session 1 (2026-08-07) note: This file holds 196 models in a single 3,811-LOC
+// file. The 2026-08-06 review run flagged this as P1 FIX-B2-1 ("schema split
+// for maintainability"). After triage, the split is DEFERRED to post-alpha per
+// ADR-014 (`docs/decisions/ADR-014.md`). The schema is functionally correct;
+// the finding is purely about long-term maintainability.
+//
+// Convention for any new model added during alpha: include a one-line comment
+// naming its bounded context, e.g. `// ctx: provider` or `// ctx: memory`. This
+// makes the eventual split mechanical when ADR-014 is reopened.
+// ─────────────────────────────────────────────────────────────────────────────
+
 generator client {
   provider = "prisma-client-js"
 }

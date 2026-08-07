@@ -98,8 +98,8 @@ describe('LiveCapabilityRegistry — http handler', () => {
     const cap = reg.getBySlug('http_cap')!
     await cap.handler?.({ x: 42 }, {} as any)
     expect(audit.calls).toHaveLength(1)
-    expect(audit.calls[0]!.url).toBe('https://consented.example.com/api')
-    expect(audit.calls[0]!.opts.body).toContain('"x"')
+    expect(audit.calls[0]?.url).toBe('https://consented.example.com/api')
+    expect(audit.calls[0]?.opts.body).toContain('"x"')
   })
 
   it('unknown {{var}} → empty string substitution (no throw)', async () => {
@@ -116,7 +116,7 @@ describe('LiveCapabilityRegistry — http handler', () => {
     const cap = reg.getBySlug('http_cap')!
     // x is undefined, so {{x}} becomes empty string
     await cap.handler?.({}, {} as any)
-    expect(audit.calls[0]!.opts.body).toContain('"x":')
+    expect(audit.calls[0]?.opts.body).toContain('"x":')
   })
 
   it('non-consented host → fetch not called, error surfaced', async () => {

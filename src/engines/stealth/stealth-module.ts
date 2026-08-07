@@ -3,7 +3,7 @@
 // running Chrome instance via CDP before any page loads.
 
 import type { z } from 'zod'
-import type { StructuredLogger } from '../logger.js'
+import type { Logger } from '../../lib/logger.js'
 
 export interface StealthCdpProxy {
   send(slaveId: string, method: string, params: Record<string, unknown>): Promise<unknown>
@@ -12,7 +12,7 @@ export interface StealthCdpProxy {
 export interface StealthContext {
   cdp: StealthCdpProxy
   slaveId: string
-  logger?: StructuredLogger
+  logger?: Logger
 }
 
 export interface StealthModuleConfig {

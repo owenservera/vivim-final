@@ -1,7 +1,14 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
   "files": {
-    "include": ["src/", "tests/", "seeds/", "frontend/src/"]
+    "include": ["src/", "tests/", "seeds/", "frontend/src/"],
+    "ignore": [
+      "seeds/taxonomy/openclaw-harvest.json",
+      "seeds/taxonomy/pool.taxonomy.json",
+      "seeds/taxonomy/surface-projections.json",
+      "src/__generated__/**"
+    ],
+    "maxSize": 5242880
   },
   "linter": {
     "enabled": true,
@@ -31,5 +38,24 @@
       "quoteStyle": "single",
       "semicolons": "asNeeded"
     }
-  }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true,
+      "indentWidth": 2,
+      "lineWidth": 100
+    }
+  },
+  "overrides": [
+    {
+      "include": ["tests/**/*.ts", "tests/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noAssignInExpressions": "warn"
+          }
+        }
+      }
+    }
+  ]
 }

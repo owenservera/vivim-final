@@ -7,6 +7,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { EngineError } from '../errors.js'
 import { newId } from '../ids.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { CapStoreDb } from '../storage/db.js'
 import type { EncryptionEngine } from './encryption.js'
 
@@ -266,6 +267,7 @@ export async function importDataToDb(
                   })
                   totalMsgs++
                 } catch {
+                  catchDebug(_err, 'engines:export:268')
                   // Skip invalid messages
                 }
               }
@@ -281,6 +283,7 @@ export async function importDataToDb(
                 await importRow(tx, tableName, row)
                 count++
               } catch {
+                catchDebug(_err, 'engines:export:283')
                 // Skip duplicate or invalid rows
               }
             }

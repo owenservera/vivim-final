@@ -245,7 +245,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toEntityRow(r: any): EntityRow {
+  private toEntityRow(r: Record<string, unknown>): EntityRow {
     return {
       id: r.id as string,
       name: r.name as string,
@@ -312,7 +312,7 @@ export class MemoryIntelligenceStoreImpl {
     return this.listEntityMentions({ conversationId, limit: 200 })
   }
 
-  private toEntityMentionRow(r: any): EntityMentionRow {
+  private toEntityMentionRow(r: Record<string, unknown>): EntityMentionRow {
     return {
       id: r.id as string,
       entityId: r.entityId as string,
@@ -397,7 +397,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toDecisionRecordRow(r: any): DecisionRecordRow {
+  private toDecisionRecordRow(r: Record<string, unknown>): DecisionRecordRow {
     return {
       id: r.id as string,
       conversationId: r.conversationId as string,
@@ -490,7 +490,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toPatternExtractRow(r: any): PatternExtractRow {
+  private toPatternExtractRow(r: Record<string, unknown>): PatternExtractRow {
     return {
       id: r.id as string,
       name: r.name as string,
@@ -605,7 +605,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toTopicRow(r: any): TopicRow {
+  private toTopicRow(r: Record<string, unknown>): TopicRow {
     return {
       id: r.id as string,
       name: r.name as string,
@@ -681,7 +681,7 @@ export class MemoryIntelligenceStoreImpl {
     return this.listProjects()
   }
 
-  private toProjectRow(r: any): ProjectRow {
+  private toProjectRow(r: Record<string, unknown>): ProjectRow {
     return {
       id: r.id as string,
       name: r.name as string,
@@ -788,7 +788,7 @@ export class MemoryIntelligenceStoreImpl {
     return this.toUserPreferenceRow(row)
   }
 
-  private toUserPreferenceRow(r: any): UserPreferenceRow {
+  private toUserPreferenceRow(r: Record<string, unknown>): UserPreferenceRow {
     return {
       id: r.id as string,
       userId: r.userId as string,
@@ -856,7 +856,7 @@ export class MemoryIntelligenceStoreImpl {
     return this.toImportJobRow(row)
   }
 
-  private toImportJobRow(r: any): ImportJobRow {
+  private toImportJobRow(r: Record<string, unknown>): ImportJobRow {
     return {
       id: r.id as string,
       source: r.source as string,
@@ -929,7 +929,7 @@ export class MemoryIntelligenceStoreImpl {
     })
   }
 
-  private toMemoryEmbeddingRow(r: any): MemoryEmbeddingRow {
+  private toMemoryEmbeddingRow(r: Record<string, unknown>): MemoryEmbeddingRow {
     return {
       id: r.id as string,
       entityType: r.entityType as string,

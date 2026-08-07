@@ -7,6 +7,7 @@
 // injected as a narrow interface (send/on/off) by the caller.
 
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import type { CdpSender } from './protocol-discovery.js'
 import type { StreamTransport } from './streaming-response-analyzer.js'
 
@@ -71,6 +72,7 @@ function detectFormatFromBody(body: string): StreamTransport | 'json_stream' {
       JSON.parse(trimmed)
       return 'websocket'
     } catch {
+      catchDebug(_err, 'engines:live-capture-engine:73')
       /* fall through */
     }
   }
@@ -204,6 +206,7 @@ export class LiveCaptureEngine {
         error: rawBody.length > 0 ? undefined : 'No streaming response captured',
       }
     } catch (err) {
+      catchDebug(err, 'engines:live-capture-engine:206')
       return {
         ok: false,
         rawBody: bodyChunks.join(''),
@@ -223,6 +226,7 @@ export class LiveCaptureEngine {
       try {
         await this.client.send('Network.disable', {}, { sessionId: this.sessionId })
       } catch {
+        catchDebug(_err, 'engines:live-capture-engine:225')
         // Best effort — don't fail if disable fails
       }
     }

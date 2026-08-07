@@ -201,7 +201,14 @@ describe('AutonomousExecutionEngine pause/resume (Unit 34.3)', () => {
     // Pause during first step execution
     const registry = {
       execute: async () => {
-        if (callCount++ === 0) await engine.pause(engine ? (engine as unknown as { activeTasks: Map<string, unknown> }).activeTasks.keys().next().value ?? '' : '')
+        if (callCount++ === 0)
+          await engine.pause(
+            engine
+              ? ((engine as unknown as { activeTasks: Map<string, unknown> }).activeTasks
+                  .keys()
+                  .next().value ?? '')
+              : '',
+          )
         return { ok: true }
       },
     } as unknown as UnifiedCapabilityRegistry
@@ -292,7 +299,14 @@ describe('AutonomousExecutionEngine pause/resume (Unit 34.3)', () => {
     // Pause during first step execution
     const registry = {
       execute: async () => {
-        if (callCount++ === 0) await engine.pause(engine ? (engine as unknown as { activeTasks: Map<string, unknown> }).activeTasks.keys().next().value ?? '' : '')
+        if (callCount++ === 0)
+          await engine.pause(
+            engine
+              ? ((engine as unknown as { activeTasks: Map<string, unknown> }).activeTasks
+                  .keys()
+                  .next().value ?? '')
+              : '',
+          )
         return { ok: true }
       },
     } as unknown as UnifiedCapabilityRegistry
@@ -311,7 +325,9 @@ describe('AutonomousExecutionEngine pause/resume (Unit 34.3)', () => {
 
     // Tamper with the cursor — mark all steps as complete in the store
     // This simulates the world changing between pause and resume
-    const steps = await (store as unknown as { getSteps(id: string): Promise<Record<string, unknown>[]> }).getSteps(task.id)
+    const steps = await (
+      store as unknown as { getSteps(id: string): Promise<Record<string, unknown>[]> }
+    ).getSteps(task.id)
     for (const step of steps) {
       await store.updateStep(step.id as string, { status: 'complete' })
     }

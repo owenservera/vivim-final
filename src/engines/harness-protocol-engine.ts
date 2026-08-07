@@ -2,6 +2,7 @@
 // HarnessProtocolEngine — bidirectional LLM↔harness bridge
 // Subsystems: PromptAugmenter, ResponseExtractor, ActionRouter
 
+import { catchDebug } from '../lib/catch-logger.js'
 import type { HarnessNode } from '../schema/harness.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 
@@ -170,6 +171,7 @@ export class ResponseExtractor {
           actions.push(parsed as HarnessAction)
         }
       } catch {
+        catchDebug(_err, 'engines:harness-protocol-engine:172')
         // skip unparseable
       }
     }

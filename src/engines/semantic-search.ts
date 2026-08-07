@@ -489,7 +489,7 @@ export async function searchHybridImpl(
 
   // Add keyword results
   for (const [key, result] of keywordResults) {
-    const [entityType, entityId] = key.split(':')
+    const [_entityType, entityId] = key.split(':')
     const existing = merged.get(key)
     const keywordScore = result.score
 
@@ -538,10 +538,10 @@ function computeKeywordScore(query: string, text: string): number {
 
   // Count occurrences
   let occurrences = 0
-  let pos = 0
-  while ((pos = lowerText.indexOf(lowerQuery, pos)) !== -1) {
+  let pos = lowerText.indexOf(lowerQuery, 0)
+  while (pos !== -1) {
     occurrences++
-    pos += lowerQuery.length
+    pos = lowerText.indexOf(lowerQuery, pos + lowerQuery.length)
   }
 
   if (occurrences === 0) return 0

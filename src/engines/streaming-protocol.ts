@@ -1,6 +1,7 @@
 // src/engines/streaming-protocol.ts
 // StreamingProtocol — progressive block delivery during capture
 
+import { catchDebug } from '../lib/catch-logger.js'
 import type { ContentBlock } from '../schema/streaming.js'
 import type { StreamBlockStoreContract } from '../storage/contracts/stream-block-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
@@ -66,6 +67,7 @@ export class StreamingProtocol {
       try {
         this.eventBus.emit(event as unknown as { type: string; [key: string]: unknown })
       } catch {
+        catchDebug(_err, 'engines:streaming-protocol:68')
         // Non-fatal: best-effort bridge
       }
     }

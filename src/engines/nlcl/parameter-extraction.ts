@@ -3,6 +3,7 @@
 
 import type { ZodSchema } from 'zod'
 import { z } from 'zod'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { DynamicEntityLinker } from './dynamic-entity-linker.js'
 import type { NLCContext } from './types.js'
 
@@ -102,6 +103,7 @@ export async function extractParametersWithLinker(
         }
       }
     } catch {
+      catchDebug(_err, 'engines:nlcl:parameter-extraction:104')
       // Linker failed — leave the sync-extracted value (if any) in place.
     }
   }

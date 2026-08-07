@@ -219,7 +219,7 @@ export function parseShorthand(line: string): SurfaceMutation {
       const target = parts[0]!
       const style: Record<string, unknown> = {}
       for (let i = 1; i < parts.length; i++) {
-        const kv = parts[i]!.split('=')
+        const kv = parts[i]?.split('=')
         if (kv.length !== 2) {
           throw new DslParseError(line, `invalid key=value: ${parts[i]}`)
         }
@@ -250,7 +250,7 @@ export function parseShorthand(line: string): SurfaceMutation {
       let capabilityId: string | undefined
       let slot: string | undefined
       for (let i = 1; i < parts.length; i++) {
-        const kv = parts[i]!.split('=')
+        const kv = parts[i]?.split('=')
         if (kv.length !== 2) {
           throw new DslParseError(line, `invalid key=value: ${parts[i]}`)
         }
@@ -277,7 +277,7 @@ export function parseShorthand(line: string): SurfaceMutation {
       const target = parts[0]!
       let capabilityId: string | undefined
       for (let i = 1; i < parts.length; i++) {
-        const kv = parts[i]!.split('=')
+        const kv = parts[i]?.split('=')
         if (kv[0] === 'capability') capabilityId = kv[1]
       }
       if (!capabilityId) {
@@ -328,8 +328,8 @@ export function parseShorthand(line: string): SurfaceMutation {
       const m = args.match(/^(\S+)\s+(.+)$/)
       if (!m) throw new DslParseError(line, '/reorder requires: <target> id1,id2,...')
       const target = m[1]!
-      const ids = m[2]!
-        .split(',')
+      const ids = m[2]
+        ?.split(',')
         .map((s) => s.trim())
         .filter(Boolean)
       if (ids.length === 0) {

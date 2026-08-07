@@ -2,6 +2,7 @@
 // ConversationStoreImpl — Prisma-backed ConversationStore (04-merged-engines.md §2).
 
 import { newId } from '../../ids.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type {
   ConversationInput,
   ConversationMessageRow,
@@ -179,6 +180,7 @@ export class ConversationStoreImpl implements ConversationStore {
       })
       return toConversationRow(row as unknown as PrismaConversation)
     } catch (_err) {
+      catchDebug(_err, 'storage:impl:conversation-store-impl:181')
       // Fallback: if provided sessionId failed FK constraint, auto-provision and retry once
       if (sessionId && input.source !== 'history-sync') {
         const sess = await this.db.ensureProviderSession({ providerId: input.providerId })
@@ -447,7 +449,7 @@ export class ConversationStoreImpl implements ConversationStore {
         createdAt: now,
       }))
 
-      const rows = await this.db.prisma.conversationMessage.createMany({ data })
+      const _rows = await this.db.prisma.conversationMessage.createMany({ data })
       // Note: createMany doesn't return rows in SQLite, so we query them back
       // This is acceptable for sync operations
     }

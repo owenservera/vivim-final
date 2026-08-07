@@ -28,6 +28,7 @@ export class CdpArtifactCleanerModule implements StealthModule {
           });
           keys.forEach(function(k) {
             try { delete window[k]; } catch(e) { /* best-effort: var may be non-configurable */ }
+              catchDebug(e, 'engines:stealth:cdp-artifact-cleaner:30')
           });
 
           // Remove from document
@@ -36,6 +37,7 @@ export class CdpArtifactCleanerModule implements StealthModule {
           });
           docKeys.forEach(function(k) {
             try { delete document[k]; } catch(e) { /* best-effort: var may be non-configurable */ }
+              catchDebug(e, 'engines:stealth:cdp-artifact-cleaner:38')
           });
         `
             : ''

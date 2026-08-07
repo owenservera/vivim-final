@@ -7,6 +7,7 @@
 // link is owned by ProgramStore (22.2/22.4).
 
 import { ValidationError } from '../../errors.js'
+import { safeJsonParse } from '../../lib/safe-json.js'
 import type { ProgramStatus } from '../../storage/contracts/program-store.js'
 import type { Recipe } from './recipe-types.js'
 
@@ -33,7 +34,7 @@ export function recipeToConfig(recipe: Recipe): string {
 
 /** Parse stored config JSON back into a ProgramConfig (throws on bad shape). */
 export function configToProgram(configJson: string): ProgramConfig {
-  const parsed = JSON.parse(configJson) as unknown
+  const parsed = safeJsonParse<unknown>(configJson, null)
   if (!parsed || typeof parsed !== 'object')
     throw new ValidationError('ProgramConfig must be an object')
   const cfg = parsed as Record<string, unknown>

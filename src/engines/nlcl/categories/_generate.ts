@@ -5,8 +5,8 @@
 //
 // Run:  bun src/engines/nlcl/categories/_generate.ts
 // Then: bun test tests/unit/engines/nlcl/  (must stay green)
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { join, dirname } from 'node:path'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 const ROOT = process.cwd()
 const SRC = join(ROOT, 'src', 'engines', 'nlcl', 'catalog.ts')
@@ -36,7 +36,7 @@ const lines = readFileSync(SRC, 'utf8').split(/\r?\n/)
 function findBlock(name: string): { start: number; end: number } | null {
   let start = -1
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i]!.includes(`const ${name}: CommandPattern[]`)) {
+    if (lines[i]?.includes(`const ${name}: CommandPattern[]`)) {
       start = i
       break
     }
@@ -66,16 +66,11 @@ for (const cat of CATEGORIES) {
   }
   const body = lines.slice(block.start, block.end + 1)
   // rename `const xPatterns = [` → `export const xPatterns = [`
-  body[0] = body[0]!.replace(/^const\s+/, 'export const ')
+  body[0] = body[0]?.replace(/^const\s+/, 'export const ')
 
-  const header = `// src/engines/nlcl/categories/${cat.file}\n` +
-    `// ${cat.name} command patterns — data only (moved from catalog.ts by\n` +
-    `// categories/_generate.ts). Keep this a pure data module: build patterns\n` +
-    `// through the shared builder in ./builder.ts.\n\n` +
-    `import { pattern${cat.constName === 'workflowPatterns' ? ', extractEmails, dayToCron' : ''} } from './builder.js'\n` +
-    `import type { CommandPattern } from '../types.js'\n\n`
+  const header = `// src/engines/nlcl/categories/${cat.file}\n// ${cat.name} command patterns — data only (moved from catalog.ts by\n// categories/_generate.ts). Keep this a pure data module: build patterns\n// through the shared builder in ./builder.ts.\n\nimport { pattern${cat.constName === 'workflowPatterns' ? ', extractEmails, dayToCron' : ''} } from './builder.js'\nimport type { CommandPattern } from '../types.js'\n\n`
 
-  const out = header + body.join('\n') + '\n'
+  const out = `${header + body.join('\n')}\n`
   const fpath = join(CAT_DIR, cat.file)
   writeFileSync(fpath, out)
   console.log(`wrote ${cat.file} (${body.length} lines)`)

@@ -3,6 +3,8 @@
 // Enhanced with DiscoveryStore persistence, CDP ops, network observation, interactive probing
 
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
+import { safeJsonParse } from '../lib/safe-json.js'
 import type { DiscoverySessionRow, DiscoveryStore } from '../storage/contracts/discovery-store.js'
 import type { ProviderStore } from '../storage/contracts/provider-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
@@ -257,7 +259,7 @@ export class ProviderDiscoveryEngine {
       returnByValue: true,
     })) as { result?: { value?: string } }
 
-    const data = JSON.parse(result?.result?.value ?? '{}') as Record<string, string>
+    const data = safeJsonParse<Record<string, string>>(result?.result?.value ?? '{}', null) ?? {}
     return {
       url: data.url ?? '',
       title: data.title ?? '',
@@ -305,7 +307,7 @@ export class ProviderDiscoveryEngine {
       returnByValue: true,
     })) as { result?: { value?: string } }
 
-    const data = JSON.parse(result?.result?.value ?? '{}') as Record<string, unknown>
+    const data = safeJsonParse<Record<string, unknown>>(result?.result?.value ?? '{}', null) ?? {}
     return {
       url: (data.url as string) ?? '',
       title: (data.title as string) ?? '',
@@ -731,6 +733,7 @@ export class ProviderDiscoveryEngine {
         })) as { result?: { value?: string } }
         if (result?.result?.value === 'complete') return
       } catch {
+        catchDebug(_err, 'engines:provider-discovery:733')
         /* ignore */
       }
       await new Promise((r) => setTimeout(r, 200))

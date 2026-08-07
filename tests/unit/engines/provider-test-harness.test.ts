@@ -94,8 +94,8 @@ describe('CapabilityStore listBindings', () => {
     const store = makeMockStore()
     const bindings = await store.listBindings([])
     expect(bindings.length).toBe(2)
-    expect(bindings[0]!.providerId).toBe('prov_claude')
-    expect(bindings[1]!.capabilitySlug).toBe('send_message')
+    expect(bindings[0]?.providerId).toBe('prov_claude')
+    expect(bindings[1]?.capabilitySlug).toBe('send_message')
   })
 })
 

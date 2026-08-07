@@ -101,12 +101,13 @@ function parseImports(source: string): ParsedImport[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] as string
     IMPORT_RE.lastIndex = 0
-    let match: RegExpExecArray | null
-    while ((match = IMPORT_RE.exec(line)) !== null) {
+    let match: RegExpExecArray | null = IMPORT_RE.exec(line)
+    while (match !== null) {
       const specifier = (match[1] ?? match[2] ?? match[3]) as string
       if (specifier) {
         results.push({ specifier, line: i + 1 })
       }
+      match = IMPORT_RE.exec(line)
     }
   }
   return results
@@ -151,13 +152,13 @@ function resolveToExistingFile(base: string): string | null {
 
   // .js → .ts (ESM import mapping)
   if (base.endsWith('.js')) {
-    const tsPath = base.slice(0, -3) + '.ts'
+    const tsPath = `${base.slice(0, -3)}.ts`
     if (existsSync(tsPath)) return tsPath
   }
 
   // Append .ts if no extension
   if (!hasExtension(base)) {
-    const tsPath = base + '.ts'
+    const tsPath = `${base}.ts`
     if (existsSync(tsPath)) return tsPath
   }
 

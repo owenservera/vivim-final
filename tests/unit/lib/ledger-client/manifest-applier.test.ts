@@ -186,7 +186,7 @@ describe('manifest-applier', () => {
 
     const result = await applyManifestEntries(db as never, [entry])
     expect(result.errors.length).toBe(1)
-    expect(result.errors[0]!.entryId).toBe('entry-1')
+    expect(result.errors[0]?.entryId).toBe('entry-1')
   })
 
   it('skips unknown content types', async () => {

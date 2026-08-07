@@ -14,6 +14,7 @@
 import type { z } from 'zod'
 import { HarnessRepairError } from '../errors.js'
 import { newId } from '../ids.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getRepairMetadata } from '../schema/repair-metadata.js'
 import type {
   HarnessRepairStore,
@@ -68,6 +69,7 @@ export class HarnessRepairEngine {
       }
       return { ok: true, data: parsed, repairs, errors }
     } catch (err) {
+      catchDebug(err, 'engines:harness-repair-engine:70')
       const message = err instanceof Error ? err.message : String(err)
       errors.push(message)
       const session = this.buildSession({
@@ -119,6 +121,7 @@ export class HarnessRepairEngine {
     try {
       value = JSON.parse(raw)
     } catch {
+      catchDebug(_err, 'engines:harness-repair-engine:121')
       // The target is a bare string (e.g. repairString()): the LLM returned a
       // plain value, not JSON. Return it verbatim — NEVER rewrite interior
       // apostrophes (defect fix: blind `'`->`"` corrupts "O'Brien").

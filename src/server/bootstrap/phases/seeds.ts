@@ -3,9 +3,9 @@
 // Writes: providerStore, registrar, providerRegistry on ctx.
 
 import { config } from '../../../config.js'
+import { getLogger } from '../../../lib/logger.js'
 import { getDb } from '../../../storage/db.js'
 import { runIndividualSeeds } from '../../bootstrap-seeds.js'
-import { getLogger } from '../../../lib/logger.js'
 import type { BootstrapContext } from '../context.js'
 
 const log = getLogger('bootstrap:seeds')

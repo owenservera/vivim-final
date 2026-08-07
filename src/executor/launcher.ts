@@ -5,6 +5,7 @@
 
 import { rmSync } from 'node:fs'
 import { catchDebug } from '../lib/catch-logger.js'
+import { getLogger } from '../lib/logger.js'
 import {
   type ChromeChannel,
   type ChromeInstanceProfile,
@@ -13,6 +14,8 @@ import {
   makeProfile,
   resolveChromeBinary,
 } from './chrome-instance-profile.js'
+
+const log = getLogger('executor:launcher')
 
 export interface LaunchResult {
   process: ReturnType<typeof Bun.spawn>
@@ -125,9 +128,7 @@ export async function launchProfile(profile: ChromeInstanceProfile): Promise<Lau
 
   const args = buildChromeArgs({ ...profile, debugPort })
 
-  console.log(
-    `[launcher] Spawning (${profile.channel}/${profile.mode}): ${binary} ${args.join(' ')}`,
-  )
+  log.info(`[launcher] Spawning (${profile.channel}/${profile.mode}): ${binary} ${args.join(' ')}`)
 
   const proc = Bun.spawn([binary, ...args], {
     stdout: 'ignore',

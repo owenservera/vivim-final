@@ -49,10 +49,14 @@ export interface ContentItemRow {
 // ── Store implementation ────────────────────────────────────────────────────
 
 export class ContentItemStoreImpl {
-  constructor(private readonly db: CapStoreDb) {}
+  protected readonly prisma: any
+
+  constructor(private readonly db: CapStoreDb) {
+    this.prisma = db.prisma
+  }
 
   async getItemById(id: string): Promise<ContentItemRow | null> {
-    const row = await this.db.loose.contentItem.findUnique({ where: { id } })
+    const row = await this.prisma.contentItem.findUnique({ where: { id } })
     return row ? this.toRow(row) : null
   }
 
@@ -69,13 +73,13 @@ export class ContentItemStoreImpl {
     if (query.providerId) where.providerId = query.providerId
     if (query.accountId) where.accountId = query.accountId
     if (query.contentType) where.contentType = query.contentType
-    const rows = await this.db.loose.contentItem.findMany({
+    const rows = await this.prisma.contentItem.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
       take: query.limit ?? 50,
       skip: query.offset ?? 0,
     })
-    return rows.map((r: any) => this.toRow(r))
+    return rows.map((r) => this.toRow(r))
   }
 
   async createItem(input: {
@@ -98,7 +102,7 @@ export class ContentItemStoreImpl {
     sortTimestamp?: number
   }): Promise<ContentItemRow> {
     const now = Date.now()
-    const row = await this.db.loose.contentItem.create({
+    const row = await this.prisma.contentItem.create({
       data: {
         id: newId(),
         providerId: input.providerId,
@@ -174,12 +178,12 @@ export class ContentItemStoreImpl {
     for (const key of allowed) {
       if (key in updates) data[key] = updates[key]
     }
-    const row = await this.db.loose.contentItem.update({ where: { id }, data })
+    const row = await this.prisma.contentItem.update({ where: { id }, data })
     return this.toRow(row)
   }
 
   async deleteItem(id: string): Promise<void> {
-    await this.db.loose.contentItem.delete({ where: { id } })
+    await this.prisma.contentItem.delete({ where: { id } })
   }
 
   async searchItems(
@@ -200,12 +204,12 @@ export class ContentItemStoreImpl {
       }
       if (opts?.containerId) where.containerId = opts.containerId
       if (opts?.contentType) where.contentType = opts.contentType
-      const rows = await this.db.loose.contentItem.findMany({
+      const rows = await this.prisma.contentItem.findMany({
         where,
         orderBy: { updatedAt: 'desc' },
         take: 50,
       })
-      return rows.map((r: any) => this.toRow(r))
+      return rows.map((r) => this.toRow(r))
     } catch {
       return []
     }
@@ -213,7 +217,7 @@ export class ContentItemStoreImpl {
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
-  private toRow(r: any): ContentItemRow {
+  private toRow(r: Record<string, unknown>): ContentItemRow {
     return {
       id: r.id,
       providerId: r.providerId,

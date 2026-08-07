@@ -43,6 +43,7 @@ export const navigatorPatchModule: StealthModule = {
         configurable: true,
       });
     } catch (e) { /* best-effort: property may already be defined as non-configurable */ }
+      catchDebug(e, 'engines:stealth:navigator-patch-module:45')
   }
   // languages is on Navigator (instance) — patch directly too
   if (descriptors.languages) {
@@ -52,6 +53,7 @@ export const navigatorPatchModule: StealthModule = {
         configurable: true,
       });
     } catch (e) { /* best-effort: property may already be defined as non-configurable */ }
+      catchDebug(e, 'engines:stealth:navigator-patch-module:54')
   }
 })();`
 

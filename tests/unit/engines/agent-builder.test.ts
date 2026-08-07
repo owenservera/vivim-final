@@ -12,13 +12,13 @@ describe('AgentBuilderEngine', () => {
     nodesMap = new Map()
     mockStore = {
       startBuilderRun: async (
-        intent: Record<string, unknown>,
-        mode: string,
-        initiator: { kind: string; id: string },
+        _intent: Record<string, unknown>,
+        _mode: string,
+        _initiator: { kind: string; id: string },
       ) => {
         return { id: 'builder-run-1' }
       },
-      spawnFromBuilder: async (builderRunId: string) => {
+      spawnFromBuilder: async (_builderRunId: string) => {
         return { agentId: 'agent-1', runId: 'run-1' }
       },
       nodes: {

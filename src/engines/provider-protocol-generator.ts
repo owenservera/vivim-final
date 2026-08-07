@@ -5,6 +5,7 @@
 import { existsSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type { CapStoreDb } from '../storage/db.js'
 
@@ -230,6 +231,7 @@ export class ProviderProtocolGenerator {
       })
       await proc.exited
     } catch {
+      catchDebug(_err, 'engines:provider-protocol-generator:232')
       // Non-fatal: generated output remains valid TypeScript even if formatting is skipped.
     }
   }

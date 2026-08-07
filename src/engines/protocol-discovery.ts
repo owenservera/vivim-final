@@ -9,6 +9,7 @@
 // Minimal surface this engine needs from a CDP client — injected by the
 // governor. Keeps the engine free of any direct CDP/transport import.
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 
 export interface CdpSender {
   send(
@@ -246,6 +247,7 @@ async function _collectNetworkPatterns(
   try {
     await client.send('Network.disable', {}, { sessionId })
   } catch {
+    catchDebug(_err, 'engines:protocol-discovery:248')
     // best-effort disable
   }
 

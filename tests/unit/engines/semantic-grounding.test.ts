@@ -47,7 +47,7 @@ describe('SemanticGroundingEngine', () => {
     const r = await eng.resolveBySelector('s1', '#ok')
     expect(r.selector).toBe('#ok')
     expect(r.mode).toBe('css')
-    expect(r.box!.w).toBe(10)
+    expect(r.box?.w).toBe(10)
   })
 
   test('resolveBySelector throws when node absent', async () => {

@@ -256,6 +256,7 @@ export class StorageRelocationEngine {
         fileCount: this.status.fileCount,
       }
     } catch (err) {
+      catchDebug(err, 'engines:storage-relocation-engine:258')
       const errorMsg = err instanceof Error ? err.message : String(err)
       log.error({ err, phase: this.status.phase }, 'Migration failed')
 
@@ -309,19 +310,19 @@ export class StorageRelocationEngine {
       mkdirSync(targetDir, { recursive: true })
       writeFileSync(testFile, 'ok', 'utf-8')
       unlinkSync(testFile)
-    } catch (err) {
+    } catch (_err) {
       throw new EngineError(`Target directory is not writable: ${targetDir}`)
     }
 
     // Check free disk space
     const sourceSize = this.dirSize(sourceDir)
     this.status.totalBytes = sourceSize
-    const multiplier = this.config.minFreeSpaceMultiplier ?? 2
+    const _multiplier = this.config.minFreeSpaceMultiplier ?? 2
     // Use a simple heuristic: stat the target's filesystem
     // Bun doesn't have statvfs, so we check the target parent
     try {
       const { statSync: s } = await import('node:fs')
-      const targetStat = s(targetParent)
+      const _targetStat = s(targetParent)
       // If we can stat it, the filesystem is accessible
       // Real space check would need platform-specific APIs; we warn if source > 1GB
       if (sourceSize > 1024 * 1024 * 1024) {
@@ -425,7 +426,7 @@ export class StorageRelocationEngine {
         await testPrisma.$disconnect()
 
         const check = Array.isArray(result) ? result[0] : result
-        const status = check?.integrity_check ?? check?.['integrity_check']
+        const status = check?.integrity_check ?? check?.integrity_check
         if (status !== 'ok') {
           throw new EngineError(`SQLite integrity check failed: ${JSON.stringify(check)}`)
         }
@@ -545,7 +546,7 @@ export class StorageRelocationEngine {
   // ── Rollback ─────────────────────────────────────────────────────────────
 
   async rollback(): Promise<RelocationResult> {
-    const sourceDir = getDataDir()
+    const _sourceDir = getDataDir()
     const archived = await this.store.getArchivedLocations()
     if (archived.length === 0) {
       throw new EngineError('No archived location to rollback to')

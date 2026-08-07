@@ -54,7 +54,7 @@ export function createPluginBuilderRouter() {
 
       const result = await pluginBuilder.build(parsed.data)
       if (!result.ok || !result.plugin || !result.manifest) {
-        return json({ ok: false, error: result.error ?? 'Build failed' }, 500)
+        return errorResponse(result.error ?? 'Build failed', 'ExecutionError', 500)
       }
 
       return json(

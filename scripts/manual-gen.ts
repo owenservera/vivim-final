@@ -2,8 +2,12 @@
 // Reflects the v10 capability registry into the user manual's Command Reference
 // table (Unit 37.5). Parses cliCommand.name + mcpToolName from
 // capability-bootstrap.ts and rewrites the section between the markers.
+//
+// Session 2 (2026-08-07): Fixed ENOENT crash by bootstrapping the manual file
+// with a minimal template (including the COMMAND_REFERENCE markers) if it
+// doesn't exist yet.
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs"
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { join, dirname } from "node:path"
 
@@ -35,24 +39,63 @@ function extractRows(): Row[] {
   return rows
 }
 
+/** Minimal manual skeleton with COMMAND_REFERENCE markers, written when missing. */
+function bootstrapManual(): string {
+  return `# vivim-final User Manual (v11)
+
+> Auto-bootstrapped by \`bun run docs:manual\`. Extend the prose sections above
+> and below the COMMAND_REFERENCE markers; the table itself is regenerated from
+> the capability registry on each run.
+
+## Quick start
+
+1. Start the backend: \`bun run dev:backend\`
+2. Start the frontend: \`bun run dev:frontend\`
+3. Open http://localhost:3000
+
+## Command reference
+
+<!-- COMMAND_REFERENCE_START -->
+<!-- COMMAND_REFERENCE_END -->
+
+## See also
+
+- [Architecture](../architecture/OVERVIEW.md)
+- [API reference](../api/v11-universal-api.yaml)
+- [Runbooks](../runbooks/DEV.md)
+`
+}
+
 function main() {
   const rows = extractRows()
   const table =
     "| Capability id | CLI command | MCP tool |\n|---------------|-------------|----------|\n" +
     rows.map((r) => `| \`${r.id}\` | \`${r.cli}\` | \`${r.mcp}\` |`).join("\n")
 
-  if (!existsSync(manualPath)) {
-    console.error(`Manual not found at ${manualPath}`)
-    process.exit(1)
+  // Bootstrap the manual (and its parent dir) if missing — session 2 fix.
+  const manualDir = dirname(manualPath)
+  if (!existsSync(manualDir)) {
+    mkdirSync(manualDir, { recursive: true })
+    console.log(`Created ${manualDir}`)
   }
+  if (!existsSync(manualPath)) {
+    writeFileSync(manualPath, bootstrapManual())
+    console.log(`Bootstrapped ${manualPath} (minimal manual skeleton).`)
+  }
+
   let manual = readFileSync(manualPath, "utf8")
   const start = "<!-- COMMAND_REFERENCE_START -->"
   const end = "<!-- COMMAND_REFERENCE_END -->"
-  const i = manual.indexOf(start)
-  const j = manual.indexOf(end)
+  let i = manual.indexOf(start)
+  let j = manual.indexOf(end)
+  // If markers are missing, inject them before the "## See also" section.
   if (i === -1 || j === -1) {
-    console.error("Command reference markers missing in manual.")
-    process.exit(1)
+    const seeAlsoIdx = manual.indexOf("## See also")
+    const injectAt = seeAlsoIdx === -1 ? manual.length : seeAlsoIdx
+    const markers = `${start}\n${end}\n`
+    manual = manual.slice(0, injectAt) + markers + manual.slice(injectAt)
+    i = manual.indexOf(start)
+    j = manual.indexOf(end)
   }
   const before = manual.slice(0, i + start.length)
   const after = manual.slice(j)

@@ -1,6 +1,7 @@
 // src/engines/mcp-server-adapter.ts
 // McpServerAdapter — expose Governor + capabilities as MCP tools via WebSocket
 
+import { catchDebug } from '../lib/catch-logger.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
@@ -209,6 +210,7 @@ export class McpServerAdapter {
               )
             }
           } catch {
+            catchDebug(_err, 'engines:mcp-server-adapter:211')
             // Ignore malformed messages
           }
         },

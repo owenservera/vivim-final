@@ -4,6 +4,7 @@
 // All DOM access via SemanticGroundingEngine (Governor Canon intact).
 
 import { EngineError } from '../../errors.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { SelectorHealStore } from '../../storage/contracts/selector-heal-store.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
@@ -36,6 +37,7 @@ export class SelectorHealer {
         await this.store.recordUse(targetKey)
         return { ...r, healed: true }
       } catch {
+        catchDebug(_err, 'engines:browser-automation:selector-healer:38')
         // stale — fall through
       }
     }
@@ -53,6 +55,7 @@ export class SelectorHealer {
         })
         return { ...r, healed: true }
       } catch {
+        catchDebug(_err, 'engines:browser-automation:selector-healer:55')
         // try next
       }
     }
@@ -80,6 +83,7 @@ export class SelectorHealer {
           await this.store.bumpHealCount(targetKey)
           return { ...r, healed: true }
         } catch {
+          catchDebug(_err, 'engines:browser-automation:selector-healer:82')
           // candidate invalid
         }
       }

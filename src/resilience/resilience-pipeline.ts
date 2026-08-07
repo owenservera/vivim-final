@@ -7,6 +7,7 @@
 //   3. Timeout (guard against hanging)
 //   4. Retry (back off and try again)
 
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import { Bulkhead } from './bulkhead.js'
 import { CircuitBreaker, DEFAULT_CB_CONFIG } from './circuit-breaker.js'
@@ -115,6 +116,7 @@ export class ResiliencePipeline {
         fromCache: false,
       }
     } catch (err) {
+      catchDebug(err, 'resilience:resilience-pipeline:117')
       // Record failure in circuit breaker (only for real execution errors).
       if (this.circuitBreaker && !circuitBreakerTripped) {
         this.circuitBreaker.recordFailure()

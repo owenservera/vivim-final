@@ -4,9 +4,9 @@
 // commands are routed to registered handlers; responses are posted back.
 
 import { EngineError } from '../../errors.js'
+import type { Logger } from '../../lib/logger.js'
 import type { StealthProfileStore } from '../../storage/contracts/stealth-store.js'
 import type { CapabilityEventBus } from '../capability-event-bus.js'
-import type { StructuredLogger } from '../logger.js'
 import type { StealthCdpProxy } from './stealth-module.js'
 
 export interface ExtensionCommand {
@@ -39,7 +39,7 @@ export class ExtensionBridgeEngine {
   constructor(
     private readonly store: StealthProfileStore,
     private readonly eventBus?: CapabilityEventBus,
-    private readonly logger?: StructuredLogger,
+    private readonly logger?: Logger,
   ) {}
 
   setCdpResolver(resolver: (slaveId: string) => StealthCdpProxy | null): void {
@@ -93,7 +93,10 @@ export class ExtensionBridgeEngine {
   parseConsoleMessage(text: string): ExtensionCommand | null {
     if (!text.startsWith(MAGIC_INBOUND)) return null
     try {
-      return JSON.parse(text.slice(MAGIC_INBOUND.length)) as ExtensionCommand
+      return JSON.parse(
+        text.slice(MAGIC_INBOUND.length),
+        null as ExtensionCommand,
+      ) as ExtensionCommand
     } catch {
       return null
     }

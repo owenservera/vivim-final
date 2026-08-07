@@ -321,7 +321,7 @@ describe('Conversation Sync Integration', () => {
 
     // Verify messages were stored
     expect(conversationStore.messages.size).toBe(2)
-    const conv1Messages = conversationStore.messages.get('conv-upserted')
+    const _conv1Messages = conversationStore.messages.get('conv-upserted')
     // Messages may be stored under different IDs depending on upsert logic
     const totalMessages = Array.from(conversationStore.messages.values()).flat()
     expect(totalMessages.length).toBe(3)
@@ -497,8 +497,8 @@ describe('Conversation Sync Integration', () => {
     const result = await engine.fetchConversation('account-1', 'slave-1', 'conv-1')
 
     expect(result).not.toBeNull()
-    expect(result!.id).toBe('conv-1')
-    expect(result!.messages).toHaveLength(1)
+    expect(result?.id).toBe('conv-1')
+    expect(result?.messages).toHaveLength(1)
   })
 
   test('fetchConversation returns null for nonexistent conversation', async () => {

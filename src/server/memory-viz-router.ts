@@ -3,45 +3,40 @@
 //
 // PRINCIPLE: FRONTEND = BACKEND
 // Every request is tagged with its source via X-Source header for audit logging.
+//
+// Session 3 (2026-08-07): Refactored from returning `{ status, body }` (Shape C)
+// to returning `Response` directly via the `json()` / `errorResponse()` helpers.
+// This fixes:
+//   - Missing CORS headers (the caller in server/index.ts was wrapping with raw
+//     `new Response(JSON.stringify(...))` which bypassed corsHeaders()).
+//   - Missing BigInt serialization (json() handles this; raw JSON.stringify does not).
+//   - Inconsistent error shape (now uses the canonical `{ error, code, details }`).
+// The caller no longer needs to wrap the return value — it just returns it.
 
 import type { MemoryEngine } from '../engines/memory-engine.js'
 import type { MemoryCuratedStore } from '../storage/contracts/memory-curated-store.js'
-
-interface MemoryVizRequest {
-  url: string
-  method: string
-  body?: unknown
-}
-
-interface MemoryVizResponse {
-  status: number
-  body: unknown
-  headers?: Record<string, string>
-}
+import { errorResponse, json } from './response.js'
 
 export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: MemoryCuratedStore) {
-  return async (req: MemoryVizRequest): Promise<MemoryVizResponse> => {
-    const url = new URL(req.url, 'http://localhost')
+  return async (req: Request): Promise<Response> => {
+    const url = new URL(req.url)
     const path = url.pathname
 
     // GET /api/memory/graph?entityId=X
     if (path === '/api/memory/graph' && req.method === 'GET') {
       const entityId = url.searchParams.get('entityId')
       if (!entityId) {
-        return { status: 400, body: { error: 'entityId required', code: 'ValidationError' } }
+        return errorResponse('entityId required', 'ValidationError', 400)
       }
       const facts = await memory.recallFacts(entityId)
-      return {
-        status: 200,
-        body: {
-          entity: entityId,
-          connections: facts.map((f) => ({
-            predicate: f.predicate,
-            value: f.object,
-            confidence: f.confidence,
-          })),
-        },
-      }
+      return json({
+        entity: entityId,
+        connections: facts.map((f) => ({
+          predicate: f.predicate,
+          value: f.object,
+          confidence: f.confidence,
+        })),
+      })
     }
 
     // GET /api/memory/graph/subgraph?focal=<id>&depth=2
@@ -49,7 +44,7 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       const focal = url.searchParams.get('focal')
       const depth = Number(url.searchParams.get('depth') ?? 2)
       if (!focal) {
-        return { status: 400, body: { error: 'focal entity required', code: 'ValidationError' } }
+        return errorResponse('focal entity required', 'ValidationError', 400)
       }
       const allFacts = await memory.getAllFacts()
       const nodes = new Map<
@@ -95,10 +90,7 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
         }
       }
 
-      return {
-        status: 200,
-        body: { nodes: [...nodes.values()], edges },
-      }
+      return json({ nodes: [...nodes.values()], edges })
     }
 
     // GET /api/memory/graph/neighbors?entity=<id>&k=10
@@ -106,7 +98,7 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       const entity = url.searchParams.get('entity')
       const k = Number(url.searchParams.get('k') ?? 10)
       if (!entity) {
-        return { status: 400, body: { error: 'entity required', code: 'ValidationError' } }
+        return errorResponse('entity required', 'ValidationError', 400)
       }
       const facts = await memory.recallFacts(entity)
       const neighbors = new Map<
@@ -124,10 +116,7 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
           })
         }
       }
-      return {
-        status: 200,
-        body: { entity, neighbors: [...neighbors.values()] },
-      }
+      return json({ entity, neighbors: [...neighbors.values()] })
     }
 
     // GET /api/memory/graph/clusters
@@ -171,10 +160,9 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
         if (!groups.has(label)) groups.set(label, [])
         groups.get(label)?.push(node)
       }
-      return {
-        status: 200,
-        body: { clusters: [...groups.entries()].map(([id, members]) => ({ id, members })) },
-      }
+      return json({
+        clusters: [...groups.entries()].map(([id, members]) => ({ id, members })),
+      })
     }
 
     // GET /api/memory/timeline?from=&to=
@@ -183,63 +171,54 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       const to = Number(url.searchParams.get('to') ?? Date.now())
       const episodes = await memory.recallEpisodes({ since: from, limit: 100 })
       const filtered = episodes.filter((e) => e.timestamp <= to)
-      return {
-        status: 200,
-        body: {
-          events: filtered.map((e) => ({
-            id: e.id,
-            action: e.action,
-            timestamp: e.timestamp,
-            success: e.success,
-          })),
-        },
-      }
+      return json({
+        events: filtered.map((e) => ({
+          id: e.id,
+          action: e.action,
+          timestamp: e.timestamp,
+          success: e.success,
+        })),
+      })
     }
 
     // GET /api/memory/stats
     if (path === '/api/memory/stats' && req.method === 'GET') {
       const episodes = await memory.recallEpisodes({ limit: 1000 })
       const facts = await memory.recallFacts('')
-      return {
-        status: 200,
-        body: {
-          totalEpisodes: episodes.length,
-          totalFacts: facts.length,
-          successRate:
-            episodes.length > 0 ? episodes.filter((e) => e.success).length / episodes.length : 0,
-        },
-      }
+      return json({
+        totalEpisodes: episodes.length,
+        totalFacts: facts.length,
+        successRate:
+          episodes.length > 0 ? episodes.filter((e) => e.success).length / episodes.length : 0,
+      })
     }
 
     // GET /api/memory/curated
     if (path === '/api/memory/curated' && req.method === 'GET') {
       const facts = await memory.recallFacts('')
       const curated = facts.filter((f) => f.confidence >= 0.8)
-      return {
-        status: 200,
-        body: {
-          entries: curated.map((f) => ({
-            id: f.id,
-            subject: f.subject,
-            predicate: f.predicate,
-            value: f.object,
-            confidence: f.confidence,
-          })),
-        },
-      }
+      return json({
+        entries: curated.map((f) => ({
+          id: f.id,
+          subject: f.subject,
+          predicate: f.predicate,
+          value: f.object,
+          confidence: f.confidence,
+        })),
+      })
     }
 
     // POST /api/memory/assert  { content } — persist a semantic fact
     if (path === '/api/memory/assert' && req.method === 'POST') {
       let body: { content?: string }
       try {
-        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+        body = (await req.json()) as { content?: string }
       } catch {
-        return { status: 400, body: { error: 'invalid json body', code: 'ValidationError' } }
+        return errorResponse('invalid json body', 'ValidationError', 400)
       }
       const content = (body.content ?? '').trim()
       if (!content) {
-        return { status: 400, body: { error: 'content required', code: 'ValidationError' } }
+        return errorResponse('content required', 'ValidationError', 400)
       }
       await memory.assertFact({
         subject: content,
@@ -248,27 +227,29 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
         confidence: 1.0,
         source: 'memory-viz-router',
       })
-      return { status: 201, body: { ok: true } }
+      return json({ ok: true }, 201)
     }
 
     // POST /api/memory/curate  { id, memoryType, memoryId, action }
     if (path === '/api/memory/curate' && req.method === 'POST') {
       if (!curatedStore) {
-        return {
-          status: 501,
-          body: { error: 'curation store not configured', code: 'NotImplemented' },
-        }
+        return errorResponse('curation store not configured', 'NotImplemented', 501)
       }
       let body: { id?: string; memoryType?: string; memoryId?: string; action?: string }
       try {
-        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+        body = (await req.json()) as {
+          id?: string
+          memoryType?: string
+          memoryId?: string
+          action?: string
+        }
       } catch {
-        return { status: 400, body: { error: 'invalid json body', code: 'ValidationError' } }
+        return errorResponse('invalid json body', 'ValidationError', 400)
       }
       const memoryType = body.memoryType ?? 'fact'
       const memoryId = body.memoryId ?? body.id
       if (!memoryId) {
-        return { status: 400, body: { error: 'memoryId required', code: 'ValidationError' } }
+        return errorResponse('memoryId required', 'ValidationError', 400)
       }
       switch (body.action) {
         case 'pin':
@@ -288,9 +269,9 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
           })
           break
         default:
-          return { status: 400, body: { error: 'unknown action', code: 'ValidationError' } }
+          return errorResponse('unknown action', 'ValidationError', 400)
       }
-      return { status: 200, body: { ok: true, action: body.action, memoryId } }
+      return json({ ok: true, action: body.action, memoryId })
     }
 
     // P3-4: Duplicate — see memory-router.ts for primary /api/memory/export implementation
@@ -299,33 +280,36 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
     if (path.startsWith('/api/memory/facts/') && req.method === 'PATCH') {
       const id = path.split('/api/memory/facts/')[1]
       if (!id) {
-        return { status: 400, body: { error: 'fact id required', code: 'ValidationError' } }
+        return errorResponse('fact id required', 'ValidationError', 400)
       }
       let body: { verified?: boolean; object?: unknown; predicate?: string; by?: string }
       try {
-        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+        body = (await req.json()) as {
+          verified?: boolean
+          object?: unknown
+          predicate?: string
+          by?: string
+        }
       } catch {
-        return { status: 400, body: { error: 'invalid json body', code: 'ValidationError' } }
+        return errorResponse('invalid json body', 'ValidationError', 400)
       }
       const by = (body.by as string) ?? 'user'
       try {
         if (body.verified === true) {
           await memory.verifyFact(id, by)
-          return { status: 200, body: { ok: true, action: 'verify', id } }
+          return json({ ok: true, action: 'verify', id })
         }
         if (body.object !== undefined || body.predicate !== undefined) {
           await memory.editFact(id, { object: body.object, predicate: body.predicate }, by)
-          return { status: 200, body: { ok: true, action: 'edit', id } }
+          return json({ ok: true, action: 'edit', id })
         }
-        return {
-          status: 400,
-          body: {
-            error: 'no valid patch fields (verified, object, predicate)',
-            code: 'ValidationError',
-          },
-        }
-      } catch (_err) {
-        return { status: 404, body: { error: `fact not found: ${id}`, code: 'NotFound' } }
+        return errorResponse(
+          'no valid patch fields (verified, object, predicate)',
+          'ValidationError',
+          400,
+        )
+      } catch {
+        return errorResponse(`fact not found: ${id}`, 'NotFound', 404)
       }
     }
 
@@ -333,23 +317,23 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
     if (path.startsWith('/api/memory/facts/') && req.method === 'DELETE') {
       const id = path.split('/api/memory/facts/')[1]
       if (!id) {
-        return { status: 400, body: { error: 'fact id required', code: 'ValidationError' } }
+        return errorResponse('fact id required', 'ValidationError', 400)
       }
-      let body: { by?: string }
+      let body: { by?: string } = {}
       try {
-        body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
+        body = (await req.json()) as { by?: string }
       } catch {
         body = {}
       }
-      const by = (body?.by as string) ?? 'user'
+      const by = body?.by ?? 'user'
       try {
         await memory.rejectFact(id, by)
-        return { status: 200, body: { ok: true, action: 'reject', id } }
-      } catch (_err) {
-        return { status: 404, body: { error: `fact not found: ${id}`, code: 'NotFound' } }
+        return json({ ok: true, action: 'reject', id })
+      } catch {
+        return errorResponse(`fact not found: ${id}`, 'NotFound', 404)
       }
     }
 
-    return { status: 404, body: { error: 'Not found', code: 'NotFound' } }
+    return errorResponse('Not found', 'NotFound', 404)
   }
 }

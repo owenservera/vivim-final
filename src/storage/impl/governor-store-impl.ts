@@ -3,6 +3,7 @@
 // Bridges the contract row types to the actual Prisma column names.
 
 import { newId } from '../../ids.js'
+import { safeJsonParse } from '../../lib/safe-json.js'
 import type {
   CircuitBreakerStateRow,
   FleetEventInput,
@@ -282,7 +283,7 @@ export class GovernorStoreImpl implements GovernorStore {
     })
     if (!def?.fleetConfigJson) return null
     try {
-      const raw = JSON.parse(def.fleetConfigJson) as Record<string, unknown>
+      const raw = safeJsonParse<Record<string, unknown>>(def.fleetConfigJson, null) ?? {}
       return {
         channel: (typeof raw.channel === 'string'
           ? raw.channel

@@ -1,0 +1,10 @@
+// Targeted typecheck: verify colors.ts fix without loading the 74MB Prisma client.
+// Run: bun x tsc --noEmit --project tsconfig.verify.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["src/engines/command-language/colors.ts", "src/errors.ts"]
+}

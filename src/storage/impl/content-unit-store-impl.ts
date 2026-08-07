@@ -6,7 +6,7 @@ import type { CapStoreDb } from '../db.js'
 
 type PrismaLoose = any
 
-function toRow(r: any): ContentUnitRow {
+function toRow(r: Record<string, unknown>): ContentUnitRow {
   return {
     id: r.id,
     messageId: r.messageId,

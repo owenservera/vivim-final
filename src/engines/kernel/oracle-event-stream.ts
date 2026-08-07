@@ -2,6 +2,7 @@
 // OracleEventStream — real-time system state over WebSocket. Broadcasts oracle
 // events (health changes, issue detection, healing actions) to all subscribers.
 
+import { catchDebug } from '../../lib/catch-logger.js'
 import type { CapabilityEventBus } from '../capability-event-bus.js'
 import type { KernelRegistry } from './kernel-registry.js'
 import type { HealAction, OracleActuator } from './oracle-actuator.js'
@@ -77,6 +78,7 @@ export class OracleEventStream {
       try {
         cb(full)
       } catch {
+        catchDebug(_err, 'engines:kernel:oracle-event-stream:79')
         /* ignore subscriber errors */
       }
     }
@@ -84,6 +86,7 @@ export class OracleEventStream {
       try {
         this.eventBus.emit({ type: 'kernel:oracle', ...full })
       } catch {
+        catchDebug(_err, 'engines:kernel:oracle-event-stream:86')
         /* ignore */
       }
     }

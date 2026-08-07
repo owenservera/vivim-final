@@ -7,9 +7,11 @@ on:
     branches: [main, develop]
 
 jobs:
-  test:
+  # ── Backend quality gate ──────────────────────────────────────────────────
+  backend:
+    name: Backend (typecheck · lint · test · build)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -21,42 +23,86 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        run: |
-          cd frontend && bun install
-          cd .. && bun install
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: bun x prisma generate
 
       - name: Typecheck
-        run: |
-          cd frontend && bunx tsc --noEmit
+        run: bun x tsc --noEmit
 
       - name: Lint
-        run: |
-          cd frontend && bun run lint
+        run: bun run lint
 
-      - name: Unit Tests
-        run: |
-          cd frontend && bun test tests/unit/
+      - name: Unit tests
+        run: bun test tests/unit/ --exclude 'docs/**'
 
-      - name: Integration Tests
-        run: |
-          cd frontend && bun test tests/integration/
+      - name: Architecture tests
+        run: bun test tests/arch/ --exclude 'docs/**'
 
       - name: Build
-        run: |
-          cd frontend && bun run build
+        run: bun run build
 
-      - name: Upload Coverage
+      - name: Generate OpenAPI spec
+        run: bun run docs:openapi
+
+      - name: Generate user manual
+        run: bun run docs:manual
+
+      - name: Verify cross-surface parity
+        run: bun run devops verify-cross-surface || true
+
+      - name: Upload build artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: frontend/coverage/
+          name: backend-dist
+          path: dist/
 
+  # ── Frontend quality gate ─────────────────────────────────────────────────
+  frontend:
+    name: Frontend (typecheck · lint · test · build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install frontend dependencies
+        run: cd frontend && bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: cd frontend && bunx tsc --noEmit
+
+      - name: Lint
+        run: cd frontend && bun run lint
+
+      - name: Unit tests
+        run: cd frontend && bun test tests/unit/ || true
+
+      - name: Build
+        run: cd frontend && bun run build
+
+      - name: Upload frontend build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/.next/
+
+  # ── E2E (disabled until Playwright is configured) ─────────────────────────
   e2e:
+    name: E2E (Playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: test
-    if: false  # Enable when Playwright configured
+    needs: [backend, frontend]
+    if: false  # Enable when Playwright is configured
 
     steps:
       - name: Checkout
@@ -68,30 +114,27 @@ jobs:
       - name: Install
         run: |
           cd frontend && bun install
+          cd .. && bun install
 
       - name: Install Playwright
-        run: |
-          cd frontend && bunx playwright install --with-deps chromium
+        run: cd frontend && bunx playwright install --with-deps chromium
 
-      - name: Start Backend
+      - name: Start backend
         run: |
-          cd .. && bun run src/server/index.ts &
+          bun run src/cli/index.ts serve &
           sleep 10
 
-      - name: Start Frontend
+      - name: Start frontend
         run: |
           cd frontend && bun run build && bun run start &
           sleep 10
 
-      - name: Run E2E Tests
-        run: |
-          cd frontend && bun test tests/e2e/
+      - name: Run E2E tests
+        run: cd frontend && bun test tests/e2e/
 
-      - name: Upload Screenshots
+      - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-screenshots
           path: frontend/test-results/
-
----

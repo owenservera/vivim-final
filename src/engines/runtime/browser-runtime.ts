@@ -3,7 +3,7 @@
 // Phase 2: Extracted from ChromeGovernor. B1 preserved: BrowserRuntime is a
 // private collaborator of Governor, not a peer.
 
-import { EngineError, CdpTimeoutError } from '../../errors.js'
+import { CdpTimeoutError, EngineError } from '../../errors.js'
 import type { SlaveLifecycle } from '../../executor/slave-states.js'
 import { getLogger } from '../../observability/logger.js'
 import { getMetrics } from '../../observability/metrics.js'

@@ -64,7 +64,7 @@ function implToContractName(implFile: string): string {
   if (contractName.endsWith('-impl')) {
     contractName = contractName.slice(0, -5)
   } else if (contractName.endsWith('-store-mem')) {
-    contractName = contractName.slice(0, -8) + '-store'
+    contractName = `${contractName.slice(0, -8)}-store`
   }
   return `${contractName}.ts`
 }

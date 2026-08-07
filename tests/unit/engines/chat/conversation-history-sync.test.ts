@@ -390,8 +390,8 @@ describe('ConversationHistorySyncEngine', () => {
       const result = await engine.fetchConversation('account-1', 'slave-1', 'conv-1')
 
       expect(result).not.toBeNull()
-      expect(result!.id).toBe('conv-1')
-      expect(result!.messages).toHaveLength(2)
+      expect(result?.id).toBe('conv-1')
+      expect(result?.messages).toHaveLength(2)
     })
 
     test('returns null when conversation not found', async () => {
@@ -435,7 +435,7 @@ describe('ConversationHistorySyncEngine', () => {
       expect(conversationStore.createMessages).toHaveBeenCalledTimes(2)
       const firstCall = (conversationStore.createMessages as ReturnType<typeof mock>).mock.calls[0]
       expect(firstCall).toBeDefined()
-      const messages = firstCall![0] as Array<{
+      const messages = firstCall?.[0] as Array<{
         conversationId: string
         role: string
         content: string

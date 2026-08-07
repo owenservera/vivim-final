@@ -5,25 +5,24 @@
  * All frames follow the TunnelFrame structure defined in shared/types.
  */
 
-import { ulid } from "ulid";
-import { PROTOCOL_VERSION } from "../../lib/tunnel-shared/constants.js";
+import { ulid } from 'ulid'
+import { PROTOCOL_VERSION } from '../../lib/tunnel-shared/constants.js'
+import { TunnelProtocolError } from '../../lib/tunnel-shared/errors.js'
+import { getLogger } from '../../lib/tunnel-shared/logger.js'
 import type {
-  TunnelFrame,
-  HttpRequestFrame,
-  HttpResponseFrame,
-  HttpChunkFrame,
-  HttpAbortFrame,
-  PingFrame,
-  PongFrame,
   AssignedFrame,
   ErrorFrame,
+  HttpAbortFrame,
+  HttpChunkFrame,
+  HttpRequestFrame,
+  HttpResponseFrame,
+  PingFrame,
+  PongFrame,
   StatusFrame,
-  FrameType,
-} from "../../lib/tunnel-shared/types.js";
-import { TunnelProtocolError } from "../../lib/tunnel-shared/errors.js";
-import { getLogger } from "../../lib/tunnel-shared/logger.js";
+  TunnelFrame,
+} from '../../lib/tunnel-shared/types.js'
 
-const log = getLogger("frame-protocol");
+const log = getLogger('frame-protocol')
 
 // ─── Frame Creation ──────────────────────────────────────────────
 
@@ -38,7 +37,7 @@ export function createHttpResponseFrame(
 ): HttpResponseFrame {
   return {
     id: ulid(),
-    type: "http.response",
+    type: 'http.response',
     timestamp: Date.now(),
     version: PROTOCOL_VERSION,
     requestId,
@@ -48,7 +47,7 @@ export function createHttpResponseFrame(
     bodySize,
     chunked,
     duration,
-  };
+  }
 }
 
 export function createHttpChunkFrame(
@@ -59,14 +58,14 @@ export function createHttpChunkFrame(
 ): HttpChunkFrame {
   return {
     id: ulid(),
-    type: "http.chunk",
+    type: 'http.chunk',
     timestamp: Date.now(),
     version: PROTOCOL_VERSION,
     requestId,
     chunkIndex,
     data,
     lastChunk,
-  };
+  }
 }
 
 export function createHttpAbortFrame(
@@ -76,23 +75,23 @@ export function createHttpAbortFrame(
 ): HttpAbortFrame {
   return {
     id: ulid(),
-    type: "http.abort",
+    type: 'http.abort',
     timestamp: Date.now(),
     version: PROTOCOL_VERSION,
     requestId,
     reason,
     code,
-  };
+  }
 }
 
 export function createPingFrame(latencyHint?: number): PingFrame {
   return {
     id: ulid(),
-    type: "ping",
+    type: 'ping',
     timestamp: Date.now(),
     version: PROTOCOL_VERSION,
     latencyHint,
-  };
+  }
 }
 
 export function createStatusFrame(
@@ -102,85 +101,83 @@ export function createStatusFrame(
 ): StatusFrame {
   return {
     id: ulid(),
-    type: "status",
+    type: 'status',
     timestamp: Date.now(),
     version: PROTOCOL_VERSION,
     localServer,
     p2pNode,
     system,
-  };
+  }
 }
 
 // ─── Frame Encoding ──────────────────────────────────────────────
 
 export function encodeFrame(frame: TunnelFrame): string {
   try {
-    return JSON.stringify(frame);
+    return JSON.stringify(frame)
   } catch (err) {
     throw new TunnelProtocolError(
       `Failed to encode frame: ${err instanceof Error ? err.message : String(err)}`,
       err instanceof Error ? err : undefined,
-    );
+    )
   }
 }
 
 // ─── Frame Decoding ──────────────────────────────────────────────
 
-type InboundFrame = HttpRequestFrame | PongFrame | AssignedFrame | ErrorFrame;
+type InboundFrame = HttpRequestFrame | PongFrame | AssignedFrame | ErrorFrame
 
 export function decodeFrame(raw: string): InboundFrame {
-  let parsed: Record<string, unknown>;
+  let parsed: Record<string, unknown>
   try {
-    parsed = JSON.parse(raw) as Record<string, unknown>;
+    parsed = JSON.parse(raw) as Record<string, unknown>
   } catch (err) {
     throw new TunnelProtocolError(
       `Invalid JSON frame: ${err instanceof Error ? err.message : String(err)}`,
       err instanceof Error ? err : undefined,
-    );
+    )
   }
 
   // Validate required fields
   if (!parsed.id || !parsed.type || !parsed.timestamp || !parsed.version) {
-    throw new TunnelProtocolError(
-      `Missing required fields in frame: ${raw.substring(0, 200)}`,
-    );
+    throw new TunnelProtocolError(`Missing required fields in frame: ${raw.substring(0, 200)}`)
   }
 
   // Validate version
   if (parsed.version !== PROTOCOL_VERSION) {
     log.warn(
       { frameVersion: parsed.version, expectedVersion: PROTOCOL_VERSION },
-      "Frame version mismatch",
-    );
+      'Frame version mismatch',
+    )
   }
 
-  const type = parsed.type as string;
+  const type = parsed.type as string
 
   switch (type) {
-    case "http.request":
-      return validateHttpRequestFrame(parsed);
-    case "pong":
-      return validatePongFrame(parsed);
-    case "assigned":
-      return validateAssignedFrame(parsed);
-    case "error":
-      return validateErrorFrame(parsed);
+    case 'http.request':
+      return validateHttpRequestFrame(parsed)
+    case 'pong':
+      return validatePongFrame(parsed)
+    case 'assigned':
+      return validateAssignedFrame(parsed)
+    case 'error':
+      return validateErrorFrame(parsed)
     default:
-      log.warn({ type }, "Unknown frame type received, ignoring");
-      return parsed as unknown as InboundFrame;
+      log.warn({ type }, 'Unknown frame type received, ignoring')
+      return parsed as unknown as InboundFrame
   }
 }
 
 function validateHttpRequestFrame(parsed: Record<string, unknown>): HttpRequestFrame {
-  const required = ["id", "type", "timestamp", "version", "method", "path"];
+  const required = ['id', 'type', 'timestamp', 'version', 'method', 'path']
   for (const field of required) {
     if (parsed[field] === undefined) {
-      throw new TunnelProtocolError(`Missing field "${field}" in http.request frame`);
+      throw new TunnelProtocolError(`Missing field "${field}" in http.request frame`)
     }
   }
   return {
     id: parsed.id as string,
-    type: "http.request",
+    type: 'http.request',
     timestamp: parsed.timestamp as number,
     version: parsed.version as string,
     method: parsed.method as string,
@@ -189,43 +186,43 @@ function validateHttpRequestFrame(parsed: Record<string, unknown>): HttpRequestF
     headers: (parsed.headers as Record<string, string>) ?? {},
     body: (parsed.body as string | null) ?? null,
     bodySize: (parsed.bodySize as number) ?? 0,
-    remoteAddress: (parsed.remoteAddress as string) ?? "",
-    protocol: (parsed.protocol as string) ?? "https",
-    host: (parsed.host as string) ?? "",
-  };
+    remoteAddress: (parsed.remoteAddress as string) ?? '',
+    protocol: (parsed.protocol as string) ?? 'https',
+    host: (parsed.host as string) ?? '',
+  }
 }
 
 function validatePongFrame(parsed: Record<string, unknown>): PongFrame {
   return {
     id: parsed.id as string,
-    type: "pong",
+    type: 'pong',
     timestamp: parsed.timestamp as number,
     version: parsed.version as string,
     serverTime: (parsed.serverTime as number) ?? Date.now(),
-  };
+  }
 }
 
 function validateAssignedFrame(parsed: Record<string, unknown>): AssignedFrame {
   return {
     id: parsed.id as string,
-    type: "assigned",
+    type: 'assigned',
     timestamp: parsed.timestamp as number,
     version: parsed.version as string,
     subdomain: parsed.subdomain as string,
     protocolVersion: parsed.protocolVersion as string,
     relayUrl: parsed.relayUrl as string,
     serverTime: parsed.serverTime as number,
-  };
+  }
 }
 
 function validateErrorFrame(parsed: Record<string, unknown>): ErrorFrame {
   return {
     id: parsed.id as string,
-    type: "error",
+    type: 'error',
     timestamp: parsed.timestamp as number,
     version: parsed.version as string,
-    code: (parsed.code as string) ?? "UNKNOWN",
-    message: (parsed.message as string) ?? "Unknown error",
+    code: (parsed.code as string) ?? 'UNKNOWN',
+    message: (parsed.message as string) ?? 'Unknown error',
     fatal: (parsed.fatal as boolean) ?? false,
-  };
+  }
 }

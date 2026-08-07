@@ -6,6 +6,7 @@
 
 import { existsSync } from 'node:fs'
 import { ChromeNotFoundError } from '@/errors.ts'
+import { catchDebug } from '../lib/catch-logger.js'
 
 // ── Config types ─────────────────────────────────────────────────────────────
 
@@ -98,6 +99,7 @@ export async function resolveChromeBinary(channel: ChromeChannel = 'system'): Pr
       try {
         return await resolveChromeBinary(fam)
       } catch {
+        catchDebug(_err, 'executor:chrome-instance-profile:100')
         /* try next */
       }
     }
@@ -118,6 +120,7 @@ async function probePath(cmd: string): Promise<string | null> {
       if (out) return out
     }
   } catch {
+    catchDebug(_err, 'executor:chrome-instance-profile:120')
     /* ignore */
   }
   return null

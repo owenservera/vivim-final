@@ -4,9 +4,9 @@
 // bot-signal flags that硬编码 buildChromeArgs used.
 
 import { EngineError } from '../../errors.js'
+import type { Logger } from '../../lib/logger.js'
 import type { StealthProfileStore } from '../../storage/contracts/stealth-store.js'
 import type { LaunchMode } from '../../storage/contracts/stealth-store.js'
-import type { StructuredLogger } from '../logger.js'
 
 export type { LaunchMode } from '../../storage/contracts/stealth-store.js'
 
@@ -31,7 +31,7 @@ export class LaunchProfileEngine {
 
   constructor(
     private readonly store: StealthProfileStore,
-    private readonly logger?: StructuredLogger,
+    private readonly logger?: Logger,
   ) {
     void this.loadProfiles()
   }
@@ -52,7 +52,10 @@ export class LaunchProfileEngine {
   async resolve(providerId: string): Promise<LaunchProfile> {
     const policy = await this.store.getPolicy()
     const overrides = policy?.providerOverridesJson
-      ? (JSON.parse(policy.providerOverridesJson) as Record<string, string>)
+      ? (JSON.parse(policy.providerOverridesJson, null as Record<string, string>) as Record<
+          string,
+          string
+        >)
       : {}
     const overrideId = overrides[providerId]
     const profileId = overrideId ?? policy?.defaultLaunchProfileId ?? 'default'

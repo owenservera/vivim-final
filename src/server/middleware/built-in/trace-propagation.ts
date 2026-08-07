@@ -7,7 +7,7 @@
 import { getLogger } from '@/lib/logger.js'
 import type { Middleware } from '../types.js'
 
-const log = getLogger('trace-propagation')
+const _log = getLogger('trace-propagation')
 
 /** Generate a short random hex string for trace IDs */
 function generateTraceId(): string {

@@ -48,7 +48,7 @@ describe('HarnessFeedbackCoordinator', () => {
       expect(result.ok).toBe(true)
       expect(result.rounds).toBe(1)
       expect(result.turns).toHaveLength(1)
-      expect(result.turns[0]!.accepted).toBe(true)
+      expect(result.turns[0]?.accepted).toBe(true)
       expect(result.finalContent).toBe('good output')
     })
 
@@ -123,7 +123,7 @@ describe('HarnessFeedbackCoordinator', () => {
       const accept = mock(() => false)
 
       const result = await coord.run('base', produce, accept)
-      expect(result.turns[1]!.prompt).toContain('Output was empty')
+      expect(result.turns[1]?.prompt).toContain('Output was empty')
     })
   })
 })

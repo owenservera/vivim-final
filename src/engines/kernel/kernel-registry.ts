@@ -1,4 +1,5 @@
 import { EngineError } from '../../errors.js'
+import { catchDebug } from '../../lib/catch-logger.js'
 import type {
   CapabilityDescriptor,
   EngineDescriptor,
@@ -32,6 +33,7 @@ export class KernelRegistry {
       try {
         cb(entry)
       } catch {
+        catchDebug(_err, 'engines:kernel:kernel-registry:34')
         /* callback error should not prevent registration */
       }
     }
@@ -158,6 +160,7 @@ export class KernelRegistry {
       try {
         cb(id, from, to)
       } catch {
+        catchDebug(_err, 'engines:kernel:kernel-registry:160')
         /* callback error should not prevent status update */
       }
     }

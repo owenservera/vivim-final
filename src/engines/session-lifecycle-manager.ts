@@ -4,8 +4,9 @@
 // This engine consolidates session logic previously scattered across
 // session-caps.ts, chrome-governor.ts, and conversation-manager.ts.
 
-import { deriveId } from '../executor/ids.js'
 import { EngineError } from '../errors.js'
+import { deriveId } from '../executor/ids.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
 import { SessionStatePersistence } from './session-state-persistence.js'
@@ -165,7 +166,9 @@ export class SessionLifecycleManager {
     // Check concurrency limit
     const activeCount = this.countActiveSessions()
     if (activeCount >= this.options.maxConcurrentSessions) {
-      throw new EngineError(`Max concurrent sessions reached (${this.options.maxConcurrentSessions})`)
+      throw new EngineError(
+        `Max concurrent sessions reached (${this.options.maxConcurrentSessions})`,
+      )
     }
 
     const sessionId = deriveId('sess')
@@ -529,6 +532,7 @@ export class SessionLifecycleManager {
       try {
         await this.terminateSession(session.sessionId, 'manager destroyed')
       } catch {
+        catchDebug(_err, 'engines:session-lifecycle-manager:533')
         // best-effort
       }
     }

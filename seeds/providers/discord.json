@@ -35,7 +35,12 @@
     }
   ],
   "parsers": [
-    { "name": "discord-gateway", "version": 1, "is_active": true, "fallback": "generic-format-agnostic" }
+    {
+      "name": "discord-gateway",
+      "version": 1,
+      "is_active": true,
+      "fallback": "generic-format-agnostic"
+    }
   ],
   "models": [],
   "capabilities_config": [],

@@ -16,6 +16,7 @@
 // invoked when the deterministic + fuzzy + semantic layers all fail to clear
 // the configured confidence threshold.
 
+import { catchDebug } from '../../lib/catch-logger.js'
 import { MiniLmEmbeddingProvider } from '../embedding-minilm.js'
 import type { EmbeddingProvider } from '../semantic-search.js'
 import type { IntentResolver, NLCContext, ParsedIntent } from './types.js'
@@ -146,6 +147,7 @@ export class LLMSlaveResolver implements IntentResolver {
         try {
           await this.budgetGuard.accrue(1, 500)
         } catch {
+          catchDebug(_err, 'engines:nlcl:llm-slave-resolver:148')
           // Best-effort accrual.
         }
       }
@@ -311,6 +313,7 @@ JSON:`
           parsed = result.data as { capabilityId?: string; input?: Record<string, unknown> }
         }
       } catch {
+        catchDebug(_err, 'engines:nlcl:llm-slave-resolver:313')
         // Fall through to direct JSON.parse.
       }
     }

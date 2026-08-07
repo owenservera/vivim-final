@@ -10,7 +10,7 @@ import type { CapStoreDb } from '../db.js'
 
 type PrismaLoose = any
 
-function toLogRow(r: any): ParserExecutionLogRow {
+function toLogRow(r: Record<string, unknown>): ParserExecutionLogRow {
   return {
     id: r.id,
     providerId: r.providerId,

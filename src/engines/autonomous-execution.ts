@@ -1,169 +1,40 @@
 // src/engines/autonomous-execution.ts
-// AutonomousExecutionEngine — multi-step autonomous task executor with HITL gates
+// AutonomousExecutionEngine — autonomous task planning + execution.
+//
+// Session 7 (2026-08-07): Types extracted to autonomous-types.ts.
+// This file now contains only the engine class + planner functions.
 
-import { BudgetExceededError, ConsentViolationError, EngineError } from '../errors.js'
-import { newId } from '../ids.js'
-import { safeJsonParse } from '../lib/safe-json.js'
-import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
-import { ReplayController } from './autonomous-replay.js'
-import type { ReplayResult } from './autonomous-replay.js'
-import type { CapabilityComposer } from './capability-composer.js'
-import type { CapabilityEventBus } from './capability-event-bus.js'
-import type { ChromeGovernor } from './chrome-governor.js'
-import type { ExecutionPolicyEngine, PolicyDecision } from './execution-policy.js'
-import type { IntentResolver, NLCContext, ParsedIntent } from './nlcl/types.js'
-import type { SelectorHealer } from './selector-healer.js'
-import type { UnifiedCapabilityRegistry } from './unified-registry.js'
+import type {
+  ActionClassification,
+  AutonomousGoal,
+  AutonomousStep,
+  AutonomousTask,
+  BudgetUsage,
+  FailoverRouter,
+  GateStatus,
+  GateType,
+  HitlGate,
+  ReplayOptions,
+  StepStatus,
+  TaskStatus,
+} from './autonomous-types.js'
 
-// ── Types ───────────────────────────────────────────────────────────────
-
-// Unit 34.5: provider failover. Implemented by ProviderMuxEngine.fallbacksFor.
-export interface FailoverRouter {
-  fallbacksFor(providerId: string): Promise<string[]>
-}
-
-export type TaskStatus =
-  | 'pending'
-  | 'planning'
-  | 'executing'
-  | 'waiting_approval'
-  | 'paused'
-  | 'complete'
-  | 'failed'
-  | 'cancelled'
-export type StepStatus = 'pending' | 'running' | 'complete' | 'failed' | 'skipped' | 'waiting_human'
-export type ActionClassification =
-  | 'read'
-  | 'write'
-  | 'navigate'
-  | 'destructive'
-  | 'financial'
-  | 'communication'
-export type GateType =
-  | 'approval'
-  | 'confirmation'
-  | 'selection'
-  | 'input'
-  | 'question'
-  | 'option'
-  | 'file'
-  | 'url'
-export type GateStatus = 'pending' | 'approved' | 'denied' | 'skipped' | 'resolved' | 'expired'
-
-export interface AutonomousGoal {
-  description: string
-  maxSteps: number
-  maxDurationMs: number
-  requireApprovalAbove: ActionClassification
-  allowBrowser: boolean
-  costBudgetCents: number
-  // Unit 8.6: per-task budgets — exceeding any transitions task to paused
-  tokenBudget: number
-  iterationBudget: number
-  // Unit 36.2: explicit LLM provider for planning. 'local' (or unset) →
-  // LocalModelAdapter (offline). Any other value is an outbound/cloud model
-  // and is only honored when the user has consented (see resolvePlanner).
-  llmProvider?: string
-}
-
-// Unit 8.6: tracks per-task consumption across cost/tokens/iterations
-export interface BudgetUsage {
-  costCents: number
-  tokens: number
-  iterations: number
-}
-
-export interface AutonomousStep {
-  id: string
-  taskId: string
-  stepIndex: number
-  description: string
-  action: string
-  actionInput: Record<string, unknown>
-  classification: ActionClassification
-  status: StepStatus
-  result: unknown
-  error: string | null
-  startedAt: number | null
-  completedAt: number | null
-  requiresHumanApproval: boolean
-  // Unit 8.9: composite step support
-  parentStepId: string | null
-  isCompositeRoot: boolean
-}
-
-export interface HitlGate {
-  id: string
-  taskId: string
-  stepId: string
-  gateType: GateType
-  prompt: string
-  options: string[]
-  defaultValue: string | null
-  status: GateStatus
-  resolvedBy: string | null
-  resolvedAt: number | null
-  response: string | null
-  createdAt: number
-  expiresAt: number | null
-}
-
-export interface AutonomousTask {
-  id: string
-  goal: AutonomousGoal
-  status: TaskStatus
-  steps: AutonomousStep[]
-  startedAt: number
-  completedAt: number | null
-  result: unknown
-  error: string | null
-}
-
-// Unit 8.10: task templates
-export interface TaskTemplate {
-  id: string
-  name: string
-  params: string[]
-  planJson: string
-  version: number
-  isShared: boolean
-  createdAt: number
-  updatedAt: number
-}
-
-// Unit 8.5: replay with branching options
-export interface ReplayOptions {
-  /** Step index to replay from (0-based). Steps before this are copied verbatim. */
-  fromStep: number
-  /** If true, create a new branch task (original untouched). If false, re-execute in-place. */
-  branch: boolean
-}
-
-// ── Classification priority (lower = more restrictive) ──────────────────
-
-const CLASSIFICATION_PRIORITY: Record<ActionClassification, number> = {
-  read: 0,
-  navigate: 1,
-  communication: 2,
-  write: 3,
-  destructive: 4,
-  financial: 5,
-}
-
-function classificationAtLeast(
-  classification: ActionClassification,
-  threshold: ActionClassification,
-): boolean {
-  return (CLASSIFICATION_PRIORITY[classification] ?? 0) >= (CLASSIFICATION_PRIORITY[threshold] ?? 0)
-}
-
-// The nlcl resolver uses a superset classification ('system' extra); map it
-// onto the autonomous engine's classification space.
-function toAutonomousClassification(c: string): ActionClassification {
-  return c === 'system' ? 'read' : (c as ActionClassification)
-}
-
-// ── Engine ──────────────────────────────────────────────────────────────
+// Re-export types so existing imports continue to work
+export type {
+  ActionClassification,
+  AutonomousGoal,
+  AutonomousStep,
+  AutonomousTask,
+  BudgetUsage,
+  FailoverRouter,
+  GateStatus,
+  GateType,
+  HitlGate,
+  ReplayOptions,
+  StepStatus,
+  TaskStatus,
+  TaskTemplate,
+} from './autonomous-types.js'
 
 export class AutonomousExecutionEngine {
   private activeTasks = new Map<string, AutonomousTask>()
@@ -440,6 +311,7 @@ export class AutonomousExecutionEngine {
             stepIndex: step.stepIndex,
           })
         } catch (err) {
+          catchDebug(err, 'engines:autonomous-execution:442')
           step.status = 'failed'
           step.error = err instanceof Error ? err.message : String(err)
           step.completedAt = Date.now()
@@ -1112,6 +984,7 @@ export class AutonomousExecutionEngine {
     try {
       return await this.executeStepWithHealing(step, task)
     } catch (err) {
+      catchDebug(err, 'engines:autonomous-execution:1114')
       const fallbacks = this.failoverRouter ? await this.failoverRouter.fallbacksFor(attempted) : []
       if (fallbacks.length === 0) throw err
 
@@ -1276,6 +1149,7 @@ export class AutonomousExecutionEngine {
         const state = await this.governor.cdp.getPageState(slaveId)
         if (state?.readyState === 'complete') return
       } catch {
+        catchDebug(_err, 'engines:autonomous-execution:1278')
         // ignore
       }
       await new Promise((r) => setTimeout(r, 200))
@@ -1396,6 +1270,7 @@ function assembleStep(
 // - no override (or 'local') → LocalModelAdapter (offline, always allowed)
 // - any other provider is an outbound/cloud model and is only honored when the
 //   user has consented; otherwise a ConsentViolationError is raised.
+
 export interface PlannerResolution {
   provider: string
   local: boolean

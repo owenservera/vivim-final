@@ -49,7 +49,7 @@ describe('LiveCaptureEngine', () => {
   })
 
   it('uses Runtime.evaluate for composer probing and typing', async () => {
-    let sentMethods: string[] = []
+    const sentMethods: string[] = []
     const sender = createMockCdpSender({
       send: mock(async (method: string) => {
         sentMethods.push(method)
@@ -64,12 +64,12 @@ describe('LiveCaptureEngine', () => {
       captureTimeoutMs: 200,
     })
     // Should have: probe + set value + press enter = 3 Runtime.evaluate calls
-    const runtimeEvalCalls = sentMethods.filter(m => m === 'Runtime.evaluate')
+    const runtimeEvalCalls = sentMethods.filter((m) => m === 'Runtime.evaluate')
     expect(runtimeEvalCalls.length).toBeGreaterThanOrEqual(3)
   })
 
   it('uses click when sendButtonSelector provided', async () => {
-    let sentMethods: string[] = []
+    const sentMethods: string[] = []
     const sender = createMockCdpSender({
       send: mock(async (method: string) => {
         sentMethods.push(method)
@@ -86,7 +86,7 @@ describe('LiveCaptureEngine', () => {
       captureTimeoutMs: 200,
     })
     // Should have Runtime.evaluate calls for probe + set value + click button
-    const runtimeEvalCalls = sentMethods.filter(m => m === 'Runtime.evaluate')
+    const runtimeEvalCalls = sentMethods.filter((m) => m === 'Runtime.evaluate')
     expect(runtimeEvalCalls.length).toBeGreaterThanOrEqual(3)
   })
 

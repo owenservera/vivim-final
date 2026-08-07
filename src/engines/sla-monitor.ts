@@ -1,8 +1,8 @@
 // src/engines/sla-monitor.ts
 // Unit 9.5 — Latency SLA monitoring + alerting.
 
+import type { Logger } from '../lib/logger.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
-import type { StructuredLogger } from './logger.js'
 import type { MetricsRegistry } from './metrics.js'
 
 export interface SlaTarget {
@@ -41,7 +41,7 @@ export class SlaMonitor {
   constructor(
     policy?: Partial<SlaPolicy>,
     private metrics?: MetricsRegistry,
-    private logger?: StructuredLogger,
+    private logger?: Logger,
     private eventBus?: CapabilityEventBus,
   ) {
     if (policy) this.policy = { ...DEFAULT_POLICY, ...policy }

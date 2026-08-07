@@ -35,9 +35,9 @@ describe('IndexingPipeline', () => {
     await new Promise((r) => setTimeout(r, 150))
 
     expect(semantic.indexed).toHaveLength(1)
-    expect(semantic.indexed[0]!.text).toBe('Hello world')
-    expect(semantic.indexed[0]!.entityType).toBe('message')
-    expect(semantic.indexed[0]!.entityId).toBe('msg1')
+    expect(semantic.indexed[0]?.text).toBe('Hello world')
+    expect(semantic.indexed[0]?.entityType).toBe('message')
+    expect(semantic.indexed[0]?.entityId).toBe('msg1')
     expect(pipeline.pendingCount).toBe(0)
   })
 

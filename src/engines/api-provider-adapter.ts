@@ -2,6 +2,7 @@
 // Unit 5.3 — API-direct providers (OpenAI, Anthropic, OpenRouter)
 
 import { EngineError } from '../errors.js'
+import { catchDebug } from '../lib/catch-logger.js'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ export class ApiProviderAdapter {
               allTokens.push(token)
             }
           } catch {
+            catchDebug(_err, 'engines:api-provider-adapter:76')
             // ignore parse errors
           }
         }

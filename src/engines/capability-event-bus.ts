@@ -7,6 +7,7 @@
 // (OpenCode ingest, browser fleet, capability layer) has a single source of truth.
 
 import { isEventDeprecated } from '../cleanup/deprecated-events.js'
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import type { EventRecordStore } from './event-record-store.js'
 
@@ -240,6 +241,7 @@ export class CapabilityEventBus {
           try {
             ws.send(JSON.stringify(event))
           } catch {
+            catchDebug(_err, 'engines:capability-event-bus:242')
             // WebSocket may be closed — ignore
           }
           continue
@@ -260,6 +262,7 @@ export class CapabilityEventBus {
           try {
             ws.send(JSON.stringify(event))
           } catch {
+            catchDebug(_err, 'engines:capability-event-bus:262')
             // WebSocket may be closed — ignore
           }
         }
