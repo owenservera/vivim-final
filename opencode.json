@@ -107,6 +107,18 @@
       "env": {
         "BROWSER": "chromium"
       }
+    },
+    "vivim-browser": {
+      "type": "local",
+      "command": [
+        "bun",
+        "run",
+        "src/mcp/browser-mcp.ts"
+      ],
+      "enabled": true,
+      "env": {
+        "VIVIM_LOG_STDERR": "1"
+      }
     }
   },
   "lsp": {

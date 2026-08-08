@@ -39,6 +39,10 @@ export class OpenCodeIngest {
     tier: number
   }
   private readonly seen = new Set<string>()
+  /** Message IDs already projected from the serve transcript (per session). */
+  private readonly projectedMessages = new Map<string, Set<string>>()
+  /** v1.18.4: streamed text parts accumulate per partID until `session.idle`. */
+  private readonly textByPart = new Map<string, string>()
   private threadBySession = new Map<
     string,
     { providerSessionId: string; conversationId: string; agentSessionId: string }
@@ -103,6 +107,22 @@ export class OpenCodeIngest {
 
     try {
       switch (ev.type) {
+        // --- opencode v1.18.4 events ---
+        case 'message.part.delta': {
+          // accumulate streaming text per partID
+          if (ev.properties?.field === 'text' && typeof ev.properties.delta === 'string') {
+            const pid = ev.properties.partID ?? 'text'
+            this.textByPart.set(pid, (this.textByPart.get(pid) ?? '') + ev.properties.delta)
+          }
+          break
+        }
+        case 'session.idle':
+          // Prefer the authoritative serve transcript (clean per-message text,
+          // both roles, correct ordering). Falls back to delta accumulation if
+          // the transcript fetch fails.
+          await this.projectSessionTranscript(sessionId, thread.conversationId)
+          break
+        // --- opencode v1.17.15 events (legacy) ---
         case 'text':
         case 'step_start':
         case 'step_finish':
@@ -115,6 +135,7 @@ export class OpenCodeIngest {
           break
         case 'permission':
         case 'permission_request':
+        case 'permission.asked':
           await this.ingestPermission(thread.agentSessionId, sessionId, ev)
           break
         case 'diff':
@@ -131,6 +152,81 @@ export class OpenCodeIngest {
       catchDebug(err, 'engines:opencode:opencode-ingest:128')
       // never crash ingest on one bad event
     }
+  }
+
+  /**
+   * Project the authoritative serve transcript (`GET /session/:id/message`) into
+   * the conversation as clean user/assistant messages, keyed by serve message ID
+   * so replayed `session.idle` events never duplicate rows. Falls back to
+   * `flushAccumulatedText` (delta accumulation) when the fetch fails so tests and
+   * non-SSE transports still land output.
+   */
+  private async projectSessionTranscript(
+    sessionId: string,
+    conversationId: string,
+  ): Promise<void> {
+    let messages: Array<Record<string, unknown>> = []
+    try {
+      messages = await this.client.getSessionMessages(sessionId)
+    } catch (err) {
+      catchDebug(err, 'engines:opencode:opencode-ingest:project:fetch')
+      await this.flushAccumulatedText(conversationId, sessionId)
+      return
+    }
+    if (!Array.isArray(messages) || messages.length === 0) {
+      await this.flushAccumulatedText(conversationId, sessionId)
+      return
+    }
+
+    const seen = this.projectedMessages.get(sessionId) ?? new Set<string>()
+    this.projectedMessages.set(sessionId, seen)
+    for (const rawMsg of messages) {
+      const info = (rawMsg.info ?? {}) as {
+        id?: string
+        role?: string
+        modelID?: string
+      }
+      const msgId = info.id
+      if (!msgId || seen.has(msgId)) continue
+
+      const parts = Array.isArray(rawMsg.parts) ? (rawMsg.parts as Array<Record<string, unknown>>) : []
+      const text = parts
+        .filter((p) => p.type === 'text' && typeof p.text === 'string')
+        .map((p) => p.text as string)
+        .join('\n')
+      if (!text.trim()) {
+        // Still mark as seen so we never re-project an empty (e.g. step-start-only) message.
+        seen.add(msgId)
+        continue
+      }
+
+      const role = info.role === 'user' ? 'user' : 'assistant'
+      seen.add(msgId)
+      await this.store.appendAgentMessage(conversationId, {
+        role,
+        text,
+        model: info.modelID ?? undefined,
+        blocks: [{ kind: 'text', data: { type: 'text', text } }],
+      })
+    }
+    // Clear any live-streamed deltas now that the transcript has been projected.
+    this.textByPart.clear()
+  }
+
+  /** Flush v1.18.4 streamed text (accumulated per part) as one assistant message. */
+  private async flushAccumulatedText(conversationId: string, sessionId: string): Promise<void> {
+    const texts = [...this.textByPart.values()].filter((t) => t.trim().length > 0)
+    this.textByPart.clear()
+    if (texts.length === 0) return
+    const text = texts.join('\n')
+    const key = `v18:${sessionId}:${texts.length}`
+    if (this.seen.has(key)) return
+    this.seen.add(key)
+    await this.store.appendAgentMessage(conversationId, {
+      role: 'assistant',
+      text,
+      blocks: [{ kind: 'text', data: { type: 'text', text } }],
+    })
   }
 
   private async ingestMessage(conversationId: string, ev: OpencodeEvent): Promise<void> {
@@ -175,9 +271,12 @@ export class OpenCodeIngest {
     sessionId: string,
     ev: OpencodeEvent,
   ): Promise<void> {
-    const tool = ev.toolName ?? ev.part?.tool
+    // v1.18.4 `permission.asked`: `{ type, properties: { id: ^per, sessionID, permission, patterns, ... } }`.
+    // The permission/tool name and the `^per` request ID live in `properties`, NOT top-level.
+    const tool = ev.properties?.permission ?? ev.toolName ?? ev.part?.tool
+    const permissionId = ev.properties?.id ?? ev.permissionID
     const { decision, tier } = this.assess(tool)
-    await this.respondDecision(agentSessionId, sessionId, ev, tool ?? 'unknown', decision, tier)
+    await this.respondDecision(agentSessionId, sessionId, ev, tool ?? 'unknown', decision, tier, permissionId)
   }
 
   private async respondDecision(
@@ -187,9 +286,13 @@ export class OpenCodeIngest {
     tool: string,
     decision: PermissionDecision,
     tier: number,
+    permissionIdOverride?: string,
   ): Promise<void> {
     await this.appendDecisionRow(agentSessionId, sessionId, ev, tool, tier, decision)
-    const pid = ev.permissionID ?? ev.id
+    // v1.18.4: the path param must be the `^per` permission ID from
+    // `properties.id`; `ev.id` is the `^evt_` event ID and would 400 on the
+    // `^per` pattern check.
+    const pid = permissionIdOverride ?? ev.permissionID ?? ev.id
     if (pid) {
       try {
         await this.client.respondPermission(sessionId, pid, decision)
@@ -208,7 +311,8 @@ export class OpenCodeIngest {
     tier: number,
     decision: PermissionDecision,
   ): Promise<void> {
-    const providerPermissionId = ev.permissionID ?? ev.id ?? `${sessionId}:${tool}:${now()}`
+    const providerPermissionId =
+      ev.properties?.id ?? ev.permissionID ?? `${sessionId}:${tool}:${now()}`
     if (this.seen.has(`perm:${providerPermissionId}`)) return
     this.seen.add(`perm:${providerPermissionId}`)
     await this.store.appendAgentPermissionDecision({

@@ -47,6 +47,9 @@ export interface ResolvedElement {
   backendNodeId?: number
   /** True if the match came from the SelectorHealer fallback. */
   healed?: boolean
+  /** 0-based index into top-frame `document.querySelectorAll('iframe')` when the
+   *  match lives inside an iframe (same-origin). Absent = main frame. */
+  frameIndex?: number
 }
 
 export interface AccessibilityNode {
@@ -149,6 +152,9 @@ export interface BrowserCapabilityDef {
   params: ZodType
   /** If set, the handler auto-resolves a target element before acting. */
   grounding?: keyof SemanticSelector | 'composite'
+  /** Params that must NOT be treated as target descriptors for grounding
+   *  (e.g. `type` uses `text` as the VALUE to type, not a target). */
+  groundingExclude?: Set<string>
   /** Trust classification. */
   trust: TrustPolicy
   /** Emits HarnessNode[] (DAG step) OR runs imperatively via governor. */

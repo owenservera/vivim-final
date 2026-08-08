@@ -467,7 +467,9 @@ Check for canvas-based streaming indicators:
 
 **Claude**: Provider is registered and Active in DB. Profile is on disk with cookies (`chrome-profiles/claude/owservera/`). Same Chrome slave requirement.
 
-**DeepSeek/Qwen/Grok**: Seeded in DB but no parser rows yet, no Chrome profiles. Will fail at parse/capture stage.
+**DeepSeek**: Provider is registered and Active in DB with `deepseek/001_reasoning_sse` parser seeded. No Chrome profile on disk yet — send/receive cannot execute until one is set up via `bun run devops runtime-test setup --provider=deepseek --account=owservera@gmail.com`.
+
+**Qwen/Grok**: Seeded in DB but no parser rows yet, no Chrome profiles. Will fail at parse/capture stage.
 
 ---
 

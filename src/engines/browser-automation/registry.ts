@@ -80,15 +80,23 @@ export class BrowserCapabilityRegistry {
     }
     // Auto-resolve target element for grounding capabilities.
     if (def.grounding) {
-      const sel = parseSelector(parsed)
+      const sel = parseSelector(parsed, def.groundingExclude)
       if (sel) {
         try {
           const resolved = await this.grounding.resolve(ctx.slaveId, sel)
-          capCtx.params = { ...parsed, __selector: resolved.selector }
+          capCtx.params = {
+            ...parsed,
+            __selector: resolved.selector,
+            ...(resolved.frameIndex !== undefined ? { __frame: resolved.frameIndex } : {}),
+          }
         } catch {
           if (this.healer) {
             const healed = await this.healer.heal(ctx.slaveId, sel, capabilityId)
-            capCtx.params = { ...parsed, __selector: healed.selector }
+            capCtx.params = {
+              ...parsed,
+              __selector: healed.selector,
+              ...(healed.frameIndex !== undefined ? { __frame: healed.frameIndex } : {}),
+            }
           } else {
             return { ok: false, error: `resolution failed for ${capabilityId}` }
           }
@@ -110,18 +118,34 @@ export class BrowserCapabilityRegistry {
 
 // ── helpers shared by def files ────────────────────────────────────────────
 
-/** Extract a SemanticSelector from parsed params (text/selector/aria/placeholder). */
+/**
+ * Extract a SemanticSelector from parsed params. When MULTIPLE grounding params
+ * are provided (e.g. `text` + `selector`), builds a `composite` list in the
+ * SemanticGrounding MODE_PRIORITY order so the most-semantic mode is tried
+ * first and the rest are fallbacks. A single param returns single-mode.
+ */
 export function parseSelector(
   params: Record<string, unknown>,
+  exclude: Set<string> = EMPTY_EXCLUDE,
 ): import('./types.js').SemanticSelector | null {
-  if (typeof params.selector === 'string') return { css: params.selector }
-  if (typeof params.text === 'string') return { text: params.text }
-  if (typeof params.ariaLabel === 'string') return { label: params.ariaLabel }
-  if (typeof params.placeholder === 'string') return { placeholder: params.placeholder }
-  if (typeof params.role === 'string') return { role: params.role }
-  if (typeof params.testid === 'string') return { testid: params.testid }
-  return null
+  const candidates: import('./types.js').SemanticSelector[] = []
+  if (typeof params.testid === 'string' && !exclude.has('testid'))
+    candidates.push({ testid: params.testid })
+  if (typeof params.ariaLabel === 'string' && !exclude.has('ariaLabel'))
+    candidates.push({ label: params.ariaLabel })
+  if (typeof params.placeholder === 'string' && !exclude.has('placeholder'))
+    candidates.push({ placeholder: params.placeholder })
+  if (typeof params.role === 'string' && !exclude.has('role')) candidates.push({ role: params.role })
+  if (typeof params.text === 'string' && !exclude.has('text')) candidates.push({ text: params.text })
+  if (typeof params.selector === 'string' && !exclude.has('selector'))
+    candidates.push({ css: params.selector })
+  if (candidates.length === 0) return null
+  if (candidates.length === 1) return candidates[0]
+  return { composite: candidates }
 }
+
+/** Shared frozen empty set so default-arg calls don't allocate. */
+const EMPTY_EXCLUDE: ReadonlySet<string> = new Set<string>()
 
 function isCapabilityDef(v: unknown): v is BrowserCapabilityDef {
   return (

@@ -709,9 +709,10 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     serve: {
       client: import('../engines/opencode/opencode-client.js').OpenCodeClient
       ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+      supervisor: import('../engines/opencode/opencode-supervisor.js').OpenCodeSupervisor
     },
   ): Promise<Response> {
-    const { client, ingest } = serve
+    const { client, ingest, supervisor } = serve
     const path = url.pathname
 
     if (path === '/api/opencode/send' && req.method === 'POST') {
@@ -744,7 +745,36 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     }
 
     if (path === '/api/opencode/sessions' && req.method === 'GET') {
-      return json({ ok: true, sessions: [], text: 'Session listing requires the ingest layer.' })
+      try {
+        const sessions = await client.listSessions()
+        return json({ ok: true, sessions, count: sessions.length })
+      } catch (err) {
+        return errorResponse(err instanceof Error ? err.message : String(err), 'InternalError', 500)
+      }
+    }
+
+    if (path === '/api/opencode/instances' && req.method === 'GET') {
+      // Instance register + live classifier: which opencode process is vivim's
+      // (managed) vs the user's interactive session (external). Never kill by
+      // image name — consult this endpoint first.
+      try {
+        const classified = supervisor.getRegistry().classifyLive()
+        const ledger = supervisor.getRegistry().readLedger()
+        return json({
+          ok: true,
+          managed: classified.filter((p) => p.managed),
+          external: classified.filter((p) => !p.managed),
+          current: {
+            instanceId: supervisor.getInstanceId(),
+            pid: supervisor.getPid(),
+            port: supervisor.getPort(),
+            running: supervisor.isRunning(),
+          },
+          ledgerCount: ledger.length,
+        })
+      } catch (err) {
+        return errorResponse(err instanceof Error ? err.message : String(err), 'InternalError', 500)
+      }
     }
 
     if (path.startsWith('/api/opencode/permission/') && req.method === 'POST') {
@@ -853,6 +883,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
             | {
                 client: import('../engines/opencode/opencode-client.js').OpenCodeClient
                 ingest: import('../engines/opencode/opencode-ingest.js').OpenCodeIngest
+                supervisor: import('../engines/opencode/opencode-supervisor.js').OpenCodeSupervisor
               }
             | undefined
           if (!serve) {

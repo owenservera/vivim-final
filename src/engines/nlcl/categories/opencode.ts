@@ -94,4 +94,86 @@ export const opencodePatterns: CommandPattern[] = [
     capabilityId: 'cap:opencode:session.list',
     execute: async () => ({}),
   }),
+
+  pattern('opencode.models', 'opencode.models', 'List available OpenCode models', {
+    patterns: [
+      {
+        regex: /opencode\s+(?:models?|model\s+list|available\s+models?)$/i,
+        priority: 12,
+        keywords: ['opencode', 'model'],
+        extract: () => ({}),
+      },
+      {
+        regex: /(?:what|which)\s+models?\s+(?:does\s+)?opencode\s+(?:have|offer|support)\??$/i,
+        priority: 11,
+        keywords: ['opencode', 'model'],
+        extract: () => ({}),
+      },
+    ],
+    aliases: ['opencode models', 'opencode model list', 'list opencode models'],
+    examples: ['opencode models', 'what models does opencode offer'],
+    inputSchema: z.object({}),
+    executor: 'opencode',
+    category: 'agent',
+    classification: 'read',
+    capabilityId: 'cap:opencode:models',
+    execute: async () => ({}),
+  }),
+
+  pattern('opencode.model.sync', 'opencode.model.sync', 'Refresh the OpenCode model list', {
+    patterns: [
+      {
+        regex: /opencode\s+(?:model\s+)?(?:sync|refresh|update)(?:\s+models?)?$/i,
+        priority: 12,
+        keywords: ['opencode', 'sync', 'refresh', 'model'],
+        extract: (m) => ({
+          refresh: /refresh/.test(m[0]),
+        }),
+      },
+    ],
+    aliases: ['sync opencode models', 'refresh opencode models'],
+    examples: ['opencode models sync', 'refresh opencode models'],
+    inputSchema: z.object({
+      refresh: z.boolean().optional(),
+    }),
+    executor: 'opencode',
+    category: 'agent',
+    classification: 'system',
+    capabilityId: 'cap:opencode:model.sync',
+    execute: async () => ({}),
+  }),
+
+  pattern('opencode.model.set_default', 'opencode.model.set_default', 'Set the default OpenCode model', {
+    patterns: [
+      {
+        regex: /(?:set|use|switch|make)\s+(?:the\s+)?(?:default\s+)?opencode\s+model\s+(?:to|as|:)\s+(.+)$/i,
+        priority: 12,
+        keywords: ['opencode', 'default', 'model'],
+        extract: (m) => ({
+          model: (m[1] ?? '').trim(),
+        }),
+      },
+      {
+        regex: /opencode\s+(?:model\s+)?set-default\s+(.+)$/i,
+        priority: 12,
+        keywords: ['opencode', 'set-default', 'model'],
+        extract: (m) => ({
+          model: (m[1] ?? '').trim(),
+        }),
+      },
+    ],
+    aliases: ['opencode model set-default', 'set default opencode model'],
+    examples: [
+      'set default opencode model to opencode/deepseek-v4-flash-free',
+      'opencode model set-default opencode/mimo-v2.5-free',
+    ],
+    inputSchema: z.object({
+      model: z.string(),
+    }),
+    executor: 'opencode',
+    category: 'agent',
+    classification: 'system',
+    capabilityId: 'cap:opencode:model.set_default',
+    execute: async () => ({}),
+  }),
 ]

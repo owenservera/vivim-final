@@ -54,7 +54,15 @@ function resolveLogFile(): string | null {
 
 const LOG_FILE = resolveLogFile()
 
+// Explicit stderr stream for stdio programs (e.g. the MCP server) whose stdout
+// must carry ONLY protocol bytes. `pino.destination(2)` is a plain fd — no
+// worker thread — and bypasses the pretty transport entirely.
+const LOG_STDERR = process.env.VIVIM_LOG_STDERR === '1'
+
 function buildLogger(): pino.Logger {
+  if (LOG_STDERR) {
+    return pino({ level: LEVEL }, pino.destination(2))
+  }
   if (LOG_FILE) {
     try {
       mkdirSync(dirname(LOG_FILE), { recursive: true })

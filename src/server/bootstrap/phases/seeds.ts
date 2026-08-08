@@ -14,6 +14,19 @@ export async function bootstrapSeedsPhase(ctx: BootstrapContext): Promise<void> 
   const db = getDb()
   ctx.db = db
 
+  // ── Data migrations (SchemaMeta-backed, complements Prisma DDL) ────────
+  // The MigrationRunner handles DATA transformations (column-value reshaping,
+  // bulk backfills). It is a no-op while the MIGRATIONS registry is empty.
+  try {
+    const { applyPendingMigrations } = await import('../../../storage/migration/index.js')
+    const applied = await applyPendingMigrations()
+    if (applied.length > 0) {
+      log.info({ count: applied.length }, 'Applied data migrations')
+    }
+  } catch (err) {
+    log.warn({ err }, 'Data migration pass skipped')
+  }
+
   // ── Boot seeds (skip if already seeded; FORCE_SEED env to re-run) ────
   const { ProviderStoreImpl } = await import('../../../storage/impl/provider-store-impl.js')
   const { ProviderRegistrar } = await import('../../../engines/provider-registrar.js')
@@ -78,6 +91,18 @@ export async function bootstrapSeedsPhase(ctx: BootstrapContext): Promise<void> 
     }
   } else {
     log.info('DB already seeded — skipping boot seeds (set FORCE_SEED=true to re-run)')
+    // Still converge the taxonomy pool: the pool may have grown since this DB
+    // was seeded (e.g. regenerated 3.5k-node pool vs 348-row DB). Converge is
+    // insert-only + cheap (one count, one select, missing-slug inserts).
+    try {
+      const { ensureTaxonomySeeded } = await import('../../../../seeds/taxonomy/taxonomy-seed.js')
+      const tax = await ensureTaxonomySeeded(db.prisma, false, true)
+      if (tax.upserted > 0) {
+        log.info({ count: tax.upserted }, 'Converged capability-taxonomy rows on seeded DB')
+      }
+    } catch (err) {
+      log.warn({ err }, 'Taxonomy converge skipped')
+    }
   }
 
   // Initialize provider registry cache (loads all provider data from DB)

@@ -10,8 +10,9 @@ import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '.
 import type { OpenCodeClient } from './opencode-client.js'
 import type { OpenCodeIngest } from './opencode-ingest.js'
 import type { OpencodeEvent } from './types.js'
+import { isSessionDone, textDeltaFromEvent } from './types.js'
 
-const SEND_TIMEOUT_MS = 30_000
+const SEND_TIMEOUT_MS = 120_000
 
 export interface OpenCodeExecutorOptions {
   client: OpenCodeClient
@@ -86,13 +87,17 @@ export class OpenCodeExecutor implements CommandExecutor {
           // biome-ignore lint/style/noNonNullAssertion: resolvedSessionId is validated before subscribe
           resolvedSessionId!,
           (ev: OpencodeEvent) => {
-            if (ev.type === 'step_finish' || ev.type === 'done') {
+            // opencode v1.18.4: completion = `session.idle`; text streams via
+            // `message.part.delta` frames (properties.delta). v1.17.15 types kept
+            // as fallbacks.
+            if (isSessionDone(ev)) {
               clearTimeout(timer)
               resolve()
             }
-            if (ev.type === 'text' && ev.part?.text) {
-              text += ev.part.text
-              blocks.push({ type: 'text', text: ev.part.text })
+            const chunk = textDeltaFromEvent(ev)
+            if (chunk) {
+              text += chunk
+              blocks.push({ type: 'text', text: chunk })
             }
             if (ev.type === 'error') {
               clearTimeout(timer)
@@ -148,12 +153,13 @@ export class OpenCodeExecutor implements CommandExecutor {
     traceId: string,
     start: number,
   ): Promise<CommandResult> {
-    // Session list is best-effort — ingest tracks active sessions in memory
+    // Authoritative list from the serve API (audit F4 — no longer a stub).
+    const sessions = await this.client.listSessions()
     return {
       ok: true,
       intent: _intent.intent,
-      output: { sessions: [] },
-      text: 'Session listing requires the ingest layer to be active.',
+      output: { sessions },
+      text: sessions.length > 0 ? `Found ${sessions.length} opencode session(s)` : 'No opencode sessions',
       latencyMs: Date.now() - start,
       traceId,
       classification: 'read',

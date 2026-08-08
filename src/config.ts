@@ -315,6 +315,14 @@ export const config = {
   opencodeServerPassword: process.env.OPENCODE_SERVER_PASSWORD ?? '',
   opencodeServerUsername: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
 
+  // OpenCode model sync (daily free-model refresh; off via '0')
+  opencodeModelSyncEnabled: process.env.OPENCODE_MODEL_SYNC_ENABLED !== '0',
+  opencodeModelSyncIntervalHours: Number.parseInt(
+    process.env.OPENCODE_MODEL_SYNC_INTERVAL_HOURS ?? '24',
+    10,
+  ) || 24,
+  opencodeModelSyncRefresh: process.env.OPENCODE_MODEL_SYNC_REFRESH === '1',
+
   // MCP
   mcpPort: Number.parseInt(process.env.MCP_PORT ?? '0', 10) || undefined,
 

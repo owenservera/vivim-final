@@ -4,13 +4,6 @@
 
 // ── L0: Bookkeeping ────────────────────────────────────────────────────────
 
-export interface MigrationLogRow {
-  id: string
-  filename: string
-  checksum: string
-  applied_at: number
-}
-
 // ── L1: Provider Knowledge Graph ────────────────────────────────────────────
 
 export interface ProviderDefinitionRow {

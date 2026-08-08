@@ -66,8 +66,15 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
     const { LocalAgentProviderExecutor } = await import(
       '../../../engines/local-agent/local-agent-executor.js'
     )
+    const { OpenCodeModelSync } = await import(
+      '../../../engines/local-agent/opencode-model-sync.js'
+    )
     const localAgentStore = new LocalAgentStoreImpl(db)
     const localAgentExecutor = new LocalAgentProviderExecutor(localAgentStore, eventBus)
+    const opencodeModelSync = new OpenCodeModelSync(localAgentStore, {
+      intervalMs: config.opencodeModelSyncIntervalHours * 60 * 60 * 1000,
+      refresh: config.opencodeModelSyncRefresh,
+    })
 
     // ── Storage Relocation Engine ──────────────────────────────────────────
     const { StorageRelocationEngine } = await import(
@@ -203,8 +210,19 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
       synthesizer,
       localAgentStore,
       localAgentExecutor,
+      opencodeModelSync,
       relocationEngine,
     })
+
+    // Background daily opencode free-model refresh (feature: model sync). Non-blocking;
+    // runs once at launch (skipping a fresh cache) then on the configured interval.
+    if (config.opencodeModelSyncEnabled) {
+      opencodeModelSync.start()
+      log.info(
+        { intervalHours: config.opencodeModelSyncIntervalHours, refresh: config.opencodeModelSyncRefresh },
+        'opencode model sync daemon started',
+      )
+    }
 
     const { registerProviderCapabilities } = await import('../../../engines/provider-caps.js')
     registerProviderCapabilities(registry)
@@ -370,7 +388,14 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
             eventRecordStore: eventStore,
           })
           ;(globalThis as Record<string, unknown>).__opencodeServe = { supervisor, client, ingest }
-          log.info({ port }, 'OpenCode serve supervisor started')
+          log.info(
+            {
+              port,
+              pid: supervisor.getPid(),
+              instanceId: supervisor.getInstanceId(),
+            },
+            'OpenCode serve supervisor started',
+          )
         } catch (err) {
           log.warn({ err }, 'OpenCode serve supervisor skipped')
         }

@@ -32,15 +32,6 @@ model SchemaMeta {
   @@id([key, value])
 }
 
-model MigrationLog {
-  id        String @id
-  filename  String
-  checksum  String
-  appliedAt BigInt @map("applied_at")
-
-  @@map("migration_log")
-}
-
 // ═══════════════════════════════════════════════════════════════════
 // L1: Provider Knowledge Graph
 // ═══════════════════════════════════════════════════════════════════

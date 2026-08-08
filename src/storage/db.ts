@@ -35,29 +35,6 @@ export class CapStoreDb {
     await closePrisma()
   }
 
-  // ── Migration helper ───────────────────────────────────────────────────
-
-  async applyMigration(filename: string, sql: string): Promise<void> {
-    const checksum = await Bun.CryptoHasher.hash('sha256', sql, 'hex')
-    await this.prisma.$executeRawUnsafe(sql)
-    await this.prisma.migrationLog.create({
-      data: {
-        id: newId(),
-        filename,
-        checksum,
-        appliedAt: Date.now(),
-      },
-    })
-  }
-
-  async hasMigration(filename: string): Promise<boolean> {
-    const row = await this.prisma.migrationLog.findFirst({
-      where: { filename },
-      select: { id: true },
-    })
-    return row !== null
-  }
-
   // ── L1: Provider CRUD ──────────────────────────────────────────────────
 
   async getProvider(id: string) {

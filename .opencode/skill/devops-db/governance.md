@@ -55,5 +55,18 @@ If you seeded but didn't restart, or generated but didn't seed, it is invisible.
 
 ## Stale Docs Note
 
-AGENTS.md says "~54 tables" — this is **wrong**; the schema now has **160 models**. When
-writing docs or reports, use 160. The `report-tables.ts` script counts live tables.
+AGENTS.md and older docs may say "~54 tables" or "160 models" — the current schema has
+**196 models**. When writing docs or reports, use 196. The `report-tables.ts` script
+counts live tables.
+
+## Schema / Migration Doctrine (current)
+
+- **DDL only via `bunx prisma db push`** — no `_prisma_migrations` table; `prisma migrate
+  diff` is the authoritative drift check (target: zero drift).
+- **Data migrations** (column-value reshaping, backfills) go through the SchemaMeta-backed
+  `MigrationRunner` (`src/storage/migration/`), wired into boot at `bootstrapSeedsPhase`
+  via `applyPendingMigrations()`. Register steps in `migrations-registry.ts`. Do NOT add a
+  second migration mechanism.
+- **Fixture rebuild** must use an ABSOLUTE `file:C:/0-BlackBoxProject-0/vivim-final/tests/fixtures/node-store-test.db`
+  URL — relative `file:` resolves against `prisma/schema.prisma` and silently creates a
+  duplicate at `prisma/tests/fixtures/`.

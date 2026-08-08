@@ -61,20 +61,30 @@ function loadJson<T>(path: string): T {
 /**
  * Idempotent taxonomy seed used at server boot.
  *
- * Writes the capability hierarchy into `capabilityTaxonomy`. Sticky by design:
- * if the table already has rows it does nothing (unless `force` is set), so a
- * fresh clone or post-migration boot self-heals without a manual `bun run seed`.
+ * Writes the capability hierarchy into `capabilityTaxonomy`.
+ *
+ * Modes:
+ * - Sticky by default: if the table already has rows it does nothing, so a
+ *   fresh clone or post-migration boot self-heals without a manual `bun run seed`.
+ * - `force`: re-upsert ALL pool rows even if the table is populated.
+ * - `converge`: insert only pool slugs missing from the DB, then fix up parent
+ *   links so children point at canonical pool ids. This lets a populated DB
+ *   self-heal when the pool grows (e.g. a regenerated 3.5k-node pool against a
+ *   348-row DB) without a manual force run.
  *
  * @param prisma   Live PrismaClient (pass `db.prisma` from boot).
  * @param force    When true, re-upsert all rows even if the table is populated.
+ * @param converge When true and the table is populated, insert missing pool
+ *                 slugs + repair parent links (best-effort convergence).
  * @returns number of rows upserted.
  */
 export async function ensureTaxonomySeeded(
   prisma: PrismaClient,
   force = false,
+  converge = false,
 ): Promise<{ upserted: number }> {
   const existing = await prisma.capabilityTaxonomy.count()
-  if (existing > 0 && !force) {
+  if (existing > 0 && !force && !converge) {
     return { upserted: 0 }
   }
 
@@ -95,8 +105,19 @@ export async function ensureTaxonomySeeded(
     slugToId.set(node.slug, node.id)
   }
 
+  // Converge mode: fetch existing slugs once and only insert the missing ones.
+  let existingSlugs = new Set<string>()
+  if (converge) {
+    const rows = await prisma.capabilityTaxonomy.findMany({ select: { slug: true } })
+    existingSlugs = new Set(rows.map((r) => r.slug))
+  }
+
   let upserted = 0
   for (const node of capabilityNodes) {
+    // Converge: skip nodes already present (insert-only, no overwrite).
+    if (converge && existingSlugs.has(node.slug)) {
+      continue
+    }
     const parentSlug = node.parent_slug
     const parentCapId = parentSlug ? (slugToId.get(parentSlug) ?? null) : null
 
@@ -195,7 +216,11 @@ async function main() {
   console.log('[seed] Done.')
 }
 
-main().catch((e) => {
-  console.error('[seed] Fatal:', e)
-  process.exit(1)
-})
+// Only run the CLI when this file is the entry point. Importing the module
+// (e.g. from server boot for `ensureTaxonomySeeded`) must NOT execute seeds.
+if (import.meta.main) {
+  main().catch((e) => {
+    console.error('[seed] Fatal:', e)
+    process.exit(1)
+  })
+}

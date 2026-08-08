@@ -257,7 +257,7 @@ bun run devops verify-cross-surface  # re-verify parity
 
 ### If Gate 0 fails (pre-flight)
 - Check `.runtime/backend-out.log` for startup errors
-- Verify DB is running: `bunx prisma migrate status`
+- Verify DB schema is in sync (no drift): `bunx prisma migrate diff --from-url "file:./prisma/dev.db" --to-schema-datamodel prisma/schema.prisma` (expect "No difference detected")
 - Check port availability: `netstat -ano | findstr :9420`
 
 ### If Gate 1 fails (typecheck)

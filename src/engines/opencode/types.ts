@@ -1,15 +1,36 @@
 // src/engines/opencode/types.ts
 // Shared types + risk-tier mapping for the OpenCode `serve` integration (feature 027).
-// Event grammar matches opencode v1.17.15 `--format json` (reuse parseOpencodeJson).
+// Event grammar: opencode v1.18.4 namespaced events (`message.part.delta`, `session.idle`)
+// wrap fields in `properties`; v1.17.15 flat `part.*` fields are kept for backward compat.
 
 import type { ContentBlock } from '../../schema/streaming.js'
 
-/** Raw SSE/NDJSON event frame from `opencode serve` (`GET /event`). */
+/**
+ * Raw SSE event frame from `opencode serve` (`GET /event`).
+ * v1.18.4 frames: `{ id, type, properties: { sessionID, messageID?, partID?, field?, delta?, ... } }`
+ */
 export interface OpencodeEvent {
+  id?: string
   type?: string
+  /** v1.18.4 payload wrapper. */
+  properties?: {
+    sessionID?: string
+    messageID?: string
+    partID?: string
+    /** For `message.part.delta`: which part field is streaming. */
+    field?: string
+    /** For `message.part.delta`: the text chunk (concatenate to rebuild text). */
+    delta?: string
+    /** For `session.status`: the session run state. */
+    status?: { type?: string; error?: unknown }
+    /** For `permission.asked`: the `^per` permission request ID + permission name. */
+    id?: string
+    permission?: string
+    [key: string]: unknown
+  }
+  // v1.17.15 flat fields (kept for backward compat / tests)
   subtype?: string
   sessionID?: string
-  id?: string
   permissionID?: string
   toolName?: string
   filePath?: string
@@ -33,6 +54,26 @@ export interface OpencodeEvent {
     cost?: number
     sessionID?: string
   }
+}
+
+/**
+ * v1.18.4 text streaming arrives as repeated `message.part.delta` frames with
+ * `properties.field === 'text'`. Returns the chunk, or undefined for other events.
+ */
+export function textDeltaFromEvent(ev: OpencodeEvent): string | undefined {
+  if (ev.type === 'message.part.delta' && ev.properties?.field === 'text') {
+    const d = ev.properties.delta
+    if (typeof d === 'string' && d) return d
+  }
+  return undefined
+}
+
+/** True when the event marks the session run as finished (v1.18.4 `session.idle`). */
+export function isSessionDone(ev: OpencodeEvent): boolean {
+  if (ev.type === 'session.idle') return true
+  if (ev.type === 'session.status' && ev.properties?.status?.type === 'idle') return true
+  if (ev.type === 'step_finish' || ev.type === 'done') return true
+  return false
 }
 
 export type PermissionDecision = 'allow' | 'deny' | 'allow_always'
