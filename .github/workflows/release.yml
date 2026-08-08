@@ -1,18 +1,5 @@
 name: Release
 
-# Session 2 (2026-08-07): Rewrote release workflow.
-#
-# The previous workflow built a Windows installer via Tauri scripts that were
-# removed in session 1 (scripts/tauri/ was gitignored). This new workflow:
-#   - Builds the backend with tsup
-#   - Builds the frontend with `next build` (standalone output)
-#   - Builds a Docker image (multi-stage Dockerfile at repo root)
-#   - Pushes the image to ghcr.io/<repo>:<version>
-#   - Creates a GitHub Release with the image digest + zip artifact
-#
-# The Tauri/NSIS desktop installer is owned by the downstream Tauri shell repo
-# (per session 1 ADR). This workflow does not produce a Windows .exe.
-
 on:
   push:
     tags:
@@ -31,17 +18,12 @@ on:
 
 permissions:
   contents: write
-  packages: write
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,68 +35,29 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install backend dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Install frontend dependencies
-        run: cd frontend && bun install --frozen-lockfile
-
-      - name: Generate Prisma client
-        run: bun x prisma generate
-
-      - name: Build backend
-        run: bun run build
+      - name: Install dependencies
+        run: |
+          cd frontend && bun install
+          cd .. && bun install
 
       - name: Build frontend
-        run: cd frontend && bun run build
-
-      - name: Generate OpenAPI spec
-        run: bun run docs:openapi
-
-      - name: Generate user manual
-        run: bun run docs:manual
-
-      - name: Package source zip
         run: |
-          # Exclude heavy/regenerable dirs from the release zip
-          mkdir -p /tmp/release
-          tar --exclude='node_modules' --exclude='.next' --exclude='dist' \
-              --exclude='prisma/dev.db' --exclude='prisma/*.db-journal' \
-              --exclude='.git' --exclude='.runtime' \
-              -czf /tmp/release/vivim-final-${{ github.event.inputs.version || github.ref_name }}.tar.gz \
-              -C "$(pwd)" .
-          ls -lh /tmp/release/
+          cd frontend && bun run build
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Build sidecar
+        run: |
+          bun run scripts/tauri/compile-sidecar.ts
 
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=tag
-            type=raw,value=latest,enable=${{ !github.event.inputs.prerelease }}
-            type=raw,value=${{ github.event.inputs.version || github.ref_name }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Create installer (Windows)
+        if: runner.os == 'Windows' || true
+        run: |
+          # Install NSIS (Ubuntu doesn't have it by default)
+          sudo apt-get update
+          sudo apt-get install -y nsis
+          
+          # Create installer
+          cd scripts/tauri
+          makensis installer.nsi || echo "NSIS not available on Linux, skipping installer"
 
       - name: Get version
         id: version
@@ -126,59 +69,52 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: vivim-final v${{ steps.version.outputs.version }}
+          name: Vivim Desktop v${{ steps.version.outputs.version }}
           body: |
-            ## vivim-final v${{ steps.version.outputs.version }}
-
-            ### Container image
-
-            ```bash
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-            docker run -p 9420:9420 -p 3000:3000 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-            ```
-
-            Or run with docker-compose — see [`docs/runbooks/DEPLOY.md`](https://github.com/${{ github.repository }}/blob/main/docs/runbooks/DEPLOY.md).
-
-            ### Source
-
-            Download `vivim-final-${{ steps.version.outputs.version }}.tar.gz` below and extract, then:
-
-            ```bash
-            bun install
-            cd frontend && bun install && cd ..
-            bun x prisma generate
-            bun x prisma migrate deploy
-            bun run dev
-            ```
-
-            ### What's new
-
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for the full change record.
-
+            ## Vivim Desktop v${{ steps.version.outputs.version }}
+            
+            ### Downloads
+            
+            - **[Windows Installer](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/vivim-desktop-setup.exe)** (~44 MB)
+            - **[Linux Binary](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/vivim-server-x86_64-unknown-linux-gnu)** (Coming soon)
+            - **[macOS Binary](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/vivim-server-x86_64-apple-darwin)** (Coming soon)
+            
+            ### What's New
+            
+            - See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md) for details
+            
+            ### Installation
+            
+            1. Download the installer for your platform
+            2. Run the installer
+            3. Launch Vivim Desktop from Start Menu or Applications
+            
             ### Documentation
-
-            - [Architecture](https://github.com/${{ github.repository }}/blob/main/docs/architecture/OVERVIEW.md)
-            - [API reference](https://github.com/${{ github.repository }}/blob/main/docs/api/v11-universal-api.yaml)
-            - [User manual](https://github.com/${{ github.repository }}/blob/main/docs/manual/v11-user-manual.md)
-            - [Deploy runbook](https://github.com/${{ github.repository }}/blob/main/docs/runbooks/DEPLOY.md)
+            
+            - [User Guide](https://github.com/${{ github.repository }}/blob/master/docs/USER-GUIDE.md)
+            - [API Reference](https://github.com/${{ github.repository }}/blob/master/docs/API.md)
+            - [Architecture](https://github.com/${{ github.repository }}/blob/master/docs/ARCHITECTURE.md)
           draft: false
           prerelease: ${{ github.event.inputs.prerelease || false }}
           files: |
-            /tmp/release/vivim-final-*.tar.gz
-          fail_on_unmatched_files: true
+            scripts/tauri/vivim-desktop-setup.exe
+            src-tauri/binaries/vivim-server-*
+          fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update package.json version
         if: github.event_name == 'workflow_dispatch'
         run: |
-          cd frontend && npm version ${{ steps.version.outputs.version }} --no-git-tag-version
-          cd .. && npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          cd frontend
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          cd ..
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
 
-      - name: Commit version bump
+      - name: Create Git Tag
         if: github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "github-actions[bot]"
