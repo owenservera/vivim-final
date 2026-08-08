@@ -1,0 +1,12 @@
+{
+  "state": "ready",
+  "readyAt": "2026-08-08T04:38:22.2154795+02:00",
+  "port": 9420,
+  "elapsedSec": 3.0,
+  "lastProbe": "health=200",
+  "serve": [
+    "1840:serve --port 23854 --hostname 127.0.0.1",
+    "5656:serve --port 62333 --hostname 127.0.0.1",
+    "6368:serve --port 62333 --hostname 127.0.0.1"
+  ]
+}

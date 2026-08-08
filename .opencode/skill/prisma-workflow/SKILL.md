@@ -5,22 +5,31 @@ description: Prisma ORM patterns and workflows for vivim-final. Use when creatin
 # Prisma Workflow — vivim-final
 
 ## Schema Location
-`prisma/schema.prisma` — single source of truth for all ~54 tables.
+`prisma/schema.prisma` — single source of truth for all **196 models**.
 
 ## Quick Reference
 
 ### After Schema Changes
 ```bash
-bunx prisma migrate dev --name descriptive_name
+bunx prisma db push --skip-generate --accept-data-loss   # DDL only — no _prisma_migrations
 bunx prisma generate
+bunx prisma validate
 ```
 
-### Check Migration SQL
-Read the generated file in `prisma/migrations/YYYYMMDDHHMMSS_descriptive_name/migration.sql`.
-
-### Prototype (No Migration)
+### Check Drift (authoritative — target zero drift)
 ```bash
-bunx prisma db push --accept-data-loss
+bunx prisma migrate diff --from-url "file:./prisma/dev.db" --to-schema-datamodel prisma/schema.prisma
+# Expect: "No difference detected."
+```
+
+### Data Migrations (value reshaping / backfills)
+Register a step in `src/storage/migration/migrations-registry.ts` (SchemaMeta-backed
+`MigrationRunner`, wired into boot at `bootstrapSeedsPhase` via `applyPendingMigrations()`).
+Do NOT add a second migration mechanism.
+
+### Rebuild the Canonical Test Fixture (ABSOLUTE file: URL — relative resolves against prisma/schema.prisma and silently writes to prisma/tests/fixtures/)
+```bash
+DATABASE_URL="file:C:/0-BlackBoxProject-0/vivim-final/tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
 ```
 
 ### Inspect Data

@@ -28,8 +28,9 @@ Everything else is **proliferation** and must be removed or ignored (see `db-age
 Invoke `devops-db` (or load this skill) whenever the task:
 - Edits any `model` in `prisma/schema.prisma`
 - Adds/removes a field, relation, `@@index`, `@@unique`, or `@map`
-- Creates or edits a migration (`prisma migrate dev`)
-- Touches a seed file (`seeds/**`, `prisma/seed.ts`)
+- Applies schema changes (`bunx prisma db push` — DDL only, no `_prisma_migrations`)
+- Registers a data migration in `src/storage/migration/migrations-registry.ts` (MigrationRunner)
+- Touches a seed file (`seeds/**`)
 - Prototypes schema with `prisma db push`
 - Adds a capability/parser/provider row that implies a schema dependency
 
@@ -40,24 +41,30 @@ Do **NOT** proceed with schema work without first completing the Pre-Edit Checkl
 1. **Confirm target DB** — `echo $env:DATABASE_URL` must be `file:./dev.db`. If it points elsewhere, stop and ask.
 2. **Confirm it's not a generated file** — never hand-edit `src/__generated__/provider-protocol.ts`, `provider-protocol.dev.ts`, or `src/engines/capability-bootstrap-generated.ts`. Edit the *source* (taxonomy pool / provider manifest) and regenerate.
 3. **Confirm Store Contract compliance** — engines must depend on `src/storage/contracts/*`, never `src/storage/impl/*`. A schema change that forces an engine to import an impl breaks the Governor Canon.
-4. **Pick the migration path** — `migrate dev` (tracked, prod-safe) vs `db push` (prototype, no migration row). See workflow.
+4. **Pick the schema path** — `db push` (DDL only, no `_prisma_migrations`; authoritative check is `prisma migrate diff`) vs MigrationRunner data migration (column-value reshaping/backfills via `src/storage/migration/`). See workflow.
 5. **Plan the index** — every field used in `where`/`orderBy` at the edge gets an `@@index`.
 
 ## Schema Edit Workflow
 
 ```bash
 # 1. Edit prisma/schema.prisma (additive-only for SQLite — no DROP COLUMN / complex ALTER)
-# 2a. Tracked migration (preferred for anything that ships):
-bunx prisma migrate dev --name descriptive_name
-# 2b. OR prototype-only push (no migration history):
-bunx prisma db push --accept-data-loss
+# 2. Apply schema (DDL only — no _prisma_migrations; zero drift is the target):
+bunx prisma db push --skip-generate --accept-data-loss
 # 3. Regenerate client so TS types match
 bunx prisma generate
-# 4. Rebuild the ONE canonical test fixture
-DATABASE_URL="file:./tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
+# 4. Rebuild the ONE canonical test fixture (ABSOLUTE file: URL — relative resolves against prisma/schema.prisma and silently creates prisma/tests/fixtures/)
+DATABASE_URL="file:C:/0-BlackBoxProject-0/vivim-final/tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
 # 5. Validate
 bunx prisma validate
 ```
+
+### Data Migrations (column-value reshaping, backfills)
+
+Schema-only changes go through `db push` above. **Data migrations** (value reshaping,
+backfills) go through the SchemaMeta-backed `MigrationRunner` (`src/storage/migration/`),
+wired into boot at `bootstrapSeedsPhase` via `applyPendingMigrations()`. Register new
+steps in `src/storage/migration/migrations-registry.ts`. Do NOT add a second migration
+mechanism.
 
 ### Additive-Only Rule (SQLite)
 SQLite cannot `DROP COLUMN` or do complex `ALTER TABLE`. All schema changes are:
@@ -65,9 +72,12 @@ SQLite cannot `DROP COLUMN` or do complex `ALTER TABLE`. All schema changes are:
 - To "remove" a column: mark it deprecated in code + add a migration comment; physically drop only via a fresh migration that recreates the table.
 
 ### Migration Recording
-Migrations applied via `CapStoreDb.applyMigration` write a `migration_log` row (checksum). Tracked `migrate dev` runs already record via Prisma; for manual SQL use the `applyMigration` helper.
+No `_prisma_migrations` table in this repo — DDL is applied via `db push` and `prisma
+migrate diff` is the authoritative drift check (target: zero drift). Data migrations
+record progress via the SchemaMeta table (`applyPendingMigrations()` in
+`src/storage/migration/`).
 
-## Model Conventions (current schema has 160 models)
+## Model Conventions (current schema has 196 models)
 
 - `@map("snake_case_table")` on every model, `@map("snake_case_col")` on every field.
 - Explicit `@relation(name: "...")` when a model has >1 relation to the same target.

@@ -27,7 +27,7 @@
 |--------|---------|------|
 | **ChromeGovernor** | The ONLY CDP-touching module. Spawns/manages logged-in Chrome slaves, runs snapshot programs | `src/engines/chrome-governor.js` |
 | **ConversationManager** | Provider-specific capture patterns; persists messages; auto-captures as Nodes | `src/engines/conversation-manager.js` |
-| ProviderRegistrar | Registers provider manifests (`seeds/providers/*.json`), wires parser fallbacks | `src/engines/provider-registrar.js` |
+| ProviderRegistrar | Registers provider manifests (`seeds/providers/manifests.ts`), wires parser fallbacks | `src/engines/provider-registrar.js` |
 | ProviderHealthKernel | Health/readiness of provider surfaces | `src/engines/provider-health.js` |
 | ProviderMuxEngine / CostOptimizer | Route a request across providers + cost-rational choice | `.../provider-mux.js`, `cost-optimizer.js` |
 

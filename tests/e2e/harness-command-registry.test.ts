@@ -1,13 +1,15 @@
 // tests/e2e/harness-command-registry.test.ts
 // E2E (T028-T031): full-stack harness pipeline against the real Prisma-backed
-// stores + dev database. Exercises the registry -> repair -> feedback path the
-// way a browser-free I/O harness would run against a live backend.
+// stores. Exercises the registry -> repair -> feedback path the way a
+// browser-free I/O harness would run against a live backend.
 //
-// Requires a reachable dev database (DATABASE_URL). Skips gracefully if the
-// Prisma client cannot connect so CI without a DB still stays green on the
-// unit/integration layers.
+// Uses a fresh per-run copy of the fixture DB (tests/fixtures/node-store-test.db)
+// so the live dev database is never mutated — tests clean up after themselves.
 
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import { copyFileSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
 import { seedHarnessCommands } from '../../seeds/harness/commands.seed.js'
@@ -19,10 +21,19 @@ import type { CapStoreDb } from '../../src/storage/db.js'
 import { GovernorStoreImpl } from '../../src/storage/impl/governor-store-impl.js'
 import { HarnessRepairStoreImpl } from '../../src/storage/impl/harness-repair-store-impl.js'
 
-const db = { prisma: new PrismaClient() } as CapStoreDb
+const FIXTURE = join(import.meta.dir, '..', 'fixtures', 'node-store-test.db')
+
+let dir: string
+let db: CapStoreDb
 let live = false
 
 beforeAll(async () => {
+  dir = mkdtempSync(join(tmpdir(), 'harness-e2e-'))
+  const dbPath = join(dir, 'test.db')
+  copyFileSync(FIXTURE, dbPath)
+  db = {
+    prisma: new PrismaClient({ datasources: { db: { url: `file:${dbPath}` } } }),
+  } as CapStoreDb
   try {
     await db.prisma.$queryRaw`SELECT 1`
     await seedHarnessCommands(db)
@@ -34,6 +45,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.prisma.$disconnect()
+  rmSync(dir, { recursive: true, force: true })
 })
 
 const guard = () => {

@@ -142,19 +142,25 @@ async function main(): Promise<void> {
   }
 
   // Phase 2: thin-client mode — try running server
+  let remoteCaps: Awaited<ReturnType<typeof fetchCliCapabilities>> = []
   try {
     const remote = serverUrl()
-    const remoteCaps = await fetchCliCapabilities(remote)
-    const matched = matchCapability(remoteCaps as Parameters<typeof matchCapability>[0], tokens)
+    remoteCaps = await fetchCliCapabilities(remote)
+  } catch {
+    // Server not reachable — fall through to "Unknown command" below.
+  }
+  if (remoteCaps.length > 0) {
+    const remote = serverUrl()
+    const matched = matchCapability(remoteCaps, tokens)
     if (matched) {
+      // Genuine remote execution failures must NOT be masked as
+      // "Unknown command" — let them propagate so the real error shows.
       const { cap, rest } = matched
       const result = await executeRemote(remote, cap.id, rest, flags)
       const mode: OutputMode = (flags.json as OutputMode) ?? 'pretty'
       console.log(formatter.format(result, mode))
       return
     }
-  } catch {
-    // Server not reachable — fall through to error
   }
 
   console.error(`Unknown command: ${tokens.join(' ')}`)

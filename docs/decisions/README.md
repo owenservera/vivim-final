@@ -39,6 +39,7 @@ Positive + negative/risk, and any follow-up tracked.
 | ADR-005-run-2026-08-06-B2 | FIX-B2-1: 196-models-in-one-schema migration risk | DEFERRED (post-alpha) — superseded by ADR-014 |
 | ADR-014 | Defer Prisma schema split to post-alpha | accepted |
 | ADR-015 | Session 1 closure — alpha P1s verified closed | accepted |
+| ADR-016 | OpenCode serve contract snapshot + weekly drift check | accepted |
 
 > ADR-006 through ADR-010 (`run-2026-08-06-*` duplicates of ADR-001 through
 > ADR-005 with extra detail) were removed in session 1 — they held the same

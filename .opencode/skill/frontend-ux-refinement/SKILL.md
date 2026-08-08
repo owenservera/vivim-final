@@ -83,7 +83,7 @@ Complete ALL code edits before running verification. Do NOT run typecheck increm
 
 **Database path:**
 1. Edit `prisma/schema.prisma`
-2. `bunx prisma migrate dev --name <x>`
+2. `bunx prisma db push --skip-generate --accept-data-loss` (DDL only — no `_prisma_migrations`; data reshaping via `MigrationRunner`)
 3. Update Store Contract
 4. Update seeds if needed
 
@@ -147,8 +147,8 @@ bun run .runtime/verify-slot-resolution.ts
 #### 4e. Database Verification (Code-First)
 
 ```bash
-# Check schema state
-bunx prisma migrate status
+# Check schema state (no _prisma_migrations — expect zero drift)
+bunx prisma migrate diff --from-url "file:./prisma/dev.db" --to-schema-datamodel prisma/schema.prisma
 
 # Inspect seeded data
 bunx prisma studio

@@ -80,4 +80,41 @@ describe('S2b: Governor permission (tier > 3 auto-deny)', () => {
 
     await ingest.stop(SESSION)
   })
+
+  it('handles v1.18.4 permission.asked (properties.id + properties.permission)', async () => {
+    const nodes = new NodeStoreImpl(prisma as never)
+    const store = new AgenticStoreImpl(nodes, prisma)
+    const events = new EventRecordStore(prisma)
+    const client = new MockClient(0, PASS)
+    const ingest = new OpenCodeIngest({ client, agenticStore: store, eventRecordStore: events })
+    const S2 = 'sess-perm-v18'
+    await ingest.start(S2, {})
+
+    const ev: OpencodeEvent = {
+      id: 'evt_permission_1',
+      type: 'permission.asked',
+      properties: {
+        id: 'perm_v18_bash',
+        sessionID: S2,
+        permission: 'bash',
+        patterns: ['*'],
+        metadata: {},
+        always: [],
+      },
+    }
+    await ingest.ingestEvent(S2, ev)
+
+    const agentSession = await prisma.agentSession.findUnique({
+      where: { providerSessionId: S2 },
+    })
+    const perms = await prisma.agentPermissionDecision.findMany({
+      where: { agentSessionId: agentSession?.id },
+    })
+    // The `^per` ID must be the path param — never the `^evt_` event id.
+    expect(client.posted).toContainEqual({ id: 'perm_v18_bash', decision: 'deny' })
+    expect(perms[0]?.providerPermissionId).toBe('perm_v18_bash')
+    expect(perms[0]?.toolName).toBe('bash')
+
+    await ingest.stop(S2)
+  })
 })

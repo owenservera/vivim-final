@@ -203,11 +203,14 @@ export class ChromeLaunchTimeoutError extends Error {
 export async function killChrome(pid: number): Promise<void> {
   if (!pid) return
   if (IS_WIN) {
-    Bun.spawn({
+    // Await the taskkill so callers (e.g. the MCP server's browser_quit / exit)
+    // can rely on Chrome being dead before the parent process exits.
+    const proc = Bun.spawn({
       cmd: ['taskkill', '/PID', String(pid), '/F', '/T'],
       stdout: 'ignore',
       stderr: 'ignore',
     })
+    await proc.exited.catch(() => {})
     return
   }
   try {

@@ -1,0 +1,177 @@
+{
+  "topic": "repo-to-docs-copy-skills",
+  "collected": "2026-08-08",
+  "confidence": "high",
+  "sources": [
+    {
+      "id": "src-01",
+      "title": "Best Software Documentation Skills for Claude Code (2026)",
+      "url": "https://claudeskills.info/best/documentation-skills/",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "Install-ranked doc skills: golang-documentation 33.7K, documentation-writer 23.4K, create-readme 15.9K, indexion drift tools 5K.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-02",
+      "title": "Best Marketing Skills for Claude Code (2026)",
+      "url": "https://claudeskills.info/best/marketing-skills/",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "copywriting (coreyhaines31) is #1 marketing skill at 156.7K installs; marketing-psychology 114.7K; content-strategy 110.2K.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-03",
+      "title": "Claude Skills for Writing & Content — Tested Editing Skills",
+      "url": "https://skillproof.dev/categories/writing",
+      "type": "product",
+      "date": "2026-08",
+      "confidence": "high",
+      "keyClaim": "Tested writing skills: Humanizer 9.6/10, Crafting Effective READMEs 9.2/10, Changelog Generator 9.2/10.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-04",
+      "title": "Claude Skills for Marketing & Growth — Tested Growth Skills",
+      "url": "https://skillproof.dev/categories/marketing",
+      "type": "product",
+      "date": "2026-08",
+      "confidence": "high",
+      "keyClaim": "Tested marketing: GTM Positioning 9.6, App Marketing Copy 9.6, B2B GTM Launch 9.2, Ship Page 9.2, Promote 8.8, Customer Story Writer 8.8.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-05",
+      "title": "PitchCraft — Claude Skill, Tested (9.2/10)",
+      "url": "https://skillproof.dev/skills/pitchcraft",
+      "type": "product",
+      "date": "2026-08",
+      "confidence": "high",
+      "keyClaim": "PitchCraft 5-part framework for pitches/kickoffs/status/solution-selling, tested 9.2/10 on Claude Code 2.x, upstream re-checked 2026-08-05.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-06",
+      "title": "Crafting Effective READMEs — Claude Skill, Tested (9.2/10)",
+      "url": "https://skillproof.dev/skills/crafting-effective-readmes",
+      "type": "product",
+      "date": "2026-08",
+      "confidence": "high",
+      "keyClaim": "Interview-driven README generator, 4 templates (OSS/personal/internal/config), tested 9.2/10.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-07",
+      "title": "Best Claude Code Skills for Documentation",
+      "url": "https://www.promptspace.in/blog/best-claude-code-skills-documentation",
+      "type": "blog",
+      "date": "2026-05-09",
+      "confidence": "medium",
+      "keyClaim": "Top doc skill categories: README gen, API docs (OpenAPI), JSDoc/comments, changelogs, architecture docs.",
+      "usedIn": ["report:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-08",
+      "title": "Best AI Agent Skills for Documentation (2026)",
+      "url": "https://www.agensi.io/learn/best-skills-documentation-ai-agents",
+      "type": "blog",
+      "date": "2026-06-30",
+      "confidence": "medium",
+      "keyClaim": "Best agent skills for API docs, READMEs, changelogs, ADRs, inline code docs.",
+      "usedIn": ["report:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-09",
+      "title": "A Claude Code Skill for Auto-Generating Project Docs (/doc-it)",
+      "url": "https://dosu.dev/blog/claude-code-skill-doc-it",
+      "type": "official",
+      "date": "2026-03-25",
+      "confidence": "high",
+      "keyClaim": "doc-it generates README/CONTRIBUTING/TOOLS/API docs from source, catches stale AGENTS.md references, scopes per-file.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-10",
+      "title": "Claude Code setups for documentation (August 2026)",
+      "url": "https://www.claudedirectory.org/for/documentation",
+      "type": "product",
+      "date": "2026-08",
+      "confidence": "high",
+      "keyClaim": "Documentation ecosystem: Changelog Generator, OpenAPI Expert, Context7, code-walkthrough, AppVersion, auto-changelog hooks.",
+      "usedIn": ["report:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-11",
+      "title": "github/awesome-copilot",
+      "url": "https://github.com/awesome-copilot",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "36.8K-star repo hosting documentation-writer (Diátaxis), create-readme, readme-blueprint-generator.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-12",
+      "title": "repo-docs-skills (YurunChen / AI4GC Lab, Zhejiang University)",
+      "url": "https://github.com/YurunChen/repo-docs-skills",
+      "type": "product",
+      "date": "2026-06",
+      "confidence": "high",
+      "keyClaim": "Living repo docs: README, walkthroughs, code-map, modules, references, glossary, change-log, AGENTS.md sync + Python validator. 445 stars.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-13",
+      "title": "codebase-to-course (zarazhangrui)",
+      "url": "https://github.com/zarazhangrui/codebase-to-course",
+      "type": "product",
+      "date": "2026-03",
+      "confidence": "high",
+      "keyClaim": "5.3K-star skill turning any codebase into an interactive single-file HTML course with plain-English code translation, animations, quizzes, glossary.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-14",
+      "title": "claude-skills-founder (emotixco)",
+      "url": "https://github.com/emotixco/claude-skills-founder",
+      "type": "product",
+      "date": "2026-03",
+      "confidence": "high",
+      "keyClaim": "12 founder skills: product-brief, persona-gen, competitor-matrix, pitch-deck, fundraise-prep, landing-page, email-sequence, GTM, metrics-dashboard.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-15",
+      "title": "marketingskills (coreyhaines31)",
+      "url": "https://github.com/coreyhaines31/marketingskills",
+      "type": "product",
+      "date": "2026",
+      "confidence": "high",
+      "keyClaim": "40.9K-star marketing pack: copywriting, marketing-psychology, content-strategy, CRO, SEO, email sequences, social content.",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-16",
+      "title": "repo-docs-skills security report (SkillsLLM)",
+      "url": "https://skillsllm.com/skill/repo-docs-skills",
+      "type": "news",
+      "date": "2026-06-27",
+      "confidence": "high",
+      "keyClaim": "repo-docs-skills passed automated security scan (no high-severity issues).",
+      "usedIn": ["report:repo-to-docs-copy-skills", "brief:repo-to-docs-copy-skills"]
+    },
+    {
+      "id": "src-17",
+      "title": "10 Best Claude Skill Repos for Marketing (2026)",
+      "url": "https://medium.com/design-bootcamp/10-best-claude-skill-repos-for-marketing-2026",
+      "type": "news",
+      "date": "2026-04-25",
+      "confidence": "medium",
+      "keyClaim": "coreyhaines31/marketingskills most-used marketing pack; BrianRWagner/ai-marketing-claude-code-skills has 19 free skills with quick/standard/deep modes.",
+      "usedIn": ["report:repo-to-docs-copy-skills"]
+    }
+  ]
+}

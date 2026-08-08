@@ -1,18 +1,24 @@
 # devops-db — Schema Edit Workflow
 
-Step-by-step procedure for any change to `prisma/schema.prisma`, seeds, or migrations.
+Step-by-step procedure for any change to `prisma/schema.prisma`, seeds, or data migrations.
 Companion to SKILL.md. Loaded when the user is actively performing a schema edit.
 
-## Decision: migrate dev vs db push
+## Decision: db push vs MigrationRunner
+
+This repo does **NOT** use `prisma migrate dev` — there is no `_prisma_migrations` table.
+DDL is applied with `db push`; the authoritative drift check is `prisma migrate diff`
+(target: zero drift).
 
 | Scenario | Command | Migration history? | Use when |
 |----------|---------|--------------------|----------|
-| Ship-tracked change | `bunx prisma migrate dev --name x` | yes | anything that may reach prod |
-| Prototype / throwaway | `bunx prisma db push --accept-data-loss` | no | local experiment only |
+| Schema change (DDL) | `bunx prisma db push --skip-generate --accept-data-loss` | no | any model/field/index change |
+| Data migration (value reshaping/backfill) | register step in `src/storage/migration/migrations-registry.ts` | SchemaMeta-backed | column-value reshaping, backfills |
 | Regen client only | `bunx prisma generate` | n/a | after schema edit, before code |
 | Validate | `bunx prisma validate` | n/a | always, before commit |
+| Drift check | `bunx prisma migrate diff --from-url "file:./prisma/dev.db" --to-schema-datamodel prisma/schema.prisma` | n/a | expect "No difference detected" |
 
-Rule of thumb: if a teammate or the running server will see it, use `migrate dev`.
+Rule of thumb: schema shape → `db push`; data value reshaping → MigrationRunner. Do NOT
+add a second migration mechanism.
 
 ## Procedure
 
@@ -29,14 +35,16 @@ Never `db push --accept-data-loss` on `prisma/dev.db` without a copy.
 
 ### 3. Apply
 ```bash
-bunx prisma migrate dev --name descriptive_name   # OR: bunx prisma db push --accept-data-loss
+bunx prisma db push --skip-generate --accept-data-loss
 bunx prisma generate
 bunx prisma validate
 ```
 
 ### 4. Rebuild the single canonical fixture
+**Use an ABSOLUTE `file:` URL** — relative ones resolve against `prisma/schema.prisma`
+and silently create a duplicate at `prisma/tests/fixtures/`:
 ```bash
-DATABASE_URL="file:./tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
+DATABASE_URL="file:C:/0-BlackBoxProject-0/vivim-final/tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
 ```
 
 ### 5. If the change implies seed data
@@ -58,6 +66,8 @@ bun run scripts/db-reports/report-schema-drift.ts
 - **Two fixtures** → tests pass locally, fail in CI (different schema). Keep ONE.
 - **`db push` on primary without backup** → unrecoverable data loss.
 - **DROP COLUMN** → SQLite rejects it; recreate the table in a migration instead.
+- **Relative `file:` URL in `db push`** → writes to `prisma/tests/fixtures/` (path resolves
+  against `prisma/schema.prisma`). Always use the absolute `file:C:/.../tests/fixtures/...` form.
 
 ## Index Cheat-Sheet
 

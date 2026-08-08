@@ -1,5 +1,6 @@
 import type { OpenCodeClient } from '../opencode/opencode-client.js'
 import type { OpenCodeIngest } from '../opencode/opencode-ingest.js'
+import type { OpenCodeSupervisor } from '../opencode/opencode-supervisor.js'
 import type { UnifiedCapability, UnifiedCapabilityRegistry } from '../unified-registry.js'
 import { seedLocalAgentProvider } from './seed.js'
 import { type BootstrapServices, makeCapability } from './types.js'
@@ -702,7 +703,7 @@ export async function registerDefaultCapabilities(
   {
     const getServe = () =>
       (globalThis as Record<string, unknown>).__opencodeServe as
-        | { client: OpenCodeClient; ingest: OpenCodeIngest }
+        | { client: OpenCodeClient; ingest: OpenCodeIngest; supervisor: OpenCodeSupervisor }
         | undefined
 
     defaults.push(
@@ -816,7 +817,46 @@ export async function registerDefaultCapabilities(
         async () => {
           const serve = getServe()
           if (!serve) return { ok: false, error: 'OpenCode serve not enabled' }
-          return { ok: true, sessions: [], text: 'Session listing requires the ingest layer.' }
+          const sessions = await serve.client.listSessions()
+          return { ok: true, sessions, count: sessions.length }
+        },
+      ),
+      makeCapability(
+        {
+          id: 'cap:opencode:instances',
+          slug: 'opencode_instances',
+          name: 'List OpenCode Serve Instances',
+          description:
+            'Register + live classification of every opencode process: which are vivim-managed serve instances vs the user\'s interactive sessions. Consult this before touching any opencode process.',
+          category: 'agent',
+          inputSchema: { type: 'object', properties: {} },
+          outputSchema: { type: 'object', properties: { managed: { type: 'array' } } },
+          cliCommand: {
+            name: 'opencode instances',
+            aliases: ['oi'],
+            examples: ['opencode instances'],
+          },
+          ui: { component: 'action-button', position: 'sidebar', order: 5 },
+          mcpToolName: 'opencode_instances',
+          apiEndpoint: { method: 'GET', path: '/api/opencode/instances' },
+        },
+        async () => {
+          const serve = getServe()
+          if (!serve?.supervisor) return { ok: false, error: 'OpenCode serve not enabled' }
+          const registry = serve.supervisor.getRegistry()
+          const classified = registry.classifyLive()
+          return {
+            ok: true,
+            managed: classified.filter((p) => p.managed),
+            external: classified.filter((p) => !p.managed),
+            current: {
+              instanceId: serve.supervisor.getInstanceId(),
+              pid: serve.supervisor.getPid(),
+              port: serve.supervisor.getPort(),
+              running: serve.supervisor.isRunning(),
+            },
+            ledgerCount: registry.readLedger().length,
+          }
         },
       ),
       makeCapability(
@@ -856,6 +896,122 @@ export async function registerDefaultCapabilities(
         },
       ),
     )
+  }
+
+  // ── OpenCode Model Sync Capabilities (feature: daily free-model refresh) ──
+  // Gated on the local-agent store (write path) and the sync engine (CLI path).
+  // `models` and `set_default` work from the store alone; `model.sync` needs the
+  // engine to shell out to `opencode models`.
+  {
+    const modelStore = services.localAgentStore
+    const modelSync = services.opencodeModelSync
+
+    if (modelStore) {
+      defaults.push(
+        makeCapability(
+          {
+            id: 'cap:opencode:models',
+            slug: 'opencode_models',
+            name: 'List OpenCode Models',
+            description:
+              'List the verified free opencode models available to the local agent, including the current default and last sync time.',
+            category: 'agent',
+            inputSchema: { type: 'object', properties: {} },
+            outputSchema: { type: 'object', properties: { models: { type: 'array' } } },
+            cliCommand: {
+              name: 'opencode models',
+              aliases: ['om'],
+              examples: ['opencode models'],
+            },
+            ui: { component: 'model-list', position: 'sidebar', order: 7 },
+            mcpToolName: 'opencode_models',
+            apiEndpoint: { method: 'GET', path: '/api/opencode/models' },
+          },
+          async () => {
+            const provider = await modelStore.getAgentProvider('opencode')
+            if (!provider) return { ok: false, error: 'local-agent provider not seeded' }
+            const syncState = await modelStore.getAgentModelSyncState('opencode')
+            return {
+              ok: true,
+              models: provider.models.map((m) => ({
+                slug: m.slug,
+                displayName: m.displayName,
+                isDefault: m.isDefault,
+                contextWindow: m.contextWindow ?? null,
+                maxOutputTokens: m.maxOutputTokens ?? null,
+              })),
+              defaultModel: provider.models.find((m) => m.isDefault)?.slug ?? null,
+              lastSyncedAt: syncState.lastSyncedAt,
+            }
+          },
+        ),
+        makeCapability(
+          {
+            id: 'cap:opencode:model.sync',
+            slug: 'opencode_model_sync',
+            name: 'Sync OpenCode Models',
+            description:
+              'Re-pull the latest free opencode model list from the CLI (and models.dev) and update the allow-list in the database.',
+            category: 'agent',
+            inputSchema: {
+              type: 'object',
+              properties: { refresh: { type: 'boolean' } },
+            },
+            outputSchema: { type: 'object' },
+            cliCommand: {
+              name: 'opencode models sync',
+              aliases: ['oms'],
+              examples: ['opencode models sync', 'opencode models sync --refresh'],
+            },
+            ui: { component: 'action-button', position: 'sidebar', order: 8 },
+            mcpToolName: 'opencode_model_sync',
+            apiEndpoint: { method: 'POST', path: '/api/opencode/models/sync' },
+            requiresConfirmation: true,
+          },
+          async (input) => {
+            if (!modelSync) return { ok: false, error: 'model sync engine not available' }
+            const summary = await modelSync.sync({
+              refresh: input.refresh === true,
+            })
+            return { ok: true, ...summary }
+          },
+        ),
+        makeCapability(
+          {
+            id: 'cap:opencode:model.set_default',
+            slug: 'opencode_model_set_default',
+            name: 'Set Default OpenCode Model',
+            description:
+              'Select which verified opencode model the local agent uses by default.',
+            category: 'agent',
+            inputSchema: {
+              type: 'object',
+              properties: { model: { type: 'string' } },
+              required: ['model'],
+            },
+            outputSchema: { type: 'object' },
+            cliCommand: {
+              name: 'opencode model set-default',
+              aliases: ['omd'],
+              examples: ['opencode model set-default opencode/deepseek-v4-flash-free'],
+            },
+            ui: { component: 'action-button', position: 'sidebar', order: 9 },
+            mcpToolName: 'opencode_model_set_default',
+            apiEndpoint: { method: 'POST', path: '/api/opencode/model/default' },
+            requiresConfirmation: true,
+          },
+          async (input) => {
+            const model = input.model ? String(input.model) : ''
+            if (!model) return { ok: false, error: 'model is required' }
+            if (!(await modelStore.isModelAllowed('opencode', model))) {
+              return { ok: false, error: `model '${model}' is not in the allow-list` }
+            }
+            await modelStore.setAgentDefaultModel('opencode', model)
+            return { ok: true, defaultModel: model }
+          },
+        ),
+      )
+    }
   }
 
   // ── Storage Relocation Capabilities ─────────────────────────────────────

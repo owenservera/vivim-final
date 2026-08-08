@@ -8,12 +8,14 @@
 - **Prisma 6.5** over **SQLite** by default (path: `CAP_STORE_DB_PATH` →
   `$dataDir/cap-store.sqlite`; `dataDir` on Windows =
   `%LOCALAPPDATA%\vivim\cap-store`). 196 models in `prisma/schema.prisma`.
-- Migrations: `prisma/migrations/` (dev: `bun run prisma:migrate:dev`; prod:
-  `bun run prisma:migrate:prod`). Never bypass Prisma for raw SQL unless
-  performance-critical.
-- Seeds: `seeds/` (`prisma/seed.ts`, provider manifests `seeds/providers/*.json`,
-  harvested parsers `seeds/parsers/harvested/`, harness commands
-  `seeds/harness/commands.json`).
+- Migrations: **no `_prisma_migrations`** — DDL via `bunx prisma db push`; `prisma
+  migrate diff` is the authoritative drift check (target: zero drift). Data migrations
+  (value reshaping/backfills) go through the SchemaMeta-backed `MigrationRunner`
+  (`src/storage/migration/`, wired into boot via `applyPendingMigrations()`). Never
+  bypass Prisma for raw SQL unless performance-critical.
+- Seeds: `seeds/` (taxonomy `seeds/taxonomy/`, provider manifests
+  `seeds/providers/manifests.ts`, harvested parsers `seeds/parsers/harvested/`, harness
+  commands `seeds/harness/commands.json`).
 
 ## Store contract discipline (invariant)
 
@@ -47,7 +49,7 @@ Bookmark, Artifact, Document, Email.
 
 ## Providers & parsers (DB-as-source-of-truth)
 
-- Provider manifests seeded from `seeds/providers/<slug>.json` — endpoints,
+- Provider manifests seeded from `seeds/providers/manifests.ts` — endpoints,
   selectors, models, parsers, capabilities.
 - Parser `logic_code` lives **only in the DB** (`logic_type=inline`), executed by
   `StreamParserEngine` via `SandboxRunner`. File-based parsers rejected unless
@@ -66,14 +68,16 @@ Bookmark, Artifact, Document, Email.
 
 - Backup: `bun run db:backup` / `db:restore`; `BackupScheduler` engine.
 - At-rest encryption: `DbEncryptionEngine` (encrypted DB blobs).
-- SQL views live in `prisma/views*.sql` (tracked risk: dual-source drift vs
-  schema — flagged in review).
 
 ## Changing the schema
 
 1. Edit `prisma/schema.prisma`.
-2. `bunx prisma migrate dev --name <purpose>`.
-3. If tests depend on schema, rebuild fixture:
-   `DATABASE_URL="file:./tests/fixtures/node-store-test.db" bunx prisma db push
-   --skip-generate --accept-data-loss`.
+2. `bunx prisma db push --skip-generate --accept-data-loss` (DDL only — no
+   `_prisma_migrations`). For value reshaping/backfills register a step in
+   `src/storage/migration/migrations-registry.ts` instead.
+3. If tests depend on schema, rebuild fixture (ABSOLUTE `file:` URL — relative
+   resolves against `prisma/schema.prisma` and silently creates
+   `prisma/tests/fixtures/`):
+   `DATABASE_URL="file:C:/0-BlackBoxProject-0/vivim-final/tests/fixtures/node-store-test.db"
+   bunx prisma db push --skip-generate --accept-data-loss`.
 4. Update this doc (model count / new stores) in the same PR.

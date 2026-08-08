@@ -119,7 +119,8 @@ export function syncCliFromUnified(
 export async function fetchCliCapabilities(remote: string): Promise<CliCapability[]> {
   const res = await fetch(`${remote}/api/capabilities?surface=cli`)
   if (!res.ok) throw new Error(`failed to fetch capabilities: ${res.status}`)
-  return (await res.json()) as CliCapability[]
+  const data = (await res.json()) as { capabilities?: CliCapability[] } | CliCapability[]
+  return Array.isArray(data) ? data : (data.capabilities ?? [])
 }
 
 /** Match a command token list to a capability by cliCommand.name or alias. */
@@ -197,10 +198,8 @@ export async function executeRemote(
   flags: Record<string, string>,
 ): Promise<unknown> {
   const cleanFlags = stripMeta(flags)
-  const cap = (await fetch(`${remote}/api/capabilities?surface=cli`).then((r) =>
-    r.json(),
-  )) as CliCapability[]
-  const found = cap.find((c) => c.id === capId)
+  const caps = await fetchCliCapabilities(remote)
+  const found = caps.find((c) => c.id === capId)
   const input = found
     ? argvToInput(args, cleanFlags, found.inputSchema)
     : { _rawArgs: args, ...cleanFlags }

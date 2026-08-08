@@ -8,7 +8,36 @@ import type { ContentBlock } from '../../schema/streaming.js'
 import { parseOpencodeJson } from '../local-agent/local-agent-executor.js'
 import type { OpencodeEvent, PermissionDecision } from './types.js'
 
+/**
+ * opencode v1.18.4 `POST /session` requires `model` as `{ id, providerID }` —
+ * NOT a `providerID/modelID` slug string. Split on the first `/` and strip the
+ * provider prefix from `id` (the server re-prefixes during resolution).
+ * e.g. `opencode/deepseek-v4-flash-free` -> `{ id: 'deepseek-v4-flash-free', providerID: 'opencode' }`
+ */
+function modelRefFromSlug(slug: string | undefined): { id: string; providerID: string } | undefined {
+  if (!slug) return undefined
+  const slash = slug.indexOf('/')
+  if (slash <= 0) return { id: slug, providerID: 'opencode' }
+  return { id: slug.slice(slash + 1), providerID: slug.slice(0, slash) }
+}
+
 const HOSTNAME = '127.0.0.1'
+
+/**
+ * Map internal Governor decision vocabulary to the serve `permission.respond` /
+ * `permission.reply` `response` enum. `allow` -> `once` (allow this one time),
+ * `allow_always` -> `always` (persist the rule), `deny` -> `reject`.
+ */
+export function mapDecisionToResponse(decision: PermissionDecision): 'once' | 'always' | 'reject' {
+  switch (decision) {
+    case 'allow_always':
+      return 'always'
+    case 'deny':
+      return 'reject'
+    default:
+      return 'once'
+  }
+}
 
 export interface OpenCodeClientOptions {
   port: number
@@ -55,10 +84,12 @@ export class OpenCodeClient {
   async createSession(
     opts: { cwd?: string; model?: string; message?: string } = {},
   ): Promise<{ sessionId: string }> {
+    // v1.18.4: `model` must be `{ id, providerID }`; `cwd`/`message` are not part of the
+    // request schema (ignored by the server), so only send the model object.
     const res = await this.req('/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cwd: opts.cwd, model: opts.model, message: opts.message }),
+      body: JSON.stringify({ model: modelRefFromSlug(opts.model) }),
     })
     const data = (await res.json()) as { id?: string }
     if (!data.id)
@@ -67,17 +98,18 @@ export class OpenCodeClient {
   }
 
   async sendPrompt(sessionId: string, prompt: string): Promise<void> {
+    // v1.18.4: `prompt_async` requires `parts` (array), not a bare `prompt` string.
     await this.req(`/session/${sessionId}/prompt_async`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ parts: [{ type: 'text', text: prompt }] }),
     })
   }
 
   /**
    * Blocking send — returns the full response as ContentBlock[].
-   * Uses `POST /session/:id/message` with the `parts` body format
-   * (opencode v1.17.15 official API, verified 2026-07-19).
+   * Uses `POST /session/:id/message` with the `parts` body format.
+   * v1.18.4 response shape: `{ info: {...}, parts: [{type:'text',text,...}, ...] }`.
    */
   async sendMessage(sessionId: string, text: string): Promise<{ blocks: ContentBlock[] }> {
     const res = await this.req(`/session/${sessionId}/message`, {
@@ -85,14 +117,30 @@ export class OpenCodeClient {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ parts: [{ type: 'text', text }] }),
     })
-    // The /message endpoint returns ContentBlock[] directly (not wrapped).
     const data: unknown = await res.json()
     const blocks: ContentBlock[] = Array.isArray(data)
-      ? data
-      : (((data as Record<string, unknown>)?.blocks ??
+      ? (data as ContentBlock[])
+      : (this.blocksFromV18(data) ??
+        (((data as Record<string, unknown>)?.blocks ??
           (data as Record<string, unknown>)?.content ??
-          []) as ContentBlock[])
+          []) as ContentBlock[]))
     return { blocks }
+  }
+
+  /** Map the v1.18.4 `{ info, parts: [...] }` response to ContentBlock[] (text parts). */
+  private blocksFromV18(data: unknown): ContentBlock[] | undefined {
+    if (!data || typeof data !== 'object') return undefined
+    const parts = (data as { parts?: unknown }).parts
+    if (!Array.isArray(parts)) return undefined
+    const blocks: ContentBlock[] = []
+    for (const p of parts) {
+      if (!p || typeof p !== 'object') continue
+      const part = p as { type?: string; text?: string }
+      if (part.type === 'text' && typeof part.text === 'string') {
+        blocks.push({ type: 'text', text: part.text })
+      }
+    }
+    return blocks
   }
 
   /**
@@ -160,20 +208,50 @@ export class OpenCodeClient {
     return parseOpencodeJson(raw).blocks
   }
 
+  /**
+   * v1.18.4 `permission.respond` body is `{ response: 'once'|'always'|'reject' }`
+   * (NOT `{ decision }` — that vocabulary is an old TUI-format legacy). The path
+   * parameter is the `^per` permission ID from `permission.asked` event `properties.id`.
+   */
   async respondPermission(
     sessionId: string,
     permissionId: string,
     decision: PermissionDecision,
   ): Promise<void> {
+    const response = mapDecisionToResponse(decision)
     await this.req(`/session/${sessionId}/permissions/${permissionId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ decision }),
+      body: JSON.stringify({ response }),
     })
   }
 
   async getDiff(sessionId: string): Promise<unknown> {
     const res = await this.req(`/session/${sessionId}/diff`)
     return res.json()
+  }
+
+  /**
+   * List all serve sessions (`GET /session`). Authoritative source for
+   * `cap:opencode:session.list` / `GET /api/opencode/sessions` (audit F4).
+   * Shape (v1.18.4): `[{ id, slug, title, directory, model:{id,providerID}, tokens, time, version, agent }]`.
+   */
+  async listSessions(): Promise<Array<Record<string, unknown>>> {
+    const res = await this.req('/session')
+    const data = (await res.json()) as unknown
+    return Array.isArray(data) ? (data as Array<Record<string, unknown>>) : []
+  }
+
+  /**
+   * Fetch the authoritative message transcript for a session
+   * (`GET /session/:id/message`). Each entry: `{ info:{ id, sessionID, role,
+   * parentID, time, modelID, providerID }, parts:[{ id, messageID, type, text }] }`.
+   * Projecting from this transcript (instead of rebuilding from SSE deltas) yields
+   * clean, correctly-ordered per-message text with both user and assistant roles.
+   */
+  async getSessionMessages(sessionId: string): Promise<Array<Record<string, unknown>>> {
+    const res = await this.req(`/session/${encodeURIComponent(sessionId)}/message`)
+    const data = (await res.json()) as unknown
+    return Array.isArray(data) ? (data as Array<Record<string, unknown>>) : []
   }
 }

@@ -2,6 +2,7 @@
 // Axis: input — interaction primitives (20 capabilities)
 
 import { z } from 'zod'
+import { EngineError } from '../../../errors.js'
 import type { BrowserCapabilityDef, CapCtx } from '../types.js'
 import { TRUST } from '../types.js'
 
@@ -12,15 +13,63 @@ const sel = z.object({
   placeholder: z.string().optional(),
   role: z.string().optional(),
   testid: z.string().optional(),
+  /** Max ms to wait for the resolved target before acting (default 1500). */
+  waitMs: z.number().optional(),
 })
 const withSel = <T extends z.ZodRawShape>(extra: T) => sel.extend(extra)
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Resolve the injected `__selector` and wait for it to be present.
+ * Throws EngineError when grounding failed to resolve a target (no silent
+ * default element — never fall back to the first tag on the page) or when the
+ * element does not appear within `waitMs`.
+ */
+async function requireTarget(ctx: CapCtx, what: string): Promise<string> {
+  const s = ctx.params.__selector as string | undefined
+  if (!s) {
+    throw new EngineError(
+      `${what}: no target element resolved — pass text/ariaLabel/selector (or waitMs to retry)`,
+    )
+  }
+  const waitMs = (ctx.params.waitMs as number | undefined) ?? 1500
+  const deadline = Date.now() + waitMs
+  while (Date.now() < deadline) {
+    const present = (await ctx.governor.evaluate(ctx.slaveId, probeExpr(ctx, s))) as boolean
+    if (present) return s
+    await sleep(100)
+  }
+  throw new EngineError(`${what}: target not ready after ${waitMs}ms: ${s}`)
+}
+
+/** Presence probe that drills into the resolved frame when frame-scoped. */
+function probeExpr(ctx: CapCtx, s: string): string {
+  const frame = ctx.params.__frame as number | undefined
+  if (frame === undefined) return `!!document.querySelector(${JSON.stringify(s)})`
+  return `(()=>{var f=document.querySelectorAll('iframe')[${frame}];var d=f&&f.contentDocument;return d?!!d.querySelector(${JSON.stringify(s)}):false;})()`
+}
+
+/**
+ * Build an IIFE that queries the resolved element (main frame or resolved
+ * iframe) and runs `body` against it as `$E`. `body` must NOT reference
+ * `document` directly — use `$E` so the same handler works across frames.
+ */
+function targetExpr(ctx: CapCtx, body: (e: string) => string): string {
+  const s = ctx.params.__selector as string
+  const frame = ctx.params.__frame as number | undefined
+  if (frame === undefined) {
+    return `(()=>{var $E=document.querySelector(${JSON.stringify(s)});if(!$E)return;${body('$E')}})()`
+  }
+  return `(()=>{var $F=document.querySelectorAll('iframe')[${frame}];var $D=$F&&$F.contentDocument;if(!$D)return;var $E=$D.querySelector(${JSON.stringify(s)});if(!$E)return;${body('$E')}})()`
+}
 
 /** Click an element resolved via grounding (`__selector` injected by registry). */
 async function clickResolved(
   ctx: CapCtx,
 ): Promise<{ ok: boolean; detail?: string; error?: string }> {
-  const s = (ctx.params.__selector as string) ?? 'button'
-  await ctx.governor.evaluate(ctx.slaveId, `document.querySelector(${JSON.stringify(s)})?.click()`)
+  const s = await requireTarget(ctx, 'click')
+  await ctx.governor.evaluate(ctx.slaveId, targetExpr(ctx, ($E) => `${$E}.click()`))
   return { ok: true, detail: `clicked ${s}` }
 }
 
@@ -42,10 +91,14 @@ export const doubleClick: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'button'
+    const s = await requireTarget(ctx, 'double-click')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('dblclick',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`,
+      targetExpr(
+        ctx,
+        ($E) =>
+          `var r=${$E}.getBoundingClientRect();var o=new MouseEvent('dblclick',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});${$E}.dispatchEvent(o);`,
+      ),
     )
     return { ok: true, detail: `double-clicked ${s}` }
   },
@@ -59,10 +112,14 @@ export const rightClick: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'button'
+    const s = await requireTarget(ctx, 'right-click')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('contextmenu',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`,
+      targetExpr(
+        ctx,
+        ($E) =>
+          `var r=${$E}.getBoundingClientRect();var o=new MouseEvent('contextmenu',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});${$E}.dispatchEvent(o);`,
+      ),
     )
     return { ok: true, detail: `right-clicked ${s}` }
   },
@@ -74,14 +131,17 @@ export const type: BrowserCapabilityDef = {
   description: 'Type text into a field.',
   params: withSel({ text: z.string(), append: z.boolean().optional() }),
   grounding: 'composite',
+  groundingExclude: new Set(['text']),
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'textarea'
+    const s = await requireTarget(ctx, 'type')
     const value = ctx.params.text as string
-    const expr = ctx.params.append
-      ? `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=(e.value||'')+${JSON.stringify(value)};e.dispatchEvent(new Event('input',{bubbles:true}));}})()`
-      : `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('input',{bubbles:true}));}})()`
-    await ctx.governor.evaluate(ctx.slaveId, expr)
+    const body = ctx.params.append
+      ? ($E: string) =>
+          `if(${$E}){${$E}.value=(${$E}.value||'')+${JSON.stringify(value)};${$E}.dispatchEvent(new Event('input',{bubbles:true}));}`
+      : ($E: string) =>
+          `if(${$E}){${$E}.value=${JSON.stringify(value)};${$E}.dispatchEvent(new Event('input',{bubbles:true}));}`
+    await ctx.governor.evaluate(ctx.slaveId, targetExpr(ctx, body))
     return { ok: true, detail: `typed into ${s}` }
   },
 }
@@ -94,10 +154,10 @@ export const clear: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'textarea'
+    const s = await requireTarget(ctx, 'clear')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value='';e.dispatchEvent(new Event('input',{bubbles:true}));}})()`,
+      targetExpr(ctx, ($E) => `if(${$E}){${$E}.value='';${$E}.dispatchEvent(new Event('input',{bubbles:true}));}`),
     )
     return { ok: true, detail: `cleared ${s}` }
   },
@@ -160,10 +220,14 @@ export const hover: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'a'
+    const s = await requireTarget(ctx, 'hover')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var r=e.getBoundingClientRect();var o=new MouseEvent('mouseover',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});e.dispatchEvent(o);}})()`,
+      targetExpr(
+        ctx,
+        ($E) =>
+          `var r=${$E}.getBoundingClientRect();var o=new MouseEvent('mouseover',{bubbles:true,clientX:r.x+r.width/2,clientY:r.y+r.height/2});${$E}.dispatchEvent(o);`,
+      ),
     )
     return { ok: true, detail: `hovered ${s}` }
   },
@@ -177,11 +241,8 @@ export const focus: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'input'
-    await ctx.governor.evaluate(
-      ctx.slaveId,
-      `document.querySelector(${JSON.stringify(s)})?.focus()`,
-    )
+    const s = await requireTarget(ctx, 'focus')
+    await ctx.governor.evaluate(ctx.slaveId, targetExpr(ctx, ($E) => `${$E}.focus()`))
     return { ok: true, detail: `focused ${s}` }
   },
 }
@@ -194,8 +255,8 @@ export const blur: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'input'
-    await ctx.governor.evaluate(ctx.slaveId, `document.querySelector(${JSON.stringify(s)})?.blur()`)
+    const s = await requireTarget(ctx, 'blur')
+    await ctx.governor.evaluate(ctx.slaveId, targetExpr(ctx, ($E) => `${$E}.blur()`))
     return { ok: true, detail: `blurred ${s}` }
   },
 }
@@ -234,12 +295,14 @@ export const select: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'select'
+    const s = await requireTarget(ctx, 'select')
     const byLabel = ctx.params.label as string | undefined
-    const expr = byLabel
-      ? `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){var o=[...e.options].find(o=>o.text===${JSON.stringify(byLabel)});if(o)e.value=o.value;e.dispatchEvent(new Event('change',{bubbles:true}));}})()`
-      : `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=${JSON.stringify(ctx.params.value)};e.dispatchEvent(new Event('change',{bubbles:true}));}})()`
-    await ctx.governor.evaluate(ctx.slaveId, expr)
+    const body = byLabel
+      ? ($E: string) =>
+          `var o=[...${$E}.options].find(o=>o.text===${JSON.stringify(byLabel)});if(o)${$E}.value=o.value;${$E}.dispatchEvent(new Event('change',{bubbles:true}));`
+      : ($E: string) =>
+          `${$E}.value=${JSON.stringify(ctx.params.value)};${$E}.dispatchEvent(new Event('change',{bubbles:true}));`
+    await ctx.governor.evaluate(ctx.slaveId, targetExpr(ctx, body))
     return { ok: true, detail: `selected in ${s}` }
   },
 }
@@ -252,10 +315,10 @@ export const check: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'input[type=checkbox]'
+    const s = await requireTarget(ctx, 'check')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e&&!e.checked){e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));}})()`,
+      targetExpr(ctx, ($E) => `if(${$E}&&!${$E}.checked){${$E}.checked=true;${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`),
     )
     return { ok: true, detail: `checked ${s}` }
   },
@@ -269,10 +332,10 @@ export const uncheck: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'input[type=checkbox]'
+    const s = await requireTarget(ctx, 'uncheck')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e&&e.checked){e.checked=false;e.dispatchEvent(new Event('change',{bubbles:true}));}})()`,
+      targetExpr(ctx, ($E) => `if(${$E}&&${$E}.checked){${$E}.checked=false;${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`),
     )
     return { ok: true, detail: `unchecked ${s}` }
   },
@@ -286,10 +349,10 @@ export const rangeSet: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'input[type=range]'
+    const s = await requireTarget(ctx, 'range-set')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=${JSON.stringify(ctx.params.value)};e.dispatchEvent(new Event('input',{bubbles:true}));}})()`,
+      targetExpr(ctx, ($E) => `${$E}.value=${JSON.stringify(ctx.params.value)};${$E}.dispatchEvent(new Event('input',{bubbles:true}));`),
     )
     return { ok: true, detail: `range set ${ctx.params.value}` }
   },
@@ -303,10 +366,10 @@ export const colorSet: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'input[type=color]'
+    const s = await requireTarget(ctx, 'color-set')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.value=${JSON.stringify(ctx.params.value)};e.dispatchEvent(new Event('input',{bubbles:true}));}})()`,
+      targetExpr(ctx, ($E) => `${$E}.value=${JSON.stringify(ctx.params.value)};${$E}.dispatchEvent(new Event('input',{bubbles:true}));`),
     )
     return { ok: true, detail: `color set ${ctx.params.value}` }
   },
@@ -320,10 +383,10 @@ export const upload: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = (ctx.params.__selector as string) ?? 'input[type=file]'
+    const s = await requireTarget(ctx, 'upload')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      `(()=>{var e=document.querySelector(${JSON.stringify(s)});if(e){e.setAttribute('data-vivim-files',${JSON.stringify(JSON.stringify(ctx.params.files))});e.dispatchEvent(new Event('change',{bubbles:true}));}})()`,
+      targetExpr(ctx, ($E) => `if(${$E}){${$E}.setAttribute('data-vivim-files',${JSON.stringify(JSON.stringify(ctx.params.files))});${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`),
     )
     return { ok: true, detail: `upload set on ${s}` }
   },

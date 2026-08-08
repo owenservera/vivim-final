@@ -8,10 +8,13 @@
 
 import { config } from '../../config.js'
 import { OpenCodeServeError } from '../../errors.js'
+import { createInstanceRegistry, OpenCodeInstanceRegistry } from './opencode-instance-registry.js'
 
 const HOSTNAME = '127.0.0.1'
 const MAX_RESTARTS = 5
-const READINESS_TIMEOUT_MS = 15_000
+// `opencode serve` can take ~20s+ on Windows (cold model/provider boot).
+// 90s gives a comfortable margin; a single respawn retry covers flaky first boots.
+const READINESS_TIMEOUT_MS = 90_000
 const RESTART_BASE_MS = 500
 
 export interface OpenCodeSupervisorOptions {
@@ -25,6 +28,8 @@ export interface OpenCodeSupervisorOptions {
   healthUrl?: string
   /** Extra args inserted after the binary (tests use a launcher script). */
   extraArgs?: string[]
+  /** Injectable registry (tests). Defaults to the real durable registry. */
+  registry?: OpenCodeInstanceRegistry
 }
 
 export interface OpenCodeSupervisorHandle {
@@ -47,6 +52,9 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
   private running = false
   private restarts = 0
   private listeners: Record<string, Array<(info: unknown) => void>> = {}
+  /** Stable ULID for the currently-supervised instance (one per supervisor). */
+  private instanceId: string | null = null
+  private readonly registry: OpenCodeInstanceRegistry
   private readonly opts: Required<
     Pick<OpenCodeSupervisorOptions, 'binary' | 'username' | 'password' | 'cwd'>
   > &
@@ -62,6 +70,22 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
       port: opts.port && opts.port > 0 ? opts.port : (config.opencodeServePort ?? 0),
       healthUrl: opts.healthUrl,
     }
+    this.registry = opts.registry ?? createInstanceRegistry()
+  }
+
+  /** Expose the registry so the serve handle can surface instance identity. */
+  getRegistry(): OpenCodeInstanceRegistry {
+    return this.registry
+  }
+
+  /** The instance ULID of the currently-supervised serve process (null until start). */
+  getInstanceId(): string | null {
+    return this.instanceId
+  }
+
+  /** The spawned child PID (null until start). */
+  getPid(): number | null {
+    return this.proc?.pid ?? null
   }
 
   on(event: 'ready' | 'exit' | 'error', cb: (info: unknown) => void): void {
@@ -116,8 +140,22 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
     }
     const port = await this.resolvePort()
     this.port = port
-    await this.spawnOnce()
-    await this.waitForReady()
+    // First spawn attempt.
+    this.spawnOnce()
+    try {
+      await this.waitForReady()
+      this.registry.recordReady(this.instanceId ?? '', this.proc?.pid, this.port)
+    } catch (firstErr) {
+      // Flaky first boot — kill and respawn once before giving up.
+      this.registry.recordError(this.instanceId ?? '', 'first readiness attempt failed', this.proc?.pid, this.port)
+      if (this.proc) {
+        this.proc.kill()
+        this.proc = null
+      }
+      this.spawnOnce()
+      await this.waitForReady()
+      this.registry.recordReady(this.instanceId ?? '', this.proc?.pid, this.port)
+    }
     this.running = true
     this.emit('ready', { port })
     return { port }
@@ -142,6 +180,15 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
         OPENCODE_SERVER_USERNAME: this.opts.username,
       },
     })
+    // Register this instance in the durable ledger BEFORE anything else can
+    // misidentify it. `this.proc.pid` is the child we spawned.
+    this.instanceId = this.registry.recordSpawn({
+      pid: this.proc.pid,
+      port: this.port ?? 0,
+      parentPid: process.pid,
+      binary: this.opts.binary,
+      cwd: this.opts.cwd,
+    })
     // Drain both stdout and stderr in background — on Windows the pipe buffer
     // fills and blocks the child process if nobody reads it. We read and discard.
     for (const stream of [this.proc.stdout, this.proc.stderr]) {
@@ -165,6 +212,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
 
   private onChildExit(code: number): void {
     this.running = false
+    this.registry.recordExit(this.instanceId ?? '', code, this.proc?.pid, this.port ?? undefined)
     this.emit('exit', { code })
     if (code !== 0 && this.restarts < MAX_RESTARTS) {
       this.restarts += 1
@@ -176,9 +224,13 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
             this.waitForReady()
               .then(() => {
                 this.running = true
+                this.registry.recordReady(this.instanceId ?? '', this.proc?.pid, this.port)
                 this.emit('ready', { port: this.port })
               })
-              .catch((e) => this.emit('error', e))
+              .catch((e) => {
+                this.registry.recordError(this.instanceId ?? '', String(e), this.proc?.pid, this.port ?? undefined)
+                this.emit('error', e)
+              })
           } catch (e) {
             this.emit('error', e)
           }
@@ -218,6 +270,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
     this.running = false
     this.opts.enabled = false
     if (this.proc) {
+      this.registry.recordStop(this.instanceId ?? '', this.proc.pid, this.port ?? undefined)
       this.proc.kill()
       this.proc = null
     }

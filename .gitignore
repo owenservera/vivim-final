@@ -61,8 +61,6 @@ web/*/bun.lock
 web/*/scripts/
 
 
-tests/fixtures/node-store-test.db
-
 # Dev database backups
 prisma/dev.db.bak-*
 prisma/prisma/dev.db
@@ -112,3 +110,6 @@ research-clones/
 
 # Review system run artifacts (regenerable)
 docs/review-system/runs/
+
+# Local-only seed snapshot (contains live user data — never commit)
+seeds/seed-snapshot.db

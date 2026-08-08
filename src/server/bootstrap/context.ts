@@ -5,7 +5,7 @@
 // returned once all phases complete.
 
 import type { ProviderRegistry } from '../../config/provider-registry.js'
-import type { CapabilityEventBus } from '../../engines/capability-event-bus.js'
+import { CapabilityEventBus } from '../../engines/capability-event-bus.js'
 import type { CapabilityResolutionEngine } from '../../engines/capability-resolution.js'
 import type { ChromeGovernor } from '../../engines/chrome-governor.js'
 import type { ConceptualModelService } from '../../engines/conceptual-model-service.js'
@@ -140,5 +140,7 @@ export interface BootstrapEnginesResult {
 
 /** Create an empty context. Phases fill it; the orchestrator resolves it. */
 export function createBootstrapContext(port: number): BootstrapContext {
-  return { port } as BootstrapContext
+  // The event bus is a process-wide singleton and the one engine every phase
+  // depends on — seed it here so `ctx.eventBus` is never undefined.
+  return { port, eventBus: CapabilityEventBus.getInstance() } as BootstrapContext
 }

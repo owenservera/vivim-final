@@ -1,13 +1,16 @@
 # Runbook — Providers
 
-> Setting up, testing, and debugging the 6 provider surfaces. Core background is
+> Setting up, testing, and debugging the provider surfaces. Core background is
 > in `AGENTS.md` (KNOW THIS FIRST). This is the operational quick-reference.
 
-## The 6 providers
+## The providers
 
-`chatgpt · claude · gemini` (fully seeded + registered), `deepseek · qwen · grok`
-(seeded, parsers pending). Each provider is seeded from
-`seeds/providers/<slug>.json`, with captured parsers in
+**16 registered** total (`chatgpt · claude · gemini · deepseek · qwen · grok` are the
+UI-facing chat providers; the rest are framework/API aliases: `generic · system ·
+facebook · slack · telegram · whatsapp · studio-ai · z-ai · opencode · mistral`).
+`chatgpt · claude · gemini · deepseek` are fully seeded + registered with parsers;
+`qwen · grok` are seeded with parsers pending. Each provider is seeded from
+`seeds/providers/manifests.ts`, with captured parsers in
 `seeds/parsers/harvested/`.
 
 ## Quick status / deep-dive

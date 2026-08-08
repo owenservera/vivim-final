@@ -6,9 +6,9 @@
     {
       "phase": "discover",
       "status": "failed",
-      "startedAt": 1786033619907,
-      "detail": "No live Chrome slave found for provider 'chatgpt'. Run: bun run devops agentic adopt --provider=chatgpt (after bun run devops runtime-test setup --provider=chatgpt --account=<email> for first-time login)",
-      "finishedAt": 1786033619982
+      "startedAt": 1786148577330,
+      "detail": "Chrome profile for 'chatgpt' not authenticated. Run: bun run devops runtime-test setup --provider=chatgpt --account=<email>",
+      "finishedAt": 1786148577448
     },
     {
       "phase": "infer",
@@ -39,6 +39,6 @@
       "status": "pending"
     }
   ],
-  "createdAt": 1786033619902,
-  "updatedAt": 1786033619982
+  "createdAt": 1786148577238,
+  "updatedAt": 1786148577448
 }

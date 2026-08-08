@@ -129,7 +129,7 @@ Run these phases in order. Each phase is an agent action, not an automated step.
       bespoke only on merit. Never hardcode feature logic; render from `ResolvedCapability`.
       For any new region/provider-family UI, prefer the **unified canvas + conceptual model** path
       (see Recipe E) over a new `ChatPage` slot.
-   - Database: edit `prisma/schema.prisma` → `bunx prisma migrate dev --name <x>` → update store
+   - Database: edit `prisma/schema.prisma` → `bunx prisma db push --skip-generate --accept-data-loss` (DDL only, no `_prisma_migrations`; data reshaping via `MigrationRunner`) → update store
      contracts → update seeds if needed.
     - Complete ALL code edits first, then run typecheck/lint/tests once.
       Do NOT run `bun run typecheck` incrementally — later edits will
@@ -196,8 +196,8 @@ CLI harness (`bun run devops runtime-test <subcmd>`):
 - `build [frontend|backend] [--cap=<slug>]` — `build backend --cap=<slug>` emits a compilable
   `makeCapability` skeleton (exact shape) into `src/engines/generated/<slug>.ts`; register it
   in `registerDefaultCapabilities`, then `catalog-gen`
-- `migrate --name=<x> [--timeout=ms]` — non-interactive `prisma migrate dev --name <x>` under a
-  hard timeout (never blocks on the stdin name prompt)
+- `db push [--timeout=ms]` — non-interactive `prisma db push --skip-generate --accept-data-loss` under a
+  hard timeout (never blocks); drift check via `prisma migrate diff`
 - `loop --goal= --max-cycles=N --mitm [--force]` — single-pass orchestration; enforces the
   goal-resolution gate (vague goal → halt & ask); always tears down servers in `finally`
 - `loop --objective="..."` — **start an iterative improve→test→debug loop**: writes a persisted
@@ -211,8 +211,8 @@ CLI harness (`bun run devops runtime-test <subcmd>`):
 - `ensure-browser`    — deterministic `{ok, source:'adopted'|'spawned'|'none'}` precheck; if not
   `adopted`/`spawned`, do NOT spin `engage` — verify via API + flag UI-unverified
 - `watchdog --pid=<n>` — detached reaper: polls parent pid, runs `stop` on agent death (no orphans)
-- `guard`             — lefthook check: fails if `.runtime/*.pid` present or `prisma migrate status`
-  is pending (run by pre-commit; blocks commits in bad state)
+- `guard`             — lefthook check: fails if `.runtime/*.pid` present or `prisma migrate diff`
+  shows drift (run by pre-commit; blocks commits in bad state)
 - `status`            — running server state from `.runtime/*.pid` + health endpoints
 - `status --provider=<slug>` — provider-specific capability status: seed presence, profile cookies, live slave, capability registration, selector confidence, UI frontend test status, canonical verdict + recommended action
 - `stop`              — tear down all services (canonical PS1 stopper); single correct teardown
@@ -330,7 +330,8 @@ Goal: "fix the broken send button".
 
 ### Recipe C — Database / schema change
 1. Edit `prisma/schema.prisma`.
-2. `bunx prisma migrate dev --name <description>`.
+2. `bunx prisma db push --skip-generate --accept-data-loss` (DDL only — no `_prisma_migrations`).
+   For value reshaping/backfills, register a step in `src/storage/migration/migrations-registry.ts` instead.
 3. Update the relevant Store Contract in `src/storage/contracts/`.
 4. Update seeds in `seeds/` if the change affects seeded data.
 5. `bunx prisma studio` to eyeball; re-run `discover` (schemaTables count updates).
@@ -477,7 +478,7 @@ Goal: "add 10x more platforms", "expand taxonomy", "add capabilities for X".
   mid-task wastes time and masks true errors — later edits will invalidate
   earlier passes. The single gate at the end is the only one that counts.
 - **Type safety:** No `any` — use `unknown` + narrowing. Errors via custom classes, never swallowed.
-- **DB-Driven Protocol (P1):** Provider-specific composer selectors, send methods, capture patterns, fetch URL patterns, and DOM selectors live in the DB (`ProviderEndpoint` rows, seeded from `seeds/providers/*.json`). NEVER hardcode these in TypeScript. The hardcoded maps in `provider-selectors.ts` and `conversation-manager.ts` are FALLBACKS only. New providers: write JSON → `bun run seed`. Use `bun run devops discover-protocol <url>` to auto-discover.
+- **DB-Driven Protocol (P1):** Provider-specific composer selectors, send methods, capture patterns, fetch URL patterns, and DOM selectors live in the DB (`ProviderEndpoint` rows, seeded from `seeds/providers/manifests.ts`). NEVER hardcode these in TypeScript. The hardcoded maps in `provider-selectors.ts` and `conversation-manager.ts` are FALLBACKS only. New providers: add to the manifest → `bun run seed`. Use `bun run devops discover-protocol <url>` to auto-discover.
 - **Chrome Slave Profile = Source of Truth:** Cookie files in profile directory determine "logged in" state — NOT DB loginState row. `isAuthenticated()` checks cookie files.
 - **One Profile Per (Provider, Account):** ProfileAllocator enforces singleton — no duplicate profiles for same provider+account combination.
 - **Lazy Startup:** Chrome slaves auto-launch when first needed, keep alive until `stop` command. No always-on requirement for dev loop.

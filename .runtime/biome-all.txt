@@ -1,0 +1,358 @@
+tests/unit/mcp/serp-parser.test.ts:34:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    32 Γöé     const results = parseGoogleSerp(SERP_HTML)
+    33 Γöé     expect(results.length).toBe(3) // ad stripped
+  > 34 Γöé     expect(results[0]!.rank).toBe(1)
+       Γöé            ^^^^^^^^^^^
+    35 Γöé     expect(results[0]!.title).toBe('opencode - The AI Agent')
+    36 Γöé     expect(results[0]!.url).toBe('https://opencode.example.com/')
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+    32 32 Γöé       const results = parseGoogleSerp(SERP_HTML)
+    33 33 Γöé       expect(results.length).toBe(3) // ad stripped
+    34    Γöé - ┬╖┬╖┬╖┬╖expect(results[0]!.rank).toBe(1)
+       34 Γöé + ┬╖┬╖┬╖┬╖expect(results[0]?.rank).toBe(1)
+    35 35 Γöé       expect(results[0]!.title).toBe('opencode - The AI Agent')
+    36 36 Γöé       expect(results[0]!.url).toBe('https://opencode.example.com/')
+  
+
+tests/unit/mcp/serp-parser.test.ts:35:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    33 Γöé     expect(results.length).toBe(3) // ad stripped
+    34 Γöé     expect(results[0]!.rank).toBe(1)
+  > 35 Γöé     expect(results[0]!.title).toBe('opencode - The AI Agent')
+       Γöé            ^^^^^^^^^^^
+    36 Γöé     expect(results[0]!.url).toBe('https://opencode.example.com/')
+    37 Γöé     expect(results[0]!.snippet).toContain('open-source AI coding agent')
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+    33 33 Γöé       expect(results.length).toBe(3) // ad stripped
+    34 34 Γöé       expect(results[0]!.rank).toBe(1)
+    35    Γöé - ┬╖┬╖┬╖┬╖expect(results[0]!.title).toBe('opencode┬╖-┬╖The┬╖AI┬╖Agent')
+       35 Γöé + ┬╖┬╖┬╖┬╖expect(results[0]?.title).toBe('opencode┬╖-┬╖The┬╖AI┬╖Agent')
+    36 36 Γöé       expect(results[0]!.url).toBe('https://opencode.example.com/')
+    37 37 Γöé       expect(results[0]!.snippet).toContain('open-source AI coding agent')
+  
+
+tests/unit/mcp/serp-parser.test.ts:36:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    34 Γöé     expect(results[0]!.rank).toBe(1)
+    35 Γöé     expect(results[0]!.title).toBe('opencode - The AI Agent')
+  > 36 Γöé     expect(results[0]!.url).toBe('https://opencode.example.com/')
+       Γöé            ^^^^^^^^^^^
+    37 Γöé     expect(results[0]!.snippet).toContain('open-source AI coding agent')
+    38 Γöé   })
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+    34 34 Γöé       expect(results[0]!.rank).toBe(1)
+    35 35 Γöé       expect(results[0]!.title).toBe('opencode - The AI Agent')
+    36    Γöé - ┬╖┬╖┬╖┬╖expect(results[0]!.url).toBe('https://opencode.example.com/')
+       36 Γöé + ┬╖┬╖┬╖┬╖expect(results[0]?.url).toBe('https://opencode.example.com/')
+    37 37 Γöé       expect(results[0]!.snippet).toContain('open-source AI coding agent')
+    38 38 Γöé     })
+  
+
+tests/unit/mcp/serp-parser.test.ts:37:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    35 Γöé     expect(results[0]!.title).toBe('opencode - The AI Agent')
+    36 Γöé     expect(results[0]!.url).toBe('https://opencode.example.com/')
+  > 37 Γöé     expect(results[0]!.snippet).toContain('open-source AI coding agent')
+       Γöé            ^^^^^^^^^^^
+    38 Γöé   })
+    39 Γöé 
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+    35 35 Γöé       expect(results[0]!.title).toBe('opencode - The AI Agent')
+    36 36 Γöé       expect(results[0]!.url).toBe('https://opencode.example.com/')
+    37    Γöé - ┬╖┬╖┬╖┬╖expect(results[0]!.snippet).toContain('open-source┬╖AI┬╖coding┬╖agent')
+       37 Γöé + ┬╖┬╖┬╖┬╖expect(results[0]?.snippet).toContain('open-source┬╖AI┬╖coding┬╖agent')
+    38 38 Γöé     })
+    39 39 Γöé   
+  
+
+tests/unit/mcp/serp-parser.test.ts:42:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    40 Γöé   test('decodes Google redirect urls', () => {
+    41 Γöé     const results = parseGoogleSerp(SERP_HTML)
+  > 42 Γöé     expect(results[1]!.url).toBe('https://docs.example.com/')
+       Γöé            ^^^^^^^^^^^
+    43 Γöé   })
+    44 Γöé 
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+    40 40 Γöé     test('decodes Google redirect urls', () => {
+    41 41 Γöé       const results = parseGoogleSerp(SERP_HTML)
+    42    Γöé - ┬╖┬╖┬╖┬╖expect(results[1]!.url).toBe('https://docs.example.com/')
+       42 Γöé + ┬╖┬╖┬╖┬╖expect(results[1]?.url).toBe('https://docs.example.com/')
+    43 43 Γöé     })
+    44 44 Γöé   
+  
+
+tests/unit/mcp/serp-parser.test.ts:47:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    45 Γöé   test('handles missing snippet as empty string', () => {
+    46 Γöé     const results = parseGoogleSerp(SERP_HTML)
+  > 47 Γöé     expect(results[1]!.snippet).toBe('')
+       Γöé            ^^^^^^^^^^^
+    48 Γöé   })
+    49 Γöé 
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+    45 45 Γöé     test('handles missing snippet as empty string', () => {
+    46 46 Γöé       const results = parseGoogleSerp(SERP_HTML)
+    47    Γöé - ┬╖┬╖┬╖┬╖expect(results[1]!.snippet).toBe('')
+       47 Γöé + ┬╖┬╖┬╖┬╖expect(results[1]?.snippet).toBe('')
+    48 48 Γöé     })
+    49 49 Γöé   
+  
+
+tests/unit/mcp/serp-parser.test.ts:52:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    50 Γöé   test('keeps direct (non-redirect) urls unchanged', () => {
+    51 Γöé     const results = parseGoogleSerp(SERP_HTML)
+  > 52 Γöé     expect(results[2]!.url).toBe('https://direct.example.com/page')
+       Γöé            ^^^^^^^^^^^
+    53 Γöé   })
+    54 Γöé 
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+    50 50 Γöé     test('keeps direct (non-redirect) urls unchanged', () => {
+    51 51 Γöé       const results = parseGoogleSerp(SERP_HTML)
+    52    Γöé - ┬╖┬╖┬╖┬╖expect(results[2]!.url).toBe('https://direct.example.com/page')
+       52 Γöé + ┬╖┬╖┬╖┬╖expect(results[2]?.url).toBe('https://direct.example.com/page')
+    53 53 Γöé     })
+    54 54 Γöé   
+  
+
+tests/unit/mcp/protocol.test.ts:50:31 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    48 Γöé       params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'test' } },
+    49 Γöé     })
+  > 50 Γöé     const parsed = JSON.parse(res!)
+       Γöé                               ^^^^
+    51 Γöé     expect(parsed.id).toBe(1)
+    52 Γöé     expect(parsed.result.protocolVersion).toBeTruthy()
+  
+
+tests/unit/mcp/protocol.test.ts:66:31 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    64 Γöé     const { handle } = makeHandler()
+    65 Γöé     const res = await send(handle, { jsonrpc: '2.0', id: 2, method: 'tools/list' })
+  > 66 Γöé     const parsed = JSON.parse(res!)
+       Γöé                               ^^^^
+    67 Γöé     expect(parsed.result.tools.length).toBe(3)
+    68 Γöé     expect(parsed.result.tools[0]!.name).toBe('browser_nav_navigate')
+  
+
+tests/unit/mcp/protocol.test.ts:68:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    66 Γöé     const parsed = JSON.parse(res!)
+    67 Γöé     expect(parsed.result.tools.length).toBe(3)
+  > 68 Γöé     expect(parsed.result.tools[0]!.name).toBe('browser_nav_navigate')
+       Γöé            ^^^^^^^^^^^^^^^^^^^^^^^
+    69 Γöé     expect(parsed.result.tools[0]!.inputSchema.type).toBe('object')
+    70 Γöé   })
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     66  66 Γöé       const parsed = JSON.parse(res!)
+     67  67 Γöé       expect(parsed.result.tools.length).toBe(3)
+     68     Γöé - ┬╖┬╖┬╖┬╖expect(parsed.result.tools[0]!.name).toBe('browser_nav_navigate')
+         68 Γöé + ┬╖┬╖┬╖┬╖expect(parsed.result.tools[0]?.name).toBe('browser_nav_navigate')
+     69  69 Γöé       expect(parsed.result.tools[0]!.inputSchema.type).toBe('object')
+     70  70 Γöé     })
+  
+
+tests/unit/mcp/protocol.test.ts:69:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    67 Γöé     expect(parsed.result.tools.length).toBe(3)
+    68 Γöé     expect(parsed.result.tools[0]!.name).toBe('browser_nav_navigate')
+  > 69 Γöé     expect(parsed.result.tools[0]!.inputSchema.type).toBe('object')
+       Γöé            ^^^^^^^^^^^^^^^^^^^^^^^
+    70 Γöé   })
+    71 Γöé 
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     67  67 Γöé       expect(parsed.result.tools.length).toBe(3)
+     68  68 Γöé       expect(parsed.result.tools[0]!.name).toBe('browser_nav_navigate')
+     69     Γöé - ┬╖┬╖┬╖┬╖expect(parsed.result.tools[0]!.inputSchema.type).toBe('object')
+         69 Γöé + ┬╖┬╖┬╖┬╖expect(parsed.result.tools[0]?.inputSchema.type).toBe('object')
+     70  70 Γöé     })
+     71  71 Γöé   
+  
+
+tests/unit/mcp/protocol.test.ts:80:31 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    78 Γöé       params: { name: 'browser_nav_navigate', arguments: { url: 'https://a.com' } },
+    79 Γöé     })
+  > 80 Γöé     const parsed = JSON.parse(res!)
+       Γöé                               ^^^^
+    81 Γöé     expect(parsed.result.content[0]!.type).toBe('text')
+    82 Γöé     const payload = JSON.parse(parsed.result.content[0]!.text)
+  
+
+tests/unit/mcp/protocol.test.ts:81:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    79 Γöé     })
+    80 Γöé     const parsed = JSON.parse(res!)
+  > 81 Γöé     expect(parsed.result.content[0]!.type).toBe('text')
+       Γöé            ^^^^^^^^^^^^^^^^^^^^^^^^^
+    82 Γöé     const payload = JSON.parse(parsed.result.content[0]!.text)
+    83 Γöé     expect(payload.ok).toBe(true)
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     79  79 Γöé       })
+     80  80 Γöé       const parsed = JSON.parse(res!)
+     81     Γöé - ┬╖┬╖┬╖┬╖expect(parsed.result.content[0]!.type).toBe('text')
+         81 Γöé + ┬╖┬╖┬╖┬╖expect(parsed.result.content[0]?.type).toBe('text')
+     82  82 Γöé       const payload = JSON.parse(parsed.result.content[0]!.text)
+     83  83 Γöé       expect(payload.ok).toBe(true)
+  
+
+tests/unit/mcp/protocol.test.ts:82:32 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    80 Γöé     const parsed = JSON.parse(res!)
+    81 Γöé     expect(parsed.result.content[0]!.type).toBe('text')
+  > 82 Γöé     const payload = JSON.parse(parsed.result.content[0]!.text)
+       Γöé                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    83 Γöé     expect(payload.ok).toBe(true)
+    84 Γöé     expect(payload.url).toBe('https://a.com')
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     80  80 Γöé       const parsed = JSON.parse(res!)
+     81  81 Γöé       expect(parsed.result.content[0]!.type).toBe('text')
+     82     Γöé - ┬╖┬╖┬╖┬╖const┬╖payload┬╖=┬╖JSON.parse(parsed.result.content[0]!.text)
+         82 Γöé + ┬╖┬╖┬╖┬╖const┬╖payload┬╖=┬╖JSON.parse(parsed.result.content[0]?.text)
+     83  83 Γöé       expect(payload.ok).toBe(true)
+     84  84 Γöé       expect(payload.url).toBe('https://a.com')
+  
+
+tests/unit/mcp/protocol.test.ts:96:31 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    94 Γöé       params: { name: 'browser_explode', arguments: {} },
+    95 Γöé     })
+  > 96 Γöé     const parsed = JSON.parse(res!)
+       Γöé                               ^^^^
+    97 Γöé     expect(parsed.result.isError).toBe(true)
+    98 Γöé     expect(parsed.result.content[0]!.text).toContain('boom')
+  
+
+tests/unit/mcp/protocol.test.ts:98:12 lint/style/noNonNullAssertion  FIXABLE  ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+     96 Γöé     const parsed = JSON.parse(res!)
+     97 Γöé     expect(parsed.result.isError).toBe(true)
+   > 98 Γöé     expect(parsed.result.content[0]!.text).toContain('boom')
+        Γöé            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     99 Γöé   })
+    100 Γöé 
+  
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+  
+     96  96 Γöé       const parsed = JSON.parse(res!)
+     97  97 Γöé       expect(parsed.result.isError).toBe(true)
+     98     Γöé - ┬╖┬╖┬╖┬╖expect(parsed.result.content[0]!.text).toContain('boom')
+         98 Γöé + ┬╖┬╖┬╖┬╖expect(parsed.result.content[0]?.text).toContain('boom')
+     99  99 Γöé     })
+    100 100 Γöé   
+  
+
+tests/unit/mcp/protocol.test.ts:109:31 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    107 Γöé       params: { name: 'nope', arguments: {} },
+    108 Γöé     })
+  > 109 Γöé     const parsed = JSON.parse(res!)
+        Γöé                               ^^^^
+    110 Γöé     expect(parsed.result.isError).toBe(true)
+    111 Γöé   })
+  
+
+tests/unit/mcp/protocol.test.ts:116:31 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    114 Γöé     const { handle } = makeHandler()
+    115 Γöé     const res = await send(handle, { jsonrpc: '2.0', id: 6, method: 'bogus' })
+  > 116 Γöé     const parsed = JSON.parse(res!)
+        Γöé                               ^^^^
+    117 Γöé     expect(parsed.error.code).toBe(-32601)
+    118 Γöé   })
+  
+
+tests/unit/mcp/protocol.test.ts:123:31 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    121 Γöé     const { handle } = makeHandler()
+    122 Γöé     const res = await handle('{not json')
+  > 123 Γöé     const parsed = JSON.parse(res!)
+        Γöé                               ^^^^
+    124 Γöé     expect(parsed.error.code).toBe(-32700)
+    125 Γöé   })
+  
+
+tests/unit/mcp/protocol.test.ts:130:31 lint/style/noNonNullAssertion ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ! Forbidden non-null assertion.
+  
+    128 Γöé     const { handle } = makeHandler()
+    129 Γöé     const res = await send(handle, { jsonrpc: '2.0', id: 7 })
+  > 130 Γöé     const parsed = JSON.parse(res!)
+        Γöé                               ^^^^
+    131 Γöé     expect(parsed.error.code).toBe(-32600)
+    132 Γöé   })
+  
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 25.
+Checked 17 files in 136ms. No fixes applied.
+Found 1 error.
+Found 44 warnings.
+check ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

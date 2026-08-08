@@ -42,9 +42,11 @@ export async function runIndividualSeeds(
 
   try {
     const { ensureTaxonomySeeded } = await import('../../seeds/taxonomy/taxonomy-seed.js')
-    const tax = await ensureTaxonomySeeded(db.prisma)
+    // Converge mode: insert-only for pool slugs missing from the DB. This lets a
+    // populated DB self-heal when the pool grows (no FORCE_SEED needed).
+    const tax = await ensureTaxonomySeeded(db.prisma, false, true)
     if (tax.upserted > 0) {
-      log.info({ count: tax.upserted }, 'Seeded capability-taxonomy rows')
+      log.info({ count: tax.upserted }, 'Converged capability-taxonomy rows')
     }
   } catch (err) {
     log.warn({ err }, 'Taxonomy seed skipped')

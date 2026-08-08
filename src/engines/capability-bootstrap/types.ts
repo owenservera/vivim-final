@@ -7,6 +7,7 @@ import type { ConversationManager } from '../conversation-manager.js'
 import type { CrossConversationSynthesizer } from '../cross-conversation-synthesis.js'
 import type { KnowledgeIngestionEngine } from '../knowledge-ingestion.js'
 import type { LocalAgentProviderExecutor } from '../local-agent/local-agent-executor.js'
+import type { OpenCodeModelSync } from '../local-agent/opencode-model-sync.js'
 import type { MemoryEngine } from '../memory-engine.js'
 import type { OpenCodeClient } from '../opencode/opencode-client.js'
 import type { OpenCodeIngest } from '../opencode/opencode-ingest.js'
@@ -26,6 +27,7 @@ export interface BootstrapServices {
   synthesizer?: CrossConversationSynthesizer
   localAgentStore?: LocalAgentStore
   localAgentExecutor?: LocalAgentProviderExecutor
+  opencodeModelSync?: OpenCodeModelSync
   opencodeClient?: OpenCodeClient
   opencodeIngest?: OpenCodeIngest
   relocationEngine?: StorageRelocationEngine

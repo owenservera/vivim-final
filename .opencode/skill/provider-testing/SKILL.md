@@ -161,7 +161,7 @@ Test gate: fixture parses into text blocks, completion detected, confidence > 0.
 
 Provider selectors (composer, send button, capture patterns) are defined in:
 - `src/engines/provider-selectors.ts` — fallback selector lists
-- `seeds/providers/<slug>.json` — primary selectors
+- `seeds/providers/manifests.ts` — primary selectors (DB-as-source-of-truth)
 
 Test via:
 ```bash
@@ -187,9 +187,9 @@ From `tests/e2e/provider-stream-validate.test.ts` and live testing:
 | Provider | Status | Parser | Tested | Gaps |
 |----------|--------|--------|--------|------|
 | claude | seeded + registered | `claude/001_streaming_sse` (inline) | tested:true conf:1 | none |
-| gemini | seeded + registered | `gemini/001_batchexecute` (inline) | tested:false conf:1 | no stream_config row (custom batchexecute RPC); onboarding pipeline: 5/8 phases pass |
-| chatgpt | seeded + partial | `chatgpt/001_openai_sse` (inline) | tested:true conf:1 | parser uses API format; wire uses chat UI format — needs real-world validation |
-| deepseek | seeded | none configured | unknown | no parser row yet |
+| gemini | seeded + registered | `gemini/001_batchexecute` (inline) + `gemini/002_ai_studio` + generic fallback | tested:false conf:1 | no stream_config row (custom batchexecute RPC); onboarding pipeline: 5/8 phases pass |
+| chatgpt | seeded + registered | `chatgpt/001_openai_delta` (inline) + generic fallback | tested:true conf:1 | parser uses API format; wire uses chat UI format — needs real-world validation |
+| deepseek | seeded + registered | `deepseek/001_reasoning_sse` (inline) | tested:false conf:? | none (reasoning-channel SSE parser seeded) |
 | qwen | seeded | none configured | unknown | no parser row yet |
 | grok | seeded | none configured | unknown | no parser row yet |
 

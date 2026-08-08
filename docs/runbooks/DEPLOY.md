@@ -75,11 +75,11 @@ cd vivim-final
 bun install
 cd frontend && bun install && cd ..
 
-# 3. Generate Prisma client + run migrations
+# 3. Generate Prisma client + apply schema
 bun x prisma generate
-bun x prisma migrate deploy     # prod — applies pending migrations
-# OR
-bun x prisma migrate dev        # dev — creates new migration if schema changed
+bun x prisma db push --skip-generate --accept-data-loss   # DDL only — no _prisma_migrations
+# Drift check (target: zero drift):
+bun x prisma migrate diff --from-url "file:./prisma/dev.db" --to-schema-datamodel prisma/schema.prisma
 
 # 4. Build
 bun run build                   # backend → dist/index.js
@@ -151,8 +151,8 @@ git pull origin main
 # Rebuild + restart (zero downtime if behind a load balancer)
 docker compose up -d --build
 
-# Run any new migrations (the entrypoint does this automatically)
-docker compose exec vivim bun x prisma migrate deploy
+# Apply schema (DDL only — the entrypoint does this automatically)
+docker compose exec vivim bun x prisma db push --skip-generate --accept-data-loss
 ```
 
 ---

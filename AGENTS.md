@@ -192,18 +192,24 @@ Endpoints like `/api/conversations/:id/send` block forever waiting for a CDP bro
 
 ### What Providers Exist
 
-The system supports **6 providers**: `chatgpt`, `claude`, `gemini`, `deepseek`, `qwen`, `grok`.
-Each is seeded from `seeds/providers/<slug>.json` (manifest with endpoints, parsers, models, capabilities).
+The system supports **16 registered providers** (`chatgpt`, `claude`, `deepseek`,
+`facebook`, `gemini`, `generic`, `grok`, `mistral`, `opencode`, `qwen`, `slack`,
+`studio-ai`, `system`, `telegram`, `whatsapp`, `z-ai`). Of these, **6 are
+UI-facing chat providers**: `chatgpt`, `claude`, `gemini`, `deepseek`, `qwen`,
+`grok`; the rest are framework/API aliases (`generic`, `system`, `facebook`,
+`slack`, `telegram`, `whatsapp`, `studio-ai`, `z-ai`, `opencode`, `mistral`).
+Each is seeded from `seeds/providers/manifests.ts` (manifest with endpoints,
+parsers, models, capabilities).
 
 ### Provider File Layout
 
 | File | Purpose |
 |------|---------|
-| `seeds/providers/<slug>.json` | Provider manifest (selectors, endpoints, parsers, models) |
+| `seeds/providers/manifests.ts` | Provider manifest definitions (selectors, endpoints, parsers, models) |
 | `seeds/parsers/harvested/<slug>-*.ts` | Stream parser `LOGIC_CODE` (inline, DB-driven) |
 | `seeds/adapters/<slug>.ts` | Import adapter for external data portability |
-| `src/engine/provider-selectors.ts` | CDP selector fallback lists (composer, send button, URL patterns) |
-| `src/engine/conversation-manager.ts` | Provider-specific capture patterns + response parsing |
+| `src/engines/provider-selectors.ts` | CDP selector fallback lists (composer, send button, URL patterns) |
+| `src/engines/conversation-manager.ts` | Provider-specific capture patterns + response parsing |
 
 ### What "Testing a Provider" Means
 
@@ -235,13 +241,13 @@ slugs like `gemini_send`. Verify a capability via the interpreter, not `--slug=g
 |----------|--------|--------------|--------------|------|
 | claude | `seeded + registered` | `claude/001_streaming_sse` (inline) | `send_message`, `select_model` | none |
 | gemini | `seeded + registered` | `gemini/001_batchexecute`, `gemini/002_ai_studio` + generic fallback | `send_message`, `select_model` | no stream_config row (custom batchexecute RPC) |
-| chatgpt | `seeded + partial` | `chatgpt/001_openai_sse` (inline) + generic fallback | `send_message` | parser uses API format; wire uses chat UI format — needs real-world validation |
-| deepseek | `seeded` | none configured | `send_message` | no parser row yet |
+| chatgpt | `seeded + registered` | `chatgpt/001_openai_delta` (inline) + generic fallback | `send_message` | parser uses API format; wire uses chat UI format — needs real-world validation |
+| deepseek | `seeded + registered` | `deepseek/001_reasoning_sse` (inline) | `send_message` | none (reasoning-channel SSE parser seeded) |
 | qwen | `seeded` | none configured | `send_message` | no parser row yet |
 | grok | `seeded` | none configured | `send_message` | no parser row yet |
 
-> The 13-provider protocol also includes `generic`, `facebook`, `x`, `mistral`, `cohere`,
-> `anthropic` (framework aliases). See `src/__generated__/provider-protocol.ts` for the full list.
+> The 16-provider protocol also includes `facebook`, `mistral`, `opencode`,
+> `studio-ai`, `z-ai` etc. See `src/__generated__/provider-protocol.ts` for the full list.
 
 ### How to Check Provider Status
 
@@ -320,10 +326,12 @@ chrome-profiles/
 
 ### Database
 - All schema in Prisma (`prisma/schema.prisma`)
-- Migrations via `bunx prisma migrate dev`
+- **Schema changes applied via `bunx prisma db push`** (DDL only — no `_prisma_migrations`; `prisma migrate diff` is authoritative, target is zero drift)
+- **Data migrations** (column-value reshaping, backfills) go through the SchemaMeta-backed `MigrationRunner` (`src/storage/migration/`) — wired into boot at `bootstrapSeedsPhase` via `applyPendingMigrations()`. Register new steps in `migrations-registry.ts`. Do NOT add a second migration mechanism.
 - Seeds in `seeds/` directory
 - Use transactions for multi-table writes
 - Never bypass Prisma for raw SQL unless performance-critical
+- After any Prisma schema change, rebuild the test fixture: `DATABASE_URL="file:C:/0-BlackBoxProject-0/vivim-final/tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss` (use an ABSOLUTE `file:` path — relative ones resolve against `prisma/schema.prisma` and would write to `prisma/tests/fixtures/`)
 
 ### Typecheck guardrail (CRITICAL)
 - **NEVER run `tsc` / `bunx tsc --noEmit` / `bun run typecheck` unless the human explicitly directs it.**
@@ -452,12 +460,13 @@ DB-only parser execution with real fallback chains. Parsers never live in engine
 | `chatgpt-openai-delta` | ChatGPT | `choices[].delta.content` + patches + parts |
 | `gemini-batchexecute` | Gemini | XSSI `decodeEnvelope` + `parseStreamChunk` |
 | `google-ai-studio` | Gemini | `candidates[].content.parts[].text` |
+| `deepseek-reasoning-sse` | DeepSeek | SSE `delta.content` with reasoning-channel separation |
 | `generic-format-agnostic` | generic | SSE/JSON/array best-effort |
 | `system-raw-text` | system | Last-resort raw text (never throws) |
 
 **Fallback chain:** `provider/001` → `generic/001` → `system/001`. Wired by `seeds/parsers/harvest.seed.ts` via 2-pass upsert (`ProviderStore.upsertParser` + `setParserFallback`).
 
-**Provider manifests (`seeds/providers/*.json`):** Each provider declares `fallback` (parser name of the next tier). `ProviderRegistrar` reads this during registration and builds the `fallbackParserId` chain.
+**Provider manifests (`seeds/providers/manifests.ts`):** Each provider declares `fallback` (parser name of the next tier). `ProviderRegistrar` reads this during registration and builds the `fallbackParserId` chain.
 
 **Inline `logic_code` contract:**
 ```
@@ -916,9 +925,12 @@ Full documentation: `docs/architecture/DATA.md` (Node model section — the old
 Engines depend on `NodeStoreContract` (never `NodeStoreImpl` directly). Located at `src/storage/contracts/node-store.ts` — implements Store Contracts invariant.
 
 ### Fixture DB
-After any Prisma schema change, rebuild test fixture:
+After any Prisma schema change, rebuild the canonical test fixture (tracked in git at
+`tests/fixtures/node-store-test.db`). Use an ABSOLUTE `file:` path — Prisma resolves
+relative ones against `prisma/schema.prisma`, which would silently create a duplicate
+at `prisma/tests/fixtures/` (DB proliferation; flagged by `scripts/db-reports/report-db-inventory.ts`):
 ```bash
-DATABASE_URL="file:./tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
+DATABASE_URL="file:C:/0-BlackBoxProject-0/vivim-final/tests/fixtures/node-store-test.db" bunx prisma db push --skip-generate --accept-data-loss
 ```
 
 ### Migration history

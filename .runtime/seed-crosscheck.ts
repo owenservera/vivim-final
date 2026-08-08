@@ -1,0 +1,16 @@
+import { Database } from "bun:sqlite";
+const db = new Database("prisma/dev.db");
+const q = (sql: string) => (db.query(sql).all() as any[]);
+console.log("harness_command (all):");
+for (const r of q("SELECT * FROM harness_command ORDER BY command_id")) console.log("  " + JSON.stringify(r));
+console.log("\n=== automation_schedule ===");
+for (const r of q("SELECT * FROM automation_schedule ORDER BY name")) console.log("  " + JSON.stringify(r));
+console.log("\n=== capability_taxonomy by category ===");
+for (const r of q("SELECT category, COUNT(*) c FROM capability_taxonomy GROUP BY category ORDER BY c DESC")) console.log(`  ${r.category}: ${r.c}`);
+console.log("\n=== capability_binding by provider ===");
+for (const r of q("SELECT provider_id, COUNT(*) c FROM capability_binding GROUP BY provider_id ORDER BY c DESC")) console.log(`  ${r.provider_id}: ${r.c}`);
+console.log("\n=== config_entry ===");
+for (const r of q("SELECT engine_id, scope_type FROM config_entry ORDER BY engine_id")) console.log(`  ${r.engine_id} (${r.scope_type})`);
+console.log("\n=== provider_endpoint count/type ===");
+for (const r of q("SELECT provider_id, endpoint_type, COUNT(*) c FROM provider_endpoint GROUP BY provider_id, endpoint_type ORDER BY provider_id")) console.log(`  ${r.provider_id}/${r.endpoint_type}: ${r.c}`);
+db.close();
