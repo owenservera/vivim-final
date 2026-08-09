@@ -27,6 +27,8 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
     | import('../../../engines/cross-conversation-synthesis.js').CrossConversationSynthesizer
     | undefined
   let exportEngine: import('../../../engines/export.js').ExportEngine | undefined
+  // #5: Hoisted to phase scope so it can be exposed on ctx for MemoryFabric.
+  let embeddingProvider: import('../../../engines/semantic-search.js').EmbeddingProvider | undefined
 
   try {
     const { KnowledgeIngestionEngine } = await import('../../../engines/knowledge-ingestion.js')
@@ -75,6 +77,7 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
       const { MiniLmEmbeddingProvider } = await import('../../../engines/embedding-minilm.js')
       embedding = new MiniLmEmbeddingProvider()
     }
+    embeddingProvider = embedding // #5: expose on phase scope
 
     semanticSearch = new SemanticSearchEngine(ssStore, embedding, db)
   } catch (e) {
@@ -89,9 +92,14 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
       '../../../storage/impl/cross-conversation-synth-store-impl.js'
     )
     const synthStore = new CrossConversationSynthesizerStoreImpl(db)
-    const noopLlm = { synthesize: async () => ({ text: 'LLM not configured', confidence: 0 }) }
+    // #1: Replace noopLlm with GatewayProviderLLMAdapter — routes synthesis through the AI Gateway.
+    // Falls back to a stub message when the gateway is disabled (preserves existing behavior).
+    const { getGatewayProviderLLMAdapter } = await import(
+      '../../../engines/gateway-provider-llm-adapter.js'
+    )
+    const synthLlm = getGatewayProviderLLMAdapter({ providerId: 'simulator' })
     if (semanticSearch)
-      synthesizer = new CrossConversationSynthesizer(synthStore, semanticSearch, noopLlm)
+      synthesizer = new CrossConversationSynthesizer(synthStore, semanticSearch, synthLlm)
   } catch (e) {
     catchDebug(e, 'bootstrap: synthesizer not available')
   }
@@ -254,6 +262,7 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
   ctx.semanticSearch = semanticSearch
   ctx.synthesizer = synthesizer
   ctx.exportEngine = exportEngine
+  ctx.embeddingProvider = embeddingProvider // #5: for MemoryFabric
   ctx.providerMux = providerMux
   ctx.costOptimizer = costOptimizer
 }

@@ -8,7 +8,10 @@
 
 import { config } from '../../config.js'
 import { OpenCodeServeError } from '../../errors.js'
-import { createInstanceRegistry, OpenCodeInstanceRegistry } from './opencode-instance-registry.js'
+import {
+  type OpenCodeInstanceRegistry,
+  createInstanceRegistry,
+} from './opencode-instance-registry.js'
 
 const HOSTNAME = '127.0.0.1'
 const MAX_RESTARTS = 5
@@ -145,9 +148,14 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
     try {
       await this.waitForReady()
       this.registry.recordReady(this.instanceId ?? '', this.proc?.pid, this.port)
-    } catch (firstErr) {
+    } catch (_firstErr) {
       // Flaky first boot — kill and respawn once before giving up.
-      this.registry.recordError(this.instanceId ?? '', 'first readiness attempt failed', this.proc?.pid, this.port)
+      this.registry.recordError(
+        this.instanceId ?? '',
+        'first readiness attempt failed',
+        this.proc?.pid,
+        this.port,
+      )
       if (this.proc) {
         this.proc.kill()
         this.proc = null
@@ -228,7 +236,12 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
                 this.emit('ready', { port: this.port })
               })
               .catch((e) => {
-                this.registry.recordError(this.instanceId ?? '', String(e), this.proc?.pid, this.port ?? undefined)
+                this.registry.recordError(
+                  this.instanceId ?? '',
+                  String(e),
+                  this.proc?.pid,
+                  this.port ?? undefined,
+                )
                 this.emit('error', e)
               })
           } catch (e) {

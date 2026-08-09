@@ -12,7 +12,7 @@ import type { OpenCodeIngest } from './opencode-ingest.js'
 import type { OpencodeEvent } from './types.js'
 import { isSessionDone, textDeltaFromEvent } from './types.js'
 
-const SEND_TIMEOUT_MS = 120_000
+const SEND_TIMEOUT_MS = 180_000
 
 export interface OpenCodeExecutorOptions {
   client: OpenCodeClient
@@ -159,7 +159,10 @@ export class OpenCodeExecutor implements CommandExecutor {
       ok: true,
       intent: _intent.intent,
       output: { sessions },
-      text: sessions.length > 0 ? `Found ${sessions.length} opencode session(s)` : 'No opencode sessions',
+      text:
+        sessions.length > 0
+          ? `Found ${sessions.length} opencode session(s)`
+          : 'No opencode sessions',
       latencyMs: Date.now() - start,
       traceId,
       classification: 'read',

@@ -33,7 +33,7 @@ import {
 } from './state.js'
 import { spawnStreaming, killVivimProcesses, launchInstalled, installNsis, sleepSync } from './spawn.js'
 import { pollReady, assertNonBlank, windowInfo, focusWindow, captureScreenshot, ownerPidForPort } from './verify.js'
-import { needsBuild, markBuilt } from './build.js'
+import { needsBuild, needsBuildMulti, needsBuildWithTools, markBuilt } from './build.js'
 import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { installedExePath, nsisPathFor, ensureDesktopVersion } from '../../scripts/tauri/version.js'
@@ -205,12 +205,35 @@ async function gateBuild(version: string, dir: string): Promise<GateResult> {
     join(process.cwd(), 'src-tauri', 'target', 'release', 'vivim-server.exe'),
   ]
 
-  // Hash-gated: check all source tiers. Any change → run canonical build.ps1.
-  const sidecar = needsBuild(version, join(process.cwd(), 'src'), TS_EXTS, 'sidecar',
+// Hash-gated: check all source tiers. Any change → run canonical build.ps1.
+  // The sidecar also embeds prisma schema + seeds. prisma's volatile dev.db
+  // is NOT fingerprinted (it changes on every local run); the embedded DB is
+  // generated from seeds at compile time.
+  const sidecar = needsBuildMulti(version, [
+    { dir: join(process.cwd(), 'src'), exts: TS_EXTS },
+    { dir: join(process.cwd(), 'prisma'), exts: ['.prisma'] },
+    { dir: join(process.cwd(), 'seeds'), exts: TS_EXTS.concat('.json', '.db') },
+  ], 'sidecar',
     existsSync(installers[0]))
   const rustCheck = needsBuild(version, join(process.cwd(), 'src-tauri', 'src'), RUST_EXTS, 'tauri-rust',
     existsSync(nsisPathFor(version)))
-  const frontendCheck = needsBuild(version, join(process.cwd(), 'frontend', 'src'), TS_EXTS, 'tauri-frontend',
+  // Frontend stage: hash frontend/src AND the build tooling (prepare-frontend,
+  // next.config, package deps) so a stale installer from an older toolchain
+  // never masks a rebuild after a tooling change.
+  const ROOT = process.cwd()
+  const frontendCheck = needsBuildWithTools(version,
+    [{ dir: join(ROOT, 'frontend', 'src'), exts: TS_EXTS }],
+    [
+      join(ROOT, 'scripts', 'tauri', 'prepare-frontend.ts'),
+      join(ROOT, 'scripts', 'tauri', 'build.ps1'),
+      join(ROOT, 'frontend', 'next.config.mjs'),
+      join(ROOT, 'frontend', 'package.json'),
+      join(ROOT, 'frontend', 'tsconfig.json'),
+      join(ROOT, 'frontend', 'postcss.config.mjs'),
+      join(ROOT, 'frontend', 'tailwind.config.ts'),
+      join(ROOT, 'frontend', 'bun.lock'),
+    ],
+    'tauri-frontend',
     existsSync(nsisPathFor(version)))
 
   if (!sidecar.changed && !rustCheck.changed && !frontendCheck.changed && existsSync(nsisPathFor(version))) {
@@ -218,7 +241,7 @@ async function gateBuild(version: string, dir: string): Promise<GateResult> {
   } else {
     const logPath = join(dir, 'build-tauri.log')
     const buildScript = join(process.cwd(), 'scripts', 'tauri', 'build.ps1')
-    const r = await spawnStreaming('pwsh', [buildScript], logPath, {
+    const r = await spawnStreaming('pwsh', ['-ExecutionPolicy', 'Bypass', '-File', buildScript], logPath, {
       cwd: process.cwd(),
       timeoutMs: 1_800_000,
       label: 'G1.build',

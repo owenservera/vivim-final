@@ -14,7 +14,9 @@ import type { OpencodeEvent, PermissionDecision } from './types.js'
  * provider prefix from `id` (the server re-prefixes during resolution).
  * e.g. `opencode/deepseek-v4-flash-free` -> `{ id: 'deepseek-v4-flash-free', providerID: 'opencode' }`
  */
-function modelRefFromSlug(slug: string | undefined): { id: string; providerID: string } | undefined {
+function modelRefFromSlug(
+  slug: string | undefined,
+): { id: string; providerID: string } | undefined {
   if (!slug) return undefined
   const slash = slug.indexOf('/')
   if (slash <= 0) return { id: slug, providerID: 'opencode' }

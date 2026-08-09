@@ -24,6 +24,21 @@ export interface ResolveRequest {
   variant?: string
 }
 
+// Module-level: the traceId of the LAST resolve response this client received.
+// useCanvasEvents reads this to skip SSE `canvas:surface:resolved` events that
+// are THIS component's own resolve echoing back — breaking the
+// resolve→SSE→invalidate→refetch self-loop while keeping genuine cross-tab
+// updates (those carry a different traceId).
+let lastResolveTraceId: string | undefined
+
+export function setLastResolveTraceId(traceId?: string) {
+  lastResolveTraceId = traceId
+}
+
+export function getLastResolveTraceId() {
+  return lastResolveTraceId
+}
+
 export function useResolvedNodes(req: ResolveRequest) {
   const io = useIO()
 
@@ -39,6 +54,7 @@ export function useResolvedNodes(req: ResolveRequest) {
     ],
     queryFn: async () => {
       const { data } = await io.post<ResolvedSurface>('/api/canvas/resolve', req)
+      setLastResolveTraceId(data.traceId)
       return data
     },
     staleTime: 10_000,

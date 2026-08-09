@@ -34,6 +34,8 @@ export interface MemoryFabricDeps {
   beliefStore: BeliefStore
   /** Default per-agent write quota (0 = unlimited). */
   writeQuota?: number
+  /** #5: Embedding provider for real semantic recall (was: stub [0] embedding). */
+  embeddingProvider?: import('../semantic-search.js').EmbeddingProvider
 }
 
 interface Subsystem {
@@ -121,6 +123,7 @@ export class MemoryFabric {
       nodeStore: this.deps.nodeStore,
       extractorStore: this.deps.extractorStore,
       semanticStore: this.deps.semanticStore,
+      embeddingProvider: this.deps.embeddingProvider,
     }
     const oracle = new MemoryOracle(agentId, oracleDeps)
 

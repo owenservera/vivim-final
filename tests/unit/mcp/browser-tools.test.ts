@@ -167,9 +167,9 @@ describe('buildConvenienceTools (Layer 2)', () => {
     expect(result.isError).toBeFalsy()
     const payload = JSON.parse(result.content[0]?.text ?? '[]')
     expect(payload.length).toBe(1)
-    expect(payload[0]!.title).toBe('opencode - The AI Agent')
-    expect(payload[0]!.url).toBe('https://opencode.example.com/')
-    expect(payload[0]!.snippet).toContain('open-source')
+    expect(payload[0]?.title).toBe('opencode - The AI Agent')
+    expect(payload[0]?.url).toBe('https://opencode.example.com/')
+    expect(payload[0]?.snippet).toContain('open-source')
     // must have hit the nav capability + the html extraction
     expect(gov.calls.length).toBeGreaterThan(1)
   })

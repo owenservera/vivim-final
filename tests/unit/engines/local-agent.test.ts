@@ -33,12 +33,12 @@ describe('parseOpencodeJson', () => {
       '{"type":"text","sessionID":"s1","part":{"type":"text","text":"done"}}',
     ].join('\n')
     const { blocks } = parseOpencodeJson(raw)
-    expect(blocks[0]!.type).toBe('step-start')
-    expect(blocks[1]!.type).toBe('tool-call')
+    expect(blocks[0]?.type).toBe('step-start')
+    expect(blocks[1]?.type).toBe('tool-call')
     expect((blocks[1] as any).toolName).toBe('glob')
-    expect(blocks[2]!.type).toBe('tool-result')
+    expect(blocks[2]?.type).toBe('tool-result')
     expect((blocks[2] as any).output).toContain('a.ts')
-    expect(blocks[3]!.type).toBe('text')
+    expect(blocks[3]?.type).toBe('text')
   })
 
   test('detects silent permission denial (tool:"invalid")', () => {
@@ -82,7 +82,7 @@ describe('parseOpencodeJson', () => {
       part: { type: 'reasoning', text: 'thinking...' },
     })
     const { blocks } = parseOpencodeJson(raw)
-    expect(blocks[0]!.type).toBe('reasoning')
+    expect(blocks[0]?.type).toBe('reasoning')
     expect((blocks[0] as any).text).toBe('thinking...')
   })
 

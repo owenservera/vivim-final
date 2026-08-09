@@ -37,6 +37,33 @@ import type { UiComponentStore } from '../storage/contracts/ui-component-store';
 
 import { primitiveToSlotId } from '../shared/conceptual-model';
 
+/**
+ * Module-level change-detection cache (loop guard).
+ *
+ * Every routeSync() emits `canvas:surface:resolved` on the event bus. That
+ * event is forwarded over SSE to the browser, which invalidates the
+ * `['canvas:resolve']` query → refetches this very route → emits again →
+ * ... (a runaway feedback loop; observed ~20 req/s with a growing
+ * `SyntaxError: Unexpected end of JSON input` storm at route.ts:36).
+ *
+ * To break the loop we only emit when the resolved surface actually CHANGED
+ * for a workspace. Identical re-resolves emit nothing, so SSE invalidation
+ * stops and the loop dies. Cross-tab hot-swap still works because real
+ * changes (tier upgrade, provider added/removed, slot def update) produce a
+ * different signature → emit → other tabs refetch.
+ */
+const lastEmittedSignatureByWorkspace = new Map<string, string>();
+
+/** Deterministic content signature of a resolved surface (excludes volatile fields). */
+function surfaceSignature(surface: ResolvedSurface): string {
+  // Sort slots by providerId:slotId so re-resolves with the same content
+  // (but possibly different iteration order) produce an identical signature.
+  const slots = [...surface.slots].sort((a, b) =>
+    `${a.providerId}:${a.slotId}`.localeCompare(`${b.providerId}:${b.slotId}`),
+  );
+  return JSON.stringify(slots);
+}
+
 export interface RouteSyncDeps {
   eventBus: CapabilityEventBus;
   logger: StructuredLogger;
@@ -232,13 +259,21 @@ export async function routeSync(ctx: RouteContext, deps: RouteSyncDeps): Promise
 
   // Step 19-20: DECOUPLED emit. The synchronous return below does NOT
   // wait for any consumer of this event (Governor Canon).
-  deps.eventBus.emit({
-    type: 'canvas:surface:resolved',
-    traceId: ctx.traceId,
-    workspaceId: ctx.workspaceId,
-    slotCount: slots.length,
-    durationMs,
-  });
+  // Change-detection guard: only emit when the surface content changed for
+  // this workspace. This breaks the SSE → query-invalidation → refetch →
+  // re-emit feedback loop (every identical re-resolve would otherwise
+  // broadcast an event that makes the browser refetch the same route).
+  const signature = surfaceSignature(surface);
+  if (lastEmittedSignatureByWorkspace.get(ctx.workspaceId) !== signature) {
+    lastEmittedSignatureByWorkspace.set(ctx.workspaceId, signature);
+    deps.eventBus.emit({
+      type: 'canvas:surface:resolved',
+      traceId: ctx.traceId,
+      workspaceId: ctx.workspaceId,
+      slotCount: slots.length,
+      durationMs,
+    });
+  }
 
   return surface;
 }

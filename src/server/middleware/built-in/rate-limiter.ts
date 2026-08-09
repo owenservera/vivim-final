@@ -46,7 +46,7 @@ export function createRateLimiterMiddleware(opts: RateLimitOptions): Middleware 
     // Try X-Forwarded-For first, then fall back to a generic key
     const forwarded = ctx.request.headers.get('X-Forwarded-For')
     if (forwarded) {
-      return forwarded.split(',')[0]!.trim()
+      return forwarded.split(',')[0]?.trim()
     }
     // Fallback: use trace-id (not ideal but works in local dev)
     return ctx.traceId.slice(0, 16)

@@ -143,37 +143,43 @@ export const opencodePatterns: CommandPattern[] = [
     execute: async () => ({}),
   }),
 
-  pattern('opencode.model.set_default', 'opencode.model.set_default', 'Set the default OpenCode model', {
-    patterns: [
-      {
-        regex: /(?:set|use|switch|make)\s+(?:the\s+)?(?:default\s+)?opencode\s+model\s+(?:to|as|:)\s+(.+)$/i,
-        priority: 12,
-        keywords: ['opencode', 'default', 'model'],
-        extract: (m) => ({
-          model: (m[1] ?? '').trim(),
-        }),
-      },
-      {
-        regex: /opencode\s+(?:model\s+)?set-default\s+(.+)$/i,
-        priority: 12,
-        keywords: ['opencode', 'set-default', 'model'],
-        extract: (m) => ({
-          model: (m[1] ?? '').trim(),
-        }),
-      },
-    ],
-    aliases: ['opencode model set-default', 'set default opencode model'],
-    examples: [
-      'set default opencode model to opencode/deepseek-v4-flash-free',
-      'opencode model set-default opencode/mimo-v2.5-free',
-    ],
-    inputSchema: z.object({
-      model: z.string(),
-    }),
-    executor: 'opencode',
-    category: 'agent',
-    classification: 'system',
-    capabilityId: 'cap:opencode:model.set_default',
-    execute: async () => ({}),
-  }),
+  pattern(
+    'opencode.model.set_default',
+    'opencode.model.set_default',
+    'Set the default OpenCode model',
+    {
+      patterns: [
+        {
+          regex:
+            /(?:set|use|switch|make)\s+(?:the\s+)?(?:default\s+)?opencode\s+model\s+(?:to|as|:)\s+(.+)$/i,
+          priority: 12,
+          keywords: ['opencode', 'default', 'model'],
+          extract: (m) => ({
+            model: (m[1] ?? '').trim(),
+          }),
+        },
+        {
+          regex: /opencode\s+(?:model\s+)?set-default\s+(.+)$/i,
+          priority: 12,
+          keywords: ['opencode', 'set-default', 'model'],
+          extract: (m) => ({
+            model: (m[1] ?? '').trim(),
+          }),
+        },
+      ],
+      aliases: ['opencode model set-default', 'set default opencode model'],
+      examples: [
+        'set default opencode model to opencode/deepseek-v4-flash-free',
+        'opencode model set-default opencode/mimo-v2.5-free',
+      ],
+      inputSchema: z.object({
+        model: z.string(),
+      }),
+      executor: 'opencode',
+      category: 'agent',
+      classification: 'system',
+      capabilityId: 'cap:opencode:model.set_default',
+      execute: async () => ({}),
+    },
+  ),
 ]

@@ -13,6 +13,7 @@ import {
 import { join } from 'node:path'
 import { StringDecoder } from 'node:string_decoder'
 import { installedExePath } from '../../scripts/tauri/version.js'
+import { pidsForPortRange } from './verify.js'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -178,13 +179,51 @@ export function killVivimProcesses(): string[] {
     process.stdout.write(`  killed stale: ${killed.join(', ')}\n`)
     sleepSync(500)
   }
+  // After the vivim exes are dead, any remaining listener on the vivim port
+  // range is a foreign process (e.g. a stale `bun ... serve`) squatting on the
+  // sidecar port — free it by PID so launch/readyz probe the real app.
+  const foreign = killForeignPortOwners()
+  killed.push(...foreign.map((pid) => `PID ${pid}`))
   return killed
 }
 
-/** Start the installed desktop exe. Returns the PID or null. */
+/**
+ * Kill ANY process listening on the vivim port range (9421..9441), regardless
+ * of image name — e.g. a stale `bun run src/cli/index.ts serve` or other
+ * foreign PID squatting on the sidecar port. The ports are exclusively ours;
+ * only the vivim sidecar may hold them. Returns the killed PIDs.
+ */
+export function killForeignPortOwners(base = 9421, count = 20): number[] {
+  const r = spawnSync('netstat', ['-ano', '-p', 'tcp'], {
+    encoding: 'utf8',
+    timeout: 10_000,
+  })
+  if (r.status !== 0) return []
+  const pids = pidsForPortRange(r.stdout ?? '', base, count)
+  const killed: number[] = []
+  for (const pid of pids) {
+    const res = spawnSync('taskkill', ['/F', '/PID', String(pid)], { encoding: 'utf8' })
+    if (res.status === 0) killed.push(pid)
+  }
+  if (killed.length) {
+    process.stdout.write(`  killed foreign port owner(s): ${killed.join(', ')}\n`)
+    sleepSync(500)
+  }
+  return killed
+}
+
+/**
+ * Start the installed desktop exe. Returns the PID or null.
+ *
+ * `detached: true` on Windows puts the child in its own process group so it
+ * is NOT killed when this CLI process exits. (`proc.unref()` alone only stops
+ * the parent from waiting on the child — the child stays in the parent's Job
+ * Object and dies with it, which previously made every CLI-launched desktop
+ * exit moments after launch while the sidecar/worker survived as an orphan.)
+ */
 export function launchInstalled(exePath: string): number | null {
   if (!existsSync(exePath)) return null
-  const proc = spawn(exePath, [], { detached: false, stdio: 'ignore' })
+  const proc = spawn(exePath, [], { detached: true, stdio: 'ignore' })
   proc.unref()
   return proc.pid ?? null
 }

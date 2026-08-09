@@ -18,7 +18,10 @@
 // the wire format below was captured live on 2026-08-08.
 
 import { getLogger } from '../../lib/logger.js'
-import type { LocalAgentModelRow, LocalAgentStore } from '../../storage/contracts/local-agent-store.js'
+import type {
+  LocalAgentModelRow,
+  LocalAgentStore,
+} from '../../storage/contracts/local-agent-store.js'
 
 const log = getLogger('opencode:model-sync')
 
@@ -118,7 +121,7 @@ export function parseOpencodeModelsVerbose(output: string): OpenCodeDiscoveredMo
     const slugMatch = line.match(/^(\S+)\/([^\s]+)\s*$/)
     if (slugMatch && !line.includes('{')) {
       flush()
-      currentSlug = slugMatch[1] + '/' + slugMatch[2]
+      currentSlug = `${slugMatch[1]}/${slugMatch[2]}`
       continue
     }
     if (currentSlug) {
@@ -151,7 +154,9 @@ export class OpenCodeModelSync {
    * Discover all free opencode models from the CLI. Pass `refresh: true` to force
    * a re-pull from models.dev instead of the cached list.
    */
-  async discover(opts: { refresh?: boolean; timeoutMs?: number } = {}): Promise<OpenCodeDiscoveredModel[]> {
+  async discover(
+    opts: { refresh?: boolean; timeoutMs?: number } = {},
+  ): Promise<OpenCodeDiscoveredModel[]> {
     const args = ['models', 'opencode', '--verbose']
     if (opts.refresh) args.push('--refresh')
     const timeoutMs = opts.timeoutMs ?? 60_000

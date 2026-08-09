@@ -35,6 +35,35 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
   const memoryEngine = ctx.memoryEngine!
   const semanticSearch = ctx.semanticSearch
   const knowledgeIngestion = ctx.knowledgeIngestion
+
+  // #3 (C5 action item): Activate PluginManagerImpl at boot as the ONE installer/loader.
+  // Wraps it with the gateway's TrustedPluginManager trust/certify layer and exposes
+  // as globalThis.__pluginManager so VivimAIGateway.installProvider() can delegate to it.
+  try {
+    const { activatePluginManager } = await import('../../../ai/plugins/plugin-manager-impl.js')
+    activatePluginManager(eventBus)
+    log.info('[boot] PluginManager activated (TrustedPluginManager wrapper)')
+  } catch (err) {
+    log.warn({ err }, '[boot] PluginManager activation failed (non-fatal)')
+  }
+
+  // #2: Instantiate HarnessRepairEngine at boot — Zod-aware JSON repair for LLM output.
+  // Required by LLMSlaveResolver (#1) to fix malformed LLM JSON before parse.
+  // Exposed on ctx.harnessRepair for downstream consumers + globalThis for lazy access.
+  let harnessRepair:
+    | import('../../../engines/harness-repair-engine.js').HarnessRepairEngine
+    | undefined
+  try {
+    const { HarnessRepairEngine } = await import('../../../engines/harness-repair-engine.js')
+    const { HarnessRepairStoreImpl } = await import(
+      '../../../storage/impl/harness-repair-store-impl.js'
+    )
+    harnessRepair = new HarnessRepairEngine(new HarnessRepairStoreImpl(db))
+    ;(globalThis as Record<string, unknown>).__harnessRepair = harnessRepair
+    log.info('[boot] HarnessRepairEngine instantiated (Zod-aware JSON repair for LLM output)')
+  } catch (err) {
+    log.warn({ err }, '[boot] HarnessRepairEngine instantiation failed (non-fatal)')
+  }
   const synthesizer = ctx.synthesizer
   const providerStore = ctx.providerStore!
 
@@ -219,7 +248,10 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
     if (config.opencodeModelSyncEnabled) {
       opencodeModelSync.start()
       log.info(
-        { intervalHours: config.opencodeModelSyncIntervalHours, refresh: config.opencodeModelSyncRefresh },
+        {
+          intervalHours: config.opencodeModelSyncIntervalHours,
+          refresh: config.opencodeModelSyncRefresh,
+        },
         'opencode model sync daemon started',
       )
     }
@@ -318,6 +350,24 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
       }
       ;(globalThis as Record<string, unknown>).__mcpServer = mcpServer
       log.info({ port: mcpPort, tools: mcpServer.getTools().length }, 'MCP server listening')
+
+      // C3: Activate the global tool orchestrator wrapping McpServerAdapter.callTool.
+      // The 6 callTool sites across the codebase route through globalThis.__toolOrchestrator
+      // (via callToolViaOrchestrator facade) so every tool call clears the 4-stage pipeline.
+      try {
+        const { activateToolOrchestrator } = await import(
+          '../../../engines/tool-orchestrator-facade.js'
+        )
+        activateToolOrchestrator(mcpServer)
+        log.info(
+          '[boot] ToolOrchestrator activated (4-stage pipeline wrapping McpServerAdapter.callTool)',
+        )
+      } catch (err) {
+        log.warn(
+          { err },
+          '[boot] ToolOrchestrator activation failed (non-fatal — callTool sites fall back to direct)',
+        )
+      }
     } catch (err) {
       log.warn({ err }, 'MCP server skipped')
     }
@@ -356,6 +406,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
         extractorStore: kexStoreImpl,
         semanticStore: ssStoreImpl,
         beliefStore,
+        embeddingProvider: ctx.embeddingProvider, // #5: real semantic recall
       })
       agentBuilder = new AgentBuilderEngine(agenticStoreImpl, memoryFabric)
       // Provision the host/system agent so a mem:* capability is live at boot
@@ -398,6 +449,159 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
           )
         } catch (err) {
           log.warn({ err }, 'OpenCode serve supervisor skipped')
+        }
+      }
+
+      // ── AI Gateway (src/ai/, feature: ai-gateway, ADDITIVE, OFF by default) ──
+      // Boots the canonical AI execution layer. Registers the simulator adapter
+      // always (for testing); registers the OpenCode adapter if opencode serve
+      // is also enabled. Exposes the gateway as globalThis.__aiGateway so the
+      // cap:ai:* capability handlers can read it lazily at call time.
+      if (config.aiGatewayEnabled) {
+        try {
+          const {
+            createGateway,
+            SimulatorAdapter,
+            SIMULATOR_PROVIDER_ID,
+            SIMULATOR_MODEL_ID,
+            OpenCodeAdapter,
+            OPENCODE_PROVIDER_ID,
+            OPENCODE_DEFAULT_MODEL,
+            TSRuntimeSupervisor,
+            RemoteProviderDelegate,
+          } = await import('../../../ai/index.js')
+          const { providerId, modelId } = await import('../../../ai/index.js')
+
+          // Build the gateway with in-memory defaults + simulator
+          const aiBundle = createGateway()
+
+          // Register the simulator provider + model in the gateway's registries
+          const simManifest = (await import('../../../ai/protocol/simulator-adapter.js'))
+            .SIMULATOR_MANIFEST
+          const simModel = (await import('../../../ai/protocol/simulator-adapter.js'))
+            .SIMULATOR_MODEL
+          await aiBundle.providerRegistry.register(simManifest)
+          // Full legal path: discovered → installed → validating → enabled → starting → ready → active
+          for (const state of [
+            'installed',
+            'validating',
+            'enabled',
+            'starting',
+            'ready',
+            'active',
+          ] as const) {
+            await aiBundle.providerRegistry.setState(SIMULATOR_PROVIDER_ID, state)
+          }
+          await aiBundle.modelRegistry.register(simModel)
+
+          // Initialize the simulator adapter (in-process, no real process)
+          // The factory already registered a SimulatorAdapter in the gateway; just initialize it.
+          // We access it via the gateway's internal map by constructing a fresh one if needed.
+          const simAdapter = new SimulatorAdapter()
+          await simAdapter.initialize({ transport: 'in-process' })
+          aiBundle.gateway.registerAdapter(SIMULATOR_PROVIDER_ID, simAdapter)
+
+          // If opencode serve is enabled, also register the OpenCode adapter
+          const opencodeServe = (globalThis as Record<string, unknown>).__opencodeServe as
+            | {
+                client: import('../../../engines/opencode/opencode-client.js').OpenCodeClient
+                supervisor: import(
+                  '../../../engines/opencode/opencode-supervisor.js'
+                ).OpenCodeSupervisor
+              }
+            | undefined
+
+          if (opencodeServe) {
+            const openCodeAdapter = new OpenCodeAdapter(opencodeServe.client, {
+              defaultModelSlug: 'opencode/default',
+            })
+            // The OpenCodeSupervisor already started the process; just wrap the connection
+            const connection = {
+              transport: 'http' as const,
+              baseUrl: `http://127.0.0.1:${config.opencodeServePort}`,
+            }
+            await openCodeAdapter.initialize(connection)
+
+            // Register the OpenCode provider + model
+            const { OPENCODE_MANIFEST, OPENCODE_DEFAULT_MODEL_DESCRIPTOR } = await import(
+              '../../../ai/protocol/opencode-adapter.js'
+            )
+            await aiBundle.providerRegistry.register(OPENCODE_MANIFEST)
+            // Full legal path: discovered → installed → validating → enabled → starting → ready → active
+            for (const state of [
+              'installed',
+              'validating',
+              'enabled',
+              'starting',
+              'ready',
+              'active',
+            ] as const) {
+              await aiBundle.providerRegistry.setState(OPENCODE_PROVIDER_ID, state)
+            }
+            await aiBundle.modelRegistry.register(OPENCODE_DEFAULT_MODEL_DESCRIPTOR)
+
+            // Register the adapter with the gateway
+            aiBundle.gateway.registerAdapter(OPENCODE_PROVIDER_ID, openCodeAdapter)
+
+            // Register a TS supervisor delegate for OpenCode (so stop/restart work)
+            const openCodeDelegate: import(
+              '../../../ai/runtime/ts-supervisor.js'
+            ).ISupervisorDelegate = {
+              providerId: OPENCODE_PROVIDER_ID,
+              async start() {
+                const { port } = await opencodeServe.supervisor.start()
+                return { transport: 'http', baseUrl: `http://127.0.0.1:${port}` }
+              },
+              async stop(_graceful?: boolean) {
+                await opencodeServe.supervisor.stop()
+              },
+              async restart() {
+                await opencodeServe.supervisor.stop()
+                const { port } = await opencodeServe.supervisor.start()
+                return { transport: 'http', baseUrl: `http://127.0.0.1:${port}` }
+              },
+              async getHealth() {
+                return {
+                  status: 'healthy' as const,
+                  state: 'active' as const,
+                  checkedAt: new Date().toISOString(),
+                }
+              },
+              async getState() {
+                return 'active' as const
+              },
+            }
+            aiBundle.supervisor.registerDelegate(openCodeDelegate)
+
+            log.info(
+              { providerId: OPENCODE_PROVIDER_ID },
+              'AI Gateway: OpenCode adapter registered',
+            )
+          }
+          // Expose globally so cap:ai:* handlers can read it lazily
+          ;(globalThis as Record<string, unknown>).__aiGateway = aiBundle.gateway
+
+          // C4: Start the EventRecordBridge — mirrors AI Gateway events onto the
+          // existing CapabilityEventBus → EventRecord durable stream (source='ai-gateway').
+          try {
+            const { EventRecordBridge } = await import('../../../ai/events/event-record-bridge.js')
+            const bridge = new EventRecordBridge(aiBundle.eventBus, eventBus)
+            bridge.start()
+            ;(globalThis as Record<string, unknown>).__aiEventBridge = bridge
+            log.info('[boot] AI Gateway EventRecordBridge started (mirrors to CapabilityEventBus)')
+          } catch (err) {
+            log.warn({ err }, '[boot] EventRecordBridge start failed (non-fatal)')
+          }
+
+          log.info(
+            {
+              simulator: true,
+              opencode: !!opencodeServe,
+            },
+            'AI Gateway booted (src/ai/)',
+          )
+        } catch (err) {
+          log.warn({ err }, 'AI Gateway boot failed (non-fatal; cap:ai:* will return errors)')
         }
       }
     } catch (err) {
@@ -499,4 +703,5 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
   ctx.relocationEngine = relocationEngine
   ctx.memoryFabric = memoryFabric
   ctx.agentBuilder = agentBuilder
+  ctx.harnessRepair = harnessRepair
 }

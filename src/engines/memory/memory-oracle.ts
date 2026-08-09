@@ -12,12 +12,15 @@ import type { KnowledgeExtractorStore } from '../../storage/contracts/knowledge-
 import type { NodeStoreContract } from '../../storage/contracts/node-store.js'
 import type { SemanticSearchStore } from '../../storage/contracts/semantic-search-store.js'
 import type { CrossConversationSynthesizer } from '../cross-conversation-synthesis.js'
+import type { EmbeddingProvider } from '../semantic-search.js'
 
 export interface MemoryOracleDeps {
   nodeStore: NodeStoreContract
   extractorStore: KnowledgeExtractorStore
   semanticStore: SemanticSearchStore
   synthesizer?: CrossConversationSynthesizer
+  /** #5: Real embedding provider — replaces the embedding:[0] stub. */
+  embeddingProvider?: EmbeddingProvider
 }
 
 interface ScopedMeta {
@@ -63,6 +66,27 @@ export class MemoryOracle {
 
   /** Recall: agent-scoped node search text + best-effort semantic nearest. */
   async recall(query: string, k = 5): Promise<string[]> {
+    // #5: Use semantic search if an embedding provider is available (was: termScore only).
+    if (this.deps.embeddingProvider) {
+      try {
+        const queryVec = await this.deps.embeddingProvider.embed(query)
+        const results = await this.deps.semanticStore.searchByEmbedding(queryVec, {
+          limit: k,
+          entityType: 'cap-store.memory',
+        })
+        if (results.length > 0) {
+          // Map entityId → node searchText
+          const rows = await Promise.all(
+            results.map((r) => this.deps.nodeStore.getNode(r.entityId)),
+          )
+          return rows.filter((r): r is NonNullable<typeof r> => r !== null).map((r) => r.searchText)
+        }
+      } catch (err) {
+        catchDebug(err, 'engines:memory:memory-oracle:recall-semantic')
+        // Fall through to term-score fallback
+      }
+    }
+    // Fallback: term-score (case-insensitive substring matching)
     const ids = await this.listScoped()
     const rows = await Promise.all(ids.map((id) => this.deps.nodeStore.getNode(id)))
     const scored = rows
@@ -102,7 +126,7 @@ export class MemoryOracle {
         meta: { ownerAgentId: this.agentId, scope: this.scope() },
       }),
     )
-    // Best-effort knowledge extraction + embedding (non-fatal).
+    // #5: Best-effort knowledge extraction + real embedding (was: stub [0]).
     await this.deps.extractorStore
       .createDecision({
         id: newId(),
@@ -115,18 +139,25 @@ export class MemoryOracle {
         ts: Date.now(),
       })
       .catch(() => undefined)
-    await this.deps.semanticStore
-      .upsertEmbedding({
-        id: newId(),
-        entityType: 'cap-store.memory',
-        entityId: this.agentId,
-        embedding: JSON.stringify([0]),
-        model: 'stub',
-        dimensions: 1,
-        contentHash: '',
-        createdAt: Date.now(),
-      })
-      .catch(() => undefined)
+    // Compute a real embedding if a provider is available; otherwise skip (non-fatal).
+    if (this.deps.embeddingProvider) {
+      try {
+        const text = `${turn.userContent}\n${turn.assistantContent}`
+        const vec = await this.deps.embeddingProvider.embed(text)
+        await this.deps.semanticStore.upsertEmbedding({
+          id: newId(),
+          entityType: 'cap-store.memory',
+          entityId: this.agentId,
+          embedding: JSON.stringify(vec),
+          model: this.deps.embeddingProvider.name,
+          dimensions: vec.length,
+          contentHash: '',
+          createdAt: Date.now(),
+        })
+      } catch (err) {
+        catchDebug(err, 'engines:memory:memory-oracle:embed')
+      }
+    }
   }
 
   /** Prune: evict low-value / expired memories in this agent's scope. */

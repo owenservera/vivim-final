@@ -79,6 +79,7 @@ import {
   discoverBackend,
   discoverCdpProtocol,
   discoverFrontend,
+  discoverProtocol,
   engageBrowser,
   ensureBrowser,
   generateCatalog,
@@ -103,6 +104,12 @@ import {
 import { runStressTests } from './runtime-test/stress/runner.js'
 import { selectNext } from './select.ts'
 import { runTruthCommand } from './truth/cli.ts'
+import { parallelize } from './parallelize.ts'
+import { listDevDeltas, loadProtocol, promoteProvider } from './protocol-promote.ts'
+import { getDb } from '../src/storage/db.ts'
+import { unifiedConverge } from './speckit-converge-bridge.ts'
+import { validateBridge } from './speckit-bridge.ts'
+import { getLatestTest, getUiTestStatus, recordUiTest } from './ui-test-registry.ts'
 
 const [cmd, ...args] = process.argv.slice(2)
 
@@ -1844,9 +1851,161 @@ async function main() {
       }
       break
     }
+    case 'discover-protocol': {
+      // CDP protocol discovery for a provider URL (composer, send method, capture).
+      //   bun run devops discover-protocol <url> [--hint=name]
+      const url = args.find((a) => !a.startsWith('--'))
+      const hintArg = args.find((a) => a.startsWith('--hint='))
+      const hint = hintArg ? hintArg.slice('--hint='.length) : undefined
+      const result = await discoverProtocol(url, { hint })
+      formatOutput(result, args)
+      process.exit(result.ok ? 0 : 1)
+      break
+    }
+    case 'protocol': {
+      // Provider-Protocol data-layer workflow: flip source, diff, promote to DB.
+      //   bun run devops protocol dev|prod|diff|promote --provider=<slug>
+      const sub = args[0] ?? 'diff'
+      const rest = args.slice(1)
+      const providerFlag = rest.find((a) => a.startsWith('--provider='))
+      const slug = providerFlag ? providerFlag.slice('--provider='.length) : undefined
+      const prod = loadProtocol('provider-protocol.ts')
+      const dev = loadProtocol('provider-protocol.dev.ts')
+      switch (sub) {
+        case 'dev': {
+          console.log(
+            'Set PROVIDER_PROTOCOL_SOURCE=dev to read provider-protocol.dev.ts (editable clone, preserved across gen).',
+          )
+          break
+        }
+        case 'prod': {
+          console.log(
+            'Unset PROVIDER_PROTOCOL_SOURCE (default) to read provider-protocol.ts (pure DB compilation).',
+          )
+          break
+        }
+        case 'diff': {
+          formatOutput(listDevDeltas(prod, dev), rest)
+          break
+        }
+        case 'promote': {
+          if (!slug) {
+            console.error('usage: devops protocol promote --provider=<name>')
+            process.exit(1)
+          }
+          const db = getDb()
+          const result = await promoteProvider(db as never, slug, dev)
+          formatOutput(result, rest)
+          process.exit(result.ok ? 0 : 1)
+          break
+        }
+        default: {
+          console.error('usage: devops protocol <dev|prod|diff|promote --provider=<name>>')
+          process.exit(1)
+        }
+      }
+      break
+    }
+    case 'parallelize': {
+      // Fan out independent atomic units to parallel subagent workers (gate-merged).
+      //   bun run devops parallelize --max <n> [--tracker <path>] [--dry-run] [--no-gate]
+      const maxArg = args.find((a) => a.startsWith('--max='))
+      const max = maxArg ? Number.parseInt(maxArg.slice('--max='.length), 10) : undefined
+      const count = await parallelize({
+        max,
+        dryRun: args.includes('--dry-run'),
+        gate: !args.includes('--no-gate'),
+      })
+      formatOutput({ ok: count > 0, units: count }, args)
+      break
+    }
+    case 'ui-test': {
+      // Query / record the UI frontend test registry.
+      //   bun run devops ui-test list|status --provider=<slug> [--cap=<name>]
+      //   bun run devops ui-test record --provider=<slug> --cap=<name> --result=<pass|fail> [--detail=...] [--tested-by=...] [--notes=...]
+      const sub = args[0] ?? 'list'
+      const rest = args.slice(1)
+      const getArg = (prefix: string) => {
+        const a = rest.find((x) => x.startsWith(prefix))
+        return a ? a.slice(prefix.length) : undefined
+      }
+      const provider = getArg('--provider=')
+      const capability = getArg('--cap=')
+      switch (sub) {
+        case 'record': {
+          if (!provider || !capability) {
+            console.error('usage: devops ui-test record --provider=<slug> --cap=<name> --result=<pass|fail> [--detail=...] [--tested-by=...] [--notes=...]')
+            process.exit(1)
+          }
+          const result = getArg('--result=') === 'pass' ? 'pass' : 'fail'
+          const detail = getArg('--detail=') ?? ''
+          const testedBy = getArg('--tested-by=') ?? 'agent'
+          const notes = getArg('--notes=')
+          const entry = await recordUiTest(provider, capability, result, detail, testedBy, { notes })
+          formatOutput({ ok: true, id: entry.id, provider, capability, result }, rest)
+          break
+        }
+        case 'status': {
+          if (!provider) {
+            console.error('usage: devops ui-test status --provider=<slug>')
+            process.exit(1)
+          }
+          const status = await getUiTestStatus(provider)
+          formatOutput({ ok: true, provider, ...status }, rest)
+          break
+        }
+        case 'list':
+        default: {
+          if (provider && capability) {
+            const latest = await getLatestTest(provider, capability)
+            formatOutput({ ok: true, provider, capability, latest }, rest)
+          } else {
+            console.log('ui-test registry: use `record`/`status` (see usage)')
+          }
+          break
+        }
+      }
+      break
+    }
+    case 'speckit': {
+      // SpecKit converge / bridge / gate pipeline.
+      //   bun run devops speckit converge <featureDir>    # spec+code+arch convergence
+      //   bun run devops speckit validate                 # bridge consistency check
+      //   bun run devops speckit gate                     # unified quality gate (alias)
+      const sub = args[0] ?? 'converge'
+      const rest = args.slice(1)
+      switch (sub) {
+        case 'converge': {
+          const featureDir = rest.find((a) => !a.startsWith('--'))
+          if (!featureDir) {
+            console.error('usage: devops speckit converge <featureDir>')
+            process.exit(1)
+          }
+          const report = await unifiedConverge(featureDir)
+          formatOutput(report, rest)
+          break
+        }
+        case 'validate': {
+          const report = await validateBridge()
+          formatOutput(report, rest)
+          process.exit(report.consistent ? 0 : 1)
+          break
+        }
+        case 'gate': {
+          gateResult = await runGate(rest.includes('--strict'), false, 'regression')
+          formatOutput(gateResult, rest)
+          break
+        }
+        default: {
+          console.error('usage: devops speckit <converge <featureDir>|validate|gate>')
+          process.exit(1)
+        }
+      }
+      break
+    }
     default: {
       console.error(
-        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|llm-test|llm-testing-log|stress-test|features|code-index|output-format|seed-memory|agent-loop|research-bridge|speckit-audit|tracker-speckit-sync> [--tracker <path>] [--json] [--out=<path>]',
+        'usage: bun run devops <select|mark|gate|run|fmt|audit|gc|report|truth|roadmap|invariants|audit-code|audit-arch|decision|goals|context|automate|runtime-test|production-build|verify-cross-surface|llm-test|llm-testing-log|stress-test|features|code-index|output-format|seed-memory|agent-loop|research-bridge|speckit-audit|tracker-speckit-sync|discover-protocol|protocol|parallelize|ui-test|speckit|toolkit> [--tracker <path>] [--json] [--out=<path>]',
       )
       process.exit(1)
     }

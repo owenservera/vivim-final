@@ -31,25 +31,25 @@ describe('parseGoogleSerp', () => {
   test('returns organic results with rank, title, url, snippet', () => {
     const results = parseGoogleSerp(SERP_HTML)
     expect(results.length).toBe(3) // ad stripped
-    expect(results[0]!.rank).toBe(1)
-    expect(results[0]!.title).toBe('opencode - The AI Agent')
-    expect(results[0]!.url).toBe('https://opencode.example.com/')
-    expect(results[0]!.snippet).toContain('open-source AI coding agent')
+    expect(results[0]?.rank).toBe(1)
+    expect(results[0]?.title).toBe('opencode - The AI Agent')
+    expect(results[0]?.url).toBe('https://opencode.example.com/')
+    expect(results[0]?.snippet).toContain('open-source AI coding agent')
   })
 
   test('decodes Google redirect urls', () => {
     const results = parseGoogleSerp(SERP_HTML)
-    expect(results[1]!.url).toBe('https://docs.example.com/')
+    expect(results[1]?.url).toBe('https://docs.example.com/')
   })
 
   test('handles missing snippet as empty string', () => {
     const results = parseGoogleSerp(SERP_HTML)
-    expect(results[1]!.snippet).toBe('')
+    expect(results[1]?.snippet).toBe('')
   })
 
   test('keeps direct (non-redirect) urls unchanged', () => {
     const results = parseGoogleSerp(SERP_HTML)
-    expect(results[2]!.url).toBe('https://direct.example.com/page')
+    expect(results[2]?.url).toBe('https://direct.example.com/page')
   })
 
   test('empty input → empty array', () => {

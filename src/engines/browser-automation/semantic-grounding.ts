@@ -94,7 +94,7 @@ export class SemanticGroundingEngine {
     for (const n of Object.values(nodes)) for (const c of n.childIds ?? []) childOf.add(c)
     const rootId =
       Object.keys(nodes).find((id) => {
-        const role = nodes[id]!.role?.value ?? ''
+        const role = nodes[id]?.role?.value ?? ''
         return /^(RootWebArea|WebArea|Document|Window|root)$/.test(role)
       }) ??
       Object.keys(nodes).find((id) => !childOf.has(id)) ??
@@ -297,9 +297,7 @@ export class SemanticGroundingEngine {
     })
     if (!hit) return null
     const box = await this.boxInFrame(slaveId, hit.selector, hit.frameIndex)
-    return box
-      ? { selector: hit.selector, mode: 'xpath', box, frameIndex: hit.frameIndex }
-      : null
+    return box ? { selector: hit.selector, mode: 'xpath', box, frameIndex: hit.frameIndex } : null
   }
 
   /**
@@ -355,7 +353,14 @@ export class SemanticGroundingEngine {
     })()`
     const box = await this.governor.evaluate(slaveId, expr)
     if (box && typeof box === 'object' && 'x' in box) {
-      const b = box as { x: number; y: number; w?: number; h?: number; width?: number; height?: number }
+      const b = box as {
+        x: number
+        y: number
+        w?: number
+        h?: number
+        width?: number
+        height?: number
+      }
       // normalize CDP rects that arrive as {width,height}
       return { x: b.x, y: b.y, w: b.w ?? b.width ?? 0, h: b.h ?? b.height ?? 0 }
     }

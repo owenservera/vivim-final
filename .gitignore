@@ -94,6 +94,7 @@ tests/e2e/tauri-sidecar.test.ts
 # Build artifacts (Bun compile)
 test-sidecar*
 *.exe
+*.bun-build
 
 
 
@@ -113,3 +114,11 @@ docs/review-system/runs/
 
 # Local-only seed snapshot (contains live user data — never commit)
 seeds/seed-snapshot.db
+
+# Dev implementation bundles (zip archives, not source)
+docs/dev-code-impl/*.zip
+
+# Binary assets inside the round-5 source snapshot (screenshots, fonts)
+docs/dev-code-impl/vivim-final-round-5/frontend/download/
+docs/dev-code-impl/vivim-final-round-5/frontend/public/fonts/
+docs/dev-code-impl/vivim-final-round-5/docs/dev-code-impl/

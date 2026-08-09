@@ -69,7 +69,10 @@ async function clickResolved(
   ctx: CapCtx,
 ): Promise<{ ok: boolean; detail?: string; error?: string }> {
   const s = await requireTarget(ctx, 'click')
-  await ctx.governor.evaluate(ctx.slaveId, targetExpr(ctx, ($E) => `${$E}.click()`))
+  await ctx.governor.evaluate(
+    ctx.slaveId,
+    targetExpr(ctx, ($E) => `${$E}.click()`),
+  )
   return { ok: true, detail: `clicked ${s}` }
 }
 
@@ -157,7 +160,10 @@ export const clear: BrowserCapabilityDef = {
     const s = await requireTarget(ctx, 'clear')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      targetExpr(ctx, ($E) => `if(${$E}){${$E}.value='';${$E}.dispatchEvent(new Event('input',{bubbles:true}));}`),
+      targetExpr(
+        ctx,
+        ($E) => `if(${$E}){${$E}.value='';${$E}.dispatchEvent(new Event('input',{bubbles:true}));}`,
+      ),
     )
     return { ok: true, detail: `cleared ${s}` }
   },
@@ -242,7 +248,10 @@ export const focus: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = await requireTarget(ctx, 'focus')
-    await ctx.governor.evaluate(ctx.slaveId, targetExpr(ctx, ($E) => `${$E}.focus()`))
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      targetExpr(ctx, ($E) => `${$E}.focus()`),
+    )
     return { ok: true, detail: `focused ${s}` }
   },
 }
@@ -256,7 +265,10 @@ export const blur: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     const s = await requireTarget(ctx, 'blur')
-    await ctx.governor.evaluate(ctx.slaveId, targetExpr(ctx, ($E) => `${$E}.blur()`))
+    await ctx.governor.evaluate(
+      ctx.slaveId,
+      targetExpr(ctx, ($E) => `${$E}.blur()`),
+    )
     return { ok: true, detail: `blurred ${s}` }
   },
 }
@@ -318,7 +330,11 @@ export const check: BrowserCapabilityDef = {
     const s = await requireTarget(ctx, 'check')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      targetExpr(ctx, ($E) => `if(${$E}&&!${$E}.checked){${$E}.checked=true;${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`),
+      targetExpr(
+        ctx,
+        ($E) =>
+          `if(${$E}&&!${$E}.checked){${$E}.checked=true;${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`,
+      ),
     )
     return { ok: true, detail: `checked ${s}` }
   },
@@ -335,7 +351,11 @@ export const uncheck: BrowserCapabilityDef = {
     const s = await requireTarget(ctx, 'uncheck')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      targetExpr(ctx, ($E) => `if(${$E}&&${$E}.checked){${$E}.checked=false;${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`),
+      targetExpr(
+        ctx,
+        ($E) =>
+          `if(${$E}&&${$E}.checked){${$E}.checked=false;${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`,
+      ),
     )
     return { ok: true, detail: `unchecked ${s}` }
   },
@@ -349,10 +369,14 @@ export const rangeSet: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = await requireTarget(ctx, 'range-set')
+    const _s = await requireTarget(ctx, 'range-set')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      targetExpr(ctx, ($E) => `${$E}.value=${JSON.stringify(ctx.params.value)};${$E}.dispatchEvent(new Event('input',{bubbles:true}));`),
+      targetExpr(
+        ctx,
+        ($E) =>
+          `${$E}.value=${JSON.stringify(ctx.params.value)};${$E}.dispatchEvent(new Event('input',{bubbles:true}));`,
+      ),
     )
     return { ok: true, detail: `range set ${ctx.params.value}` }
   },
@@ -366,10 +390,14 @@ export const colorSet: BrowserCapabilityDef = {
   grounding: 'composite',
   trust: TRUST.write,
   handler: async (ctx) => {
-    const s = await requireTarget(ctx, 'color-set')
+    const _s = await requireTarget(ctx, 'color-set')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      targetExpr(ctx, ($E) => `${$E}.value=${JSON.stringify(ctx.params.value)};${$E}.dispatchEvent(new Event('input',{bubbles:true}));`),
+      targetExpr(
+        ctx,
+        ($E) =>
+          `${$E}.value=${JSON.stringify(ctx.params.value)};${$E}.dispatchEvent(new Event('input',{bubbles:true}));`,
+      ),
     )
     return { ok: true, detail: `color set ${ctx.params.value}` }
   },
@@ -386,7 +414,11 @@ export const upload: BrowserCapabilityDef = {
     const s = await requireTarget(ctx, 'upload')
     await ctx.governor.evaluate(
       ctx.slaveId,
-      targetExpr(ctx, ($E) => `if(${$E}){${$E}.setAttribute('data-vivim-files',${JSON.stringify(JSON.stringify(ctx.params.files))});${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`),
+      targetExpr(
+        ctx,
+        ($E) =>
+          `if(${$E}){${$E}.setAttribute('data-vivim-files',${JSON.stringify(JSON.stringify(ctx.params.files))});${$E}.dispatchEvent(new Event('change',{bubbles:true}));}`,
+      ),
     )
     return { ok: true, detail: `upload set on ${s}` }
   },

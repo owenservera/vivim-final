@@ -47,6 +47,11 @@ export class OpenCodeIngest {
     string,
     { providerSessionId: string; conversationId: string; agentSessionId: string }
   >()
+  /** F3: per-session denial log so cap:opencode:send can surface permissionDenied. */
+  private readonly denialsBySession = new Map<
+    string,
+    Array<{ tool: string; tier: number; at: string }>
+  >()
 
   constructor(opts: OpenCodeIngestOptions) {
     this.client = opts.client
@@ -161,10 +166,7 @@ export class OpenCodeIngest {
    * `flushAccumulatedText` (delta accumulation) when the fetch fails so tests and
    * non-SSE transports still land output.
    */
-  private async projectSessionTranscript(
-    sessionId: string,
-    conversationId: string,
-  ): Promise<void> {
+  private async projectSessionTranscript(sessionId: string, conversationId: string): Promise<void> {
     let messages: Array<Record<string, unknown>> = []
     try {
       messages = await this.client.getSessionMessages(sessionId)
@@ -189,7 +191,9 @@ export class OpenCodeIngest {
       const msgId = info.id
       if (!msgId || seen.has(msgId)) continue
 
-      const parts = Array.isArray(rawMsg.parts) ? (rawMsg.parts as Array<Record<string, unknown>>) : []
+      const parts = Array.isArray(rawMsg.parts)
+        ? (rawMsg.parts as Array<Record<string, unknown>>)
+        : []
       const text = parts
         .filter((p) => p.type === 'text' && typeof p.text === 'string')
         .map((p) => p.text as string)
@@ -276,7 +280,15 @@ export class OpenCodeIngest {
     const tool = ev.properties?.permission ?? ev.toolName ?? ev.part?.tool
     const permissionId = ev.properties?.id ?? ev.permissionID
     const { decision, tier } = this.assess(tool)
-    await this.respondDecision(agentSessionId, sessionId, ev, tool ?? 'unknown', decision, tier, permissionId)
+    await this.respondDecision(
+      agentSessionId,
+      sessionId,
+      ev,
+      tool ?? 'unknown',
+      decision,
+      tier,
+      permissionId,
+    )
   }
 
   private async respondDecision(
@@ -323,6 +335,22 @@ export class OpenCodeIngest {
       decision,
       payload: ev,
     })
+    // F3: track denials per session so cap:opencode:send can surface permissionDenied
+    if (decision === 'deny') {
+      const list = this.denialsBySession.get(sessionId) ?? []
+      list.push({ tool, tier, at: new Date().toISOString() })
+      this.denialsBySession.set(sessionId, list)
+    }
+  }
+
+  /** F3: Get denials recorded for a session (for cap:opencode:send output). */
+  getDenialsForSession(sessionId: string): Array<{ tool: string; tier: number; at: string }> {
+    return this.denialsBySession.get(sessionId) ?? []
+  }
+
+  /** F3: Clear denials for a session (call after the send handler has surfaced them). */
+  clearDenialsForSession(sessionId: string): void {
+    this.denialsBySession.delete(sessionId)
   }
 
   private async ingestFileEdit(agentSessionId: string, ev: OpencodeEvent): Promise<void> {

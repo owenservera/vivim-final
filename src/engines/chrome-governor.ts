@@ -119,7 +119,7 @@ import type {
   SlaveStatus,
 } from './chrome/types.js'
 
-const log = getLogger('chrome-governor')
+const _log = getLogger('chrome-governor')
 
 export class ChromeGovernor {
   private fleetSupervisor: FleetSupervisorContract

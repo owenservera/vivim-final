@@ -33,7 +33,26 @@ const REQUEST_SCHEMA = z.object({
 })
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as unknown
+  // Harden against empty/malformed bodies. During the resolve-feedback-loop
+  // storm, aborted/cancelled fetch streams reached this handler with no body,
+  // producing a 500 + `SyntaxError: Unexpected end of JSON input` at req.json().
+  // A clean 400 (instead of an uncaught throw) keeps the dev overlay quiet and
+  // lets the client's transient-retry handle it.
+  let rawBody = '';
+  try {
+    rawBody = await req.text();
+  } catch {
+    return NextResponse.json({ ok: false, error: 'Unable to read request body' }, { status: 400 });
+  }
+  if (!rawBody.trim()) {
+    return NextResponse.json({ ok: false, error: 'Empty request body' }, { status: 400 });
+  }
+  let body: unknown;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 });
+  }
   const parsed = REQUEST_SCHEMA.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ ok: false, error: parsed.error.message }, { status: 400 })

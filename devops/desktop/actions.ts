@@ -19,14 +19,17 @@ import {
 import {
   pollReady,
   ownerPidForPort,
+  ancestorNamesForPid,
   scanPortForPid,
+  processNameForPid,
+  isVivimOwner,
   windowInfo,
   focusWindow,
   captureScreenshot,
   assertNonBlank,
   getImageStats,
 } from './verify.js'
-import { needsBuild, markBuilt } from './build.js'
+import { needsBuild, needsBuildMulti, needsBuildWithTools, markBuilt } from './build.js'
 import {
   loadState,
   saveState,
@@ -115,9 +118,18 @@ export async function actionBuild(args: CliArgs): Promise<ActionResult> {
   const RUST_EXTS = ['.rs', '.toml']
   const artifacts: string[] = []
 
-  // Sidecar check
+  // Sidecar check. The sidecar embeds app code + prisma schema + seeds, so a
+  // change in ANY of them must trigger a rebuild. The embedded DB is built
+  // from seeds at compile time — we fingerprint prisma/schema.prisma (DDL)
+  // and seeds/ (manifests, parsers, snapshot), NOT the volatile dev.db
+  // (which changes on every local run and would force a rebuild every time).
   const sidecarSrc = join(process.cwd(), 'src')
-  const sidecar = needsBuild(synced, sidecarSrc, TS_EXTS, 'sidecar',
+  const prismaDir = join(process.cwd(), 'prisma')
+  const sidecar = needsBuildMulti(synced, [
+    { dir: sidecarSrc, exts: TS_EXTS },
+    { dir: prismaDir, exts: ['.prisma'] },
+    { dir: join(process.cwd(), 'seeds'), exts: TS_EXTS.concat('.json', '.db') },
+  ], 'sidecar',
     existsSync(join(SRC_TAURI, 'target', 'release', 'vivim-server.exe')))
 
   // Tauri check
@@ -125,7 +137,23 @@ export async function actionBuild(args: CliArgs): Promise<ActionResult> {
   const frontendSrc = join(process.cwd(), 'frontend', 'src')
   const rustCheck = needsBuild(synced, tauriSrc, RUST_EXTS, 'tauri-rust',
     existsSync(nsisPathFor(synced)))
-  const frontendCheck = needsBuild(synced, frontendSrc, TS_EXTS, 'tauri-frontend',
+  // The frontend stage outputs depend on frontend/src AND the build tooling
+  // that drives them (prepare-frontend, next.config, package deps). Hash both
+  // so a stale installer built by an older toolchain never masks a rebuild.
+  const ROOT = process.cwd()
+  const frontendCheck = needsBuildWithTools(synced,
+    [{ dir: frontendSrc, exts: TS_EXTS }],
+    [
+      join(ROOT, 'scripts', 'tauri', 'prepare-frontend.ts'),
+      join(ROOT, 'scripts', 'tauri', 'build.ps1'),
+      join(ROOT, 'frontend', 'next.config.mjs'),
+      join(ROOT, 'frontend', 'package.json'),
+      join(ROOT, 'frontend', 'tsconfig.json'),
+      join(ROOT, 'frontend', 'postcss.config.mjs'),
+      join(ROOT, 'frontend', 'tailwind.config.ts'),
+      join(ROOT, 'frontend', 'bun.lock'),
+    ],
+    'tauri-frontend',
     existsSync(nsisPathFor(synced)))
 
   const changed = sidecar.changed || rustCheck.changed || frontendCheck.changed
@@ -424,6 +452,32 @@ export async function actionTest(args: CliArgs): Promise<ActionResult> {
     }
   }
 
+  // Assert the /readyz responder is a genuine vivim process, not a foreign
+  // process squatting on the port (e.g. a stale `bun ... serve`). Without
+  // this, a foreign 200 passes readyz/probe while process/window fail.
+  //
+  // The owner is legit if its name OR any ancestor's name is a vivim image —
+  // the compiled sidecar `vivim-server.exe` re-spawns the real worker via
+  // `bun run src/cli/index.ts serve`, so a `bun` owner with a vivim ancestor
+  // is the genuine server, not a squatter.
+  const checkOwner = async (): Promise<CheckResult> => {
+    const runtime = loadRuntime()
+    const port = runtime?.port ?? DEFAULT_PORT
+    const expectedPid = runtime?.ownerPid ?? runtime?.lastPid ?? null
+    const owner = ownerPidForPort(port)
+    const ownerName = owner !== null ? processNameForPid(owner) : null
+    const ancestors = owner !== null ? ancestorNamesForPid(owner) : []
+    const legit = isVivimOwner(ownerName, owner, expectedPid, ancestors)
+    if (owner === null) return { name: 'owner', ok: false, detail: `no listener on :${port}` }
+    return {
+      name: 'owner',
+      ok: legit,
+      detail: legit
+        ? `:${port} owned by ${owner} (${ownerName ?? 'unknown'})`
+        : `foreign responder ${owner} (${ownerName ?? 'unknown'}) on :${port}`,
+    }
+  }
+
   const checkWindow = async (): Promise<CheckResult> => {
     const w = windowInfo('vivim-desktop')
     return { name: 'window', ok: w.exists && w.title.length > 0, detail: w.title || 'no title' }
@@ -453,6 +507,7 @@ export async function actionTest(args: CliArgs): Promise<ActionResult> {
   if (battery === 'smoke' || battery === 'all') {
     await runCheck('process', checkProcess)
     await runCheck('readyz', checkReadyz)
+    await runCheck('owner', checkOwner)
     await runCheck('window', checkWindow)
     await runCheck('screenshot', checkScreenshot)
     await runCheck('probe:readyz', () => checkProbe('/readyz'))

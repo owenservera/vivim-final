@@ -122,6 +122,25 @@ export function scanPortForPid(pid: number, base = 9421, count = 20): number | n
   return null
 }
 
+/**
+ * Return the PIDs of every process LISTENING on ports base..base+count-1,
+ * in ascending port order (duplicates collapsed). Pure — parse a raw
+ * netstat snapshot so the decision logic stays unit-testable.
+ */
+export function pidsForPortRange(netstatRaw: string, base = 9421, count = 20): number[] {
+  const map = parseNetstat(netstatRaw)
+  const seen = new Set<number>()
+  const pids: number[] = []
+  for (let i = 0; i < count; i++) {
+    const pid = map.get(base + i)
+    if (pid && !seen.has(pid)) {
+      seen.add(pid)
+      pids.push(pid)
+    }
+  }
+  return pids
+}
+
 /** Is a process alive? (kill -0 trick) */
 export function pidAlive(pid: number): boolean {
   try {
@@ -130,6 +149,70 @@ export function pidAlive(pid: number): boolean {
   } catch {
     return false
   }
+}
+
+/** Executable name (without .exe) for a PID, or null if not found. */
+export function processNameForPid(pid: number): string | null {
+  const r = spawnSync('powershell', [
+    '-NoProfile', '-Command',
+    `(Get-Process -Id ${pid} -ErrorAction SilentlyContinue).ProcessName`,
+  ], { encoding: 'utf8', timeout: 10_000 })
+  const name = (r.stdout ?? '').trim()
+  return name || null
+}
+
+/**
+ * Walk the process tree from a PID upward (parent → grandparent → …) and
+ * return the process names in order (owner first). Max `depth` hops to bound
+ * runaway chains. Returns [ownerName, parentName, ...] with the owner itself
+ * first so name checks see the nearest process too.
+ */
+export function ancestorNamesForPid(pid: number, depth = 12): string[] {
+  const ps = `
+$names = @()
+$id = ${pid}
+for ($i = 0; $i -lt ${depth}; $i++) {
+  $p = Get-CimInstance Win32_Process -Filter "ProcessId = $id" -ErrorAction SilentlyContinue
+  if (-not $p) { break }
+  $names += $p.Name
+  $id = $p.ParentProcessId
+  if ($id -le 0) { break }
+}
+Write-Output ($names -join '|')
+`
+  const r = spawnSync('powershell', ['-NoProfile', '-Command', ps], {
+    encoding: 'utf8',
+    timeout: 10_000,
+  })
+  const names = ((r.stdout ?? '').trim() || '').split('|').filter((n) => n.length > 0)
+  return names
+}
+
+/** Pure: is a process-name string a vivim image (case-insensitive, .exe tolerant)? */
+export function isVivimImageName(name: string | null): boolean {
+  if (name === null) return false
+  const n = name.toLowerCase().replace(/\.exe$/, '')
+  return n === 'vivim-desktop' || n === 'vivim-server'
+}
+
+/**
+ * Pure: decide whether a port owner is a legitimate vivim process.
+ * Accepts when the owner PID is the expected launched PID, OR the owner's
+ * name is a vivim image, OR any ancestor of the owner is a vivim image
+ * (the compiled sidecar `vivim-server.exe` re-spawns the real worker via
+ * `bun run src/cli/index.ts serve`, so the port owner is often a `bun`
+ * process whose parent chain leads back to a vivim exe).
+ */
+export function isVivimOwner(
+  ownerName: string | null,
+  ownerPid: number | null,
+  expectedPid: number | null,
+  ancestorNames: string[] = [],
+): boolean {
+  if (ownerPid === null) return false
+  if (expectedPid !== null && ownerPid === expectedPid) return true
+  if (isVivimImageName(ownerName)) return true
+  return ancestorNames.some((name) => isVivimImageName(name))
 }
 
 // ── Ready Polling ──────────────────────────────────────────────────────────

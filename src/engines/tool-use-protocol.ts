@@ -46,7 +46,12 @@ export class ToolUseProtocolImpl implements ToolUseProtocol {
     input: Record<string, unknown>,
   ): Promise<ToolResult> {
     try {
-      const result = await this.client.callTool(serverId, toolName, input)
+      // C3: Route through tool orchestrator when available.
+      const { callToolViaOrchestrator } = await import('./tool-orchestrator-facade.js')
+      const result = (await callToolViaOrchestrator(this.client, serverId, toolName, input)) as {
+        isError?: boolean
+        content: unknown
+      }
       return { success: !result.isError, output: result.content }
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) }

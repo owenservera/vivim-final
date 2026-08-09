@@ -17,7 +17,11 @@ const HEARTBEAT_TIMEOUT = 5_000
 
 export function useNetworkStatus(pollInterval = HEARTBEAT_INTERVAL): NetworkStatus {
   const [status, setStatus] = useState<NetworkStatus>({
-    online: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    // Guard for server-side rendering: Bun/Node expose a `navigator` global
+    // (userAgent, platform) without `onLine`, so keying off `window` is the
+    // reliable browser detection. On the server default to online so the SSR
+    // HTML never renders the offline banner.
+    online: typeof window !== 'undefined' ? navigator.onLine === true : true,
     lastChecked: Date.now(),
     latencyMs: null,
   })

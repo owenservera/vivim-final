@@ -34,6 +34,12 @@ export async function bootstrapLifecyclePhase(ctx: BootstrapContext): Promise<vo
     conversationStore: convStore,
     registry,
     db,
+    // #1: Wire the AI Gateway as the NLCL Tier-3 LLM provider (was: never passed → dead code).
+    // When the gateway is disabled, the adapter returns a stub message and the Tier-3 path
+    // gracefully falls through to lower tiers.
+    providerLLM: (
+      await import('../../../engines/gateway-provider-llm-adapter.js')
+    ).getGatewayProviderLLMAdapter({ providerId: 'simulator' }),
     opencodeClient: (globalThis as Record<string, unknown>).__opencodeServe
       ? (
           (globalThis as Record<string, unknown>).__opencodeServe as {
@@ -51,12 +57,79 @@ export async function bootstrapLifecyclePhase(ctx: BootstrapContext): Promise<vo
   })
   log.info(`[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`)
 
+  // F2: Register NLCL tools (nl_command, nl_list_commands, nl_help) on the MCP server.
+  // McpServerAdapter is constructed in capabilities.ts (earlier phase) and exposed
+  // as globalThis.__mcpServer. NLCLEngine is constructed here. This is the earliest
+  // point where both exist.
+  const mcpServer = (globalThis as Record<string, unknown>).__mcpServer as
+    | {
+        tool?: (
+          name: string,
+          desc: string,
+          schema: Record<string, unknown>,
+          handler: (args: Record<string, unknown>) => Promise<unknown>,
+        ) => void
+      }
+    | undefined
+  if (mcpServer?.tool) {
+    try {
+      const { registerNLCLTools } = await import('../../../mcp/nlcl-tools.js')
+      registerNLCLTools(mcpServer as never, nlclEngine)
+      log.info('[boot] NLCL MCP tools registered (nl_command, nl_list_commands, nl_help)')
+    } catch (err) {
+      log.warn({ err }, '[boot] NLCL MCP tool registration failed (non-fatal)')
+    }
+  }
+
   // 24.7 — register NLCL itself as a capability on the unified registry
   if (registry) {
     const { registerNlInterpretCapability } = await import(
       '../../../engines/capability-bootstrap.js'
     )
     registerNlInterpretCapability(registry, nlclEngine)
+  }
+
+  // #1 + #2: Construct LLMSlaveResolver (BM25+MiniLM+RRF RAG pipeline) — the advanced
+  // catalog-grounded intent resolver. Was: never instantiated (rg "new LLMSlaveResolver" = 0).
+  // Now: constructed with the GatewayProviderLLMAdapter (#1) + HarnessRepairEngine (#2)
+  // and exposed as globalThis.__llmSlaveResolver for the NLCL engine to use as a Layer-4 fallback.
+  try {
+    const { LLMSlaveResolver } = await import('../../../engines/nlcl/llm-slave-resolver.js')
+    const { getGatewayProviderLLMAdapter } = await import(
+      '../../../engines/gateway-provider-llm-adapter.js'
+    )
+    const harnessRepair = (globalThis as Record<string, unknown>).__harnessRepair as
+      | {
+          repair: (input: {
+            content: string
+            schema: { parse: (v: unknown) => { success: boolean; data?: unknown } }
+          }) => Promise<{ ok: boolean; data?: unknown; repairs: string[]; errors: string[] }>
+        }
+      | undefined
+
+    const slaveResolver = new LLMSlaveResolver({
+      providerLLM: getGatewayProviderLLMAdapter({ providerId: 'simulator' }),
+      catalog: () =>
+        registry?.list()?.map(
+          (c: {
+            id: string
+            slug: string
+            name: string
+            description?: string
+            inputSchema?: unknown
+          }) => ({
+            id: c.id,
+            intent: c.slug,
+            description: c.name ?? c.id,
+            inputSchema: c.inputSchema,
+          }),
+        ) ?? [],
+      repairEngine: harnessRepair,
+    })
+    ;(globalThis as Record<string, unknown>).__llmSlaveResolver = slaveResolver
+    log.info('[boot] LLMSlaveResolver constructed (BM25+MiniLM+RRF RAG, gateway-backed)')
+  } catch (err) {
+    log.warn({ err }, '[boot] LLMSlaveResolver construction failed (non-fatal)')
   }
 
   // ── Kernel bootstrap ──────────────────────────────────────────────────

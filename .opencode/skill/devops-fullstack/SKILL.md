@@ -710,7 +710,7 @@ When implementing a feature that has a SpecKit spec, follow this workflow:
 
 | Command | Purpose |
 |---------|---------|
-| `bun run devops speckit sync <featureDir>` | Sync tasks to tracker |
+| `bun run devops tracker-speckit-sync sync --dir=<featureDir>` | Sync tasks to tracker |
 | `bun run devops speckit gate --scope=feature` | Unified gate for feature |
 | `bun run devops speckit converge <featureDir>` | Run converge pipeline |
 

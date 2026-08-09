@@ -168,6 +168,48 @@ async function gracefulShutdown(signal: string): Promise<void> {
 }
 
 /**
+ * Match a pathname + method against any capability's declared apiEndpoint.
+ * Handles `{param}` and `:param` placeholders in the path.
+ * Returns the matched capability + extracted path params, or null.
+ */
+function matchCapabilityEndpoint(
+  registry: import('../engines/unified-registry.js').UnifiedCapabilityRegistry,
+  pathname: string,
+  method: string,
+): {
+  cap: import('../engines/unified-registry.js').UnifiedCapability
+  pathParams: Record<string, string>
+} | null {
+  const caps = registry.list({ surface: 'api' })
+  for (const cap of caps) {
+    if (!cap.apiEndpoint) continue
+    if (cap.apiEndpoint.method.toUpperCase() !== method.toUpperCase()) continue
+    const declared = cap.apiEndpoint.path
+    // Convert /api/foo/{id}/bar or /api/foo/:id/bar → regex
+    const paramNames: string[] = []
+    const regexStr = declared
+      .replace(/\{([^}]+)\}/g, (_, name) => {
+        paramNames.push(name)
+        return '([^/]+)'
+      })
+      .replace(/:([^/]+)/g, (_, name) => {
+        paramNames.push(name)
+        return '([^/]+)'
+      })
+    const regex = new RegExp(`^${regexStr}$`)
+    const match = pathname.match(regex)
+    if (match) {
+      const pathParams: Record<string, string> = {}
+      paramNames.forEach((name, i) => {
+        pathParams[name] = decodeURIComponent(match[i + 1] ?? '')
+      })
+      return { cap, pathParams }
+    }
+  }
+  return null
+}
+
+/**
  * Try to bind Bun.serve on `port`. If EADDRINUSE, walk up to the next free
  * port (up to +200). Writes the actual port to `.runtime/backend.port` so
  * downstream clients (PS1 scripts, frontend, CLI) discover it.
@@ -696,6 +738,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
   const contactsRouter = createContactsRouter(ctx)
   const syncRouter = createSyncRouter(ctx)
   const mediaRouter = createMediaRouter(ctx)
+  const updateRouter = createUpdateRouter()
 
   registerConversationForwarder(engines.eventBus)
   registerCanvasMutationForwarder(engines.eventBus)
@@ -867,6 +910,27 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         const authResult = auth(req)
         if (authResult) return authResult
 
+        // Desktop sidecar: ported frontend App Router bag. Runs FIRST — right after
+        // the auth gate, before every backend prefix router. The WebView served its
+        // /api/* entirely from the frontend App Router at dev time, so an exact table
+        // path (e.g. /api/canvas/shell, /api/canvas/definition/[id],
+        // /api/media/open, /api/storage/health) must win over backend prefix routers
+        // that would otherwise swallow it (the canvas router 404s shell, the media
+        // :id matcher catches open, the storage router 404s health). Backend keeps
+        // priority for every path with no frontend table entry. Only exact
+        // path+verb matches resolve; null falls through to the backend chain.
+        if (url.pathname.startsWith('/api/')) {
+          try {
+            const { dispatchFrontendRoute } = await import('../desktop/frontend-route-mount.js')
+            const ported = await dispatchFrontendRoute(req, url)
+            if (ported) return withTrace(ported)
+          } catch (err) {
+            // Frontend route bag unavailable (dev/test bundles without frontend):
+            // fall through to the normal backend routing chain.
+            catchDebug(err, 'server:index:dispatchFrontendRoute')
+          }
+        }
+
         if (url.pathname.startsWith('/api/route/')) return muxRouter(req)
         if (url.pathname.startsWith('/api/autonomous/') && autonomousRouter) {
           return dispatch(
@@ -877,6 +941,41 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         if (url.pathname.startsWith('/api/nlcl/')) return nlclRouter(req)
         if (url.pathname === '/api/interpret' && req.method === 'POST') {
           return interpretRouter(req)
+        }
+        // F1: Live POST /api/agent/run route — calls the cap:agent:run capability
+        // via the unified registry (mirrors the universal execute path).
+        if (url.pathname === '/api/agent/run' && req.method === 'POST') {
+          const body = (await req.json().catch(() => ({}))) as {
+            prompt?: string
+            model?: string
+            sessionId?: string
+            cwd?: string
+          }
+          if (!body.prompt?.trim()) {
+            return errorResponse('prompt is required', 'ValidationError', 400)
+          }
+          const registry = engines.registry
+          if (!registry) {
+            return errorResponse('Capability registry not ready', 'NotAvailable', 503)
+          }
+          try {
+            const cap = registry.get('cap:agent:run')
+            if (!cap) {
+              return errorResponse('cap:agent:run not registered', 'NotAvailable', 504)
+            }
+            const result = await cap.handler(
+              {
+                prompt: String(body.prompt),
+                model: body.model,
+                sessionId: body.sessionId,
+                cwd: body.cwd,
+              },
+              { metadata: {} },
+            )
+            return withTrace(json(result))
+          } catch (err) {
+            return errorResponse(String(err), 'ExecutionError', 500)
+          }
         }
         if (url.pathname.startsWith('/api/opencode/')) {
           const serve = (globalThis as Record<string, unknown>).__opencodeServe as
@@ -905,6 +1004,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         if (url.pathname.startsWith('/api/contacts/')) return contactsRouter(req)
         if (url.pathname.startsWith('/api/sync/')) return syncRouter(req)
         if (url.pathname.startsWith('/api/media/')) return mediaRouter(req)
+        if (url.pathname.startsWith('/api/update/')) return updateRouter(req, url)
         if (url.pathname.startsWith('/api/nodes/')) return nodeRouter(req)
         if (url.pathname.startsWith('/api/storage/') && storageRouter) return storageRouter(req)
         if (url.pathname.startsWith('/api/memory/') && memoryRouter) {
@@ -960,6 +1060,39 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
         if (url.pathname.startsWith('/api/capabilities') && capabilityRouter) {
           return capabilityRouter(req, url)
+        }
+
+        // Universal apiEndpoint dispatcher: if no dedicated route matched, check if
+        // the path + method matches a capability's declared apiEndpoint. If so,
+        // route through registry.execute() — the single entry point.
+        // This ensures EVERY declared apiEndpoint is reachable without writing a
+        // dedicated route for each. (F1-style fix for all missing /api/ai/*, /api/admin/*, etc.)
+        if (url.pathname.startsWith('/api/') && engines.registry) {
+          const matchResult = matchCapabilityEndpoint(engines.registry, url.pathname, req.method)
+          if (matchResult) {
+            const { cap, pathParams } = matchResult
+            try {
+              const body = await req.json().catch(() => ({}))
+              const input =
+                typeof body === 'object' && body !== null
+                  ? { ...body, ...pathParams }
+                  : { ...pathParams }
+              // Also merge query params
+              for (const [key, value] of url.searchParams) {
+                input[key] = value
+              }
+              const output = await engines.registry.execute(cap.id, input, { metadata: {} })
+              return withTrace(json(output))
+            } catch (err) {
+              return withTrace(
+                errorResponse(
+                  err instanceof Error ? err.message : String(err),
+                  'ExecutionError',
+                  500,
+                ),
+              )
+            }
+          }
         }
 
         const frontendDir = process.env.FRONTEND_DIR

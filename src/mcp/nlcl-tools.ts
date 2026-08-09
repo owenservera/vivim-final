@@ -4,9 +4,18 @@
 
 import type { NLCLEngine } from '../engines/nlcl/nlcl-engine.js'
 import type { NLCContext } from '../engines/nlcl/types.js'
-import type { DiscoveryMcpServer } from './server.js'
 
-export function registerNLCLTools(server: DiscoveryMcpServer, engine: NLCLEngine): void {
+/** F2: Structural interface so both DiscoveryMcpServer and McpServerAdapter satisfy it. */
+export interface NLCLToolHost {
+  tool(
+    name: string,
+    description: string,
+    inputSchema: Record<string, unknown>,
+    handler: (args: Record<string, unknown>) => Promise<{ content: unknown; isError?: boolean }>,
+  ): void
+}
+
+export function registerNLCLTools(server: NLCLToolHost, engine: NLCLEngine): void {
   server.tool(
     'nl_command',
     'Execute a natural language command. Type what you want in plain English — the system deterministically parses and executes it. No AI required for 95% of commands.',

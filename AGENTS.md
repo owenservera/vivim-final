@@ -706,12 +706,12 @@ bun test tests/unit/lib/ledger-client/ tests/unit/lib/tunnel-client/ tests/unit/
 
 ## Skill Management
 
-- **Source of truth:** `.opencode/skill/` (23 project skills)
+- **Source of truth:** `.opencode/skill/` (30 project skills; `desktop-build-testing` and `production-build` exist locally but are gitignored)
 - **Sync to kilocode:** `pwsh scripts/sync-skills.ps1`
 - **Global skills:** `~/.agents/skills/` (171) + `~/.claude/skills/` (94)
 - **Adding new skills:** Create in `.opencode/skill/`, run sync, test
-- **Audit:** `docs/audits/SKILL-DEVOPS-AUDIT-2026-07-19.md`
-- **Architecture:** `docs/skill-architecture.md`
+- **Audit:** archived at `.archive/docs-stale-2026-08-06/audits/SKILL-DEVOPS-AUDIT-2026-07-19.md`
+- **Architecture:** archived at `.archive/docs-stale-2026-08-06/skill-architecture.md`
 
 ## Available Skills
 
@@ -722,7 +722,9 @@ bun test tests/unit/lib/ledger-client/ tests/unit/lib/tunnel-client/ tests/unit/
 - **devops-generators** — Taxonomy generation pipeline (4-round)
 - **devops-research** — Research-first intelligence layer
 - **devops-roadmap** — Research-first roadmap system
+- **devops-toolkit** — Surface regeneration + cross-surface parity (regen/verify/diff)
 - **feature-governance** — Feature registry, lifecycle, skill mapping, health dashboard
+- **convergence-auditor** — Spec/code/arch convergence audit & drift detection
 - **agentic** — Limited-context agentic dev loop
 
 #### DevOps Loop Commands (atomic unit pipeline)
@@ -736,7 +738,7 @@ bun run devops gate [--strict]        # quality gate, exit non-zero on fail
 bun run devops parallelize --max 4 [--dry-run] [--tracker <path>]  # fan out N units to isolated subagents
 bun run devops context                # durable task-state snapshot (resume after compaction)
 bun run devops audit <id> "<notes>"   # append PROGRESS.md line w/ resolved sha (post-commit)
-bun run devops code-index <build|search|stats|watch|mcp> [--all] [--no-embed] [--no-watch]  # local offline code indexing
+bun run devops code-index <index|search|stats|watch|mcp|clear> [--all] [--no-embed] [--no-watch]  # local offline code indexing
 ```
 **Single-pass commit rule:** always use `devops mark <id> done "<msg>"` — it transitions state,
 appends the PROGRESS.md audit line with the real resolved sha, and folds everything into ONE git
@@ -747,7 +749,6 @@ forward logs via `src/engines/otel-sink.ts`.
 ### Implementation
 - **vivim-build** — Engine implementation workflow (13-engine architecture)
 - **vivim-runtime** — Agent-as-runtime dev loop
-- **vivi-frontend** — Hot-swappable frontend skill
 
 ### Quality
 - **vivim-testing** — Testing patterns & workflows
@@ -756,6 +757,12 @@ forward logs via `src/engines/otel-sink.ts`.
 - **provider-testing** — 8-phase provider onboarding
 - **db-agent** — Oracle-vision database agent
 - **prisma-workflow** — Prisma ORM patterns
+- **provider-onboard-explorer** — Agent-as-explorer provider onboarding (APOP-AX)
+
+### Frontend & UX
+- **frontend-ux-refinement** — Iterative frontend UX refinement + cross-surface wiring
+- **llm-provider-frontend-testing** — LLM-as-Human exploratory frontend testing per provider
+- **vivi-frontend** — Hot-swappable frontend UI slots (see Implementation below)
 
 ### Debugging
 - **diagnose** — Structured diagnosis loop (reproduce → fix)
@@ -817,9 +824,9 @@ instead of forcing full-file reads (cuts the ~60–70% exploration tax). Native
 (archived: `.archive/docs-stale-2026-08-06/research/briefs/local-code-indexing-llm-brief.md`).
 
 ```bash
-bun run devops code-index build            # index code-only roots (src, devops, frontend, scripts, seeds, prisma); watch by default
-bun run devops code-index build --all      # index the whole repo
-bun run devops code-index build --no-watch # one-shot, no file watcher
+bun run devops code-index index           # index code-only roots (src, devops, frontend, scripts, seeds, prisma); watch by default
+bun run devops code-index index --all     # index the whole repo
+bun run devops code-index index --no-watch # one-shot, no file watcher
 bun run devops code-index search "StreamParserEngine fallback"
 bun run devops code-index stats
 bun run devops code-index mcp              # stdio MCP: code_index_search + code_index_stats

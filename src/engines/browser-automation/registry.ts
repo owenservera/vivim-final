@@ -135,8 +135,10 @@ export function parseSelector(
     candidates.push({ label: params.ariaLabel })
   if (typeof params.placeholder === 'string' && !exclude.has('placeholder'))
     candidates.push({ placeholder: params.placeholder })
-  if (typeof params.role === 'string' && !exclude.has('role')) candidates.push({ role: params.role })
-  if (typeof params.text === 'string' && !exclude.has('text')) candidates.push({ text: params.text })
+  if (typeof params.role === 'string' && !exclude.has('role'))
+    candidates.push({ role: params.role })
+  if (typeof params.text === 'string' && !exclude.has('text'))
+    candidates.push({ text: params.text })
   if (typeof params.selector === 'string' && !exclude.has('selector'))
     candidates.push({ css: params.selector })
   if (candidates.length === 0) return null

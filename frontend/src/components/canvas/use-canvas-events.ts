@@ -16,6 +16,7 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { EventBus } from './event-bus';
+import { getLastResolveTraceId } from './use-resolved-nodes';
 
 export interface CanvasEvent {
   type:
@@ -62,6 +63,18 @@ export function useCanvasEvents(workspaceId: string | null) {
           const evt = JSON.parse(msg.data) as CanvasEvent;
           // Skip stream:open and heartbeat — these are connection signals, not canvas updates
           if (evt.type === 'stream:open' || evt.type === 'heartbeat') return;
+          // Self-loop guard: a `canvas:surface:resolved` event that carries the
+          // SAME traceId as our last resolve response is OUR OWN echo coming
+          // back through the SSE forwarder. Invalidating here would refetch
+          // /api/canvas/resolve → re-emit → loop forever. Genuine cross-tab
+          // updates carry a different traceId, so they still invalidate.
+          if (
+            evt.type === 'canvas:surface:resolved' &&
+            evt.traceId &&
+            evt.traceId === getLastResolveTraceId()
+          ) {
+            return;
+          }
           // Deduplicate: track by traceId to prevent replays on reconnect
           const key = evt.traceId ?? `${evt.type}:${evt.workspaceId ?? ''}:${evt.definitionId ?? ''}:${Date.now()}`;
           if (seenRef.current.has(key)) return;

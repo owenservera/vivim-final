@@ -48,14 +48,14 @@ function frameGov() {
 }
 
 describe('F1 — no silent default target', () => {
-  let reg: BrowserCapabilityRegistry
+  let _reg: BrowserCapabilityRegistry
 
   beforeEach(() => {
     const gov = makeGov()
     const grounding = {
       resolve: mock((_s: string, _sel: any) => Promise.resolve({} as ResolvedElement)),
     } as any
-    reg = new BrowserCapabilityRegistry(gov, grounding)
+    _reg = new BrowserCapabilityRegistry(gov, grounding)
   })
 
   test('click without any target params resolves nothing and throws (no silent button)', async () => {
@@ -75,11 +75,19 @@ describe('F1 — no silent default target', () => {
     )
     const grounding = {
       resolve: mock((_s: string, _sel: any) =>
-        Promise.resolve({ selector: '#accept-btn', mode: 'text', box: { x: 1, y: 2, w: 10, h: 4 } }),
+        Promise.resolve({
+          selector: '#accept-btn',
+          mode: 'text',
+          box: { x: 1, y: 2, w: 10, h: 4 },
+        }),
       ),
     } as any
     const reg2 = new BrowserCapabilityRegistry(gov, grounding)
-    const r = await reg2.invoke('auto:input:click', { text: 'Aceptar todas las cookies' }, { slaveId: 's1' })
+    const r = await reg2.invoke(
+      'auto:input:click',
+      { text: 'Aceptar todas las cookies' },
+      { slaveId: 's1' },
+    )
     expect(r.ok).toBe(true)
     expect(r.detail).toContain('#accept-btn')
   })
@@ -124,7 +132,9 @@ describe('F3 — iframe-aware resolution', () => {
     const r = await reg.invoke('auto:input:click', { selector: '#in-frame' }, { slaveId: 's1' })
     expect(r.ok).toBe(true)
     const evalCalls = gov.calls
-    const frameExpr = evalCalls.find((e: string) => e.includes('contentDocument') && e.includes('.click()'))
+    const frameExpr = evalCalls.find(
+      (e: string) => e.includes('contentDocument') && e.includes('.click()'),
+    )
     expect(frameExpr).toBeDefined()
     expect(frameExpr).toContain("querySelectorAll('iframe')[0]")
   })

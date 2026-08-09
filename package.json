@@ -41,6 +41,7 @@
     "generate-skills": "bun run scripts/generate-skills.ts",
     "devops:toolkit": "bun run devops/index.ts toolkit",
     "gen:protocol": "bun run src/engines/provider-protocol-generator.ts",
+    "gen:frontend-routes": "bun run scripts/tauri/gen-frontend-routes.ts",
     "web:dev": "bun run --cwd frontend dev",
     "web:build": "bun run --cwd frontend build",
     "frontend:dev": "bun run --cwd frontend dev",

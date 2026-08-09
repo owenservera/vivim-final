@@ -1,0 +1,23 @@
+{
+  "providerId": "ollama-v1",
+  "displayName": "Ollama (OpenAI-compatible)",
+  "baseURL": "http://localhost:11434/v1",
+  "auth": { "kind": "none" },
+  "transport": "http",
+  "providerKind": "local",
+  "trust": "official",
+  "models": [],
+  "capabilities": ["chat", "streaming", "tool-calling", "usage-reporting", "cancellation"],
+  "extensions": {
+    "supportsStreaming": true,
+    "supportsFunctionCalling": true,
+    "supportsVision": false,
+    "supportsJsonSchema": false
+  },
+  "lifecycle": {
+    "supervisorKind": "ollama",
+    "startCommand": ["ollama", "serve"],
+    "readinessProbe": { "path": "/api/tags", "expectStatus": 200 }
+  },
+  "_comment": "Ollama's /v1/chat/completions endpoint IS OpenAI-compatible. This manifest works with the generic OpenAICompatibleAdapter — zero adapter code needed. Models are discovered dynamically via GET /v1/models (manifest models: [] means 'discover at runtime')."
+}

@@ -13,7 +13,7 @@ import type {
 } from '../contracts/local-agent-store.js'
 import type { CapStoreDb } from '../db.js'
 
-const DEFAULT_TIMEOUT_MS = 120_000
+const DEFAULT_TIMEOUT_MS = 180_000
 const MODELS_LAST_SYNC_KEY = 'models_last_synced_at'
 
 function toModelRow(m: any): LocalAgentModelRow {
@@ -159,9 +159,10 @@ export class LocalAgentStoreImpl implements LocalAgentStore {
     // Preserve the current default when it is still present; else fall back to
     // the caller-provided default (or the first incoming model).
     const currentDefault = (def.models ?? []).find((m: any) => m.isDefault === 1)?.modelSlug
-    const defaultModel = incoming.includes(currentDefault)
-      ? currentDefault!
-      : (opts.defaultModel ?? incoming[0] ?? '')
+    const defaultModel =
+      currentDefault && incoming.includes(currentDefault)
+        ? currentDefault
+        : (opts.defaultModel ?? incoming[0] ?? '')
 
     for (const m of models) {
       const isDefault = m.slug === defaultModel

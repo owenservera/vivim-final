@@ -190,9 +190,9 @@ export class ModuleRegistry {
       container.register(name, instance, {
         lifecycle: def.lifecycle
           ? {
-              init: def.lifecycle.init ? async () => def.lifecycle!.init!(instance) : undefined,
-              start: def.lifecycle.start ? async () => def.lifecycle!.start!(instance) : undefined,
-              stop: def.lifecycle.stop ? async () => def.lifecycle!.stop!(instance) : undefined,
+              init: def.lifecycle.init ? async () => def.lifecycle?.init?.(instance) : undefined,
+              start: def.lifecycle.start ? async () => def.lifecycle?.start?.(instance) : undefined,
+              stop: def.lifecycle.stop ? async () => def.lifecycle?.stop?.(instance) : undefined,
             }
           : undefined,
         tags: def.tags,

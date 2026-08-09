@@ -7,6 +7,7 @@
 // data modules) and flows through the shared builder in categories/builder.ts.
 // Add a new category by adding a file in categories/ and a line here.
 
+import { aiPatterns } from './categories/ai.ts'
 import { appPatterns } from './categories/app.ts'
 import { automationPatterns } from './categories/automation.ts'
 import { browserPatterns } from './categories/browser.ts'
@@ -45,6 +46,7 @@ export function getDefaultCommandPatterns(): CommandPattern[] {
     ...automationPatterns,
     ...opencodePatterns,
     ...providerCapPatterns,
+    ...aiPatterns,
   ]
 }
 

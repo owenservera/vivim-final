@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { spawn } from 'node:child_process'
-import { createInterface } from 'node:readline'
 import { resolve } from 'node:path'
+import { createInterface } from 'node:readline'
 import { BrowserCapabilityRegistry } from '../../../src/engines/browser-automation/registry.js'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
 import { assembleTools, createJsonRpcHandler } from '../../../src/mcp/browser-mcp.js'
@@ -85,24 +85,24 @@ describe('InMemoryHealStore', () => {
     await store.upsertStrategy({ targetKey: 'k', selectorFormat: '#a', mode: 'css' })
     const row: SelectorStrategyRow | null = await store.getStrategy('k')
     expect(row).not.toBeNull()
-    expect(row!.targetKey).toBe('k')
-    expect(row!.selectorFormat).toBe('#a')
-    expect(row!.mode).toBe('css')
-    expect(row!.healCount).toBe(0)
+    expect(row?.targetKey).toBe('k')
+    expect(row?.selectorFormat).toBe('#a')
+    expect(row?.mode).toBe('css')
+    expect(row?.healCount).toBe(0)
   })
 
   test('bumpHealCount increments existing strategy', async () => {
     await store.upsertStrategy({ targetKey: 'k', selectorFormat: '#a', mode: 'css' })
     await store.bumpHealCount('k')
     const row = await store.getStrategy('k')
-    expect(row!.healCount).toBe(1)
+    expect(row?.healCount).toBe(1)
   })
 
   test('recordUse updates lastUsed', async () => {
     await store.upsertStrategy({ targetKey: 'k', selectorFormat: '#a', mode: 'css' })
     await store.recordUse('k')
     const row = await store.getStrategy('k')
-    expect(row!.lastUsed).toBeGreaterThan(0)
+    expect(row?.lastUsed).toBeGreaterThan(0)
   })
 })
 
@@ -281,51 +281,47 @@ describe('live process lifecycle (spawn, exit-notification terminates)', () => {
   // The `exit` notification must actually terminate the process (stdin stays
   // open otherwise) — this guards the orphaned-server regression. initialize +
   // exit never call ensureReady, so no DB/Chrome boot happens here.
-  test(
-    'process exits cleanly after an exit notification',
-    async () => {
-      const entry = resolve('src/mcp/browser-mcp.ts')
-      const child = spawn('bun', ['run', entry], {
-        cwd: process.cwd(),
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, VIVIM_LOG_STDERR: '1' },
+  test('process exits cleanly after an exit notification', async () => {
+    const entry = resolve('src/mcp/browser-mcp.ts')
+    const child = spawn('bun', ['run', entry], {
+      cwd: process.cwd(),
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, VIVIM_LOG_STDERR: '1' },
+    })
+
+    const stderr: string[] = []
+    child.stderr.on('data', (d) => stderr.push(d.toString()))
+
+    const stdout = createInterface({ input: child.stdout })
+    const responses: unknown[] = []
+    stdout.on('line', (line) => {
+      try {
+        responses.push(JSON.parse(line))
+      } catch {
+        // non-JSON on stdout would be a protocol violation — record it
+        responses.push({ stdoutPollution: line })
+      }
+    })
+
+    child.stdin.write(
+      `${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} })}\n`,
+    )
+    child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'exit' })}\n`)
+
+    const exitCode = await new Promise<number | null>((resolvePromise) => {
+      const timer = setTimeout(() => {
+        child.kill()
+        resolvePromise(null)
+      }, 15_000)
+      child.on('exit', (code) => {
+        clearTimeout(timer)
+        resolvePromise(code)
       })
+    })
 
-      const stderr: string[] = []
-      child.stderr.on('data', (d) => stderr.push(d.toString()))
-
-      const stdout = createInterface({ input: child.stdout })
-      const responses: unknown[] = []
-      stdout.on('line', (line) => {
-        try {
-          responses.push(JSON.parse(line))
-        } catch {
-          // non-JSON on stdout would be a protocol violation — record it
-          responses.push({ stdoutPollution: line })
-        }
-      })
-
-      child.stdin.write(
-        JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }) + '\n',
-      )
-      child.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'exit' }) + '\n')
-
-      const exitCode = await new Promise<number | null>((resolvePromise) => {
-        const timer = setTimeout(() => {
-          child.kill()
-          resolvePromise(null)
-        }, 15_000)
-        child.on('exit', (code) => {
-          clearTimeout(timer)
-          resolvePromise(code)
-        })
-      })
-
-      expect(exitCode, `stderr:\n${stderr.join('')}`).toBe(0)
-      expect(responses.length).toBe(1)
-      const init = responses[0] as { result?: { serverInfo?: { name?: string } } }
-      expect(init.result?.serverInfo?.name).toBe('vivim-browser')
-    },
-    20_000,
-  )
+    expect(exitCode, `stderr:\n${stderr.join('')}`).toBe(0)
+    expect(responses.length).toBe(1)
+    const init = responses[0] as { result?: { serverInfo?: { name?: string } } }
+    expect(init.result?.serverInfo?.name).toBe('vivim-browser')
+  }, 20_000)
 })

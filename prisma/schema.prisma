@@ -249,7 +249,7 @@ model ProviderAccount {
   debugPort         Int?    @map("debug_port")
   profileDir        String? @map("profile_dir")
   chromeSlaveId     String? @map("chrome_slave_id")
-  userId           String  @default("default") @map("user_id")
+  userId            String  @default("default") @map("user_id")
   createdAt         BigInt  @map("created_at")
   updatedAt         BigInt  @map("updated_at")
 
@@ -765,68 +765,68 @@ model ParserExecutionLog {
 // ═══════════════════════════════════════════════════════════════════
 
 model Node {
-  id             String  @id
-  type           String  @map("type")
-  parentId       String? @map("parent_id")
-  schemaVersion  Int     @default(1) @map("schema_version")
+  id               String  @id
+  type             String  @map("type")
+  parentId         String? @map("parent_id")
+  schemaVersion    Int     @default(1) @map("schema_version")
   // Raw, unparsed import payload (for remux / re-parse). Null when synthesized.
-  rawSource      String? @map("raw_source")
+  rawSource        String? @map("raw_source")
   // Typed node data, JSON-serialized per the registered NodeSchema.
-  dataJson       String  @default("{}") @map("data_json")
+  dataJson         String  @default("{}") @map("data_json")
   // Outgoing edges (graph), JSON array of {type,targetId,label,properties}.
-  edgesJson      String  @default("[]") @map("edges_json")
+  edgesJson        String  @default("[]") @map("edges_json")
   // Arbitrary key/value metadata (sync status, source ids, dedup keys, etc.).
-  metaJson       String  @default("{}") @map("meta_json")
+  metaJson         String  @default("{}") @map("meta_json")
   // Free-text content for full-text search (populated from NodeSchema.indexContent).
-  searchText     String  @default("") @map("search_text")
+  searchText       String  @default("") @map("search_text")
   // Origin conversation/message when this node was captured from a chat stream.
-  conversationId String? @map("conversation_id")
-  messageId      String? @map("message_id")
+  conversationId   String? @map("conversation_id")
+  messageId        String? @map("message_id")
   // Provenance: which parser/adapter produced this node.
-  sourceParser   String? @map("source_parser")
+  sourceParser     String? @map("source_parser")
   // ── Node-layer v2: ACU-proven fields (adopted from vivim-app-og) ──
   // Content integrity / dedup hash (OG contentHash).
-  contentHash    String? @map("content_hash")
+  contentHash      String? @map("content_hash")
   // Monotonic edit version (starts at 1).
-  version        Int     @default(1) @map("version")
+  version          Int     @default(1) @map("version")
   // Lifecycle state (OG state).
-  state          String  @default("active") @map("state")
+  state            String  @default("active") @map("state")
   // Sensitivity tier (OG securityLevel).
-  securityLevel  Int?    @map("security_level")
+  securityLevel    Int?    @map("security_level")
   // Fine-grained content classification (OG contentType).
-  contentType    String? @map("content_type")
+  contentType      String? @map("content_type")
   // Provenance (OG authorDid / signature).
-  authorDid      String? @map("author_did")
-  signature      String? @map("signature")
+  authorDid        String? @map("author_did")
+  signature        String? @map("signature")
   // Access control list, JSON (OG sharing*).
-  aclJson        String  @default("{}") @map("acl_json")
+  aclJson          String  @default("{}") @map("acl_json")
   // Curation quality scoring, JSON (OG quality*).
-  qualityJson    String  @default("{}") @map("quality_json")
+  qualityJson      String  @default("{}") @map("quality_json")
   // Temporal validity window (OG validFrom / validUntil).
-  validFrom      BigInt? @map("valid_from")
-  validUntil     BigInt? @map("valid_until")
+  validFrom        BigInt? @map("valid_from")
+  validUntil       BigInt? @map("valid_until")
   // Predecessor version in the version chain (OG LCG parent).
-  parentVersion  Int?    @map("parent_version")
+  parentVersion    Int?    @map("parent_version")
   // ── ACU fields (Phase 0 — doc 00 §9) ──
   // ACU type: conversation_root | claim | decision | code | preference | insight | fact
-  acuType        String? @map("acu_type")
+  acuType          String? @map("acu_type")
   // Lineage kind for derived ACUs: remix | fork | quote | extract
-  lineageKind    String? @map("lineage_kind")
+  lineageKind      String? @map("lineage_kind")
   // Extractor / parser version that produced this ACU (re-runnable lens).
   extractorVersion String? @map("extractor_version")
-  parserVersion  String? @map("parser_version")
+  parserVersion    String? @map("parser_version")
   // Computed importance score (0.0–1.0) — high-value targeting heuristic.
-  valueScore     Float?  @map("value_score")
+  valueScore       Float?  @map("value_score")
   // Boolean flag: crossed the promotion threshold.
-  isHighValue    Int     @default(0) @map("is_high_value")
-  createdAt      BigInt  @map("created_at")
-  updatedAt      BigInt  @map("updated_at")
+  isHighValue      Int     @default(0) @map("is_high_value")
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
 
-  parent  Node?   @relation("NodeParent", fields: [parentId], references: [id], onDelete: SetNull)
-  children Node[] @relation("NodeParent")
-  outgoingEdges NodeEdge[] @relation("EdgeSource")
-  incomingEdges NodeEdge[] @relation("EdgeTarget")
-  versions NodeVersion[] @relation("NodeVersions")
+  parent        Node?         @relation("NodeParent", fields: [parentId], references: [id], onDelete: SetNull)
+  children      Node[]        @relation("NodeParent")
+  outgoingEdges NodeEdge[]    @relation("EdgeSource")
+  incomingEdges NodeEdge[]    @relation("EdgeTarget")
+  versions      NodeVersion[] @relation("NodeVersions")
 
   @@index([type], map: "idx_node_type")
   @@index([parentId], map: "idx_node_parent")
@@ -843,14 +843,14 @@ model Node {
 // Version chain for a Node (mirrors OG temporal_log). Enables time-travel:
 // point-in-time reads (getNodeAtVersion) and full history (getNodeHistory).
 model NodeVersion {
-  id           String  @id
-  nodeId       String  @map("node_id")
-  version      Int     @map("version")
-  hash         String
-  contentRef   String  @map("content_ref")
-  op           String  // create | update | supersede
+  id            String @id
+  nodeId        String @map("node_id")
+  version       Int    @map("version")
+  hash          String
+  contentRef    String @map("content_ref")
+  op            String // create | update | supersede
   parentVersion Int?   @map("parent_version")
-  createdAt    BigInt  @map("created_at")
+  createdAt     BigInt @map("created_at")
 
   node Node @relation("NodeVersions", fields: [nodeId], references: [id], onDelete: Cascade)
 
@@ -862,12 +862,12 @@ model NodeVersion {
 // Entity alias -> canonical resolution (mirrors OG EntityAlias). Enables
 // contacts/entities to be merged under a single canonical node id.
 model NodeAlias {
-  id          String  @id
-  aliasId     String  @map("alias_id")
-  canonicalId String  @map("canonical_id")
+  id          String @id
+  aliasId     String @map("alias_id")
+  canonicalId String @map("canonical_id")
   method      String
-  confidence  Float   @default(1.0)
-  createdAt   BigInt  @map("created_at")
+  confidence  Float  @default(1.0)
+  createdAt   BigInt @map("created_at")
 
   @@unique([aliasId], map: "uq_node_alias")
   @@index([canonicalId], map: "idx_node_alias_canonical")
@@ -877,14 +877,14 @@ model NodeAlias {
 // Materialized edge table for efficient graph traversal (denormalized from
 // edgesJson). One row per directed edge. Mirrors the in-memory Edge shape.
 model NodeEdge {
-  id         String  @id
-  sourceId   String  @map("source_id")
-  targetId   String  @map("target_id")
-  edgeType   String  @map("edge_type")
-  label      String? @map("label")
-  weight     Float?  @map("weight")
-  propertiesJson String @default("{}") @map("properties_json")
-  createdAt  BigInt  @map("created_at")
+  id             String  @id
+  sourceId       String  @map("source_id")
+  targetId       String  @map("target_id")
+  edgeType       String  @map("edge_type")
+  label          String? @map("label")
+  weight         Float?  @map("weight")
+  propertiesJson String  @default("{}") @map("properties_json")
+  createdAt      BigInt  @map("created_at")
 
   source Node @relation("EdgeSource", fields: [sourceId], references: [id], onDelete: Cascade)
   target Node @relation("EdgeTarget", fields: [targetId], references: [id], onDelete: Cascade)
@@ -895,8 +895,6 @@ model NodeEdge {
   @@index([edgeType], map: "idx_edge_type")
   @@map("node_edge")
 }
-
-
 
 model ProviderManifestVersion {
   id            String  @id
@@ -1257,15 +1255,15 @@ model HarnessCheckpoint {
 
 // ── Harness Command Registry (017-harness-command-registry) ──
 model HarnessCommand {
-  id              String @id
-  commandId       String @map("command_id")
-  version         String
-  kind            String
+  id               String @id
+  commandId        String @map("command_id")
+  version          String
+  kind             String
   paramsSchemaJson String @map("params_schema_json")
-  adaptorRef      String @map("adaptor_ref")
-  description     String
-  createdAt       BigInt @map("created_at")
-  updatedAt       BigInt @map("updated_at")
+  adaptorRef       String @map("adaptor_ref")
+  description      String
+  createdAt        BigInt @map("created_at")
+  updatedAt        BigInt @map("updated_at")
 
   @@unique([commandId, version], map: "uq_harness_cmd_id_ver")
   @@index([commandId], map: "idx_harness_cmd_id")
@@ -1357,13 +1355,13 @@ model CircuitBreakerState {
 }
 
 model DriftEvent {
-  id            String  @id
-  providerId    String  @map("provider_id")
-  capabilitySlug  String  @map("capability_slug") // Per-provider capability slug (not taxonomy id)
-  selector      String? @map("selector") // The drifted selector (optional)
-  detectedAt   BigInt  @map("detected_at")
-  resolvedAt   BigInt? @map("resolved_at")
-  status        String   @default("open") // open | resolved | accepted
+  id             String  @id
+  providerId     String  @map("provider_id")
+  capabilitySlug String  @map("capability_slug") // Per-provider capability slug (not taxonomy id)
+  selector       String? @map("selector") // The drifted selector (optional)
+  detectedAt     BigInt  @map("detected_at")
+  resolvedAt     BigInt? @map("resolved_at")
+  status         String  @default("open") // open | resolved | accepted
 
   provider ProviderDefinition @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
@@ -1941,11 +1939,11 @@ model SemanticMemory {
   subject    String
   predicate  String
   objectJson String  @map("object_json")
-    confidence Float   @default(1.0)
-    source     String
-    timestamp  BigInt
-    expiresAt  BigInt? @map("expires_at")
-    createdAt  BigInt  @map("created_at")
+  confidence Float   @default(1.0)
+  source     String
+  timestamp  BigInt
+  expiresAt  BigInt? @map("expires_at")
+  createdAt  BigInt  @map("created_at")
 
   @@map("semantic_memory")
 }
@@ -2292,19 +2290,19 @@ model UserPreference {
 }
 
 model PluginRegistry {
-  id             String  @id
-  name           String
-  version        String
-  filePath       String  @map("file_path")
-  capabilities   String  @default("[]") @map("capabilities_json")
-  description    String? @map("description")
-  dependsOnJson  String  @default("[]") @map("depends_on_json")
-  integrityHash  String? @map("integrity_hash")
-  manifestJson   String  @default("{}") @map("manifest_json")
-  isActive       Int     @default(1) @map("is_active")
-  loadedAt       BigInt? @map("loaded_at")
-  createdAt      BigInt  @map("created_at")
-  updatedAt      BigInt  @map("updated_at")
+  id            String  @id
+  name          String
+  version       String
+  filePath      String  @map("file_path")
+  capabilities  String  @default("[]") @map("capabilities_json")
+  description   String? @map("description")
+  dependsOnJson String  @default("[]") @map("depends_on_json")
+  integrityHash String? @map("integrity_hash")
+  manifestJson  String  @default("{}") @map("manifest_json")
+  isActive      Int     @default(1) @map("is_active")
+  loadedAt      BigInt? @map("loaded_at")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
 
   @@unique([name])
   @@map("plugin_registry")
@@ -2349,6 +2347,10 @@ model PolicyRule {
   maxOccurrences   Int    @default(1000000) @map("max_occurrences")
   windowMs         Int    @default(60000) @map("window_ms")
   isActive         Int    @default(1) @map("is_active")
+  // C2: scope controls which execution path reads this rule.
+  // 'both' (default) = legacy + gateway; 'legacy' = ExecutionPolicyEngine only;
+  // 'gateway' = IPolicyEnforcer only. Additive column — defaults to 'both'.
+  scope            String @default("both")
 
   @@unique([name])
   @@map("policy_rule")
@@ -2417,14 +2419,14 @@ model HitlGate {
 // ── Phase 8.10: Task Templates ──────────────────────────────────────────
 
 model TaskTemplate {
-  id        String  @id
-  name      String  @unique
+  id         String @id
+  name       String @unique
   paramsJson String @default("[]") @map("params_json")
-  planJson  String  @map("plan_json")
-  version   Int     @default(1)
-  isShared  Int     @default(0) @map("is_shared")
-  createdAt BigInt  @map("created_at")
-  updatedAt BigInt  @map("updated_at")
+  planJson   String @map("plan_json")
+  version    Int    @default(1)
+  isShared   Int    @default(0) @map("is_shared")
+  createdAt  BigInt @map("created_at")
+  updatedAt  BigInt @map("updated_at")
 
   @@map("task_template")
 }
@@ -2796,36 +2798,37 @@ model SituationDetection {
 // See docs/vivim-canvas/implementation/10-conceptual-matrix.md §3.
 
 model ProviderType {
-  id                   String @id
-  slug                 String @unique @map("slug")
-  displayName          String @map("display_name")
-  description          String? @map("description")
-  slotCatalogJson      String @default("[]") @map("slot_catalog_json")
-  regionLayoutJson     String @default("{}") @map("region_layout_json")
-  interactionGrammarJson String @default("{}") @map("interaction_grammar_json")
-  basePrimitive        String @default("conversations") @map("base_primitive")
-  version              Int    @default(1)
-  createdAt            BigInt @map("created_at")
-  updatedAt            BigInt @map("updated_at")
+  id                     String  @id
+  slug                   String  @unique @map("slug")
+  displayName            String  @map("display_name")
+  description            String? @map("description")
+  slotCatalogJson        String  @default("[]") @map("slot_catalog_json")
+  regionLayoutJson       String  @default("{}") @map("region_layout_json")
+  interactionGrammarJson String  @default("{}") @map("interaction_grammar_json")
+  basePrimitive          String  @default("conversations") @map("base_primitive")
+  version                Int     @default(1)
+  createdAt              BigInt  @map("created_at")
+  updatedAt              BigInt  @map("updated_at")
 
-  primitives           Primitive[]
+  primitives Primitive[]
+
   @@map("provider_type")
 }
 
 model Primitive {
-  id               String  @id
-  scope            String  @map("scope")
-  familyId         String? @map("family_id")
-  providerId       String? @map("provider_id")
-  label            String
-  description      String? @map("description")
-  defaultRegionJson String @default("{}") @map("default_region_json")
-  version          Int     @default(1)
-  createdAt        BigInt  @map("created_at")
-  updatedAt        BigInt  @map("updated_at")
+  id                String  @id
+  scope             String  @map("scope")
+  familyId          String? @map("family_id")
+  providerId        String? @map("provider_id")
+  label             String
+  description       String? @map("description")
+  defaultRegionJson String  @default("{}") @map("default_region_json")
+  version           Int     @default(1)
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
 
-  providerType     ProviderType? @relation(fields: [familyId], references: [id], onDelete: SetNull)
-  components       UiComponent[]
+  providerType ProviderType? @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  components   UiComponent[]
 
   @@index([scope], map: "idx_prim_scope")
   @@index([familyId], map: "idx_prim_family")
@@ -2834,11 +2837,11 @@ model Primitive {
 }
 
 model UiComponent {
-  id               String  @id
-  primitiveId      String  @map("primitive_id")
-  scope            String  @map("scope")
-  ownerId          String  @map("owner_id")
-  variant          String? @map("variant")
+  id                String  @id
+  primitiveId       String  @map("primitive_id")
+  scope             String  @map("scope")
+  ownerId           String  @map("owner_id")
+  variant           String? @map("variant")
   componentKey      String  @map("component_key")
   displayName       String  @map("display_name")
   html              String  @default("")
@@ -2856,7 +2859,7 @@ model UiComponent {
   createdAt         BigInt  @map("created_at")
   updatedAt         BigInt  @map("updated_at")
 
-  primitive         Primitive @relation(fields: [primitiveId], references: [id], onDelete: Cascade)
+  primitive Primitive @relation(fields: [primitiveId], references: [id], onDelete: Cascade)
 
   @@unique([primitiveId, scope, ownerId, variant], map: "uniq_comp_resolve")
   @@index([primitiveId], map: "idx_uc_prim")
@@ -2915,17 +2918,16 @@ model WorkflowRetryQueue {
 }
 
 model WorkflowVersion {
-  id            String @id
-  workflowId    String @map("workflow_id")
-  version       Int
+  id             String @id
+  workflowId     String @map("workflow_id")
+  version        Int
   definitionJson String @map("definition_json")
-  createdAt     BigInt @map("created_at")
+  createdAt      BigInt @map("created_at")
 
   @@unique([workflowId, version], map: "uq_wv_wf_ver")
   @@index([workflowId], map: "idx_wv_wf")
   @@map("workflow_version")
 }
-
 
 // ═══════════════════════════════════════════════════════════════════
 // Agentic Backbone (SOTA agentic system) — ADD only, never rewrite.
@@ -2935,17 +2937,17 @@ model WorkflowVersion {
 
 // ── Agent builder pipeline (human_led / agent_led) ──────────────────
 model AgentBuilderRun {
-  id              String   @id
-  initiatorJson   String   @map("initiator_json") // ActorRef JSON
-  intentJson      String   @map("intent_json")
-  mode            String   @default("human_led")
-  stage           String   @default("discover") // discover|infer|draft|validate|spawn|done|failed
-  producedAgentId String?  @map("produced_agent_id")
-  producedRunId   String?  @map("produced_run_id")
-  status          String   @default("pending") // pending|running|done|failed
-  resultJson      String   @default("{}") @map("result_json")
-  createdAt       BigInt   @map("created_at")
-  updatedAt       BigInt   @map("updated_at")
+  id              String  @id
+  initiatorJson   String  @map("initiator_json") // ActorRef JSON
+  intentJson      String  @map("intent_json")
+  mode            String  @default("human_led")
+  stage           String  @default("discover") // discover|infer|draft|validate|spawn|done|failed
+  producedAgentId String? @map("produced_agent_id")
+  producedRunId   String? @map("produced_run_id")
+  status          String  @default("pending") // pending|running|done|failed
+  resultJson      String  @default("{}") @map("result_json")
+  createdAt       BigInt  @map("created_at")
+  updatedAt       BigInt  @map("updated_at")
 
   @@index([mode], map: "idx_abr_mode")
   @@index([status], map: "idx_abr_status")
@@ -2954,13 +2956,13 @@ model AgentBuilderRun {
 
 // ── Mid-run task inbox (asap / when_idle) ────────────────────────────
 model RunInbox {
-  id          String   @id
-  runId       String   @map("run_id")
-  priority    String   @default("asap") // asap|when_idle
-  contentJson String   @map("content_json")
-  status      String   @default("pending") // pending|done|skipped
-  createdAt   BigInt   @map("created_at")
-  updatedAt   BigInt   @map("updated_at")
+  id          String @id
+  runId       String @map("run_id")
+  priority    String @default("asap") // asap|when_idle
+  contentJson String @map("content_json")
+  status      String @default("pending") // pending|done|skipped
+  createdAt   BigInt @map("created_at")
+  updatedAt   BigInt @map("updated_at")
 
   @@index([runId, status], map: "idx_ri_run")
   @@map("run_inbox")
@@ -2968,16 +2970,16 @@ model RunInbox {
 
 // ── Audited UI↔agent/role hot-swap binding ──────────────────────────
 model SlotBinding {
-  id            String   @id
-  slotId        String   @map("slot_id")
-  componentId   String   @map("component_id")
-  boundAgentId  String?  @map("bound_agent_id")
-  boundRoleId   String?  @map("bound_role_id")
-  boundByJson   String   @map("bound_by_json") // ActorRef JSON
-  active        Int      @default(1)
-  auditJson     String   @default("{}") @map("audit_json")
-  createdAt     BigInt   @map("created_at")
-  updatedAt     BigInt   @map("updated_at")
+  id           String  @id
+  slotId       String  @map("slot_id")
+  componentId  String  @map("component_id")
+  boundAgentId String? @map("bound_agent_id")
+  boundRoleId  String? @map("bound_role_id")
+  boundByJson  String  @map("bound_by_json") // ActorRef JSON
+  active       Int     @default(1)
+  auditJson    String  @default("{}") @map("audit_json")
+  createdAt    BigInt  @map("created_at")
+  updatedAt    BigInt  @map("updated_at")
 
   @@index([slotId, active], map: "idx_sb_slot")
   @@map("slot_binding")
@@ -2987,16 +2989,16 @@ model SlotBinding {
 // Shared substrate: OpenCode + browser fleet + capability layer all write here.
 // This is the single source of truth for cross-surface event replay.
 model EventRecord {
-  id                String   @id
-  source            String   // opencode|browser_fleet|capability|...
-  entityType        String?  @map("entity_type")
-  entityId          String?  @map("entity_id")
-  providerSessionId String?  @map("provider_session_id")
+  id                String  @id
+  source            String // opencode|browser_fleet|capability|...
+  entityType        String? @map("entity_type")
+  entityId          String? @map("entity_id")
+  providerSessionId String? @map("provider_session_id")
   type              String
-  payloadJson       String   @map("payload_json")
+  payloadJson       String  @map("payload_json")
   seq               Int
   hash              String
-  createdAt         BigInt   @map("created_at")
+  createdAt         BigInt  @map("created_at")
 
   @@unique([source, seq], map: "uq_er_src_seq")
   @@index([source, entityType, entityId], map: "idx_er_src_ent")
@@ -3006,21 +3008,21 @@ model EventRecord {
 
 // ── OpenCode supervision extension of ProviderSession ────────────────
 model AgentSession {
-  id                String   @id
-  providerSessionId String   @unique @map("provider_session_id")
-  providerId        String   @default("opencode") @map("provider_id")
-  parentSessionId   String?  @map("parent_session_id")
-  agentName         String?  @map("agent_name")
+  id                String  @id
+  providerSessionId String  @unique @map("provider_session_id")
+  providerId        String  @default("opencode") @map("provider_id")
+  parentSessionId   String? @map("parent_session_id")
+  agentName         String? @map("agent_name")
   model             String?
-  projectPath       String?  @map("project_path")
-  status            String   @default("idle")
-  createdAt         BigInt   @map("created_at")
-  updatedAt         BigInt   @map("updated_at")
+  projectPath       String? @map("project_path")
+  status            String  @default("idle")
+  createdAt         BigInt  @map("created_at")
+  updatedAt         BigInt  @map("updated_at")
 
-  parentSession AgentSession? @relation("AgentSessionFork", fields: [parentSessionId], references: [id], onDelete: SetNull)
-  childSessions AgentSession[] @relation("AgentSessionFork")
+  parentSession       AgentSession?             @relation("AgentSessionFork", fields: [parentSessionId], references: [id], onDelete: SetNull)
+  childSessions       AgentSession[]            @relation("AgentSessionFork")
   permissionDecisions AgentPermissionDecision[]
-  fileEdits AgentFileEdit[]
+  fileEdits           AgentFileEdit[]
 
   @@index([providerSessionId], map: "idx_as_session")
   @@map("agent_session")
@@ -3028,17 +3030,17 @@ model AgentSession {
 
 // ── Governor-owned permission decisions ──────────────────────────────
 model AgentPermissionDecision {
-  id                String   @id
-  agentSessionId    String   @map("agent_session_id")
-  providerPermissionId String @unique @map("provider_permission_id")
-  toolName          String   @map("tool_name")
-  riskTier          Int      @map("risk_tier") // local 1-5, maps onto Node.securityLevel
-  requestedAt       BigInt   @map("requested_at")
-  respondedAt       BigInt?  @map("responded_at")
-  decision          String?  // allow|deny|allow_always
-  decidedBy         String?  @map("decided_by")
-  payloadJson       String   @default("{}") @map("payload_json")
-  createdAt         BigInt   @map("created_at")
+  id                   String  @id
+  agentSessionId       String  @map("agent_session_id")
+  providerPermissionId String  @unique @map("provider_permission_id")
+  toolName             String  @map("tool_name")
+  riskTier             Int     @map("risk_tier") // local 1-5, maps onto Node.securityLevel
+  requestedAt          BigInt  @map("requested_at")
+  respondedAt          BigInt? @map("responded_at")
+  decision             String? // allow|deny|allow_always
+  decidedBy            String? @map("decided_by")
+  payloadJson          String  @default("{}") @map("payload_json")
+  createdAt            BigInt  @map("created_at")
 
   agentSession AgentSession @relation(fields: [agentSessionId], references: [id], onDelete: Cascade)
 
@@ -3048,14 +3050,14 @@ model AgentPermissionDecision {
 
 // ── Filesystem truth from /session/:id/diff ──────────────────────────
 model AgentFileEdit {
-  id                String   @id
-  agentSessionId    String   @map("agent_session_id")
-  messageId         String?  @map("message_id")
-  filePath          String   @map("file_path")
-  patchJson         String   @map("patch_json") // RFC-6902 JSON Patch
-  beforeHash        String?  @map("before_hash")
-  afterHash         String?  @map("after_hash")
-  createdAt         BigInt   @map("created_at")
+  id             String  @id
+  agentSessionId String  @map("agent_session_id")
+  messageId      String? @map("message_id")
+  filePath       String  @map("file_path")
+  patchJson      String  @map("patch_json") // RFC-6902 JSON Patch
+  beforeHash     String? @map("before_hash")
+  afterHash      String? @map("after_hash")
+  createdAt      BigInt  @map("created_at")
 
   agentSession AgentSession @relation(fields: [agentSessionId], references: [id], onDelete: Cascade)
 
@@ -3065,14 +3067,14 @@ model AgentFileEdit {
 
 // ── Versioned agent / permission presets as data ─────────────────────
 model AgentDefinition {
-  id             String   @id
-  name           String   @unique
-  mode           String   @default("all") // all|primary|subagent
+  id              String  @id
+  name            String  @unique
+  mode            String  @default("all") // all|primary|subagent
   permissionsJson String  @map("permissions_json")
-  model          String?
-  systemPrompt   String?  @map("system_prompt")
-  version        Int      @default(1)
-  createdAt      BigInt   @map("created_at")
+  model           String?
+  systemPrompt    String? @map("system_prompt")
+  version         Int     @default(1)
+  createdAt       BigInt  @map("created_at")
 
   @@index([name], map: "idx_ad_name")
   @@map("agent_definition")
@@ -3081,9 +3083,9 @@ model AgentDefinition {
 // ── Command Language: NLP description + patterns ────────────────────
 model CommandDescription {
   id          String  @id
-  commandId   String  @map("command_id") @unique
+  commandId   String  @unique @map("command_id")
   description String
-  patterns    String  // JSON array of pattern strings
+  patterns    String // JSON array of pattern strings
   category    String
   prefix      String?
   confidence  Float   @default(0.7)
@@ -3354,7 +3356,7 @@ model ContentItem {
   updatedAt            BigInt  @map("updated_at")
   deletedAt            BigInt? @map("deleted_at")
 
-  container EntityContainer? @relation(fields: [containerId], references: [id], onDelete: SetNull)
+  container EntityContainer?  @relation(fields: [containerId], references: [id], onDelete: SetNull)
   media     MediaAttachment[]
 
   @@index([providerId, accountId], map: "idx_ci_provider")
@@ -3430,13 +3432,13 @@ model Contact {
 }
 
 model ContactIdentity {
-  id                 String  @id
-  canonicalContactId String  @map("canonical_contact_id")
-  mergedContactId    String  @map("merged_contact_id")
-  mergeConfidence    Float   @default(0.5) @map("merge_confidence") // how confident we are that these are the same person
-  mergeMethod        String  @default("auto") @map("merge_method") // auto, manual, email_match, phone_match, name_heuristic
-  isConfirmed        Int     @default(0) @map("is_confirmed") // user confirmed this merge
-  createdAt          BigInt  @map("created_at")
+  id                 String @id
+  canonicalContactId String @map("canonical_contact_id")
+  mergedContactId    String @map("merged_contact_id")
+  mergeConfidence    Float  @default(0.5) @map("merge_confidence") // how confident we are that these are the same person
+  mergeMethod        String @default("auto") @map("merge_method") // auto, manual, email_match, phone_match, name_heuristic
+  isConfirmed        Int    @default(0) @map("is_confirmed") // user confirmed this merge
+  createdAt          BigInt @map("created_at")
 
   canonicalContact Contact @relation(fields: [canonicalContactId], references: [id], onDelete: Cascade)
 
@@ -3446,25 +3448,25 @@ model ContactIdentity {
 }
 
 model SyncState {
-  id             String  @id
-  providerId     String  @map("provider_id")
-  accountId      String  @map("account_id")
-  entityType     String  @map("entity_type") // container, content_item, contact, notification
-  entityId       String  @map("entity_id") // the ID of the entity being synced
-  syncDirection  String  @default("pull") @map("sync_direction") // pull, push, bidirectional
-  syncStatus     String  @default("pending") @map("sync_status") // pending, in_progress, completed, failed, conflict, partial
-  syncVersion    Int     @default(0) @map("sync_version") // incremented on each successful sync
-  cursorJson     String  @default("{}") @map("cursor_json") // opaque cursor for incremental sync
-  lastSyncedAt   BigInt? @map("last_synced_at")
-  nextSyncAt     BigInt? @map("next_sync_at") // scheduled next sync time
-  errorCount     Int     @default(0) @map("error_count")
-  lastError      String? @map("last_error")
-  itemsSynced    Int     @default(0) @map("items_synced")
-  itemsFailed    Int     @default(0) @map("items_failed")
-  bytesSynced    Int     @default(0) @map("bytes_synced")
-  metadataJson   String  @default("{}") @map("metadata_json")
-  createdAt      BigInt  @map("created_at")
-  updatedAt      BigInt  @map("updated_at")
+  id            String  @id
+  providerId    String  @map("provider_id")
+  accountId     String  @map("account_id")
+  entityType    String  @map("entity_type") // container, content_item, contact, notification
+  entityId      String  @map("entity_id") // the ID of the entity being synced
+  syncDirection String  @default("pull") @map("sync_direction") // pull, push, bidirectional
+  syncStatus    String  @default("pending") @map("sync_status") // pending, in_progress, completed, failed, conflict, partial
+  syncVersion   Int     @default(0) @map("sync_version") // incremented on each successful sync
+  cursorJson    String  @default("{}") @map("cursor_json") // opaque cursor for incremental sync
+  lastSyncedAt  BigInt? @map("last_synced_at")
+  nextSyncAt    BigInt? @map("next_sync_at") // scheduled next sync time
+  errorCount    Int     @default(0) @map("error_count")
+  lastError     String? @map("last_error")
+  itemsSynced   Int     @default(0) @map("items_synced")
+  itemsFailed   Int     @default(0) @map("items_failed")
+  bytesSynced   Int     @default(0) @map("bytes_synced")
+  metadataJson  String  @default("{}") @map("metadata_json")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
 
   @@unique([providerId, accountId, entityType, entityId])
   @@index([providerId, accountId], map: "idx_ss_provider")
@@ -3475,28 +3477,28 @@ model SyncState {
 }
 
 model MediaAttachment {
-  id                  String   @id
-  providerId          String   @map("provider_id")
-  contentItemId       String?  @map("content_item_id")
-  mediaType           String   @map("media_type") // image, video, audio, file, embed, sticker, voice, avatar, icon
-  mimeType            String   @map("mime_type")
-  filename            String?
-  originalUrl         String   @map("original_url") // provider's URL for this media
-  localPath           String?  @map("local_path") // local file path after download (sovereign data)
-  thumbnailUrl        String?  @map("thumbnail_url")
-  thumbnailLocalPath  String?  @map("thumbnail_local_path")
-  sizeBytes           Int?     @map("size_bytes")
-  width               Int?
-  height              Int?
-  durationSeconds     Float?   @map("duration_seconds") // for audio/video
-  isDownloaded        Int      @default(0) @map("is_downloaded")
-  isEncrypted         Int      @default(0) @map("is_encrypted")
-  encryptionKeyRef    String?  @map("encryption_key_ref") // reference to encryption key (sovereign data)
-  downloadProgress    Float?   @default(0) @map("download_progress") // 0.0 to 1.0
-  providerNativeId    String?  @map("provider_native_id") // provider's own ID for this media
-  metadataJson        String   @default("{}") @map("metadata_json") // EXIF, transcription, OCR, etc.
-  createdAt           BigInt   @map("created_at")
-  updatedAt           BigInt   @map("updated_at")
+  id                 String  @id
+  providerId         String  @map("provider_id")
+  contentItemId      String? @map("content_item_id")
+  mediaType          String  @map("media_type") // image, video, audio, file, embed, sticker, voice, avatar, icon
+  mimeType           String  @map("mime_type")
+  filename           String?
+  originalUrl        String  @map("original_url") // provider's URL for this media
+  localPath          String? @map("local_path") // local file path after download (sovereign data)
+  thumbnailUrl       String? @map("thumbnail_url")
+  thumbnailLocalPath String? @map("thumbnail_local_path")
+  sizeBytes          Int?    @map("size_bytes")
+  width              Int?
+  height             Int?
+  durationSeconds    Float?  @map("duration_seconds") // for audio/video
+  isDownloaded       Int     @default(0) @map("is_downloaded")
+  isEncrypted        Int     @default(0) @map("is_encrypted")
+  encryptionKeyRef   String? @map("encryption_key_ref") // reference to encryption key (sovereign data)
+  downloadProgress   Float?  @default(0) @map("download_progress") // 0.0 to 1.0
+  providerNativeId   String? @map("provider_native_id") // provider's own ID for this media
+  metadataJson       String  @default("{}") @map("metadata_json") // EXIF, transcription, OCR, etc.
+  createdAt          BigInt  @map("created_at")
+  updatedAt          BigInt  @map("updated_at")
 
   contentItem ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
 
@@ -3508,23 +3510,23 @@ model MediaAttachment {
 }
 
 model ProviderCapabilityTaxonomy {
-  id                     String  @id
-  providerId             String  @map("provider_id")
-  platformCategory       String  @map("platform_category") // ai_chatbot, social_messaging, social_feed, productivity, dating, forum, ide, agentic_agent, ai_tooling, browser_automation
-  interactionPattern     String  @map("interaction_pattern") // chat, feed, thread, document, canvas, voice, mixed
-  messageTypesJson       String  @default("[]") @map("message_types_json") // platform-specific message/content types
-  capabilitiesJson       String  @default("[]") @map("capabilities_json") // [{slug, type, authScope, description}]
-  constraintsJson        String  @default("{}") @map("constraints_json") // {rateLimits, maxMessageLength, supportedMediaTypes, maxFileSize}
-  authRequirementsJson   String  @default("[]") @map("auth_requirements_json") // auth steps required
-  discoveryHintsJson     String  @default("{}") @map("discovery_hints_json") // {composerSelector, sendButtonSelector, etc.}
-  nlpEntityTypesJson     String  @default("[]") @map("nlp_entity_types_json") // [{name, extractionPattern, normalizationFn}]
-  nlpIntentPatternsJson  String  @default("[]") @map("nlp_intent_patterns_json") // [{intent, patterns[], confidence, requiredEntities[]}]
-  entityHierarchyJson    String  @default("[]") @map("entity_hierarchy_json") // [{level, label, children[], icon, selectorHint}]
-  syncCapabilitiesJson   String  @default("{}") @map("sync_capabilities_json") // {supported, method, maxAge, batchSize}
-  seedDataVersion        Int     @default(1) @map("seed_data_version")
-  isActive               Int     @default(1) @map("is_active")
-  createdAt              BigInt  @map("created_at")
-  updatedAt              BigInt  @map("updated_at")
+  id                    String @id
+  providerId            String @map("provider_id")
+  platformCategory      String @map("platform_category") // ai_chatbot, social_messaging, social_feed, productivity, dating, forum, ide, agentic_agent, ai_tooling, browser_automation
+  interactionPattern    String @map("interaction_pattern") // chat, feed, thread, document, canvas, voice, mixed
+  messageTypesJson      String @default("[]") @map("message_types_json") // platform-specific message/content types
+  capabilitiesJson      String @default("[]") @map("capabilities_json") // [{slug, type, authScope, description}]
+  constraintsJson       String @default("{}") @map("constraints_json") // {rateLimits, maxMessageLength, supportedMediaTypes, maxFileSize}
+  authRequirementsJson  String @default("[]") @map("auth_requirements_json") // auth steps required
+  discoveryHintsJson    String @default("{}") @map("discovery_hints_json") // {composerSelector, sendButtonSelector, etc.}
+  nlpEntityTypesJson    String @default("[]") @map("nlp_entity_types_json") // [{name, extractionPattern, normalizationFn}]
+  nlpIntentPatternsJson String @default("[]") @map("nlp_intent_patterns_json") // [{intent, patterns[], confidence, requiredEntities[]}]
+  entityHierarchyJson   String @default("[]") @map("entity_hierarchy_json") // [{level, label, children[], icon, selectorHint}]
+  syncCapabilitiesJson  String @default("{}") @map("sync_capabilities_json") // {supported, method, maxAge, batchSize}
+  seedDataVersion       Int    @default(1) @map("seed_data_version")
+  isActive              Int    @default(1) @map("is_active")
+  createdAt             BigInt @map("created_at")
+  updatedAt             BigInt @map("updated_at")
 
   @@unique([providerId, platformCategory, interactionPattern])
   @@index([platformCategory], map: "idx_pct_category")
@@ -3536,21 +3538,21 @@ model ProviderCapabilityTaxonomy {
 // ── Discord Extensions ────────────────────────────────────────────────────
 
 model DiscordVoiceState {
-  id              String  @id
-  containerId     String  @map("container_id") // guild/channel ID
-  userId          String  @map("user_id")
-  channelId       String  @map("channel_id")
-  guildId         String? @map("guild_id")
-  sessionId       String  @map("session_id")
-  deaf            Int     @default(0)
-  mute            Int     @default(0)
-  selfDeaf        Int     @default(0) @map("self_deaf")
-  selfMute        Int     @default(0) @map("self_mute")
-  suppress        Int     @default(0)
+  id                      String  @id
+  containerId             String  @map("container_id") // guild/channel ID
+  userId                  String  @map("user_id")
+  channelId               String  @map("channel_id")
+  guildId                 String? @map("guild_id")
+  sessionId               String  @map("session_id")
+  deaf                    Int     @default(0)
+  mute                    Int     @default(0)
+  selfDeaf                Int     @default(0) @map("self_deaf")
+  selfMute                Int     @default(0) @map("self_mute")
+  suppress                Int     @default(0)
   requestToSpeakTimestamp BigInt? @map("request_to_speak_timestamp")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  metadataJson            String  @default("{}") @map("metadata_json")
+  createdAt               BigInt  @map("created_at")
+  updatedAt               BigInt  @map("updated_at")
 
   @@unique([userId, channelId])
   @@index([guildId], map: "idx_dvs_guild")
@@ -3559,18 +3561,18 @@ model DiscordVoiceState {
 }
 
 model DiscordMemberMeta {
-  id              String  @id
-  containerId     String  @map("container_id") // guild ID
-  userId          String  @map("user_id")
-  nick            String?
-  roles           String  @default("[]") @map("roles_json")
-  joinedAt        BigInt  @map("joined_at")
-  premiumSince    BigInt? @map("premium_since")
-  isPending       Int     @default(0) @map("is_pending")
+  id                         String  @id
+  containerId                String  @map("container_id") // guild ID
+  userId                     String  @map("user_id")
+  nick                       String?
+  roles                      String  @default("[]") @map("roles_json")
+  joinedAt                   BigInt  @map("joined_at")
+  premiumSince               BigInt? @map("premium_since")
+  isPending                  Int     @default(0) @map("is_pending")
   communicationDisabledUntil BigInt? @map("communication_disabled_until")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  metadataJson               String  @default("{}") @map("metadata_json")
+  createdAt                  BigInt  @map("created_at")
+  updatedAt                  BigInt  @map("updated_at")
 
   @@unique([containerId, userId])
   @@index([userId], map: "idx_dmm_user")
@@ -3580,19 +3582,19 @@ model DiscordMemberMeta {
 // ── Slack Extensions ──────────────────────────────────────────────────────
 
 model SlackChannelMeta {
-  id              String  @id
-  containerId     String  @map("container_id") // channel ID
-  workspaceId     String? @map("workspace_id")
-  name            String
-  topic           String?
-  purpose         String?
-  isPrivate       Int     @default(0) @map("is_private")
-  isArchived      Int     @default(0) @map("is_archived")
-  memberCount     Int     @default(0) @map("member_count")
-  lastMessageAt   BigInt? @map("last_message_at")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  id            String  @id
+  containerId   String  @map("container_id") // channel ID
+  workspaceId   String? @map("workspace_id")
+  name          String
+  topic         String?
+  purpose       String?
+  isPrivate     Int     @default(0) @map("is_private")
+  isArchived    Int     @default(0) @map("is_archived")
+  memberCount   Int     @default(0) @map("member_count")
+  lastMessageAt BigInt? @map("last_message_at")
+  metadataJson  String  @default("{}") @map("metadata_json")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
 
   @@unique([containerId])
   @@index([workspaceId], map: "idx_scm_workspace")
@@ -3601,16 +3603,16 @@ model SlackChannelMeta {
 }
 
 model SlackThreadMeta {
-  id              String  @id
-  containerId     String  @map("container_id") // channel ID
-  threadTs        String  @map("thread_ts") // Slack thread timestamp
-  parentTs        String  @map("parent_ts") // parent message timestamp
-  replyCount      Int     @default(0) @map("reply_count")
-  lastReplyAt     BigInt? @map("last_reply_at")
-  isParticipated  Int     @default(0) @map("is_participated")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  id             String  @id
+  containerId    String  @map("container_id") // channel ID
+  threadTs       String  @map("thread_ts") // Slack thread timestamp
+  parentTs       String  @map("parent_ts") // parent message timestamp
+  replyCount     Int     @default(0) @map("reply_count")
+  lastReplyAt    BigInt? @map("last_reply_at")
+  isParticipated Int     @default(0) @map("is_participated")
+  metadataJson   String  @default("{}") @map("metadata_json")
+  createdAt      BigInt  @map("created_at")
+  updatedAt      BigInt  @map("updated_at")
 
   @@unique([containerId, threadTs])
   @@index([parentTs], map: "idx_stm_parent")
@@ -3620,17 +3622,17 @@ model SlackThreadMeta {
 // ── WhatsApp Extensions ───────────────────────────────────────────────────
 
 model WhatsAppEncryptionMeta {
-  id              String  @id
-  containerId     String  @map("container_id") // chat ID
-  userId          String  @map("user_id")
-  keyIndex        String? @map("key_index")
-  identityKey     String? @map("identity_key")
-  registrationId  Int?    @map("registration_id")
-  preKeyId        Int?    @map("pre_key_id")
-  signedPreKeyId  Int?    @map("signed_pre_key_id")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  id             String  @id
+  containerId    String  @map("container_id") // chat ID
+  userId         String  @map("user_id")
+  keyIndex       String? @map("key_index")
+  identityKey    String? @map("identity_key")
+  registrationId Int?    @map("registration_id")
+  preKeyId       Int?    @map("pre_key_id")
+  signedPreKeyId Int?    @map("signed_pre_key_id")
+  metadataJson   String  @default("{}") @map("metadata_json")
+  createdAt      BigInt  @map("created_at")
+  updatedAt      BigInt  @map("updated_at")
 
   @@unique([containerId, userId])
   @@index([userId], map: "idx_wem_user")
@@ -3638,20 +3640,20 @@ model WhatsAppEncryptionMeta {
 }
 
 model WhatsAppContactMeta {
-  id              String  @id
-  contactId       String  @map("contact_id")
-  phoneNumber     String  @map("phone_number")
-  isBusiness      Int     @default(0) @map("is_business")
-  businessName    String? @map("business_name")
+  id                  String  @id
+  contactId           String  @map("contact_id")
+  phoneNumber         String  @map("phone_number")
+  isBusiness          Int     @default(0) @map("is_business")
+  businessName        String? @map("business_name")
   businessDescription String? @map("business_description")
-  isBlocked       Int     @default(0) @map("is_blocked")
-  isFavorite      Int     @default(0) @map("is_favorite")
-  lastSeenAt      BigInt? @map("last_seen_at")
-  about           String?
-  profilePhotoUrl String? @map("profile_photo_url")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  isBlocked           Int     @default(0) @map("is_blocked")
+  isFavorite          Int     @default(0) @map("is_favorite")
+  lastSeenAt          BigInt? @map("last_seen_at")
+  about               String?
+  profilePhotoUrl     String? @map("profile_photo_url")
+  metadataJson        String  @default("{}") @map("metadata_json")
+  createdAt           BigInt  @map("created_at")
+  updatedAt           BigInt  @map("updated_at")
 
   @@unique([contactId])
   @@index([phoneNumber], map: "idx_wcm_phone")
@@ -3662,18 +3664,18 @@ model WhatsAppContactMeta {
 // ── Reddit Extensions ─────────────────────────────────────────────────────
 
 model RedditSubredditMeta {
-  id              String  @id
-  containerId     String  @map("container_id") // subreddit ID
-  name            String
-  displayName     String  @map("display_name")
-  description     String?
+  id               String  @id
+  containerId      String  @map("container_id") // subreddit ID
+  name             String
+  displayName      String  @map("display_name")
+  description      String?
   shortDescription String? @map("short_description")
-  subscriberCount Int     @default(0) @map("subscriber_count")
-  activeCount     Int     @default(0) @map("active_count")
-  isNsfw          Int     @default(0) @map("is_nsfw")
-  isPrivate       Int     @default(0) @map("is_private")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  subscriberCount  Int     @default(0) @map("subscriber_count")
+  activeCount      Int     @default(0) @map("active_count")
+  isNsfw           Int     @default(0) @map("is_nsfw")
+  isPrivate        Int     @default(0) @map("is_private")
+  createdAt        BigInt  @map("created_at")
+  updatedAt        BigInt  @map("updated_at")
 
   @@unique([containerId])
   @@index([name], map: "idx_rsm_name")
@@ -3682,25 +3684,25 @@ model RedditSubredditMeta {
 }
 
 model RedditPostMeta {
-  id              String  @id
-  contentItemId   String  @map("content_item_id")
-  subredditId     String? @map("subreddit_id")
-  authorId        String? @map("author_id")
-  authorName      String? @map("author_name")
-  title           String
-  url             String?
-  permalink       String?
-  score           Int     @default(0)
-  upvoteRatio     Float?  @map("upvote_ratio")
-  commentCount    Int     @default(0) @map("comment_count")
-  isSelf          Int     @default(0) @map("is_self")
-  selfText        String? @map("self_text")
-  isNsfw          Int     @default(0) @map("is_nsfw")
-  isSpoiler       Int     @default(0) @map("is_spoiler")
-  flair           String?
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  id            String  @id
+  contentItemId String  @map("content_item_id")
+  subredditId   String? @map("subreddit_id")
+  authorId      String? @map("author_id")
+  authorName    String? @map("author_name")
+  title         String
+  url           String?
+  permalink     String?
+  score         Int     @default(0)
+  upvoteRatio   Float?  @map("upvote_ratio")
+  commentCount  Int     @default(0) @map("comment_count")
+  isSelf        Int     @default(0) @map("is_self")
+  selfText      String? @map("self_text")
+  isNsfw        Int     @default(0) @map("is_nsfw")
+  isSpoiler     Int     @default(0) @map("is_spoiler")
+  flair         String?
+  metadataJson  String  @default("{}") @map("metadata_json")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
 
   @@unique([contentItemId])
   @@index([subredditId], map: "idx_rpm_subreddit")
@@ -3712,16 +3714,16 @@ model RedditPostMeta {
 // ── Notion Extensions ─────────────────────────────────────────────────────
 
 model NotionBlockMeta {
-  id              String  @id
-  contentItemId   String  @map("content_item_id")
-  blockType       String  @map("block_type") // paragraph, heading, list, code, etc.
-  blockId         String  @map("block_id") // Notion block ID
-  parentId        String? @map("parent_id")
-  hasChildren     Int     @default(0) @map("has_children")
-  richTextJson    String  @default("[]") @map("rich_text_json")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  id            String  @id
+  contentItemId String  @map("content_item_id")
+  blockType     String  @map("block_type") // paragraph, heading, list, code, etc.
+  blockId       String  @map("block_id") // Notion block ID
+  parentId      String? @map("parent_id")
+  hasChildren   Int     @default(0) @map("has_children")
+  richTextJson  String  @default("[]") @map("rich_text_json")
+  metadataJson  String  @default("{}") @map("metadata_json")
+  createdAt     BigInt  @map("created_at")
+  updatedAt     BigInt  @map("updated_at")
 
   @@unique([contentItemId])
   @@index([blockType], map: "idx_nbm_type")
@@ -3730,18 +3732,18 @@ model NotionBlockMeta {
 }
 
 model NotionDatabaseMeta {
-  id              String  @id
-  contentItemId   String  @map("content_item_id")
-  databaseId      String  @map("database_id")
-  title           String
-  description     String?
-  icon            String?
-  cover           String?
-  isInline        Int     @default(0) @map("is_inline")
-  propertiesJson  String  @default("[]") @map("properties_json")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  id             String  @id
+  contentItemId  String  @map("content_item_id")
+  databaseId     String  @map("database_id")
+  title          String
+  description    String?
+  icon           String?
+  cover          String?
+  isInline       Int     @default(0) @map("is_inline")
+  propertiesJson String  @default("[]") @map("properties_json")
+  metadataJson   String  @default("{}") @map("metadata_json")
+  createdAt      BigInt  @map("created_at")
+  updatedAt      BigInt  @map("updated_at")
 
   @@unique([contentItemId])
   @@index([databaseId], map: "idx_ndm_database")
@@ -3749,18 +3751,18 @@ model NotionDatabaseMeta {
 }
 
 model NotionPageMeta {
-  id              String  @id
-  contentItemId   String  @map("content_item_id")
-  pageId          String  @map("page_id")
-  databaseId      String? @map("database_id")
-  title           String
-  icon            String?
-  cover           String?
-  isPublished     Int     @default(0) @map("is_published")
-  propertiesJson  String  @default("[]") @map("properties_json")
-  metadataJson    String  @default("{}") @map("metadata_json")
-  createdAt       BigInt  @map("created_at")
-  updatedAt       BigInt  @map("updated_at")
+  id             String  @id
+  contentItemId  String  @map("content_item_id")
+  pageId         String  @map("page_id")
+  databaseId     String? @map("database_id")
+  title          String
+  icon           String?
+  cover          String?
+  isPublished    Int     @default(0) @map("is_published")
+  propertiesJson String  @default("[]") @map("properties_json")
+  metadataJson   String  @default("{}") @map("metadata_json")
+  createdAt      BigInt  @map("created_at")
+  updatedAt      BigInt  @map("updated_at")
 
   @@unique([contentItemId])
   @@index([databaseId], map: "idx_npm_database")
@@ -3796,21 +3798,100 @@ model ConversationSyncState {
 }
 
 model ConversationSyncLog {
-  id                   String  @id
-  providerId           String  @map("provider_id")
-  accountId            String  @map("account_id")
-  syncType             String  @map("sync_type") // full | incremental | selective
-  status               String  // started | completed | failed | cancelled
-  startedAt            BigInt  @map("started_at")
-  completedAt          BigInt? @map("completed_at")
-  durationMs           Int?    @map("duration_ms")
-  conversationsFound   Int     @default(0) @map("conversations_found")
-  conversationsSynced  Int     @default(0) @map("conversations_synced")
-  conversationsFailed  Int     @default(0) @map("conversations_failed")
-  errorJson            String? @map("error_json") // error details if failed
-  metadataJson         String  @default("{}") @map("metadata_json") // additional metadata
+  id                  String  @id
+  providerId          String  @map("provider_id")
+  accountId           String  @map("account_id")
+  syncType            String  @map("sync_type") // full | incremental | selective
+  status              String // started | completed | failed | cancelled
+  startedAt           BigInt  @map("started_at")
+  completedAt         BigInt? @map("completed_at")
+  durationMs          Int?    @map("duration_ms")
+  conversationsFound  Int     @default(0) @map("conversations_found")
+  conversationsSynced Int     @default(0) @map("conversations_synced")
+  conversationsFailed Int     @default(0) @map("conversations_failed")
+  errorJson           String? @map("error_json") // error details if failed
+  metadataJson        String  @default("{}") @map("metadata_json") // additional metadata
 
   @@index([providerId, accountId], map: "idx_cslog_account")
   @@index([startedAt], map: "idx_cslog_time")
   @@map("conversation_sync_log")
+}
+
+// ── AI Gateway (src/ai/) — additive tables for AI execution persistence ────────
+// ctx: ai-gateway. These tables are SEPARATE from ProviderDefinition/ProviderModel
+// (CDP providers) per bounded coexistence [AUDIT R-10]. No cross-write.
+// Added Round 3 (2026-08-08) for AIExecutionStore persistence.
+
+model AIExecution {
+  // ctx: ai-gateway
+  id        String  @id // ExecutionId (ULID)
+  requestId String  @map("request_id") // RequestId (ULID)
+  sessionId String? @map("session_id") // SessionId, if request had one
+
+  state    String // created|queued|routing|starting|executing|waiting-tool|draining|completed|failed|cancelled
+  priority String // interactive|foreground|background|maintenance
+
+  providerId String? @map("provider_id")
+  modelId    String? @map("model_id")
+  attempt    Int     @default(0) // incremented on provider fallback
+
+  createdAt   String  @map("created_at") // ISO timestamp
+  startedAt   String? @map("started_at")
+  completedAt String? @map("completed_at")
+
+  errorCode      String?  @map("error_code")
+  errorMessage   String?  @map("error_message")
+  errorRetryable Boolean? @map("error_retryable")
+
+  inputTokens  Int? @map("input_tokens")
+  outputTokens Int? @map("output_tokens")
+  totalTokens  Int? @map("total_tokens")
+
+  events AIExecutionEvent[]
+
+  @@index([requestId], map: "idx_aiexec_request")
+  @@index([state], map: "idx_aiexec_state")
+  @@index([providerId], map: "idx_aiexec_provider")
+  @@index([createdAt], map: "idx_aiexec_created")
+  @@map("ai_execution")
+}
+
+model AIExecutionEvent {
+  // ctx: ai-gateway
+  id          String @id // EventId (ULID)
+  executionId String @map("execution_id")
+  sequence    Int
+  timestamp   String
+  type        String // execution.created|state-changed|provider-selected|ai-event|completed|failed|cancelled
+  payloadJson String @map("payload_json") // full event payload as JSON
+
+  execution AIExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId], map: "idx_aievent_exec")
+  @@index([sequence], map: "idx_aievent_seq")
+  @@map("ai_execution_event")
+}
+
+model AIProviderInstance {
+  // ctx: ai-gateway — gateway-local provider registry (separate identity namespace
+  // from ProviderDefinition which holds CDP providers). No cross-write [AUDIT R-10].
+  id               String  @id // ProviderId
+  pluginId         String  @map("plugin_id")
+  name             String
+  version          String
+  protocolVersion  String  @map("protocol_version")
+  kind             String // local|remote|hybrid|embedded
+  trust            String // official|verified|community|unverified|blocked
+  state            String // discovered|installed|validating|enabled|starting|ready|active|degraded|unhealthy|draining|disabled|stopped|failed
+  capabilitiesJson String  @default("{}") @map("capabilities_json")
+  extensionsJson   String? @map("extensions_json")
+  integrityHash    String? @map("integrity_hash")
+  signature        String?
+  certifiedAt      String? @map("certified_at")
+  installedAt      String  @map("installed_at")
+  updatedAt        String  @map("updated_at")
+
+  @@index([state], map: "idx_aiprovider_state")
+  @@index([kind], map: "idx_aiprovider_kind")
+  @@map("ai_provider_instance")
 }

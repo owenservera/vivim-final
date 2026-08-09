@@ -219,7 +219,12 @@ export class LiveCapabilityRegistry extends UnifiedCapabilityRegistry {
             }
             await this.mcp.connect(serverId, url)
           }
-          const result = await this.mcp.callTool(serverId, toolName, input)
+          // C3: Route through global tool orchestrator when available (4-stage pipeline).
+          const { callToolViaOrchestrator } = await import('../engines/tool-orchestrator-facade.js')
+          const result = (await callToolViaOrchestrator(this.mcp, serverId, toolName, input)) as {
+            isError?: boolean
+            content: unknown
+          }
           // Two-surface error handling: a tool-level failure (isError) must not
           // be silently treated as success — surface it as a capability error.
           if (result.isError) {

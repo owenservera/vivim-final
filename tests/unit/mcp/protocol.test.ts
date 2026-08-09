@@ -65,8 +65,8 @@ describe('browser MCP JSON-RPC protocol', () => {
     const res = await send(handle, { jsonrpc: '2.0', id: 2, method: 'tools/list' })
     const parsed = JSON.parse(res!)
     expect(parsed.result.tools.length).toBe(3)
-    expect(parsed.result.tools[0]!.name).toBe('browser_nav_navigate')
-    expect(parsed.result.tools[0]!.inputSchema.type).toBe('object')
+    expect(parsed.result.tools[0]?.name).toBe('browser_nav_navigate')
+    expect(parsed.result.tools[0]?.inputSchema.type).toBe('object')
   })
 
   test('tools/call routes to the tool handler', async () => {
@@ -78,8 +78,8 @@ describe('browser MCP JSON-RPC protocol', () => {
       params: { name: 'browser_nav_navigate', arguments: { url: 'https://a.com' } },
     })
     const parsed = JSON.parse(res!)
-    expect(parsed.result.content[0]!.type).toBe('text')
-    const payload = JSON.parse(parsed.result.content[0]!.text)
+    expect(parsed.result.content[0]?.type).toBe('text')
+    const payload = JSON.parse(parsed.result.content[0]?.text)
     expect(payload.ok).toBe(true)
     expect(payload.url).toBe('https://a.com')
     expect(parsed.result.isError).toBeFalsy()
@@ -95,7 +95,7 @@ describe('browser MCP JSON-RPC protocol', () => {
     })
     const parsed = JSON.parse(res!)
     expect(parsed.result.isError).toBe(true)
-    expect(parsed.result.content[0]!.text).toContain('boom')
+    expect(parsed.result.content[0]?.text).toContain('boom')
   })
 
   test('unknown tool returns isError', async () => {

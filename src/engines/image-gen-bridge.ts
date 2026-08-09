@@ -43,7 +43,13 @@ export async function generateImage(
   // Try provider LLM with image-generation tool
   if (deps.providerLLM?.callTool) {
     try {
-      const result = await deps.providerLLM.callTool('image_generate', { query })
+      // C3: Route through tool orchestrator when available.
+      const { callToolViaOrchestrator } = await import('./tool-orchestrator-facade.js')
+      const result = (await callToolViaOrchestrator(
+        deps.providerLLM as { callTool: (...args: never[]) => Promise<unknown> },
+        'image_generate',
+        { query },
+      )) as { dataUrl?: string }
       const dataUrl = result.dataUrl as string | undefined
       if (dataUrl) {
         return { dataUrl, source: 'provider' }

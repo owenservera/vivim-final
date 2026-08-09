@@ -292,7 +292,9 @@ Suggest a replacement SemanticSelector (JSON) that would match the intended elem
 Return only JSON: { "type": "aria"|"text"|"css", ... }`
 
     try {
-      const response = (await this.mcpClient.callTool('llm_complete', {
+      // C3: Route through tool orchestrator when available.
+      const { callToolViaOrchestrator } = await import('../engines/tool-orchestrator-facade.js')
+      const response = (await callToolViaOrchestrator(this.mcpClient, 'llm_complete', {
         prompt,
         model: this.config.llmModel,
       })) as { text?: string } | string

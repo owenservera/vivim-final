@@ -1,0 +1,45 @@
+{
+  "providerId": "opencode-serve",
+  "displayName": "OpenCode Local Agent (serve)",
+  "baseURL": "http://127.0.0.1:${OPENCODE_SERVE_PORT}",
+  "auth": {
+    "kind": "basic",
+    "usernameEnvVar": "OPENCODE_SERVER_USERNAME",
+    "passwordEnvVar": "OPENCODE_SERVER_PASSWORD"
+  },
+  "transport": "http",
+  "providerKind": "local",
+  "trust": "official",
+  "models": [
+    {
+      "modelId": "opencode:default",
+      "displayName": "OpenCode Default Model",
+      "openAIModelName": "opencode/default",
+      "contextWindow": 32768,
+      "capabilities": ["chat", "streaming", "tool-calling", "usage-reporting"],
+      "isDefault": true
+    }
+  ],
+  "capabilities": ["chat", "streaming", "tool-calling", "cancellation", "usage-reporting"],
+  "extensions": {
+    "supportsStreaming": true,
+    "supportsFunctionCalling": true,
+    "supportsVision": false,
+    "supportsJsonSchema": false
+  },
+  "lifecycle": {
+    "supervisorKind": "opencode-serve",
+    "startCommand": [
+      "opencode",
+      "serve",
+      "--port",
+      "${OPENCODE_SERVE_PORT}",
+      "--hostname",
+      "127.0.0.1"
+    ],
+    "readinessProbe": { "path": "/doc", "expectStatus": 200 },
+    "port": 4096,
+    "envVars": { "OPENCODE_SERVER_PASSWORD": "${OPENCODE_SERVER_PASSWORD}" }
+  },
+  "_comment": "NOTE: This manifest is REFERENCE ONLY. OpenCode serve uses a session-based protocol (POST /session, POST /session/:id/message, GET /event?session= SSE), NOT /v1/chat/completions. The actual adapter is the native OpenCodeAdapter (src/ai/protocol/opencode-adapter.ts) which wraps the existing OpenCodeClient. This manifest exists for documentation/discovery purposes; the OpenAICompatibleAdapter cannot be used with OpenCode serve directly."
+}

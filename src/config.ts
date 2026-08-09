@@ -317,11 +317,14 @@ export const config = {
 
   // OpenCode model sync (daily free-model refresh; off via '0')
   opencodeModelSyncEnabled: process.env.OPENCODE_MODEL_SYNC_ENABLED !== '0',
-  opencodeModelSyncIntervalHours: Number.parseInt(
-    process.env.OPENCODE_MODEL_SYNC_INTERVAL_HOURS ?? '24',
-    10,
-  ) || 24,
+  opencodeModelSyncIntervalHours:
+    Number.parseInt(process.env.OPENCODE_MODEL_SYNC_INTERVAL_HOURS ?? '24', 10) || 24,
   opencodeModelSyncRefresh: process.env.OPENCODE_MODEL_SYNC_REFRESH === '1',
+
+  // AI Gateway (src/ai/) — canonical AI execution layer.
+  // When disabled, cap:ai:execute returns { ok: false, error: 'AI Gateway not enabled' }.
+  // When enabled, the gateway boots with in-memory stores + simulator + (optionally) OpenCode adapter.
+  aiGatewayEnabled: process.env.AI_GATEWAY_ENABLED === '1',
 
   // MCP
   mcpPort: Number.parseInt(process.env.MCP_PORT ?? '0', 10) || undefined,

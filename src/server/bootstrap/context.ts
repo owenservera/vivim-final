@@ -61,6 +61,8 @@ export interface BootstrapContext {
   semanticSearch?: SemanticSearchEngine
   synthesizer?: CrossConversationSynthesizer
   exportEngine?: ExportEngine
+  /** #5: Embedding provider — constructed in knowledge phase, used by MemoryFabric. */
+  embeddingProvider?: import('../../engines/semantic-search.js').EmbeddingProvider
 
   // Phase: mux/cost (optional)
   providerMux?: ProviderMuxEngine
@@ -73,6 +75,8 @@ export interface BootstrapContext {
   relocationEngine?: import('../../engines/storage-relocation-engine.js').StorageRelocationEngine
   memoryFabric?: import('../../engines/memory/memory-fabric.js').MemoryFabric
   agentBuilder?: import('../../engines/agent-builder.js').AgentBuilderEngine
+  /** #2: HarnessRepairEngine — Zod-aware JSON repair for LLM output. */
+  harnessRepair?: import('../../engines/harness-repair-engine.js').HarnessRepairEngine
 
   // Phase: lifecycle
   nlclEngine?: NLCLEngine

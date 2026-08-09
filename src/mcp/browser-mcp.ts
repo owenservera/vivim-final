@@ -168,7 +168,7 @@ async function run() {
 
   // Track in-flight handlers so `close` (stdin EOF) doesn't exit while a boot
   // or a tools/call is still resolving — otherwise responses get dropped.
-  let inflight = new Set<Promise<void>>()
+  const inflight = new Set<Promise<void>>()
   const done = async (p: Promise<void>) => {
     inflight.add(p)
     try {

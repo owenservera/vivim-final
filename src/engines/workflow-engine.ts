@@ -408,7 +408,9 @@ export class WorkflowEngine {
     }
     if (node.type === 'llm_call' && this.mcpClient) {
       const prompt = this.interpolate((node.config.prompt as string) ?? '', variables)
-      const result = await this.mcpClient.callTool('llm', { prompt })
+      // C3: Route through tool orchestrator when available.
+      const { callToolViaOrchestrator } = await import('../engines/tool-orchestrator-facade.js')
+      const result = await callToolViaOrchestrator(this.mcpClient, 'llm', { prompt })
       return { llmResult: result }
     }
     return {}
@@ -475,7 +477,13 @@ export class WorkflowEngine {
     const resolvedArgs = this.resolveVariables(args, variables)
     // Plugin calls go through MCP if available
     if (this.mcpClient) {
-      const result = await this.mcpClient.callTool(`${pluginId}.${method}`, resolvedArgs)
+      // C3: Route through tool orchestrator when available.
+      const { callToolViaOrchestrator } = await import('../engines/tool-orchestrator-facade.js')
+      const result = await callToolViaOrchestrator(
+        this.mcpClient,
+        `${pluginId}.${method}`,
+        resolvedArgs,
+      )
       return { pluginResult: result }
     }
     return { pluginId, method, args: resolvedArgs, executed: true }

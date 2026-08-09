@@ -116,27 +116,27 @@ export function createConversationSyncRouter(ctx: ServerContext) {
         return errorResponse('providerId and accountId are required', 'ValidationError', 400)
       }
 
-      const engine = getSyncEngine(providerId, ctx)
-      if (!engine) {
-        return errorResponse(`Provider ${providerId} not supported`, 'NotSupported', 400)
+      // #4: Wire to the real ConversationSyncStoreImpl (was: 501 alpha stub).
+      // The store impl was always complete — only the wiring was missing.
+      try {
+        const { ConversationSyncStoreImpl } = await import(
+          '../storage/impl/conversation-sync-store-impl.js'
+        )
+        const store = new ConversationSyncStoreImpl(ctx.db)
+        const state = await store.getSyncState(providerId, accountId)
+        if (!state) {
+          return json({
+            status: 'never_synced',
+            providerId,
+            accountId,
+            detail: 'No sync has been run for this account yet.',
+          })
+        }
+        return json({ status: 'ok', providerId, accountId, state })
+      } catch (err) {
+        log.error({ err, providerId, accountId }, 'Failed to get sync state')
+        return appErrorResponse(err)
       }
-
-      // Session 1 (2026-08-07): Alpha stub. The sync-state store contract
-      // exists (`ConversationSyncStateStore` in
-      // `src/storage/contracts/conversation-store.ts`) but the SQLite impl
-      // returns no rows in alpha. Wired as 501 Not Implemented so callers
-      // can distinguish "not yet built" from "sync not running".
-      // Post-alpha: wire to `engine.getStatus(accountId)` once the store impl
-      // is complete (tracked as unit 2.3 in `docs/atomic-v3-fork-canon/01-tracker.md`).
-      return json(
-        {
-          status: 'not_implemented',
-          providerId,
-          accountId,
-          detail: 'Sync status endpoint is an alpha stub — wired in post-alpha (see tracker 2.3).',
-        },
-        501,
-      )
     }
 
     // GET /api/conversations/sync/:provider/logs — get sync logs for an account
@@ -149,18 +149,22 @@ export function createConversationSyncRouter(ctx: ServerContext) {
         return errorResponse('providerId and accountId are required', 'ValidationError', 400)
       }
 
-      // Session 1 (2026-08-07): Alpha stub — see note above. Was previously
-      // returning `{ logs: [], ... }` which masqueraded as "no logs found".
-      // 501 makes the not-implemented state explicit.
-      return json(
-        {
-          logs: [],
-          providerId,
-          accountId,
-          detail: 'Sync logs endpoint is an alpha stub — wired in post-alpha (see tracker 2.3).',
-        },
-        501,
-      )
+      // #4: Wire to the real ConversationSyncStoreImpl (was: 501 alpha stub).
+      try {
+        const { ConversationSyncStoreImpl } = await import(
+          '../storage/impl/conversation-sync-store-impl.js'
+        )
+        const store = new ConversationSyncStoreImpl(ctx.db)
+        const limit = Number.parseInt(url.searchParams.get('limit') ?? '50', 10)
+        const logs = await store.getSyncLogs(providerId, accountId, {
+          limit: Number.isFinite(limit) ? limit : 50,
+          offset: Number.parseInt(url.searchParams.get('offset') ?? '0', 10) || undefined,
+        })
+        return json({ logs, providerId, accountId, count: logs.length })
+      } catch (err) {
+        log.error({ err, providerId, accountId }, 'Failed to get sync logs')
+        return appErrorResponse(err)
+      }
     }
 
     // POST /api/conversations/sync/:provider/fetch/:conversationId — fetch a single conversation

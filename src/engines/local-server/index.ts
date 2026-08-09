@@ -55,7 +55,7 @@ export class LocalServer {
   private async handleRequest(req: Request): Promise<Response> {
     this.requestCount++
     const url = new URL(req.url)
-    const startTime = Date.now()
+    const _startTime = Date.now()
 
     log.debug(
       { method: req.method, path: url.pathname, requestCount: this.requestCount },
@@ -161,7 +161,7 @@ export class LocalServer {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'connected' })}\n\n`))
 
         // Keep-alive ping every 30s
-        const interval = setInterval(() => {
+        const _interval = setInterval(() => {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'ping' })}\n\n`))
         }, 30_000)
 
@@ -206,7 +206,7 @@ export class LocalServer {
     return new Response('Not Found', { status: 404 })
   }
 
-  private corsResponse(req: Request): Response {
+  private corsResponse(_req: Request): Response {
     return new Response(null, {
       status: 204,
       headers: {
@@ -218,7 +218,7 @@ export class LocalServer {
     })
   }
 
-  private addCorsHeaders(response: Response, req: Request): Response {
+  private addCorsHeaders(response: Response, _req: Request): Response {
     const headers = new Headers(response.headers)
     headers.set('Access-Control-Allow-Origin', this.config.corsOrigins[0] ?? '*')
     headers.set('Access-Control-Allow-Credentials', 'true')

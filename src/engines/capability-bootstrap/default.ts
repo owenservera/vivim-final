@@ -679,6 +679,7 @@ export async function registerDefaultCapabilities(
               }
               return {
                 ok: result.exitCode === 0 && !result.timedOut && !result.permissionDenied,
+                error: result.permissionDenied ? 'OPENCODE_PERMISSION_DENIED' : undefined,
                 blocks: result.blocks,
                 model: result.model,
                 sessionId: result.sessionId,
@@ -755,6 +756,20 @@ export async function registerDefaultCapabilities(
           await ingest.start(sessionId, { model: input.model ? String(input.model) : undefined })
           await client.sendPrompt(sessionId, String(input.prompt))
 
+          // F3: surface permission denials recorded during this send
+          const denials = ingest.getDenialsForSession(sessionId)
+          if (denials.length > 0) {
+            ingest.clearDenialsForSession(sessionId)
+            return {
+              ok: false,
+              sessionId,
+              permissionDenied: true,
+              error: 'OPENCODE_PERMISSION_DENIED',
+              denials,
+              text: `Permission denied for ${denials.length} tool call(s): ${denials.map((d) => d.tool).join(', ')}`,
+            }
+          }
+
           return {
             ok: true,
             sessionId,
@@ -827,7 +842,7 @@ export async function registerDefaultCapabilities(
           slug: 'opencode_instances',
           name: 'List OpenCode Serve Instances',
           description:
-            'Register + live classification of every opencode process: which are vivim-managed serve instances vs the user\'s interactive sessions. Consult this before touching any opencode process.',
+            "Register + live classification of every opencode process: which are vivim-managed serve instances vs the user's interactive sessions. Consult this before touching any opencode process.",
           category: 'agent',
           inputSchema: { type: 'object', properties: {} },
           outputSchema: { type: 'object', properties: { managed: { type: 'array' } } },
@@ -981,8 +996,7 @@ export async function registerDefaultCapabilities(
             id: 'cap:opencode:model.set_default',
             slug: 'opencode_model_set_default',
             name: 'Set Default OpenCode Model',
-            description:
-              'Select which verified opencode model the local agent uses by default.',
+            description: 'Select which verified opencode model the local agent uses by default.',
             category: 'agent',
             inputSchema: {
               type: 'object',
@@ -1168,6 +1182,211 @@ export async function registerDefaultCapabilities(
           return { error: 'Storage engine not available' }
         }
         return relocationEngine.getStatus()
+      },
+    ),
+  )
+
+  // ── AI Gateway (src/ai/) ───────────────────────────────────────────
+  // cap:ai:execute — canonical AI execution through the AI Gateway.
+  // Gated by config.aiGatewayEnabled. When disabled, returns a clear error.
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:ai:execute',
+        slug: 'ai_execute',
+        name: 'AI Execute',
+        description:
+          'Execute an AI request through the AI Gateway (src/ai/). Streams AIEvents. Supports local LLM providers (OpenCode, Ollama, llama.cpp) and OpenAI-compatible cloud APIs.',
+        category: 'ai',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            messages: {
+              type: 'array',
+              description: 'Array of { role, content } messages.',
+              items: { type: 'object' },
+            },
+            providerId: {
+              type: 'string',
+              description:
+                'Provider ID (e.g. "simulator", "opencode-serve", "ollama-v1"). If omitted, the router picks.',
+            },
+            modelId: {
+              type: 'string',
+              description: 'Model ID. If omitted, the router picks.',
+            },
+            task: {
+              type: 'string',
+              description: 'Optional task descriptor name.',
+            },
+            temperature: { type: 'number' },
+            maxOutputTokens: { type: 'integer' },
+          },
+          required: ['messages'],
+        },
+        outputSchema: { type: 'object' },
+        cliCommand: {
+          name: 'ai execute',
+          aliases: ['ai'],
+          examples: [
+            'ai execute --messages="[{role:user,content:Hello}]"',
+            'ai execute --provider=simulator --messages="..."',
+          ],
+        },
+        ui: { component: 'ai-execute', position: 'composer', order: 10 },
+        mcpToolName: 'ai_execute',
+        apiEndpoint: { method: 'POST', path: '/api/ai/execute' },
+      },
+      async (input) => {
+        const gateway = (globalThis as Record<string, unknown>).__aiGateway as
+          | import('../../ai/gateway/gateway.js').IVIVIMGateway
+          | undefined
+        if (!gateway) {
+          return { ok: false, error: 'AI Gateway not enabled (set AI_GATEWAY_ENABLED=1)' }
+        }
+
+        // Build the AIRequest from the capability input
+        const { createRequestId, requestId } = await import('../../ai/index.js')
+        const aiRequest = {
+          requestId: createRequestId(),
+          messages: Array.isArray(input.messages)
+            ? (
+                input.messages as Array<{
+                  role: string
+                  content: string | Array<{ type: string; text?: string }>
+                }>
+              ).map((m) => ({
+                role: m.role as 'user' | 'system' | 'assistant',
+                content:
+                  typeof m.content === 'string'
+                    ? [{ type: 'text' as const, text: m.content }]
+                    : (m.content as Array<{ type: 'text'; text: string }>),
+              }))
+            : [],
+          model:
+            input.providerId || input.modelId
+              ? {
+                  providerId: input.providerId as never,
+                  modelId: input.modelId as never,
+                }
+              : undefined,
+          task: input.task ? { name: String(input.task) } : undefined,
+          generation:
+            input.temperature || input.maxOutputTokens
+              ? {
+                  temperature: input.temperature ? Number(input.temperature) : undefined,
+                  maxOutputTokens: input.maxOutputTokens
+                    ? Number(input.maxOutputTokens)
+                    : undefined,
+                }
+              : undefined,
+        }
+
+        // Collect the streamed events into a result
+        const blocks: Array<{ type: string; text?: string; toolCall?: unknown }> = []
+        let totalText = ''
+        let usage: { inputTokens?: number; outputTokens?: number; totalTokens?: number } | undefined
+
+        try {
+          for await (const event of gateway.execute(aiRequest)) {
+            if (event.type === 'output.text.delta') {
+              totalText += event.text
+              blocks.push({ type: 'text', text: event.text })
+            } else if (event.type === 'tool.call.completed') {
+              blocks.push({
+                type: 'tool-call',
+                toolCall: { name: (event as { name?: string }).name, arguments: event.arguments },
+              })
+            } else if (event.type === 'usage.updated') {
+              usage = event.usage
+            } else if (event.type === 'response.failed') {
+              return { ok: false, error: event.error.message, code: event.error.code, blocks }
+            }
+          }
+          return { ok: true, text: totalText, blocks, usage }
+        } catch (err) {
+          return { ok: false, error: String(err), blocks }
+        }
+      },
+    ),
+  )
+
+  // ── AI Gateway discovery capabilities ──────────────────────────────
+  // cap:ai:providers — list registered AI Gateway providers.
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:ai:providers',
+        slug: 'ai_providers',
+        name: 'AI Providers',
+        description: 'List AI providers registered in the AI Gateway.',
+        category: 'ai',
+        inputSchema: { type: 'object', properties: { kind: { type: 'string' } } },
+        outputSchema: { type: 'array' },
+        cliCommand: { name: 'ai providers', aliases: ['aip'], examples: ['ai providers'] },
+        ui: { component: 'ai-providers', position: 'sidebar', order: 11 },
+        mcpToolName: 'ai_providers',
+        apiEndpoint: { method: 'GET', path: '/api/ai/providers' },
+      },
+      async (input) => {
+        const gateway = (globalThis as Record<string, unknown>).__aiGateway as
+          | import('../../ai/gateway/gateway.js').IVIVIMGateway
+          | undefined
+        if (!gateway) return { ok: false, error: 'AI Gateway not enabled' }
+        const filter = input.kind
+          ? { kind: input.kind as 'local' | 'remote' | 'hybrid' | 'embedded' }
+          : undefined
+        const providers = await gateway.listProviders(filter)
+        return {
+          ok: true,
+          providers: providers.map((p) => ({
+            id: p.id,
+            name: p.name,
+            kind: p.kind,
+            trust: p.trust,
+          })),
+        }
+      },
+    ),
+  )
+
+  // cap:ai:models — list registered AI Gateway models.
+  registry.register(
+    makeCapability(
+      {
+        id: 'cap:ai:models',
+        slug: 'ai_models',
+        name: 'AI Models',
+        description:
+          'List AI models registered in the AI Gateway, optionally filtered by provider.',
+        category: 'ai',
+        inputSchema: { type: 'object', properties: { providerId: { type: 'string' } } },
+        outputSchema: { type: 'array' },
+        cliCommand: {
+          name: 'ai models',
+          aliases: ['aim'],
+          examples: ['ai models', 'ai models --provider=simulator'],
+        },
+        ui: { component: 'ai-models', position: 'sidebar', order: 12 },
+        mcpToolName: 'ai_models',
+        apiEndpoint: { method: 'GET', path: '/api/ai/models' },
+      },
+      async (input) => {
+        const gateway = (globalThis as Record<string, unknown>).__aiGateway as
+          | import('../../ai/gateway/gateway.js').IVIVIMGateway
+          | undefined
+        if (!gateway) return { ok: false, error: 'AI Gateway not enabled' }
+        const filter = input.providerId ? { providerId: input.providerId as never } : undefined
+        const models = await gateway.listModels(filter)
+        return {
+          ok: true,
+          models: models.map((m) => ({
+            id: m.id,
+            providerId: m.providerId,
+            name: m.name,
+            contextWindow: m.contextWindow,
+          })),
+        }
       },
     ),
   )

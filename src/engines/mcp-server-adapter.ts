@@ -29,12 +29,30 @@ export class McpServerAdapter {
   private tools: McpToolDefinition[] = []
   private running = false
   private server?: ReturnType<typeof Bun.serve>
+  /** F2: custom tool handlers (e.g. nl_command, nl_list_commands, nl_help). */
+  private readonly customHandlers = new Map<
+    string,
+    (args: Record<string, unknown>) => Promise<McpToolCallResult>
+  >()
 
   constructor(
     private readonly governor: ChromeGovernor,
     private readonly registry?: UnifiedCapabilityRegistry,
   ) {
     this.registerTools()
+  }
+
+  /** F2: Register a custom MCP tool with its handler (for NLCL tools). */
+  tool(
+    name: string,
+    description: string,
+    inputSchema: Record<string, unknown>,
+    handler: (args: Record<string, unknown>) => Promise<McpToolCallResult>,
+  ): void {
+    // Avoid duplicate registration
+    if (this.tools.some((t) => t.name === name)) return
+    this.tools.push({ name, description, inputSchema })
+    this.customHandlers.set(name, handler)
   }
 
   private registerTools(): void {
@@ -235,6 +253,19 @@ export class McpServerAdapter {
   }
 
   async callTool(toolName: string, input: Record<string, unknown>): Promise<McpToolCallResult> {
+    // F2: custom handlers first (nl_command, nl_list_commands, nl_help, etc.)
+    const customHandler = this.customHandlers.get(toolName)
+    if (customHandler) {
+      try {
+        return await customHandler(input)
+      } catch (err) {
+        return {
+          content: { error: err instanceof Error ? err.message : String(err) },
+          isError: true,
+        }
+      }
+    }
+
     // Route to UnifiedCapabilityRegistry if available (18.10)
     if (this.registry) {
       const cap = this.registry.list({ surface: 'mcp' }).find((c) => c.mcpToolName === toolName)

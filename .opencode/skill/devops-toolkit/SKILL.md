@@ -55,7 +55,7 @@ bun run devops:toolkit config set <key> <value>
 bun run devops:toolkit diff
 ```
 
-(All also available as `bun run devops index.ts toolkit <sub>`.)
+(All also available as `bun run devops toolkit <sub>`.)
 
 ---
 

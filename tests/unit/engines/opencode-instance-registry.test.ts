@@ -2,7 +2,7 @@
 // OpenCodeInstanceRegistry — durable ledger + live classifier (managed vs external).
 
 import { describe, expect, test } from 'bun:test'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { OpenCodeInstanceRegistry } from '../../../src/engines/opencode/opencode-instance-registry.js'
@@ -21,7 +21,13 @@ function makeRegistry(
 describe('OpenCodeInstanceRegistry', () => {
   test('records spawn/ready/exit/stop to a durable JSONL ledger', () => {
     const r = makeRegistry([])
-    const id = r.recordSpawn({ pid: 1001, port: 23863, parentPid: 9001, binary: 'opencode', cwd: '/x' })
+    const id = r.recordSpawn({
+      pid: 1001,
+      port: 23863,
+      parentPid: 9001,
+      binary: 'opencode',
+      cwd: '/x',
+    })
     r.recordReady(id, 1001, 23863)
     r.recordExit(id, 1, 1001, 23863)
 
@@ -76,16 +82,29 @@ describe('OpenCodeInstanceRegistry', () => {
 
     const live = r.classifyLive()
     // Both the direct child (1001) and the resolved socket owner (6666) are managed.
-    expect(live.filter((p) => p.managed).map((p) => p.pid).sort()).toEqual([1001, 6666])
+    expect(
+      live
+        .filter((p) => p.managed)
+        .map((p) => p.pid)
+        .sort(),
+    ).toEqual([1001, 6666])
   })
 
   test('ledger survives across registry instances (durable file)', () => {
     const ledgerPath = join(mkdtempSync(join(tmpdir(), 'oc-reg-')), 'instances.jsonl')
-    const r1 = new OpenCodeInstanceRegistry({ ledgerPath, listProcesses: () => [], ownerOfPort: () => null })
+    const r1 = new OpenCodeInstanceRegistry({
+      ledgerPath,
+      listProcesses: () => [],
+      ownerOfPort: () => null,
+    })
     const id = r1.recordSpawn({ pid: 1001, port: 23863, parentPid: 9001 })
     r1.recordReady(id, 1001, 23863)
 
-    const r2 = new OpenCodeInstanceRegistry({ ledgerPath, listProcesses: () => [], ownerOfPort: () => null })
+    const r2 = new OpenCodeInstanceRegistry({
+      ledgerPath,
+      listProcesses: () => [],
+      ownerOfPort: () => null,
+    })
     expect(r2.readLedger()).toHaveLength(2)
     expect(r2.liveInstances()).toHaveLength(1)
     expect(r2.liveInstances()[0].instanceId).toBe(id)

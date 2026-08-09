@@ -20,11 +20,11 @@
 //   - `classifyLive()` is the ONLY sanctioned way to decide which opencode
 //     processes belong to vivim. Never `Stop-Process -Name opencode -Force`.
 
+import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { execFileSync } from 'node:child_process'
-import { newId } from '../../ids.js'
 import { OpenCodeServeError } from '../../errors.js'
+import { newId } from '../../ids.js'
 
 /**
  * Run a PowerShell command and return its stdout, WITHOUT ever throwing.
@@ -36,17 +36,12 @@ import { OpenCodeServeError } from '../../errors.js'
  * failure so process/port enumeration is strictly best-effort (per the
  * registry's documented invariant: reads never block or break the caller).
  */
-function runPowershellSafe(
-  script: string,
-  timeoutMs: number,
-  spawnTimeoutMs: number,
-): string {
+function runPowershellSafe(script: string, _timeoutMs: number, spawnTimeoutMs: number): string {
   try {
-    const out = execFileSync(
-      'powershell',
-      ['-NoProfile', '-NonInteractive', '-Command', script],
-      { encoding: 'utf8', timeout: spawnTimeoutMs },
-    )
+    const out = execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', script], {
+      encoding: 'utf8',
+      timeout: spawnTimeoutMs,
+    })
     return out ?? ''
   } catch {
     return ''
@@ -102,8 +97,7 @@ export class OpenCodeInstanceRegistry {
   private readonly ownerOfPort: (port: number) => number | null
 
   constructor(opts: InstanceRegistryOptions = {}) {
-    this.ledgerPath =
-      opts.ledgerPath ?? join(process.cwd(), '.runtime', 'opencode-instances.jsonl')
+    this.ledgerPath = opts.ledgerPath ?? join(process.cwd(), '.runtime', 'opencode-instances.jsonl')
     this.listProcesses =
       opts.listProcesses ??
       (() => {
