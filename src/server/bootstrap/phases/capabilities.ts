@@ -227,7 +227,12 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
       log.warn({ err }, 'Storage crash recovery check failed (non-fatal)')
     })
 
-    registerDefaultCapabilities(registry, {
+    // MUST be awaited: registerDefaultCapabilities is async (it awaits
+    // seedLocalAgentProvider before the final register loop). Without await,
+    // the taxonomy pool (registerGeneratedCapabilities below) registers
+    // overlapping slugs like system_health first, then the resumed default
+    // loop throws "Slug already registered" and boot dies.
+    await registerDefaultCapabilities(registry, {
       db,
       conversationStore: convStore,
       governor,
@@ -684,6 +689,29 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
 
     // Bridge: sync all cli-surface capabilities to the CLI CommandRegistry
     connectCapabilityRegistry(registry)
+
+    // F2/F8 fix: register router-only endpoints as capabilities so CLI/MCP
+    // can reach them through the universal dispatcher.
+    try {
+      const { registerRouterCapabilities } = await import('../../../engines/router-capability-bridge.js')
+      const bridgeResult = registerRouterCapabilities(registry, ctx.port ?? 9420)
+      log.info(
+        `[boot] Router-capability bridge: registered=${bridgeResult.registered} skipped=${bridgeResult.skipped}`,
+      )
+    } catch (e) {
+      catchDebug(e, 'bootstrap: router-capability-bridge failed (non-fatal)')
+    }
+
+    // F7 fix: wrap legacy builtins as capabilities so they're reachable
+    // via CLI (through registry), API, and MCP — not just the raw CLI dispatcher.
+    try {
+      const { registerBuiltinCapabilities } = await import('../../../engines/builtin-capability-wrappers.js')
+      const builtinResult = registerBuiltinCapabilities(registry)
+      log.info(`[boot] Builtin capability wrappers: registered=${builtinResult}`)
+    } catch (e) {
+      catchDebug(e, 'bootstrap: builtin capability wrappers failed (non-fatal)')
+    }
+
     policyEngine = new ExecutionPolicyEngine(pStore)
     await policyEngine.initialize()
     autonomousEngine = new AutonomousExecutionEngine(

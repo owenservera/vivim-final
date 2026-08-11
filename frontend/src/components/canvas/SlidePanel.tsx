@@ -6,6 +6,7 @@ import { useSessionState } from './SessionStateProvider';
 import { PANEL_REGISTRY, CATEGORY_COLORS, type PanelType } from './TabConfig';
 import { getPanelLoader } from './PanelRegistry';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Spinner } from './Spinner';
 
 // ── SlidePanel ────────────────────────────────────────────────────────────
 
@@ -214,7 +215,7 @@ export function SlidePanel({
             <PanelComponent workspaceId={workspaceId} />
           </ErrorBoundary>
         ) : (
-          <div style={{ padding: 16, fontSize: 11, color: 'var(--text-muted)' }}>Loading...</div>
+          <div style={{ padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spinner size={18} /></div>
         )}
       </div>
     </div>

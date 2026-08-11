@@ -41,3 +41,11 @@ export { HealthAggregator, worstHealthStatus, registerPipelineHealth } from './h
 
 // ── Presets & Factories ────────────────────────────────────────────────────────
 export { PRESETS, createPolicy, createPipeline } from './presets.js'
+
+// ── Account Circuit Breaker (harvested from edge-pwa) ──────────────────────────
+export { AccountCircuitBreaker, CircuitOpenError as AccountCircuitOpenError } from './account-circuit-breaker.js'
+export type { BreakerState as AccountBreakerState, AccountBreakerConfig } from './account-circuit-breaker.js'
+
+// ── Health Monitor (harvested from edge-pwa) ───────────────────────────────────
+export { createHealthMonitor } from './health-monitor.js'
+export type { ProbeClassification, HealthCheckTarget, HealthCheckResult, HealthEvent } from './health-monitor.js'

@@ -45,6 +45,7 @@ export { DevConsole } from './DevConsole'
 
 // Phase 5 — Conversation History Sync
 export { ConversationSyncPanel } from './ConversationSyncPanel'
+export { MobileNav } from './MobileNav'
 
 // Phase 4 — doc suite, z-layers, drawers, unified IO
 export { UnifiedIOProvider, useIO, useIOEvents, IOError } from './UnifiedIOProvider'

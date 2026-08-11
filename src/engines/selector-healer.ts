@@ -1,5 +1,6 @@
 // src/engines/selector-healer.ts
 // SelectorHealer — LLM-powered selector repair when a selector misses
+// Also exports: failure classification for automated failure analysis
 
 import { catchDebug } from '../lib/catch-logger.js'
 import { safeJsonParse } from '../lib/safe-json.js'
@@ -359,3 +360,132 @@ Return only JSON: { "type": "aria"|"text"|"css", ... }`
     return lines.slice(0, 200).join('\n')
   }
 }
+
+// ── Failure Classification (harvested from edge-pwa self-healing) ──────────
+//
+/** The kind of selector failure detected. */
+export type FailureType =
+  | 'selector_not_found'
+  | 'element_changed'
+  | 'dom_restructured'
+  | 'timing_issue'
+  | 'wrong_capability'
+  | 'unknown'
+
+/** Result of classifying a failure. */
+export interface FailureClassification {
+  failureType: FailureType
+  confidence: number
+  signals: string[]
+  suggestedStrategies: HealStrategy[]
+}
+
+/** Pattern-matching rules keyed by failure type. */
+const FAILURE_PATTERNS: Record<FailureType, Array<{ pattern: RegExp; weight: number }>> = {
+  selector_not_found: [
+    { pattern: /no-match/i, weight: 0.8 },
+    { pattern: /element not found/i, weight: 0.7 },
+    { pattern: /selector.*not found/i, weight: 0.9 },
+    { pattern: /cannot find element/i, weight: 0.7 },
+  ],
+  element_changed: [
+    { pattern: /element.*changed/i, weight: 0.6 },
+    { pattern: /stale element/i, weight: 0.7 },
+    { pattern: /element.*detached/i, weight: 0.6 },
+    { pattern: /element.*modified/i, weight: 0.5 },
+  ],
+  dom_restructured: [
+    { pattern: /dom.*changed/i, weight: 0.5 },
+    { pattern: /layout.*changed/i, weight: 0.4 },
+    { pattern: /structure.*changed/i, weight: 0.5 },
+    { pattern: /page.*reloaded/i, weight: 0.6 },
+  ],
+  timing_issue: [
+    { pattern: /timeout/i, weight: 0.7 },
+    { pattern: /timed out/i, weight: 0.8 },
+    { pattern: /slow.*response/i, weight: 0.5 },
+    { pattern: /animation.*not.*complete/i, weight: 0.4 },
+  ],
+  wrong_capability: [
+    { pattern: /wrong.*element/i, weight: 0.6 },
+    { pattern: /unexpected.*element/i, weight: 0.5 },
+    { pattern: /multiple.*matches/i, weight: 0.7 },
+    { pattern: /ambiguous.*selector/i, weight: 0.6 },
+  ],
+  unknown: [],
+}
+
+/** Map failure type to suggested healing strategies. */
+const STRATEGY_SUGGESTIONS: Record<FailureType, HealStrategy[]> = {
+  selector_not_found: ['text_match', 'aria_relaxed', 'dom_structure'],
+  element_changed: ['aria_relaxed', 'text_match'],
+  dom_restructured: ['dom_structure', 'text_match'],
+  timing_issue: ['aria_relaxed', 'text_match'],
+  wrong_capability: ['aria_relaxed', 'text_match', 'dom_structure'],
+  unknown: ['aria_relaxed', 'text_match', 'dom_structure'],
+}
+
+/**
+ * Classify a selector failure based on error message and context.
+ *
+ * Uses regex pattern matching against the error reason to determine
+ * the most likely failure type and suggest healing strategies.
+ *
+ * @param reason   The error message or failure description.
+ * @param selector The selector string that failed.
+ * @returns A classification with failure type, confidence, and suggested strategies.
+ */
+export function classifyFailure(reason: string, selector: string): FailureClassification {
+  const scores: Record<FailureType, number> = {
+    selector_not_found: 0, element_changed: 0, dom_restructured: 0,
+    timing_issue: 0, wrong_capability: 0, unknown: 0,
+  }
+
+  for (const [failureType, patterns] of Object.entries(FAILURE_PATTERNS)) {
+    for (const { pattern, weight } of patterns) {
+      if (pattern.test(reason)) {
+        scores[failureType as FailureType] += weight
+      }
+    }
+  }
+
+  const sorted = Object.entries(scores)
+    .map(([type, score]) => ({ type: type as FailureType, score }))
+    .sort((a, b) => b.score - a.score)
+
+  const primary = sorted[0]
+  const failureType = primary?.type ?? 'unknown'
+  const totalScore = sorted.reduce((sum, s) => sum + s.score, 0)
+  const confidence = totalScore > 0 ? Math.min(primary!.score / totalScore, 1) : 0.5
+
+  // Boost strategy suggestions based on the actual selector
+  let strategies = STRATEGY_SUGGESTIONS[failureType] ?? []
+  if (selector.includes('[role=')) strategies.unshift('aria_relaxed')
+  if (selector.includes('[aria-label=')) strategies.unshift('aria_relaxed')
+  if (selector.includes('text~')) strategies.unshift('text_match')
+  strategies = [...new Set(strategies)]
+
+  return {
+    failureType,
+    confidence,
+    signals: [reason, selector],
+    suggestedStrategies: strategies,
+  }
+}
+
+/**
+ * Compute a healing priority score (0-1) for a failure classification.
+ * Higher = more important to heal immediately.
+ */
+export function healingPriority(classification: FailureClassification): number {
+  const base: Record<FailureType, number> = {
+    selector_not_found: 1.0,
+    element_changed: 0.8,
+    dom_restructured: 0.7,
+    timing_issue: 0.5,
+    wrong_capability: 0.6,
+    unknown: 0.3,
+  }
+  return base[classification.failureType] * classification.confidence
+}
+

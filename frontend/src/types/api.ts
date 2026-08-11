@@ -24,7 +24,6 @@ export type {
   ApiSuccessResponse,
   ApiErrorResponse,
   ApiResponse,
-  ErrorResponse,
   HealthDashboardResponse,
   ProviderHealthDetail,
 } from './shared/api-contract'

@@ -10,12 +10,17 @@ import { type CSSProperties } from 'react';
 interface StatusDotProps {
   color: string;
   size?: number;
+  /** Accessible label describing the status (e.g. 'Online', 'Error') */
+  label?: string;
   style?: CSSProperties;
 }
 
-export function StatusDot({ color, size = 8, style }: StatusDotProps) {
+export function StatusDot({ color, size = 8, label, style }: StatusDotProps) {
   return (
     <div
+      role="status"
+      aria-label={label ?? 'Status indicator'}
+      title={label}
       style={{
         width: size,
         height: size,

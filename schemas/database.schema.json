@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vivim.app/schemas/database.schema.json",
+  "title": "DatabaseConfig",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "Database directory path (computed from VIVIM_DB_PATH env)",
+      "x-visibility": "basic",
+      "x-stability": "stable"
+    },
+    "max_trees": {
+      "type": "integer",
+      "default": 100,
+      "minimum": 10,
+      "maximum": 1000,
+      "description": "Maximum number of reDB trees",
+      "x-visibility": "advanced",
+      "x-stability": "stable"
+    },
+    "lock_retry_max": {
+      "type": "integer",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum retries on database lock contention",
+      "x-visibility": "expert",
+      "x-stability": "stable"
+    },
+    "lock_backoff_ms": {
+      "type": "integer",
+      "default": 200,
+      "minimum": 50,
+      "maximum": 5000,
+      "description": "Base backoff for database lock retries (exponential)",
+      "x-visibility": "expert",
+      "x-stability": "stable"
+    },
+    "change_channel_cap": {
+      "type": "integer",
+      "default": 1024,
+      "minimum": 64,
+      "maximum": 65536,
+      "description": "Capacity of the DB change event channel",
+      "x-visibility": "expert",
+      "x-stability": "stable"
+    },
+    "graph_scan_limit": {
+      "type": "integer",
+      "default": 1000000,
+      "minimum": 10000,
+      "maximum": 10000000,
+      "description": "Maximum keys scanned during graph health check",
+      "x-visibility": "expert",
+      "x-stability": "stable"
+    },
+    "warn_bytes": {
+      "type": "integer",
+      "default": 1073741824,
+      "description": "Database size warning threshold (bytes, default 1GB)",
+      "x-visibility": "advanced",
+      "x-stability": "stable"
+    },
+    "crit_bytes": {
+      "type": "integer",
+      "default": 3221225472,
+      "description": "Database size critical threshold (bytes, default 3GB)",
+      "x-visibility": "advanced",
+      "x-stability": "stable"
+    }
+  },
+  "additionalProperties": false
+}

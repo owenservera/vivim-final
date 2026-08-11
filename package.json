@@ -41,12 +41,14 @@
     "generate-skills": "bun run scripts/generate-skills.ts",
     "devops:toolkit": "bun run devops/index.ts toolkit",
     "gen:protocol": "bun run src/engines/provider-protocol-generator.ts",
-    "gen:frontend-routes": "bun run scripts/tauri/gen-frontend-routes.ts",
     "web:dev": "bun run --cwd frontend dev",
     "web:build": "bun run --cwd frontend build",
     "frontend:dev": "bun run --cwd frontend dev",
     "frontend:build": "bun run --cwd frontend build",
+    "frontend:build:tauri": "bun run --cwd frontend build:tauri",
     "frontend:typecheck": "bun run --cwd frontend typecheck",
+    "tauri:dev": "cargo tauri dev",
+    "tauri:build": "cargo tauri build",
     "seed:snapshot": "bun run scripts/seed-snapshot.ts",
     "db:backup": "bun run scripts/backup-db.ts",
     "db:restore": "bun run scripts/restore-db.ts",
@@ -57,7 +59,7 @@
   "prisma": {
     "seed": "bun run src/cli/index.ts seed all"
   },
-  "_comment_tauri_removed": "Session 1 (2026-08-07): `tauri:sidecar` and `tauri:build` scripts removed because they referenced `scripts/tauri/build-sidecar.ps1` and `build.ps1` which are gitignored and unreachable from a fresh clone. Desktop build pipeline is owned by the downstream Tauri shell repo. See docs/runbooks/DESKTOP.md for the manual build procedure.",
+  "_tauri_note": "Tauri V2 scaffolding added 2026-08-10. Run 'bun run tauri:dev' for dev, 'bun run tauri:build' for production installers. See src-tauri/ for Rust shell.",
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.13",
     "@libp2p/autonat": "^3.0.26",

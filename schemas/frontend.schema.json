@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vivim.app/schemas/frontend.schema.json",
+  "title": "FrontendConfig",
+  "type": "object",
+  "properties": {
+    "api_base": {
+      "type": "string",
+      "default": "http://127.0.0.1:8443",
+      "description": "Backend API base URL",
+      "x-visibility": "basic"
+    },
+    "ws_reconnect_attempts": {
+      "type": "integer",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Maximum WebSocket reconnection attempts",
+      "x-visibility": "advanced"
+    },
+    "ws_reconnect_backoff_ms": {
+      "type": "integer",
+      "default": 1000,
+      "minimum": 100,
+      "maximum": 10000,
+      "description": "Base WebSocket reconnect backoff",
+      "x-visibility": "advanced"
+    },
+    "ws_reconnect_max_ms": {
+      "type": "integer",
+      "default": 30000,
+      "minimum": 5000,
+      "maximum": 120000,
+      "description": "Maximum WebSocket reconnect backoff",
+      "x-visibility": "advanced"
+    },
+    "query_stale_time_ms": {
+      "type": "integer",
+      "default": 300000,
+      "description": "React Query stale time (5 min)",
+      "x-visibility": "advanced"
+    },
+    "query_retry": {
+      "type": "integer",
+      "default": 1,
+      "minimum": 0,
+      "maximum": 5,
+      "description": "React Query retry count",
+      "x-visibility": "advanced"
+    },
+    "toast_dismiss_ms": {
+      "type": "integer",
+      "default": 8000,
+      "minimum": 2000,
+      "maximum": 30000,
+      "description": "Toast notification auto-dismiss time",
+      "x-visibility": "basic"
+    },
+    "polling_intervals": {
+      "type": "object",
+      "description": "Frontend polling intervals",
+      "properties": {
+        "account_refresh_ms": { "type": "integer", "default": 30000 },
+        "automation_dashboard_ms": { "type": "integer", "default": 10000 },
+        "orchestration_status_ms": { "type": "integer", "default": 2000 }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "description": "Frontend display and pagination limits",
+      "properties": {
+        "max_traces": { "type": "integer", "default": 500 },
+        "trace_ttl_ms": { "type": "integer", "default": 86400000 },
+        "max_error_logs": { "type": "integer", "default": 100 },
+        "max_bookmarks": { "type": "integer", "default": 200 },
+        "max_activity_entries": { "type": "integer", "default": 200 },
+        "memory_search_limit": { "type": "integer", "default": 100 },
+        "due_memories_limit": { "type": "integer", "default": 50 },
+        "consolidation_limit": { "type": "integer", "default": 30 },
+        "social_feed_limit": { "type": "integer", "default": 50 },
+        "permissions_audit_limit": { "type": "integer", "default": 50 },
+        "download_limit": { "type": "integer", "default": 50 },
+        "snapshot_ring_size": { "type": "integer", "default": 50 }
+      }
+    },
+    "title_truncation": {
+      "type": "object",
+      "properties": {
+        "max_chars": { "type": "integer", "default": 45 },
+        "fallback_chars": { "type": "integer", "default": 30 }
+      }
+    }
+  },
+  "additionalProperties": false
+}

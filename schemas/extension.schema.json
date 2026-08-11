@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vivim.app/schemas/extension.schema.json",
+  "title": "ExtensionConfig",
+  "type": "object",
+  "properties": {
+    "backend_host": {
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "Backend host for extension connection",
+      "x-visibility": "basic"
+    },
+    "backend_port": {
+      "type": "integer",
+      "default": 8443,
+      "description": "Backend port for extension connection",
+      "x-visibility": "basic"
+    },
+    "native_host_name": {
+      "type": "string",
+      "default": "app.vivim.edge_capture",
+      "description": "Native messaging host name",
+      "x-visibility": "basic"
+    },
+    "capture_batch_interval_ms": {
+      "type": "integer",
+      "default": 500,
+      "minimum": 100,
+      "maximum": 5000,
+      "description": "Capture event batching interval",
+      "x-visibility": "advanced"
+    },
+    "capture_max_batch_size": {
+      "type": "integer",
+      "default": 50,
+      "minimum": 5,
+      "maximum": 500,
+      "description": "Maximum events per capture batch",
+      "x-visibility": "advanced"
+    },
+    "capture_max_buffer": {
+      "type": "integer",
+      "default": 1000,
+      "minimum": 100,
+      "maximum": 10000,
+      "description": "Maximum buffered capture events",
+      "x-visibility": "advanced"
+    },
+    "a11y_max_nodes": {
+      "type": "integer",
+      "default": 5000,
+      "minimum": 500,
+      "maximum": 50000,
+      "description": "Maximum A11Y tree nodes to extract",
+      "x-visibility": "advanced"
+    },
+    "a11y_max_depth": {
+      "type": "integer",
+      "default": 15,
+      "minimum": 3,
+      "maximum": 50,
+      "description": "Maximum A11Y tree traversal depth",
+      "x-visibility": "advanced"
+    },
+    "moment_probe_debounce_ms": {
+      "type": "integer",
+      "default": 800,
+      "minimum": 100,
+      "maximum": 5000,
+      "description": "Moment probe debounce interval",
+      "x-visibility": "advanced"
+    },
+    "moment_heartbeat_ms": {
+      "type": "integer",
+      "default": 30000,
+      "minimum": 5000,
+      "maximum": 120000,
+      "description": "Moment probe heartbeat interval",
+      "x-visibility": "advanced"
+    },
+    "sidepanel_ping_ms": {
+      "type": "integer",
+      "default": 25000,
+      "minimum": 5000,
+      "maximum": 120000,
+      "description": "Sidepanel WebSocket ping interval",
+      "x-visibility": "advanced"
+    },
+    "screenshot_px_per_token": {
+      "type": "integer",
+      "default": 28,
+      "minimum": 10,
+      "maximum": 100,
+      "description": "Screenshot pixel-per-token ratio",
+      "x-visibility": "expert"
+    },
+    "screenshot_max_target_px": {
+      "type": "integer",
+      "default": 1568,
+      "minimum": 512,
+      "maximum": 4096,
+      "description": "Screenshot maximum target dimension",
+      "x-visibility": "expert"
+    },
+    "max_media_size": {
+      "type": "integer",
+      "default": 20971520,
+      "description": "Maximum media attachment size (20MB)",
+      "x-visibility": "advanced"
+    },
+    "max_gemini_image_bytes": {
+      "type": "integer",
+      "default": 5242880,
+      "description": "Maximum Gemini image size (5MB)",
+      "x-visibility": "advanced"
+    },
+    "session_conflict_ttl_ms": {
+      "type": "integer",
+      "default": 30000,
+      "minimum": 5000,
+      "maximum": 120000,
+      "description": "Tab ownership TTL for session conflict resolution",
+      "x-visibility": "expert"
+    },
+    "blocked_cache_ttl_ms": {
+      "type": "integer",
+      "default": 60000,
+      "minimum": 10000,
+      "maximum": 600000,
+      "description": "Blocked domain check cache TTL",
+      "x-visibility": "expert"
+    },
+    "token_vault_pbkdf2_iterations": {
+      "type": "integer",
+      "default": 100000,
+      "minimum": 10000,
+      "maximum": 1000000,
+      "description": "PBKDF2 iterations for token vault encryption",
+      "x-visibility": "expert"
+    },
+    "token_vault_key_size": {
+      "type": "integer",
+      "default": 32,
+      "description": "Token vault AES key size in bytes (256-bit)",
+      "x-visibility": "expert"
+    }
+  },
+  "additionalProperties": false
+}

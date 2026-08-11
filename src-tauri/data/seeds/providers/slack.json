@@ -1,0 +1,52 @@
+{
+  "provider": {
+    "slug": "slack",
+    "display_name": "Slack",
+    "description": "Slack workspace integration",
+    "category": "chat",
+    "provider_type": "webapp",
+    "website_url": "https://slack.com",
+    "documentation_url": "https://api.slack.com/docs",
+    "auth_type": "oauth2",
+    "has_multi_account": true,
+    "profile_strategy": "browser",
+    "capabilities": [
+      "send_message",
+      "send_reply",
+      "create_thread",
+      "upload_file",
+      "manage_channels",
+      "react_to_message",
+      "pin_message"
+    ]
+  },
+  "endpoints": [
+    {
+      "label": "api",
+      "url": "https://slack.com/api",
+      "endpoint_type": "api",
+      "is_default": true
+    },
+    {
+      "label": "events",
+      "url": "https://slack.com/api/apps.connections.open",
+      "endpoint_type": "auth",
+      "is_default": false
+    }
+  ],
+  "parsers": [
+    {
+      "name": "slack-events",
+      "version": 1,
+      "is_active": true,
+      "fallback": "generic-format-agnostic"
+    }
+  ],
+  "models": [],
+  "capabilities_config": [],
+  "config": [
+    { "key": "bot_token", "value": "SLACK_BOT_TOKEN", "is_secret": true },
+    { "key": "app_token", "value": "SLACK_APP_TOKEN", "is_secret": true },
+    { "key": "signing_secret", "value": "SLACK_SIGNING_SECRET", "is_secret": true }
+  ]
+}

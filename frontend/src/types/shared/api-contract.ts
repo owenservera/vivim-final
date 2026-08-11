@@ -59,9 +59,10 @@ export interface CapabilityListResponse {
 
 /** Response from POST /api/capabilities/:id/execute */
 export interface CapabilityExecuteResponse {
-  ok: true
+  ok: boolean
   capabilityId: string
   output: unknown
+  error?: string
   traceId: string
   latencyMs: number
 }

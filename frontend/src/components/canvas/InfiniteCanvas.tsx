@@ -81,16 +81,20 @@ function CanvasNodeRenderer({
             {(node.data.code as string) ?? ''}
           </code>
         )}
-        {node.type === 'link' && (
-          <a
-            href={node.data.url as string}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: config.palette.accent, textDecoration: 'underline' }}
-          >
-            {node.data.url as string}
-          </a>
-        )}
+        {node.type === 'link' && (() => {
+          const url = node.data.url as string | undefined;
+          if (!url || (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/'))) return null;
+          return (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: config.palette.accent, textDecoration: 'underline' }}
+            >
+              {url}
+            </a>
+          );
+        })()}
         {node.type === 'package' && <span>{(node.data.slug as string) ?? node.id}</span>}
         {node.type === 'image' && Boolean(node.data.src) && (
           <img

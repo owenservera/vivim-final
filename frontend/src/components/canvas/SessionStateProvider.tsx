@@ -90,7 +90,7 @@ function getInitialState(): CanvasSessionState {
 const LayerStateSchema = z.object({
   openPanels: z.array(z.string()),
   activePanel: z.string().nullable(),
-  panelSizes: z.record(z.object({ width: z.number(), height: z.number() })),
+  panelSizes: z.record(z.string(), z.object({ width: z.number(), height: z.number() })),
 });
 
 const SessionStateSchema = z.object({

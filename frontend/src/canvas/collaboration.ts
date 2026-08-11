@@ -31,7 +31,7 @@ export function initCollaboration(canvasId: string, syncUrl: string): Collaborat
   })
 
   // Awareness: who else is here. Each peer publishes { name, color, cursorViewport }.
-  const awareness = provider.awareness
+  const awareness = (provider as unknown as { awareness: Awareness }).awareness
   awareness.setLocalStateField('joinedAt', new Date().toISOString())
 
   return {
@@ -39,7 +39,7 @@ export function initCollaboration(canvasId: string, syncUrl: string): Collaborat
     provider,
     awareness,
     disconnect: () => {
-      awareness.setLocalState(null)
+      awareness.setLocalState(null as unknown as Record<string, unknown>)
       provider.disconnect()
       doc.destroy()
     },

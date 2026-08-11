@@ -30,23 +30,26 @@ export function useProvider() {
       // Backend returns either a raw array or { providers: [...] }
       const raw = res.data
       const all: Provider[] = (
-        Array.isArray(raw) ? raw : ((raw as { providers?: Provider[] })?.providers ?? [])
+        Array.isArray(raw) ? raw : ((raw as unknown as { providers?: Provider[] })?.providers ?? [])
       )
-        .filter((p: Provider) => p.id !== 'generic')
-        .map((p: Provider) => {
+        .filter((p: unknown) => (p as Provider).id !== 'generic')
+        .map((p: unknown): Provider => {
+          const prov = p as Record<string, unknown>
           let caps: string[] | undefined
           try {
-            caps = (p as unknown as { capabilitiesJson?: string }).capabilitiesJson
-              ? JSON.parse((p as unknown as { capabilitiesJson: string }).capabilitiesJson)
-              : p.capabilities
+            caps = typeof prov.capabilitiesJson === 'string'
+              ? JSON.parse(prov.capabilitiesJson)
+              : (prov.capabilities as string[] | undefined)
           } catch {
             caps = []
           }
           return {
-            id: p.id,
-            name: (p as unknown as { displayName?: string }).displayName ?? p.name ?? p.id,
-            slug: p.slug ?? p.id,
-            status: (p as unknown as { protocolStatus?: string }).protocolStatus ?? p.status,
+            id: prov.id as string,
+            name: (prov.displayName as string | undefined) ?? (prov.name as string | undefined) ?? (prov.id as string),
+            displayName: (prov.displayName as string) ?? (prov.id as string),
+            slug: (prov.slug as string | undefined) ?? (prov.id as string),
+            status: (prov.protocolStatus as string | undefined) ?? (prov.status as string | undefined),
+            protocolStatus: prov.protocolStatus as string | undefined,
             capabilities: caps,
           }
         })

@@ -27,7 +27,23 @@ export function FullPageError({ error, errorInfo, onRetry }: FullPageErrorProps)
       }}
     >
       <div style={{ maxWidth: 480, textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>💥</div>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            background: 'var(--color-error-surface, #fef2f2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+            fontSize: 24,
+            fontWeight: 700,
+            color: 'var(--destructive, #ef4444)',
+          }}
+        >
+          !
+        </div>
         <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
           Something went wrong
         </h1>

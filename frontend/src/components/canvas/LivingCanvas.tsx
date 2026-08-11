@@ -117,6 +117,9 @@ export function LivingCanvas(props: LivingCanvasProps) {
   // Keyboard handler for Ctrl+F, Ctrl+Z/Y, Escape
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept shortcuts when user is typing in inputs/textareas
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
         setSearchOpen(true);
@@ -466,7 +469,7 @@ const onUp = () => {
 
   if (isLoading) {
     return (
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted-foreground)', fontFamily: 'var(--font-sans)' }}>
+      <div role="status" aria-live="polite" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted-foreground)', fontFamily: 'var(--font-sans)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <Spinner size={24} />
           <span style={{ fontSize: 13, fontWeight: 500 }}>Resolving canvas</span>
@@ -476,10 +479,16 @@ const onUp = () => {
   }
   if (error) {
     return (
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--destructive)', fontFamily: 'var(--font-sans)' }}>
+      <div role="alert" aria-live="assertive" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--destructive)', fontFamily: 'var(--font-sans)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           <Icon name="alert" size={24} />
           <span style={{ fontSize: 13, fontWeight: 500 }}>Canvas error: {String(error.message).slice(0, 80)}</span>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ padding: '6px 16px', borderRadius: 'var(--radius)', background: 'var(--primary)', color: 'var(--primary-foreground)', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

@@ -29,7 +29,7 @@ function customRender(ui: ReactElement, options: CustomRenderOptions = {}) {
 
   // eslint-disable-next-line react/no-children-prop
   return render(ui, {
-    wrapper: ({ children }) => React.createElement(AllProviders, { queryClient, children }),
+    wrapper: ({ children }: { children: React.ReactNode }) => React.createElement(AllProviders, { queryClient, children }),
     ...renderOptions,
   });
 }

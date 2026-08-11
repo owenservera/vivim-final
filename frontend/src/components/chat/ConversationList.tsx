@@ -133,7 +133,7 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
               position: 'relative',
             }}
           >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
+            {virtualizer.getVirtualItems().map((virtualRow: { index: number; key: string; start: number; size: number }) => {
               const c = filtered[virtualRow.index];
               const active = c.id === activeId;
               const pTheme = getProviderTheme(c.providerId);
@@ -141,7 +141,7 @@ export function ConversationList({ activeId, onSelect, defaultProviderId }: Conv
                 <div
                   key={c.id}
                   data-index={virtualRow.index}
-                  ref={virtualizer.measureElement}
+                  ref={(el: HTMLDivElement | null) => { if (el) (virtualizer as unknown as { measureElement: (el: Element) => void }).measureElement(el) }}
                   onClick={() => onSelect(c.id)}
                   style={{
                     position: 'absolute',

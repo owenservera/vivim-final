@@ -23,7 +23,7 @@ export function apiHandler(handler: RouteHandler): RouteHandler {
       }
 
       return NextResponse.json(
-        { error: classified.title, message: classified.message, type: classified.type },
+        { ok: false, error: classified.title, message: classified.message, type: classified.type },
         { status }
       )
     }

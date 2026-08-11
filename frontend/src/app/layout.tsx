@@ -94,6 +94,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <JsonLd />
+        {/* Blocking script: prevent dark-mode FOUC by setting .dark class before hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=JSON.parse(localStorage.getItem('vivim.theme'));if(t&&t.mode==='dark'||(t&&t.mode==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`,
+          }}
+        />
         <style>{`
           @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {

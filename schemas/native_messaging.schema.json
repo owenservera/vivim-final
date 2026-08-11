@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vivim.app/schemas/native_messaging.schema.json",
+  "title": "NativeMessagingConfig",
+  "type": "object",
+  "properties": {
+    "max_msg_size": {
+      "type": "integer",
+      "default": 1048576,
+      "description": "Maximum native message size in bytes (1MB)",
+      "x-visibility": "advanced"
+    },
+    "chunking_threshold": {
+      "type": "integer",
+      "default": 1048576,
+      "description": "Message size threshold for chunked transfer",
+      "x-visibility": "expert"
+    },
+    "chunk_size": {
+      "type": "integer",
+      "default": 262144,
+      "description": "Chunk size for chunked native messages (256KB)",
+      "x-visibility": "expert"
+    },
+    "message_timeout_ms": {
+      "type": "integer",
+      "default": 10000,
+      "minimum": 1000,
+      "maximum": 60000,
+      "description": "Timeout for native message round-trip",
+      "x-visibility": "advanced"
+    },
+    "reconnect_delay_ms": {
+      "type": "integer",
+      "default": 2000,
+      "minimum": 500,
+      "maximum": 30000,
+      "description": "Delay before native messaging reconnection attempt",
+      "x-visibility": "advanced"
+    },
+    "max_reconnect_attempts": {
+      "type": "integer",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum reconnection attempts before giving up",
+      "x-visibility": "advanced"
+    },
+    "queue_max_size": {
+      "type": "integer",
+      "default": 50,
+      "minimum": 10,
+      "maximum": 500,
+      "description": "Maximum queued native messages",
+      "x-visibility": "advanced"
+    },
+    "queue_max_retries": {
+      "type": "integer",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum retries for queued messages",
+      "x-visibility": "advanced"
+    }
+  },
+  "additionalProperties": false
+}

@@ -38,6 +38,7 @@ import {
   PanelPalette,
   getLayerConfig,
   UpdateNotification,
+  MobileNav,
 } from '@/components/canvas';
 import { HelpWidget } from '@/features/help-system';
 import { getPanelType } from '@/components/canvas/TabConfig';
@@ -381,6 +382,9 @@ function CanvasApp() {
 
       {/* Update notification */}
       <UpdateNotification />
+
+      {/* Mobile bottom navigation bar */}
+      <MobileNav />
 
       {/* Panel palette (Cmd+Shift+P) */}
       <PanelPalette

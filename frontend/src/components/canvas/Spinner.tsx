@@ -10,6 +10,9 @@ interface SpinnerProps {
 export function Spinner({ size = 16, style }: SpinnerProps) {
   return (
     <div
+      role="progressbar"
+      aria-label="Loading"
+      aria-busy="true"
       style={{
         width: size,
         height: size,

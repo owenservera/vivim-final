@@ -86,7 +86,11 @@ export function BackendOfflineCard() {
             color: 'var(--text, #1f2937)',
           }}
         >
-          %LOCALAPPDATA%\vivim\vivim-server.log
+          {typeof navigator !== 'undefined' && /Win/i.test(navigator.userAgent || '')
+            ? '%LOCALAPPDATA%\\vivim\\vivim-server.log'
+            : navigator.platform?.startsWith('Mac')
+              ? '~/Library/Application Support/vivim/vivim-server.log'
+              : '~/.local/share/vivim/vivim-server.log'}
         </p>
       </div>
     </div>

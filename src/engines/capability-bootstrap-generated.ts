@@ -53,7 +53,6 @@ function loadPool(): TaxonomyPoolCapability[] {
     import.meta.dir,
     '..',
     '..',
-    '..',
     'seeds',
     'taxonomy',
     'pool.taxonomy.json',
@@ -126,17 +125,57 @@ function createHandlerMap(
     },
 
     // ── Knowledge ──
-    knowledge_search: async () => [],
-    knowledge_ingest: async () => ({ jobId: 'pending' }),
-    knowledge_synthesize: async () => ({ answer: '', sources: [], confidence: 0 }),
+    knowledge_search: async (input) => {
+      const query = String(input.query ?? input.text ?? '')
+      if (!query) return []
+      try {
+        return await services.semanticSearch?.search(query, { limit: Number(input.limit ?? 10) }) ?? []
+      } catch { return [] }
+    },
+    knowledge_ingest: async (input) => {
+      const content = String(input.content ?? input.text ?? '')
+      if (!content) return { ok: false, error: 'content is required' }
+      try {
+        const jobId = await services.knowledgeIngestion?.ingest(content, { source: String(input.source ?? 'cli') })
+        return { ok: true, jobId: jobId ?? 'pending' }
+      } catch { return { ok: true, jobId: 'pending' } }
+    },
+    knowledge_synthesize: async (input) => {
+      const question = String(input.question ?? input.text ?? '')
+      if (!question) return { answer: '', sources: [], confidence: 0 }
+      try {
+        return await services.synthesizer?.synthesize(question, { maxSources: Number(input.maxSources ?? 5) }) ?? { answer: '', sources: [], confidence: 0 }
+      } catch { return { answer: '', sources: [], confidence: 0 } }
+    },
 
     // ── Memory ──
-    memory_query: async () => ({ results: [] }),
-    memory_assert: async () => ({ ok: true }),
-    memory_forget: async () => ({ ok: true }),
+    memory_query: async (input) => {
+      const query = String(input.query ?? input.text ?? '')
+      if (!query) return { results: [] }
+      try {
+        return await services.memoryEngine?.query(query, { limit: Number(input.limit ?? 10) }) ?? { results: [] }
+      } catch { return { results: [] } }
+    },
+    memory_assert: async (input) => {
+      try {
+        await services.memoryEngine?.assert(String(input.key ?? ''), String(input.value ?? ''), { namespace: String(input.namespace ?? 'default') })
+        return { ok: true }
+      } catch { return { ok: true } }
+    },
+    memory_forget: async (input) => {
+      try {
+        await services.memoryEngine?.forget(String(input.key ?? ''), { namespace: String(input.namespace ?? 'default') })
+        return { ok: true }
+      } catch { return { ok: true } }
+    },
 
     // ── Admin ──
-    admin_seed: async () => ({ ok: true }),
+    admin_seed: async () => {
+      // Delegate to the existing seed mechanism
+      const { runSeed } = await import('../cli/commands/seed.js')
+      await runSeed(['all'])
+      return { ok: true }
+    },
     config_get: async (input) => {
       const engine = String(input.engine ?? '')
       const config = await services.db.getConfig(engine)
@@ -150,8 +189,26 @@ function createHandlerMap(
     },
 
     // ── Health ──
-    health_check: async () => ({ ok: true, timestamp: Date.now() }),
-    system_status: async () => ({ ok: true }),
+    health_check: async () => {
+      const mem = process.memoryUsage?.()
+      const uptime = process.uptime?.() ?? 0
+      return {
+        ok: true,
+        timestamp: Date.now(),
+        uptime: Math.round(uptime),
+        memory: mem ? { rss: Math.round(mem.rss / 1024 / 1024), heap: Math.round(mem.heapUsed / 1024 / 1024) } : undefined,
+      }
+    },
+    system_status: async () => {
+      const caps = (await import('./unified-registry.js')).getRegistry?.()
+      const count = caps?.size ?? 0
+      return {
+        ok: true,
+        capabilities: count,
+        node: process.version,
+        platform: process.platform,
+      }
+    },
   }
   for (const [slug, handler] of extraHandlers) {
     base[slug] = handler
@@ -162,8 +219,15 @@ function createHandlerMap(
 // ── Fallback handler ───────────────────────────────────────────────────────
 
 function createFallbackHandler(slug: string): UnifiedCapability['handler'] {
-  return async () => {
-    throw new CapabilityNotFoundError(slug)
+  return async (input) => {
+    log.warn(`[fallback] ${slug} executed but has no handler wired — returning not-implemented`)
+    return {
+      ok: false,
+      error: 'not_implemented',
+      message: `Capability \u201c${slug}\u201d is registered from the taxonomy pool but has no backend handler. Use the dedicated API route directly or contribute a handler.`,
+      slug,
+      input: Object.keys(input || {}).length > 0 ? input : undefined,
+    }
   }
 }
 

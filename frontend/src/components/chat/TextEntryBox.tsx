@@ -51,6 +51,7 @@ export function TextEntryBox({
       placeholder={placeholder}
       disabled={disabled}
       rows={1}
+      aria-label="Chat message input"
       style={{
         flex: 1,
         resize: 'none',

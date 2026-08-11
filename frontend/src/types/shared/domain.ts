@@ -66,4 +66,8 @@ export interface Provider {
   websiteUrl?: string
   createdAt?: string
   updatedAt?: string
+  // Computed / denormalized fields used by UI components
+  name?: string
+  status?: string
+  capabilities?: string[]
 }

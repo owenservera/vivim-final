@@ -38,9 +38,16 @@ export function jsonSchemaToZod(schema: CliCapability['inputSchema']): z.ZodType
       case 'boolean':
         zod = z.boolean()
         break
-      case 'array':
-        zod = z.array(z.any())
+      case 'array': {
+        // Support typed arrays when items schema is available
+        const items = (def as { items?: { type: string } }).items
+        let itemZod = z.string()
+        if (items?.type === 'number' || items?.type === 'integer') itemZod = z.number()
+        else if (items?.type === 'boolean') itemZod = z.boolean()
+        else if (items?.type === 'object') itemZod = z.record(z.any())
+        zod = z.array(itemZod)
         break
+      }
       case 'object':
         zod = z.record(z.any())
         break
@@ -128,7 +135,8 @@ export function matchCapability(
   caps: CliCapability[],
   tokens: string[],
 ): { cap: CliCapability; rest: string[] } | undefined {
-  for (let i = Math.min(tokens.length, 4); i >= 1; i--) {
+  // Try matching full token depth (no longer capped at 4)
+  for (let i = Math.min(tokens.length, 8); i >= 1; i--) {
     const joined = tokens.slice(0, i).join(' ')
     const cap = caps.find(
       (c) => c.cliCommand?.name === joined || c.cliCommand?.aliases?.includes(joined),
@@ -178,10 +186,11 @@ export function argvToInput(
 }
 
 /** Strip CLI meta-flags so they are not mistaken for capability inputs. */
+const META_FLAGS = new Set(['json', 'remote', 'auth', 'help', 'version', 'verbose', 'quiet'])
 export function stripMeta(flags: Record<string, string>): Record<string, string> {
   const out: Record<string, string> = {}
   for (const [k, v] of Object.entries(flags)) {
-    if (k === 'json' || k === 'remote' || k === 'auth') continue
+    if (META_FLAGS.has(k)) continue
     out[k] = v
   }
   return out
@@ -191,6 +200,10 @@ export function stripMeta(flags: Record<string, string>): Record<string, string>
  * Execute a capability on a remote server via POST /api/capabilities/:id/execute.
  * Positional args are mapped to input schema automatically.
  */
+// In-memory cache for remote capability introspection (avoids re-fetching on every invocation)
+let _remoteCapsCache: { remote: string; caps: CliCapability[]; ts: number } | null = null
+const REMOTE_CAPS_TTL = 30_000 // 30 seconds
+
 export async function executeRemote(
   remote: string,
   capId: string,
@@ -198,15 +211,36 @@ export async function executeRemote(
   flags: Record<string, string>,
 ): Promise<unknown> {
   const cleanFlags = stripMeta(flags)
-  const caps = await fetchCliCapabilities(remote)
+  // Use cached capabilities if fresh
+  let caps: CliCapability[]
+  if (_remoteCapsCache && _remoteCapsCache.remote === remote && Date.now() - _remoteCapsCache.ts < REMOTE_CAPS_TTL) {
+    caps = _remoteCapsCache.caps
+  } else {
+    caps = await fetchCliCapabilities(remote)
+    _remoteCapsCache = { remote, caps, ts: Date.now() }
+  }
   const found = caps.find((c) => c.id === capId)
-  const input = found
-    ? argvToInput(args, cleanFlags, found.inputSchema)
-    : { _rawArgs: args, ...cleanFlags }
+  // Support --json-input for nested payloads
+  const jsonInput = flags['json-input']
+  let input: Record<string, unknown>
+  if (jsonInput) {
+    try {
+      input = JSON.parse(jsonInput) as Record<string, unknown>
+    } catch {
+      input = found
+        ? argvToInput(args, cleanFlags, found.inputSchema)
+        : { _rawArgs: args, ...cleanFlags }
+    }
+  } else {
+    input = found
+      ? argvToInput(args, cleanFlags, found.inputSchema)
+      : { _rawArgs: args, ...cleanFlags }
+  }
   const res = await fetch(`${remote}/api/capabilities/${capId}/execute`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Source': 'cli' },
     body: JSON.stringify({ input }),
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) {
     const err = await res.text()
@@ -221,6 +255,13 @@ function coerce(type: string | undefined, val: string): unknown {
     const n = Number(val)
     return Number.isNaN(n) ? val : n
   }
-  if (type === 'boolean') return val === 'true' || val === '1' || val === ''
+  if (type === 'boolean') {
+    // Only explicit 'true'/'1' are true. Empty string and 'false'/'0' are false.
+    return val === 'true' || val === '1'
+  }
+  // Support --json-input for nested object/array payloads
+  if ((type === 'object' || type === 'array') && val.startsWith('{')) {
+    try { return JSON.parse(val) } catch { return val }
+  }
   return val
 }

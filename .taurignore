@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.git/
+
+# Build artifacts (rebuilt by Tauri)
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+
+# Dev & test
+frontend/playwright-report/
+frontend/test-results/
+tests/
+scripts/
+docs/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Tool results & generated
+frontend/tool-results/
+frontend/download/
+docs/dev-code-impl/
+__generated__/
+
+# Database
+*.db
+*.db-journal
+prisma/migrations/
+
+# Archives
+dist/
+*.zip
+*.tar.gz
+
+# Misc
+*.log
+.env
+.env.*
+*.tsbuildinfo

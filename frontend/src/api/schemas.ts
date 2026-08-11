@@ -212,7 +212,7 @@ export const SessionDetailSchema = z.object({
   isActive: z.boolean(),
   startedAt: z.number(),
   lastActivityAt: z.number().nullable(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 export const SessionListResponseSchema = z.array(SessionDetailSchema)

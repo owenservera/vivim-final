@@ -35,6 +35,10 @@ const nextConfig = {
             { source: '/api/providers/:path*', destination: `${backend}/api/providers/:path*` },
             { source: '/api/update/:path*', destination: `${backend}/api/update/:path*` },
             { source: '/api/interpret', destination: `${backend}/api/interpret` },
+            { source: '/api/admin/:path*', destination: `${backend}/api/admin/:path*` },
+            { source: '/api/session/:path*', destination: `${backend}/api/session/:path*` },
+            { source: '/api/variant/:path*', destination: `${backend}/api/variant/:path*` },
+            { source: '/api/canvas/save', destination: `${backend}/api/canvas/save` },
           ]
         },
       }),

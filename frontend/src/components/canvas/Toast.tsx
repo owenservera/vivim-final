@@ -27,6 +27,8 @@ export function Toast({ kind, message, autoDismiss = 2500, style, onDismiss }: T
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       style={{
         position: 'fixed',
         top: 52,
@@ -41,10 +43,20 @@ export function Toast({ kind, message, autoDismiss = 2500, style, onDismiss }: T
         boxShadow: '0 4px 16px rgba(0,0,0,0.16)',
         transition: 'opacity 0.2s',
         opacity: visible ? 1 : 0,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
         ...style,
       }}
     >
-      {message}
+      <span>{message}</span>
+      <button
+        onClick={() => { setVisible(false); onDismiss?.(); }}
+        style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, fontSize: 14, lineHeight: 1 }}
+        aria-label="Dismiss notification"
+      >
+        \u00d7
+      </button>
     </div>
   );
 }

@@ -11,6 +11,7 @@
 //   bun run scripts/verify-cross-surface.ts                        (offline, static)
 //   bun run scripts/verify-cross-surface.ts --live                 (+ server API reachability)
 //   bun run scripts/verify-cross-surface.ts --runtime              (+ actual CLI dispatch)
+//   bun run scripts/verify-cross-surface.ts --runtime-registry     (+ runtime vs pool coverage check)
 //   bun run scripts/verify-cross-surface.ts --live --runtime       (all checks)
 //
 // Exit code is non-zero if any capability fails verification, so it can block
@@ -415,6 +416,7 @@ function render(report: Report): void {
 async function main() {
   const live = process.argv.includes('--live')
   const runtime = process.argv.includes('--runtime')
+  const runtimeRegistry = process.argv.includes('--runtime-registry')
   const baseUrl =
     process.argv.find((a) => a.startsWith('--base='))?.slice('--base='.length) ??
     'http://localhost:5173'
@@ -423,6 +425,37 @@ async function main() {
   if (nodes.length === 0) {
     console.error('[verify-cross-surface] no capability nodes found in pool')
     process.exit(2)
+  }
+
+  // F6 fix: --runtime-registry verifies the actual running server's registry
+  // against the pool, catching the "3.2% coverage" problem.
+  if (runtimeRegistry) {
+    const registryUrl = process.env.BACKEND_URL ?? 'http://localhost:9420'
+    console.log(`[runtime-registry] Fetching runtime registry from ${registryUrl}...`)
+    try {
+      const res = await fetch(`${registryUrl}/api/capabilities?surface=cli`)
+      if (!res.ok) throw new Error(`${res.status}`)
+      const data = (await res.json()) as { capabilities?: Array<{ slug: string; id: string }> } | Array<{ slug: string; id: string }>
+      const caps = Array.isArray(data) ? data : (data.capabilities ?? [])
+      const poolSlugs = new Set(nodes.map((n) => n.slug))
+      const runtimeSlugs = new Set(caps.map((c) => c.slug))
+      const inBoth = caps.filter((c) => poolSlugs.has(c.slug)).length
+      const onlyInPool = [...poolSlugs].filter((s) => !runtimeSlugs.has(s)).length
+      const onlyInRuntime = [...runtimeSlugs].filter((s) => !poolSlugs.has(s)).length
+      console.log(`  Runtime registry: ${caps.length} capabilities`)
+      console.log(`  Pool: ${nodes.length} capability nodes`)
+      console.log(`  Overlap: ${inBoth} (pool slugs found in runtime)`)
+      console.log(`  Pool-only (no handler): ${onlyInPool}`)
+      console.log(`  Runtime-only (not in pool): ${onlyInRuntime}`)
+      if (onlyInPool > nodes.length * 0.5) {
+        console.error(`[runtime-registry] FAIL: >50% of pool capabilities have no runtime handler`)
+        process.exit(1)
+      }
+      process.exit(0)
+    } catch (err) {
+      console.error(`[runtime-registry] Failed to fetch registry: ${err}`)
+      process.exit(1)
+    }
   }
 
   let mode: Report['mode'] = 'offline'

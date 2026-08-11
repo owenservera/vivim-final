@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vivim.app/schemas/server.schema.json",
+  "title": "ServerConfig",
+  "type": "object",
+  "properties": {
+    "port": {
+      "type": "integer",
+      "default": 8443,
+      "minimum": 1024,
+      "maximum": 65535,
+      "description": "HTTP server listen port",
+      "x-visibility": "basic",
+      "x-stability": "stable"
+    },
+    "host": {
+      "type": "string",
+      "default": "0.0.0.0",
+      "description": "HTTP server bind address",
+      "x-visibility": "basic",
+      "x-stability": "stable"
+    },
+    "cors_origins": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["http://localhost:3000", "http://localhost:5173", "http://localhost:1420"],
+      "description": "Allowed CORS origins",
+      "x-visibility": "advanced",
+      "x-stability": "stable"
+    },
+    "ws_max_connections": {
+      "type": "integer",
+      "default": 10,
+      "minimum": 1,
+      "maximum": 100,
+      "description": "Maximum concurrent WebSocket connections",
+      "x-visibility": "advanced",
+      "x-stability": "stable"
+    },
+    "ws_heartbeat_secs": {
+      "type": "integer",
+      "default": 30,
+      "minimum": 5,
+      "maximum": 300,
+      "description": "WebSocket heartbeat interval in seconds",
+      "x-visibility": "advanced",
+      "x-stability": "stable"
+    },
+    "rate_limit_rps": {
+      "type": "integer",
+      "default": 100,
+      "minimum": 1,
+      "maximum": 10000,
+      "description": "Global HTTP rate limit (requests per second)",
+      "x-visibility": "expert",
+      "x-stability": "experimental"
+    },
+    "rate_limit_burst": {
+      "type": "integer",
+      "default": 200,
+      "minimum": 1,
+      "maximum": 10000,
+      "description": "Global HTTP rate limit burst size",
+      "x-visibility": "expert",
+      "x-stability": "experimental"
+    }
+  },
+  "additionalProperties": false
+}

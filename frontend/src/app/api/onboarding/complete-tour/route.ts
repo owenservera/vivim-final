@@ -13,7 +13,7 @@ export const dynamic = 'force-static'
 const SCHEMA = z.object({
   userId: z.string(),
   totalDurationMs: z.number().min(0),
-  stepTimings: z.record(z.number()),
+  stepTimings: z.record(z.string(), z.number()),
 })
 
 export async function POST(req: NextRequest) {
@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
     const bag = getEngineBag()
     const state = await bag.onboardingStore.completeTour(parsed.data.userId, {
       totalDurationMs: parsed.data.totalDurationMs,
-      stepTimings: parsed.data.stepTimings,
+      stepTimings: Object.fromEntries(
+        Object.entries(parsed.data.stepTimings).map(([k, v]) => [k, v] as [string, number])
+      ),
     })
 
     // Fire analytics event (best-effort, fire-and-forget)
