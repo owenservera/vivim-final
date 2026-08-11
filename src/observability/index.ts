@@ -27,8 +27,19 @@ export { StructuredLogger, getLogger } from './logger.js'
 export type { LogLevel, LogEntry } from './logger.js'
 
 // Phase 2A: Schema inference, traffic recording, and replay engine.
-export { inferFromSample, mergeSchemas, diffSchemas, SchemaEvolutionTracker } from './schema-inference.js'
-export type { JsonSchema, SchemaChange, SchemaDiff, SchemaSample, EvolutionReport } from './schema-inference.js'
+export {
+  inferFromSample,
+  mergeSchemas,
+  diffSchemas,
+  SchemaEvolutionTracker,
+} from './schema-inference.js'
+export type {
+  JsonSchema,
+  SchemaChange,
+  SchemaDiff,
+  SchemaSample,
+  EvolutionReport,
+} from './schema-inference.js'
 
 export { TrafficRecorder } from './traffic-recorder.js'
 export type { TrafficEntry, RedactionPattern } from './traffic-recorder.js'

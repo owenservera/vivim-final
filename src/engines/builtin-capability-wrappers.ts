@@ -19,11 +19,19 @@ const BUILTIN_SPECS = [
     category: 'automation',
     surfaces: ['cli', 'api', 'mcp'],
     apiEndpoint: { method: 'POST', path: '/api/automate' },
-    cliCommand: { name: 'automate', aliases: ['auto'], examples: ['automate navigate http://localhost:5173'] },
+    cliCommand: {
+      name: 'automate',
+      aliases: ['auto'],
+      examples: ['automate navigate http://localhost:5173'],
+    },
     inputSchema: {
       type: 'object',
       properties: {
-        args: { type: 'array', items: { type: 'string' }, description: 'Automation subcommand and arguments' },
+        args: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Automation subcommand and arguments',
+        },
       },
       required: ['args'],
     },
@@ -36,11 +44,19 @@ const BUILTIN_SPECS = [
     category: 'admin',
     surfaces: ['cli', 'api', 'mcp'],
     apiEndpoint: { method: 'POST', path: '/api/moments' },
-    cliCommand: { name: 'moments', aliases: ['moment'], examples: ['moments list', 'moments health'] },
+    cliCommand: {
+      name: 'moments',
+      aliases: ['moment'],
+      examples: ['moments list', 'moments health'],
+    },
     inputSchema: {
       type: 'object',
       properties: {
-        args: { type: 'array', items: { type: 'string' }, description: 'Moment subcommand and arguments' },
+        args: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Moment subcommand and arguments',
+        },
       },
       required: ['args'],
     },
@@ -57,7 +73,11 @@ const BUILTIN_SPECS = [
     inputSchema: {
       type: 'object',
       properties: {
-        args: { type: 'array', items: { type: 'string' }, description: 'Seed targets (e.g. ["all"])' },
+        args: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Seed targets (e.g. ["all"])',
+        },
       },
     },
   },

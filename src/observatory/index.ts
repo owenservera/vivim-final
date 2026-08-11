@@ -20,14 +20,14 @@ export type {
   DiffOp,
   SchemaSnapshot,
   CompatibilityReport,
-} from './schema-inference.js';
+} from './schema-inference.js'
 
 export {
   inferShape,
   computeHash,
   diffShapes,
   assessCompatibility,
-} from './schema-inference.js';
+} from './schema-inference.js'
 
 // ─── Traffic Recorder ──────────────────────────────────────────────────
 
@@ -35,12 +35,12 @@ export type {
   TrafficEnvelope,
   TrafficStore,
   TrafficRecorder,
-} from './traffic-recorder.js';
+} from './traffic-recorder.js'
 
 export {
   redactSecrets,
   createTrafficRecorder,
-} from './traffic-recorder.js';
+} from './traffic-recorder.js'
 
 // ─── Replay Engine ─────────────────────────────────────────────────────
 
@@ -49,8 +49,6 @@ export type {
   ReplayResult,
   ReplayEngineDeps,
   ReplayEngine,
-} from './replay-engine.js';
+} from './replay-engine.js'
 
-export {
-  createReplayEngine,
-} from './replay-engine.js';
+export { createReplayEngine } from './replay-engine.js'

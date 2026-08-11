@@ -19,9 +19,9 @@
 /** A single timestamped entry in the sliding window. */
 export interface SlidingWindowEntry {
   /** Epoch-ms timestamp of the entry. */
-  ts: number;
+  ts: number
   /** Numeric value (latency, count, etc.). */
-  value: number;
+  value: number
 }
 
 // -- Implementation -----------------------------------------------------------
@@ -33,17 +33,17 @@ export interface SlidingWindowEntry {
  * lazily on every {@link add} and {@link compute} call.
  */
 export class SlidingWindow {
-  private readonly entries: SlidingWindowEntry[] = [];
-  private readonly windowMs: number;
+  private readonly entries: SlidingWindowEntry[] = []
+  private readonly windowMs: number
 
   /**
    * @param windowMs - Width of the sliding window in milliseconds.
    */
   constructor(windowMs: number) {
     if (windowMs <= 0) {
-      throw new RangeError(`windowMs must be > 0, got ${windowMs}`);
+      throw new RangeError(`windowMs must be > 0, got ${windowMs}`)
     }
-    this.windowMs = windowMs;
+    this.windowMs = windowMs
   }
 
   /**
@@ -53,18 +53,18 @@ export class SlidingWindow {
    * @param value - Numeric metric value.
    */
   add(ts: number, value: number): void {
-    this.entries.push({ ts, value });
-    this.prune(ts);
+    this.entries.push({ ts, value })
+    this.prune(ts)
   }
 
   /**
    * Remove entries whose timestamp is outside the window relative to `now`.
    */
   private prune(now: number): void {
-    const cutoff = now - this.windowMs;
+    const cutoff = now - this.windowMs
     // Entries are appended in order, so we can shift from the front.
     while (this.entries.length > 0 && this.entries[0].ts < cutoff) {
-      this.entries.shift();
+      this.entries.shift()
     }
   }
 
@@ -76,44 +76,44 @@ export class SlidingWindow {
    * @returns The computed value, or `0` when the window is empty.
    */
   compute(ts: number, metric: 'avg' | 'max' | 'min' | 'count' | 'sum'): number {
-    this.prune(ts);
+    this.prune(ts)
 
-    if (this.entries.length === 0) return 0;
+    if (this.entries.length === 0) return 0
 
     switch (metric) {
       case 'count':
-        return this.entries.length;
+        return this.entries.length
 
       case 'sum': {
-        let total = 0;
+        let total = 0
         for (let i = 0; i < this.entries.length; i++) {
-          total += this.entries[i].value;
+          total += this.entries[i].value
         }
-        return total;
+        return total
       }
 
       case 'avg': {
-        let total = 0;
+        let total = 0
         for (let i = 0; i < this.entries.length; i++) {
-          total += this.entries[i].value;
+          total += this.entries[i].value
         }
-        return total / this.entries.length;
+        return total / this.entries.length
       }
 
       case 'max': {
-        let m = -Infinity;
+        let m = Number.NEGATIVE_INFINITY
         for (let i = 0; i < this.entries.length; i++) {
-          if (this.entries[i].value > m) m = this.entries[i].value;
+          if (this.entries[i].value > m) m = this.entries[i].value
         }
-        return m;
+        return m
       }
 
       case 'min': {
-        let m = Infinity;
+        let m = Number.POSITIVE_INFINITY
         for (let i = 0; i < this.entries.length; i++) {
-          if (this.entries[i].value < m) m = this.entries[i].value;
+          if (this.entries[i].value < m) m = this.entries[i].value
         }
-        return m;
+        return m
       }
     }
   }
@@ -124,15 +124,15 @@ export class SlidingWindow {
    */
   size(): number {
     if (this.entries.length > 0) {
-      this.prune(this.entries[this.entries.length - 1].ts);
+      this.prune(this.entries[this.entries.length - 1].ts)
     }
-    return this.entries.length;
+    return this.entries.length
   }
 
   /**
    * Remove all entries from the window.
    */
   clear(): void {
-    this.entries.length = 0;
+    this.entries.length = 0
   }
 }

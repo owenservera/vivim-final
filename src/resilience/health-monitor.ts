@@ -35,56 +35,56 @@ export type ProbeClassification = 'ok' | 'zombie' | 'crashed'
 /** A target to be health-checked. */
 export interface HealthCheckTarget {
   /** Unique identifier for the target. */
-  id: string;
+  id: string
   /** Human-readable name. */
-  name: string;
+  name: string
   /** Owning provider (if applicable). */
-  providerId?: string;
+  providerId?: string
   /** Current status string reported by the target. */
-  status: string;
+  status: string
   /** Arbitrary extra metadata attached to the target. */
-  [key: string]: any;
+  [key: string]: any
 }
 
 /** Result of probing a single target. */
 export interface HealthCheckResult {
   /** The target that was probed. */
-  targetId: string;
+  targetId: string
   /** Probe classification. */
-  classification: ProbeClassification;
+  classification: ProbeClassification
   /** `true` when the target's process was alive at probe time. */
-  pidAlive?: boolean;
+  pidAlive?: boolean
   /** `true` when the target's HTTP endpoint responded. */
-  endpointResponsive?: boolean;
+  endpointResponsive?: boolean
   /** Round-trip latency to the endpoint (ms). */
-  latencyMs?: number;
+  latencyMs?: number
   /** Epoch-ms when the probe was performed. */
-  checkedAt: number;
+  checkedAt: number
 }
 
 /** Emitted whenever a target transitions to a non-ok classification. */
 export interface HealthEvent {
   /** Event discriminator (e.g. `"zombie"`, `"crashed"`). */
-  type: string;
+  type: string
   /** Target identifier. */
-  targetId: string;
+  targetId: string
   /** Owning provider (if known). */
-  providerId?: string;
+  providerId?: string
   /** Previous classification. */
-  from: string;
+  from: string
   /** New classification. */
-  to: string;
+  to: string
   /** Epoch-ms when the event was recorded. */
-  timestamp: number;
+  timestamp: number
   /** Optional extra data (latency, error message, etc.). */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any>
 }
 
 // -- Internal -----------------------------------------------------------------
 
 interface HealthMonitorConfig {
   /** Override the default check interval (default 30 000 ms). */
-  defaultIntervalMs: number;
+  defaultIntervalMs: number
 }
 
 interface HealthMonitorInstance {
@@ -92,18 +92,18 @@ interface HealthMonitorInstance {
   start: (
     targets: HealthCheckTarget[],
     probeFn: (target: HealthCheckTarget) => Promise<{
-      pidAlive?: boolean;
-      endpointResponsive?: boolean;
-      latencyMs?: number;
+      pidAlive?: boolean
+      endpointResponsive?: boolean
+      latencyMs?: number
     }>,
     intervalMs?: number,
-  ) => void;
+  ) => void
   /** Stop periodic probing and clear the timer. */
-  stop: () => void;
+  stop: () => void
   /** Return a snapshot of the most recent probe results per target. */
-  getResults: () => HealthCheckResult[];
+  getResults: () => HealthCheckResult[]
   /** Return all events emitted since the last {@link stop}. */
-  getEvents: () => HealthEvent[];
+  getEvents: () => HealthEvent[]
 }
 
 // -- Classification ----------------------------------------------------------
@@ -119,9 +119,9 @@ function classify(
   pidAlive: boolean | undefined,
   endpointResponsive: boolean | undefined,
 ): ProbeClassification {
-  if (pidAlive && endpointResponsive) return 'ok';
-  if (pidAlive) return 'zombie';
-  return 'crashed';
+  if (pidAlive && endpointResponsive) return 'ok'
+  if (pidAlive) return 'zombie'
+  return 'crashed'
 }
 
 // -- Factory -----------------------------------------------------------------
@@ -136,30 +136,32 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
   const cfg: HealthMonitorConfig = {
     defaultIntervalMs: 30_000,
     ...config,
-  };
+  }
 
-  let timer: ReturnType<typeof setInterval> | null = null;
-  let activeTargets: HealthCheckTarget[] = [];
-  let probeFn: ((target: HealthCheckTarget) => Promise<{
-    pidAlive?: boolean;
-    endpointResponsive?: boolean;
-    latencyMs?: number;
-  }>) | null = null;
+  let timer: ReturnType<typeof setInterval> | null = null
+  let activeTargets: HealthCheckTarget[] = []
+  let probeFn:
+    | ((target: HealthCheckTarget) => Promise<{
+        pidAlive?: boolean
+        endpointResponsive?: boolean
+        latencyMs?: number
+      }>)
+    | null = null
 
-  const results = new Map<string, HealthCheckResult>();
-  const events: HealthEvent[] = [];
+  const results = new Map<string, HealthCheckResult>()
+  const events: HealthEvent[] = []
 
   /** Run a single round of probes against all targets. */
   async function check(): Promise<void> {
-    if (!probeFn) return;
+    if (!probeFn) return
 
-    const now = Date.now();
+    const now = Date.now()
 
     // Fire all probes concurrently for speed.
     const promises = activeTargets.map(async (target) => {
       try {
-        const probe = await probeFn!(target);
-        const classification = classify(probe.pidAlive, probe.endpointResponsive);
+        const probe = await probeFn!(target)
+        const classification = classify(probe.pidAlive, probe.endpointResponsive)
 
         const result: HealthCheckResult = {
           targetId: target.id,
@@ -168,13 +170,13 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
           endpointResponsive: probe.endpointResponsive,
           latencyMs: probe.latencyMs,
           checkedAt: now,
-        };
+        }
 
-        const prev = results.get(target.id);
+        const prev = results.get(target.id)
 
         // Emit event on classification change or first non-ok result.
         if (classification !== 'ok') {
-          const prevClass = prev?.classification ?? 'unknown';
+          const prevClass = prev?.classification ?? 'unknown'
           if (prevClass === 'ok' || prevClass === 'unknown' || prevClass !== classification) {
             const event: HealthEvent = {
               type: classification,
@@ -188,8 +190,8 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
                 pidAlive: probe.pidAlive,
                 endpointResponsive: probe.endpointResponsive,
               },
-            };
-            events.push(event);
+            }
+            events.push(event)
           }
         } else if (prev && prev.classification !== 'ok') {
           // Recovery event — transitioned back to ok.
@@ -200,14 +202,14 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
             from: prev.classification,
             to: 'ok',
             timestamp: now,
-          });
+          })
         }
 
-        results.set(target.id, result);
+        results.set(target.id, result)
       } catch (err) {
         // Probe itself threw — treat as crashed.
-        const prev = results.get(target.id);
-        const prevClass = prev?.classification ?? 'unknown';
+        const prev = results.get(target.id)
+        const prevClass = prev?.classification ?? 'unknown'
 
         if (prevClass !== 'crashed') {
           events.push({
@@ -218,18 +220,18 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
             to: 'crashed',
             timestamp: now,
             metadata: { error: err instanceof Error ? err.message : String(err) },
-          });
+          })
         }
 
         results.set(target.id, {
           targetId: target.id,
           classification: 'crashed',
           checkedAt: now,
-        });
+        })
       }
-    });
+    })
 
-    await Promise.allSettled(promises);
+    await Promise.allSettled(promises)
   }
 
   return {
@@ -240,37 +242,35 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
      * @param fn         - Async probe function invoked for each target.
      * @param intervalMs - Probe interval in ms (falls back to `defaultIntervalMs`).
      */
-    start(
-      targets: HealthCheckTarget[],
-      fn: typeof probeFn,
-      intervalMs?: number,
-    ): void {
-      this.stop(); // ensure no double-timers
-      activeTargets = targets;
-      probeFn = fn;
+    start(targets: HealthCheckTarget[], fn: typeof probeFn, intervalMs?: number): void {
+      this.stop() // ensure no double-timers
+      activeTargets = targets
+      probeFn = fn
       // Run immediately, then schedule.
-      void check();
-      timer = setInterval(() => { void check(); }, intervalMs ?? cfg.defaultIntervalMs);
+      void check()
+      timer = setInterval(() => {
+        void check()
+      }, intervalMs ?? cfg.defaultIntervalMs)
       // Allow the process to exit even if the timer is still active.
-      if (timer.unref) timer.unref();
+      if (timer.unref) timer.unref()
     },
 
     /** Stop periodic probing and clear the timer. */
     stop(): void {
       if (timer !== null) {
-        clearInterval(timer);
-        timer = null;
+        clearInterval(timer)
+        timer = null
       }
     },
 
     /** Return a snapshot of the most recent probe results. */
     getResults(): HealthCheckResult[] {
-      return Array.from(results.values());
+      return Array.from(results.values())
     },
 
     /** Return all events emitted since the last `start` / `stop` cycle. */
     getEvents(): HealthEvent[] {
-      return events.slice();
+      return events.slice()
     },
-  };
+  }
 }

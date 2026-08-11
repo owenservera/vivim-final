@@ -30,11 +30,11 @@ export class AlertCooldown {
   /**
    * Map of `"providerId|conditionId"` → epoch-ms timestamp of last fire.
    */
-  private lastFired = new Map<string, number>();
+  private lastFired = new Map<string, number>()
 
   /** Build the composite key used internally. */
   private key(providerId: string | null, conditionId: string): string {
-    return `${providerId ?? 'null'}|${conditionId}`;
+    return `${providerId ?? 'null'}|${conditionId}`
   }
 
   /**
@@ -47,10 +47,15 @@ export class AlertCooldown {
    * @param now         - Current epoch-ms timestamp.
    * @returns `true` if the alert may be fired.
    */
-  canFire(providerId: string | null, conditionId: string, cooldownMs: number, now: number): boolean {
-    const last = this.lastFired.get(this.key(providerId, conditionId));
-    if (last === undefined) return true;
-    return (now - last) >= cooldownMs;
+  canFire(
+    providerId: string | null,
+    conditionId: string,
+    cooldownMs: number,
+    now: number,
+  ): boolean {
+    const last = this.lastFired.get(this.key(providerId, conditionId))
+    if (last === undefined) return true
+    return now - last >= cooldownMs
   }
 
   /**
@@ -62,7 +67,7 @@ export class AlertCooldown {
    * @param ts          - Epoch-ms timestamp when the alert fired.
    */
   record(providerId: string | null, conditionId: string, ts: number): void {
-    this.lastFired.set(this.key(providerId, conditionId), ts);
+    this.lastFired.set(this.key(providerId, conditionId), ts)
   }
 
   /**
@@ -73,6 +78,6 @@ export class AlertCooldown {
    * @param conditionId - Unique condition identifier.
    */
   reset(providerId: string | null, conditionId: string): void {
-    this.lastFired.delete(this.key(providerId, conditionId));
+    this.lastFired.delete(this.key(providerId, conditionId))
   }
 }

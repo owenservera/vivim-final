@@ -15,21 +15,21 @@
 // Dynamic import guard — @tauri-apps/api is only bundled when running in Tauri.
 // The try/catch + typeof ensures this file is safe to import in pure web mode.
 
-let _isTauri: boolean | null = null;
+let _isTauri: boolean | null = null
 
 export function isTauri(): boolean {
-  if (_isTauri !== null) return _isTauri;
+  if (_isTauri !== null) return _isTauri
   try {
-    _isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+    _isTauri = typeof window !== 'undefined' && '__TAURI__' in window
   } catch {
-    _isTauri = false;
+    _isTauri = false
   }
-  return _isTauri;
+  return _isTauri
 }
 
-export type TauriInvoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+export type TauriInvoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>
 
-let _invoke: TauriInvoke | null = null;
+let _invoke: TauriInvoke | null = null
 
 /**
  * Call a Tauri IPC command.  Only works inside the Tauri shell.
@@ -38,13 +38,15 @@ let _invoke: TauriInvoke | null = null;
  */
 export async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (!isTauri()) {
-    throw new Error(`[tauri-bridge] tauriInvoke('${cmd}') called outside Tauri — use apiCall() for web fallback`);
+    throw new Error(
+      `[tauri-bridge] tauriInvoke('${cmd}') called outside Tauri — use apiCall() for web fallback`,
+    )
   }
   if (!_invoke) {
-    const mod = await import('@tauri-apps/api/core');
-    _invoke = mod.invoke as TauriInvoke;
+    const mod = await import('@tauri-apps/api/core')
+    _invoke = mod.invoke as TauriInvoke
   }
-  return _invoke(cmd, args);
+  return _invoke(cmd, args)
 }
 
 /**
@@ -58,29 +60,29 @@ export async function apiCall<T = unknown>(
   if (isTauri()) {
     // In Tauri V2, sidecar/backend calls go through Tauri commands.
     // The path is mapped to a command name, e.g. '/api/health' → 'api_health'
-    const cmd = 'api_' + path.replace(/^\//, '').replace(/\//g, '_');
-    return tauriInvoke<T>(cmd, { body: options?.body, method: options?.method });
+    const cmd = 'api_' + path.replace(/^\//, '').replace(/\//g, '_')
+    return tauriInvoke<T>(cmd, { body: options?.body, method: options?.method })
   }
   // Web fallback — standard fetch with timeout
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000);
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15000)
   try {
-  const resp = await fetch(path, {
-    method: options?.method ?? 'GET',
-    signal: controller.signal,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-    body: options?.body ? JSON.stringify(options.body) : undefined,
-  });
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => '');
-    throw new Error(`API ${options?.method ?? 'GET'} ${path} → ${resp.status}: ${text}`);
-  }
-  return resp.json() as Promise<T>;
+    const resp = await fetch(path, {
+      method: options?.method ?? 'GET',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      body: options?.body ? JSON.stringify(options.body) : undefined,
+    })
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '')
+      throw new Error(`API ${options?.method ?? 'GET'} ${path} → ${resp.status}: ${text}`)
+    }
+    return resp.json() as Promise<T>
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(timeout)
   }
 }
 
@@ -90,6 +92,6 @@ export async function apiCall<T = unknown>(
  */
 export async function signalBackendReady(): Promise<void> {
   if (isTauri()) {
-    await tauriInvoke('backend_ready');
+    await tauriInvoke('backend_ready')
   }
 }

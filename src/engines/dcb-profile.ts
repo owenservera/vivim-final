@@ -15,7 +15,7 @@
  *   decision_brief→ + Entity + Project + Decisions (no JIT/History)
  */
 
-import type { LayerType } from './cortex-budget.js';
+import type { LayerType } from './cortex-budget.js'
 
 export type DcbProfile =
   | 'seed'
@@ -25,38 +25,67 @@ export type DcbProfile =
   | 'handoff'
   | 'probe'
   | 'deep_research'
-  | 'decision_brief';
+  | 'decision_brief'
 
 /** Static profile → layers activation matrix. */
 const PROFILE_LAYERS: Record<DcbProfile, LayerType[]> = {
   seed: ['L0Identity', 'L1GlobalPrefs', 'L7UserQuery'],
   reunion: ['L0Identity', 'L1GlobalPrefs', 'L2Topic', 'L3Entity', 'L5JitContext', 'L7UserQuery'],
-  convergence: ['L0Identity', 'L1GlobalPrefs', 'L2Topic', 'L3Entity', 'L5JitContext', 'L6RecentHistory', 'L7UserQuery'],
+  convergence: [
+    'L0Identity',
+    'L1GlobalPrefs',
+    'L2Topic',
+    'L3Entity',
+    'L5JitContext',
+    'L6RecentHistory',
+    'L7UserQuery',
+  ],
   continuum: [
-    'L0Identity', 'L1GlobalPrefs', 'L2Topic', 'L3Entity',
-    'LpProjectState', 'LdDecisions', 'L4Conversation',
-    'L6RecentHistory', 'L7UserQuery',
+    'L0Identity',
+    'L1GlobalPrefs',
+    'L2Topic',
+    'L3Entity',
+    'LpProjectState',
+    'LdDecisions',
+    'L4Conversation',
+    'L6RecentHistory',
+    'L7UserQuery',
   ],
   handoff: [
-    'L0Identity', 'L3Entity', 'LpProjectState', 'LdDecisions',
-    'L4Conversation', 'L6RecentHistory', 'L7UserQuery',
+    'L0Identity',
+    'L3Entity',
+    'LpProjectState',
+    'LdDecisions',
+    'L4Conversation',
+    'L6RecentHistory',
+    'L7UserQuery',
   ],
   probe: ['L0Identity', 'L1GlobalPrefs', 'L2Topic', 'L3Entity', 'L5JitContext', 'L7UserQuery'],
   deep_research: [
-    'L0Identity', 'L1GlobalPrefs', 'L2Topic', 'L3Entity',
-    'LpProjectState', 'L5JitContext', 'L6RecentHistory', 'L7UserQuery',
+    'L0Identity',
+    'L1GlobalPrefs',
+    'L2Topic',
+    'L3Entity',
+    'LpProjectState',
+    'L5JitContext',
+    'L6RecentHistory',
+    'L7UserQuery',
   ],
   decision_brief: [
-    'L0Identity', 'L1GlobalPrefs', 'L3Entity',
-    'LpProjectState', 'LdDecisions', 'L7UserQuery',
+    'L0Identity',
+    'L1GlobalPrefs',
+    'L3Entity',
+    'LpProjectState',
+    'LdDecisions',
+    'L7UserQuery',
   ],
-};
+}
 
 /**
  * Get the active layers for a given DCB profile.
  */
 export function activeLayers(profile: DcbProfile): LayerType[] {
-  return PROFILE_LAYERS[profile] ?? [];
+  return PROFILE_LAYERS[profile] ?? []
 }
 
 /**
@@ -66,16 +95,22 @@ export function profileToDepth(profile: DcbProfile): 'Standard' | 'Deep' | 'Comp
   switch (profile) {
     case 'deep_research':
     case 'convergence':
-      return 'Deep';
+      return 'Deep'
     case 'seed':
-      return 'Compact';
+      return 'Compact'
     default:
-      return 'Standard';
+      return 'Standard'
   }
 }
 
 /** All valid profile names. */
 export const DCB_PROFILES: DcbProfile[] = [
-  'seed', 'reunion', 'convergence', 'continuum',
-  'handoff', 'probe', 'deep_research', 'decision_brief',
-];
+  'seed',
+  'reunion',
+  'convergence',
+  'continuum',
+  'handoff',
+  'probe',
+  'deep_research',
+  'decision_brief',
+]

@@ -511,7 +511,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
             | {
                 client: import('../../../engines/opencode/opencode-client.js').OpenCodeClient
                 supervisor: import(
-                  '../../../engines/opencode/opencode-supervisor.js'
+                  '../../../engines/opencode/opencode-supervisor.js',
                 ).OpenCodeSupervisor
               }
             | undefined
@@ -550,7 +550,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
 
             // Register a TS supervisor delegate for OpenCode (so stop/restart work)
             const openCodeDelegate: import(
-              '../../../ai/runtime/ts-supervisor.js'
+              '../../../ai/runtime/ts-supervisor.js',
             ).ISupervisorDelegate = {
               providerId: OPENCODE_PROVIDER_ID,
               async start() {
@@ -693,7 +693,9 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
     // F2/F8 fix: register router-only endpoints as capabilities so CLI/MCP
     // can reach them through the universal dispatcher.
     try {
-      const { registerRouterCapabilities } = await import('../../../engines/router-capability-bridge.js')
+      const { registerRouterCapabilities } = await import(
+        '../../../engines/router-capability-bridge.js'
+      )
       const bridgeResult = registerRouterCapabilities(registry, ctx.port ?? 9420)
       log.info(
         `[boot] Router-capability bridge: registered=${bridgeResult.registered} skipped=${bridgeResult.skipped}`,
@@ -705,7 +707,9 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
     // F7 fix: wrap legacy builtins as capabilities so they're reachable
     // via CLI (through registry), API, and MCP — not just the raw CLI dispatcher.
     try {
-      const { registerBuiltinCapabilities } = await import('../../../engines/builtin-capability-wrappers.js')
+      const { registerBuiltinCapabilities } = await import(
+        '../../../engines/builtin-capability-wrappers.js'
+      )
       const builtinResult = registerBuiltinCapabilities(registry)
       log.info(`[boot] Builtin capability wrappers: registered=${builtinResult}`)
     } catch (e) {

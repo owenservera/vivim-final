@@ -17,7 +17,11 @@
 // every path that has no frontend table entry, plus the excluded setup/health
 // surface.
 
-import { frontendRoutes, type FrontendRouteEntry, type FrontendHandler } from './generated-frontend-routes.js'
+import {
+  type FrontendHandler,
+  type FrontendRouteEntry,
+  frontendRoutes,
+} from './generated-frontend-routes.js'
 
 // Keep the compiler honest about the entry shape without importing type for runtime.
 export type { FrontendRouteEntry, FrontendHandler }

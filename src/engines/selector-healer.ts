@@ -437,8 +437,12 @@ const STRATEGY_SUGGESTIONS: Record<FailureType, HealStrategy[]> = {
  */
 export function classifyFailure(reason: string, selector: string): FailureClassification {
   const scores: Record<FailureType, number> = {
-    selector_not_found: 0, element_changed: 0, dom_restructured: 0,
-    timing_issue: 0, wrong_capability: 0, unknown: 0,
+    selector_not_found: 0,
+    element_changed: 0,
+    dom_restructured: 0,
+    timing_issue: 0,
+    wrong_capability: 0,
+    unknown: 0,
   }
 
   for (const [failureType, patterns] of Object.entries(FAILURE_PATTERNS)) {
@@ -488,4 +492,3 @@ export function healingPriority(classification: FailureClassification): number {
   }
   return base[classification.failureType] * classification.confidence
 }
-

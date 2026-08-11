@@ -16,11 +16,11 @@
 
 export interface SSEFrame {
   /** Whether this frame came from a named event or bare data. */
-  type: 'event' | 'data';
+  type: 'event' | 'data'
   /** The payload data string. */
-  value: string;
+  value: string
   /** Event type from `event:` lines (undefined for bare data frames). */
-  eventType?: string;
+  eventType?: string
 }
 
 // ── Factory ──────────────────────────────────────────────────────
@@ -34,24 +34,24 @@ export interface SSEFrame {
  * Thread-safety: not thread-safe; use one parser per stream.
  */
 export function createSSEParser(): { feed(chunk: string): SSEFrame[] } {
-  let buffer = '';
+  let buffer = ''
 
   return {
     feed(chunk: string): SSEFrame[] {
-      buffer += chunk;
-      const frames: SSEFrame[] = [];
-      const lines = buffer.split('\n');
+      buffer += chunk
+      const frames: SSEFrame[] = []
+      const lines = buffer.split('\n')
       // The last element may be incomplete — keep it in the buffer.
-      buffer = lines.pop() ?? '';
+      buffer = lines.pop() ?? ''
 
-      let currentData = '';
-      let currentEvent = '';
+      let currentData = ''
+      let currentEvent = ''
 
       for (const line of lines) {
         if (line.startsWith('event:')) {
-          currentEvent = line.slice(6).trim();
+          currentEvent = line.slice(6).trim()
         } else if (line.startsWith('data:')) {
-          currentData += (currentData ? '\n' : '') + line.slice(5).trim();
+          currentData += (currentData ? '\n' : '') + line.slice(5).trim()
         } else if (line.trim() === '') {
           // Blank line = end of event
           if (currentData || currentEvent) {
@@ -59,15 +59,15 @@ export function createSSEParser(): { feed(chunk: string): SSEFrame[] } {
               type: currentEvent ? 'event' : 'data',
               value: currentData,
               eventType: currentEvent || undefined,
-            });
-            currentData = '';
-            currentEvent = '';
+            })
+            currentData = ''
+            currentEvent = ''
           }
         }
         // Comments (lines starting with ':') and other lines are silently ignored.
       }
 
-      return frames;
+      return frames
     },
-  };
+  }
 }

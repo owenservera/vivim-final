@@ -8,57 +8,57 @@
  * key-value store for persistence.
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto'
 
 // ─── Public Types ───────────────────────────────────────────────────────
 
 /** A complete HTTP round-trip envelope. */
 export interface TrafficEnvelope {
   /** Unique identifier for this recorded exchange. */
-  id: string;
+  id: string
   /** Identifier of the API provider (e.g. "openai", "anthropic"). */
-  providerId: string;
+  providerId: string
   /** Optional account / project identifier. */
-  accountId?: string;
+  accountId?: string
   /** ISO-8601 timestamp of when the request was initiated. */
-  timestamp: string;
+  timestamp: string
   /** Full request URL (with query string). */
-  requestUrl: string;
+  requestUrl: string
   /** HTTP method (GET, POST, …). */
-  requestMethod: string;
+  requestMethod: string
   /** Request headers (lower-cased keys). */
-  requestHeaders: Record<string, string>;
+  requestHeaders: Record<string, string>
   /** Raw request body as a string (empty string for GET). */
-  requestBody: string;
+  requestBody: string
   /** HTTP response status code (e.g. 200, 429). */
-  responseStatus: number;
+  responseStatus: number
   /** Response headers (lower-cased keys). */
-  responseHeaders: Record<string, string>;
+  responseHeaders: Record<string, string>
   /** Raw response body as a string. */
-  responseBody: string;
+  responseBody: string
   /** Round-trip latency in milliseconds. */
-  timingMs: number;
+  timingMs: number
 }
 
 /** Minimal key-value store contract required by the traffic recorder. */
 export interface TrafficStore {
-  put(key: string, value: unknown): Promise<void>;
-  get(key: string): Promise<unknown | null>;
+  put(key: string, value: unknown): Promise<void>
+  get(key: string): Promise<unknown | null>
 }
 
 /** Returned by `createTrafficRecorder`. */
 export interface TrafficRecorder {
   /** Redact and persist a traffic envelope. */
-  record(envelope: TrafficEnvelope): Promise<void>;
+  record(envelope: TrafficEnvelope): Promise<void>
   /** Retrieve a single envelope by ID. Returns `null` if not found. */
-  getEnvelope(id: string): Promise<TrafficEnvelope | null>;
+  getEnvelope(id: string): Promise<TrafficEnvelope | null>
   /**
    * List envelopes sorted by timestamp descending.
    *
    * @param offset - Number of envelopes to skip (default 0).
    * @param limit  - Maximum envelopes to return (default 50).
    */
-  listEnvelopes(offset?: number, limit?: number): Promise<TrafficEnvelope[]>;
+  listEnvelopes(offset?: number, limit?: number): Promise<TrafficEnvelope[]>
 }
 
 // ─── Internal Constants ─────────────────────────────────────────────────
@@ -71,11 +71,11 @@ const REDACTED_HEADERS = new Set([
   'x-goog-api-key',
   'x-csrf-token',
   'sec-ch-ua-authorization',
-]);
+])
 
-const REDACTED_VALUE = '[REDACTED]';
-const STORE_PREFIX = 'obs:env:';
-const INDEX_KEY = 'obs:index';
+const REDACTED_VALUE = '[REDACTED]'
+const STORE_PREFIX = 'obs:env:'
+const INDEX_KEY = 'obs:index'
 
 // ─── 1. redactSecrets ───────────────────────────────────────────────────
 
@@ -95,12 +95,12 @@ const INDEX_KEY = 'obs:index';
  */
 export function redactSecrets(envelope: TrafficEnvelope): void {
   // ── Redact headers ──
-  redactHeaders(envelope.requestHeaders);
-  redactHeaders(envelope.responseHeaders);
+  redactHeaders(envelope.requestHeaders)
+  redactHeaders(envelope.responseHeaders)
 
   // ── Redact body patterns ──
-  envelope.requestBody = redactBodyPatterns(envelope.requestBody);
-  envelope.responseBody = redactBodyPatterns(envelope.responseBody);
+  envelope.requestBody = redactBodyPatterns(envelope.requestBody)
+  envelope.responseBody = redactBodyPatterns(envelope.responseBody)
 }
 
 /**
@@ -109,7 +109,7 @@ export function redactSecrets(envelope: TrafficEnvelope): void {
 function redactHeaders(headers: Record<string, string>): void {
   for (const key of Object.keys(headers)) {
     if (REDACTED_HEADERS.has(key.toLowerCase())) {
-      headers[key] = REDACTED_VALUE;
+      headers[key] = REDACTED_VALUE
     }
   }
 }
@@ -118,15 +118,15 @@ function redactHeaders(headers: Record<string, string>): void {
  * Replace known secret patterns in a string body.
  */
 function redactBodyPatterns(body: string): string {
-  let result = body;
+  let result = body
 
   // at=... tokens (URL-encoded or query-string style)
-  result = result.replace(/at=[^&\s"]+/g, 'at=[REDACTED]');
+  result = result.replace(/at=[^&\s"]+/g, 'at=[REDACTED]')
 
   // Bearer tokens in JSON strings or text
-  result = result.replace(/Bearer\s+[\w\-._~+/]+=*/g, '[REDACTED BEARER TOKEN IN BODY]');
+  result = result.replace(/Bearer\s+[\w\-._~+/]+=*/g, '[REDACTED BEARER TOKEN IN BODY]')
 
-  return result;
+  return result
 }
 
 // ─── 2. createTrafficRecorder ───────────────────────────────────────────
@@ -148,23 +148,21 @@ export function createTrafficRecorder(store: TrafficStore): TrafficRecorder {
    */
   async function readIndex(): Promise<Array<{ id: string; timestamp: string }>> {
     try {
-      const raw = await store.get(INDEX_KEY);
+      const raw = await store.get(INDEX_KEY)
       if (Array.isArray(raw)) {
-        return raw as Array<{ id: string; timestamp: string }>;
+        return raw as Array<{ id: string; timestamp: string }>
       }
-      return [];
+      return []
     } catch {
-      return [];
+      return []
     }
   }
 
   /**
    * Persist the updated envelope ID index.
    */
-  async function writeIndex(
-    index: Array<{ id: string; timestamp: string }>,
-  ): Promise<void> {
-    await store.put(INDEX_KEY, index);
+  async function writeIndex(index: Array<{ id: string; timestamp: string }>): Promise<void> {
+    await store.put(INDEX_KEY, index)
   }
 
   return {
@@ -175,20 +173,20 @@ export function createTrafficRecorder(store: TrafficStore): TrafficRecorder {
     async record(envelope: TrafficEnvelope): Promise<void> {
       // Assign ID if not provided
       if (!envelope.id) {
-        envelope.id = randomUUID();
+        envelope.id = randomUUID()
       }
 
       // Sanitise in place
-      redactSecrets(envelope);
+      redactSecrets(envelope)
 
       // Persist the envelope itself
-      await store.put(STORE_PREFIX + envelope.id, envelope);
+      await store.put(STORE_PREFIX + envelope.id, envelope)
 
       // Update the index (insert sorted by timestamp desc)
-      const index = await readIndex();
-      index.push({ id: envelope.id, timestamp: envelope.timestamp });
-      index.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-      await writeIndex(index);
+      const index = await readIndex()
+      index.push({ id: envelope.id, timestamp: envelope.timestamp })
+      index.sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+      await writeIndex(index)
     },
 
     /**
@@ -199,13 +197,13 @@ export function createTrafficRecorder(store: TrafficStore): TrafficRecorder {
      */
     async getEnvelope(id: string): Promise<TrafficEnvelope | null> {
       try {
-        const raw = await store.get(STORE_PREFIX + id);
+        const raw = await store.get(STORE_PREFIX + id)
         if (raw && typeof raw === 'object' && 'id' in (raw as object)) {
-          return raw as TrafficEnvelope;
+          return raw as TrafficEnvelope
         }
-        return null;
+        return null
       } catch {
-        return null;
+        return null
       }
     },
 
@@ -216,22 +214,19 @@ export function createTrafficRecorder(store: TrafficStore): TrafficRecorder {
      * @param limit  - Maximum items to return (default `50`, max `200`).
      * @returns Array of matching envelopes (may be fewer than `limit`).
      */
-    async listEnvelopes(
-      offset: number = 0,
-      limit: number = 50,
-    ): Promise<TrafficEnvelope[]> {
-      const cappedLimit = Math.min(Math.max(0, limit), 200);
-      const index = await readIndex();
-      const slice = index.slice(offset, offset + cappedLimit);
+    async listEnvelopes(offset = 0, limit = 50): Promise<TrafficEnvelope[]> {
+      const cappedLimit = Math.min(Math.max(0, limit), 200)
+      const index = await readIndex()
+      const slice = index.slice(offset, offset + cappedLimit)
 
-      const envelopes: TrafficEnvelope[] = [];
+      const envelopes: TrafficEnvelope[] = []
       for (const entry of slice) {
-        const env = await store.get(STORE_PREFIX + entry.id);
+        const env = await store.get(STORE_PREFIX + entry.id)
         if (env && typeof env === 'object' && 'id' in (env as object)) {
-          envelopes.push(env as TrafficEnvelope);
+          envelopes.push(env as TrafficEnvelope)
         }
       }
-      return envelopes;
+      return envelopes
     },
-  };
+  }
 }

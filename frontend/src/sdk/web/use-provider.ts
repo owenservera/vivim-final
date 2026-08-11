@@ -37,18 +37,23 @@ export function useProvider() {
           const prov = p as Record<string, unknown>
           let caps: string[] | undefined
           try {
-            caps = typeof prov.capabilitiesJson === 'string'
-              ? JSON.parse(prov.capabilitiesJson)
-              : (prov.capabilities as string[] | undefined)
+            caps =
+              typeof prov.capabilitiesJson === 'string'
+                ? JSON.parse(prov.capabilitiesJson)
+                : (prov.capabilities as string[] | undefined)
           } catch {
             caps = []
           }
           return {
             id: prov.id as string,
-            name: (prov.displayName as string | undefined) ?? (prov.name as string | undefined) ?? (prov.id as string),
+            name:
+              (prov.displayName as string | undefined) ??
+              (prov.name as string | undefined) ??
+              (prov.id as string),
             displayName: (prov.displayName as string) ?? (prov.id as string),
             slug: (prov.slug as string | undefined) ?? (prov.id as string),
-            status: (prov.protocolStatus as string | undefined) ?? (prov.status as string | undefined),
+            status:
+              (prov.protocolStatus as string | undefined) ?? (prov.status as string | undefined),
             protocolStatus: prov.protocolStatus as string | undefined,
             capabilities: caps,
           }

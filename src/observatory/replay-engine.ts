@@ -10,47 +10,42 @@
  *                    against the baseline.
  */
 
-import type { CompatibilityReport } from './schema-inference.js';
-import {
-  inferShape,
-  computeHash,
-  diffShapes,
-  assessCompatibility,
-} from './schema-inference.js';
-import type { TrafficEnvelope, TrafficStore } from './traffic-recorder.js';
+import type { CompatibilityReport } from './schema-inference.js'
+import { assessCompatibility, computeHash, diffShapes, inferShape } from './schema-inference.js'
+import type { TrafficEnvelope, TrafficStore } from './traffic-recorder.js'
 
 // ─── Public Types ───────────────────────────────────────────────────────
 
 /** Replay execution mode. */
-export type ReplayMode = 'mock' | 'authenticated';
+export type ReplayMode = 'mock' | 'authenticated'
 
 /** Result of a single replay execution. */
 export interface ReplayResult {
   /** ID of the source envelope that was replayed. */
-  envelopeId: string;
+  envelopeId: string
   /** The mode used for this replay. */
-  mode: ReplayMode;
+  mode: ReplayMode
   /** ISO-8601 timestamp of when the replay was executed. */
-  timestamp: string;
+  timestamp: string
   /** `true` when the replay completed without errors. */
-  success: boolean;
+  success: boolean
   /** End-to-end latency of the replay in milliseconds. */
-  latencyMs: number;
+  latencyMs: number
   /** HTTP status code (stored for mock, live for authenticated). */
-  responseStatus: number;
+  responseStatus: number
   /** Compatibility report comparing response shape against the baseline. */
-  compatibility: CompatibilityReport;
+  compatibility: CompatibilityReport
   /** Human-readable error message when `success` is `false`. */
-  error?: string;
+  error?: string
 }
 
 // ─── Internal Constants ─────────────────────────────────────────────────
 
 /** Request timeout in milliseconds for authenticated replays. */
-const REPLAY_TIMEOUT_MS = 15_000;
+const REPLAY_TIMEOUT_MS = 15_000
 
 /** Store key prefix for baseline shape snapshots. */
-const BASELINE_PREFIX = 'obs:baseline:';
+const BASELINE_PREFIX = 'obs:baseline:'
 
 // ─── Internal Helpers ───────────────────────────────────────────────────
 
@@ -58,25 +53,23 @@ const BASELINE_PREFIX = 'obs:baseline:';
  * Build a baseline key from provider ID + endpoint.
  */
 function baselineKey(providerId: string, endpoint: string): string {
-  return `${BASELINE_PREFIX}${providerId}:${endpoint}`;
+  return `${BASELINE_PREFIX}${providerId}:${endpoint}`
 }
 
 /**
  * Remove headers whose values are redacted placeholders so they don't
  * leak into live requests.
  */
-function cleanHeaders(
-  headers: Record<string, string>,
-): Record<string, string> {
-  const redactedMarkers = ['[REDACTED]', '[REDACTED BEARER TOKEN IN BODY]'];
-  const out: Record<string, string> = {};
+function cleanHeaders(headers: Record<string, string>): Record<string, string> {
+  const redactedMarkers = ['[REDACTED]', '[REDACTED BEARER TOKEN IN BODY]']
+  const out: Record<string, string> = {}
   for (const [k, v] of Object.entries(headers)) {
     if (redactedMarkers.some((m) => v.includes(m))) {
-      continue;
+      continue
     }
-    out[k] = v;
+    out[k] = v
   }
-  return out;
+  return out
 }
 
 /**
@@ -84,9 +77,9 @@ function cleanHeaders(
  */
 function safeParse(text: string): unknown {
   try {
-    return JSON.parse(text);
+    return JSON.parse(text)
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -102,24 +95,24 @@ async function compareAgainstBaseline(
   endpoint: string,
   responseShape: unknown,
 ): Promise<{ report: CompatibilityReport; baselineHash: string }> {
-  const key = baselineKey(providerId, endpoint);
-  const currentHash = computeHash(responseShape);
+  const key = baselineKey(providerId, endpoint)
+  const currentHash = computeHash(responseShape)
 
-  const stored = await store.get(key);
+  const stored = await store.get(key)
 
   if (stored && typeof stored === 'object' && 'hash' in (stored as object)) {
-    const baseline = stored as { hash: string; shape: unknown };
-    const diffs = diffShapes(baseline.shape, responseShape);
-    const report = assessCompatibility(diffs);
-    return { report, baselineHash: baseline.hash };
+    const baseline = stored as { hash: string; shape: unknown }
+    const diffs = diffShapes(baseline.shape, responseShape)
+    const report = assessCompatibility(diffs)
+    return { report, baselineHash: baseline.hash }
   }
 
   // No baseline yet — store current shape as the new baseline
-  await store.put(key, { hash: currentHash, shape: responseShape });
+  await store.put(key, { hash: currentHash, shape: responseShape })
   return {
     report: { isCompatible: true, severity: 'none', diffs: [] },
     baselineHash: currentHash,
-  };
+  }
 }
 
 // ─── createReplayEngine ─────────────────────────────────────────────────
@@ -129,7 +122,7 @@ async function compareAgainstBaseline(
  */
 export interface ReplayEngineDeps {
   /** Key-value store used to retrieve envelopes and baselines. */
-  store: TrafficStore;
+  store: TrafficStore
 }
 
 /**
@@ -143,7 +136,7 @@ export interface ReplayEngine {
    * @param mode       - `'mock'` for offline diff, `'authenticated'` for live request.
    * @returns A {@link ReplayResult} with timing, compatibility, and status.
    */
-  replay(envelopeId: string, mode: ReplayMode): Promise<ReplayResult>;
+  replay(envelopeId: string, mode: ReplayMode): Promise<ReplayResult>
 }
 
 /**
@@ -153,23 +146,16 @@ export interface ReplayEngine {
  * @returns A `ReplayEngine` instance.
  */
 export function createReplayEngine(deps: ReplayEngineDeps): ReplayEngine {
-  const { store } = deps;
+  const { store } = deps
 
   return {
-    async replay(
-      envelopeId: string,
-      mode: ReplayMode,
-    ): Promise<ReplayResult> {
-      const startTime = Date.now();
-      const timestamp = new Date().toISOString();
+    async replay(envelopeId: string, mode: ReplayMode): Promise<ReplayResult> {
+      const startTime = Date.now()
+      const timestamp = new Date().toISOString()
 
       // ── Load stored envelope ──
-      const rawEnvelope = await store.get(`obs:env:${envelopeId}`);
-      if (
-        !rawEnvelope ||
-        typeof rawEnvelope !== 'object' ||
-        !('id' in rawEnvelope)
-      ) {
+      const rawEnvelope = await store.get(`obs:env:${envelopeId}`)
+      if (!rawEnvelope || typeof rawEnvelope !== 'object' || !('id' in rawEnvelope)) {
         return {
           envelopeId,
           mode,
@@ -179,20 +165,17 @@ export function createReplayEngine(deps: ReplayEngineDeps): ReplayEngine {
           responseStatus: 0,
           compatibility: { isCompatible: true, severity: 'none', diffs: [] },
           error: `Envelope not found: ${envelopeId}`,
-        };
+        }
       }
 
-      const envelope = rawEnvelope as TrafficEnvelope;
+      const envelope = rawEnvelope as TrafficEnvelope
 
       try {
         if (mode === 'mock') {
-          return await replayMock(
-            store,
-            envelope,
-          );
+          return await replayMock(store, envelope)
         }
 
-        return await replayAuthenticated(store, envelope);
+        return await replayAuthenticated(store, envelope)
       } catch (err) {
         return {
           envelopeId,
@@ -203,10 +186,10 @@ export function createReplayEngine(deps: ReplayEngineDeps): ReplayEngine {
           responseStatus: 0,
           compatibility: { isCompatible: true, severity: 'none', diffs: [] },
           error: err instanceof Error ? err.message : String(err),
-        };
+        }
       }
     },
-  };
+  }
 }
 
 // ─── Mode Implementations ──────────────────────────────────────────────
@@ -215,22 +198,14 @@ export function createReplayEngine(deps: ReplayEngineDeps): ReplayEngine {
  * Mock replay: infer the shape of the stored response body, diff against
  * the persisted baseline, and return the compatibility report.
  */
-async function replayMock(
-  store: TrafficStore,
-  envelope: TrafficEnvelope,
-): Promise<ReplayResult> {
-  const startTime = Date.now();
+async function replayMock(store: TrafficStore, envelope: TrafficEnvelope): Promise<ReplayResult> {
+  const startTime = Date.now()
 
-  const parsedBody = safeParse(envelope.responseBody);
-  const shape = parsedBody !== null ? inferShape(parsedBody) : 'string';
+  const parsedBody = safeParse(envelope.responseBody)
+  const shape = parsedBody !== null ? inferShape(parsedBody) : 'string'
 
-  const endpoint = extractPath(envelope.requestUrl);
-  const { report } = await compareAgainstBaseline(
-    store,
-    envelope.providerId,
-    endpoint,
-    shape,
-  );
+  const endpoint = extractPath(envelope.requestUrl)
+  const { report } = await compareAgainstBaseline(store, envelope.providerId, endpoint, shape)
 
   return {
     envelopeId: envelope.id,
@@ -240,7 +215,7 @@ async function replayMock(
     latencyMs: Date.now() - startTime,
     responseStatus: envelope.responseStatus,
     compatibility: report,
-  };
+  }
 }
 
 /**
@@ -252,24 +227,24 @@ async function replayAuthenticated(
   store: TrafficStore,
   envelope: TrafficEnvelope,
 ): Promise<ReplayResult> {
-  const startTime = Date.now();
+  const startTime = Date.now()
 
   // Clean headers — remove any that were redacted
-  const headers = cleanHeaders(envelope.requestHeaders);
+  const headers = cleanHeaders(envelope.requestHeaders)
 
   // Set up abort controller for timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REPLAY_TIMEOUT_MS);
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), REPLAY_TIMEOUT_MS)
 
-  let responseStatus: number;
-  let responseBody: string;
+  let responseStatus: number
+  let responseBody: string
 
   try {
     const fetchOptions: RequestInit = {
       method: envelope.requestMethod,
       headers,
       signal: controller.signal,
-    };
+    }
 
     // Attach body for methods that support it
     if (
@@ -277,20 +252,20 @@ async function replayAuthenticated(
       envelope.requestMethod !== 'HEAD' &&
       envelope.requestBody
     ) {
-      fetchOptions.body = envelope.requestBody;
+      fetchOptions.body = envelope.requestBody
     }
 
-    const response = await fetch(envelope.requestUrl, fetchOptions);
-    responseStatus = response.status;
-    responseBody = await response.text();
+    const response = await fetch(envelope.requestUrl, fetchOptions)
+    responseStatus = response.status
+    responseBody = await response.text()
   } catch (err) {
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId)
     const message =
       err instanceof DOMException && err.name === 'AbortError'
         ? `Replay timed out after ${REPLAY_TIMEOUT_MS}ms`
         : err instanceof Error
           ? err.message
-          : String(err);
+          : String(err)
 
     return {
       envelopeId: envelope.id,
@@ -301,22 +276,17 @@ async function replayAuthenticated(
       responseStatus: 0,
       compatibility: { isCompatible: true, severity: 'none', diffs: [] },
       error: message,
-    };
+    }
   } finally {
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId)
   }
 
   // Infer shape of the live response and compare
-  const parsedBody = safeParse(responseBody);
-  const shape = parsedBody !== null ? inferShape(parsedBody) : 'string';
+  const parsedBody = safeParse(responseBody)
+  const shape = parsedBody !== null ? inferShape(parsedBody) : 'string'
 
-  const endpoint = extractPath(envelope.requestUrl);
-  const { report } = await compareAgainstBaseline(
-    store,
-    envelope.providerId,
-    endpoint,
-    shape,
-  );
+  const endpoint = extractPath(envelope.requestUrl)
+  const { report } = await compareAgainstBaseline(store, envelope.providerId, endpoint, shape)
 
   return {
     envelopeId: envelope.id,
@@ -326,7 +296,7 @@ async function replayAuthenticated(
     latencyMs: Date.now() - startTime,
     responseStatus,
     compatibility: report,
-  };
+  }
 }
 
 /**
@@ -334,10 +304,10 @@ async function replayAuthenticated(
  */
 function extractPath(url: string): string {
   try {
-    const parsed = new URL(url);
-    return parsed.pathname;
- } catch {
+    const parsed = new URL(url)
+    return parsed.pathname
+  } catch {
     // Fallback: treat the whole string as the path
-    return url;
+    return url
   }
 }

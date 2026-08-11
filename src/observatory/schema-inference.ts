@@ -10,53 +10,53 @@
  * built-ins.
  */
 
-import { createHash } from 'node:crypto';
+import { createHash } from 'node:crypto'
 
 // ─── Public Types ───────────────────────────────────────────────────────
 
 /** Severity level for a detected schema change. */
-export type ChangeSeverity = 'none' | 'minor' | 'critical';
+export type ChangeSeverity = 'none' | 'minor' | 'critical'
 
 /** A single diff operation between two structural shapes. */
 export type DiffOp =
   | { kind: 'key_added'; path: string }
   | { kind: 'key_removed'; path: string }
-  | { kind: 'type_changed'; path: string; oldType: string; newType: string };
+  | { kind: 'type_changed'; path: string; oldType: string; newType: string }
 
 /** A point-in-time snapshot of an API response shape. */
 export interface SchemaSnapshot {
   /** SHA-256 hash of the structural shape. */
-  hash: string;
+  hash: string
   /** Identifier of the API provider. */
-  providerId: string;
+  providerId: string
   /** Endpoint URL path. */
-  endpoint: string;
+  endpoint: string
   /** ISO-8601 timestamp of when this snapshot was taken. */
-  timestamp: string;
+  timestamp: string
   /** The inferred structural shape object. */
-  shape: unknown;
+  shape: unknown
 }
 
 /** Result of a compatibility assessment between two schema shapes. */
 export interface CompatibilityReport {
   /** `true` when the change is backwards-compatible (only additions). */
-  isCompatible: boolean;
+  isCompatible: boolean
   /** Worst severity found in the diff set. */
-  severity: ChangeSeverity;
+  severity: ChangeSeverity
   /** Individual differences ordered depth-first. */
-  diffs: DiffOp[];
+  diffs: DiffOp[]
 }
 
 // ─── Internal Helpers ───────────────────────────────────────────────────
 
 /** Tag used for primitive type labels in structural shapes. */
-type PrimLabel = 'string' | 'number' | 'boolean' | 'null' | 'undefined';
+type PrimLabel = 'string' | 'number' | 'boolean' | 'null' | 'undefined'
 
 /**
  * Determine if a value is a plain object (not array, not null).
  */
 function isPlainObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
 // ─── 1. inferShape ─────────────────────────────────────────────────────
@@ -75,41 +75,41 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
  */
 export function inferShape(val: unknown): unknown {
   // ── Primitives ──
-  if (val === undefined) return 'undefined' as PrimLabel;
-  if (val === null) return 'null' as PrimLabel;
-  if (typeof val === 'string') return 'string' as PrimLabel;
-  if (typeof val === 'number') return 'number' as PrimLabel;
-  if (typeof val === 'boolean') return 'boolean' as PrimLabel;
+  if (val === undefined) return 'undefined' as PrimLabel
+  if (val === null) return 'null' as PrimLabel
+  if (typeof val === 'string') return 'string' as PrimLabel
+  if (typeof val === 'number') return 'number' as PrimLabel
+  if (typeof val === 'boolean') return 'boolean' as PrimLabel
 
   // ── Arrays ──
   if (Array.isArray(val)) {
-    if (val.length === 0) return [];
+    if (val.length === 0) return []
 
-    const seen = new Set<string>();
-    const uniqueShapes: unknown[] = [];
+    const seen = new Set<string>()
+    const uniqueShapes: unknown[] = []
 
     for (const item of val) {
-      const shape = inferShape(item);
-      const key = JSON.stringify(shape);
+      const shape = inferShape(item)
+      const key = JSON.stringify(shape)
       if (!seen.has(key)) {
-        seen.add(key);
-        uniqueShapes.push(shape);
+        seen.add(key)
+        uniqueShapes.push(shape)
       }
     }
-    return uniqueShapes;
+    return uniqueShapes
   }
 
   // ── Plain objects ──
   if (isPlainObject(val)) {
-    const result: Record<string, unknown> = {};
+    const result: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(val)) {
-      result[k] = inferShape(v);
+      result[k] = inferShape(v)
     }
-    return result;
+    return result
   }
 
   // Fallback (functions, symbols, etc.) — not expected in JSON payloads
-  return 'unknown';
+  return 'unknown'
 }
 
 // ─── 2. computeHash ─────────────────────────────────────────────────────
@@ -124,10 +124,13 @@ export function inferShape(val: unknown): unknown {
  * @returns Lower-case hex SHA-256 string (64 characters).
  */
 export function computeHash(shape: unknown): string {
-  const canonical = JSON.stringify(shape, Object.keys.bind(null, shape as object).length ? sortKeys : undefined);
+  const canonical = JSON.stringify(
+    shape,
+    Object.keys.bind(null, shape as object).length ? sortKeys : undefined,
+  )
   // Fallback: always sort to ensure determinism
-  const sorted = canonicalise(shape);
-  return createHash('sha256').update(sorted).digest('hex');
+  const sorted = canonicalise(shape)
+  return createHash('sha256').update(sorted).digest('hex')
 }
 
 /**
@@ -139,17 +142,17 @@ function canonicalise(value: unknown): string {
       return Object.keys(val)
         .sort()
         .reduce<Record<string, unknown>>((acc, k) => {
-          acc[k] = (val as Record<string, unknown>)[k];
-          return acc;
-        }, {});
+          acc[k] = (val as Record<string, unknown>)[k]
+          return acc
+        }, {})
     }
-    return val;
-  });
+    return val
+  })
 }
 
 /** Dummy replacer helper — unused, canonicalise handles everything. */
 function sortKeys(_key: string, _value: unknown): unknown {
-  return _value;
+  return _value
 }
 
 // ─── 3. diffShapes ──────────────────────────────────────────────────────
@@ -162,49 +165,45 @@ function sortKeys(_key: string, _value: unknown): unknown {
  * @param path     - Dot-separated path prefix for human-readable locations.
  * @returns Array of differences, depth-first ordered.
  */
-export function diffShapes(
-  oldShape: unknown,
-  newShape: unknown,
-  path: string = '',
-): DiffOp[] {
-  const diffs: DiffOp[] = [];
-  const seg = (key: string) => (path ? `${path}.${key}` : key);
+export function diffShapes(oldShape: unknown, newShape: unknown, path = ''): DiffOp[] {
+  const diffs: DiffOp[] = []
+  const seg = (key: string) => (path ? `${path}.${key}` : key)
 
   // Both are plain objects — compare keys
   if (isPlainObject(oldShape) && isPlainObject(newShape)) {
-    const oldKeys = new Set(Object.keys(oldShape));
-    const newKeys = new Set(Object.keys(newShape));
+    const oldKeys = new Set(Object.keys(oldShape))
+    const newKeys = new Set(Object.keys(newShape))
 
     for (const key of newKeys) {
       if (!oldKeys.has(key)) {
-        diffs.push({ kind: 'key_added', path: seg(key) });
+        diffs.push({ kind: 'key_added', path: seg(key) })
       } else {
-        diffs.push(...diffShapes(oldShape[key], newShape[key], seg(key)));
+        diffs.push(...diffShapes(oldShape[key], newShape[key], seg(key)))
       }
     }
 
     for (const key of oldKeys) {
       if (!newKeys.has(key)) {
-        diffs.push({ kind: 'key_removed', path: seg(key) });
+        diffs.push({ kind: 'key_removed', path: seg(key) })
       }
     }
 
-    return diffs;
+    return diffs
   }
 
   // Both are arrays — compare element-by-element
   if (Array.isArray(oldShape) && Array.isArray(newShape)) {
-    const maxLen = Math.max(oldShape.length, newShape.length);
+    const maxLen = Math.max(oldShape.length, newShape.length)
     for (let i = 0; i < maxLen; i++) {
       if (i >= oldShape.length) {
-        diffs.push({ kind: 'key_added', path: `${path}[${i}]` });
+        diffs.push({ kind: 'key_added', path: `${path}[${i}]` })
       } else if (i >= newShape.length) {
-        diffs.push({ kind: 'key_removed', path: `${path}[${i}]` });
+        diffs.push({ kind: 'key_removed', path: `${path}[${i}]` })
       } else {
-        diffs.push(...diffShapes(oldShape[i], newShape[i], `${path}[${i}]`));
+        diffs.push(...diffShapes(oldShape[i], newShape[i], `${path}[${i}]`))
       }
     }
-    return diffs;
+    return diffs
   }
 
   // Both are strings (type labels) — check for type change
@@ -215,9 +214,9 @@ export function diffShapes(
         path: path || '$',
         oldType: oldShape,
         newType: newShape,
-      });
+      })
     }
-    return diffs;
+    return diffs
   }
 
   // Structural mismatch (e.g. object vs. array, or object vs. primitive)
@@ -226,9 +225,9 @@ export function diffShapes(
     path: path || '$',
     oldType: typeof oldShape,
     newType: typeof newShape,
-  });
+  })
 
-  return diffs;
+  return diffs
 }
 
 // ─── 4. assessCompatibility ─────────────────────────────────────────────
@@ -247,28 +246,28 @@ export function diffShapes(
  */
 export function assessCompatibility(diffs: DiffOp[]): CompatibilityReport {
   if (diffs.length === 0) {
-    return { isCompatible: true, severity: 'none', diffs: [] };
+    return { isCompatible: true, severity: 'none', diffs: [] }
   }
 
-  let hasCritical = false;
-  let hasMinor = false;
+  let hasCritical = false
+  let hasMinor = false
 
   for (const d of diffs) {
     if (d.kind === 'key_removed' || d.kind === 'type_changed') {
-      hasCritical = true;
+      hasCritical = true
     } else if (d.kind === 'key_added') {
-      hasMinor = true;
+      hasMinor = true
     }
   }
 
   if (hasCritical) {
-    return { isCompatible: false, severity: 'critical', diffs };
+    return { isCompatible: false, severity: 'critical', diffs }
   }
 
   if (hasMinor) {
-    return { isCompatible: true, severity: 'minor', diffs };
+    return { isCompatible: true, severity: 'minor', diffs }
   }
 
   // Should not reach here, but handle defensively
-  return { isCompatible: true, severity: 'none', diffs };
+  return { isCompatible: true, severity: 'none', diffs }
 }

@@ -28,11 +28,11 @@ export class AlertDedup {
    * Internal map keyed by `"providerId|conditionId"` (or `"null|conditionId"`
    * when `providerId` is `null`).
    */
-  private seen = new Map<string, number>();
+  private seen = new Map<string, number>()
 
   /** Build the composite key used internally. */
   private key(providerId: string | null, conditionId: string): string {
-    return `${providerId ?? 'null'}|${conditionId}`;
+    return `${providerId ?? 'null'}|${conditionId}`
   }
 
   /**
@@ -45,10 +45,15 @@ export class AlertDedup {
    * @param now         - Current epoch-ms timestamp.
    * @returns `true` if the alert is a duplicate and should be suppressed.
    */
-  isDuplicate(providerId: string | null, conditionId: string, cooldownMs: number, now: number): boolean {
-    const lastSeen = this.seen.get(this.key(providerId, conditionId));
-    if (lastSeen === undefined) return false;
-    return (now - lastSeen) < cooldownMs;
+  isDuplicate(
+    providerId: string | null,
+    conditionId: string,
+    cooldownMs: number,
+    now: number,
+  ): boolean {
+    const lastSeen = this.seen.get(this.key(providerId, conditionId))
+    if (lastSeen === undefined) return false
+    return now - lastSeen < cooldownMs
   }
 
   /**
@@ -60,7 +65,7 @@ export class AlertDedup {
    * @param ts          - Epoch-ms timestamp of the alert.
    */
   mark(providerId: string | null, conditionId: string, ts: number): void {
-    this.seen.set(this.key(providerId, conditionId), ts);
+    this.seen.set(this.key(providerId, conditionId), ts)
   }
 
   /**
@@ -70,13 +75,13 @@ export class AlertDedup {
    * @param conditionId - Unique condition identifier.
    */
   clear(providerId: string | null, conditionId: string): void {
-    this.seen.delete(this.key(providerId, conditionId));
+    this.seen.delete(this.key(providerId, conditionId))
   }
 
   /**
    * Clear **all** dedup records.
    */
   clearAll(): void {
-    this.seen.clear();
+    this.seen.clear()
   }
 }

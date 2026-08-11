@@ -111,7 +111,11 @@ export function compileMessageToAST(content: string): ASTNode[] {
       if (lang === 'mermaid') {
         nodes.push({ type: 'mermaid', content: codeBlockMatch[2].trim() })
       } else {
-        nodes.push({ type: 'code_block', language: lang || 'plaintext', content: codeBlockMatch[2] })
+        nodes.push({
+          type: 'code_block',
+          language: lang || 'plaintext',
+          content: codeBlockMatch[2],
+        })
       }
       remaining = remaining.substring(codeBlockMatch[0].length)
       continue
@@ -147,7 +151,11 @@ function parseMarkdownBlocks(chunk: string): ASTNode[] {
   const nodes: ASTNode[] = []
   const lines = chunk.split('\n')
 
-  interface ListFrame { items: ASTNode[]; indent: number; isOrdered: boolean }
+  interface ListFrame {
+    items: ASTNode[]
+    indent: number
+    isOrdered: boolean
+  }
   const listStack: ListFrame[] = []
 
   function flushLists(toIndent: number): void {
@@ -183,7 +191,11 @@ function parseMarkdownBlocks(chunk: string): ASTNode[] {
       }
       if (tableLines.length >= 2) {
         const table = parsePipeTable(tableLines)
-        if (table) { flushLists(0); nodes.push(table); continue }
+        if (table) {
+          flushLists(0)
+          nodes.push(table)
+          continue
+        }
       }
     }
 
@@ -191,7 +203,11 @@ function parseMarkdownBlocks(chunk: string): ASTNode[] {
     const headerMatch = line.match(/^(#{1,6})\s+(.*)$/)
     if (headerMatch) {
       flushLists(0)
-      nodes.push({ type: 'header', level: headerMatch[1].length, children: parseInline(headerMatch[2]) })
+      nodes.push({
+        type: 'header',
+        level: headerMatch[1].length,
+        children: parseInline(headerMatch[2]),
+      })
       continue
     }
 
@@ -209,7 +225,11 @@ function parseMarkdownBlocks(chunk: string): ASTNode[] {
       while (i < lines.length && lines[i].trimStart().startsWith('>')) {
         let depth = 0
         let content = lines[i]
-        while (content.startsWith('>')) { depth++; content = content.substring(1); if (content.startsWith(' ')) content = content.substring(1) }
+        while (content.startsWith('>')) {
+          depth++
+          content = content.substring(1)
+          if (content.startsWith(' ')) content = content.substring(1)
+        }
         bqLines.push({ content, depth })
         i++
       }
@@ -234,8 +254,12 @@ function parseMarkdownBlocks(chunk: string): ASTNode[] {
         listStack.push({ items: [itemNode], indent, isOrdered })
       } else {
         const top = listStack[listStack.length - 1]
-        if (top.isOrdered === isOrdered && top.indent === indent) { top.items.push(itemNode) }
-        else { flushLists(indent); listStack.push({ items: [itemNode], indent, isOrdered }) }
+        if (top.isOrdered === isOrdered && top.indent === indent) {
+          top.items.push(itemNode)
+        } else {
+          flushLists(indent)
+          listStack.push({ items: [itemNode], indent, isOrdered })
+        }
       }
       continue
     }
@@ -248,14 +272,21 @@ function parseMarkdownBlocks(chunk: string): ASTNode[] {
         listStack.push({ items: [itemNode], indent, isOrdered })
       } else {
         const top = listStack[listStack.length - 1]
-        if (top.isOrdered === isOrdered && top.indent === indent) { top.items.push(itemNode) }
-        else { flushLists(indent); listStack.push({ items: [itemNode], indent, isOrdered }) }
+        if (top.isOrdered === isOrdered && top.indent === indent) {
+          top.items.push(itemNode)
+        } else {
+          flushLists(indent)
+          listStack.push({ items: [itemNode], indent, isOrdered })
+        }
       }
       continue
     }
 
     // Blank line
-    if (line.trim() === '') { flushLists(0); continue }
+    if (line.trim() === '') {
+      flushLists(0)
+      continue
+    }
 
     // Paragraph
     flushLists(0)
@@ -276,9 +307,14 @@ function buildNestedBlockquotes(bqLines: { content: string; depth: number }[]): 
         idx++
       } else if (depth > baseDepth) {
         const deeper: { content: string; depth: number }[] = []
-        while (idx < lines.length && lines[idx].depth > baseDepth) { deeper.push(lines[idx]); idx++ }
+        while (idx < lines.length && lines[idx].depth > baseDepth) {
+          deeper.push(lines[idx])
+          idx++
+        }
         children.push({ type: 'blockquote', children: process(deeper, baseDepth + 1) })
-      } else { idx++ }
+      } else {
+        idx++
+      }
     }
     return children
   }
@@ -298,7 +334,10 @@ function parsePipeTable(lines: string[]): ASTNode | null {
     return null
   })
   const rows: string[][] = []
-  for (let i = 2; i < lines.length; i++) { const row = parseTableRow(lines[i]); if (row) rows.push(row) }
+  for (let i = 2; i < lines.length; i++) {
+    const row = parseTableRow(lines[i])
+    if (row) rows.push(row)
+  }
   return {
     type: 'table',
     headers: headerRow,
@@ -315,7 +354,10 @@ function parsePipeTable(lines: string[]): ASTNode | null {
 function parseTableRow(line: string): string[] | null {
   const trimmed = line.trim()
   if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return null
-  return trimmed.slice(1, -1).split('|').map((c) => c.trim())
+  return trimmed
+    .slice(1, -1)
+    .split('|')
+    .map((c) => c.trim())
 }
 function parseInline(text: string): ASTNode[] {
   const inlineNodes: ASTNode[] = []
@@ -325,44 +367,72 @@ function parseInline(text: string): ASTNode[] {
     // Inline code
     const codeMatch = remaining.match(/^`([^`]+)`/)
     if (codeMatch) {
-      inlineNodes.push({ type: 'inline_code', text: codeMatch[1] }); index += codeMatch[0].length; continue
+      inlineNodes.push({ type: 'inline_code', text: codeMatch[1] })
+      index += codeMatch[0].length
+      continue
     }
     // Inline LaTeX
     const latexMatch = remaining.match(/^\$([^$]+)\$/)
     if (latexMatch) {
-      inlineNodes.push({ type: 'latex_inline', content: latexMatch[1] }); index += latexMatch[0].length; continue
+      inlineNodes.push({ type: 'latex_inline', content: latexMatch[1] })
+      index += latexMatch[0].length
+      continue
     }
     // Citations
     const citationMatch = remaining.match(/^\[\^?(\d+)\]/)
     if (citationMatch) {
-      inlineNodes.push({ type: 'citation', text: citationMatch[1] }); index += citationMatch[0].length; continue
+      inlineNodes.push({ type: 'citation', text: citationMatch[1] })
+      index += citationMatch[0].length
+      continue
     }
     // Strikethrough
     const strikeMatch = remaining.match(/^~~(.+?)~~/)
     if (strikeMatch) {
-      inlineNodes.push({ type: 'strikethrough' as ASTNodeType, text: strikeMatch[1], children: parseInline(strikeMatch[1]) });
-      index += strikeMatch[0].length; continue
+      inlineNodes.push({
+        type: 'strikethrough' as ASTNodeType,
+        text: strikeMatch[1],
+        children: parseInline(strikeMatch[1]),
+      })
+      index += strikeMatch[0].length
+      continue
     }
     // Bold
     const boldMatch = remaining.match(/^(\*\*|__)(.*?)\1/)
     if (boldMatch) {
-      inlineNodes.push({ type: 'bold', text: boldMatch[2], children: parseInline(boldMatch[2]) }); index += boldMatch[0].length; continue
+      inlineNodes.push({ type: 'bold', text: boldMatch[2], children: parseInline(boldMatch[2]) })
+      index += boldMatch[0].length
+      continue
     }
     // Italic
     const italicMatch = remaining.match(/^(\*|_)(.*?)\1/)
     if (italicMatch) {
-      inlineNodes.push({ type: 'italic', text: italicMatch[2], children: parseInline(italicMatch[2]) }); index += italicMatch[0].length; continue
+      inlineNodes.push({
+        type: 'italic',
+        text: italicMatch[2],
+        children: parseInline(italicMatch[2]),
+      })
+      index += italicMatch[0].length
+      continue
     }
     // Media ![alt](url)
     const mediaMatch = remaining.match(/^!\[(.*?)\]\((.*?)\)/)
     if (mediaMatch) {
-      inlineNodes.push({ type: 'media', text: mediaMatch[1], content: mediaMatch[2] }); index += mediaMatch[0].length; continue
+      inlineNodes.push({ type: 'media', text: mediaMatch[1], content: mediaMatch[2] })
+      index += mediaMatch[0].length
+      continue
     }
     // Inline HTML
-    const htmlMatch = remaining.match(/^<(kbd|mark|sub|sup|del|ins|abbr|code|var|samp)(\s[^>]*)?>([\s\S]*?)<\/\1>/)
+    const htmlMatch = remaining.match(
+      /^<(kbd|mark|sub|sup|del|ins|abbr|code|var|samp)(\s[^>]*)?>([\s\S]*?)<\/\1>/,
+    )
     if (htmlMatch) {
-      inlineNodes.push({ type: 'inline_html' as ASTNodeType, text: htmlMatch[0], content: htmlMatch[3] });
-      index += htmlMatch[0].length; continue
+      inlineNodes.push({
+        type: 'inline_html' as ASTNodeType,
+        text: htmlMatch[0],
+        content: htmlMatch[3],
+      })
+      index += htmlMatch[0].length
+      continue
     }
     // Escape sequence
     const escapeMatch = remaining.match(/^\\([`*_${}~\\#\-!()[\].|])/)
@@ -370,7 +440,8 @@ function parseInline(text: string): ASTNode[] {
       const last = inlineNodes[inlineNodes.length - 1]
       if (last && last.type === 'text') last.text += escapeMatch[1]
       else inlineNodes.push({ type: 'text', text: escapeMatch[1] })
-      index += escapeMatch[0].length; continue
+      index += escapeMatch[0].length
+      continue
     }
     // Fallback: character
     const char = text[index]

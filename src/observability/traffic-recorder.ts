@@ -17,21 +17,21 @@
 // ── Types ────────────────────────────────────────────────────────
 
 export interface TrafficEntry {
-  timestamp: string;
-  direction: 'request' | 'response';
-  url: string;
-  method?: string;
-  status?: number;
-  headers: Record<string, string>;
-  body?: string;
-  redactedFields: string[];
+  timestamp: string
+  direction: 'request' | 'response'
+  url: string
+  method?: string
+  status?: number
+  headers: Record<string, string>
+  body?: string
+  redactedFields: string[]
 }
 
 export interface RedactionPattern {
-  name: string;
-  pattern: RegExp;
+  name: string
+  pattern: RegExp
   /** Fields to which this pattern applies (e.g. 'headers', 'body', 'url'). */
-  fields: string[];
+  fields: string[]
 }
 
 // ── Default Redaction Patterns ─────────────────────────────────────
@@ -67,7 +67,7 @@ const DEFAULT_PATTERNS: RedactionPattern[] = [
     pattern: /(?:secret|token|password)\s*[:=]\s*['"]?[^'"&\s,}]{8,}/gi,
     fields: ['body', 'url'],
   },
-];
+]
 
 // ── Traffic Recorder ─────────────────────────────────────────────────
 
@@ -78,54 +78,60 @@ const DEFAULT_PATTERNS: RedactionPattern[] = [
  * Custom redaction patterns can be added via {@link addPattern}.
  */
 export class TrafficRecorder {
-  private entries: TrafficEntry[] = [];
-  private patterns: RedactionPattern[];
-  private _maxEntries: number;
+  private entries: TrafficEntry[] = []
+  private patterns: RedactionPattern[]
+  private _maxEntries: number
 
   constructor(opts?: { maxEntries?: number; extraPatterns?: RedactionPattern[] }) {
-    this._maxEntries = opts?.maxEntries ?? 10_000;
-    this.patterns = [...DEFAULT_PATTERNS];
+    this._maxEntries = opts?.maxEntries ?? 10_000
+    this.patterns = [...DEFAULT_PATTERNS]
     if (opts?.extraPatterns) {
-      this.patterns.push(...opts.extraPatterns);
+      this.patterns.push(...opts.extraPatterns)
     }
   }
 
   /**
    * Record a traffic entry after redacting secrets.
    */
-  recordRequest(entry: Omit<TrafficEntry, 'timestamp' | 'redactedFields' | 'direction'>): TrafficEntry {
-    const timestamp = new Date().toISOString();
-    const { headers, body, url, ...rest } = entry;
-    const clonedHeaders = { ...headers };
-    const clonedBody = body ? String(body) : undefined;
-    const clonedUrl = url;
+  recordRequest(
+    entry: Omit<TrafficEntry, 'timestamp' | 'redactedFields' | 'direction'>,
+  ): TrafficEntry {
+    const timestamp = new Date().toISOString()
+    const { headers, body, url, ...rest } = entry
+    const clonedHeaders = { ...headers }
+    const clonedBody = body ? String(body) : undefined
+    const clonedUrl = url
 
-    const redactedFields: string[] = [];
+    const redactedFields: string[] = []
 
     const applyPatterns = (value: string, fieldPath: string): string => {
-      let result = value;
+      let result = value
       for (const p of this.patterns) {
-        if (p.fields.some((f) => fieldPath.startsWith(f) || f === 'headers' || f === 'body' || f === 'url')) {
+        if (
+          p.fields.some(
+            (f) => fieldPath.startsWith(f) || f === 'headers' || f === 'body' || f === 'url',
+          )
+        ) {
           if (p.pattern.test(result)) {
-            redactedFields.push(p.name);
-            result = result.replace(p.pattern, '[REDACTED:$&]');
+            redactedFields.push(p.name)
+            result = result.replace(p.pattern, '[REDACTED:$&]')
           }
         }
       }
-      return result;
-    };
+      return result
+    }
 
     // Redact URL
-    const redactedUrl = applyPatterns(clonedUrl, 'url');
+    const redactedUrl = applyPatterns(clonedUrl, 'url')
 
     // Redact headers
-    const redactedHeaders: Record<string, string> = {};
+    const redactedHeaders: Record<string, string> = {}
     for (const [key, value] of Object.entries(clonedHeaders)) {
-      redactedHeaders[key] = applyPatterns(value, `headers.${key.toLowerCase()}`);
+      redactedHeaders[key] = applyPatterns(value, `headers.${key.toLowerCase()}`)
     }
 
     // Redact body
-    const redactedBody = clonedBody ? applyPatterns(clonedBody, 'body') : undefined;
+    const redactedBody = clonedBody ? applyPatterns(clonedBody, 'body') : undefined
 
     const record: TrafficEntry = {
       timestamp,
@@ -135,20 +141,22 @@ export class TrafficRecorder {
       body: redactedBody,
       redactedFields: [...new Set(redactedFields)],
       ...rest,
-    };
-
-    this.entries.push(record);
-    if (this.entries.length > this._maxEntries) {
-      this.entries.shift();
     }
 
-    return record;
+    this.entries.push(record)
+    if (this.entries.length > this._maxEntries) {
+      this.entries.shift()
+    }
+
+    return record
   }
 
   /**
    * Record a response entry.
    */
-  recordResponse(entry: Omit<TrafficEntry, 'timestamp' | 'redactedFields' | 'direction'>): TrafficEntry {
+  recordResponse(
+    entry: Omit<TrafficEntry, 'timestamp' | 'redactedFields' | 'direction'>,
+  ): TrafficEntry {
     const record: TrafficEntry = {
       timestamp: new Date().toISOString(),
       direction: 'response',
@@ -157,36 +165,36 @@ export class TrafficRecorder {
       body: entry.body,
       redactedFields: [],
       ...entry,
-    };
-    this.entries.push(record);
-    if (this.entries.length > this._maxEntries) {
-      this.entries.shift();
     }
-    return record;
+    this.entries.push(record)
+    if (this.entries.length > this._maxEntries) {
+      this.entries.shift()
+    }
+    return record
   }
 
   /** Get all recorded entries. */
   getEntries(): TrafficEntry[] {
-    return this.entries.slice();
+    return this.entries.slice()
   }
 
   /** Get entries filtered by URL pattern. */
   getByUrl(urlPattern: RegExp): TrafficEntry[] {
-    return this.entries.filter((e) => urlPattern.test(e.url));
+    return this.entries.filter((e) => urlPattern.test(e.url))
   }
 
   /** Clear all entries. */
   clear(): void {
-    this.entries.length = 0;
+    this.entries.length = 0
   }
 
   /** Add a custom redaction pattern. */
   addPattern(pattern: RedactionPattern): void {
-    this.patterns.push(pattern);
+    this.patterns.push(pattern)
   }
 
   /** Get current redaction patterns (for diagnostics). */
   getPatterns(): RedactionPattern[] {
-    return this.patterns.slice();
+    return this.patterns.slice()
   }
 }

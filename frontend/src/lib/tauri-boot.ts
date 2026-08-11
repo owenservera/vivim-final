@@ -6,20 +6,20 @@
  * so the Rust shell shows the window (no white-flash).
  */
 
-import { isTauri, tauriInvoke } from './tauri-bridge';
+import { isTauri, tauriInvoke } from './tauri-bridge'
 
-let booted = false;
+let booted = false
 
 export async function tauriBoot(): Promise<void> {
-  if (booted || !isTauri()) return;
-  booted = true;
+  if (booted || !isTauri()) return
+  booted = true
 
   try {
     // Give React a tick to hydrate before signaling
-    await new Promise((r) => requestAnimationFrame(r));
-    await tauriInvoke('backend_ready');
-    console.log('[tauri-boot] backend-ready signaled, window should be visible');
+    await new Promise((r) => requestAnimationFrame(r))
+    await tauriInvoke('backend_ready')
+    console.log('[tauri-boot] backend-ready signaled, window should be visible')
   } catch (err) {
-    console.warn('[tauri-boot] failed to signal backend-ready:', err);
+    console.warn('[tauri-boot] failed to signal backend-ready:', err)
   }
 }

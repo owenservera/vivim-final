@@ -213,7 +213,11 @@ export async function executeRemote(
   const cleanFlags = stripMeta(flags)
   // Use cached capabilities if fresh
   let caps: CliCapability[]
-  if (_remoteCapsCache && _remoteCapsCache.remote === remote && Date.now() - _remoteCapsCache.ts < REMOTE_CAPS_TTL) {
+  if (
+    _remoteCapsCache &&
+    _remoteCapsCache.remote === remote &&
+    Date.now() - _remoteCapsCache.ts < REMOTE_CAPS_TTL
+  ) {
     caps = _remoteCapsCache.caps
   } else {
     caps = await fetchCliCapabilities(remote)
@@ -261,7 +265,11 @@ function coerce(type: string | undefined, val: string): unknown {
   }
   // Support --json-input for nested object/array payloads
   if ((type === 'object' || type === 'array') && val.startsWith('{')) {
-    try { return JSON.parse(val) } catch { return val }
+    try {
+      return JSON.parse(val)
+    } catch {
+      return val
+    }
   }
   return val
 }

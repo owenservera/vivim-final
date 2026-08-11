@@ -28,27 +28,27 @@ export async function sendWebhook(
   payload: Record<string, unknown>,
 ): Promise<{ delivered: boolean; responseCode: number | null }> {
   try {
-    const controller = new AbortController();
-    const timeout = AbortSignal.timeout(10_000);
+    const controller = new AbortController()
+    const timeout = AbortSignal.timeout(10_000)
 
     // Combine external abort with our timeout.
-    const combinedSignal = AbortSignal.any?.([controller.signal, timeout]) ?? timeout;
+    const combinedSignal = AbortSignal.any?.([controller.signal, timeout]) ?? timeout
 
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal: combinedSignal,
-    });
+    })
 
     // Treat 2xx as delivered.
-    const delivered = response.status >= 200 && response.status < 300;
-    return { delivered, responseCode: response.status };
+    const delivered = response.status >= 200 && response.status < 300
+    return { delivered, responseCode: response.status }
   } catch (err: unknown) {
     // Timeout, DNS failure, network error, etc.
     if (err instanceof DOMException && err.name === 'TimeoutError') {
-      return { delivered: false, responseCode: null };
+      return { delivered: false, responseCode: null }
     }
-    return { delivered: false, responseCode: null };
+    return { delivered: false, responseCode: null }
   }
 }

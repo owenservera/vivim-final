@@ -17,56 +17,68 @@
 
 // ── Types ────────────────────────────────────────────────────────────
 
-export type ReplayStatus = 'pass' | 'fail' | 'changed';
+export type ReplayStatus = 'pass' | 'fail' | 'changed'
 
 export interface ReplayEntry {
-  url: string;
-  method: string;
-  headers: Record<string, string>;
-  body?: string;
+  url: string
+  method: string
+  headers: Record<string, string>
+  body?: string
   expected?: {
-    status: number;
-    body?: string;
-  };
+    status: number
+    body?: string
+  }
 }
 
 export interface ReplayResult {
-  status: ReplayStatus;
-  entry: ReplayEntry;
-  actualStatus: number | null;
-  actualBody?: string;
-  diff?: string;
-  durationMs: number;
-  error?: string;
+  status: ReplayStatus
+  entry: ReplayEntry
+  actualStatus: number | null
+  actualBody?: string
+  diff?: string
+  durationMs: number
+  error?: string
 }
 
 export interface ReplaySummary {
-  total: number;
-  passed: number;
-  changed: number;
-  failed: number;
-  results: ReplayResult[];
+  total: number
+  passed: number
+  changed: number
+  failed: number
+  results: ReplayResult[]
 }
 
 // ── Fuzzy Matching Patterns ───────────────────────────────────────────
 
 /** Fields that are expected to change between replays. */
 const VOLATILE_PATTERNS: Array<{ name: string; pattern: RegExp; replacement: string }> = [
-  { name: 'uuid', pattern: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, replacement: '<UUID>' },
-  { name: 'timestamp-iso', pattern: /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/g, replacement: '<TIMESTAMP>' },
-  { name: 'timestamp-epoch', pattern: /(?<=[:"'\s=])\d{13,16}(?=["'\s,}])/g, replacement: '<EPOCH>' },
+  {
+    name: 'uuid',
+    pattern: /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+    replacement: '<UUID>',
+  },
+  {
+    name: 'timestamp-iso',
+    pattern: /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/g,
+    replacement: '<TIMESTAMP>',
+  },
+  {
+    name: 'timestamp-epoch',
+    pattern: /(?<=[:"'\s=])\d{13,16}(?=["'\s,}])/g,
+    replacement: '<EPOCH>',
+  },
   { name: 'date-slash', pattern: /\d{2}\/\d{2}\/\d{2,4}/g, replacement: '<DATE>' },
-];
+]
 
 /**
  * Normalize a string by replacing volatile fields with stable placeholders.
  */
 function normalize(text: string): string {
-  let result = text;
+  let result = text
   for (const { pattern, replacement } of VOLATILE_PATTERNS) {
-    result = result.replace(pattern, replacement);
+    result = result.replace(pattern, replacement)
   }
-  return result;
+  return result
 }
 
 /**
@@ -74,33 +86,33 @@ function normalize(text: string): string {
  * Returns a summary of added/removed lines.
  */
 function computeDiff(expected: string, actual: string): string {
-  const normExpected = normalize(expected);
-  const normActual = normalize(actual);
+  const normExpected = normalize(expected)
+  const normActual = normalize(actual)
 
-  if (normExpected === normActual) return '';
+  if (normExpected === normActual) return ''
 
-  const expectedLines = normExpected.split('\n');
-  const actualLines = normActual.split('\n');
-  const parts: string[] = [];
+  const expectedLines = normExpected.split('\n')
+  const actualLines = normActual.split('\n')
+  const parts: string[] = []
 
-  const maxLen = Math.max(expectedLines.length, actualLines.length);
-  let diffCount = 0;
+  const maxLen = Math.max(expectedLines.length, actualLines.length)
+  let diffCount = 0
 
   for (let i = 0; i < maxLen; i++) {
-    const exp = expectedLines[i] ?? '';
-    const act = actualLines[i] ?? '';
+    const exp = expectedLines[i] ?? ''
+    const act = actualLines[i] ?? ''
     if (exp !== act) {
-      parts.push(`L${i + 1}: - ${exp}`);
-      parts.push(`L${i + 1}: + ${act}`);
-      diffCount++;
+      parts.push(`L${i + 1}: - ${exp}`)
+      parts.push(`L${i + 1}: + ${act}`)
+      diffCount++
       if (diffCount >= 20) {
-        parts.push('... (truncated)');
-        break;
+        parts.push('... (truncated)')
+        break
       }
     }
   }
 
-  return parts.join('\n');
+  return parts.join('\n')
 }
 
 // ── Replay Engine ─────────────────────────────────────────────────────
@@ -112,10 +124,10 @@ function computeDiff(expected: string, actual: string): string {
  * with `status` (HTTP status code) and optional `body` (response body string).
  */
 export class ReplayEngine {
-  private fuzzy: boolean;
+  private fuzzy: boolean
 
   constructor(opts?: { fuzzy?: boolean }) {
-    this.fuzzy = opts?.fuzzy ?? true;
+    this.fuzzy = opts?.fuzzy ?? true
   }
 
   /**
@@ -129,15 +141,15 @@ export class ReplayEngine {
     recording: ReplayEntry[],
     targetFn: (entry: ReplayEntry) => Promise<{ status: number; body?: string }>,
   ): Promise<ReplaySummary> {
-    const results: ReplayResult[] = [];
+    const results: ReplayResult[] = []
 
     for (const entry of recording) {
-      const start = performance.now();
-      let result: ReplayResult;
+      const start = performance.now()
+      let result: ReplayResult
 
       try {
-        const response = await targetFn(entry);
-        const durationMs = Math.round(performance.now() - start);
+        const response = await targetFn(entry)
+        const durationMs = Math.round(performance.now() - start)
 
         if (!entry.expected) {
           // No expected response — smoke test only
@@ -147,14 +159,13 @@ export class ReplayEngine {
             actualStatus: response.status,
             actualBody: response.body,
             durationMs,
-          };
+          }
         } else {
-          const statusMatch = response.status === entry.expected.status;
+          const statusMatch = response.status === entry.expected.status
           const bodyMatch =
-            entry.expected.body === undefined ||
-            this.fuzzy
+            entry.expected.body === undefined || this.fuzzy
               ? normalize(response.body ?? '') === normalize(entry.expected.body)
-              : (response.body ?? '') === entry.expected.body;
+              : (response.body ?? '') === entry.expected.body
 
           if (statusMatch && bodyMatch) {
             result = {
@@ -163,9 +174,9 @@ export class ReplayEngine {
               actualStatus: response.status,
               actualBody: response.body,
               durationMs,
-            };
+            }
           } else if (statusMatch && !bodyMatch) {
-            const diff = computeDiff(entry.expected.body ?? '', response.body ?? '');
+            const diff = computeDiff(entry.expected.body ?? '', response.body ?? '')
             result = {
               status: 'changed',
               entry,
@@ -173,7 +184,7 @@ export class ReplayEngine {
               actualBody: response.body,
               diff,
               durationMs,
-            };
+            }
           } else {
             result = {
               status: 'fail',
@@ -182,7 +193,7 @@ export class ReplayEngine {
               actualBody: response.body,
               diff: `Status: expected ${entry.expected.status}, got ${response.status}`,
               durationMs,
-            };
+            }
           }
         }
       } catch (err) {
@@ -192,16 +203,16 @@ export class ReplayEngine {
           actualStatus: null,
           durationMs: Math.round(performance.now() - start),
           error: err instanceof Error ? err.message : String(err),
-        };
+        }
       }
 
-      results.push(result);
+      results.push(result)
     }
 
-    const passed = results.filter((r) => r.status === 'pass').length;
-    const changed = results.filter((r) => r.status === 'changed').length;
-    const failed = results.filter((r) => r.status === 'fail').length;
+    const passed = results.filter((r) => r.status === 'pass').length
+    const changed = results.filter((r) => r.status === 'changed').length
+    const failed = results.filter((r) => r.status === 'fail').length
 
-    return { total: results.length, passed, changed, failed, results };
+    return { total: results.length, passed, changed, failed, results }
   }
 }

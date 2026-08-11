@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const state = await bag.onboardingStore.completeTour(parsed.data.userId, {
       totalDurationMs: parsed.data.totalDurationMs,
       stepTimings: Object.fromEntries(
-        Object.entries(parsed.data.stepTimings).map(([k, v]) => [k, v] as [string, number])
+        Object.entries(parsed.data.stepTimings).map(([k, v]) => [k, v] as [string, number]),
       ),
     })
 

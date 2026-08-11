@@ -4,5 +4,5 @@
 export * from './api-contract'
 export * from './domain'
 export { type ErrorCode, getUserMessage, isRetryable, ERROR_MESSAGES } from './errors'
-export { type ApiErrorResponse as ServerApiErrorResponse } from './errors'
+export type { ApiErrorResponse as ServerApiErrorResponse } from './errors'
 export * from './ws-events'

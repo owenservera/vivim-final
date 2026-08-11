@@ -30,7 +30,14 @@ declare module 'jspdf' {
       pageSize: { width: number; getHeight(): number; getWidth(): number }
     }
     constructor(options?: Record<string, unknown>)
-    addImage(imageData: string | HTMLCanvasElement | HTMLImageElement, format: string, x: number, y: number, w: number, h: number): jsPDF
+    addImage(
+      imageData: string | HTMLCanvasElement | HTMLImageElement,
+      format: string,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+    ): jsPDF
     save(filename?: string): jsPDF
     output(type: 'blob'): Blob
     output(type: string): string | ArrayBuffer

@@ -7,7 +7,7 @@
  * Ingests streaming chunks and produces self-healed ASTs
  * by detecting and closing unclosed markdown structures.
  */
-import { compileMessageToAST, type ASTNode } from './ast-compiler.js'
+import { type ASTNode, compileMessageToAST } from './ast-compiler.js'
 
 /**
  * Streaming assembler that ingests partial chunks and produces
@@ -18,8 +18,8 @@ export class StreamingSemanticAssembler {
   private lastAssembledAST: ASTNode[] = []
 
   /**
-	 * Append an incoming chunk and return the self-healed AST.
-	 */
+   * Append an incoming chunk and return the self-healed AST.
+   */
   public ingestChunk(chunk: string): ASTNode[] {
     this.buffer += chunk
     const healedContent = this.repairSyntax(this.buffer)
@@ -39,9 +39,9 @@ export class StreamingSemanticAssembler {
   }
 
   /**
-	 * Detects unclosed structures and injects closing tokens.
-	 * Handles: thinking tags, code blocks, bold, italic, backticks.
-	 */
+   * Detects unclosed structures and injects closing tokens.
+   * Handles: thinking tags, code blocks, bold, italic, backticks.
+   */
   private repairSyntax(text: string): string {
     let repaired = text
 

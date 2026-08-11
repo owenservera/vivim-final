@@ -86,7 +86,7 @@ async function exportToPdf(state: CanvasState, options: ExportOptions): Promise<
       pdf.addImage(pngDataUrl, 'PNG', -c * pageW, -r * pageH, bbox.width, bbox.height)
     }
   }
-  return pdf.output('blob') as Blob;
+  return pdf.output('blob') as Blob
 }
 
 function computeBoundingBox(state: CanvasState, padding: number) {

@@ -9,7 +9,6 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { CapabilityNotFoundError } from '../errors.js'
 import { getLogger } from '../lib/logger.js'
 import type { BootstrapServices } from './capability-bootstrap.js'
 
@@ -49,14 +48,7 @@ interface TaxonomyPool {
 // ── Load pool ─────────────────────────────────────────────────────────────
 
 function loadPool(): TaxonomyPoolCapability[] {
-  const poolPath = join(
-    import.meta.dir,
-    '..',
-    '..',
-    'seeds',
-    'taxonomy',
-    'pool.taxonomy.json',
-  )
+  const poolPath = join(import.meta.dir, '..', '..', 'seeds', 'taxonomy', 'pool.taxonomy.json')
   try {
     const raw = JSON.parse(readFileSync(poolPath, 'utf-8')) as TaxonomyPool
     return raw.nodes
@@ -129,23 +121,37 @@ function createHandlerMap(
       const query = String(input.query ?? input.text ?? '')
       if (!query) return []
       try {
-        return await services.semanticSearch?.search(query, { limit: Number(input.limit ?? 10) }) ?? []
-      } catch { return [] }
+        return (
+          (await services.semanticSearch?.search(query, { limit: Number(input.limit ?? 10) })) ?? []
+        )
+      } catch {
+        return []
+      }
     },
     knowledge_ingest: async (input) => {
       const content = String(input.content ?? input.text ?? '')
       if (!content) return { ok: false, error: 'content is required' }
       try {
-        const jobId = await services.knowledgeIngestion?.ingest(content, { source: String(input.source ?? 'cli') })
+        const jobId = await services.knowledgeIngestion?.ingest(content, {
+          source: String(input.source ?? 'cli'),
+        })
         return { ok: true, jobId: jobId ?? 'pending' }
-      } catch { return { ok: true, jobId: 'pending' } }
+      } catch {
+        return { ok: true, jobId: 'pending' }
+      }
     },
     knowledge_synthesize: async (input) => {
       const question = String(input.question ?? input.text ?? '')
       if (!question) return { answer: '', sources: [], confidence: 0 }
       try {
-        return await services.synthesizer?.synthesize(question, { maxSources: Number(input.maxSources ?? 5) }) ?? { answer: '', sources: [], confidence: 0 }
-      } catch { return { answer: '', sources: [], confidence: 0 } }
+        return (
+          (await services.synthesizer?.synthesize(question, {
+            maxSources: Number(input.maxSources ?? 5),
+          })) ?? { answer: '', sources: [], confidence: 0 }
+        )
+      } catch {
+        return { answer: '', sources: [], confidence: 0 }
+      }
     },
 
     // ── Memory ──
@@ -153,20 +159,34 @@ function createHandlerMap(
       const query = String(input.query ?? input.text ?? '')
       if (!query) return { results: [] }
       try {
-        return await services.memoryEngine?.query(query, { limit: Number(input.limit ?? 10) }) ?? { results: [] }
-      } catch { return { results: [] } }
+        return (
+          (await services.memoryEngine?.query(query, { limit: Number(input.limit ?? 10) })) ?? {
+            results: [],
+          }
+        )
+      } catch {
+        return { results: [] }
+      }
     },
     memory_assert: async (input) => {
       try {
-        await services.memoryEngine?.assert(String(input.key ?? ''), String(input.value ?? ''), { namespace: String(input.namespace ?? 'default') })
+        await services.memoryEngine?.assert(String(input.key ?? ''), String(input.value ?? ''), {
+          namespace: String(input.namespace ?? 'default'),
+        })
         return { ok: true }
-      } catch { return { ok: true } }
+      } catch {
+        return { ok: true }
+      }
     },
     memory_forget: async (input) => {
       try {
-        await services.memoryEngine?.forget(String(input.key ?? ''), { namespace: String(input.namespace ?? 'default') })
+        await services.memoryEngine?.forget(String(input.key ?? ''), {
+          namespace: String(input.namespace ?? 'default'),
+        })
         return { ok: true }
-      } catch { return { ok: true } }
+      } catch {
+        return { ok: true }
+      }
     },
 
     // ── Admin ──
@@ -196,7 +216,9 @@ function createHandlerMap(
         ok: true,
         timestamp: Date.now(),
         uptime: Math.round(uptime),
-        memory: mem ? { rss: Math.round(mem.rss / 1024 / 1024), heap: Math.round(mem.heapUsed / 1024 / 1024) } : undefined,
+        memory: mem
+          ? { rss: Math.round(mem.rss / 1024 / 1024), heap: Math.round(mem.heapUsed / 1024 / 1024) }
+          : undefined,
       }
     },
     system_status: async () => {
