@@ -1,11 +1,12 @@
 // src/engines/nlcl/layered-resolver.ts
-// LayeredResolver — the full SOTA 5-layer NLU pipeline orchestrator.
+// LayeredResolver — the full SOTA 6-layer NLU pipeline orchestrator.
 //
 // Pipeline (per research report nlcl-nlu-systems-sota-2026.md):
 //   Normalization (TextNormalizer, shared)
 //     → Deterministic (regex/keyword)      confidence gate: parser minConfidence
 //     → Fuzzy (Jaro-Winkler/Dice)          confidence gate: 0.70
 //     → Semantic (TF-IDF cosine)           confidence gate: 0.60
+//     → Classifier (NLI zero-shot)         confidence gate: 0.55
 //     → LLM fallback (Local/Provider LLM)  confidence gate: 0.50
 //     → (else) unresolved / clarification
 //
@@ -19,7 +20,7 @@ import { DeterministicResolver } from './intent-resolver.js'
 import { SemanticResolver } from './semantic-resolver.js'
 import type { IntentResolver, NLCContext, ParsedIntent } from './types.js'
 
-export type ResolutionLayer = 'deterministic' | 'fuzzy' | 'semantic' | 'llm' | 'none'
+export type ResolutionLayer = 'deterministic' | 'fuzzy' | 'semantic' | 'classifier' | 'llm' | 'none'
 
 export interface LayeredResolverOptions {
   llmFallback?: IntentResolver
@@ -27,6 +28,8 @@ export interface LayeredResolverOptions {
   semanticThreshold?: number
   llmThreshold?: number
   embeddingProvider?: EmbeddingProvider
+  classifierResolver?: IntentResolver
+  classifierThreshold?: number
 }
 
 export interface LayerTelemetry {
@@ -40,8 +43,10 @@ export class LayeredResolver implements IntentResolver {
   private fuzzy: FuzzyResolver
   private semantic: SemanticResolver
   private llmFallback: IntentResolver | null
+  private classifier: IntentResolver | null
   private fuzzyThreshold: number
   private semanticThreshold: number
+  private classifierThreshold: number
   private llmThreshold: number
   private lastLayer: ResolutionLayer = 'none'
   private lastScores: Partial<Record<ResolutionLayer, number>> = {}
@@ -54,8 +59,10 @@ export class LayeredResolver implements IntentResolver {
       threshold: opts.semanticThreshold ?? 0.6,
     })
     this.llmFallback = opts.llmFallback ?? null
+    this.classifier = opts.classifierResolver ?? null
     this.fuzzyThreshold = opts.fuzzyThreshold ?? 0.7
     this.semanticThreshold = opts.semanticThreshold ?? 0.6
+    this.classifierThreshold = opts.classifierThreshold ?? 0.55
     this.llmThreshold = opts.llmThreshold ?? 0.5
   }
 
@@ -90,6 +97,19 @@ export class LayeredResolver implements IntentResolver {
       return sem
     }
 
+    // Layer 3.5: Tiny NLI classifier (cheap pre-filter before the LLM).
+    if (this.classifier) {
+      const cls = await this.classifier.resolve(rawInput, ctx)
+      if (cls) scores.classifier = cls.confidence
+      if (cls && cls.confidence >= this.classifierThreshold) {
+        this.lastLayer = 'classifier'
+        this.lastScores = scores
+        const alts = [fz, sem].filter(Boolean) as ParsedIntent[]
+        cls.alternatives = [...alts, ...cls.alternatives]
+        return cls
+      }
+    }
+
     // Layer 4: LLM fallback (ambiguous cases only).
     if (this.llmFallback) {
       const llm = await this.llmFallback.resolve(rawInput, ctx)
@@ -122,6 +142,7 @@ export class LayeredResolver implements IntentResolver {
       deterministic: this.deterministic,
       fuzzy: this.fuzzy,
       semantic: this.semantic,
+      classifier: this.classifier ?? (null as unknown as IntentResolver),
       llm: this.llmFallback ?? (null as unknown as IntentResolver),
     }
   }

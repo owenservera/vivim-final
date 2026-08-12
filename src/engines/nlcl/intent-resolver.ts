@@ -198,6 +198,7 @@ export function createResolver(
     localLLM?: LocalLLMAdapter
     providerLLM?: ProviderLLMAdapter
     embeddingProvider?: EmbeddingProvider
+    classifierResolver?: IntentResolver
   },
 ): IntentResolver {
   switch (config.type) {
@@ -241,7 +242,7 @@ export function createResolver(
     }
 
     case 'layered': {
-      // Full SOTA 5-layer pipeline: Deterministic → Fuzzy → Semantic → LLM.
+      // Full SOTA 6-layer pipeline: Deterministic → Fuzzy → Semantic → Classifier → LLM.
       const llms: IntentResolver[] = []
       if (adapters?.localLLM) {
         llms.push(
@@ -258,6 +259,7 @@ export function createResolver(
       const llmFallback = llms[0] ?? (config.fallbackToDeterministic ? undefined : undefined)
       return new LayeredResolver(registry, {
         llmFallback,
+        classifierResolver: adapters?.classifierResolver,
         fuzzyThreshold: config.fuzzyThreshold,
         semanticThreshold: config.semanticThreshold,
         llmThreshold: config.llmThreshold ?? config.minConfidence,

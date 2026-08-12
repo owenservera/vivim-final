@@ -1,0 +1,92 @@
+{
+  "providerId": "local-tiny-experts-v1",
+  "displayName": "VIVIM Local Tiny Experts (ONNX, in-process)",
+  "baseURL": "in-process://huggingface-transformers-js",
+  "auth": { "kind": "none" },
+  "transport": "in-process",
+  "providerKind": "local",
+  "trust": "official",
+  "capabilities": ["embeddings", "structured-output", "generation", "tool-calling"],
+  "extensions": {
+    "runtime": "@huggingface/transformers",
+    "supportsStreaming": false,
+    "supportsFunctionCalling": true,
+    "supportsVision": false,
+    "supportsJsonSchema": false,
+    "sharedRuntimeWith": "hf:mpnet-base-v2"
+  },
+  "lifecycle": {
+    "supervisorKind": "none",
+    "readinessProbe": null
+  },
+  "models": [
+    {
+      "id": "hf:mpnet-base-v2",
+      "providerId": "local-tiny-experts-v1",
+      "name": "all-mpnet-base-v2 (embedding)",
+      "family": "mpnet",
+      "revision": "Xenova/all-mpnet-base-v2",
+      "modalities": { "input": ["text"], "output": ["embedding"] },
+      "capabilities": {
+        "embeddings": { "supported": true, "level": "advanced" }
+      },
+      "parameters": 109000000,
+      "quantization": "int8",
+      "artifact": { "format": "onnx" },
+      "resourceRequirements": { "diskBytes": 115000000, "gpuRequired": false },
+      "license": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/sentence-transformers/all-mpnet-base-v2"
+      },
+      "_role": "embedding",
+      "_usedBy": ["src/engines/embedding-hf.ts", "src/engines/nlcl/semantic-resolver.ts", "src/engines/nlcl/llm-slave-resolver.ts"]
+    },
+    {
+      "id": "nli:deberta-v3-xsmall",
+      "providerId": "local-tiny-experts-v1",
+      "name": "nli-deberta-v3-xsmall (CLI / intent classifier)",
+      "family": "deberta-v3",
+      "revision": "Xenova/nli-deberta-v3-xsmall",
+      "modalities": { "input": ["text"], "output": ["structured-data"] },
+      "capabilities": {
+        "structured-output": { "supported": true, "level": "basic" }
+      },
+      "parameters": 22000000,
+      "quantization": "int8",
+      "artifact": { "format": "onnx" },
+      "resourceRequirements": { "diskBytes": 22000000, "gpuRequired": false },
+      "license": {
+        "name": "MIT",
+        "url": "https://huggingface.co/cross-encoder/nli-deberta-v3-xsmall"
+      },
+      "_role": "cli-resolver",
+      "_usedBy": ["src/engines/classifier-nli.ts", "src/engines/nlcl/classifier-resolver.ts"]
+    },
+    {
+      "id": "slm:qwen2.5-0.5b-instruct",
+      "providerId": "local-tiny-experts-v1",
+      "name": "Qwen2.5-0.5B-Instruct (agentic / automation)",
+      "family": "qwen2.5",
+      "revision": "onnx-community/Qwen2.5-0.5B-Instruct",
+      "modalities": { "input": ["text"], "output": ["text", "tool-call"] },
+      "capabilities": {
+        "generation": { "supported": true, "level": "basic" },
+        "tool-calling": { "supported": true, "level": "basic" },
+        "structured-output": { "supported": true, "level": "basic" }
+      },
+      "contextWindow": 32768,
+      "maxOutputTokens": 8192,
+      "parameters": 500000000,
+      "quantization": "q4",
+      "artifact": { "format": "onnx" },
+      "resourceRequirements": { "diskBytes": 350000000, "recommendedRamMB": 1024, "gpuRequired": false },
+      "license": {
+        "name": "Apache-2.0",
+        "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct"
+      },
+      "_role": "agentic-automation",
+      "_usedBy": ["src/engines/agentic-slm.ts"]
+    }
+  ],
+  "_comment": "All three models share one runtime (@huggingface/transformers, already a project dependency — see package.json). Combined on-disk footprint ≈ 490MB, only ever downloaded/cached on first use per model (VIVIM_MODEL_CACHE, default data/models), not bundled into the install package itself. See UPGRADE-PACK-TINY-EXPERT-MODELS.md for rationale and wiring."
+}

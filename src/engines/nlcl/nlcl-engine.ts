@@ -114,6 +114,12 @@ export interface NLCLEngineDeps {
    * same real neural embeddings (HF 768-d) instead of the MiniLM hash fallback.
    */
   embeddingProvider?: EmbeddingProvider
+  /**
+   * NLI classifier resolver — tiny local expert #2 for intent classification.
+   * If provided, sits between SemanticResolver and the LLM fallback as a
+   * cheap pre-filter (layer 3.5). See nlcl/classifier-resolver.ts.
+   */
+  classifierResolver?: IntentResolver
 }
 
 // Tier 3 unit 15.10 — COMPOSITE_SPLITTERS table removed.
@@ -158,6 +164,7 @@ export class NLCLEngine {
       localLLM: deps.localLLM,
       providerLLM: deps.providerLLM,
       embeddingProvider: deps.embeddingProvider,
+      classifierResolver: deps.classifierResolver,
     })
 
     this.registerDefaultPatterns()

@@ -34,8 +34,8 @@ yarn-error.log*
 # Test artifacts
 tests/**/.tmp-export-test/
 
-# Boot test output
-.runtime/boot-test-*
+# Runtime scratch (dev probes, dumps, debug scripts — never commit)
+.runtime/
 
 # Bun
 .bunv/
@@ -63,13 +63,24 @@ web/*/scripts/
 
 # Dev tool artifacts (regenerable)
 docs/dev-code-impl/
+docs/audits/
 frontend/tool-results/
 frontend/playwright-report/
 frontend/test-results/
+frontend/download/
+
+# Kilo skills (duplicate of .opencode/skill/)
+.skills/
 
 # Dev database backups
 prisma/dev.db.bak-*
 prisma/prisma/dev.db
+
+# Docs (regenerable, not source)
+docs/
+
+# Dev scratch / proof-of-concept
+dev-poc/
 
 # Local browser-export / cache dumps (never commit)
 chatgpt/
@@ -86,7 +97,18 @@ nil/
 agent-brief/
 .opencode/.claude/
 --url/
-dev-poc/
+
+# Build test artifacts
+.build-test/
+
+# Audit artifacts (large, local-only)
+audit-report.json
+audit-results.sarif
+src/audit-report.json
+src/audit-results.sarif
+
+# Local model downloads
+data/
 
 
 # Tauri desktop build artifacts (source is kept!)
