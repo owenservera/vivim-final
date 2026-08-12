@@ -11,6 +11,7 @@ import { bootstrapKernel } from '../../../engines/kernel/kernel-bootstrap.js'
 import { NLCLEngine } from '../../../engines/nlcl/nlcl-engine.js'
 import { getLogger } from '../../../lib/logger.js'
 import { onShutdown } from '../../index.js'
+import { config } from '../../../config.js'
 import type { BootstrapContext } from '../context.js'
 
 const log = getLogger('bootstrap:lifecycle')
@@ -58,6 +59,30 @@ export async function bootstrapLifecyclePhase(ctx: BootstrapContext): Promise<vo
   })
   log.info(`[boot] NLCL engine initialized — ${nlclEngine.listCommands().length} command patterns`)
 
+  // P0 ExecutionKernel — hardened, observable NLCL execution lifecycle (alpha-gated, OFF by default).
+  // When VIVIM_EXECUTION_KERNEL=1, every NLCL capability execution routes through ExecutionKernel:
+  // P0PolicyEngine tier-blocking (default-deny for destructive/communication/financial/security-sensitive)
+  // -> execute -> verify -> MemoryJournal. The kernel is the execution primitive only; the NLCL confirmation
+  // gate (minted/verified upstream) marks already-confirmed plans engine-authorized so they are not re-gated.
+  if (config.executionKernel.enabled) {
+    const { ExecutionKernel, MemoryJournal } = await import('../../../engines/execution-kernel.js')
+    const { P0PolicyEngine } = await import('../../../engines/policy-engine.js')
+    const ek = new ExecutionKernel({
+      policy: new P0PolicyEngine({
+        allowDestructive: config.executionKernel.allowDestructive,
+        allowFinancial: config.executionKernel.allowFinancial,
+        allowCommunication: config.executionKernel.allowCommunication,
+        allowSecuritySensitive: config.executionKernel.allowSecuritySensitive,
+        maxRiskTier: config.executionKernel.maxRiskTier,
+      }),
+      journal: new MemoryJournal(),
+    })
+    nlclEngine.setExecutionKernel(ek)
+    log.info(
+      `[boot] P0 ExecutionKernel wired into NLCL (hardened lifecycle ON; maxRiskTier=${config.executionKernel.maxRiskTier})`,
+    )
+  }
+
   // F2: Register NLCL tools (nl_command, nl_list_commands, nl_help) on the MCP server.
   // McpServerAdapter is constructed in capabilities.ts (earlier phase) and exposed
   // as globalThis.__mcpServer. NLCLEngine is constructed here. This is the earliest
@@ -94,9 +119,7 @@ export async function bootstrapLifecyclePhase(ctx: BootstrapContext): Promise<vo
   // Runs after NLCL engine and registry are both populated.
   // Logs warnings; errors are non-fatal in this phase (visibility, not enforcement).
   try {
-    const { CapabilityParityAuditor } = await import(
-      '../../../engines/capability-parity.js'
-    )
+    const { CapabilityParityAuditor } = await import('../../../engines/capability-parity.js')
     const auditor = new CapabilityParityAuditor()
     const nlclPatterns = nlclEngine.listCommands()
     const report = auditor.audit(nlclPatterns, registry!)

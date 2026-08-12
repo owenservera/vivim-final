@@ -127,9 +127,7 @@ export class PlanValidationGate {
         node.risk === 'destructive' &&
         !node.requiresConfirmation
       ) {
-        warnings.push(
-          `Node "${node.id}" has destructive risk but lacks requiresConfirmation`,
-        )
+        warnings.push(`Node "${node.id}" has destructive risk but lacks requiresConfirmation`)
       }
     }
 

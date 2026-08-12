@@ -116,6 +116,10 @@ export interface ParsedIntent {
   capabilityId?: string
   /** Action classification of the matched capability (drives HITL approval gating). */
   classification?: ActionClassification
+  /** Set by the engine when the NLCL confirmation gate has already minted/verified a token
+   * (i.e. this is a resumed, already-confirmed intent). The ExecutionKernel treats such plans as
+   * engine-authorized and bypasses its own policy tier-blocking + confirmation gate. */
+  confirmationSatisfied?: boolean
 }
 
 export interface NLPattern {

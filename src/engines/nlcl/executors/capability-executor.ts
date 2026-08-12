@@ -1,11 +1,31 @@
 // src/engines/nlcl/executors/capability-executor.ts
 // CapabilityExecutor — delegates to UnifiedCapabilityRegistry.
 // Bridges NLCL intents to the existing typed capability system.
+// When an ExecutionKernel is provided, routes through the full lifecycle
+// (policy → execute → verify → journal) instead of direct registry.execute().
 
 import { newId } from '../../../ids.js'
+import type { ActionPlan, CapabilityRisk } from '../../action-plan.js'
+import type { ExecutionKernel } from '../../execution-kernel.js'
 import type { CapabilityContext, UnifiedCapabilityRegistry } from '../../unified-registry.js'
 import { createNoOpResponseInterpreter, type ResponseInterpreter } from '../response-interpreter.js'
-import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
+import type { ActionClassification, CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
+
+/** Map NLCL classification to ActionPlan risk tier. */
+function classificationToRisk(classification?: ActionClassification): CapabilityRisk {
+  switch (classification) {
+    case 'destructive':
+      return 'destructive'
+    case 'communication':
+      return 'external_communication'
+    case 'financial':
+      return 'security_sensitive'
+    case 'write':
+      return 'reversible_write'
+    default:
+      return 'read'
+  }
+}
 
 export class CapabilityExecutor implements CommandExecutor {
   readonly id = 'capability' as const
@@ -14,8 +34,14 @@ export class CapabilityExecutor implements CommandExecutor {
   constructor(
     private registry?: UnifiedCapabilityRegistry,
     responseInterpreter?: ResponseInterpreter,
+    private kernel?: ExecutionKernel,
   ) {
     this.responseInterpreter = responseInterpreter ?? createNoOpResponseInterpreter()
+  }
+
+  /** Inject the execution kernel after construction (for deferred init). */
+  setKernel(kernel: ExecutionKernel): void {
+    this.kernel = kernel
   }
 
   async execute(intent: ParsedIntent, ctx: NLCContext): Promise<CommandResult> {
@@ -48,8 +74,50 @@ export class CapabilityExecutor implements CommandExecutor {
       const input = { ...intent.input }
       input.capabilityId = undefined
       input.slug = undefined
+      const confirmationToken = input.confirmationToken as string | undefined
+      const engineConfirmed = intent.confirmationSatisfied === true || confirmationToken != null
 
-      const result = await this.registry.execute(cap.id, input, capCtx)
+      // Route through ExecutionKernel when available (P0 lifecycle).
+      // Falls back to direct registry.execute() for backward compatibility.
+      let result: unknown
+      if (this.kernel) {
+        // Build a real single-node ActionPlan matching the canonical schema the kernel validates
+        // (src/engines/action-plan.ts). The kernel executes each node via (node, nodeInput) -> registry.execute.
+        const plan: ActionPlan = {
+          version: 1,
+          goal: `Execute ${cap.id}`,
+          nodes: [
+            {
+              id: 'n1',
+              capability: cap.id,
+              input,
+              dependsOn: [],
+              risk: classificationToRisk(intent.classification),
+              requiresConfirmation: cap.requiresConfirmation,
+              verify: { type: 'none' },
+            },
+          ],
+          groundedRefs: [],
+          metadata: {
+            patternId: intent.patternId,
+            confidence: intent.confidence,
+            rawInput: intent.rawInput,
+            ...(confirmationToken ? { confirmationToken } : {}),
+            ...(engineConfirmed ? { __confirmed: true } : {}),
+          },
+        }
+
+        const kernelResult = await this.kernel.execute(plan, async (_node, nodeInput) =>
+          this.registry!.execute(cap.id, nodeInput, capCtx),
+        )
+
+        if (!kernelResult.ok) {
+          return this.fail(intent, traceId, start, kernelResult.error ?? 'Execution failed')
+        }
+        result = kernelResult.output
+      } else {
+        result = await this.registry.execute(cap.id, input, capCtx)
+      }
 
       const raw: CommandResult = {
         ok: true,

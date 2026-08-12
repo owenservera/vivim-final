@@ -2,8 +2,8 @@
 // Phase 2 — PlanValidationGate unit tests.
 
 import { describe, expect, it } from 'bun:test'
-import { PlanValidationGate } from '../../../src/engines/plan-validation-gate.js'
 import type { ActionPlan } from '../../../src/engines/action-plan.js'
+import { PlanValidationGate } from '../../../src/engines/plan-validation-gate.js'
 
 function makePlan(overrides?: Partial<ActionPlan>): ActionPlan {
   return {
@@ -79,9 +79,7 @@ describe('PlanValidationGate', () => {
     })
     const result = strictGate.validate(plan)
     expect(result.valid).toBe(false)
-    expect(
-      result.errors.some((e) => e.includes('Risk tier')),
-    ).toBe(true)
+    expect(result.errors.some((e) => e.includes('Risk tier'))).toBe(true)
   })
 
   it('should warn about destructive risk without confirmation', () => {
@@ -100,9 +98,7 @@ describe('PlanValidationGate', () => {
     })
     const result = gate.validate(plan)
     expect(result.warnings.length).toBeGreaterThan(0)
-    expect(
-      result.warnings.some((w) => w.toLowerCase().includes('confirmation')),
-    ).toBe(true)
+    expect(result.warnings.some((w) => w.toLowerCase().includes('confirmation'))).toBe(true)
   })
 
   it('should report unknown dependency refs', () => {
@@ -121,9 +117,7 @@ describe('PlanValidationGate', () => {
     })
     const result = gate.validate(plan)
     expect(result.valid).toBe(false)
-    expect(
-      result.errors.some((e) => e.includes('unknown node')),
-    ).toBe(true)
+    expect(result.errors.some((e) => e.includes('unknown node'))).toBe(true)
   })
 
   it('should validate via isSafe boolean', () => {
@@ -134,8 +128,6 @@ describe('PlanValidationGate', () => {
   it('should warn when confirmation required but no prompt', () => {
     const plan = makePlan({ requiresConfirmation: true })
     const result = gate.validate(plan)
-    expect(
-      result.warnings.some((w) => w.includes('confirmationPrompt')),
-    ).toBe(true)
+    expect(result.warnings.some((w) => w.includes('confirmationPrompt'))).toBe(true)
   })
 })

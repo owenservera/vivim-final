@@ -1,11 +1,16 @@
 // src/engines/nlcl/intent-router.ts
 // IntentRouter — routes parsed intents to the correct CommandExecutor.
 // Also handles composite intents (multi-step commands like "go to cnn and summarize").
+// When an ExecutionKernel is present, routes capability execution through
+// the full lifecycle (policy → execute → verify → journal).
 
 import { EngineError } from '../../errors.js'
 import { newId } from '../../ids.js'
+import type { ActionPlan, CapabilityRisk } from '../action-plan.js'
+import type { ExecutionKernel } from '../execution-kernel.js'
 import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
 import type {
+  ActionClassification,
   CommandExecutor,
   CommandResult,
   ExecutorId,
@@ -37,9 +42,26 @@ function toCapCtx(ctx: NLCContext): {
   }
 }
 
+/** Map NLCL classification to ActionPlan risk tier. */
+function classificationToRisk(classification?: ActionClassification): CapabilityRisk {
+  switch (classification) {
+    case 'destructive':
+      return 'destructive'
+    case 'communication':
+      return 'external_communication'
+    case 'financial':
+      return 'security_sensitive'
+    case 'write':
+      return 'reversible_write'
+    default:
+      return 'read'
+  }
+}
+
 export class IntentRouter {
   private executors = new Map<ExecutorId, CommandExecutor>()
   private registry?: UnifiedCapabilityRegistry
+  private kernel?: ExecutionKernel
 
   constructor(registry?: UnifiedCapabilityRegistry) {
     this.registry = registry
@@ -47,6 +69,11 @@ export class IntentRouter {
 
   setRegistry(registry: UnifiedCapabilityRegistry): void {
     this.registry = registry
+  }
+
+  /** Inject the execution kernel for P0 lifecycle routing. */
+  setKernel(kernel: ExecutionKernel): void {
+    this.kernel = kernel
   }
 
   registerExecutor(executor: CommandExecutor): void {
@@ -82,6 +109,12 @@ export class IntentRouter {
 
     // Unit 25.4: Route via registry if capabilityId present
     if (intent.capabilityId && this.registry) {
+      // Route through ExecutionKernel when available (P0 lifecycle)
+      if (this.kernel) {
+        return this.routeViaKernel(intent, ctx, start, traceId)
+      }
+
+      // Fallback: direct registry execution (backward compatible)
       try {
         const output = await this.registry.execute(
           intent.capabilityId,
@@ -193,6 +226,14 @@ export class IntentRouter {
   /** Route a single step via registry if capabilityId present, else router. */
   private async routeStep(step: ParsedIntent, ctx: NLCContext): Promise<CommandResult> {
     if (step.capabilityId && this.registry) {
+      // Route through ExecutionKernel when available (P0 lifecycle)
+      if (this.kernel) {
+        const start = Date.now()
+        const traceId = newId()
+        return this.routeViaKernel(step, ctx, start, traceId)
+      }
+
+      // Fallback: direct registry execution (backward compatible)
       try {
         const output = await this.registry.execute(
           step.capabilityId,
@@ -222,6 +263,102 @@ export class IntentRouter {
       }
     }
     return this.route(step, ctx)
+  }
+
+  /**
+   * Route an intent through the ExecutionKernel.
+   * Builds an ActionPlan from the intent, then executes through the kernel lifecycle.
+   */
+  private async routeViaKernel(
+    intent: ParsedIntent,
+    ctx: NLCContext,
+    start: number,
+    traceId: string,
+  ): Promise<CommandResult> {
+    try {
+      const cap = this.registry!.get(intent.capabilityId!) ?? this.registry!.getBySlug(intent.capabilityId!)
+      if (!cap) {
+        return {
+          ok: false,
+          intent: intent.intent,
+          error: `Capability not found: ${intent.capabilityId}`,
+          latencyMs: Date.now() - start,
+          traceId,
+          classification: 'system',
+          capabilityId: intent.capabilityId,
+        }
+      }
+
+      const input = { ...intent.input }
+      delete input.capabilityId
+      delete input.slug
+      // The confirmation token mints once (NLCL layer) and rides through the already-confirmed resume.
+      const confirmationToken = input.confirmationToken as string | undefined
+      const engineConfirmed = intent.confirmationSatisfied === true || confirmationToken != null
+
+      // Build a real single-node ActionPlan matching the canonical schema the ExecutionKernel validates
+      // (src/engines/action-plan.ts). The kernel executes each node via (node, nodeInput) -> registry.execute.
+      const plan: ActionPlan = {
+        version: 1,
+        goal: `Execute ${cap.id}`,
+        nodes: [
+          {
+            id: 'n1',
+            capability: cap.id,
+            input,
+            dependsOn: [],
+            risk: classificationToRisk(intent.classification),
+            requiresConfirmation: cap.requiresConfirmation,
+            verify: { type: 'none' },
+          },
+        ],
+        groundedRefs: [],
+        metadata: {
+          patternId: intent.patternId,
+          confidence: intent.confidence,
+          rawInput: intent.rawInput,
+          ...(confirmationToken ? { confirmationToken } : {}),
+          ...(engineConfirmed ? { __confirmed: true } : {}),
+        },
+      }
+
+      const kernelResult = await this.kernel!.execute(plan, async (_node, nodeInput) =>
+        this.registry!.execute(cap.id, nodeInput, toCapCtx(ctx)),
+      )
+
+      if (!kernelResult.ok) {
+        return {
+          ok: false,
+          intent: intent.intent,
+          error: kernelResult.error ?? 'Execution failed',
+          latencyMs: Date.now() - start,
+          traceId,
+          classification: 'system',
+          capabilityId: intent.capabilityId,
+        }
+      }
+
+      return {
+        ok: true,
+        intent: intent.intent,
+        output: kernelResult.output,
+        latencyMs: Date.now() - start,
+        traceId,
+        classification: 'system',
+        capabilityId: intent.capabilityId,
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      return {
+        ok: false,
+        intent: intent.intent,
+        error: message,
+        latencyMs: Date.now() - start,
+        traceId,
+        classification: 'system',
+        capabilityId: intent.capabilityId,
+      }
+    }
   }
 
   private patternRegistry: Map<string, { executor: ExecutorId }> = new Map()

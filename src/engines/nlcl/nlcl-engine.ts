@@ -8,9 +8,12 @@ import { newId } from '../../ids.js'
 import { safeJsonParse } from '../../lib/safe-json.js'
 import type { ConversationStore } from '../../storage/contracts/conversation-store.js'
 import type { CapStoreDb } from '../../storage/db.js'
+import type { ActionPlan, GroundedReference } from '../action-plan.js'
+import { ActionPlanBridge } from '../action-plan-bridge.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { ConversationManager } from '../conversation-manager.js'
 import { OpenCodeExecutor } from '../opencode/opencode-executor.js'
+import { PlanValidationGate } from '../plan-validation-gate.js'
 import type { EmbeddingProvider } from '../semantic-search.js'
 import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
 import { getDefaultCommandPatterns } from './catalog.js'
@@ -36,6 +39,7 @@ import {
   SystemExecutor,
   WorkflowExecutor,
 } from './executors/index.js'
+import type { ExecutionKernel } from '../execution-kernel.js'
 import { HelpResolver } from './help-resolver.js'
 import {
   createResolver,
@@ -52,9 +56,6 @@ import {
 } from './parameter-extraction.js'
 import { Prerouter } from './prerouter.js'
 import { createResponseInterpreter, type ResponseInterpreter } from './response-interpreter.js'
-import type { ActionPlan, GroundedReference } from '../action-plan.js'
-import { ActionPlanBridge } from '../action-plan-bridge.js'
-import { PlanValidationGate } from '../plan-validation-gate.js'
 import type {
   CommandExecutor,
   CommandPattern,
@@ -154,6 +155,8 @@ export class NLCLEngine {
   private actionPlanBridge: ActionPlanBridge
   /** Phase 2 — pre-execution validation gate for ActionPlans. */
   private planValidationGate: PlanValidationGate
+  /** P0 ExecutionKernel — hardened execution lifecycle, wired at boot when enabled. */
+  private capabilityExecutor?: CapabilityExecutor
   private auditLog: Array<{
     ts: number
     input: string
@@ -299,6 +302,8 @@ export class NLCLEngine {
                 resolvedAt: Date.now(),
                 capabilityId: confirmed.capabilityId,
                 classification: pattern.classification,
+                // The human confirmation gate already minted/verified the token; tell the kernel this plan is engine-authorized.
+                confirmationSatisfied: true,
               },
               confirmedCtx,
             )
@@ -708,6 +713,7 @@ export class NLCLEngine {
     const systemExec = new SystemExecutor(db, governor, registry)
     const convExec = new ConversationExecutor(conversationManager)
     const capExec = new CapabilityExecutor(registry, this.responseInterpreter)
+    this.capabilityExecutor = capExec
     const emailExec = new EmailExecutor()
     const appExec = new AppExecutor()
     const workflowExec = new WorkflowExecutor(registry)
@@ -737,6 +743,17 @@ export class NLCLEngine {
     for (const exec of executors) {
       this.router.registerExecutor(exec)
     }
+  }
+
+  /**
+   * Wire the P0 ExecutionKernel into NLCL. The router handles intents whose
+   * capabilityId resolves to a registered capability; the CapabilityExecutor is
+   * the backstop for `capability:`-prefixed intents. Called once at boot when
+   * VIVIM_EXECUTION_KERNEL is enabled.
+   */
+  setExecutionKernel(kernel: ExecutionKernel): void {
+    this.router.setKernel(kernel)
+    this.capabilityExecutor?.setKernel(kernel)
   }
 
   private detectComposite(rawInput: string, ctx?: NLCContext): CompositeIntent | null {

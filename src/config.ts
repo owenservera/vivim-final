@@ -326,6 +326,20 @@ export const config = {
   // When enabled, the gateway boots with in-memory stores + simulator + (optionally) OpenCode adapter.
   aiGatewayEnabled: process.env.AI_GATEWAY_ENABLED === '1',
 
+  // P0 ExecutionKernel — hardened, observable NLCL execution lifecycle (alpha-gated, OFF by default).
+  // When enabled, NLCL capability execution routes through ExecutionKernel: P0PolicyEngine tier-blocking
+  // (default-deny for destructive/communication/financial/security-sensitive) -> execute -> verify -> journal.
+  // The kernel is wired into NLCL only at boot when this flag is '1'; otherwise NLCL executes directly via the
+  // registry (today's behavior). Per-tier allows relax the policy for trusted callers; maxRiskTier caps tier breadth.
+  executionKernel: {
+    enabled: process.env.VIVIM_EXECUTION_KERNEL === '1',
+    allowDestructive: process.env.VIVIM_EXECUTION_KERNEL_ALLOW_DESTRUCTIVE === '1',
+    allowFinancial: process.env.VIVIM_EXECUTION_KERNEL_ALLOW_FINANCIAL === '1',
+    allowCommunication: process.env.VIVIM_EXECUTION_KERNEL_ALLOW_COMMUNICATION === '1',
+    allowSecuritySensitive: process.env.VIVIM_EXECUTION_KERNEL_ALLOW_SECURITY === '1',
+    maxRiskTier: Number.parseInt(process.env.VIVIM_EXECUTION_KERNEL_MAX_RISK_TIER ?? '3', 10),
+  },
+
   // MCP
   mcpPort: Number.parseInt(process.env.MCP_PORT ?? '0', 10) || undefined,
 
