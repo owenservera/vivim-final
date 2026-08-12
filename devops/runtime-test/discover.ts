@@ -78,6 +78,7 @@ export async function discoverAll(opts?: { offline?: boolean }): Promise<Discove
     const matches = schema.match(/^\s*model\s+\w+/gm)
     schemaTables = matches?.length ?? 0
   } catch {
+  // [audit] log the error with context here
     // Schema file unreadable — schema introspection is optional, not fatal
   }
 

@@ -34,6 +34,7 @@ export async function bootstrapLifecyclePhase(ctx: BootstrapContext): Promise<vo
     conversationStore: convStore,
     registry,
     db,
+    embeddingProvider: ctx.embeddingProvider,
     // #1: Wire the AI Gateway as the NLCL Tier-3 LLM provider (was: never passed → dead code).
     // When the gateway is disabled, the adapter returns a stub message and the Tier-3 path
     // gracefully falls through to lower tiers.
@@ -110,21 +111,24 @@ export async function bootstrapLifecyclePhase(ctx: BootstrapContext): Promise<vo
     const slaveResolver = new LLMSlaveResolver({
       providerLLM: getGatewayProviderLLMAdapter({ providerId: 'simulator' }),
       catalog: () =>
-        registry?.list()?.map(
-          (c: {
-            id: string
-            slug: string
-            name: string
-            description?: string
-            inputSchema?: unknown
-          }) => ({
-            id: c.id,
-            intent: c.slug,
-            description: c.name ?? c.id,
-            inputSchema: c.inputSchema,
-          }),
-        ) ?? [],
+        registry
+          ?.list()
+          ?.map(
+            (c: {
+              id: string
+              slug: string
+              name: string
+              description?: string
+              inputSchema?: unknown
+            }) => ({
+              id: c.id,
+              intent: c.slug,
+              description: c.name ?? c.id,
+              inputSchema: c.inputSchema,
+            }),
+          ) ?? [],
       repairEngine: harnessRepair,
+      embeddingProvider: ctx.embeddingProvider,
     })
     ;(globalThis as Record<string, unknown>).__llmSlaveResolver = slaveResolver
     log.info('[boot] LLMSlaveResolver constructed (BM25+MiniLM+RRF RAG, gateway-backed)')

@@ -62,6 +62,7 @@ async function classifyIntentViaBackend(query: string): Promise<AgentMode> {
       }
     }
   } catch {
+  // [audit] log the error with context here
     // Backend unavailable, fall back to keyword classification
   }
 
@@ -215,7 +216,7 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error('[Help Agent] Error:', error)
+    // [audit] removed: console.error('[Help Agent] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

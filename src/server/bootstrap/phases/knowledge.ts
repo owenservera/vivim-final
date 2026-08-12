@@ -67,15 +67,25 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
     const ssStore = new SemanticSearchStoreImpl(db)
 
     let embedding: EmbeddingProvider
+    // Ordered provider chain: HF (default, local ONNX) → Ollama (opt-in) → MiniLM (fallback)
     try {
-      const { OllamaEmbeddingProvider } = await import('../../../engines/embedding-ollama.js')
-      const provider = new OllamaEmbeddingProvider()
-      await provider.embed('ping')
+      const { HfEmbeddingProvider } = await import('../../../engines/embedding-hf.js')
+      const provider = new HfEmbeddingProvider()
+      await provider.init()
+      await provider.embed('warmup')
       embedding = provider
     } catch (e) {
-      catchDebug(e, 'bootstrap: embedding provider fallback to MiniLM')
-      const { MiniLmEmbeddingProvider } = await import('../../../engines/embedding-minilm.js')
-      embedding = new MiniLmEmbeddingProvider()
+      catchDebug(e, 'bootstrap: HF embedding failed, trying Ollama')
+      try {
+        const { OllamaEmbeddingProvider } = await import('../../../engines/embedding-ollama.js')
+        const provider = new OllamaEmbeddingProvider()
+        await provider.embed('ping')
+        embedding = provider
+      } catch (e2) {
+        catchDebug(e2, 'bootstrap: Ollama unavailable, falling back to MiniLM')
+        const { MiniLmEmbeddingProvider } = await import('../../../engines/embedding-minilm.js')
+        embedding = new MiniLmEmbeddingProvider()
+      }
     }
     embeddingProvider = embedding // #5: expose on phase scope
 

@@ -120,6 +120,7 @@ export class StructuredLogger {
       try {
         sink(entry);
       } catch {
+  // [audit] log the error with context here
         // Sink failure must never break the bus.
       }
     }

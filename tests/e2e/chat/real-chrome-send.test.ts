@@ -43,7 +43,7 @@ async function createConversation(): Promise<string | null> {
 describe('E2E: Real Chrome send', () => {
   it('send message returns ok:true with blocks', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping E2E test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping E2E test')
       return
     }
 
@@ -63,7 +63,7 @@ describe('E2E: Real Chrome send', () => {
 
   it('send returns response text', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping E2E test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping E2E test')
       return
     }
 
@@ -83,7 +83,7 @@ describe('E2E: Real Chrome send', () => {
 
   it('send latency is reasonable (< 30s)', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping E2E test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping E2E test')
       return
     }
 
@@ -104,7 +104,7 @@ describe('E2E: Real Chrome send', () => {
 describe('E2E: Multi-turn Chrome', () => {
   it('second message on same conversation works', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping E2E test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping E2E test')
       return
     }
 
@@ -126,7 +126,7 @@ describe('E2E: Multi-turn Chrome', () => {
 
   it('message count increments across turns', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping E2E test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping E2E test')
       return
     }
 
@@ -147,7 +147,7 @@ describe('E2E: Multi-turn Chrome', () => {
 describe('E2E: Chrome recovery', () => {
   it('server still responds after Chrome instability', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping E2E test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping E2E test')
       return
     }
 

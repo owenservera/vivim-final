@@ -2,11 +2,11 @@
 // LLMSlaveResolver — Catalog-grounded LLM resolution with hybrid RAG.
 //
 // Tier 3 unit 15.7 — closes audit findings:
-//   ❌-9: dense embeddings (MiniLM) used for catalog retrieval, not TF-IDF only.
+//   ❌-9: dense embeddings (HF 768-d) used for catalog retrieval, not TF-IDF only.
 //   ❌-10: explicit retry commitment via harness-feedback-coordinator (delegated
 //          to the engine layer — here we just call into HarnessRepairEngine
 //          which has its own retry-on-parse-fail strategy).
-//   🚀-14: hybrid retrieval (BM25 sparse + MiniLM dense + RRF fusion) for the
+//   🚀-14: hybrid retrieval (BM25 sparse + HF dense + RRF fusion) for the
 //          top-K catalog candidates sent to the LLM (keeps prompt bounded).
 //   🚀-22: budget-engine check before LLM call (audit Tier 5).
 //   🚀-26: harness-repair-engine.repair() used to fix LLM JSON output before
@@ -17,7 +17,7 @@
 // the configured confidence threshold.
 
 import { catchDebug } from '../../lib/catch-logger.js'
-import { MiniLmEmbeddingProvider } from '../embedding-minilm.js'
+import { HfEmbeddingProvider } from '../embedding-hf.js'
 import type { EmbeddingProvider } from '../semantic-search.js'
 import type { IntentResolver, NLCContext, ParsedIntent } from './types.js'
 
@@ -33,8 +33,8 @@ export interface LLMSlaveResolverDeps {
   }>
   /**
    * Tier 3 unit 15.6 — dense embedding provider for RAG retrieval.
-   * Defaults to MiniLmEmbeddingProvider. Pass a real ONNX/transformers
-   * provider in production.
+   * Defaults to HfEmbeddingProvider (768-d ONNX). Pass the booted
+   * embeddingProvider from BootstrapContext in production.
    */
   embeddingProvider?: EmbeddingProvider
   /**
@@ -96,7 +96,7 @@ export class LLMSlaveResolver implements IntentResolver {
   constructor(deps: LLMSlaveResolverDeps) {
     this.adapter = deps.providerLLM
     this.getCatalog = deps.catalog
-    this.embeddingProvider = deps.embeddingProvider ?? new MiniLmEmbeddingProvider()
+    this.embeddingProvider = deps.embeddingProvider ?? new HfEmbeddingProvider()
     this.repairEngine = deps.repairEngine
     this.budgetGuard = deps.budgetGuard
     this.topK = deps.topK ?? 8

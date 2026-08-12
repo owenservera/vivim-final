@@ -177,6 +177,7 @@ export class ProviderAdapter implements SurfaceAdapter {
     const result = await this.runTest(test)
     // T16 — project every provider test result into the agent memory system.
     await this.recordToMemory(test, result).catch(() => {})
+  // [audit] log the error with context here
     return result
   }
 
@@ -472,6 +473,7 @@ export class ProviderAdapter implements SurfaceAdapter {
     await store
       .appendAgentMessage(conversationId, { role: 'user', text: prompt })
       .catch(() => {})
+  // [audit] log the error with context here
 
     const responseText =
       `${result.status.toUpperCase()}: ${result.actual}` +
@@ -479,6 +481,7 @@ export class ProviderAdapter implements SurfaceAdapter {
     await store
       .appendAgentMessage(conversationId, { role: 'assistant', text: responseText })
       .catch(() => {})
+  // [audit] log the error with context here
 
     if (this.eventRecordStore) {
       await this.eventRecordStore
@@ -500,6 +503,7 @@ export class ProviderAdapter implements SurfaceAdapter {
           },
         })
         .catch(() => {})
+  // [audit] log the error with context here
     }
   }
 

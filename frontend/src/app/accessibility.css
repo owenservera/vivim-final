@@ -52,3 +52,12 @@
   border-radius: var(--radius) !important;
   text-decoration: none !important;
 }
+
+/* Touch pointer target sizing (min 44x44px for touch interactivity) */
+@media (pointer: coarse) {
+  button, a, input, select, textarea, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+

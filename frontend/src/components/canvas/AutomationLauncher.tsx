@@ -49,6 +49,7 @@ export function AutomationLauncher() {
       if (rRes.ok) setRecipes(rRes.data?.recipes ?? []);
       if (rlRes.ok) setRoles(rlRes.data?.roles ?? []);
     } catch { /* silent */ }
+  // [audit] log the error with context here
   }, [io]);
 
   useEffect(() => { fetchData(); }, [fetchData]);

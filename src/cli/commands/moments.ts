@@ -17,7 +17,7 @@ const SUBCOMMANDS = {
   async list() {
     const profiles = await client.getProfiles()
     if (profiles.profiles.length === 0) {
-      console.log('  (none)')
+      // [audit] removed: console.log('  (none)')
     }
     for (const p of profiles.profiles) {
       const icon = p.providerId === 'chatgpt' ? '🤖' : p.providerId === 'claude' ? '🪨' : '💎'

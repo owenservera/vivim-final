@@ -194,6 +194,7 @@ export function attachCanvasWs(engine: CanvasEngine): (ws: WsLike, raw: string) 
     // Browser pushed local region state → optimistic mirror (P2).
     if (msg.type === 'canvas:state' && typeof msg.instanceId === 'string') {
       engine.mirror.pushOptimistic(msg.instanceId, String(msg.regionId), msg.state).catch(() => {})
+  // [audit] log the error with context here
       return
     }
 

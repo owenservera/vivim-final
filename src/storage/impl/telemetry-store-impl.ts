@@ -215,6 +215,7 @@ export class TelemetryStoreImpl implements TelemetryStore {
         data: { scheduleName, rowsWritten, durationMs, error: error ?? null, ts: Date.now() },
       })
       .catch(() => {
+  // [audit] log the error with context here
         // Table may not exist in all deployments; cyclic logging is best-effort.
       })
   }

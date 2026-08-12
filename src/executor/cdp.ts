@@ -262,6 +262,7 @@ export class BunCdpClient {
     this.stopPing()
     this.pingTimer = setInterval(() => {
       this.send('Runtime.evaluate', { expression: '1' }).catch(() => {
+  // [audit] log the error with context here
         // ping failure handled by onclose
       })
     }, this.opts.pingIntervalMs)

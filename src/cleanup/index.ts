@@ -38,6 +38,7 @@ export async function runCleanupAnalysis(rootDir: string): Promise<{
       : `${rootDir}/src/index.ts`
     unusedExports = await analyzeBarrelExports(barrelPath, rootDir)
   } catch {
+  // [audit] log the error with context here
     // If barrel analysis fails (e.g. in bundled contexts), return empty.
   }
 

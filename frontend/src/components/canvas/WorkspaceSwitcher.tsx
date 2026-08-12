@@ -41,6 +41,7 @@ export function WorkspaceSwitcher({
         }
       })
       .catch(() => {
+  // [audit] log the error with context here
         // network error — keep the empty list
       })
       .finally(() => !cancelled && setLoading(false));

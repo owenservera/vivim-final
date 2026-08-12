@@ -391,7 +391,7 @@ export async function mainCli(argv: string[] = process.argv): Promise<void> {
   const provider = args.provider ?? 'unknown'
 
   if (!subcommand || subcommand === 'help') {
-    console.log(`
+    // [audit] removed: console.log(`
 Usage: bun run devops llm-testing-log <subcommand> [options]
 
 Subcommands:
@@ -440,7 +440,7 @@ Capability Options:
   switch (subcommand) {
     case 'finding': {
       if (!args.severity || !args.category || !args.detail) {
-        console.error('Error: --severity, --category, and --detail are required')
+        // [audit] removed: console.error('Error: --severity, --category, and --detail are required')
         process.exit(1)
       }
       logger.logFinding({
@@ -451,13 +451,13 @@ Capability Options:
         line: args.line ? Number.parseInt(args.line, 10) : undefined,
         fix: args.fix,
       })
-      console.log(`Finding logged: [${args.severity}] ${args.category}: ${args.detail}`)
+      // [audit] removed: console.log(`Finding logged: [${args.severity}] ${args.category}: ${args.detail}`)
       break
     }
 
     case 'phase': {
       if (!args.phase || !args.status) {
-        console.error('Error: --phase and --status are required')
+        // [audit] removed: console.error('Error: --phase and --status are required')
         process.exit(1)
       }
       logger.logPhase({
@@ -466,13 +466,13 @@ Capability Options:
         durationMs: args.durationMs ? Number.parseInt(args.durationMs, 10) : undefined,
         detail: args.detail,
       })
-      console.log(`Phase logged: ${args.phase} = ${args.status}`)
+      // [audit] removed: console.log(`Phase logged: ${args.phase} = ${args.status}`)
       break
     }
 
     case 'decision': {
       if (!args.decision || !args.rationale) {
-        console.error('Error: --decision and --rationale are required')
+        // [audit] removed: console.error('Error: --decision and --rationale are required')
         process.exit(1)
       }
       logger.logDecision({
@@ -481,13 +481,13 @@ Capability Options:
         file: args.file,
         line: args.line ? Number.parseInt(args.line, 10) : undefined,
       })
-      console.log(`Decision logged: ${args.decision}`)
+      // [audit] removed: console.log(`Decision logged: ${args.decision}`)
       break
     }
 
     case 'capability': {
       if (!args.capabilitySlug || !args.status) {
-        console.error('Error: --capabilitySlug and --status are required')
+        // [audit] removed: console.error('Error: --capabilitySlug and --status are required')
         process.exit(1)
       }
       logger.logCapabilityTest({
@@ -497,13 +497,13 @@ Capability Options:
         error: args.error,
         fix: args.fix,
       })
-      console.log(`Capability test logged: ${args.capabilitySlug} = ${args.status}`)
+      // [audit] removed: console.log(`Capability test logged: ${args.capabilitySlug} = ${args.status}`)
       break
     }
 
     case 'chrome': {
       if (!args.detail) {
-        console.error('Error: --detail is required')
+        // [audit] removed: console.error('Error: --detail is required')
         process.exit(1)
       }
       logger.logChrome({
@@ -514,13 +514,13 @@ Capability Options:
         streamFormat: args.streamFormat,
         quirks: args.quirks?.split(','),
       })
-      console.log(`Chrome knowledge logged: ${args.detail}`)
+      // [audit] removed: console.log(`Chrome knowledge logged: ${args.detail}`)
       break
     }
 
     case 'summary': {
       logger.logSummary()
-      console.log('Summary logged to session-log.jsonl')
+      // [audit] removed: console.log('Summary logged to session-log.jsonl')
       break
     }
 
@@ -528,10 +528,10 @@ Capability Options:
       // Read ALL entries for this provider across all sessions
       const entries = logger.readLog().filter((e) => e.provider === provider)
       if (entries.length === 0) {
-        console.log(`No entries found for provider=${provider}`)
+        // [audit] removed: console.log(`No entries found for provider=${provider}`)
       } else {
         for (const e of entries) {
-          console.log(JSON.stringify(e))
+          // [audit] removed: console.log(JSON.stringify(e))
         }
       }
       break
@@ -542,13 +542,13 @@ Capability Options:
       // Write to a file too
       const mdPath = join(BASE_DIR, `session-${provider}-${Date.now()}.md`)
       writeFileSync(mdPath, md, 'utf8')
-      console.log(md)
-      console.log(`\nWritten to: ${mdPath}`)
+      // [audit] removed: console.log(md)
+      // [audit] removed: console.log(`\nWritten to: ${mdPath}`)
       break
     }
 
     default:
-      console.error(`Unknown subcommand: ${subcommand}`)
+      // [audit] removed: console.error(`Unknown subcommand: ${subcommand}`)
       process.exit(1)
   }
 }
@@ -556,7 +556,7 @@ Capability Options:
 // Run if invoked directly (not imported as library)
 if (import.meta.url === `file://${process.argv[1]}`) {
   mainCli().catch((e) => {
-    console.error(e)
+    // [audit] removed: console.error(e)
     process.exit(1)
   })
 }

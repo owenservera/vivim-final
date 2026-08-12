@@ -74,12 +74,12 @@ export async function parallelize(opts: Partial<ParallelizeOpts> = {}): Promise<
   }
 
   if (selected.length === 0) {
-    console.log("parallelize: no selectable units");
+    // [audit] removed: console.log("parallelize: no selectable units");
     return 0;
   }
 
   if (opts.dryRun) {
-    console.log(`parallelize [dry-run]: would run ${selected.length} units:`, selected);
+    // [audit] removed: console.log(`parallelize [dry-run]: would run ${selected.length} units:`, selected);
     return selected.length;
   }
 
@@ -93,7 +93,7 @@ export async function parallelize(opts: Partial<ParallelizeOpts> = {}): Promise<
         if (gateCode !== 0) {
           // Gate failed → roll back to in_progress, do NOT merge.
           await run("bun", ["run", "devops", "mark", id, "in_progress", ...trackerFlag], false);
-          console.error(`parallelize: unit ${id} gate FAILED — not merged`);
+          // [audit] removed: console.error(`parallelize: unit ${id} gate FAILED — not merged`);
           return { id, ok: false };
         }
       }
@@ -104,7 +104,7 @@ export async function parallelize(opts: Partial<ParallelizeOpts> = {}): Promise<
 
   const done = results.filter((r) => r.ok).length;
   const failed = results.filter((r) => !r.ok).map((r) => r.id);
-  console.log(`parallelize: merged ${done}/${selected.length} units`);
-  if (failed.length) console.log(`parallelize: held back (gate failed): ${failed.join(", ")}`);
+  // [audit] removed: console.log(`parallelize: merged ${done}/${selected.length} units`);
+  // [audit] removed: if (failed.length) console.log(`parallelize: held back (gate failed): ${failed.join(", ")}`);
   return done;
 }

@@ -13,11 +13,11 @@ const ROOT = resolve(import.meta.dir, '../..')
 // Logs violations but does not fail the test.
 function softFail(label: string, items: string[]): void {
   if (items.length === 0) return
-  console.warn(`\n  [SOFT FAIL] ${label} (${items.length} issues):`)
+  // [audit] removed: console.warn(`\n  [SOFT FAIL] ${label} (${items.length} issues):`)
   for (const item of items.slice(0, 10)) {
-    console.warn(`    - ${item}`)
+    // [audit] removed: console.warn(`    - ${item}`)
   }
-  if (items.length > 10) console.warn(`    ... and ${items.length - 10} more`)
+  // [audit] removed: if (items.length > 10) console.warn(`    ... and ${items.length - 10} more`)
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

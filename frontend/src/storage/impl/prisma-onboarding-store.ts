@@ -34,8 +34,9 @@ interface PrismaDelegate {
   }): Promise<UserOnboardingRow>
 }
 
-interface PrismaLike {
+export interface PrismaLike {
   userOnboarding: PrismaDelegate
+  [key: string]: unknown
 }
 
 export class PrismaOnboardingStore implements OnboardingStore {

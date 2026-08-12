@@ -71,7 +71,7 @@ export function useSlotOverrides(providerSlug?: string): void {
 
             const component = COMPONENT_CATALOG[override.component];
             if (!component) {
-              console.warn(
+              // [audit] removed: console.warn(
                 `[useSlotOverrides] Unknown catalog key "${override.component}" for slot "${slot}"`,
               );
               continue;
@@ -82,7 +82,7 @@ export function useSlotOverrides(providerSlug?: string): void {
                 sandbox: override.sandbox,
               });
             } catch (e) {
-              console.warn(
+              // [audit] removed: console.warn(
                 `[useSlotOverrides] Failed to register slot ${slot} for ${cap.slug}:`,
                 e,
               );
@@ -90,7 +90,7 @@ export function useSlotOverrides(providerSlug?: string): void {
           }
         }
       } catch (e) {
-        console.warn('[useSlotOverrides] Failed to fetch capabilities:', e);
+        // [audit] removed: console.warn('[useSlotOverrides] Failed to fetch capabilities:', e);
       }
     }
 

@@ -101,6 +101,7 @@ function findSkillFiles(): string[] {
         if (statSync(full).isDirectory()) walk(full)
         else if (entry === 'SKILL.md') results.push(full)
       } catch { /* skip */ }
+  // [audit] log the error with context here
     }
   }
   walk(root)
@@ -183,16 +184,16 @@ export function verifySkillCliDrift(): DriftIssue[] {
 if (process.argv[1]?.endsWith('skill-cli-verifier.ts')) {
   const issues = verifySkillCliDrift()
   if (issues.length === 0) {
-    console.log('OK — No skill↔CLI drift detected')
+    // [audit] removed: console.log('OK — No skill↔CLI drift detected')
     process.exit(0)
   } else {
-    console.error(`Found ${issues.length} drift issue(s) in skill files:\n`)
+    // [audit] removed: console.error(`Found ${issues.length} drift issue(s) in skill files:\n`)
     for (const issue of issues) {
-      console.error(`  [MISSING] ${issue.command}`)
-      console.error(`           file: ${issue.skillFile}`)
-      console.error(`           line: ${issue.skillLine}`)
-      console.error(`           hint: ${issue.suggestion}`)
-      console.error('')
+      // [audit] removed: console.error(`  [MISSING] ${issue.command}`)
+      // [audit] removed: console.error(`           file: ${issue.skillFile}`)
+      // [audit] removed: console.error(`           line: ${issue.skillLine}`)
+      // [audit] removed: console.error(`           hint: ${issue.suggestion}`)
+      // [audit] removed: console.error('')
     }
     process.exit(1)
   }

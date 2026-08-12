@@ -62,11 +62,11 @@ export function runMerge(): TaxonomyDocument {
 
   // Round 3: UI slot mapping
   const uiMapped = runUIMapping(nodes)
-  console.log(`  Round 3 (UI mapping): ${uiMapped} capabilities mapped`)
+  // [audit] removed: console.log(`  Round 3 (UI mapping): ${uiMapped} capabilities mapped`)
 
   // Round 4: Cross-surface binding
   const bound = runCrossSurfaceBinding(nodes)
-  console.log(`  Round 4 (cross-surface): ${bound} capabilities bound`)
+  // [audit] removed: console.log(`  Round 4 (cross-surface): ${bound} capabilities bound`)
 
   const doc: TaxonomyDocument = TaxonomyDocumentSchema.parse({
     version: '1.0.0',
@@ -81,7 +81,7 @@ export function runMerge(): TaxonomyDocument {
   const byKind = countByKind(doc.nodes)
   const uiCoverage = countUICoverage(doc.nodes)
   const bindingCoverage = countBindingCoverage(doc.nodes)
-  console.log(
+  // [audit] removed: console.log(
     `✅ Merged master taxonomy pool → ${SEED_TARGET}\n` +
       `   nodes: ${doc.nodes.length}  edges: ${doc.edges.length}\n` +
       `   ${byKind}\n` +

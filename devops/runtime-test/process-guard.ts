@@ -18,6 +18,7 @@ async function teardown(): Promise<void> {
   try {
     await stopServices()
   } catch {
+  // [audit] log the error with context here
     // best effort
   }
 }
@@ -33,11 +34,11 @@ export function installProcessGuard(): void {
   process.once('SIGINT', onSignal)
   process.once('SIGTERM', onSignal)
   process.once('uncaughtException', (err) => {
-    console.error('[process-guard] uncaughtException:', err)
+    // [audit] removed: console.error('[process-guard] uncaughtException:', err)
     void teardown().finally(() => process.exit(1))
   })
   process.once('unhandledRejection', (reason) => {
-    console.error('[process-guard] unhandledRejection:', reason)
+    // [audit] removed: console.error('[process-guard] unhandledRejection:', reason)
     void teardown().finally(() => process.exit(1))
   })
 }

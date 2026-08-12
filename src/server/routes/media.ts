@@ -4,6 +4,7 @@
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { appErrorResponse, errorResponse, json } from '../response.js'
+import { parseRequestBody } from '../validate.js'
 
 export function createMediaRouter(ctx: ServerContext) {
   return async function mediaRouter(req: Request): Promise<Response | undefined> {
@@ -78,8 +79,8 @@ export function createMediaRouter(ctx: ServerContext) {
           providerNativeId: z.string().optional(),
           metadataJson: z.string().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const attachment = await store.createMedia(parsed.data)
         return json({ attachment }, 201)
       }
@@ -94,8 +95,9 @@ export function createMediaRouter(ctx: ServerContext) {
 
       // PUT /api/media/:id
       if (req.method === 'PUT' && attachmentMatch && attachmentMatch[1]) {
-        const body = (await req.json()) as Record<string, unknown>
-        const attachment = await store.updateMedia(attachmentMatch[1], body)
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const attachment = await store.updateMedia(attachmentMatch[1], parsed.data)
         return json({ attachment })
       }
 
@@ -108,22 +110,21 @@ export function createMediaRouter(ctx: ServerContext) {
       // POST /api/media/:id/download
       const downloadMatch = path.match(/^\/api\/media\/([^/]+)\/download$/)
       if (req.method === 'POST' && downloadMatch && downloadMatch[1]) {
-        const body = (await req.json()) as { localPath?: string }
-        if (!body.localPath || typeof body.localPath !== 'string') {
-          return errorResponse('localPath is required', 'ValidationError', 400)
-        }
-        const attachment = await store.markDownloaded(downloadMatch[1], body.localPath)
+        const parsed = await parseRequestBody(req, z.object({ localPath: z.string().min(1) }))
+        if (!parsed.success) return parsed.response
+        const attachment = await store.markDownloaded(downloadMatch[1], parsed.data.localPath)
         return json({ attachment })
       }
 
       // PUT /api/media/:id/progress
       const progressMatch = path.match(/^\/api\/media\/([^/]+)\/progress$/)
       if (req.method === 'PUT' && progressMatch && progressMatch[1]) {
-        const body = (await req.json()) as { progress?: number }
-        if (body.progress === undefined || typeof body.progress !== 'number') {
-          return errorResponse('progress is required (number)', 'ValidationError', 400)
-        }
-        const attachment = await store.updateDownloadProgress(progressMatch[1], body.progress)
+        const parsed = await parseRequestBody(req, z.object({ progress: z.number() }))
+        if (!parsed.success) return parsed.response
+        const attachment = await store.updateDownloadProgress(
+          progressMatch[1],
+          parsed.data.progress,
+        )
         return json({ attachment })
       }
 

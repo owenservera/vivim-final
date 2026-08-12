@@ -131,9 +131,11 @@ export class SystemBrief {
       try {
         health = (await r.json()) as Record<string, unknown>
       } catch {
+  // [audit] log the error with context here
         /* ignore */
       }
     } catch {
+  // [audit] log the error with context here
       /* unreachable */
     }
 
@@ -148,6 +150,7 @@ export class SystemBrief {
         toolCount = j.tools?.length ?? 0
       }
     } catch {
+  // [audit] log the error with context here
       /* mcp down */
     }
 

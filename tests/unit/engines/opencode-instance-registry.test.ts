@@ -114,6 +114,7 @@ describe('OpenCodeInstanceRegistry', () => {
     try {
       rmSync(ledgerPath, { recursive: true, force: true })
     } catch {
+  // [audit] log the error with context here
       /* best-effort */
     }
   })

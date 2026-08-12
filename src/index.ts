@@ -374,3 +374,25 @@ export type {
 } from './storage/contracts/harness-repair-store.js'
 export { seedHarnessCommands } from '../seeds/harness/commands.seed.js'
 export { seedAutomation } from '../seeds/automation/automation.seed.js'
+
+// LLM Agent-Driven Code Audit Engine
+export { CodeAuditEngine } from './engines/code-audit/index.js'
+export type {
+  AuditPhase,
+  SeverityLevel,
+  Finding,
+  PhaseResult,
+  AuditReport,
+  CodeAuditOptions,
+  TaintFlow,
+  TaintStep,
+  AgentOpinion,
+  DebateConsensus,
+  GraphNode,
+  GraphEdge,
+  CodebaseTopology,
+  IngestionStats,
+  SarifLog,
+} from './engines/code-audit/types.js'
+
+

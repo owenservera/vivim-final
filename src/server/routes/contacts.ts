@@ -4,6 +4,7 @@
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { appErrorResponse, errorResponse, json } from '../response.js'
+import { parseRequestBody } from '../validate.js'
 
 export function createContactsRouter(ctx: ServerContext) {
   return async function contactsRouter(req: Request): Promise<Response | undefined> {
@@ -71,8 +72,8 @@ export function createContactsRouter(ctx: ServerContext) {
           notes: z.string().optional(),
           metadataJson: z.string().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const contact = await store.createContact(parsed.data)
         return json({ contact }, 201)
       }
@@ -87,8 +88,9 @@ export function createContactsRouter(ctx: ServerContext) {
 
       // PUT /api/contacts/:id
       if (req.method === 'PUT' && contactMatch && contactMatch[1]) {
-        const body = (await req.json()) as Record<string, unknown>
-        const contact = await store.updateContact(contactMatch[1], body)
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const contact = await store.updateContact(contactMatch[1], parsed.data)
         return json({ contact })
       }
 
@@ -100,22 +102,19 @@ export function createContactsRouter(ctx: ServerContext) {
 
       // POST /api/contacts/lookup
       if (req.method === 'POST' && path === '/api/contacts/lookup') {
-        const body = (await req.json()) as {
-          providerId?: string
-          accountId?: string
-          providerNativeId?: string
-        }
-        if (!body.providerId || !body.accountId || !body.providerNativeId) {
-          return errorResponse(
-            'providerId, accountId, and providerNativeId are required',
-            'ValidationError',
-            400,
-          )
-        }
+        const parsed = await parseRequestBody(
+          req,
+          z.object({
+            providerId: z.string().min(1),
+            accountId: z.string().min(1),
+            providerNativeId: z.string().min(1),
+          }),
+        )
+        if (!parsed.success) return parsed.response
         const contact = await store.getContactByNativeId(
-          body.providerId,
-          body.accountId,
-          body.providerNativeId,
+          parsed.data.providerId,
+          parsed.data.accountId,
+          parsed.data.providerNativeId,
         )
         if (!contact) return errorResponse('Contact not found', 'NotFound', 404)
         return json({ contact })
@@ -129,8 +128,8 @@ export function createContactsRouter(ctx: ServerContext) {
           method: z.string().optional(),
           confidence: z.number().min(0).max(1).optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const identity = await store.mergeContacts(
           mergeMatch[1],
           parsed.data.mergedContactId,

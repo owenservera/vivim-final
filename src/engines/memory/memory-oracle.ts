@@ -73,6 +73,8 @@ export class MemoryOracle {
         const results = await this.deps.semanticStore.searchByEmbedding(queryVec, {
           limit: k,
           entityType: 'cap-store.memory',
+          model: this.deps.embeddingProvider?.name,
+          dimensions: this.deps.embeddingProvider?.dimensions,
         })
         if (results.length > 0) {
           // Map entityId → node searchText

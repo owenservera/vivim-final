@@ -121,6 +121,7 @@ export class AutomationBuilder {
           },
         })
         .catch(() => {});
+  // [audit] log the error with context here
 
       // For the prototype, each node "succeeds" with a stub output.
       // Production dispatches to cap:* capabilities via /api/capabilities/:id/execute.

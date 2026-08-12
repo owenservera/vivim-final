@@ -1,6 +1,9 @@
 // src/engines/nlcl/help-resolver.ts
 // Tier 4 unit 16.9 — HelpResolver with embedder-based question detection.
 //
+// Uses the booted HfEmbeddingProvider (768-d ONNX) for question similarity.
+// Falls back to HfEmbeddingProvider if no provider is passed.
+//
 // Closes audit finding ❌-14: the previous implementation (planned in the
 // design doc but never implemented) used a regex to detect help questions
 // ("how do I", "what is", "tell me about"). This was brittle:
@@ -26,7 +29,7 @@
 // This runs as a pre-resolver step (before the deterministic resolver) so
 // help questions don't waste cycles on fuzzy/semantic/LLM retrieval.
 
-import { MiniLmEmbeddingProvider } from '../embedding-minilm.js'
+import { HfEmbeddingProvider } from '../embedding-hf.js'
 import type { EmbeddingProvider } from '../semantic-search.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { buildIntentFromPattern } from './pattern-match.js'
@@ -92,7 +95,7 @@ export class HelpResolver {
 
   constructor(registry: CommandPatternRegistry, opts?: HelpResolverOpts) {
     this.registry = registry
-    this.embeddingProvider = opts?.embeddingProvider ?? new MiniLmEmbeddingProvider()
+    this.embeddingProvider = opts?.embeddingProvider ?? new HfEmbeddingProvider()
     this.helpThreshold = opts?.helpThreshold ?? 0.7
   }
 

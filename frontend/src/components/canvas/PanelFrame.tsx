@@ -80,6 +80,7 @@ export function PanelFrame({
         if (state.position) setPosition(state.position);
         if (state.isMinimized) setIsMinimized(state.isMinimized);
       } catch {}
+  // [audit] log the error with context here
     }
   }, [panelId]);
 

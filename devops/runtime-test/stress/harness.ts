@@ -42,6 +42,7 @@ export async function ensureBackendReady(): Promise<boolean> {
       const { status, body } = await fetchWithTimeout('/health')
       if (status === 200 && body?.status === 'ok') return true
     } catch {}
+  // [audit] log the error with context here
     await Bun.sleep(1000)
   }
   return false
@@ -104,6 +105,7 @@ export async function killChromeProcesses(): Promise<number> {
     const proc = Bun.spawnSync(['taskkill', '/F', '/IM', 'chrome.exe'], {})
     killed = proc.exitCode === 0 ? 1 : 0
   } catch {}
+  // [audit] log the error with context here
   return killed
 }
 
@@ -135,6 +137,7 @@ export async function runOpencodeDirect(prompt: string, model?: string, cwd?: st
   const blocks: any[] = []
   for (const line of raw.split('\n').filter(Boolean)) {
     try { const obj = JSON.parse(line); if (obj?.part?.text) blocks.push(obj.part) } catch {}
+  // [audit] log the error with context here
   }
   return { ok: exitCode === 0, blocks, raw: all, exitCode }
 }

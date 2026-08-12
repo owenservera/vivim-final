@@ -62,6 +62,7 @@ export class DiscoveryStoreImpl implements DiscoveryStore {
 
   async deleteSession(id: string): Promise<void> {
     await this.db.prisma.discoverySession.delete({ where: { id } }).catch(() => {})
+  // [audit] log the error with context here
   }
 
   async createObservation(row: DiscoveryObservationRow): Promise<void> {

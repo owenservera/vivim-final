@@ -27,6 +27,7 @@ export function addSearchHistory(query: string): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(history))
   } catch {
+  // [audit] log the error with context here
     // localStorage full or blocked — silent
   }
 }
@@ -36,6 +37,7 @@ export function clearSearchHistory(): void {
   try {
     localStorage.removeItem(STORAGE_KEY)
   } catch {
+  // [audit] log the error with context here
     // silent
   }
 }

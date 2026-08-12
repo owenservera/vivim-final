@@ -53,6 +53,7 @@ export function saveLoopState(state: LoopState): void {
   try {
     writeFileSync(LEDGER, JSON.stringify(state, null, 2), 'utf8')
   } catch {
+  // [audit] log the error with context here
     // best-effort
   }
 }
@@ -74,6 +75,7 @@ export function clearLoopState(): void {
   try {
     if (existsSync(LEDGER)) rmSync(LEDGER, { force: true })
   } catch {
+  // [audit] log the error with context here
     // ignore
   }
 }

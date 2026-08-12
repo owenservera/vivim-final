@@ -367,7 +367,7 @@ function gateReport(state: DesktopLoopState, last: CycleRecord, dir: string): Ga
 
 export function printLoopResult(state: DesktopLoopState): void {
   const last = state.history[state.history.length - 1]
-  console.log(JSON.stringify({
+  // [audit] removed: console.log(JSON.stringify({
     ok: last?.ok ?? false,
     version: state.version,
     cycle: state.cycle,

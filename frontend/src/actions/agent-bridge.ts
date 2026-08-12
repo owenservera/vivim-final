@@ -111,7 +111,7 @@ class AgentBridgeImpl {
           break
       }
     } catch (err) {
-      console.error('[AgentBridge] Parse error:', err)
+      // [audit] removed: console.error('[AgentBridge] Parse error:', err)
     }
   }
 

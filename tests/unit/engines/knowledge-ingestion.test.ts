@@ -148,6 +148,7 @@ beforeAll(() => {
   try {
     mkdirSync(FIXTURE_DIR, { recursive: true })
   } catch {}
+  // [audit] log the error with context here
   writeFileSync(`${FIXTURE_DIR}/generic-import.json`, JSON.stringify(sampleConversations), 'utf-8')
   writeFileSync(
     `${FIXTURE_DIR}/chatgpt-export.json`,
@@ -169,9 +170,11 @@ afterAll(() => {
   try {
     unlinkSync(`${FIXTURE_DIR}/generic-import.json`)
   } catch {}
+  // [audit] log the error with context here
   try {
     unlinkSync(`${FIXTURE_DIR}/chatgpt-export.json`)
   } catch {}
+  // [audit] log the error with context here
 })
 
 describe('KnowledgeIngestionEngine', () => {

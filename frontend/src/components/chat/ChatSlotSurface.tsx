@@ -134,7 +134,7 @@ export function ChatSlotSurface({
         const r = resolveSlot(pos.slot, ctx);
         results[pos.slot] = { component: r.component, source: r.source };
       } catch (e) {
-        console.warn(`[ChatSlotSurface] Failed to resolve slot ${pos.slot}:`, e);
+        // [audit] removed: console.warn(`[ChatSlotSurface] Failed to resolve slot ${pos.slot}:`, e);
         results[pos.slot] = null;
       }
     }

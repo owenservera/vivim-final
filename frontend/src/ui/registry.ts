@@ -198,6 +198,7 @@ function persist(): void {
     }
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records))
   } catch {
+  // [audit] log the error with context here
     // persistence is best-effort
   }
 }
@@ -214,6 +215,7 @@ export function loadPersisted(): void {
       if (component) register(r.slot, r.slug, component, { sandbox: r.sandbox })
     }
   } catch {
+  // [audit] log the error with context here
     // ignore corrupt storage
   }
 }

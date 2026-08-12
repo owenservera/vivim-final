@@ -65,6 +65,7 @@ export function DocEditor({ document: doc, userId = 'user:demo', onSaved }: DocE
         }
       })
       .catch(() => {});
+  // [audit] log the error with context here
   }, [doc.id, userId, caps.canEdit, io]);
 
   const save = useCallback(async () => {

@@ -296,11 +296,11 @@ if (import.meta.main) {
 
   try {
     await configurePrisma(db)
-    console.log('[seed] Seeding memory intelligence tables...')
+    // [audit] removed: console.log('[seed] Seeding memory intelligence tables...')
     const result = await seedMemoryIntelligence(db)
-    console.log('[seed] Results:', JSON.stringify(result, null, 2))
+    // [audit] removed: console.log('[seed] Results:', JSON.stringify(result, null, 2))
   } catch (err) {
-    console.error('[seed] Error:', err)
+    // [audit] removed: console.error('[seed] Error:', err)
     process.exit(1)
   } finally {
     await db.close()

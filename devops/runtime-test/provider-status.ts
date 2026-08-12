@@ -88,7 +88,7 @@ async function getJson(path: string): Promise<Record<string, unknown> | null> {
 export async function providerStatus(provider: string): Promise<ProviderStatusResult> {
   // 0. Ensure backend is running — auto-launch if not
   if (!(await isBackendHealthy())) {
-    console.log('[status] Backend not running, launching...')
+    // [audit] removed: console.log('[status] Backend not running, launching...')
     const launched = await launchBackend()
     if (!launched) {
       return {
@@ -112,7 +112,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
         recommendedAction: 'Backend could not be started. Run bun run dev:backend manually.',
       }
     }
-    console.log('[status] Backend launched successfully')
+    // [audit] removed: console.log('[status] Backend launched successfully')
   }
 
   // 1. Seed presence — check providerDefinition table
@@ -145,6 +145,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
       }
     }
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
 
@@ -164,6 +165,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
       verifiedLoggedIn = ctx.accounts.some((a) => a.providerId === provider && a.hasCookies)
     }
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
 
@@ -192,6 +194,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
       capabilityStatus = `Capability ${slug} not found`
     }
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
 
@@ -203,6 +206,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
       const selResult = await testSelectors(provider)
       selectorConfidence = selResult.confidence
     } catch {
+  // [audit] log the error with context here
       /* ignore */
     }
   }
@@ -230,6 +234,7 @@ export async function providerStatus(provider: string): Promise<ProviderStatusRe
       uiTestStatus.lastFailedCapabilities = untested.lastFailed
     }
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
 

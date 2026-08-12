@@ -106,6 +106,7 @@ export class OpenCodeIngest {
         payload: ev as unknown,
       })
       .catch(() => {})
+  // [audit] log the error with context here
 
     const thread = this.threadBySession.get(sessionId)
     if (!thread) return

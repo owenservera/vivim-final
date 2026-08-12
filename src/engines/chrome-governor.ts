@@ -455,6 +455,7 @@ export class ChromeGovernor {
   ): Promise<void> {
     for (const domain of domains) {
       await this.cdp.send(slaveId, `${domain}.enable`).catch(() => {
+  // [audit] log the error with context here
         // Some domains are optional depending on the page/profile; non-fatal.
       })
     }
@@ -546,6 +547,7 @@ export class ChromeGovernor {
         durationMs: Date.now() - start,
         error: null,
       }).catch(() => {})
+  // [audit] log the error with context here
       return result
     } catch (err) {
       const message = err instanceof Error ? err.message : 'execution failed'
@@ -558,6 +560,7 @@ export class ChromeGovernor {
         durationMs: Date.now() - start,
         error: message,
       }).catch(() => {})
+  // [audit] log the error with context here
       throw err
     }
   }

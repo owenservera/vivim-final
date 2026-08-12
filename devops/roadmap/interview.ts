@@ -139,17 +139,17 @@ export async function synthesizeInterview(
 export async function runInterview(gapId: string): Promise<void> {
   const { unit, questions } = await generateInterviewQuestions(gapId)
 
-  console.log(`\n=== Interview for ${gapId}: ${unit.summary} ===\n`)
-  console.log('AI will ask questions. Answer each one, or type "skip" to skip.')
-  console.log('Type "not needed" to reject this unit entirely.\n')
+  // [audit] removed: console.log(`\n=== Interview for ${gapId}: ${unit.summary} ===\n`)
+  // [audit] removed: console.log('AI will ask questions. Answer each one, or type "skip" to skip.')
+  // [audit] removed: console.log('Type "not needed" to reject this unit entirely.\n')
 
   for (let i = 0; i < questions.length; i++) {
-    console.log(`Q${i + 1}: ${questions[i]}`)
+    // [audit] removed: console.log(`Q${i + 1}: ${questions[i]}`)
   }
 
-  console.log('\n---')
-  console.log('Enter your answers below (one per line, empty line to finish):')
-  console.log('Format: A1: <answer>, A2: <answer>, etc.\n')
+  // [audit] removed: console.log('\n---')
+  // [audit] removed: console.log('Enter your answers below (one per line, empty line to finish):')
+  // [audit] removed: console.log('Format: A1: <answer>, A2: <answer>, etc.\n')
 
   // Placeholder answers for non-interactive use
   const answers: string[] = []
@@ -165,14 +165,14 @@ export async function runInterview(gapId: string): Promise<void> {
 
   const entry = await synthesizeInterview(gapId, answers, decision)
 
-  console.log(`\n=== Interview Complete ===`)
-  console.log(`Decision: ${entry.decision}`)
+  // [audit] removed: console.log(`\n=== Interview Complete ===`)
+  // [audit] removed: console.log(`Decision: ${entry.decision}`)
   if (entry.decision === 'approved') {
-    console.log('Spec draft generated. Review and run `bun run devops roadmap --merge-unit <id>` to add to tracker.')
+    // [audit] removed: console.log('Spec draft generated. Review and run `bun run devops roadmap --merge-unit <id>` to add to tracker.')
   } else if (entry.decision === 'rejected') {
-    console.log('Unit rejected. Not adding to tracker.')
+    // [audit] removed: console.log('Unit rejected. Not adding to tracker.')
   } else {
-    console.log('Unit deferred. Will be revisited later.')
+    // [audit] removed: console.log('Unit deferred. Will be revisited later.')
   }
 }
 

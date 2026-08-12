@@ -110,6 +110,7 @@ export function DevConsole({ open, onClose }: DevConsoleProps) {
       try {
         ws.send(JSON.stringify({ type: 'dev:unsubscribe' }));
       } catch {}
+  // [audit] log the error with context here
       ws.close();
       wsRef.current = null;
     };

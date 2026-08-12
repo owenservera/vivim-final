@@ -293,6 +293,7 @@ export class InMemoryExecutionManager implements IExecutionManager {
       try {
         listener(event)
       } catch {
+  // [audit] log the error with context here
         // Listener errors are ignored — the bus must not crash
       }
     }

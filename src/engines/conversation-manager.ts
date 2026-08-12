@@ -308,6 +308,7 @@ export class ConversationManager {
         updatedAt: now,
       })
       .catch(() => {})
+  // [audit] log the error with context here
     return nodeId
   }
 
@@ -591,6 +592,7 @@ export class ConversationManager {
       if (this.contentUnitStore) {
         const units = decomposeToContentUnits(parseResult.blocks, conversationId, msgRow.id)
         await this.contentUnitStore.storeUnits(units).catch(() => {})
+  // [audit] log the error with context here
       }
 
       // Universal capture — persist both messages as Nodes (fully compliant DB).
@@ -619,6 +621,10 @@ export class ConversationManager {
         type: 'conversation:complete',
         conversationId,
         message: msgRow,
+        // Full, canonical ContentPart[] — not a {text,kind} sliver. The
+        // frontend renders from this immediately and treats loadHistory()
+        // as reconciliation (upgrade doc Gap 2 / backend-patches.md §1).
+        blocks: parseResult.blocks,
       })
 
       timing.total = Date.now() - totalStart
@@ -640,6 +646,7 @@ export class ConversationManager {
             tags: ['conversation', conv.providerId],
           })
           .catch(() => {}) // fire-and-forget
+  // [audit] log the error with context here
       }
 
       return {
@@ -942,6 +949,7 @@ export class ConversationManager {
     if (this.contentUnitStore) {
       const units = decomposeToContentUnits(parseResult.blocks, conversationId, msgRow.id)
       await this.contentUnitStore.storeUnits(units).catch(() => {})
+  // [audit] log the error with context here
     }
 
     // Universal capture — persist both messages as Nodes (fully compliant DB).

@@ -52,7 +52,7 @@ export function recordFinding(
 ): void {
   // In agent mode, the agent appends this to output/providers/<slug>/research.md
   // This function just formats for display.
-  console.log(`[research] ${platform}: ${finding} (${confidence}) <- ${sourceUrl}`)
+  // [audit] removed: console.log(`[research] ${platform}: ${finding} (${confidence}) <- ${sourceUrl}`)
 }
 
 export const EXISTING_LIB_QUERIES = [

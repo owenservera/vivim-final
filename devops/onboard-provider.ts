@@ -105,7 +105,7 @@ export async function onboardProvider(
         is_active: 1,
       },
     })
-    console.log(`[onboard] Created provider definition: ${provider} (${prov.id})`)
+    // [audit] removed: console.log(`[onboard] Created provider definition: ${provider} (${prov.id})`)
   }
 
   // 2. Check if already authenticated (fast no-op)
@@ -126,10 +126,10 @@ export async function onboardProvider(
   }
 
   // 3. Launch Chrome + wait for login
-  console.log(`[onboard] Starting wizard for ${provider}/${account}...`)
+  // [audit] removed: console.log(`[onboard] Starting wizard for ${provider}/${account}...`)
   const result = await wizard.runSetup(prov.id, provider, account, {
     visible: true,
-    onProgress: (msg: string) => console.log(msg),
+    // [audit] removed: onProgress: (msg: string) => console.log(msg),
   })
 
   if (!result.ok) {

@@ -273,6 +273,7 @@ export function BuilderSurface({
           label = res.data.surface.label;
         }
       } catch {
+  // [audit] log the error with context here
         // Fall back to id.
       }
       setGraph((g) => ({

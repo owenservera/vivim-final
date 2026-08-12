@@ -9,14 +9,14 @@ import { getChangedFiles } from './changed.ts'
 export function fmt(): void {
   const files = getChangedFiles()
   if (files.length === 0) {
-    console.log('devops fmt: no changed .ts files to format')
+    // [audit] removed: console.log('devops fmt: no changed .ts files to format')
     return
   }
   const res = spawnSync('bun', ['x', '@biomejs/biome', 'check', '--write', ...files], {
     stdio: 'inherit',
   })
   if (res.status !== 0) {
-    console.error('devops fmt: biome reported errors in changed files')
+    // [audit] removed: console.error('devops fmt: biome reported errors in changed files')
     process.exit(res.status ?? 1)
   }
 }

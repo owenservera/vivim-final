@@ -33,6 +33,7 @@ export function DocumentsPanel({ workspaceId }: DocumentsPanelProps) {
       .then((r) => r.json())
       .then((doc) => { if (doc.id) setDocuments((prev) => [doc, ...prev]); })
       .catch(() => {});
+  // [audit] log the error with context here
   }, [workspaceId]);
 
   return (

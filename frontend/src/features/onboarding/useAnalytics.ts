@@ -47,6 +47,7 @@ export function useAnalytics({ userId, enabled = true }: UseAnalyticsOptions) {
         if (stored.length > 100) stored.splice(0, stored.length - 100)
         localStorage.setItem('vivim-tour-analytics', JSON.stringify(stored))
       } catch {
+  // [audit] log the error with context here
         // Ignore localStorage errors
       }
 
@@ -56,6 +57,7 @@ export function useAnalytics({ userId, enabled = true }: UseAnalyticsOptions) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(event),
       }).catch(() => {})
+  // [audit] log the error with context here
     },
     [enabled],
   )

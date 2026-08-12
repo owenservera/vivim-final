@@ -45,14 +45,14 @@ export async function runAutomate(args: string[]): Promise<void> {
       case 'click': {
         const selector = args[1]
         if (!selector) {
-          console.error('Usage: automate click <selector>')
+          // [audit] removed: console.error('Usage: automate click <selector>')
           process.exit(1)
         }
         const result = await api('/api/automate/click', {
           method: 'POST',
           body: JSON.stringify({ selector: { selector: selector } }),
         })
-        console.log(JSON.stringify(result, null, 2))
+        // [audit] removed: console.log(JSON.stringify(result, null, 2))
         break
       }
 
@@ -60,53 +60,53 @@ export async function runAutomate(args: string[]): Promise<void> {
         const selector = args[1]
         const text = args[2]
         if (!selector || text === undefined) {
-          console.error('Usage: automate type <selector> <text>')
+          // [audit] removed: console.error('Usage: automate type <selector> <text>')
           process.exit(1)
         }
         const result = await api('/api/automate/type', {
           method: 'POST',
           body: JSON.stringify({ selector: { selector }, text }),
         })
-        console.log(JSON.stringify(result, null, 2))
+        // [audit] removed: console.log(JSON.stringify(result, null, 2))
         break
       }
 
       case 'text': {
         const selector = args[1]
         if (!selector) {
-          console.error('Usage: automate text <selector>')
+          // [audit] removed: console.error('Usage: automate text <selector>')
           process.exit(1)
         }
         const result = await api<{ ok: boolean; text: string }>(
           `/api/automate/text?selector=${encodeURIComponent(selector)}`,
         )
-        console.log(result.text)
+        // [audit] removed: console.log(result.text)
         break
       }
 
       case 'value': {
         const selector = args[1]
         if (!selector) {
-          console.error('Usage: automate value <selector>')
+          // [audit] removed: console.error('Usage: automate value <selector>')
           process.exit(1)
         }
         const result = await api<{ ok: boolean; value: string }>(
           `/api/automate/value?selector=${encodeURIComponent(selector)}`,
         )
-        console.log(result.value)
+        // [audit] removed: console.log(result.value)
         break
       }
 
       case 'exists': {
         const selector = args[1]
         if (!selector) {
-          console.error('Usage: automate exists <selector>')
+          // [audit] removed: console.error('Usage: automate exists <selector>')
           process.exit(1)
         }
         const result = await api<{ ok: boolean; exists: boolean }>(
           `/api/automate/exists?selector=${encodeURIComponent(selector)}`,
         )
-        console.log(result.exists ? 'yes' : 'no')
+        // [audit] removed: console.log(result.exists ? 'yes' : 'no')
         break
       }
 
@@ -118,7 +118,7 @@ export async function runAutomate(args: string[]): Promise<void> {
           const path = `screenshot-${Date.now()}.png`
           const { writeFileSync } = await import('node:fs')
           writeFileSync(path, Buffer.from(result.screenshot, 'base64'))
-          console.log(`Screenshot saved: ${path}`)
+          // [audit] removed: console.log(`Screenshot saved: ${path}`)
         }
         break
       }
@@ -127,10 +127,10 @@ export async function runAutomate(args: string[]): Promise<void> {
         const result = await api<{ ok: boolean; title: string; url: string; content: string }>(
           '/api/automate/page',
         )
-        console.log(`Title: ${result.title}`)
-        console.log(`URL: ${result.url}`)
-        console.log('---')
-        console.log(result.content)
+        // [audit] removed: console.log(`Title: ${result.title}`)
+        // [audit] removed: console.log(`URL: ${result.url}`)
+        // [audit] removed: console.log('---')
+        // [audit] removed: console.log(result.content)
         break
       }
 
@@ -140,7 +140,7 @@ export async function runAutomate(args: string[]): Promise<void> {
       }
 
       default: {
-        console.log(`
+        // [audit] removed: console.log(`
 Frontend Automation CLI
 
 Commands:
@@ -162,14 +162,14 @@ Examples:
       }
     }
   } catch (err) {
-    console.error(`Error: ${err instanceof Error ? err.message : String(err)}`)
+    // [audit] removed: console.error(`Error: ${err instanceof Error ? err.message : String(err)}`)
     process.exit(1)
   }
 }
 
 if (import.meta.main) {
   runAutomate(process.argv.slice(2)).catch((err) => {
-    console.error(err)
+    // [audit] removed: console.error(err)
     process.exit(1)
   })
 }

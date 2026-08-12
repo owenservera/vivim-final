@@ -22,6 +22,17 @@ const DEFAULT_EXCLUDE = [
   /migrations/,
   /harvest-targets/,
   /sdk/,
+  // Non-source / stale roots (kept in sync with the engine's ignorePaths).
+  /docs/,
+  /chrome-profiles/,
+  /harvest/,
+  /dev-code-impl/,
+  /\.runtime/,
+  /\.archive/,
+  /test-sidecar/,
+  /\.test-tmp/,
+  /\.playwright-mcp/,
+  /\.skills/,
 ]
 
 // In-process caches so repeated scans over the same dirs/files are cheap.

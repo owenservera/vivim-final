@@ -45,4 +45,5 @@ try {
   const s = await Bun.file('chrome_stderr.txt').text()
   log(s.slice(0, 2000))
 } catch {}
+  // [audit] log the error with context here
 process.exit(0)

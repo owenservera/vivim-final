@@ -128,6 +128,7 @@ export function resumeLoop(): ResumeResult {
         const t = JSON.parse(require('node:fs').readFileSync(join(taskDir, f), 'utf8')) as AgenticTask
         tasks.push(t)
       } catch { /* skip */ }
+  // [audit] log the error with context here
     }
   }
 
@@ -288,6 +289,7 @@ export function markTaskDone(taskId: string, status: 'done' | 'failed' | 'blocke
           const t = JSON.parse(require('node:fs').readFileSync(join(taskDir, f), 'utf8')) as AgenticTask
           tasks.push(t)
         } catch { /* skip */ }
+  // [audit] log the error with context here
       }
     }
 

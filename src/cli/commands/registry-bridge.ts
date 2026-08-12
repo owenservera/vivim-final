@@ -77,7 +77,7 @@ export function syncCliFromUnified(
     const names = [cli.name, ...(cli.aliases ?? [])]
     for (const name of names) {
       if (seen.has(name)) {
-        console.warn(
+        // [audit] removed: console.warn(
           `[cli-bridge] alias collision: "${name}" already registered (skipping ${cap.slug})`,
         )
         skipped++
@@ -118,7 +118,7 @@ export function syncCliFromUnified(
     }
   }
   if (skipped > 0) {
-    console.warn(`[cli-bridge] ${skipped} aliases skipped due to collisions`)
+    // [audit] removed: console.warn(`[cli-bridge] ${skipped} aliases skipped due to collisions`)
   }
 }
 

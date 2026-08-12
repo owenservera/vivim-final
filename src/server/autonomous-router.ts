@@ -102,6 +102,7 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     const replayMatch = path.match(/^\/api\/autonomous\/([^/]+)\/replay$/)
     if (replayMatch && req.method === 'POST') {
       const parsed = ReplaySchema.safeParse(await req.json().catch(() => ({})))
+  // [audit] log the error with context here
       const fromStep = parsed.success ? (parsed.data.fromStep ?? 0) : 0
       const taskId = await autonomousEngine.replay(replayMatch[1] ?? '', {
         fromStep,

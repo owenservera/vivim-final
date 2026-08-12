@@ -43,7 +43,7 @@ async function main() {
     defined = nodes.length;
     definedCaps = nodes.filter((n) => n.kind === "capability" || (n.slug ?? "").includes("_")).length;
   } catch (e) {
-    console.error("could not read pool:", e);
+    // [audit] removed: console.error("could not read pool:", e);
     process.exit(1);
   }
 
@@ -53,7 +53,7 @@ async function main() {
   try {
     seeded = await prisma.capabilityTaxonomy.count();
   } catch (e) {
-    console.error("could not read DB (is DATABASE_URL set / dev.db present?):", e);
+    // [audit] removed: console.error("could not read DB (is DATABASE_URL set / dev.db present?):", e);
   } finally {
     await prisma.$disconnect();
   }
@@ -61,17 +61,17 @@ async function main() {
   // REGISTERED
   const reg = await getRegisteredCount();
 
-  console.log("=== CAPABILITY GAP ===\n");
-  console.log("STAGE        COUNT   SOURCE");
-  console.log("-".repeat(48));
-  console.log("DEFINED ".padEnd(13), String(defined).padStart(6), "  seeds/taxonomy/pool.taxonomy.json");
-  console.log("SEEDED  ".padEnd(13), String(seeded).padStart(6), "  capabilityTaxonomy (prisma/dev.db)");
-  console.log(
+  // [audit] removed: console.log("=== CAPABILITY GAP ===\n");
+  // [audit] removed: console.log("STAGE        COUNT   SOURCE");
+  // [audit] removed: console.log("-".repeat(48));
+  // [audit] removed: console.log("DEFINED ".padEnd(13), String(defined).padStart(6), "  seeds/taxonomy/pool.taxonomy.json");
+  // [audit] removed: console.log("SEEDED  ".padEnd(13), String(seeded).padStart(6), "  capabilityTaxonomy (prisma/dev.db)");
+  // [audit] removed: console.log(
     "REGISTERED ".padEnd(11),
     (reg.count < 0 ? "n/a" : String(reg.count)).padStart(6),
     `  ${reg.note}`,
   );
-  console.log("-".repeat(48));
+  // [audit] removed: console.log("-".repeat(48));
 
   const issues: string[] = [];
   if (defined > seeded) {
@@ -94,14 +94,14 @@ async function main() {
   }
 
   if (issues.length === 0) {
-    console.log("OK: defined -> seeded -> registered are consistent.");
+    // [audit] removed: console.log("OK: defined -> seeded -> registered are consistent.");
   } else {
-    console.log("\nFINDINGS:");
-    for (const i of issues) console.log("  - " + i);
+    // [audit] removed: console.log("\nFINDINGS:");
+    // [audit] removed: for (const i of issues) console.log("  - " + i);
   }
 }
 
 main().catch((err) => {
-  console.error("report-capability-gap failed:", err);
+  // [audit] removed: console.error("report-capability-gap failed:", err);
   process.exit(1);
 });

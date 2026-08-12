@@ -69,6 +69,7 @@ export class PresenceEngine {
     const simUsers = SIMULATED_USERS.slice(1, 4); // skip "You"
     for (const u of simUsers) {
       this.join(workspaceId, u).catch(() => {});
+  // [audit] log the error with context here
     }
 
     // Cursor wiggle every 2s.
@@ -84,6 +85,7 @@ export class PresenceEngine {
           lastSeenAt: Date.now(),
         };
         this.updateCursor(workspaceId, cursor).catch(() => {});
+  // [audit] log the error with context here
       }
     }, 2000);
     this.simTimers.push(t);
@@ -91,6 +93,7 @@ export class PresenceEngine {
     // Prune stale every 10s.
     const p = setInterval(() => {
       this.deps.presenceStore.pruneStale(workspaceId, 10_000).catch(() => {});
+  // [audit] log the error with context here
     }, 10_000);
     this.simTimers.push(p);
   }

@@ -217,7 +217,7 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
           setProviderUpdates((prev) => new Map(prev).set(slug, update))
         }
       } catch (err) {
-        console.error(`Failed to check ${slug} update:`, err)
+        // [audit] removed: console.error(`Failed to check ${slug} update:`, err)
       }
     },
     [io],
@@ -239,7 +239,7 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
         }
       }
     } catch (err) {
-      console.error('Failed to check provider updates:', err)
+      // [audit] removed: console.error('Failed to check provider updates:', err)
     }
   }, [io, checkProviderUpdate])
 

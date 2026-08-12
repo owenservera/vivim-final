@@ -52,6 +52,7 @@ export function hotReload(opts: HotReloadOptions): Disposer {
         opts.onDefChanged!(evt.definitionId, evt.slug, evt.version);
       }
     } catch {
+  // [audit] log the error with context here
       // ignore malformed events
     }
   };

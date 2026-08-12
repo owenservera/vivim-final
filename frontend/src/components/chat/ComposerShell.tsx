@@ -53,6 +53,7 @@ function loadConfig(instanceId: string): ComposerUserConfig {
     const raw = localStorage.getItem(`vivim:composer-addons:${instanceId}`);
     if (raw) return JSON.parse(raw) as ComposerUserConfig;
   } catch { /* corrupt or missing */ }
+  // [audit] log the error with context here
   return { enabledAddOns: [], showToggleMenu: false };
 }
 
@@ -60,6 +61,7 @@ function saveConfig(instanceId: string, config: ComposerUserConfig): void {
   try {
     localStorage.setItem(`vivim:composer-addons:${instanceId}`, JSON.stringify(config));
   } catch { /* storage full or disabled */ }
+  // [audit] log the error with context here
 }
 
 // ── Props ────────────────────────────────────────────────────────────────

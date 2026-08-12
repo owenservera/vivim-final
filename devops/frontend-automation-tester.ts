@@ -81,6 +81,7 @@ export async function testFrontend(
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     })
     const invokeData = (await invokeRes.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+  // [audit] log the error with context here
     result.invoked = invokeRes.ok && Boolean(invokeData.ok)
     if (!result.invoked) {
       result.detail = `capability invoke failed: ${invokeData.error ?? `HTTP ${invokeRes.status}`}`

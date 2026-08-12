@@ -35,7 +35,7 @@ export function formatOutput(data: unknown, args: string[]): void {
 
   if (json) {
     // --json: ONLY write JSON to stdout, nothing else
-    console.log(jsonStr)
+    // [audit] removed: console.log(jsonStr)
     return
   }
 
@@ -43,12 +43,12 @@ export function formatOutput(data: unknown, args: string[]): void {
     // --out=<path>: write JSON to file, print human-readable
     const resolved = join(process.cwd(), out)
     writeFileSync(resolved, jsonStr, 'utf8')
-    console.log(typeof data === 'object' && data !== null ? humanReadable(data as Record<string, unknown>) : `${data}`)
+    // [audit] removed: console.log(typeof data === 'object' && data !== null ? humanReadable(data as Record<string, unknown>) : `${data}`)
     return
   }
 
   // Default: human-readable
-  console.log(typeof data === 'object' && data !== null ? humanReadable(data as Record<string, unknown>) : `${data}`)
+  // [audit] removed: console.log(typeof data === 'object' && data !== null ? humanReadable(data as Record<string, unknown>) : `${data}`)
 }
 
 function humanReadable(data: Record<string, unknown>, indent = ''): string {

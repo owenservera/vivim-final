@@ -4,6 +4,7 @@
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { appErrorResponse, errorResponse, json } from '../response.js'
+import { parseRequestBody } from '../validate.js'
 
 export function createNotificationsRouter(ctx: ServerContext) {
   return async function notificationsRouter(req: Request): Promise<Response | undefined> {
@@ -79,8 +80,8 @@ export function createNotificationsRouter(ctx: ServerContext) {
           expiresAt: z.number().optional(),
           metadataJson: z.string().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const notification = await store.createNotification(parsed.data)
         return json({ notification }, 201)
       }
@@ -95,8 +96,9 @@ export function createNotificationsRouter(ctx: ServerContext) {
 
       // PUT /api/notifications/:id
       if (req.method === 'PUT' && notifMatch && notifMatch[1]) {
-        const body = (await req.json()) as Record<string, unknown>
-        const notification = await store.updateNotification(notifMatch[1], body)
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const notification = await store.updateNotification(notifMatch[1], parsed.data)
         return json({ notification })
       }
 
@@ -116,8 +118,8 @@ export function createNotificationsRouter(ctx: ServerContext) {
       // POST /api/notifications/read-all
       if (req.method === 'POST' && path === '/api/notifications/read-all') {
         const schema = z.object({ accountId: z.string().min(1, 'accountId is required') })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const count = await store.markAllAsRead(parsed.data.accountId)
         return json({ count })
       }

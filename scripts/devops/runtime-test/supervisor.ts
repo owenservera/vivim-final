@@ -35,6 +35,7 @@ function resolveBackendPort(): number {
       if (/^\d+$/.test(v)) return Number.parseInt(v, 10)
     }
   } catch {
+  // [audit] log the error with context here
     // ignore
   }
   return 9420
@@ -90,6 +91,7 @@ export function startSupervisor(config: ServiceConfig): Promise<Supervisor> {
             process.kill(backendProc.pid, 'SIGKILL')
           }
         } catch {
+  // [audit] log the error with context here
           // Process already dead
         }
       }
@@ -119,6 +121,7 @@ export async function waitForBackend(port: number, timeoutMs = 30000): Promise<b
       const r = await fetch(`http://127.0.0.1:${port}/api/health/providers`)
       if (r.ok) return true
     } catch {
+  // [audit] log the error with context here
       // Not ready yet
     }
     await new Promise((resolve) => setTimeout(resolve, 500))

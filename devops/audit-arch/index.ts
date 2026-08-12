@@ -133,7 +133,7 @@ export async function runAuditArch(args: string[]): Promise<void> {
   const graph = target ? subgraphAround(full, target) : full
 
   if (target && graph.modules.size <= 1) {
-    console.error(`[audit-arch] --module "${target}" matched no in-repo modules. Try e.g. "engines/stealth" or "storage/contracts".`)
+    // [audit] removed: console.error(`[audit-arch] --module "${target}" matched no in-repo modules. Try e.g. "engines/stealth" or "storage/contracts".`)
     process.exit(1)
   }
 
@@ -173,17 +173,17 @@ export async function runAuditArch(args: string[]): Promise<void> {
     const report = renderReport(data, ctx, trend)
     const reportPath = join(AUDITS_DIR, `ARCH-AUDIT-${target ? 'module' : 'system'}-${scope}-${date}.md`)
     await writeFile(reportPath, report, 'utf8')
-    console.log(report)
+    // [audit] removed: console.log(report)
   } else {
-    console.log(`Wrote ${FINDINGS_PATH} (${raw.length} findings).`)
+    // [audit] removed: console.log(`Wrote ${FINDINGS_PATH} (${raw.length} findings).`)
   }
 
   if (doBaseline) {
     const p = await saveBaseline(AUDITS_DIR, data)
-    console.log(`Saved baseline: ${p}`)
+    // [audit] removed: console.log(`Saved baseline: ${p}`)
   }
 
-  console.log(
+  // [audit] removed: console.log(
     `\n[audit-arch] scope=${scope} mode=${target ? `module:${target}` : 'system'} risk=${summary.risk} P0=${summary.P0} P1=${summary.P1} P2=${summary.P2} P3=${summary.P3} modules=${graph.modules.size} edges=${graph.edges.length} cycles=${detectCycles(graph).length}`,
   )
 }
@@ -192,7 +192,7 @@ export async function runAuditArch(args: string[]): Promise<void> {
 if (import.meta.main) {
   const [, , ...rest] = process.argv
   runAuditArch(rest).catch((e) => {
-    console.error(e)
+    // [audit] removed: console.error(e)
     process.exit(1)
   })
 }

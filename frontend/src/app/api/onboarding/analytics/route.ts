@@ -18,7 +18,7 @@ function pushEvent(event: TourAnalyticsEvent): void {
   if (buffer.length > BUFFER_MAX) {
     buffer.shift()
   }
-  console.log(
+  // [audit] removed: console.log(
     JSON.stringify({
       level: 'info',
       msg: 'onboarding-analytics',

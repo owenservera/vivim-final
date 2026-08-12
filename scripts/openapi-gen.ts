@@ -83,7 +83,7 @@ paths:
 function main() {
   const ids = extractCapabilityIds()
   if (ids.length === 0) {
-    console.error("No capability ids extracted from bootstrap — aborting.")
+    // [audit] removed: console.error("No capability ids extracted from bootstrap — aborting.")
     process.exit(1)
   }
 
@@ -91,7 +91,7 @@ function main() {
   const docsApiDir = dirname(outPath)
   if (!existsSync(docsApiDir)) {
     mkdirSync(docsApiDir, { recursive: true })
-    console.log(`Created ${docsApiDir}`)
+    // [audit] removed: console.log(`Created ${docsApiDir}`)
   }
 
   // Emit machine-readable capability index.
@@ -101,7 +101,7 @@ function main() {
   // Bootstrap the spec if it doesn't exist yet (session 2 fix).
   if (!existsSync(specPath)) {
     writeFileSync(specPath, bootstrapSpec(ids.length))
-    console.log(`Bootstrapped ${specPath} (minimal OpenAPI 3.1 skeleton).`)
+    // [audit] removed: console.log(`Bootstrapped ${specPath} (minimal OpenAPI 3.1 skeleton).`)
   }
 
   let spec = readFileSync(specPath, "utf8")
@@ -120,9 +120,9 @@ function main() {
   }
   writeFileSync(specPath, spec)
 
-  console.log(`Reflected ${ids.length} capabilities into the v11 OpenAPI spec.`)
-  console.log(`  - ${outPath}`)
-  if (existsSync(specPath)) console.log(`  - ${specPath}`)
+  // [audit] removed: console.log(`Reflected ${ids.length} capabilities into the v11 OpenAPI spec.`)
+  // [audit] removed: console.log(`  - ${outPath}`)
+  // [audit] removed: if (existsSync(specPath)) console.log(`  - ${specPath}`)
 }
 
 main()

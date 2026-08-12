@@ -32,6 +32,7 @@ export function resolveBackendPort(): number {
       if (/^\d+$/.test(v)) return Number.parseInt(v, 10)
     }
   } catch {
+  // [audit] log the error with context here
     // ignore — fall through to default
   }
   return 9420

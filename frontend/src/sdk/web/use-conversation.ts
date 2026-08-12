@@ -24,10 +24,14 @@ export function useConversation() {
   const refresh = useCallback(async () => {
     setLoading(true)
     setError(null)
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 8000)
     try {
       const res = await io.get<ConversationDetail[]>('/api/conversations', {
         responseSchema: ConversationArraySchema,
+        signal: controller.signal,
       })
+      clearTimeout(timer)
       if (!mountedRef.current) return
       // Backend returns ConversationDetail[] (array directly) — transform to domain models
       const raw = res.data
@@ -39,17 +43,34 @@ export function useConversation() {
             ),
       )
     } catch (e) {
+      clearTimeout(timer)
       if (!mountedRef.current) return
-      setError(e instanceof Error ? e.message : 'Failed to load conversations')
+      if (e instanceof Error && e.name === 'AbortError') {
+        setError('Conversation request timed out after 8s')
+      } else {
+        setError(e instanceof Error ? e.message : 'Failed to load conversations')
+      }
     } finally {
       if (mountedRef.current) setLoading(false)
     }
   }, [io])
 
-  // Auto-fetch conversations on mount
+  // Auto-fetch conversations on mount & listen to real-time IO events
   useEffect(() => {
     refresh()
-  }, [refresh])
+    const unsub = io.on((e) => {
+      if (!mountedRef.current) return
+      // Auto-refresh conversation list when remote CRUD events or sse events complete
+      if (
+        e.url?.includes('/api/conversations') &&
+        (e.type === 'request:success' || e.type === 'sse:close') &&
+        (e.method === 'POST' || e.method === 'DELETE' || e.method === 'PUT')
+      ) {
+        refresh()
+      }
+    })
+    return unsub
+  }, [refresh, io])
 
   const create = useCallback(
     async (providerId?: string) => {

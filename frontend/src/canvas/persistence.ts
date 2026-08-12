@@ -64,6 +64,7 @@ export async function saveCanvas(state: CanvasState): Promise<void> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(state),
   }).catch(() => {
+  // [audit] log the error with context here
     /* offline or no auth; local copy is authoritative */
   })
 }

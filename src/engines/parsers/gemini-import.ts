@@ -46,3 +46,5 @@ export class GeminiExportParserImpl {
     }
   }
 }
+
+export { toContentParts } from './to-content-parts.js'

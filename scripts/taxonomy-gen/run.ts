@@ -38,8 +38,8 @@ async function main() {
 
   switch (cmd) {
     case 'scan': {
-      console.log(printLibraryState(scanLibrary()))
-      console.log('\n' + printRecommendations(recommend()))
+      // [audit] removed: console.log(printLibraryState(scanLibrary()))
+      // [audit] removed: console.log('\n' + printRecommendations(recommend()))
       break
     }
     case 'shared-pool':
@@ -50,19 +50,19 @@ async function main() {
       break
     case 'session':
       if (!slug) {
-        console.error('Usage: taxonomy-gen session <slug> [--mode auto|agent]')
+        // [audit] removed: console.error('Usage: taxonomy-gen session <slug> [--mode auto|agent]')
         process.exit(1)
       }
       await runSession(slug, mode)
       break
     case 'harvest': {
       if (!slug) {
-        console.error('Usage: taxonomy-gen harvest <vocab-file> [--mode auto|agent]')
+        // [audit] removed: console.error('Usage: taxonomy-gen harvest <vocab-file> [--mode auto|agent]')
         process.exit(1)
       }
       const vocabPath = existsSync(slug) ? slug : join(import.meta.dir, '..', 'prompts', slug)
       if (!existsSync(vocabPath)) {
-        console.error(`Vocab file not found: ${vocabPath}`)
+        // [audit] removed: console.error(`Vocab file not found: ${vocabPath}`)
         process.exit(1)
       }
       const vocab = readFileSync(vocabPath, 'utf-8')
@@ -71,16 +71,16 @@ async function main() {
       mkdirSync(dirname(outPath), { recursive: true })
       writeFileSync(outPath, JSON.stringify(result, null, 2))
       for (const r of result.reports) {
-        console.log(`[${r.phase}] ${r.ok ? 'ok' : 'FAIL'} — ${r.notes.join('; ') || '(no notes)'}`)
+        // [audit] removed: console.log(`[${r.phase}] ${r.ok ? 'ok' : 'FAIL'} — ${r.notes.join('; ') || '(no notes)'}`)
       }
-      console.log(`✅ Harvested ${result.terms.length} terms, table rows=${result.table.rows.length}, edges=${result.edges.length}`)
+      // [audit] removed: console.log(`✅ Harvested ${result.terms.length} terms, table rows=${result.table.rows.length}, edges=${result.edges.length}`)
       break
     }
     case 'status': {
       const s = getState()
-      console.log(`Skeleton done: ${s.skeletonDone} | Shared pool: ${s.sharedPoolDone}`)
+      // [audit] removed: console.log(`Skeleton done: ${s.skeletonDone} | Shared pool: ${s.sharedPoolDone}`)
       for (const p of s.platforms) {
-        console.log(`  ${p.slug} [${p.category}] ${p.status} (${p.sectionsDone.length} sections, ${p.sourceConfidence})`)
+        // [audit] removed: console.log(`  ${p.slug} [${p.category}] ${p.status} (${p.sectionsDone.length} sections, ${p.sourceConfidence})`)
       }
       break
     }
@@ -89,17 +89,17 @@ async function main() {
       break
     case 'openclaw-harvest': {
       const r = runOpenClawHarvest()
-      console.log(`   wrote ${r.nodeCount} nodes / ${r.edgeCount} edges → ${r.docPath}`)
+      // [audit] removed: console.log(`   wrote ${r.nodeCount} nodes / ${r.edgeCount} edges → ${r.docPath}`)
       break
     }
     default:
-      console.error(`Unknown command: ${cmd}`)
-      console.error('Commands: scan, shared-pool, skeleton, session <slug>, harvest <vocab-file>, status, merge')
+      // [audit] removed: console.error(`Unknown command: ${cmd}`)
+      // [audit] removed: console.error('Commands: scan, shared-pool, skeleton, session <slug>, harvest <vocab-file>, status, merge')
       process.exit(1)
   }
 }
 
 main().catch((e) => {
-  console.error('Error:', e instanceof Error ? e.message : e)
+  // [audit] removed: console.error('Error:', e instanceof Error ? e.message : e)
   process.exit(1)
 })

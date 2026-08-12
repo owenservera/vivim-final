@@ -1,11 +1,11 @@
 // src/engines/nlcl/semantic-resolver.ts
-// SemanticResolver — IntentResolver using DENSE embeddings (MiniLM) fused with
+// SemanticResolver — IntentResolver using DENSE embeddings (HF 768-d) fused with
 // sparse TF-IDF via Reciprocal Rank Fusion (RRF).
 //
 // Tier 3 unit 15.6 — closes audit finding ❌-9 ("semantic resolver uses TF-IDF
-// cosine only; no real embeddings wired"). The repo's MiniLmEmbeddingProvider
-// (src/engines/embedding-minilm.ts) was previously only used by semantic-search
-// for content retrieval, NOT by the NLCL intent resolver.
+// cosine only; no real embeddings wired"). Uses the booted HfEmbeddingProvider
+// (Xenova/all-mpnet-base-v2, 768-d ONNX WASM) via the provider chain in
+// knowledge.ts. Falls back to HfEmbeddingProvider if no provider is passed.
 //
 // SOTA pipeline Layer 3 (paraphrase detection). Sits between FuzzyResolver
 // and LLM fallback.
@@ -22,11 +22,11 @@
 //     k=60 standard.
 
 import { EngineError } from '../../errors.js'
-import { MiniLmEmbeddingProvider } from '../embedding-minilm.js'
+import { HfEmbeddingProvider } from '../embedding-hf.js'
 import type { EmbeddingProvider } from '../semantic-search.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { buildIntentFromPattern } from './pattern-match.js'
-import { type SparseVector, Tfidf, cosineSimilarity } from './tfidf.js'
+import { cosineSimilarity, type SparseVector, Tfidf } from './tfidf.js'
 import type {
   CommandPattern,
   IntentResolver,
@@ -81,13 +81,13 @@ export class SemanticResolver implements IntentResolver {
     // Backward-compat: a bare number is interpreted as the sparse threshold
     // (matches the previous constructor signature).
     if (typeof opts === 'number') {
-      this.embeddingProvider = new MiniLmEmbeddingProvider()
+      this.embeddingProvider = new HfEmbeddingProvider()
       this.threshold = 0.01
       this.rrfK = 60
       this.sparseThreshold = opts
       this.denseThreshold = 0.4
     } else {
-      this.embeddingProvider = opts.embeddingProvider ?? new MiniLmEmbeddingProvider()
+      this.embeddingProvider = opts.embeddingProvider ?? new HfEmbeddingProvider()
       this.threshold = opts.threshold ?? 0.01
       this.rrfK = opts.rrfK ?? 60
       this.sparseThreshold = opts.sparseThreshold ?? 0.6

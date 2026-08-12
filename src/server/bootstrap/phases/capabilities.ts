@@ -511,7 +511,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
             | {
                 client: import('../../../engines/opencode/opencode-client.js').OpenCodeClient
                 supervisor: import(
-                  '../../../engines/opencode/opencode-supervisor.js',
+                  '../../../engines/opencode/opencode-supervisor.js'
                 ).OpenCodeSupervisor
               }
             | undefined
@@ -550,7 +550,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
 
             // Register a TS supervisor delegate for OpenCode (so stop/restart work)
             const openCodeDelegate: import(
-              '../../../ai/runtime/ts-supervisor.js',
+              '../../../ai/runtime/ts-supervisor.js'
             ).ISupervisorDelegate = {
               providerId: OPENCODE_PROVIDER_ID,
               async start() {
@@ -633,6 +633,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
             update: { updatedAt: now },
           })
           .catch(() => {})
+  // [audit] log the error with context here
         await db.prisma.capabilityBinding
           .upsert({
             where: {
@@ -660,6 +661,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
             },
           })
           .catch(() => {})
+  // [audit] log the error with context here
       },
     }
 

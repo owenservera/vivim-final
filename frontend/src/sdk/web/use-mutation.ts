@@ -158,6 +158,7 @@ export function useMutation(opts: UseMutationOptions = {}) {
         })
       }
     } catch {
+  // [audit] log the error with context here
       // Silent — status polling is best-effort.
     }
   }, [io])
@@ -172,6 +173,7 @@ export function useMutation(opts: UseMutationOptions = {}) {
           setHistory(res.data.history ?? [])
         }
       } catch {
+  // [audit] log the error with context here
         // Silent — history polling is best-effort.
       }
     },

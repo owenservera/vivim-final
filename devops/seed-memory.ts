@@ -21,6 +21,7 @@ function detectRuntime(): string {
     const allDeps = { ...pkg.dependencies, ...pkg.devDependencies }
     if (allDeps['bun-types'] || allDeps['@types/bun']) return 'Bun'
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
   if (existsSync(join(process.cwd(), 'bun.lock'))) return 'Bun'
@@ -48,6 +49,7 @@ function countTestFiles(dir: string): number {
       }
     }
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
   return count
@@ -65,10 +67,12 @@ function getProviders(): string[] {
         const p = manifest.provider ?? manifest
         slugOrder.push(p.slug ?? p.name ?? f.replace('.json', ''))
       } catch {
+  // [audit] log the error with context here
         /* skip */
       }
     }
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
   return slugOrder
@@ -104,6 +108,7 @@ function getDbInfo(): string {
     if (provider?.[1] === 'postgresql') return 'PostgreSQL'
     if (provider?.[1] === 'mysql') return 'MySQL'
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
   const dbPath = join(process.cwd(), 'prisma', 'dev.db')
@@ -215,5 +220,5 @@ export function seedMemory(): void {
 
   mkdirSync(join(process.cwd(), '.opencode', 'memory'), { recursive: true })
   writeFileSync(MEMORY_PATH, lines.join('\n'), 'utf8')
-  console.log(`seed-memory: wrote ${MEMORY_PATH}`)
+  // [audit] removed: console.log(`seed-memory: wrote ${MEMORY_PATH}`)
 }

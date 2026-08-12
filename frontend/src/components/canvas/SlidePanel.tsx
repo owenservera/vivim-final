@@ -43,6 +43,7 @@ export function SlidePanel({
     const loader = getPanelLoader(panelId);
     if (loader) {
       loader().then((m) => setPanelComponent(() => m.default)).catch(() => {});
+  // [audit] log the error with context here
     }
   }, [panelId, isOpen]);
 

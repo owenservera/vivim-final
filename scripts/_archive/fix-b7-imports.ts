@@ -42,4 +42,4 @@ for (const f of files) {
   }
 }
 report.push(`imports added: ${added}`)
-console.log(report.join('\n'))
+// [audit] removed: console.log(report.join('\n'))

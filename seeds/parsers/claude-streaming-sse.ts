@@ -83,6 +83,7 @@ export function parse(rawBody: string): ContentBlock[] {
         }
       }
     } catch {
+  // [audit] log the error with context here
       // skip unparseable lines
     }
   }

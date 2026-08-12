@@ -4,6 +4,7 @@
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { appErrorResponse, errorResponse, json } from '../response.js'
+import { parseRequestBody } from '../validate.js'
 
 export function createContainersRouter(ctx: ServerContext) {
   return async function containersRouter(req: Request): Promise<Response | undefined> {
@@ -52,8 +53,8 @@ export function createContainersRouter(ctx: ServerContext) {
           metadataJson: z.string().optional(),
           parentContainerId: z.string().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const container = await store.createContainer(parsed.data)
         return json({ container }, 201)
       }
@@ -68,8 +69,9 @@ export function createContainersRouter(ctx: ServerContext) {
 
       // PUT /api/containers/:id
       if (req.method === 'PUT' && containerMatch && containerMatch[1]) {
-        const body = (await req.json()) as Record<string, unknown>
-        const container = await store.updateContainer(containerMatch[1], body)
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const container = await store.updateContainer(containerMatch[1], parsed.data)
         return json({ container })
       }
 
@@ -88,16 +90,20 @@ export function createContainersRouter(ctx: ServerContext) {
 
       // POST /api/containers/:id/members
       if (req.method === 'POST' && membersMatch && membersMatch[1]) {
-        const body = (await req.json()) as {
-          userRole?: string
-          notificationPreference?: string
-          isFavorite?: number
-        }
+        const parsed = await parseRequestBody(
+          req,
+          z.object({
+            userRole: z.string().optional(),
+            notificationPreference: z.string().optional(),
+            isFavorite: z.number().optional(),
+          }),
+        )
+        if (!parsed.success) return parsed.response
         const membership = await store.addMembership({
           containerId: membersMatch[1],
-          userRole: body.userRole ?? 'member',
-          notificationPreference: body.notificationPreference ?? 'all',
-          isFavorite: body.isFavorite ?? 0,
+          userRole: parsed.data.userRole ?? 'member',
+          notificationPreference: parsed.data.notificationPreference ?? 'all',
+          isFavorite: parsed.data.isFavorite ?? 0,
         })
         return json({ membership }, 201)
       }

@@ -9,11 +9,11 @@ export async function runMigrate(args: string[]): Promise<void> {
       const { createServerWithEngines } = await import('../../server/index.js')
       const port = Number(process.env.PORT) || 9420
       const _ctx = await createServerWithEngines(port)
-      console.log('Database migrated')
+      // [audit] removed: console.log('Database migrated')
       break
     }
     default:
-      console.error(`Unknown migrate command: ${cmd}`)
+      // [audit] removed: console.error(`Unknown migrate command: ${cmd}`)
       process.exit(1)
   }
 }

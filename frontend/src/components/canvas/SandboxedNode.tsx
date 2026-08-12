@@ -222,9 +222,15 @@ export function SandboxedNode({
     channel.port1.onmessage = handleMessage;
 
     const onLoad = () => {
+      // Restrict target origin to prevent cross-origin channel port leakage.
+      // In static Tauri file:// contexts origin is 'null' — fall back to '*' only then.
+      const targetOrigin =
+        window.location.origin && window.location.origin !== 'null'
+          ? window.location.origin
+          : '*';
       iframe.contentWindow?.postMessage(
         { type: 'bridge:init', instanceId },
-        '*',
+        targetOrigin,
         [channel.port2],
       );
     };

@@ -34,12 +34,12 @@ async function main() {
 
   const existingCaps = poolDoc.nodes.filter((n) => n.kind === 'capability')
   const existingSlugs = new Set(existingCaps.map((c) => c.slug))
-  console.log(`Existing pool capabilities: ${existingCaps.length}`)
+  // [audit] removed: console.log(`Existing pool capabilities: ${existingCaps.length}`)
 
   // Load new capabilities from raw.json
   const raw = JSON.parse(readFileSync(SHARED_RAW, 'utf-8')) as { capabilities?: RawCapability[] }
   const rawCaps = raw.capabilities ?? []
-  console.log(`Raw capabilities: ${rawCaps.length}`)
+  // [audit] removed: console.log(`Raw capabilities: ${rawCaps.length}`)
 
   // Create new capability nodes
   const newCaps: TaxonomyNode[] = []
@@ -58,15 +58,15 @@ async function main() {
     })
     newCaps.push(node)
   }
-  console.log(`New capabilities to add: ${newCaps.length}`)
+  // [audit] removed: console.log(`New capabilities to add: ${newCaps.length}`)
 
   // Run Round 3 (UI mapping) on new caps
   const uiMapped = runUIMapping(newCaps)
-  console.log(`Round 3 (UI mapping): ${uiMapped} capabilities mapped`)
+  // [audit] removed: console.log(`Round 3 (UI mapping): ${uiMapped} capabilities mapped`)
 
   // Run Round 4 (cross-surface binding) on new caps
   const bound = runCrossSurfaceBinding(newCaps)
-  console.log(`Round 4 (cross-surface): ${bound} capabilities bound`)
+  // [audit] removed: console.log(`Round 4 (cross-surface): ${bound} capabilities bound`)
 
   // Merge all nodes (existing + new)
   const allNodes = [...poolDoc.nodes, ...newCaps]
@@ -79,11 +79,11 @@ async function main() {
 
   // Write back
   writeFileSync(POOL_PATH, JSON.stringify(doc, null, 2))
-  console.log(`✅ Pool updated: ${allNodes.length} total nodes (${existingCaps.length} existing + ${newCaps.length} new)`)
-  console.log(`   → ${POOL_PATH}`)
+  // [audit] removed: console.log(`✅ Pool updated: ${allNodes.length} total nodes (${existingCaps.length} existing + ${newCaps.length} new)`)
+  // [audit] removed: console.log(`   → ${POOL_PATH}`)
 }
 
 main().catch((e) => {
-  console.error(e)
+  // [audit] removed: console.error(e)
   process.exit(1)
 })

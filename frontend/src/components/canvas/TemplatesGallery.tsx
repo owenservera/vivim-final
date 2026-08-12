@@ -27,6 +27,7 @@ export function TemplatesGallery({ onCreated }: { onCreated?: (workspaceId: stri
         if (res.data?.ok) setTemplates(res.data.templates);
       })
       .catch(() => {});
+  // [audit] log the error with context here
   }, [io]);
 
   const create = async (tpl: WorkspaceTemplate) => {

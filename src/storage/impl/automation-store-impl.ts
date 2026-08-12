@@ -60,6 +60,7 @@ export class AutomationStoreImpl implements AutomationStore {
 
   async delete(id: string): Promise<void> {
     await this.db.prisma.automationSchedule.delete({ where: { id } }).catch(() => {})
+  // [audit] log the error with context here
   }
 
   private toAutomation(row: {

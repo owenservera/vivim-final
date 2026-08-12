@@ -25,8 +25,8 @@ export async function ping(
 ): Promise<PingResult> {
   if (opts.mode === 'agent') {
     // Print prompt for the agent to fulfill; do not call API
-    console.log('\n' + '═'.repeat(70))
-    console.log('🔷 PROMPT (agent mode — generate the output, save to ' + (opts.outputPath ?? '<path>') + ')')
+    // [audit] removed: console.log('\n' + '═'.repeat(70))
+    // [audit] removed: console.log('🔷 PROMPT (agent mode — generate the output, save to ' + (opts.outputPath ?? '<path>') + ')')
     console.log('═'.repeat(70))
     console.log(prompt)
     console.log('═'.repeat(70) + '\n')

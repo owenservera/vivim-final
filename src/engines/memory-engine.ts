@@ -354,6 +354,7 @@ export class MemoryEngine {
           updatedAt: now,
         })
         .catch(() => {})
+  // [audit] log the error with context here
     }
     this.eventBus.emit({ type: 'memory:recorded', data: { id, category: input.category } })
     return id

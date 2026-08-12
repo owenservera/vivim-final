@@ -13,6 +13,8 @@ export interface FixInstructions {
   summary: string
   steps: string[]
   patchSuggestion?: string
+  /** Recipe kind from the engine (remove-line / insert-log / manual). */
+  kind?: string
   effort: FixEffort
   autoFixable: boolean
 }
@@ -96,6 +98,8 @@ export interface FindingInput {
   fixSummary: string
   fixSteps: string[]
   patchSuggestion?: string
+  /** Recipe kind from the engine (remove-line / insert-log / manual). */
+  kind?: string
   effort: FixEffort
   autoFixable: boolean
   linkedUnit?: string
@@ -118,6 +122,7 @@ export function buildFinding(input: FindingInput): Finding {
       summary: input.fixSummary,
       steps: input.fixSteps,
       patchSuggestion: input.patchSuggestion,
+      kind: input.kind,
       effort: input.effort,
       autoFixable: input.autoFixable,
     },
@@ -181,12 +186,15 @@ export interface TrendResult {
   unchanged: Finding[]
 }
 
-// Compare current open findings (by id+file+line fingerprint) against a baseline.
+// Compare current open findings against a baseline using a stable fingerprint
+// (dimension + file + line). The engine assigns a fresh ULID per run, so the
+// id must never be part of the identity — otherwise every finding reads as
+// "new" and every baseline finding reads as "resolved".
 export function compareBaseline(current: Finding[], baseline: FindingsFile | null): TrendResult {
   if (!baseline) {
     return { baselineDate: 'none', newFindings: current, resolvedFindings: [], unchanged: [] }
   }
-  const key = (f: Finding) => `${f.id}@${f.file}:${f.line}`
+  const key = (f: Finding) => `${f.dimension}|${f.file}:${f.line}`
   const baseKeys = new Set(baseline.findings.map(key))
   const curKeys = new Set(current.map(key))
   const newFindings = current.filter((f) => !baseKeys.has(key(f)))

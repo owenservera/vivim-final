@@ -78,6 +78,7 @@ export function createKernelRouter(
         limit: z.number().int().positive().optional(),
       })
       const parsed = schema.safeParse(await req.json().catch(() => ({})))
+  // [audit] log the error with context here
       if (!parsed.success) {
         return errorResponse(parsed.error.message, 'ValidationError', 400)
       }
@@ -99,6 +100,7 @@ export function createKernelRouter(
     if (url.pathname === '/api/kernel/oracle/heal' && req.method === 'POST') {
       const schema = z.object({ issueId: z.string().min(1, 'issueId is required') })
       const parsed = schema.safeParse(await req.json().catch(() => ({})))
+  // [audit] log the error with context here
       if (!parsed.success) {
         return errorResponse(parsed.error.message, 'ValidationError', 400)
       }
@@ -163,6 +165,7 @@ export function createKernelRouter(
           scope: z.string().optional(),
         })
         const parsed = schema.safeParse(await req.json().catch(() => ({})))
+  // [audit] log the error with context here
         if (!parsed.success) {
           return errorResponse(parsed.error.message, 'ValidationError', 400)
         }
@@ -205,6 +208,7 @@ export function createKernelRouter(
       const key = parts[3]
       const schema = z.object({ value: z.unknown() })
       const parsed = schema.safeParse(await req.json().catch(() => ({})))
+  // [audit] log the error with context here
       if (!parsed.success) {
         return errorResponse(parsed.error.message, 'ValidationError', 400)
       }
@@ -231,6 +235,7 @@ export function createKernelRouter(
     if (configSurface && url.pathname === '/api/kernel/config/rollback' && req.method === 'POST') {
       const schema = z.object({ id: z.string().min(1, 'id is required') })
       const parsed = schema.safeParse(await req.json().catch(() => ({})))
+  // [audit] log the error with context here
       if (!parsed.success) {
         return errorResponse(parsed.error.message, 'ValidationError', 400)
       }

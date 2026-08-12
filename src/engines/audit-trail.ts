@@ -76,6 +76,7 @@ export class AuditTrail {
 
     for (const sink of this.sinks) {
       void sink.record(full).catch(() => {})
+  // [audit] log the error with context here
     }
   }
 }

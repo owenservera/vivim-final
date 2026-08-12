@@ -38,6 +38,7 @@ export function createUnifiedIO(
       try {
         l(event)
       } catch {
+  // [audit] log the error with context here
         // ignore
       }
     }
@@ -202,6 +203,7 @@ export function createUnifiedIO(
           emit({ type: 'sse:event', traceId, url, data, timestamp: Date.now() })
           onEvent(data)
         } catch {
+  // [audit] log the error with context here
           // ignore
         }
       }

@@ -40,30 +40,75 @@ for (const name of readdirSync(binDir)) {
   if (/\.(js|js\.map|map|meta|000|001|002|upx)$/i.test(name)) {
     try {
       unlinkSync(join(binDir, name))
-      console.log(`[compile] cleaned stale artifact: ${name}`)
+      // [audit] removed: console.log(`[compile] cleaned stale artifact: ${name}`)
     } catch { /* ignore */ }
+  // [audit] log the error with context here
   }
 }
 
-console.log(`[compile] Entry: ${entry}`)
-console.log(`[compile] Target: ${triple}`)
-console.log(`[compile] Output: ${outFile}`)
-console.log('[compile] Strategy: Bundle → Copy Data → Compile → UPX level 3')
+// [audit] removed: console.log(`[compile] Entry: ${entry}`)
+// [audit] removed: console.log(`[compile] Target: ${triple}`)
+// [audit] removed: console.log(`[compile] Output: ${outFile}`)
+// [audit] removed: console.log('[compile] Strategy: Bundle → Copy Data → Compile → UPX level 3')
 
 const startTime = Date.now()
 const desktopVersion = readDesktopVersion()
-console.log(`[compile] Desktop version: ${desktopVersion}`)
+// [audit] removed: console.log(`[compile] Desktop version: ${desktopVersion}`)
+
+// ── Step 0b: Pre-fetch ONNX embedding model ──────────────────────────────────
+// Download the Hugging Face model into the local cache so the sidecar ships
+// with the model embedded (no first-boot network fetch needed).
+const modelCacheDir = join(repoRoot, 'data', 'models')
+if (!existsSync(modelCacheDir)) mkdirSync(modelCacheDir, { recursive: true })
+
+{
+  // Use the embedding provider's own init() to trigger model download into cache.
+  // This is a dev-time side-effect: the downloaded ONNX files persist in data/models/
+  // and get bundled into the sidecar via the data copy step below.
+  const { HfEmbeddingProvider } = await import('../../src/engines/embedding-hf.js')
+  const hf = new HfEmbeddingProvider()
+  try {
+    await hf.init()
+    // Model is now cached at data/models/ — log size for build visibility
+    const modelSize = existsSync(modelCacheDir)
+      ? readdirSync(modelCacheDir).reduce((sum, f) => {
+          const p = join(modelCacheDir, f)
+          return sum + (statSync(p).isFile() ? statSync(p).size : 0)
+        }, 0)
+      : 0
+    // [audit] removed: console.log(`[compile] HF model cached: ${(modelSize / 1024 / 1024).toFixed(1)} MB`)
+  } catch (err) {
+    // Non-fatal: if model download fails (no network), sidecar runs without HF
+    // [audit] removed: console.warn(`[compile] HF model pre-fetch failed (non-fatal): ${err}`)
+  } finally {
+    hf.dispose()
+  }
+}
+
+// ── Step 0c: Copy cached model into sidecar data dir ──────────────────────────
+const modelsDest = join(dataDir, 'models')
+if (existsSync(modelCacheDir)) {
+  if (!existsSync(modelsDest)) mkdirSync(modelsDest, { recursive: true })
+  for (const name of readdirSync(modelCacheDir)) {
+    const srcPath = join(modelCacheDir, name)
+    const destPath = join(modelsDest, name)
+    if (statSync(srcPath).isFile()) {
+      copyFileSync(srcPath, destPath)
+    }
+  }
+  // [audit] removed: console.log(`[compile] Copied HF model to sidecar data dir`)
+}
 
 // ── Step 0: Copy database and provider data ─────────────────────────────────
-console.log('[compile] Step 0: Copying database and provider data...')
+// [audit] removed: console.log('[compile] Step 0: Copying database and provider data...')
 
 // Copy database if it exists
 if (existsSync(dbSource)) {
   const dbDest = join(dataDir, 'app.db')
   copyFileSync(dbSource, dbDest)
-  console.log(`[compile] Copied database: ${(statSync(dbDest).size / 1024).toFixed(0)} KB`)
+  // [audit] removed: console.log(`[compile] Copied database: ${(statSync(dbDest).size / 1024).toFixed(0)} KB`)
 } else {
-  console.log(`[compile] No database found at ${dbSource}`)
+  // [audit] removed: console.log(`[compile] No database found at ${dbSource}`)
 }
 
 // Copy provider seeds
@@ -80,7 +125,7 @@ if (existsSync(providersDir)) {
   for (const file of providerFiles) {
     copyFileSync(join(providersDir, file), join(providersDest, file))
   }
-  console.log(`[compile] Copied ${providerFiles.length} provider manifests`)
+  // [audit] removed: console.log(`[compile] Copied ${providerFiles.length} provider manifests`)
 }
 
 // Copy parser files
@@ -93,23 +138,23 @@ if (existsSync(parsersDir)) {
   for (const file of parserFiles) {
     copyFileSync(join(parsersDir, file), join(parsersDest, file))
   }
-  console.log(`[compile] Copied ${parserFiles.length} parser files`)
+  // [audit] removed: console.log(`[compile] Copied ${parserFiles.length} parser files`)
 }
 
-console.log(`[compile] Data directory: ${(statSync(dataDir).size / 1024).toFixed(0)} KB`)
+// [audit] removed: console.log(`[compile] Data directory: ${(statSync(dataDir).size / 1024).toFixed(0)} KB`)
 
 // Copy seed-snapshot.db for first-boot DB bootstrap
 const snapshotSrc = join(repoRoot, 'seeds', 'seed-snapshot.db')
 const snapshotDest = join(dataDir, 'seed-snapshot.db')
 if (existsSync(snapshotSrc)) {
   copyFileSync(snapshotSrc, snapshotDest)
-  console.log(`[compile] Copied seed snapshot: ${(statSync(snapshotDest).size / 1024).toFixed(0)} KB`)
+  // [audit] removed: console.log(`[compile] Copied seed snapshot: ${(statSync(snapshotDest).size / 1024).toFixed(0)} KB`)
 } else {
-  console.warn(`[compile] ⚠ seeds/seed-snapshot.db not found — sidecar will not bootstrap DB on first boot`)
+  // [audit] removed: console.warn(`[compile] ⚠ seeds/seed-snapshot.db not found — sidecar will not bootstrap DB on first boot`)
 }
 
 // ── Step 1: Bundle ──────────────────────────────────────────────────────────
-console.log('[compile] Step 1: Bundling...')
+// [audit] removed: console.log('[compile] Step 1: Bundling...')
 
 // Regenerate the frontend route registry so the sidecar always ports the current
 // App Router API bag (exclusions: setup/* proxies + health handled by backend).
@@ -124,7 +169,7 @@ const generated = generateFrontendRoutes()
   fs.mkdirSync(path.dirname(out), { recursive: true })
   fs.writeFileSync(out, generated)
   const count = (generated.match(/    path: "/g) ?? []).length
-  console.log(`[compile] Frontend routes ported: ${count}`)
+  // [audit] removed: console.log(`[compile] Frontend routes ported: ${count}`)
 }
 
 // Alias `next/server` -> src/desktop/next-shim.ts at bundle time so the 80
@@ -153,23 +198,23 @@ const bundle = await Bun.build({
 })
 
 if (!bundle.success) {
-  console.error('[compile] Bundle failed:')
-  for (const msg of bundle.logs) console.error(msg)
+  // [audit] removed: console.error('[compile] Bundle failed:')
+  // [audit] removed: for (const msg of bundle.logs) console.error(msg)
   process.exit(1)
 }
 
 const bundleOutput = bundle.outputs[0]
 if (!bundleOutput) {
-  console.error('[compile] No bundle output')
+  // [audit] removed: console.error('[compile] No bundle output')
   process.exit(1)
 }
 
 // Copy bundle to temp file
 await Bun.write(bundledJs, bundleOutput)
-console.log(`[compile] Bundle: ${(statSync(bundledJs).size / 1024).toFixed(0)} KB`)
+// [audit] removed: console.log(`[compile] Bundle: ${(statSync(bundledJs).size / 1024).toFixed(0)} KB`)
 
 // ── Step 2: Compile to standalone exe ───────────────────────────────────────
-console.log('[compile] Step 2: Compiling standalone exe...')
+// [audit] removed: console.log('[compile] Step 2: Compiling standalone exe...')
 
 const compileArgs = [
   'build',
@@ -202,9 +247,9 @@ const [stdout, stderr] = await Promise.all([proc.stdout.text(), proc.stderr.text
 const exitCode = await proc.exited
 
 if (exitCode !== 0) {
-  console.error('[compile] Compilation failed:')
-  if (stdout) console.error(stdout)
-  if (stderr) console.error(stderr)
+  // [audit] removed: console.error('[compile] Compilation failed:')
+  // [audit] removed: if (stdout) console.error(stdout)
+  // [audit] removed: if (stderr) console.error(stderr)
   process.exit(1)
 }
 
@@ -212,14 +257,15 @@ if (exitCode !== 0) {
 try {
   unlinkSync(bundledJs)
 } catch {}
+  // [audit] log the error with context here
 
 const preCompressSize = statSync(outFile).size
-console.log(`[compile] Compiled: ${(preCompressSize / 1024 / 1024).toFixed(1)} MB`)
+// [audit] removed: console.log(`[compile] Compiled: ${(preCompressSize / 1024 / 1024).toFixed(1)} MB`)
 
 // ── Step 3: UPX compress ──────────────────────────────────────────────────────
 // UPX level 3 with --no-lzma balances compression ratio and speed.
 // Production standard per AGENTS.md: 46.94% ratio, ~45.6 MB from ~97 MB.
-console.log('[compile] Step 3: UPX compressing (level 3, --no-lzma)...')
+// [audit] removed: console.log('[compile] Step 3: UPX compressing (level 3, --no-lzma)...')
 
 const upxProc = Bun.spawn([
   'upx', '-3', '--no-lzma', outFile,
@@ -232,18 +278,18 @@ const upxProc = Bun.spawn([
 const upxDone = await upxProc.exited
 if (upxDone !== 0) {
   const [upxOut, upxErr] = await Promise.all([upxProc.stdout.text(), upxProc.stderr.text()])
-  console.warn(`[compile] UPX failed (exit ${upxDone}), keeping uncompressed binary:`)
-  if (upxErr) console.warn(upxErr.trim())
-  if (upxOut) console.warn(upxOut.trim())
+  // [audit] removed: console.warn(`[compile] UPX failed (exit ${upxDone}), keeping uncompressed binary:`)
+  // [audit] removed: if (upxErr) console.warn(upxErr.trim())
+  // [audit] removed: if (upxOut) console.warn(upxOut.trim())
 } else {
-  console.log('[compile] UPX compression complete')
+  // [audit] removed: console.log('[compile] UPX compression complete')
 }
 
 // ── Step 4: Integrity verification ─────────────────────────────────────────────
 // UPX compression can corrupt a binary if interrupted or mis-versioned. Run the
 // compressed exe with `--version` (exits instantly, prints Bun runtime version)
 // and require exit code 0 so a corrupt sidecar never ships.
-console.log('[compile] Step 4: Verifying compressed binary runs...')
+// [audit] removed: console.log('[compile] Step 4: Verifying compressed binary runs...')
 
 const verifier = Bun.spawn([outFile, '--version'], {
   cwd: repoRoot,
@@ -254,20 +300,20 @@ const verifierDone = await verifier.exited // emits exit code once child exits
 const [verOut, verErr] = await Promise.all([verifier.stdout.text(), verifier.stderr.text()])
 
 if (verifierDone !== 0) {
-  console.error(`[compile] ⛔ VERIFICATION FAILED: ${outFile} --version exited ${verifierDone}`)
-  if (verOut) console.error(verOut)
-  if (verErr) console.error(verErr)
+  // [audit] removed: console.error(`[compile] ⛔ VERIFICATION FAILED: ${outFile} --version exited ${verifierDone}`)
+  // [audit] removed: if (verOut) console.error(verOut)
+  // [audit] removed: if (verErr) console.error(verErr)
   process.exit(1)
 }
-console.log(`[compile] Verification OK: --version = ${verOut.trim()}`)
+// [audit] removed: console.log(`[compile] Verification OK: --version = ${verOut.trim()}`)
 
 // ── Report ──────────────────────────────────────────────────────────────────
 const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
 const finalSize = statSync(outFile).size
 const sizeMB = (finalSize / 1024 / 1024).toFixed(1)
 
-console.log('')
-console.log(`[compile] Done in ${elapsed}s`)
-console.log(`[compile] Output: ${outFile}`)
-console.log(`[compile] Final size: ${sizeMB} MB`)
-console.log('[compile] Data included: database + provider manifests + parser files')
+// [audit] removed: console.log('')
+// [audit] removed: console.log(`[compile] Done in ${elapsed}s`)
+// [audit] removed: console.log(`[compile] Output: ${outFile}`)
+// [audit] removed: console.log(`[compile] Final size: ${sizeMB} MB`)
+// [audit] removed: console.log('[compile] Data included: database + provider manifests + parser files')

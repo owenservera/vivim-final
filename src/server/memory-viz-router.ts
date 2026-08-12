@@ -13,9 +13,11 @@
 //   - Inconsistent error shape (now uses the canonical `{ error, code, details }`).
 // The caller no longer needs to wrap the return value — it just returns it.
 
+import { z } from 'zod'
 import type { MemoryEngine } from '../engines/memory-engine.js'
 import type { MemoryCuratedStore } from '../storage/contracts/memory-curated-store.js'
 import { errorResponse, json } from './response.js'
+import { parseRequestBody } from './validate.js'
 
 export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: MemoryCuratedStore) {
   return async (req: Request): Promise<Response> => {
@@ -210,12 +212,9 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
 
     // POST /api/memory/assert  { content } — persist a semantic fact
     if (path === '/api/memory/assert' && req.method === 'POST') {
-      let body: { content?: string }
-      try {
-        body = (await req.json()) as { content?: string }
-      } catch {
-        return errorResponse('invalid json body', 'ValidationError', 400)
-      }
+      const parsed = await parseRequestBody(req, z.object({ content: z.string().optional() }))
+      if (!parsed.success) return parsed.response
+      const body = parsed.data
       const content = (body.content ?? '').trim()
       if (!content) {
         return errorResponse('content required', 'ValidationError', 400)
@@ -235,17 +234,17 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       if (!curatedStore) {
         return errorResponse('curation store not configured', 'NotImplemented', 501)
       }
-      let body: { id?: string; memoryType?: string; memoryId?: string; action?: string }
-      try {
-        body = (await req.json()) as {
-          id?: string
-          memoryType?: string
-          memoryId?: string
-          action?: string
-        }
-      } catch {
-        return errorResponse('invalid json body', 'ValidationError', 400)
-      }
+      const parsed = await parseRequestBody(
+        req,
+        z.object({
+          id: z.string().optional(),
+          memoryType: z.string().optional(),
+          memoryId: z.string().optional(),
+          action: z.string().optional(),
+        }),
+      )
+      if (!parsed.success) return parsed.response
+      const body = parsed.data
       const memoryType = body.memoryType ?? 'fact'
       const memoryId = body.memoryId ?? body.id
       if (!memoryId) {
@@ -282,18 +281,18 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       if (!id) {
         return errorResponse('fact id required', 'ValidationError', 400)
       }
-      let body: { verified?: boolean; object?: unknown; predicate?: string; by?: string }
-      try {
-        body = (await req.json()) as {
-          verified?: boolean
-          object?: unknown
-          predicate?: string
-          by?: string
-        }
-      } catch {
-        return errorResponse('invalid json body', 'ValidationError', 400)
-      }
-      const by = (body.by as string) ?? 'user'
+      const parsed = await parseRequestBody(
+        req,
+        z.object({
+          verified: z.boolean().optional(),
+          object: z.unknown().optional(),
+          predicate: z.string().optional(),
+          by: z.string().optional(),
+        }),
+      )
+      if (!parsed.success) return parsed.response
+      const body = parsed.data
+      const by = body.by ?? 'user'
       try {
         if (body.verified === true) {
           await memory.verifyFact(id, by)
@@ -319,12 +318,11 @@ export function createMemoryVizRouter(memory: MemoryEngine, curatedStore?: Memor
       if (!id) {
         return errorResponse('fact id required', 'ValidationError', 400)
       }
-      let body: { by?: string } = {}
-      try {
-        body = (await req.json()) as { by?: string }
-      } catch {
-        body = {}
-      }
+      const parsed = z
+        .object({ by: z.string().optional() })
+        .safeParse(await req.json().catch(() => ({})))
+      // [audit] log the error with context here
+      const body = parsed.success ? parsed.data : {}
       const by = body?.by ?? 'user'
       try {
         await memory.rejectFact(id, by)

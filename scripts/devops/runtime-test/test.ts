@@ -46,6 +46,7 @@ export async function runLiveE2E(backendPort: number, frontendPort: number): Pro
         result.errors.push(`Frontend not accessible: ${frontR.status}`)
       }
     } catch (e) {
+  // [audit] log the error with context here
       // Frontend optional
     }
 

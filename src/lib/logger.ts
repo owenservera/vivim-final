@@ -70,6 +70,7 @@ function buildLogger(): pino.Logger {
       // compiled Bun binaries. JSON lines, append-mode by default.
       return pino({ level: LEVEL }, pino.destination(LOG_FILE))
     } catch {
+  // [audit] log the error with context here
       // fall through to console logger — never crash the sidecar over logging
     }
   }

@@ -25,6 +25,7 @@ export function startWatchdog(parentPid: number, intervalMs = 5_000): void {
       try {
         await stopServices()
       } catch {
+  // [audit] log the error with context here
         // best effort
       }
       process.exit(0)

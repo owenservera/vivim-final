@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
         }),
       })
     } catch {
+  // [audit] log the error with context here
       // Non-fatal — analytics are best-effort
     }
 

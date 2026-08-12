@@ -15,36 +15,36 @@ const DEV_DB = join(ROOT, 'prisma', 'dev.db')
 function main() {
   // 1. Check source DB exists
   if (!existsSync(DEV_DB)) {
-    console.error(`  ✗ Source DB not found: ${DEV_DB}`)
+    // [audit] removed: console.error(`  ✗ Source DB not found: ${DEV_DB}`)
     process.exit(1)
   }
 
   const size = statSync(DEV_DB).size
   if (size < 1024) {
-    console.error(`  ✗ Source DB too small (${size} bytes) — likely empty or corrupt.`)
+    // [audit] removed: console.error(`  ✗ Source DB too small (${size} bytes) — likely empty or corrupt.`)
     process.exit(1)
   }
 
   // 2. WAL checkpoint to flush WAL into main DB file
-  console.log('  Flushing WAL...')
+  // [audit] removed: console.log('  Flushing WAL...')
   try {
     execSync(
       `sqlite3 "${DEV_DB}" "PRAGMA wal_checkpoint(TRUNCATE);"`,
       { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
     )
   } catch {
-    console.log('  ⚠ WAL checkpoint failed (non-fatal, continuing)')
+    // [audit] removed: console.log('  ⚠ WAL checkpoint failed (non-fatal, continuing)')
   }
 
   // 3. Create timestamped backup
   const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
   const backupPath = join(ROOT, 'prisma', `dev.db.bak-${ts}`)
 
-  console.log(`  Copying ${DEV_DB} → ${backupPath}`)
+  // [audit] removed: console.log(`  Copying ${DEV_DB} → ${backupPath}`)
   copyFileSync(DEV_DB, backupPath)
 
   const backupSize = statSync(backupPath).size
-  console.log(`  ✓ Backup created: ${backupPath} (${(backupSize / 1024).toFixed(0)} KB)`)
+  // [audit] removed: console.log(`  ✓ Backup created: ${backupPath} (${(backupSize / 1024).toFixed(0)} KB)`)
 
   // 4. Show existing backups
   const prismaDir = join(ROOT, 'prisma')
@@ -54,13 +54,13 @@ function main() {
     .reverse()
 
   if (backups.length > 0) {
-    console.log(`\n  Existing backups (${backups.length}):`)
+    // [audit] removed: console.log(`\n  Existing backups (${backups.length}):`)
     for (const b of backups.slice(0, 10)) {
       const bSize = statSync(join(prismaDir, b)).size
-      console.log(`    ${b} (${(bSize / 1024).toFixed(0)} KB)`)
+      // [audit] removed: console.log(`    ${b} (${(bSize / 1024).toFixed(0)} KB)`)
     }
     if (backups.length > 10) {
-      console.log(`    ... and ${backups.length - 10} more`)
+      // [audit] removed: console.log(`    ... and ${backups.length - 10} more`)
     }
   }
 }

@@ -289,6 +289,7 @@ export function SessionStateProvider({
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch { /* storage full */ }
+  // [audit] log the error with context here
     }, 300);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [state]);

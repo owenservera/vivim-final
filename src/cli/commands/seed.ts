@@ -9,11 +9,11 @@ export async function runSeed(args: string[]): Promise<void> {
       const { createServerWithEngines } = await import('../../server/index.js')
       const port = Number(process.env.PORT) || 9420
       const _ctx = await createServerWithEngines(port)
-      console.log('Database seeded')
+      // [audit] removed: console.log('Database seeded')
       break
     }
     default:
-      console.error(`Unknown seed command: ${cmd}`)
+      // [audit] removed: console.error(`Unknown seed command: ${cmd}`)
       process.exit(1)
   }
 }

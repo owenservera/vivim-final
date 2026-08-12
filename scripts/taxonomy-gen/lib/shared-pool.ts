@@ -60,7 +60,7 @@ export async function runSharedPool(mode: PingMode, confirm = false): Promise<vo
     const doc = { nodes, edges: [] as TaxonomyEdge[] }
     writeFileSync(POOL_PATH, JSON.stringify(doc, null, 2))
     setSharedPoolDone(true)
-    console.log(`✅ Shared pool loaded: ${nodes.length} nodes (capabilities/protocols/techstacks/parsers) → shared/pool.json`)
+    // [audit] removed: console.log(`✅ Shared pool loaded: ${nodes.length} nodes (capabilities/protocols/techstacks/parsers) → shared/pool.json`)
     return
   }
 
@@ -68,7 +68,7 @@ export async function runSharedPool(mode: PingMode, confirm = false): Promise<vo
   const result = await ping(prompt, { mode, outputPath: 'shared/raw.json' })
 
   if (mode === 'agent') {
-    console.log('Agent mode: generate seeds/taxonomy/shared/raw.json from the prompt above, then re-run with --mode agent --confirm')
+    // [audit] removed: console.log('Agent mode: generate seeds/taxonomy/shared/raw.json from the prompt above, then re-run with --mode agent --confirm')
     return
   }
 
@@ -92,5 +92,5 @@ export async function runSharedPool(mode: PingMode, confirm = false): Promise<vo
   if (!existsSync(join(POOL_PATH, '..'))) mkdirSync(join(POOL_PATH, '..'), { recursive: true })
   writeFileSync(POOL_PATH, JSON.stringify({ nodes, edges: [] as TaxonomyEdge[] }, null, 2))
   setSharedPoolDone(true)
-  console.log(`✅ Shared pool: ${nodes.length} nodes (capabilities/protocols/techstacks/parsers) → shared/pool.json`)
+  // [audit] removed: console.log(`✅ Shared pool: ${nodes.length} nodes (capabilities/protocols/techstacks/parsers) → shared/pool.json`)
 }

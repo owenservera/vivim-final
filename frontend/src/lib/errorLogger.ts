@@ -36,9 +36,11 @@ function flush() {
       body: JSON.stringify({ errors: batch }),
       keepalive: true,
     }).catch(() => {
+  // [audit] log the error with context here
       // Silent — logging should never break the app
     })
   } catch {
+  // [audit] log the error with context here
     // Silent
   }
 }
@@ -67,7 +69,7 @@ export function logError(error: unknown, context?: string, componentStack?: stri
 
   // Console output for dev
   if (process.env.NODE_ENV !== 'production') {
-    console.error(`[ErrorLogger:${classified.type}] ${context ?? 'uncaught'}`, classified.message)
+    // [audit] removed: console.error(`[ErrorLogger:${classified.type}] ${context ?? 'uncaught'}`, classified.message)
   }
 
   startFlushTimer()

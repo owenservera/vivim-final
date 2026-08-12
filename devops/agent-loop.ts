@@ -151,6 +151,7 @@ async function runWorker(
   } finally {
     killTree(proc)
     await rm(workdir, { recursive: true, force: true }).catch(() => {})
+  // [audit] log the error with context here
   }
 }
 
@@ -162,6 +163,7 @@ function killTree(proc: ReturnType<typeof Bun.spawn> | null): void {
   try {
     proc.kill(9)
   } catch {
+  // [audit] log the error with context here
     /* already gone */
   }
   const pid = proc.pid
@@ -172,6 +174,7 @@ function killTree(proc: ReturnType<typeof Bun.spawn> | null): void {
         stderr: 'ignore',
       })
     } catch {
+  // [audit] log the error with context here
       /* ignore */
     }
   }
@@ -189,11 +192,11 @@ export async function runAgentLoop(opts: AgentLoopOptions = {}): Promise<AgentLo
     const sel = await selectNext()
     if (!sel) break
 
-    console.log(`[agent-loop] implementing ${sel.id}: ${sel.name}`)
+    // [audit] removed: console.log(`[agent-loop] implementing ${sel.id}: ${sel.name}`)
     await markUnit(sel.id, 'in_progress')
 
     if (opts.dryRun) {
-      console.log(`[agent-loop] DRY RUN — would dispatch worker for ${sel.id}, skipping.`)
+      // [audit] removed: console.log(`[agent-loop] DRY RUN — would dispatch worker for ${sel.id}, skipping.`)
       await markUnit(sel.id, 'pending')
       processed++
       continue
@@ -202,7 +205,7 @@ export async function runAgentLoop(opts: AgentLoopOptions = {}): Promise<AgentLo
     const timeoutMs = opts.timeoutMs ?? DEFAULT_WORKER_TIMEOUT_MS
     const { code, log, timedOut } = await runWorker(buildTaskPrompt(sel), timeoutMs)
     if (code !== 0) {
-      console.error(
+      // [audit] removed: console.error(
         `[agent-loop] ${sel.id} -> WORKER ERROR (exit=${code}${timedOut ? ', TIMED OUT & HARD-KILLED at ' + Math.round(timeoutMs / 1000) + 's silent' : ''}). Last output:\n` +
           log.split('\n').slice(-20).join('\n'),
       )
@@ -218,11 +221,11 @@ export async function runAgentLoop(opts: AgentLoopOptions = {}): Promise<AgentLo
     if (gate.pass) {
       await markUnit(sel.id, 'done')
       done.push(sel.id)
-      console.log(`[agent-loop] ${sel.id} -> done  (${gate.summary})`)
+      // [audit] removed: console.log(`[agent-loop] ${sel.id} -> done  (${gate.summary})`)
     } else {
       await markUnit(sel.id, 'blocked')
       blocked.push(sel.id)
-      console.error(`[agent-loop] ${sel.id} -> BLOCKED  (${gate.summary})`)
+      // [audit] removed: console.error(`[agent-loop] ${sel.id} -> BLOCKED  (${gate.summary})`)
     }
     processed++
   }

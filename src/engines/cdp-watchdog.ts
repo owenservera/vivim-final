@@ -50,6 +50,7 @@ export function setupDialogWatchdog(
 ): void {
   // Enable dialog handling via CDP
   transport.send(slaveId, 'Page.enable').catch(() => {})
+  // [audit] log the error with context here
 
   // Listen for dialog events — auto-dismiss all dialogs
   watchdog.on('dialog', async (_event, data) => {

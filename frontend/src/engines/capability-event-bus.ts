@@ -68,6 +68,7 @@ export class CapabilityEventBus {
           try {
             ws.send(JSON.stringify(event));
           } catch {
+  // [audit] log the error with context here
             // WS may be closed — ignore.
           }
         }

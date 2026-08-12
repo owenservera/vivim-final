@@ -20,40 +20,15 @@ import type { MigrationStep } from './types.js'
  *   - Tag with categories for filtering (e.g., 'provider', 'conversation', 'telemetry')
  */
 export const MIGRATIONS: MigrationStep[] = [
-  // ── Example template (uncomment and adapt when needed) ────────────
-  // {
-  //   id: '001-add-session-lifecycle-table',
-  //   description: 'Add session lifecycle tracking table',
-  //   version: 1,
-  //   tags: ['schema', 'session'],
-  //   up: [
-  //     `CREATE TABLE IF NOT EXISTS session_lifecycle (
-  //        id TEXT PRIMARY KEY,
-  //        provider_session_id TEXT NOT NULL REFERENCES provider_session(id),
-  //        event_type TEXT NOT NULL,
-  //        payload_json TEXT DEFAULT '{}',
-  //        ts INTEGER NOT NULL
-  //      )`,
-  //   ],
-  //   down: [
-  //     `DROP TABLE IF EXISTS session_lifecycle`,
-  //   ],
-  //   estimatedDurationMs: 500,
-  // },
-  //
-  // {
-  //   id: '002-backfill-provider-display-names',
-  //   description: 'Backfill display_name from displayName for legacy providers',
-  //   version: 2,
-  //   tags: ['provider', 'backfill'],
-  //   dependsOn: ['001-add-session-lifecycle-table'],
-  //   up: [
-  //     `UPDATE provider_definition SET display_name = COALESCE(display_name, slug)
-  //      WHERE display_name = '' OR display_name IS NULL`,
-  //   ],
-  //   down: [],
-  //   estimatedDurationMs: 200,
-  // },
+  {
+    id: '001-embed-reindex-v1',
+    description: 'Invalidate pre-HF embeddings (minilm:ts, tfidf); rebuild lazily on next index()',
+    version: 1,
+    tags: ['embedding', 'reindex'],
+    up: [`DELETE FROM memory_embedding WHERE model IN ('minilm:ts', 'tfidf')`],
+    down: [],
+    estimatedDurationMs: 500,
+  },
 ]
 
 /**

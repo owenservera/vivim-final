@@ -2,8 +2,37 @@
 // REST API for frontend UI automation.
 // The agent calls these endpoints to drive the browser — user sees it live.
 
+import { z } from 'zod'
 import { errorResponse, json } from '../server/response.js'
+import { parseRequestBody } from '../server/validate.js'
 import { type ElementSelector, UIAutomator } from './ui-automator.js'
+
+const NavigateSchema = z.object({ url: z.string().min(1), port: z.number().int().optional() })
+const ClickSchema = z.object({
+  selector: z.custom<ElementSelector>(),
+  port: z.number().int().optional(),
+})
+const TypeSchema = z.object({
+  selector: z.custom<ElementSelector>(),
+  text: z.string(),
+  delay: z.number().optional(),
+  port: z.number().int().optional(),
+})
+const ClearSchema = z.object({
+  selector: z.custom<ElementSelector>(),
+  port: z.number().int().optional(),
+})
+const PressSchema = z.object({
+  key: z.string().min(1),
+  modifiers: z
+    .object({
+      ctrl: z.boolean().optional(),
+      shift: z.boolean().optional(),
+      alt: z.boolean().optional(),
+    })
+    .optional(),
+  port: z.number().int().optional(),
+})
 
 let automator: UIAutomator | null = null
 
@@ -24,56 +53,48 @@ export function createAutomationRouter() {
     try {
       // POST /api/automate/navigate — navigate to URL
       if (pathname === '/api/automate/navigate' && method === 'POST') {
-        const body = (await req.json()) as { url: string; port?: number }
-        if (!body.url) return errorResponse('url required', 'ValidationError', 400)
-        const auto = await getAutomator(body.port)
-        const result = await auto.navigate(body.url)
+        const parsed = await parseRequestBody(req, NavigateSchema)
+        if (!parsed.success) return parsed.response
+        const auto = await getAutomator(parsed.data.port)
+        const result = await auto.navigate(parsed.data.url)
         return json(result)
       }
 
       // POST /api/automate/click — click an element
       if (pathname === '/api/automate/click' && method === 'POST') {
-        const body = (await req.json()) as { selector: ElementSelector; port?: number }
-        if (!body.selector) return errorResponse('selector required', 'ValidationError', 400)
-        const auto = await getAutomator(body.port)
-        const result = await auto.click(body.selector)
+        const parsed = await parseRequestBody(req, ClickSchema)
+        if (!parsed.success) return parsed.response
+        const auto = await getAutomator(parsed.data.port)
+        const result = await auto.click(parsed.data.selector)
         return json(result)
       }
 
       // POST /api/automate/type — type text into an element
       if (pathname === '/api/automate/type' && method === 'POST') {
-        const body = (await req.json()) as {
-          selector: ElementSelector
-          text: string
-          delay?: number
-          port?: number
-        }
-        if (!body.selector || body.text === undefined)
-          return errorResponse('selector and text required', 'ValidationError', 400)
-        const auto = await getAutomator(body.port)
-        const result = await auto.type(body.selector, body.text, { delay: body.delay })
+        const parsed = await parseRequestBody(req, TypeSchema)
+        if (!parsed.success) return parsed.response
+        const auto = await getAutomator(parsed.data.port)
+        const result = await auto.type(parsed.data.selector, parsed.data.text, {
+          delay: parsed.data.delay,
+        })
         return json(result)
       }
 
       // POST /api/automate/clear — clear an input
       if (pathname === '/api/automate/clear' && method === 'POST') {
-        const body = (await req.json()) as { selector: ElementSelector; port?: number }
-        if (!body.selector) return errorResponse('selector required', 'ValidationError', 400)
-        const auto = await getAutomator(body.port)
-        const result = await auto.clear(body.selector)
+        const parsed = await parseRequestBody(req, ClearSchema)
+        if (!parsed.success) return parsed.response
+        const auto = await getAutomator(parsed.data.port)
+        const result = await auto.clear(parsed.data.selector)
         return json(result)
       }
 
       // POST /api/automate/press — press a key
       if (pathname === '/api/automate/press' && method === 'POST') {
-        const body = (await req.json()) as {
-          key: string
-          modifiers?: { ctrl?: boolean; shift?: boolean; alt?: boolean }
-          port?: number
-        }
-        if (!body.key) return errorResponse('key required', 'ValidationError', 400)
-        const auto = await getAutomator(body.port)
-        const result = await auto.pressKey(body.key, body.modifiers)
+        const parsed = await parseRequestBody(req, PressSchema)
+        if (!parsed.success) return parsed.response
+        const auto = await getAutomator(parsed.data.port)
+        const result = await auto.pressKey(parsed.data.key, parsed.data.modifiers)
         return json(result)
       }
 
@@ -81,7 +102,7 @@ export function createAutomationRouter() {
       if (pathname === '/api/automate/text' && method === 'GET') {
         const portParam = url.searchParams.get('port')
         const selector = Object.fromEntries(url.searchParams) as unknown as ElementSelector
-        const port = portParam ? Number.parseInt(portParam) : undefined
+        const port = portParam ? Number.parseInt(portParam, 10) : undefined
         const auto = await getAutomator(port)
         const text = await auto.getText(selector)
         return json({ ok: true, text })
@@ -91,7 +112,7 @@ export function createAutomationRouter() {
       if (pathname === '/api/automate/value' && method === 'GET') {
         const portParam = url.searchParams.get('port')
         const selector = Object.fromEntries(url.searchParams) as unknown as ElementSelector
-        const port = portParam ? Number.parseInt(portParam) : undefined
+        const port = portParam ? Number.parseInt(portParam, 10) : undefined
         const auto = await getAutomator(port)
         const value = await auto.getValue(selector)
         return json({ ok: true, value })
@@ -101,7 +122,7 @@ export function createAutomationRouter() {
       if (pathname === '/api/automate/exists' && method === 'GET') {
         const portParam = url.searchParams.get('port')
         const selector = Object.fromEntries(url.searchParams) as unknown as ElementSelector
-        const port = portParam ? Number.parseInt(portParam) : undefined
+        const port = portParam ? Number.parseInt(portParam, 10) : undefined
         const auto = await getAutomator(port)
         const exists = await auto.exists(selector)
         return json({ ok: true, exists })
@@ -110,7 +131,7 @@ export function createAutomationRouter() {
       // GET /api/automate/screenshot — take screenshot
       if (pathname === '/api/automate/screenshot' && method === 'GET') {
         const portParam = url.searchParams.get('port')
-        const port = portParam ? Number.parseInt(portParam) : undefined
+        const port = portParam ? Number.parseInt(portParam, 10) : undefined
         const auto = await getAutomator(port)
         const data = await auto.screenshot()
         return json({ ok: true, screenshot: data })
@@ -129,6 +150,7 @@ export function createAutomationRouter() {
       if (pathname === '/api/automate/reset' && method === 'POST') {
         if (automator) {
           await automator.disconnect().catch(() => {})
+          // [audit] log the error with context here
           automator = null
         }
         return json({ ok: true, detail: 'Automator reset' })

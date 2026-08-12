@@ -93,6 +93,7 @@ async function scanLiveChromePorts(startPort = 9222, endPort = 9350): Promise<Li
             pageUrl = chat?.url ?? pages[0]?.url ?? null
             pageTitle = chat?.title ?? pages[0]?.title ?? null
           } catch { /* optional */ }
+  // [audit] log the error with context here
           live.push({
             debugPort: port,
             browser: j.Browser ?? 'Chrome',
@@ -103,6 +104,7 @@ async function scanLiveChromePorts(startPort = 9222, endPort = 9350): Promise<Li
           })
         })
         .catch(() => { /* port not live */ }),
+  // [audit] log the error with context here
     )
   }
   await Promise.all(promises)
@@ -131,9 +133,11 @@ function scanProfiles(baseDir: string): ProfileContext[] {
             const meta = JSON.parse(require('node:fs').readFileSync(metaPath, 'utf8'))
             lastUsed = meta.lastUsed ? new Date(meta.lastUsed) : null
           } catch { /* ignore */ }
+  // [audit] log the error with context here
         }
         let sizeBytes = 0
         try { sizeBytes = statSync(dir).size } catch { /* ignore */ }
+  // [audit] log the error with context here
         profiles.push({
           providerId: prov.name,
           accountId: acct.name,
@@ -145,6 +149,7 @@ function scanProfiles(baseDir: string): ProfileContext[] {
       }
     }
   } catch { /* ignore */ }
+  // [audit] log the error with context here
   return profiles
 }
 
@@ -184,6 +189,7 @@ export async function generatePreflightContext(): Promise<PreflightSnapshot> {
       isDefault: r.isDefault === 1,
     }))
   } catch { /* DB not available */ }
+  // [audit] log the error with context here
 
   // 2. Scan profiles from chrome-profiles/
   const profileDir = j(repoRoot, 'chrome-profiles')
@@ -283,6 +289,7 @@ export async function generatePreflightContext(): Promise<PreflightSnapshot> {
       }
     }
   } catch { /* registry not available */ }
+  // [audit] log the error with context here
 
   // 9. Build a suggested-action string that leads with the most actionable item.
   let suggestedAction = ''

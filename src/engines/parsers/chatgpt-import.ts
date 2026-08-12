@@ -95,3 +95,5 @@ export class ChatGPTExportParserImpl implements ChatGPTExportParser {
     }
   }
 }
+
+export { toContentParts } from './to-content-parts.js'

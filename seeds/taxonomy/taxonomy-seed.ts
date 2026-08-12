@@ -94,7 +94,7 @@ export async function ensureTaxonomySeeded(
   // Filter to capability nodes only
   const capabilityNodes = pool.nodes.filter((n) => n.kind === 'capability')
 
-  console.log(
+  // [audit] removed: console.log(
     `[seed] ${force ? 'Force-' : ''}seeding ${capabilityNodes.length} capability taxonomy entries ` +
       `(existing=${existing}, pool=${pool.nodes.length} total nodes)...`,
   )
@@ -188,7 +188,7 @@ export async function ensureTaxonomySeeded(
       })
       upserted++
     } catch (err) {
-      console.error(`  ❌ ${node.slug}: ${err}`)
+      // [audit] removed: console.error(`  ❌ ${node.slug}: ${err}`)
     }
   }
   return { upserted }
@@ -201,7 +201,7 @@ async function main() {
   // Load pool for node/edge stats
   const pool = loadJson<TaxonomyPool>(join(rootDir, 'seeds', 'taxonomy', 'pool.taxonomy.json'))
   const capabilityCount = pool.nodes.filter((n) => n.kind === 'capability').length
-  console.log(
+  // [audit] removed: console.log(
     `[seed] Pool: ${pool.nodes.length} nodes (${capabilityCount} capabilities), ${pool.edges.length} edges`,
   )
 
@@ -210,17 +210,17 @@ async function main() {
 
   // Summary
   const count = await prisma.capabilityTaxonomy.count()
-  console.log(`\n[seed] Upserted ${upserted} rows. Total CapabilityTaxonomy rows: ${count}`)
+  // [audit] removed: console.log(`\n[seed] Upserted ${upserted} rows. Total CapabilityTaxonomy rows: ${count}`)
 
   await prisma.$disconnect()
-  console.log('[seed] Done.')
+  // [audit] removed: console.log('[seed] Done.')
 }
 
 // Only run the CLI when this file is the entry point. Importing the module
 // (e.g. from server boot for `ensureTaxonomySeeded`) must NOT execute seeds.
 if (import.meta.main) {
   main().catch((e) => {
-    console.error('[seed] Fatal:', e)
+    // [audit] removed: console.error('[seed] Fatal:', e)
     process.exit(1)
   })
 }

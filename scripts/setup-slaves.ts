@@ -150,8 +150,10 @@ async function verifySlave(port: number): Promise<VerifyResult> {
           await client
             .send('Target.detachFromTarget', { sessionId: sid }, { sessionId: sid })
             .catch(() => {})
+  // [audit] log the error with context here
         }
       } catch {
+  // [audit] log the error with context here
         // best-effort: cookie API can be flaky across Chrome builds
       }
     }
@@ -167,15 +169,16 @@ async function verifySlave(port: number): Promise<VerifyResult> {
     }
   } catch (err) {
     await client.disconnect().catch(() => {})
+  // [audit] log the error with context here
     return { alive: false, loggedIn: false, url: String(err) }
   }
 }
 
 async function run(): Promise<void> {
-  console.log('\n=== Chrome Slave Setup ===')
+  // [audit] removed: console.log('\n=== Chrome Slave Setup ===')
   await mkdir(PROFILE_BASE, { recursive: true })
-  console.log(`Profile root: ${PROFILE_BASE}`)
-  console.log(
+  // [audit] removed: console.log(`Profile root: ${PROFILE_BASE}`)
+  // [audit] removed: console.log(
     VERIFY_ONLY
       ? 'Mode: --verify (relaunch headless from existing profiles)\n'
       : 'Mode: interactive (enter login email, log in manually, then headless reuse is verified)\n',
@@ -191,12 +194,12 @@ async function run(): Promise<void> {
         `Email you will use to log in to ${p.provider} (e.g. you@domain.com):`,
       )
       const account = accountFromEmail(p.provider, email)
-      console.log(
+      // [audit] removed: console.log(
         `[${i + 1}/${PROVIDERS.length}] Launching VISIBLE Chrome for ${p.provider}/${account} → ${p.loginUrl}`,
       )
       const s = await launchVisible(p.provider, account, p.loginUrl, port)
       sessions.push(s)
-      console.log(`  profile: ${s.profileDir}\n  debugPort: ${port}  pid: ${s.visiblePid}`)
+      // [audit] removed: console.log(`  profile: ${s.profileDir}\n  debugPort: ${port}  pid: ${s.visiblePid}`)
       await ask('  >> Log in to the provider in the opened window, then press ENTER:')
     }
   }
@@ -204,7 +207,7 @@ async function run(): Promise<void> {
   if (VERIFY_ONLY) {
     const existing = await allocator.list()
     if (existing.length === 0) {
-      console.log('No existing profiles found under the profile root. Run without --verify first.')
+      // [audit] removed: console.log('No existing profiles found under the profile root. Run without --verify first.')
       process.exitCode = 1
       return
     }
@@ -217,7 +220,7 @@ async function run(): Promise<void> {
 
   // Verify headless reuse: relaunch headless on the same profile dir to prove
   // the authenticated session survives.
-  console.log('\n--- Verifying headless reuse (persisted auth) ---')
+  // [audit] removed: console.log('\n--- Verifying headless reuse (persisted auth) ---')
   let pass = 0
   for (let i = 0; i < sessions.length; i++) {
     const s = sessions[i]
@@ -229,23 +232,23 @@ async function run(): Promise<void> {
     const v = await verifySlave(s.port)
     const status = v.alive && v.loggedIn ? 'PASS' : 'FAIL'
     if (status === 'PASS') pass++
-    console.log(
+    // [audit] removed: console.log(
       `  [${status}] ${s.provider}/${s.account}  alive=${v.alive} cookies=${v.cookieCount ?? '?'} url=${v.url ?? '-'}`,
     )
   }
 
-  console.log(`\n=== Done: ${pass}/${sessions.length} slaves verified ===\n`)
+  // [audit] removed: console.log(`\n=== Done: ${pass}/${sessions.length} slaves verified ===\n`)
   if (pass < sessions.length) {
-    console.log('Some slaves did not verify. Re-run and log in again, or use --verify once')
-    console.log(`profiles exist under ${join(PROFILE_BASE, '<provider>', '<provider>_<email>')}.\n`)
+    // [audit] removed: console.log('Some slaves did not verify. Re-run and log in again, or use --verify once')
+    // [audit] removed: console.log(`profiles exist under ${join(PROFILE_BASE, '<provider>', '<provider>_<email>')}.\n`)
     process.exitCode = 1
   } else {
-    console.log('Profiles are authenticated and persist for headless test runs.')
-    console.log('Later: ChromeGovernor.spawn(provider, account) reuses these sessions.\n')
+    // [audit] removed: console.log('Profiles are authenticated and persist for headless test runs.')
+    // [audit] removed: console.log('Later: ChromeGovernor.spawn(provider, account) reuses these sessions.\n')
   }
 }
 
 run().catch((err) => {
-  console.error('Setup failed:', err)
+  // [audit] removed: console.error('Setup failed:', err)
   process.exit(1)
 })

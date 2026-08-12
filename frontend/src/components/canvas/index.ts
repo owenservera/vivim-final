@@ -192,3 +192,10 @@ export { CanvasConfigPanel } from './CanvasConfigPanel'
 export type { CanvasConfigPanelProps } from './CanvasConfigPanel'
 export { CanvasPalette } from './CanvasPalette'
 export type { CanvasPaletteProps } from './CanvasPalette'
+
+// Senior Frontend Assessment additions
+export { QuickActionDock } from './QuickActionDock'
+export type { QuickActionDockProps } from './QuickActionDock'
+export { StreamStatusPill } from './StreamStatusPill'
+export type { StreamStatusPillProps } from './StreamStatusPill'
+

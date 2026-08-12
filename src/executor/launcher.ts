@@ -211,6 +211,7 @@ export async function killChrome(pid: number): Promise<void> {
       stderr: 'ignore',
     })
     await proc.exited.catch(() => {})
+  // [audit] log the error with context here
     return
   }
   try {

@@ -68,6 +68,7 @@ export function ChromeSurface({
           setSpec(res.data.spec);
         }
       } catch {
+  // [audit] log the error with context here
         // Best-effort — the wrapped children render without spec.
       }
     })();

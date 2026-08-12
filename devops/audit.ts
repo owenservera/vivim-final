@@ -49,14 +49,14 @@ export function audit(id: string, summary: string): void {
     existing = ''
   }
   if (existing.includes(`-> done [${commit}]`)) {
-    console.log('devops audit: already recorded for this commit')
+    // [audit] removed: console.log('devops audit: already recorded for this commit')
     return
   }
   writeFile(PROGRESS, existing.replace(/\n*$/, '\n') + line, 'utf8', (err) => {
     if (err) {
-      console.error('devops audit: failed to write PROGRESS.md', err)
+      // [audit] removed: console.error('devops audit: failed to write PROGRESS.md', err)
       process.exit(1)
     }
-    console.log(`devops audit: logged ${id} @ ${commit}`)
+    // [audit] removed: console.log(`devops audit: logged ${id} @ ${commit}`)
   })
 }

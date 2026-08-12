@@ -51,6 +51,7 @@ export function WorkspaceSettings({ onClose }: WorkspaceSettingsProps) {
         chromeConfig: { ...form.getValues('chromeConfig'), ...(config.data?.chromeConfig ?? {}) },
       });
     } catch {
+  // [audit] log the error with context here
       // use defaults on error
     } finally {
       setLoading(false);
@@ -80,6 +81,7 @@ export function WorkspaceSettings({ onClose }: WorkspaceSettingsProps) {
       });
       onClose?.();
     } catch {
+  // [audit] log the error with context here
       // silent
     } finally {
       setSaving(false);

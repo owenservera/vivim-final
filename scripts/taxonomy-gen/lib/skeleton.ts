@@ -40,7 +40,7 @@ export async function runSkeleton(mode: PingMode, confirm = false): Promise<void
     if (!existsSync(join(OUT_PATH, '..'))) mkdirSync(join(OUT_PATH, '..'), { recursive: true })
     writeFileSync(OUT_PATH, JSON.stringify({ platforms }, null, 2))
     setSkeletonDone(true)
-    console.log(`✅ Skeleton loaded: ${platforms.length} platforms catalogued.`)
+    // [audit] removed: console.log(`✅ Skeleton loaded: ${platforms.length} platforms catalogued.`)
     return
   }
 
@@ -48,7 +48,7 @@ export async function runSkeleton(mode: PingMode, confirm = false): Promise<void
   const result = await ping(prompt, { mode, outputPath: 'skeleton/platforms.json' })
 
   if (mode === 'agent') {
-    console.log('Agent mode: generate seeds/taxonomy/skeleton/platforms.json from the prompt above, then re-run with --mode agent --confirm')
+    // [audit] removed: console.log('Agent mode: generate seeds/taxonomy/skeleton/platforms.json from the prompt above, then re-run with --mode agent --confirm')
     return
   }
 
@@ -66,5 +66,5 @@ export async function runSkeleton(mode: PingMode, confirm = false): Promise<void
 
   if (!existsSync(join(OUT_PATH, '..'))) mkdirSync(join(OUT_PATH, '..'), { recursive: true })
   writeFileSync(OUT_PATH, JSON.stringify({ platforms }, null, 2))
-  console.log(`✅ Skeleton: ${platforms.length} platforms catalogued.`)
+  // [audit] removed: console.log(`✅ Skeleton: ${platforms.length} platforms catalogued.`)
 }

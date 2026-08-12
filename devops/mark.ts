@@ -72,7 +72,7 @@ export async function markUnitDone(id: string, message?: string): Promise<void> 
   execSync("git add -A", { stdio: "inherit" });
   execSync("git commit --amend --no-edit", { stdio: "inherit" });
 
-  console.log(`marked ${id} -> done @ ${sha} (single commit)`);
+  // [audit] removed: console.log(`marked ${id} -> done @ ${sha} (single commit)`);
 }
 
 /**
@@ -128,5 +128,5 @@ export async function markUnitDoneLoop(id: string, message?: string): Promise<vo
   ).trim();
   execSync(`git reset --soft ${finalSha}`, { stdio: "inherit" });
 
-  console.log(`marked ${id} -> done @ ${finalSha} (loop-safe single commit)`);
+  // [audit] removed: console.log(`marked ${id} -> done @ ${finalSha} (loop-safe single commit)`);
 }

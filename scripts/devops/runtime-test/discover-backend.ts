@@ -16,7 +16,7 @@ export async function discoverBackend(port: number): Promise<BackendCapability[]
   try {
     const r = await fetch(`http://127.0.0.1:${port}/api/capabilities`)
     if (!r.ok) {
-      console.error(`[discover-backend] Failed: ${r.status}`)
+      // [audit] removed: console.error(`[discover-backend] Failed: ${r.status}`)
       return []
     }
     
@@ -32,7 +32,7 @@ export async function discoverBackend(port: number): Promise<BackendCapability[]
     }
     return []
   } catch (e) {
-    console.error('[discover-backend] Error:', e)
+    // [audit] removed: console.error('[discover-backend] Error:', e)
     return []
   }
 }

@@ -53,6 +53,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         setPref({ ...DEFAULT_THEME, ...parsed });
       }
     } catch {
+  // [audit] log the error with context here
       // ignore corrupt storage
     }
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -68,6 +69,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(pref));
     } catch {
+  // [audit] log the error with context here
       // ignore
     }
     const tokens = resolveTokens(pref, systemDark);

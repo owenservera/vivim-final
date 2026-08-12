@@ -31,25 +31,25 @@ export interface StressRunResult {
 
 export async function runStressTests(singleScenarioId?: number): Promise<StressRunResult> {
   const overallStart = Date.now()
-  console.log('')
-  console.log('═══════════════════════════════════════════════════════════════')
-  console.log('  VIVIM STRESS TEST SUITE')
-  console.log('═══════════════════════════════════════════════════════════════')
-  console.log('')
+  // [audit] removed: console.log('')
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log('  VIVIM STRESS TEST SUITE')
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log('')
 
   // 1. Ensure backend is ready
-  console.log('  [harness] Checking backend...')
+  // [audit] removed: console.log('  [harness] Checking backend...')
   const ready = await ensureBackendReady()
   if (!ready) {
-    console.log('  [harness] BACKEND NOT REACHABLE — aborting')
-    console.log('')
+    // [audit] removed: console.log('  [harness] BACKEND NOT REACHABLE — aborting')
+    // [audit] removed: console.log('')
     return {
       ok: false, total: 0, passed: 0, failed: 0, skipped: 0,
       scenarios: [], durationMs: Date.now() - overallStart,
     }
   }
-  console.log('  [harness] Backend reachable')
-  console.log('')
+  // [audit] removed: console.log('  [harness] Backend reachable')
+  // [audit] removed: console.log('')
 
   // 2. Determine which scenarios to run
   const loaders = singleScenarioId
@@ -57,7 +57,7 @@ export async function runStressTests(singleScenarioId?: number): Promise<StressR
     : SCENARIOS
 
   if (loaders.length === 0) {
-    console.log(`  No matching scenario for ID ${singleScenarioId}`)
+    // [audit] removed: console.log(`  No matching scenario for ID ${singleScenarioId}`)
     return {
       ok: false, total: 0, passed: 0, failed: 0, skipped: 0,
       scenarios: [], durationMs: Date.now() - overallStart,
@@ -78,7 +78,7 @@ export async function runStressTests(singleScenarioId?: number): Promise<StressR
 
   for (const loader of loaders) {
     const mod = await loader()
-    console.log(`  ── [S${mod.meta.id}] ${mod.meta.name} (${mod.meta.criticality}) ──`)
+    // [audit] removed: console.log(`  ── [S${mod.meta.id}] ${mod.meta.name} (${mod.meta.criticality}) ──`)
 
     try {
       const result = await mod.run(ctx)
@@ -86,15 +86,15 @@ export async function runStressTests(singleScenarioId?: number): Promise<StressR
 
       const icon = result.skipped ? '⊘' : (result.passed ? '✓' : '✗')
       const label = result.skipped ? 'SKIP' : (result.passed ? 'PASS' : 'FAIL')
-      console.log(`  ${icon} ${label} (${result.durationMs}ms)`)
+      // [audit] removed: console.log(`  ${icon} ${label} (${result.durationMs}ms)`)
       for (const line of result.detail) {
-        console.log(`    ${line}`)
+        // [audit] removed: console.log(`    ${line}`)
       }
       if (result.error) {
-        console.log(`    ERROR: ${result.error}`)
+        // [audit] removed: console.log(`    ERROR: ${result.error}`)
       }
     } catch (err) {
-      console.log(`  ✗ THREW: ${err instanceof Error ? err.message : String(err)}`)
+      // [audit] removed: console.log(`  ✗ THREW: ${err instanceof Error ? err.message : String(err)}`)
       results.push({
         scenarioId: mod.meta.id,
         name: mod.meta.name,
@@ -105,7 +105,7 @@ export async function runStressTests(singleScenarioId?: number): Promise<StressR
         error: err instanceof Error ? err.message : String(err),
       })
     }
-    console.log('')
+    // [audit] removed: console.log('')
   }
 
   const passed = results.filter((r) => r.passed && !r.skipped)
@@ -114,32 +114,32 @@ export async function runStressTests(singleScenarioId?: number): Promise<StressR
   const totalDuration = Date.now() - overallStart
 
   // 3. Scorecard
-  console.log('═══════════════════════════════════════════════════════════════')
-  console.log('  SCORECARD')
-  console.log('═══════════════════════════════════════════════════════════════')
-  console.log(`  Total:   ${results.length}`)
-  console.log(`  Passed:  ${passed.length}`)
-  console.log(`  Skipped: ${skipped.length}`)
-  console.log(`  Failed:  ${failed.length}`)
-  console.log(`  Time:    ${totalDuration}ms`)
-  console.log('')
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log('  SCORECARD')
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log(`  Total:   ${results.length}`)
+  // [audit] removed: console.log(`  Passed:  ${passed.length}`)
+  // [audit] removed: console.log(`  Skipped: ${skipped.length}`)
+  // [audit] removed: console.log(`  Failed:  ${failed.length}`)
+  // [audit] removed: console.log(`  Time:    ${totalDuration}ms`)
+  // [audit] removed: console.log('')
   if (skipped.length > 0) {
-    console.log('  SKIPPED:')
+    // [audit] removed: console.log('  SKIPPED:')
     for (const s of skipped) {
-      console.log(`    [S${s.scenarioId}] ${s.name} — ${s.detail[0] ?? 'no reason'}`)
+      // [audit] removed: console.log(`    [S${s.scenarioId}] ${s.name} — ${s.detail[0] ?? 'no reason'}`)
     }
-    console.log('')
+    // [audit] removed: console.log('')
   }
   if (failed.length > 0) {
-    console.log('  FAILURES:')
+    // [audit] removed: console.log('  FAILURES:')
     for (const f of failed) {
-      console.log(`    [S${f.scenarioId}] ${f.name} — ${f.error ?? 'assertion failed'}`)
+      // [audit] removed: console.log(`    [S${f.scenarioId}] ${f.name} — ${f.error ?? 'assertion failed'}`)
     }
-    console.log('')
+    // [audit] removed: console.log('')
   }
-  console.log('═══════════════════════════════════════════════════════════════')
-  console.log(`  RESULT: ${failed.length === 0 ? 'ALL PASSED' : `${failed.length} FAILURE(S)`}`)
-  console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log(`  RESULT: ${failed.length === 0 ? 'ALL PASSED' : `${failed.length} FAILURE(S)`}`)
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
 
   return {
     ok: failed.length === 0,

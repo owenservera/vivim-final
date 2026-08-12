@@ -89,7 +89,7 @@ export function registerCanvasCapabilities(
   registry: UnifiedCapabilityRegistry,
   svc: CanvasCapabilityServices,
 ): void {
-  registry.register(
+  registry.registerOrReplace(
     canvasCap(
       {
         id: 'cap:canvas:spawn',
@@ -117,7 +117,7 @@ export function registerCanvasCapabilities(
     ),
   )
 
-  registry.register(
+  registry.registerOrReplace(
     canvasCap(
       {
         id: 'cap:canvas:dismiss',
@@ -147,7 +147,7 @@ export function registerCanvasCapabilities(
     ),
   )
 
-  registry.register(
+  registry.registerOrReplace(
     canvasCap(
       {
         id: 'cap:canvas:mutate',
@@ -179,7 +179,7 @@ export function registerCanvasCapabilities(
     ),
   )
 
-  registry.register(
+  registry.registerOrReplace(
     canvasCap(
       {
         id: 'cap:canvas:observe',
@@ -212,7 +212,7 @@ export function registerCanvasCapabilities(
     ),
   )
 
-  registry.register(
+  registry.registerOrReplace(
     canvasCap(
       {
         id: 'cap:canvas:define',
@@ -262,7 +262,7 @@ export function registerCanvasCapabilities(
     ),
   )
 
-  registry.register(
+  registry.registerOrReplace(
     canvasCap(
       {
         id: 'cap:canvas:list',
@@ -290,7 +290,7 @@ export function registerCanvasCapabilities(
   // cap:kernel:query — query oracle
   if (svc.kernelOracle?.query) {
     const query = svc.kernelOracle.query
-    registry.register(
+    registry.registerOrReplace(
       canvasCap(
         {
           id: 'cap:kernel:query',
@@ -327,7 +327,7 @@ export function registerCanvasCapabilities(
   }
 
   // cap:kernel:visibility — oracle visibility
-  registry.register(
+  registry.registerOrReplace(
     canvasCap(
       {
         id: 'cap:kernel:visibility',
@@ -353,7 +353,7 @@ export function registerCanvasCapabilities(
   // cap:kernel:heal — trigger healing
   if (svc.kernelOracle?.actuator) {
     const actuator = svc.kernelOracle.actuator
-    registry.register(
+    registry.registerOrReplace(
       canvasCap(
         {
           id: 'cap:kernel:heal',
@@ -384,7 +384,7 @@ export function registerCanvasCapabilities(
   // cap:config:list — list config scopes
   if (svc.configSurface) {
     const configSurface = svc.configSurface
-    registry.register(
+    registry.registerOrReplace(
       canvasCap(
         {
           id: 'cap:config:list',
@@ -408,7 +408,7 @@ export function registerCanvasCapabilities(
     )
 
     // cap:config:get — get config value
-    registry.register(
+    registry.registerOrReplace(
       canvasCap(
         {
           id: 'cap:config:get',
@@ -439,7 +439,7 @@ export function registerCanvasCapabilities(
     )
 
     // cap:config:set — set config value
-    registry.register(
+    registry.registerOrReplace(
       canvasCap(
         {
           id: 'cap:config:set',

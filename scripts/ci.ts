@@ -80,9 +80,9 @@ function banner(text: string, color: 'gray' | 'green' | 'red' | 'cyan' = 'gray')
   }
   const reset = '\x1b[0m'
   const line = '─'.repeat(Math.max(40, text.length + 4))
-  console.log(`${colors[color]}${line}${reset}`)
-  console.log(`${colors[color]}  ${text}${reset}`)
-  console.log(`${colors[color]}${line}${reset}`)
+  // [audit] removed: console.log(`${colors[color]}${line}${reset}`)
+  // [audit] removed: console.log(`${colors[color]}  ${text}${reset}`)
+  // [audit] removed: console.log(`${colors[color]}${line}${reset}`)
 }
 
 function runStep(step: Step): boolean {
@@ -95,24 +95,24 @@ function runStep(step: Step): boolean {
   })
   if (result.status === 0) {
     banner(`✓ ${step.name} — PASS`, 'green')
-    console.log()
+    // [audit] removed: console.log()
     return true
   }
   if (step.optional) {
     banner(`⚠ ${step.name} — FAILED (optional, continuing)`, 'gray')
-    console.log()
+    // [audit] removed: console.log()
     return true
   }
   banner(`✗ ${step.name} — FAIL (exit ${result.status})`, 'red')
-  console.log()
+  // [audit] removed: console.log()
   return false
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
 banner('vivim-final local CI gate', 'gray')
-console.log()
-if (fix) console.log('Running in --fix mode (lint will auto-write).\n')
+// [audit] removed: console.log()
+// [audit] removed: if (fix) console.log('Running in --fix mode (lint will auto-write).\n')
 
 const startedAt = Date.now()
 let allPassed = true

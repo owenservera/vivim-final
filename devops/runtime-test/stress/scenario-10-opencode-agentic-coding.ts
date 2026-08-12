@@ -13,6 +13,7 @@ export async function run(ctx: StressContext): Promise<ScenarioResult> {
 
   const testFile = join(process.cwd(), '.stress-test-output.ts')
   if (existsSync(testFile)) { try { unlinkSync(testFile) } catch {} }
+  // [audit] log the error with context here
 
   const result = await runOpencodeDirect(
     `Write a TypeScript function to ${testFile.replace(/\\/g, '/')} that calculates Fibonacci numbers using memoization. Only write the file, do not run it.`,
@@ -35,6 +36,7 @@ export async function run(ctx: StressContext): Promise<ScenarioResult> {
       detail.push('  WARN: file exists but may not contain Fibonacci function')
     }
     try { unlinkSync(testFile) } catch {}
+  // [audit] log the error with context here
   }
 
   const passed = result.ok && fileExists

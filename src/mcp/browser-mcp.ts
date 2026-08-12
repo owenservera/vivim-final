@@ -217,6 +217,7 @@ async function run() {
     // inflight set so drain() doesn't wait on itself.
     if (isExitLine) {
       if (session) await session.quit().catch(() => {})
+  // [audit] log the error with context here
       log.info('exit notification received — terminating')
       process.exit(0)
     }
@@ -225,15 +226,18 @@ async function run() {
   rl.on('close', async () => {
     await drain()
     if (session) await session.quit().catch(() => {})
+  // [audit] log the error with context here
     process.exit(0)
   })
 
   process.on('SIGINT', async () => {
     if (session) await session.quit().catch(() => {})
+  // [audit] log the error with context here
     process.exit(0)
   })
   process.on('SIGTERM', async () => {
     if (session) await session.quit().catch(() => {})
+  // [audit] log the error with context here
     process.exit(0)
   })
 }

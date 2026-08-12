@@ -11,7 +11,7 @@ const db = getDb();
 const store = new ProviderStoreImpl(db);
 const report = await runProviderHarness({ store });
 
-console.log(formatHarnessMatrix(report));
+// [audit] removed: console.log(formatHarnessMatrix(report));
 
 if (report.failed > 0) {
   process.exit(1);

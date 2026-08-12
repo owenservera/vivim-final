@@ -4,6 +4,7 @@
 
 import { AppError } from './errors.js'
 import type { ErrorCode } from './errors.js'
+import { getLogger } from '../lib/logger.js'
 
 /**
  * Response shape conventions:
@@ -44,9 +45,7 @@ function startCacheSweep(): void {
       }
     }
     if (deleted > 0) {
-      // Use console.warn here (not getLogger) because this runs before the logger
-      // is initialized, and we want to avoid a circular import with lib/logger.ts.
-      console.debug(`[response-cache] swept ${deleted} expired entries`)
+      getLogger('response-cache').debug(`[response-cache] swept ${deleted} expired entries`)
     }
   }, SWEEP_INTERVAL_MS).unref() // .unref() so the timer doesn't keep the process alive
 }

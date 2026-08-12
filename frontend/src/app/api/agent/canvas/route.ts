@@ -9,6 +9,7 @@ import { type NextRequest, NextResponse } from 'next/server'
  */
 export async function POST(req: NextRequest) {
   const parsed = await req.json().catch(() => ({}))
+  // [audit] log the error with context here
   const prompt = (parsed.prompt ?? '').toString().trim()
 
   if (!prompt) {

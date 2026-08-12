@@ -179,6 +179,7 @@ export class Tracer {
 
     // Export completed span
     this.exporter.export([span]).catch(() => {})
+  // [audit] log the error with context here
   }
 
   addEvent(

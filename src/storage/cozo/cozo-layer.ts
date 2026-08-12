@@ -57,8 +57,8 @@ const GRAPH_DDL: string[] = [
 
 const LCG_DDL: string[] = [
   // LCG: Local Conversation Graph — entity extraction + project inference
-  ':create Entity {id => name, kind, canonical, first_seen, last_seen, mention_count, doc_freq, embedding: <F32;1536>}',
-  ':create ConvMeta {id => provider, account_id, title, updated_at, msg_count, centroid: <F32;1536>}',
+  ':create Entity {id => name, kind, canonical, first_seen, last_seen, mention_count, doc_freq, embedding: <F32;768>}',
+  ':create ConvMeta {id => provider, account_id, title, updated_at, msg_count, centroid: <F32;768>}',
   ':create ConvEntity {conv_id, entity_id, weight, raw_count, provider, account_id, conv_updated_at}',
   ':create Project {id => name, status, confidence, is_user_confirmed, providers, created_at, updated_at, device_id, rev, updated_by, valid_from, superseded_at}',
   ':create ProjectMembership {project_id, conv_id, score, method, added_at, device_id, rev, updated_by, valid_from, superseded_at}',

@@ -19,6 +19,7 @@ function resolveBackendPort(): number {
       if (/^\d+$/.test(v)) return Number.parseInt(v, 10)
     }
   } catch {}
+  // [audit] log the error with context here
   return 9420
 }
 
@@ -77,7 +78,7 @@ function countFiles(dir: string, ext: string): number {
 // ── Health command ──────────────────────────────────────────────────────────
 
 async function cmdHealth(): Promise<void> {
-  console.log('🏥 Vivim Health Check')
+  // [audit] removed: console.log('🏥 Vivim Health Check')
   console.log('')
 
   const backend = await checkHealth(`${BACKEND_URL}/api/health`)

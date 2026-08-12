@@ -38,7 +38,7 @@ describe('architectural boundary invariants (session 1)', () => {
       const b13Warnings = result.warnings.filter((v) => v.id === 'B13')
       // Warnings don't fail the suite, but log them so reviewers notice.
       if (b13Warnings.length > 0) {
-        console.warn(
+        // [audit] removed: console.warn(
           `\n  [B13 warning] boot graph documentation regressed:\n${b13Warnings.map((v) => `    - ${v.file ?? ''} — ${v.message}`).join('\n')}\n`,
         )
       }
@@ -50,7 +50,7 @@ describe('architectural boundary invariants (session 1)', () => {
     it('checkInvariants(undefined, "B") returns pass=true', async () => {
       const result = await checkInvariants(undefined, 'B')
       if (!result.pass) {
-        console.error(
+        // [audit] removed: console.error(
           `\n  [Category B FAIL] ${result.violations.length} blocking violations:\n${result.violations.map((v) => `    - ${v.id}: ${v.file ?? ''}:${v.line ?? ''} — ${v.message}`).join('\n')}\n`,
         )
       }

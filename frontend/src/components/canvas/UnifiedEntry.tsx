@@ -47,9 +47,9 @@ const LAYER_LABELS: Record<string, string> = {
 };
 
 const LAYER_PLACEHOLDERS: Record<string, string> = {
-  chat: 'Message...',
-  build: 'Enter a prompt...',
-  admin: 'Enter a command...',
+  chat: 'Ask Vivim anything or type a prompt...',
+  build: 'Describe what you want to build or generate...',
+  admin: 'Search settings, view logs, or audit workspace...',
 };
 
 export function UnifiedEntry({
@@ -64,7 +64,7 @@ export function UnifiedEntry({
   onTogglePanel,
 }: UnifiedEntryProps) {
   const io = useIO();
-  const { state } = useSessionState();
+  const { state, dispatch } = useSessionState();
   const layerConfig = useMemo(() => getLayerConfig(state.activeLayer), [state.activeLayer]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -225,34 +225,43 @@ export function UnifiedEntry({
         }}
       />
 
-      {/* Layer badge */}
+      {/* Interactive Layer Selector */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 4,
-          padding: '3px 8px',
+          gap: 2,
+          padding: '2px',
           borderRadius: 6,
-          background: `color-mix(in oklch, ${layerColor} 15%, transparent)`,
-          color: layerColor,
-          fontSize: 10,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
+          background: 'var(--muted)',
           flexShrink: 0,
-          cursor: 'default',
         }}
-        title={`Current layer: ${layerLabel} (${layerConfig.chatBehavior})`}
       >
-        <div
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: layerColor,
-          }}
-        />
-        {layerLabel}
+        {(['chat', 'build', 'admin'] as const).map((l) => {
+          const isActive = activeLayer === l;
+          const lColor = LAYER_COLORS[l];
+          return (
+            <button
+              key={l}
+              type="button"
+              onClick={() => dispatch({ type: 'LAYER_SWITCH', layerId: l })}
+              aria-label={`Switch to ${LAYER_LABELS[l]} layer`}
+              style={{
+                padding: '3px 7px',
+                borderRadius: 4,
+                border: 'none',
+                background: isActive ? 'var(--bg)' : 'transparent',
+                color: isActive ? lColor : 'var(--muted-foreground)',
+                fontSize: 10,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {LAYER_LABELS[l]}
+            </button>
+          );
+        })}
       </div>
 
       {/* Divider */}

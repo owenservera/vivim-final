@@ -165,16 +165,19 @@ export function generateStateSnapshot(): StateSnapshot {
       selectorProbe = extractSelectorProbe(readFileSync(selPath, 'utf8'))
     }
   } catch { /* ignore */ }
+  // [audit] log the error with context here
 
   // Schema probe
   const dbPath = join(repoRoot, 'prisma', 'dev.db')
   let dbSize = 0
   try { dbSize = statSync(dbPath).size } catch { /* ignore */ }
+  // [audit] log the error with context here
 
   // Migration count
   const migDir = join(repoRoot, 'prisma', 'migrations')
   let migCount = 0
   try { migCount = readdirSync(migDir).filter((f) => f !== 'migration_lock.toml').length } catch { /* ignore */ }
+  // [audit] log the error with context here
 
   // Test file count
   let unitFiles = 0
@@ -188,6 +191,7 @@ export function generateStateSnapshot(): StateSnapshot {
     integFiles = existsSync(i) ? countTestFiles(i) : 0
     e2eFiles = existsSync(e) ? countTestFiles(e) : 0
   } catch { /* ignore */ }
+  // [audit] log the error with context here
 
   // Component probe — count UiComponent rows from seed
   let compTotal = 0
@@ -209,6 +213,7 @@ export function generateStateSnapshot(): StateSnapshot {
       }
     }
   } catch { /* ignore */ }
+  // [audit] log the error with context here
 
   // Critical gaps detection
   const gaps: string[] = []
@@ -275,6 +280,7 @@ function countTestFiles(dir: string): number {
       }
     }
   } catch { /* ignore */ }
+  // [audit] log the error with context here
   return count
 }
 

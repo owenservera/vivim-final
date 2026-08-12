@@ -57,6 +57,7 @@ class BrowserUnifiedIO implements UnifiedIO {
     try {
       this.authToken = localStorage.getItem('vivim:auth:token');
     } catch {
+  // [audit] log the error with context here
       // SSR or localStorage unavailable
     }
   }
@@ -68,6 +69,7 @@ class BrowserUnifiedIO implements UnifiedIO {
       if (token) localStorage.setItem('vivim:auth:token', token);
       else localStorage.removeItem('vivim:auth:token');
     } catch {
+  // [audit] log the error with context here
       // ignore
     }
   }
@@ -77,6 +79,7 @@ class BrowserUnifiedIO implements UnifiedIO {
       try {
         l(event);
       } catch {
+  // [audit] log the error with context here
         // ignore listener errors
       }
     }
@@ -259,6 +262,7 @@ class BrowserUnifiedIO implements UnifiedIO {
         this.emit({ type: 'sse:event', traceId, url: fullUrl, data, timestamp: Date.now() });
         onEvent(data);
       } catch {
+  // [audit] log the error with context here
         // ignore malformed events
       }
     };

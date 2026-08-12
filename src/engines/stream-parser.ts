@@ -577,5 +577,6 @@ export class StreamParserEngine {
         }),
       })
       .catch(() => {}) // swallow — diagnostic logging is best-effort
+  // [audit] log the error with context here
   }
 }

@@ -13,10 +13,8 @@ const nextConfig = {
   // this, the start script fails with ENOENT because the standalone server
   // is never produced by `next build`.
   typescript: {
-    // TODO(session 3): remove this once frontend typecheck is clean.
-    // Currently ignored because the WP-10 upgrade left ~30 frontend type
-    // errors that don't block the build but should be fixed.
-    ignoreBuildErrors: true,
+    // Enforce strict type checking during builds
+    ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
   images: {
     unoptimized: true,

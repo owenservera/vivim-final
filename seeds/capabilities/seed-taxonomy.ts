@@ -51,7 +51,7 @@ async function main() {
       })
       created++
     } catch (err) {
-      console.error(
+      // [audit] removed: console.error(
         `Failed to upsert ${entry.providerId}/${entry.platformCategory}/${entry.interactionPattern}:`,
         err,
       )
@@ -59,8 +59,8 @@ async function main() {
     }
   }
 
-  console.log(`Capability taxonomy seed complete: ${created} created/updated, ${skipped} skipped`)
+  // [audit] removed: console.log(`Capability taxonomy seed complete: ${created} created/updated, ${skipped} skipped`)
   await prisma.$disconnect()
 }
 
-main().catch(console.error)
+// [audit] removed: main().catch(console.error)

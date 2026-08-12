@@ -17,21 +17,22 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import type { SearchHit, SearchEntityKind } from '../../shared/search';
 import { Truncate } from './Truncate';
+import { Icon, type IconName } from './Icon';
 import { dispatchBehavior } from '@/shared/dispatch-behavior';
 import { useIO } from '@/components/canvas/UnifiedIOProvider';
 import { getSearchHistory, addSearchHistory, type SearchHistoryEntry } from '@/lib/searchHistory';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
-const KIND_GROUPS: Array<{ kind: SearchEntityKind; label: string; icon: string }> = [
-  { kind: 'command', label: 'Commands', icon: '⚡' },
-  { kind: 'workspace', label: 'Workspaces', icon: '📁' },
-  { kind: 'document', label: 'Documents', icon: '📄' },
-  { kind: 'media', label: 'Media', icon: '🖼' },
-  { kind: 'automation', label: 'Automations', icon: '⚙' },
-  { kind: 'agent', label: 'Agents', icon: '🤖' },
-  { kind: 'provider', label: 'Providers', icon: '🔌' },
-  { kind: 'capability', label: 'Capabilities', icon: '🎯' },
-  { kind: 'panel', label: 'Panels', icon: '📋' },
+const KIND_GROUPS: Array<{ kind: SearchEntityKind; label: string; icon: IconName }> = [
+  { kind: 'command',    label: 'Commands',     icon: 'zap' },
+  { kind: 'workspace',  label: 'Workspaces',   icon: 'folder' },
+  { kind: 'document',   label: 'Documents',    icon: 'document' },
+  { kind: 'media',      label: 'Media',        icon: 'image' },
+  { kind: 'automation', label: 'Automations',  icon: 'bolt' },
+  { kind: 'agent',      label: 'Agents',       icon: 'robot' },
+  { kind: 'provider',   label: 'Providers',    icon: 'connections' },
+  { kind: 'capability', label: 'Capabilities', icon: 'sparkle' },
+  { kind: 'panel',      label: 'Panels',       icon: 'layers' },
 ];
 
 export interface CommandPaletteProps {
@@ -78,7 +79,7 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
         const searchData = result.data as { hits?: SearchHit[] } | undefined;
         setHits(searchData?.hits ?? []);
         setSelectedIndex(0);
-        addSearchHistory(query);
+        // History is recorded at execution time (Enter / click), not on every search.
       } catch {
         setHits([]);
       } finally {
@@ -126,6 +127,7 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
         setSelectedIndex((i) => Math.max(0, i - 1));
       } else if (e.key === 'Enter' && filteredHits[selectedIndex]) {
         e.preventDefault();
+        addSearchHistory(query);
         onAction?.(filteredHits[selectedIndex]!);
         onClose();
       }
@@ -173,8 +175,8 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
         }}
       >
         {/* Search input */}
-        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontSize: 18, marginRight: 10, color: 'var(--text-muted)' }}>🔍</span>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid var(--border)', gap: 10 }}>
+          <Icon name="search" size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
           <input
             ref={inputRef}
             value={query}
@@ -236,13 +238,14 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
                     key={e.query}
                     onClick={() => setQuery(e.query)}
                     style={{
-                      display: 'block', width: '100%', textAlign: 'left',
+                      display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
                       padding: '6px 10px', border: 'none', background: 'transparent',
                       color: 'var(--text)', cursor: 'pointer', borderRadius: 4, fontSize: 13,
                       fontFamily: 'inherit',
                     }}
                   >
-                    🕐 {e.query}
+                    <Icon name="history" size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                    {e.query}
                   </button>
                 ))}
               </div>
@@ -258,13 +261,13 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
               <div style={{ padding: 24, color: 'var(--text-subtle)', fontSize: 12 }}>
                 <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--text-muted)' }}>Quick actions</div>
                 {([
-                  { label: 'Ask Vivim', cmd: 'assistant:open', action: () => onOpenAssistant?.() },
-                  { label: 'Open Shell tab', cmd: 'switch-surface:shell' },
-                  { label: 'Open Documents tab', cmd: 'switch-surface:docs' },
-                  { label: 'Open Automation Builder', cmd: 'switch-surface:automation' },
-                  { label: 'Open Agents Builder', cmd: 'switch-surface:agents' },
-                  { label: 'Run "admin db status"', cmd: 'shell:admin db status' },
-                ] as Array<{ label: string; cmd: string; action?: () => void }>).map((a) => (
+                  { label: 'Ask Vivim',               cmd: 'assistant:open',            icon: 'sparkle' as IconName, action: () => onOpenAssistant?.() },
+                  { label: 'Open Shell tab',           cmd: 'switch-surface:shell',      icon: 'terminal' as IconName },
+                  { label: 'Open Documents tab',       cmd: 'switch-surface:docs',       icon: 'document' as IconName },
+                  { label: 'Open Automation Builder',  cmd: 'switch-surface:automation', icon: 'bolt' as IconName },
+                  { label: 'Open Agents Builder',      cmd: 'switch-surface:agents',     icon: 'robot' as IconName },
+                  { label: 'Run "admin db status"',    cmd: 'shell:admin db status',     icon: 'terminal' as IconName },
+                ] as Array<{ label: string; cmd: string; icon: IconName; action?: () => void }>).map((a) => (
                   <button
                     key={a.cmd}
                     onClick={() => {
@@ -276,13 +279,14 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
                       onClose();
                     }}
                     style={{
-                      display: 'block', width: '100%', textAlign: 'left',
+                      display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
                       padding: '6px 10px', border: 'none', background: 'transparent',
                       color: 'var(--text)', cursor: 'pointer', borderRadius: 4, fontSize: 12,
                       fontFamily: 'inherit',
                     }}
                   >
-                    ⚡ {a.label}
+                    <Icon name={a.icon} size={13} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                    {a.label}
                   </button>
                 ))}
               </div>
@@ -296,8 +300,10 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
                   <div style={{
                     padding: '6px 10px 2px', fontSize: 10, fontWeight: 600,
                     color: 'var(--text-subtle)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                    display: 'flex', alignItems: 'center', gap: 5,
                   }}>
-                    {icon} {label}
+                    <Icon name={icon} size={11} />
+                    {label}
                   </div>
                   {groupHits.map((hit) => {
                     const flatIdx = filteredHits.indexOf(hit);
@@ -306,6 +312,7 @@ export function CommandPalette({ open, onClose, onAction, onOpenAssistant, works
                       <button
                         key={`${hit.kind}|${hit.id}`}
                         onClick={() => {
+                          addSearchHistory(query);
                           onAction?.(hit);
                           onClose();
                         }}

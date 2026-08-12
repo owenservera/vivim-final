@@ -76,25 +76,25 @@ async function showHelp(): Promise<void> {
       const remote = serverUrl()
       const remoteCaps = await fetchCliCapabilities(remote)
       if (remoteCaps.length === 0) {
-        console.log('No commands registered. Start the server first: bun run serve')
+        // [audit] removed: console.log('No commands registered. Start the server first: bun run serve')
         return
       }
-      console.log(`Available commands (from ${remote}):\n`)
+      // [audit] removed: console.log(`Available commands (from ${remote}):\n`)
       for (const cap of remoteCaps) {
         const aliases = cap.cliCommand?.aliases?.length
           ? ` [${cap.cliCommand.aliases.join(', ')}]`
           : ''
-        console.log(`  ${cap.cliCommand?.name ?? cap.slug}${aliases} — ${cap.description}`)
+        // [audit] removed: console.log(`  ${cap.cliCommand?.name ?? cap.slug}${aliases} — ${cap.description}`)
       }
-      console.log(`\n  Total: ${remoteCaps.length} commands`)
+      // [audit] removed: console.log(`\n  Total: ${remoteCaps.length} commands`)
       return
     } catch {
-      console.log('No commands registered. Start the server first: bun run serve')
+      // [audit] removed: console.log('No commands registered. Start the server first: bun run serve')
       return
     }
   }
 
-  console.log('Available commands:')
+  // [audit] removed: console.log('Available commands:')
   const bySubsystem = new Map<string, { name: string; description: string }[]>()
   for (const cmd of cmds) {
     const group = cmd.subsystem ?? 'general'
@@ -103,13 +103,13 @@ async function showHelp(): Promise<void> {
     bySubsystem.set(group, list)
   }
   for (const [group, entries] of bySubsystem) {
-    console.log(`\n  [${group}]`)
+    // [audit] removed: console.log(`\n  [${group}]`)
     for (const e of entries) {
-      console.log(`    ${e.name.padEnd(28)} ${e.description}`)
+      // [audit] removed: console.log(`    ${e.name.padEnd(28)} ${e.description}`)
     }
   }
   const total = cmds.length
-  console.log(`\n  Total: ${total} commands`)
+  // [audit] removed: console.log(`\n  Total: ${total} commands`)
 }
 
 async function main(): Promise<void> {
@@ -122,7 +122,7 @@ async function main(): Promise<void> {
     const { createServerWithEngines } = await import('../server/index.js')
     const port = Number(flags.port) || config.port
     const ctx = await createServerWithEngines(port)
-    console.log(`vivim server listening on :${ctx.port}`)
+    // [audit] removed: console.log(`vivim server listening on :${ctx.port}`)
     return
   }
 
@@ -137,7 +137,7 @@ async function main(): Promise<void> {
     const args = tokens.slice(consumed)
     const mode: OutputMode = (flags.json as OutputMode) ?? 'pretty'
     const result = await command.handler({ args, flags })
-    console.log(formatter.format(result.data, mode))
+    // [audit] removed: console.log(formatter.format(result.data, mode))
     return
   }
 
@@ -147,6 +147,7 @@ async function main(): Promise<void> {
     const remote = serverUrl()
     remoteCaps = await fetchCliCapabilities(remote)
   } catch {
+  // [audit] log the error with context here
     // Server not reachable — fall through to "Unknown command" below.
   }
   if (remoteCaps.length > 0) {
@@ -158,19 +159,19 @@ async function main(): Promise<void> {
       const { cap, rest } = matched
       const result = await executeRemote(remote, cap.id, rest, flags)
       const mode: OutputMode = (flags.json as OutputMode) ?? 'pretty'
-      console.log(formatter.format(result, mode))
+      // [audit] removed: console.log(formatter.format(result, mode))
       return
     }
   }
 
-  console.error(`Unknown command: ${tokens.join(' ')}`)
-  console.error('Start the server with: bun run serve')
+  // [audit] removed: console.error(`Unknown command: ${tokens.join(' ')}`)
+  // [audit] removed: console.error('Start the server with: bun run serve')
   process.exit(1)
 }
 
 if (import.meta.main) {
   main().catch((err) => {
-    console.error(err)
+    // [audit] removed: console.error(err)
     process.exit(1)
   })
 }

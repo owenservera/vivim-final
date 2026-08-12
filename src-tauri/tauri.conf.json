@@ -4,12 +4,11 @@
   "identifier": "com.vivim.desktop",
   "build": {
     "beforeDevCommand": "cd frontend && bun run dev",
-    "beforeBuildCommand": "cd frontend && TAURI_STATIC_EXPORT=1 bun run build",
+    "beforeBuildCommand": "bun scripts/tauri/prepare-frontend.ts",
     "devUrl": "http://localhost:3000",
     "frontendDist": "../frontend/out"
   },
   "app": {
-    "title": "Vivim",
     "windows": [
       {
         "title": "Vivim",
@@ -31,12 +30,11 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "dmg", "deb", "appimage"],
+    "targets": ["nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
-      "icons/icon.icns",
       "icons/icon.ico"
     ],
     "linux": {

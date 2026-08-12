@@ -72,6 +72,7 @@ export function getPrisma(): PrismaClient {
     // Fire-and-forget WAL init — completes before first real query in practice
     if (!walApplied) {
       initPrismaWal(client).catch(() => {})
+  // [audit] log the error with context here
     }
   }
   return client

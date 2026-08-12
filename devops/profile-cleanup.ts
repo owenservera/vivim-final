@@ -78,6 +78,7 @@ async function collectLiveSlavePaths(db: CapStoreDb): Promise<Set<string>> {
         })
         if (resp.ok) set.add(resolve(a.profileDir))
       } catch {
+  // [audit] log the error with context here
         // debugPort stale / browser gone — not a live slave
       }
     }),
@@ -226,7 +227,7 @@ export async function runProfileCleanup(argv: string[]): Promise<number> {
   const args = parseArgs(argv)
 
   if (args.sub !== 'cleanup') {
-    console.error(
+    // [audit] removed: console.error(
       'usage: devops profiles cleanup [--force] [--provider=<slug>] [--account=<email>] [--reconcile-db] [--json]',
     )
     return 1
@@ -245,16 +246,16 @@ export async function runProfileCleanup(argv: string[]): Promise<number> {
   plan.mode = args.dryRun ? 'dry-run' : 'enforce'
 
   if (args.json) {
-    console.log(JSON.stringify({ plan }, null, 2))
+    // [audit] removed: console.log(JSON.stringify({ plan }, null, 2))
   } else {
-    console.log(renderPlan(plan))
+    // [audit] removed: console.log(renderPlan(plan))
   }
 
   if (args.dryRun) {
     if (!args.json) {
-      console.log('\ndry-run: no changes made. Pass --force to apply.')
+      // [audit] removed: console.log('\ndry-run: no changes made. Pass --force to apply.')
       if (args.reconcileDb) {
-        console.log('--reconcile-db is a mutation and will only run with --force.')
+        // [audit] removed: console.log('--reconcile-db is a mutation and will only run with --force.')
       }
     }
     return 0
@@ -271,19 +272,19 @@ export async function runProfileCleanup(argv: string[]): Promise<number> {
     if (args.json) {
       // already printed plan; print reconcile summary separately
     } else if (rec.warnings.length || rec.errors.length) {
-      console.log('\nreconcile:')
-      for (const w of rec.warnings) console.log(`  ! ${w}`)
-      for (const e of rec.errors) console.log(`  x ${e}`)
+      // [audit] removed: console.log('\nreconcile:')
+      // [audit] removed: for (const w of rec.warnings) console.log(`  ! ${w}`)
+      // [audit] removed: for (const e of rec.errors) console.log(`  x ${e}`)
     }
   }
 
   const file = await writeSnapshot(snapshot)
-  console.log(`\nsnapshot: ${file}`)
+  // [audit] removed: console.log(`\nsnapshot: ${file}`)
 
   if (args.json) {
-    console.log(JSON.stringify({ result, reconcile: snapshot.reconcile ?? null }, null, 2))
+    // [audit] removed: console.log(JSON.stringify({ result, reconcile: snapshot.reconcile ?? null }, null, 2))
   } else {
-    console.log(renderResult(result))
+    // [audit] removed: console.log(renderResult(result))
   }
 
   return result.errors.length > 0 ? 1 : 0

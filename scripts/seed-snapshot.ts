@@ -18,19 +18,19 @@ const SNAPSHOT_SHM = join(ROOT, 'seeds', 'seed-snapshot.db-shm')
 function main() {
   // 1. Check source DB exists
   if (!existsSync(DEV_DB)) {
-    console.error(`  ✗ Source DB not found: ${DEV_DB}`)
-    console.error('    Run the server first to create and seed the database.')
+    // [audit] removed: console.error(`  ✗ Source DB not found: ${DEV_DB}`)
+    // [audit] removed: console.error('    Run the server first to create and seed the database.')
     process.exit(1)
   }
 
   const size = statSync(DEV_DB).size
   if (size < 1024) {
-    console.error(`  ✗ Source DB too small (${size} bytes) — likely empty or corrupt.`)
+    // [audit] removed: console.error(`  ✗ Source DB too small (${size} bytes) — likely empty or corrupt.`)
     process.exit(1)
   }
 
   // 2. Check source DB has data (provider count)
-  console.log('  Checking source DB is seeded...')
+  // [audit] removed: console.log('  Checking source DB is seeded...')
   try {
     // Use sqlite3 CLI to check provider count (fast, no Prisma needed)
     const count = execSync(
@@ -39,18 +39,18 @@ function main() {
     ).trim()
 
     if (count === '0') {
-      console.error('  ✗ Source DB has no providers — not fully seeded.')
-      console.error('    Run the server once to seed, or use FORCE_SEED=true.')
+      // [audit] removed: console.error('  ✗ Source DB has no providers — not fully seeded.')
+      // [audit] removed: console.error('    Run the server once to seed, or use FORCE_SEED=true.')
       process.exit(1)
     }
-    console.log(`  ✓ Source DB has ${count} providers`)
+    // [audit] removed: console.log(`  ✓ Source DB has ${count} providers`)
   } catch {
     // sqlite3 not available — use Prisma instead
-    console.log('  (sqlite3 CLI not found, skipping provider count check)')
+    // [audit] removed: console.log('  (sqlite3 CLI not found, skipping provider count check)')
   }
 
   // 3. WAL checkpoint to flush WAL into main DB file
-  console.log('  Flushing WAL (PRAGMA wal_checkpoint)...')
+  // [audit] removed: console.log('  Flushing WAL (PRAGMA wal_checkpoint)...')
   try {
     execSync(
       `sqlite3 "${DEV_DB}" "PRAGMA wal_checkpoint(TRUNCATE);"`,
@@ -58,11 +58,11 @@ function main() {
     )
   } catch {
     // Non-fatal — copy may still work if WAL is small
-    console.log('  ⚠ WAL checkpoint failed (non-fatal, continuing)')
+    // [audit] removed: console.log('  ⚠ WAL checkpoint failed (non-fatal, continuing)')
   }
 
   // 4. Copy to snapshot
-  console.log(`  Copying ${DEV_DB} → ${SNAPSHOT}`)
+  // [audit] removed: console.log(`  Copying ${DEV_DB} → ${SNAPSHOT}`)
   copyFileSync(DEV_DB, SNAPSHOT)
 
   // Clean up any WAL/SHM sidecars that might have been created
@@ -73,10 +73,10 @@ function main() {
   }
 
   const snapshotSize = statSync(SNAPSHOT).size
-  console.log(`  ✓ Snapshot created: ${SNAPSHOT} (${(snapshotSize / 1024).toFixed(0)} KB)`)
-  console.log('')
-  console.log('  The snapshot will be used by the server boot to instantly restore')
-  console.log('  a seeded DB on fresh clones. Use FORCE_SEED=true to skip snapshot.')
+  // [audit] removed: console.log(`  ✓ Snapshot created: ${SNAPSHOT} (${(snapshotSize / 1024).toFixed(0)} KB)`)
+  // [audit] removed: console.log('')
+  // [audit] removed: console.log('  The snapshot will be used by the server boot to instantly restore')
+  // [audit] removed: console.log('  a seeded DB on fresh clones. Use FORCE_SEED=true to skip snapshot.')
 }
 
 main()

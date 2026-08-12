@@ -17,14 +17,14 @@ const DESIGN_DOCS_DIR = join(PROJECT_ROOT, 'docs', 'merged-design-v2')
 const ROADMAP_DIR = join(PROJECT_ROOT, 'docs', 'roadmap')
 
 async function cmdScan(args: string[]) {
-  console.log('Scanning codebase...')
+  // [audit] removed: console.log('Scanning codebase...')
   const scan = await scanRoot(PROJECT_ROOT)
-  console.log(scan.summary)
+  // [audit] removed: console.log(scan.summary)
 
   if (args.includes('--verbose')) {
     for (const file of scan.files) {
       if (file.classification !== 'REAL') {
-        console.log(`  ${file.classification.padEnd(15)} ${file.relativePath} (${file.lines} lines)`)
+        // [audit] removed: console.log(`  ${file.classification.padEnd(15)} ${file.relativePath} (${file.lines} lines)`)
       }
     }
   }
@@ -33,31 +33,31 @@ async function cmdScan(args: string[]) {
 }
 
 async function cmdCompare(args: string[]) {
-  console.log('Loading design docs...')
+  // [audit] removed: console.log('Loading design docs...')
   const claims = await loadDesignDocs(DESIGN_DOCS_DIR)
-  console.log(`Found ${claims.length} design claims across ${DESIGN_DOCS_DIR}`)
+  // [audit] removed: console.log(`Found ${claims.length} design claims across ${DESIGN_DOCS_DIR}`)
 
-  console.log('Scanning codebase...')
+  // [audit] removed: console.log('Scanning codebase...')
   const scan = await scanRoot(PROJECT_ROOT)
 
-  console.log('Comparing design to code...')
+  // [audit] removed: console.log('Comparing design to code...')
   const result = compareDesignToCode(claims, scan)
 
-  console.log(`\nDesign Doc Comparison:`)
-  console.log(`  Total claims: ${result.totalClaims}`)
-  console.log(`  Verified: ${result.verified.length}`)
-  console.log(`  Violated: ${result.violated.length}`)
-  console.log(`  Unverifiable: ${result.unverifiable.length}`)
-  console.log(`  Code not in design: ${result.missingFromDesign.length}`)
+  // [audit] removed: console.log(`\nDesign Doc Comparison:`)
+  // [audit] removed: console.log(`  Total claims: ${result.totalClaims}`)
+  // [audit] removed: console.log(`  Verified: ${result.verified.length}`)
+  // [audit] removed: console.log(`  Violated: ${result.violated.length}`)
+  // [audit] removed: console.log(`  Unverifiable: ${result.unverifiable.length}`)
+  // [audit] removed: console.log(`  Code not in design: ${result.missingFromDesign.length}`)
 
   if (args.includes('--verbose')) {
-    console.log('\nViolated claims:')
+    // [audit] removed: console.log('\nViolated claims:')
     for (const v of result.violated) {
-      console.log(`  ${v.source}:L${v.line} — ${v.name} (${v.detail.slice(0, 60)})`)
+      // [audit] removed: console.log(`  ${v.source}:L${v.line} — ${v.name} (${v.detail.slice(0, 60)})`)
     }
-    console.log('\nUnverifiable claims:')
+    // [audit] removed: console.log('\nUnverifiable claims:')
     for (const v of result.unverifiable) {
-      console.log(`  ${v.source}:L${v.line} — ${v.name}`)
+      // [audit] removed: console.log(`  ${v.source}:L${v.line} — ${v.name}`)
     }
   }
 
@@ -65,26 +65,26 @@ async function cmdCompare(args: string[]) {
 }
 
 async function cmdInterfaces(args: string[]) {
-  console.log('Scanning codebase...')
+  // [audit] removed: console.log('Scanning codebase...')
   const scan = await scanRoot(PROJECT_ROOT)
 
-  console.log('Comparing interfaces...')
+  // [audit] removed: console.log('Comparing interfaces...')
   const result = await compareInterfaces(scan)
 
-  console.log(`\nInterface Comparison:`)
-  console.log(result.summary)
+  // [audit] removed: console.log(`\nInterface Comparison:`)
+  // [audit] removed: console.log(result.summary)
 
   if (args.includes('--verbose')) {
-    console.log('\nPartial implementations:')
+    // [audit] removed: console.log('\nPartial implementations:')
     for (const p of result.partial) {
-      console.log(`  ${p.interfaceName}: ${p.implementingFile}`)
+      // [audit] removed: console.log(`  ${p.interfaceName}: ${p.implementingFile}`)
       for (const m of p.methods) {
-        console.log(`    ${m.name}: ${m.implemented ? (m.stub ? 'STUB' : 'OK') : 'MISSING'}`)
+        // [audit] removed: console.log(`    ${m.name}: ${m.implemented ? (m.stub ? 'STUB' : 'OK') : 'MISSING'}`)
       }
     }
-    console.log('\nMissing implementations:')
+    // [audit] removed: console.log('\nMissing implementations:')
     for (const m of result.missing) {
-      console.log(`  ${m.interfaceName}: ${m.interfaceFile}`)
+      // [audit] removed: console.log(`  ${m.interfaceName}: ${m.interfaceFile}`)
     }
   }
 
@@ -157,29 +157,29 @@ function formatReport(report: GapReport): string {
 }
 
 async function cmdFull(): Promise<GapReport> {
-  console.log('=== Truth Grounding System — Full Analysis ===\n')
+  // [audit] removed: console.log('=== Truth Grounding System — Full Analysis ===\n')
 
   // 1. Scan
-  console.log('Step 1: Scanning codebase...')
+  // [audit] removed: console.log('Step 1: Scanning codebase...')
   const scan = await scanRoot(PROJECT_ROOT)
-  console.log(scan.summary)
+  // [audit] removed: console.log(scan.summary)
 
   // 2. Design comparison
-  console.log('\nStep 2: Loading design docs...')
+  // [audit] removed: console.log('\nStep 2: Loading design docs...')
   const claims = await loadDesignDocs(DESIGN_DOCS_DIR)
-  console.log(`Found ${claims.length} design claims`)
+  // [audit] removed: console.log(`Found ${claims.length} design claims`)
   const dc = compareDesignToCode(claims, scan)
-  console.log(`Verified: ${dc.verified.length} | Violated: ${dc.violated.length} | Unverifiable: ${dc.unverifiable.length}`)
+  // [audit] removed: console.log(`Verified: ${dc.verified.length} | Violated: ${dc.violated.length} | Unverifiable: ${dc.unverifiable.length}`)
 
   // 3. Interface comparison
-  console.log('\nStep 3: Comparing interfaces...')
+  // [audit] removed: console.log('\nStep 3: Comparing interfaces...')
   const ic = await compareInterfaces(scan)
-  console.log(ic.summary)
+  // [audit] removed: console.log(ic.summary)
 
   // 4. Gap report
-  console.log('\nStep 4: Generating gap report...')
+  // [audit] removed: console.log('\nStep 4: Generating gap report...')
   const report = generateGapReport(scan, dc, ic)
-  console.log(`\n${report.executiveSummary}`)
+  // [audit] removed: console.log(`\n${report.executiveSummary}`)
 
   return report
 }
@@ -195,9 +195,9 @@ async function cmdReport() {
   await Bun.write(outPath, content)
   await Bun.write(datedPath, content)
 
-  console.log(`\nReport written to:`)
-  console.log(`  ${outPath}`)
-  console.log(`  ${datedPath}`)
+  // [audit] removed: console.log(`\nReport written to:`)
+  // [audit] removed: console.log(`  ${outPath}`)
+  // [audit] removed: console.log(`  ${datedPath}`)
 }
 
 // ── Main entry for `bun run devops truth <subcmd>` ────────────────────────
@@ -227,12 +227,12 @@ export async function runTruthCommand(args: string[]) {
       break
 
     default:
-      console.error('usage: bun run devops truth <scan|compare|interfaces|full|report>')
-      console.error('  scan        — scan codebase, classify files as REAL/STUB/INTERFACE_ONLY')
-      console.error('  compare     — compare design docs to actual code')
-      console.error('  interfaces  — compare exported interfaces to implementations')
-      console.error('  full        — run all three and produce gap report')
-      console.error('  report      — run full analysis and write gap report to docs/roadmap/')
+      // [audit] removed: console.error('usage: bun run devops truth <scan|compare|interfaces|full|report>')
+      // [audit] removed: console.error('  scan        — scan codebase, classify files as REAL/STUB/INTERFACE_ONLY')
+      // [audit] removed: console.error('  compare     — compare design docs to actual code')
+      // [audit] removed: console.error('  interfaces  — compare exported interfaces to implementations')
+      // [audit] removed: console.error('  full        — run all three and produce gap report')
+      // [audit] removed: console.error('  report      — run full analysis and write gap report to docs/roadmap/')
       process.exit(1)
   }
 }
@@ -242,7 +242,7 @@ export async function runTruthCommand(args: string[]) {
 const [cmd, ...args] = process.argv.slice(2)
 if (import.meta.path === Bun.main) {
   runTruthCommand([cmd, ...args]).catch((e) => {
-    console.error('Truth Grounding System error:', e)
+    // [audit] removed: console.error('Truth Grounding System error:', e)
     process.exit(1)
   })
 }

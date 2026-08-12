@@ -98,7 +98,7 @@ export function registerCanvasMutationCaps(
   svc: MutationServices,
 ): void {
   // cap:canvas:set_background
-  registry.register(
+  registry.registerOrReplace(
     makeMutationCap(
       {
         id: 'cap:canvas:set_background',
@@ -155,7 +155,7 @@ export function registerCanvasMutationCaps(
   )
 
   // cap:canvas:add_layer
-  registry.register(
+  registry.registerOrReplace(
     makeMutationCap(
       {
         id: 'cap:canvas:add_layer',
@@ -218,7 +218,7 @@ export function registerCanvasMutationCaps(
   )
 
   // cap:canvas:remove_layer
-  registry.register(
+  registry.registerOrReplace(
     makeMutationCap(
       {
         id: 'cap:canvas:remove_layer',
@@ -266,7 +266,7 @@ export function registerCanvasMutationCaps(
   )
 
   // cap:canvas:set_layout
-  registry.register(
+  registry.registerOrReplace(
     makeMutationCap(
       {
         id: 'cap:canvas:set_layout',
@@ -311,7 +311,7 @@ export function registerCanvasMutationCaps(
   )
 
   // cap:canvas:set_theme
-  registry.register(
+  registry.registerOrReplace(
     makeMutationCap(
       {
         id: 'cap:canvas:set_theme',
@@ -356,7 +356,7 @@ export function registerCanvasMutationCaps(
   )
 
   // Unit 26.5: cap:canvas:undo
-  registry.register(
+  registry.registerOrReplace(
     makeMutationCap(
       {
         id: 'cap:canvas:undo',
@@ -402,7 +402,7 @@ export function registerCanvasMutationCaps(
   )
 
   // Unit 26.5: cap:canvas:history
-  registry.register(
+  registry.registerOrReplace(
     makeMutationCap(
       {
         id: 'cap:canvas:history',

@@ -93,6 +93,7 @@ export class ErrorTracker {
 
     for (const reporter of this.reporters) {
       void reporter.report(tracked).catch(() => {})
+  // [audit] log the error with context here
     }
   }
 

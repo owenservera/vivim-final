@@ -76,11 +76,11 @@ function main() {
   const manualDir = dirname(manualPath)
   if (!existsSync(manualDir)) {
     mkdirSync(manualDir, { recursive: true })
-    console.log(`Created ${manualDir}`)
+    // [audit] removed: console.log(`Created ${manualDir}`)
   }
   if (!existsSync(manualPath)) {
     writeFileSync(manualPath, bootstrapManual())
-    console.log(`Bootstrapped ${manualPath} (minimal manual skeleton).`)
+    // [audit] removed: console.log(`Bootstrapped ${manualPath} (minimal manual skeleton).`)
   }
 
   let manual = readFileSync(manualPath, "utf8")
@@ -103,7 +103,7 @@ function main() {
   const footer = "\n"
   manual = `${before}${header}${table}${footer}${after}`
   writeFileSync(manualPath, manual)
-  console.log(`Inserted ${rows.length} command rows into the user manual.`)
+  // [audit] removed: console.log(`Inserted ${rows.length} command rows into the user manual.`)
 }
 
 main()

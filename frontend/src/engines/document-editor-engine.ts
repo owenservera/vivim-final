@@ -123,6 +123,7 @@ export class DocumentEditorEngine {
           return replace;
         });
       } catch {
+  // [audit] log the error with context here
         // invalid regex
       }
     } else {

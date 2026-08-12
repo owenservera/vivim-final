@@ -1,7 +1,9 @@
 // src/engines/mcp-server-adapter.ts
 // McpServerAdapter — expose Governor + capabilities as MCP tools via WebSocket
 
+import { z } from 'zod'
 import { catchDebug } from '../lib/catch-logger.js'
+import { parseRequestBody } from '../server/validate.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
@@ -190,9 +192,13 @@ export class McpServerAdapter {
         }
 
         if (url.pathname === '/tools/call' && req.method === 'POST') {
+          const parsed = await parseRequestBody(
+            req,
+            z.object({ name: z.string().min(1), input: z.record(z.string(), z.unknown()) }),
+          )
+          if (!parsed.success) return parsed.response
           try {
-            const body = (await req.json()) as { name: string; input: Record<string, unknown> }
-            const result = await this.callTool(body.name, body.input)
+            const result = await this.callTool(parsed.data.name, parsed.data.input)
             return Response.json(result)
           } catch (err) {
             return Response.json(

@@ -266,6 +266,7 @@ export class CDPProxy {
             await this.transport
               ?.send(slaveId, 'Target.activateTarget', { targetId: params.targetId })
               .catch(() => {})
+  // [audit] log the error with context here
             stepsCompleted++
             break
           }

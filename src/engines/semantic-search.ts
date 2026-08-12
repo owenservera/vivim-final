@@ -87,6 +87,8 @@ export class SemanticSearchEngine {
     const results = await this.store.searchByEmbedding(queryEmbedding, {
       limit,
       threshold,
+      model: this.embeddingProvider.name,
+      dimensions: this.embeddingProvider.dimensions,
     })
 
     return results.map((r) => ({
@@ -312,7 +314,13 @@ export async function searchHybridImpl(
   store: {
     searchByEmbedding(
       embedding: number[],
-      opts: { limit?: number; threshold?: number; entityType?: string },
+      opts: {
+        limit?: number
+        threshold?: number
+        entityType?: string
+        model?: string
+        dimensions?: number
+      },
     ): Promise<Array<{ entityId: string; entityType: string; score: number }>>
     upsertEmbedding(input: {
       id: string
@@ -340,6 +348,8 @@ export async function searchHybridImpl(
     semanticResults = await store.searchByEmbedding(queryEmbedding, {
       limit: limit * 3, // Over-fetch to allow for merging with keyword results
       threshold: 0.0,
+      model: provider.name,
+      dimensions: provider.dimensions,
     })
   } catch (e) {
     catchDebug(e, 'semantic-search: embedding failed, falling back to keyword')

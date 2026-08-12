@@ -4,6 +4,7 @@
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { appErrorResponse, errorResponse, json } from '../response.js'
+import { parseRequestBody } from '../validate.js'
 
 export function createUserRouter(ctx: ServerContext) {
   return async function userRouter(req: Request): Promise<Response | undefined> {
@@ -34,8 +35,8 @@ export function createUserRouter(ctx: ServerContext) {
           name: z.string().min(1, 'name is required'),
           avatarColor: z.string().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const user = await ctx.userIdentity.createProfile(parsed.data.name, {
           avatarColor: parsed.data.avatarColor,
         })
@@ -45,8 +46,8 @@ export function createUserRouter(ctx: ServerContext) {
       // POST /api/users/switch — switch active profile
       if (req.method === 'POST' && path === '/api/users/switch') {
         const schema = z.object({ userId: z.string().min(1, 'userId is required') })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const result = await ctx.userIdentity.switchProfile(parsed.data.userId)
         return json(result)
       }
@@ -60,8 +61,8 @@ export function createUserRouter(ctx: ServerContext) {
           avatarColor: z.string().optional(),
           avatarUrl: z.string().nullable().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         await ctx.userIdentity.updateProfile(userId, parsed.data)
         const updated = await ctx.userIdentity.getProfile(userId)
         return json({ user: updated })
@@ -78,12 +79,13 @@ export function createUserRouter(ctx: ServerContext) {
       const roleMatch = path.match(/^\/api\/users\/([^/]+)\/role$/)
       if (req.method === 'PATCH' && roleMatch && roleMatch[1]) {
         const userId = roleMatch[1]
-        const body = (await req.json()) as { role?: string }
-        if (!body.role || !['member', 'admin', 'developer'].includes(body.role)) {
-          return errorResponse('role must be member, admin, or developer', 'ValidationError', 400)
-        }
-        await ctx.userIdentity.setRole(userId, body.role as 'member' | 'admin' | 'developer')
-        return json({ ok: true, userId, role: body.role })
+        const parsed = await parseRequestBody(
+          req,
+          z.object({ role: z.enum(['member', 'admin', 'developer']) }),
+        )
+        if (!parsed.success) return parsed.response
+        await ctx.userIdentity.setRole(userId, parsed.data.role)
+        return json({ ok: true, userId, role: parsed.data.role })
       }
     } catch (err) {
       return appErrorResponse(err)

@@ -120,6 +120,7 @@ export class StoreBackedPolicyEnforcer implements IPolicyEnforcer {
         const url = new URL(targetHost)
         host = url.hostname
       } catch {
+  // [audit] log the error with context here
         // Not a URL — use as-is
       }
       const isLocal =

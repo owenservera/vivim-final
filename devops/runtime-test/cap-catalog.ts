@@ -41,6 +41,7 @@ export function generateCatalog(): { ok: boolean; capabilities: CatalogCap[]; er
       mkdirSync('.runtime', { recursive: true })
       writeFileSync(OUT, JSON.stringify({ generatedAt: Date.now(), capabilities: caps }, null, 2), 'utf8')
     } catch {
+  // [audit] log the error with context here
       // best-effort persistence
     }
     return { ok: true, capabilities: caps }

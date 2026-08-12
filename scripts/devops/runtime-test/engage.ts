@@ -60,7 +60,7 @@ export async function engageBrowser(): Promise<EngageResult> {
       }
     } catch (e) {
       // Slave spawn failed - log but continue
-      console.error(`[engage] Failed to spawn ${provider.id}:`, e)
+      // [audit] removed: console.error(`[engage] Failed to spawn ${provider.id}:`, e)
       slaves.push({
         slaveId: 'failed',
         provider: provider.id,

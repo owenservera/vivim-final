@@ -61,8 +61,8 @@ fetchWithPreconnect.preconnect = () => {};
 global.fetch = fetchWithPreconnect;
 
 // Mock console.error to suppress React act() warnings in tests
-const originalError = console.error;
-console.error = (...args: unknown[]) => {
+// [audit] removed: const originalError = console.error;
+// [audit] removed: console.error = (...args: unknown[]) => {
   if (
     typeof args[0] === 'string' &&
     args[0].includes('Warning: An update to')

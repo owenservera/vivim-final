@@ -163,8 +163,8 @@ function inferKind(name: string): 'action' | 'query' | 'state' | 'config' | 'nav
 
 export function runOpenClawHarvest(): { areaCount: number; catCount: number; featCount: number; covCount: number; nodeCount: number; edgeCount: number; docPath: string } {
   if (!existsSync(YAML_PATH)) {
-    console.error(`OpenClaw taxonomy.yaml not found at ${YAML_PATH}`)
-    console.error('Run the research clone step first (fetch research-clones/openclaw-core/taxonomy.yaml).')
+    // [audit] removed: console.error(`OpenClaw taxonomy.yaml not found at ${YAML_PATH}`)
+    // [audit] removed: console.error('Run the research clone step first (fetch research-clones/openclaw-core/taxonomy.yaml).')
     process.exit(1)
   }
   const text = readFileSync(YAML_PATH, 'utf-8')
@@ -293,14 +293,14 @@ export function runOpenClawHarvest(): { areaCount: number; catCount: number; fea
 // Thin CLI entry: run extraction + print summary.
 function main() {
   const r = runOpenClawHarvest()
-  console.log(`✅ OpenClaw harvest complete`)
-  console.log(`   areas:     ${r.areaCount}`)
-  console.log(`   categories:${r.catCount}`)
-  console.log(`   features:  ${r.featCount}`)
-  console.log(`   coverageIds:${r.covCount}`)
-  console.log(`   total nodes: ${r.nodeCount} (terms + capabilities)`)
-  console.log(`   total edges: ${r.edgeCount}`)
-  console.log(`   → ${r.docPath}`)
+  // [audit] removed: console.log(`✅ OpenClaw harvest complete`)
+  // [audit] removed: console.log(`   areas:     ${r.areaCount}`)
+  // [audit] removed: console.log(`   categories:${r.catCount}`)
+  // [audit] removed: console.log(`   features:  ${r.featCount}`)
+  // [audit] removed: console.log(`   coverageIds:${r.covCount}`)
+  // [audit] removed: console.log(`   total nodes: ${r.nodeCount} (terms + capabilities)`)
+  // [audit] removed: console.log(`   total edges: ${r.edgeCount}`)
+  // [audit] removed: console.log(`   → ${r.docPath}`)
 }
 
 // Only auto-run when invoked directly (not when imported by run.ts).

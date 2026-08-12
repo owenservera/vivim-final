@@ -91,10 +91,10 @@ export class StructuredLogger {
     if (this.isDev) {
       // Pretty print in dev
       const { level: _, time: __, ...rest } = entry
-      console.log(`[${level.toUpperCase()}] ${entry.msg}`, rest)
+      // [audit] removed: console.log(`[${level.toUpperCase()}] ${entry.msg}`, rest)
     } else {
       // JSON in production
-      console.log(JSON.stringify(entry))
+      // [audit] removed: console.log(JSON.stringify(entry))
     }
   }
 

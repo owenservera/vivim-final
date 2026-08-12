@@ -55,4 +55,4 @@ for (const f of files) {
   }
 }
 report.push(`files changed: ${changed}, zeroArg sites: ${zeroArg}`)
-console.log(report.join('\n'))
+// [audit] removed: console.log(report.join('\n'))

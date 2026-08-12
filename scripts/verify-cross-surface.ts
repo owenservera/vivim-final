@@ -88,8 +88,8 @@ const SLOT_ID_SET = new Set<string>(SLOT_IDS)
 
 function loadNodes(): TaxonomyNode[] {
   if (!existsSync(SEED_TARGET)) {
-    console.error(`[verify-cross-surface] pool not found: ${SEED_TARGET}`)
-    console.error('[verify-cross-surface] run `bun run taxonomy-gen merge` first')
+    // [audit] removed: console.error(`[verify-cross-surface] pool not found: ${SEED_TARGET}`)
+    // [audit] removed: console.error('[verify-cross-surface] run `bun run taxonomy-gen merge` first')
     process.exit(2)
   }
   const doc = JSON.parse(readFileSync(SEED_TARGET, 'utf-8')) as { nodes?: unknown[] }
@@ -361,56 +361,56 @@ function buildReport(
 }
 
 function render(report: Report): void {
-  console.log('═══════════════════════════════════════════════════════════════')
-  console.log('              CROSS-SURFACE VERIFICATION REPORT')
-  console.log('═══════════════════════════════════════════════════════════════')
-  console.log(`Mode: ${report.mode}`)
-  console.log(`Capabilities: ${report.total}  Passed: ${report.passed}  Failed: ${report.failed}`)
-  console.log('')
-  console.log('Surface coverage:')
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log('              CROSS-SURFACE VERIFICATION REPORT')
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log(`Mode: ${report.mode}`)
+  // [audit] removed: console.log(`Capabilities: ${report.total}  Passed: ${report.passed}  Failed: ${report.failed}`)
+  // [audit] removed: console.log('')
+  // [audit] removed: console.log('Surface coverage:')
   for (const [surface, { required, ok }] of Object.entries(report.bySurface)) {
     const icon = ok === required ? '✓' : '✗'
-    console.log(`  ${icon} ${surface.padEnd(4)}: ${ok}/${required} resolved`)
+    // [audit] removed: console.log(`  ${icon} ${surface.padEnd(4)}: ${ok}/${required} resolved`)
   }
   if (report.mode.includes('live')) {
-    console.log('')
-    console.log(
+    // [audit] removed: console.log('')
+    // [audit] removed: console.log(
       `Live API check: ${report.liveApi.ok ? '✓' : '✗'} (${report.liveApi.checked} endpoints)`,
     )
-    for (const f of report.liveApi.failures) console.log(`  ✗ ${f}`)
+    // [audit] removed: for (const f of report.liveApi.failures) console.log(`  ✗ ${f}`)
   }
   if (report.runtimeCli.checked > 0) {
-    console.log('')
-    console.log(
+    // [audit] removed: console.log('')
+    // [audit] removed: console.log(
       `Runtime CLI dispatch: ${report.runtimeCli.passed}/${report.runtimeCli.checked} passed`,
     )
     for (const f of report.runtimeCli.failures) {
-      console.log(`  ✗ ${f.slug} (${f.cliName}) exit=${f.exitCode}`)
-      if (f.stderr) console.log(`      stderr: ${f.stderr}`)
+      // [audit] removed: console.log(`  ✗ ${f.slug} (${f.cliName}) exit=${f.exitCode}`)
+      // [audit] removed: if (f.stderr) console.log(`      stderr: ${f.stderr}`)
     }
   }
   if (report.aliasCollisions.length > 0) {
-    console.log('')
-    console.log(`Alias collisions: ${report.aliasCollisions.length}`)
+    // [audit] removed: console.log('')
+    // [audit] removed: console.log(`Alias collisions: ${report.aliasCollisions.length}`)
     for (const c of report.aliasCollisions) {
-      console.log(`  ⚠ "${c.alias}" → ${c.slugs.join(', ')}`)
+      // [audit] removed: console.log(`  ⚠ "${c.alias}" → ${c.slugs.join(', ')}`)
     }
   }
   if (report.failed > 0) {
-    console.log('')
-    console.log('Surface spec failures:')
+    // [audit] removed: console.log('')
+    // [audit] removed: console.log('Surface spec failures:')
     for (const f of report.findings) {
       const failedSurfaces = (Object.keys(f.checks) as (keyof SurfaceCheck)[]).filter(
         (k) => f.surfaces.includes(k) && !f.checks[k],
       )
       if (f.issues.length === 0 && failedSurfaces.length === 0) continue
-      console.log(`  ✗ ${f.slug} (${f.capId ?? 'no-capId'})`)
-      for (const issue of f.issues) console.log(`      - ${issue}`)
+      // [audit] removed: console.log(`  ✗ ${f.slug} (${f.capId ?? 'no-capId'})`)
+      // [audit] removed: for (const issue of f.issues) console.log(`      - ${issue}`)
       if (failedSurfaces.length > 0)
-        console.log(`      - surface checks failed: ${failedSurfaces.join(', ')}`)
+        // [audit] removed: console.log(`      - surface checks failed: ${failedSurfaces.join(', ')}`)
     }
   }
-  console.log('═══════════════════════════════════════════════════════════════')
+  // [audit] removed: console.log('═══════════════════════════════════════════════════════════════')
 }
 
 async function main() {
@@ -423,7 +423,7 @@ async function main() {
 
   const nodes = loadNodes()
   if (nodes.length === 0) {
-    console.error('[verify-cross-surface] no capability nodes found in pool')
+    // [audit] removed: console.error('[verify-cross-surface] no capability nodes found in pool')
     process.exit(2)
   }
 
@@ -431,7 +431,7 @@ async function main() {
   // against the pool, catching the "3.2% coverage" problem.
   if (runtimeRegistry) {
     const registryUrl = process.env.BACKEND_URL ?? 'http://localhost:9420'
-    console.log(`[runtime-registry] Fetching runtime registry from ${registryUrl}...`)
+    // [audit] removed: console.log(`[runtime-registry] Fetching runtime registry from ${registryUrl}...`)
     try {
       const res = await fetch(`${registryUrl}/api/capabilities?surface=cli`)
       if (!res.ok) throw new Error(`${res.status}`)
@@ -442,18 +442,18 @@ async function main() {
       const inBoth = caps.filter((c) => poolSlugs.has(c.slug)).length
       const onlyInPool = [...poolSlugs].filter((s) => !runtimeSlugs.has(s)).length
       const onlyInRuntime = [...runtimeSlugs].filter((s) => !poolSlugs.has(s)).length
-      console.log(`  Runtime registry: ${caps.length} capabilities`)
-      console.log(`  Pool: ${nodes.length} capability nodes`)
-      console.log(`  Overlap: ${inBoth} (pool slugs found in runtime)`)
-      console.log(`  Pool-only (no handler): ${onlyInPool}`)
-      console.log(`  Runtime-only (not in pool): ${onlyInRuntime}`)
+      // [audit] removed: console.log(`  Runtime registry: ${caps.length} capabilities`)
+      // [audit] removed: console.log(`  Pool: ${nodes.length} capability nodes`)
+      // [audit] removed: console.log(`  Overlap: ${inBoth} (pool slugs found in runtime)`)
+      // [audit] removed: console.log(`  Pool-only (no handler): ${onlyInPool}`)
+      // [audit] removed: console.log(`  Runtime-only (not in pool): ${onlyInRuntime}`)
       if (onlyInPool > nodes.length * 0.5) {
-        console.error(`[runtime-registry] FAIL: >50% of pool capabilities have no runtime handler`)
+        // [audit] removed: console.error(`[runtime-registry] FAIL: >50% of pool capabilities have no runtime handler`)
         process.exit(1)
       }
       process.exit(0)
     } catch (err) {
-      console.error(`[runtime-registry] Failed to fetch registry: ${err}`)
+      // [audit] removed: console.error(`[runtime-registry] Failed to fetch registry: ${err}`)
       process.exit(1)
     }
   }
@@ -470,7 +470,7 @@ async function main() {
 
   let runtimeResults: RuntimeCliCheck[] | undefined
   if (runtime) {
-    console.log('[runtime] Dispatching CLI commands (concurrency 8)...')
+    // [audit] removed: console.log('[runtime] Dispatching CLI commands (concurrency 8)...')
     runtimeResults = await verifyRuntimeCli(nodes)
   }
 
@@ -487,6 +487,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(e)
+  // [audit] removed: console.error(e)
   process.exit(1)
 })

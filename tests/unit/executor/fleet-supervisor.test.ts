@@ -53,6 +53,7 @@ mock.module('../../../src/executor/launcher.js', () => {
         try {
           rmSync(`${dir}/${n}`, { force: true })
         } catch {}
+  // [audit] log the error with context here
       }
     },
   }
@@ -249,6 +250,7 @@ describe('FleetSupervisor pressure gate (ADR-015)', () => {
       cpuOverloadPct: 0,
     })
     await fs.spawn('claude', 'acc1').catch(() => {})
+  // [audit] log the error with context here
     expect(events.some((e) => e.eventType === 'spawn_rejected_pressure')).toBe(true)
   })
 })

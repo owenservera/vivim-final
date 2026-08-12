@@ -1244,6 +1244,7 @@ export class AutonomousExecutionEngine {
           }
         })
         .catch(() => {
+  // [audit] log the error with context here
           /* poll failure — timer fallback handles it */
         })
     })

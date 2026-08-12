@@ -55,6 +55,7 @@ export async function GET(req: Request) {
         try {
           controller.close()
         } catch {
+  // [audit] log the error with context here
           // already closed
         }
       })

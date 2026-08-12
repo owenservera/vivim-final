@@ -157,17 +157,17 @@ export async function runBoundaryEnforcementWithReport(rootDir: string = ROOT): 
     return a.file.localeCompare(b.file)
   })
 
-  console.log(`\n${'═'.repeat(60)}`)
-  console.log('  ARCHITECTURAL BOUNDARY ENFORCEMENT REPORT')
-  console.log(`${'═'.repeat(60)}`)
-  console.log(`  Files scanned:   ${result.filesScanned}`)
-  console.log(`  Imports checked:  ${result.importsChecked}`)
-  console.log(`  Violations found: ${result.violations.length}`)
-  console.log(`${'─'.repeat(60)}`)
+  // [audit] removed: console.log(`\n${'═'.repeat(60)}`)
+  // [audit] removed: console.log('  ARCHITECTURAL BOUNDARY ENFORCEMENT REPORT')
+  // [audit] removed: console.log(`${'═'.repeat(60)}`)
+  // [audit] removed: console.log(`  Files scanned:   ${result.filesScanned}`)
+  // [audit] removed: console.log(`  Imports checked:  ${result.importsChecked}`)
+  // [audit] removed: console.log(`  Violations found: ${result.violations.length}`)
+  // [audit] removed: console.log(`${'─'.repeat(60)}`)
 
   if (findings.length === 0) {
-    console.log('  ✅ No boundary violations detected.')
-    console.log(`${'═'.repeat(60)}\n`)
+    // [audit] removed: console.log('  ✅ No boundary violations detected.')
+    // [audit] removed: console.log(`${'═'.repeat(60)}\n`)
     return
   }
 
@@ -179,15 +179,15 @@ export async function runBoundaryEnforcementWithReport(rootDir: string = ROOT): 
   }
 
   for (const [priority, items] of byPriority) {
-    console.log(`\n  ${priority} (${items.length} violation${items.length === 1 ? '' : 's'})`)
-    console.log(`${'─'.repeat(40)}`)
+    // [audit] removed: console.log(`\n  ${priority} (${items.length} violation${items.length === 1 ? '' : 's'})`)
+    // [audit] removed: console.log(`${'─'.repeat(40)}`)
     for (const f of items) {
-      console.log(`    ${f.file}:${f.line}  ${f.title}`)
-      console.log(`      → ${f.evidence}`)
+      // [audit] removed: console.log(`    ${f.file}:${f.line}  ${f.title}`)
+      // [audit] removed: console.log(`      → ${f.evidence}`)
     }
   }
 
-  console.log(`\n${'═'.repeat(60)}\n`)
+  // [audit] removed: console.log(`\n${'═'.repeat(60)}\n`)
 }
 
 // ── CLI entry point ──────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ if (import.meta.main) {
   const [, , ...args] = process.argv
   const root = args[0] ?? ROOT
   runBoundaryEnforcementWithReport(root).catch((e) => {
-    console.error(e)
+    // [audit] removed: console.error(e)
     process.exit(1)
   })
 }

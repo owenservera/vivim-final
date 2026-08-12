@@ -12,6 +12,7 @@
 // First layer to clear its gate wins; lower-confidence matches are attached as
 // alternatives. Tracks which layer resolved (telemetry for Kernel Oracle).
 
+import type { EmbeddingProvider } from '../semantic-search.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { FuzzyResolver } from './fuzzy-resolver.js'
 import { DeterministicResolver } from './intent-resolver.js'
@@ -25,6 +26,7 @@ export interface LayeredResolverOptions {
   fuzzyThreshold?: number
   semanticThreshold?: number
   llmThreshold?: number
+  embeddingProvider?: EmbeddingProvider
 }
 
 export interface LayerTelemetry {
@@ -47,7 +49,10 @@ export class LayeredResolver implements IntentResolver {
   constructor(registry: CommandPatternRegistry, opts: LayeredResolverOptions = {}) {
     this.deterministic = new DeterministicResolver(registry)
     this.fuzzy = new FuzzyResolver(registry, opts.fuzzyThreshold ?? 0.7)
-    this.semantic = new SemanticResolver(registry, opts.semanticThreshold ?? 0.6)
+    this.semantic = new SemanticResolver(registry, {
+      embeddingProvider: opts.embeddingProvider,
+      threshold: opts.semanticThreshold ?? 0.6,
+    })
     this.llmFallback = opts.llmFallback ?? null
     this.fuzzyThreshold = opts.fuzzyThreshold ?? 0.7
     this.semanticThreshold = opts.semanticThreshold ?? 0.6

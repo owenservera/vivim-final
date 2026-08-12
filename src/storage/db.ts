@@ -265,6 +265,7 @@ export class CapStoreDb {
         update: { updatedAt: now },
       })
       .catch(() => {})
+  // [audit] log the error with context here
 
     const vivimSession = await this.prisma.vivimSession.create({
       data: { id: newId(), state: 'idle', contextJson: '{}', createdAt: now, updatedAt: now },

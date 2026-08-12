@@ -82,6 +82,7 @@ export function clearLedger(): void {
     const { rmSync } = require('node:fs') as typeof import('node:fs')
     rmSync(LEDGER, { force: true })
   } catch { /* ignore */ }
+  // [audit] log the error with context here
 }
 
 export function cycleDir(version: string, cycle: number): string {
@@ -120,4 +121,5 @@ export function clearRuntime(): void {
     const { rmSync } = require('node:fs') as typeof import('node:fs')
     rmSync(RUNTIME_FILE, { force: true })
   } catch { /* ignore */ }
+  // [audit] log the error with context here
 }

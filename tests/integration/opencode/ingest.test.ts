@@ -36,6 +36,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await prisma.$disconnect().catch(() => {})
+  // [audit] log the error with context here
   await new Promise((r) => setTimeout(r, 50))
   rmSync(dir, { recursive: true, force: true })
 })

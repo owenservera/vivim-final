@@ -169,11 +169,11 @@ async function main() {
     : manifest.moments.filter((m) => m.verification && m.verification.type !== 'manual')
 
   if (moments.length === 0) {
-    console.log(`No moments found${targetId ? ` matching "${targetId}"` : ''}`)
+    // [audit] removed: console.log(`No moments found${targetId ? ` matching "${targetId}"` : ''}`)
     process.exit(1)
   }
 
-  console.log(`\nVerifying ${moments.length} moment(s)...\n`)
+  // [audit] removed: console.log(`\nVerifying ${moments.length} moment(s)...\n`)
 
   const results = await Promise.all(moments.map(verifyMoment))
 
@@ -182,12 +182,12 @@ async function main() {
   for (const r of results) {
     const icon = r.pass ? '✓' : '✗'
     const color = r.pass ? '\x1b[32m' : '\x1b[31m'
-    console.log(`${color}${icon}\x1b[0m ${r.id} ${r.name}: ${r.reason}`)
+    // [audit] removed: console.log(`${color}${icon}\x1b[0m ${r.id} ${r.name}: ${r.reason}`)
     if (r.pass) passed++
     else failed++
   }
 
-  console.log(`\n${passed} passed, ${failed} failed\n`)
+  // [audit] removed: console.log(`\n${passed} passed, ${failed} failed\n`)
 
   // Update manifest with verification timestamps
   if (!targetId) {
@@ -204,7 +204,7 @@ async function main() {
     manifest.lastVerified = now
     const { writeFileSync } = await import('node:fs')
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
-    console.log('Manifest updated.')
+    // [audit] removed: console.log('Manifest updated.')
   }
 
   process.exit(failed > 0 ? 1 : 0)

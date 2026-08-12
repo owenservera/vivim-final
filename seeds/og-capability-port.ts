@@ -175,7 +175,7 @@ async function portTaxonomy(): Promise<number> {
       },
     })
     count++
-    if (count % 50 === 0) console.log(`  taxonomy: ${count}/${rows.length}`)
+    // [audit] removed: if (count % 50 === 0) console.log(`  taxonomy: ${count}/${rows.length}`)
   }
   return rows.length
 }
@@ -213,7 +213,7 @@ async function portBindings(): Promise<number> {
       },
     })
     count++
-    if (count % 25 === 0) console.log(`  bindings: ${count}/${rows.length}`)
+    // [audit] removed: if (count % 25 === 0) console.log(`  bindings: ${count}/${rows.length}`)
   }
   return rows.length
 }
@@ -311,6 +311,7 @@ async function portOutcomes(): Promise<number> {
       const binding = await prisma.capabilityBinding.findUnique({ where: { id: r.binding_id } })
       if (binding) capId = binding.globalId
     } catch {
+  // [audit] log the error with context here
       /* leave as binding_id */
     }
 
@@ -338,7 +339,7 @@ async function portOutcomes(): Promise<number> {
       },
     })
     count++
-    if (count % 100 === 0) console.log(`  outcomes: ${count}/${rows.length}`)
+    // [audit] removed: if (count % 100 === 0) console.log(`  outcomes: ${count}/${rows.length}`)
   }
   return rows.length
 }
@@ -438,7 +439,7 @@ async function portFleetEvents(): Promise<number> {
       },
     })
     count++
-    if (count % 50 === 0) console.log(`  fleet events: ${count}/${rows.length}`)
+    // [audit] removed: if (count % 50 === 0) console.log(`  fleet events: ${count}/${rows.length}`)
   }
   return rows.length
 }
@@ -482,7 +483,7 @@ async function portHoles(): Promise<number> {
 /* ── main ────────────────────────────────────────────────────── */
 
 async function main() {
-  console.log('═══ OG cap-store → vivim-final DB port ═══\n')
+  // [audit] removed: console.log('═══ OG cap-store → vivim-final DB port ═══\n')
 
   const steps: { name: string; fn: () => Promise<number> }[] = [
     { name: 'Provider', fn: portProviders },
@@ -503,14 +504,14 @@ async function main() {
     process.stdout.write(`  ${step.name} … `)
     try {
       const count = await step.fn()
-      console.log(`${count} rows`)
+      // [audit] removed: console.log(`${count} rows`)
     } catch (err) {
-      console.error(`ERROR: ${err}`)
+      // [audit] removed: console.error(`ERROR: ${err}`)
     }
   }
 
   // Verify
-  console.log('\n═══ Verification ═══\n')
+  // [audit] removed: console.log('\n═══ Verification ═══\n')
   const checks = [
     ['provider', 'ProviderDefinition'],
     ['capability_taxonomy', 'CapabilityTaxonomy'],
@@ -522,22 +523,22 @@ async function main() {
     ['fleet_event', 'FleetEvent'],
   ]
   // Derived tables: ProviderEndpoint (1 per provider=7), ProviderStreamConfig (6 non-null)
-  console.log('  (derived) ProviderEndpoint: target=7')
-  console.log('  (derived) ProviderStreamConfig: target=6 (qwen has no stream config)')
+  // [audit] removed: console.log('  (derived) ProviderEndpoint: target=7')
+  // [audit] removed: console.log('  (derived) ProviderStreamConfig: target=6 (qwen has no stream config)')
   for (const [ogTable, vfModel] of checks) {
     const ogCount = (og.query(`SELECT COUNT(*) as cnt FROM \`${ogTable}\``).get() as any).cnt
     const vfCount = await (prisma as any)[vfModel as keyof typeof prisma].count()
     const ok = ogCount === vfCount ? '✓' : '✗'
-    console.log(`  ${ok} ${ogTable} → ${vfModel}: OG=${ogCount} VF=${vfCount}`)
+    // [audit] removed: console.log(`  ${ok} ${ogTable} → ${vfModel}: OG=${ogCount} VF=${vfCount}`)
   }
 
   await prisma.$disconnect()
   og.close()
 
-  console.log('\n═══ Done ═══')
+  // [audit] removed: console.log('\n═══ Done ═══')
 }
 
 main().catch((err) => {
-  console.error('FATAL:', err)
+  // [audit] removed: console.error('FATAL:', err)
   process.exit(1)
 })

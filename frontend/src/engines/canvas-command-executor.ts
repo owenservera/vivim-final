@@ -22,7 +22,7 @@ export class CanvasCommandExecutor {
   private agentId: string
   private pendingConfirmations = new Map<
     string,
-    { command: AgentCanvasCommand; resolve: (approved: boolean) => void }
+    { command: AgentCanvasCommand; resolve: (approved: boolean) => void; timer?: ReturnType<typeof setTimeout> }
   >()
 
   constructor(policy: AgentCanvasPolicy) {
@@ -89,7 +89,15 @@ export class CanvasCommandExecutor {
     command: AgentCanvasCommand,
   ): Promise<boolean> {
     return new Promise((resolve) => {
-      this.pendingConfirmations.set(confirmationId, { command, resolve })
+      // Timeout after 30s
+      const timer = setTimeout(() => {
+        if (this.pendingConfirmations.has(confirmationId)) {
+          this.pendingConfirmations.delete(confirmationId)
+          resolve(false)
+        }
+      }, 30000)
+
+      this.pendingConfirmations.set(confirmationId, { command, resolve, timer })
       const bus = getCanvasEventBus()
       bus.emit(CanvasEventType.AGENT_CONFIRMATION_REQUESTED, {
         confirmationId,
@@ -97,13 +105,6 @@ export class CanvasCommandExecutor {
         command,
         timestamp: Date.now(),
       })
-      // Timeout after 30s
-      setTimeout(() => {
-        if (this.pendingConfirmations.has(confirmationId)) {
-          this.pendingConfirmations.delete(confirmationId)
-          resolve(false)
-        }
-      }, 30000)
     })
   }
 
@@ -111,6 +112,7 @@ export class CanvasCommandExecutor {
   handleConfirmationResponse(confirmationId: string, approved: boolean): void {
     const entry = this.pendingConfirmations.get(confirmationId)
     if (entry) {
+      if (entry.timer) clearTimeout(entry.timer)
       this.pendingConfirmations.delete(confirmationId)
       entry.resolve(approved)
     }

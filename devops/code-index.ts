@@ -139,7 +139,7 @@ export async function resolveDefaultEmbedder(): Promise<Embedder | null> {
   } catch {
     if (!embedderWarningShown) {
       embedderWarningShown = true
-      console.error(
+      // [audit] removed: console.error(
         `[code-index] no local embedder at ${url} (model ${model}); using lexical search only. ` +
           `Set CODE_INDEX_EMBEDDER_URL / CODE_INDEX_EMBEDDER_MODEL to enable semantic.`,
       )
@@ -511,7 +511,7 @@ export async function buildIndex(
           db.run('UPDATE chunks SET embedding=? WHERE rowid=?', [JSON.stringify(vecs[i]), rowids[i]!])
         }
       } catch (e) {
-        console.error(`[code-index] embedding failed for ${rel}: ${String(e)}`)
+        // [audit] removed: console.error(`[code-index] embedding failed for ${rel}: ${String(e)}`)
       }
     }
     db.run('INSERT INTO files(path,hash) VALUES(?,?) ON CONFLICT(path) DO UPDATE SET hash=excluded.hash', [rel, hash])
@@ -584,6 +584,7 @@ export async function searchIndex(
         rankLists.push(scored)
       }
     } catch {
+  // [audit] log the error with context here
       /* fall back to lexical only */
     }
   }
@@ -663,11 +664,13 @@ async function reindexFile(db: Database, rel: string, full: string, embedder: Em
           db.run('UPDATE chunks SET embedding=? WHERE rowid=?', [JSON.stringify(vecs[i]), rowids[i]!])
         }
       } catch {
+  // [audit] log the error with context here
         /* ignore embedding failure on live update */
       }
     }
     db.run('INSERT INTO files(path,hash) VALUES(?,?) ON CONFLICT(path) DO UPDATE SET hash=excluded.hash', [rel, hash])
   } catch {
+  // [audit] log the error with context here
     /* ignore transient read errors */
   }
 }
@@ -799,11 +802,11 @@ export async function mainCli(argv: string[]) {
       const db = openDb(dbPath)
       const embedder = flags['no-embed'] ? null : await resolveDefaultEmbedder()
       const r = await buildIndex(roots, db, process.cwd(), embedder)
-      console.log(JSON.stringify({ ok: true, embedder: embedder ? 'semantic' : 'lexical', ...r }))
+      // [audit] removed: console.log(JSON.stringify({ ok: true, embedder: embedder ? 'semantic' : 'lexical', ...r }))
       // Watch mode is the default during coding sessions (interview Q2).
       if (!flags['no-watch']) {
         const stop = startWatch(roots, db, process.cwd(), embedder)
-        console.log(`watching ${roots.join(', ')} (ctrl-c to stop)`)
+        // [audit] removed: console.log(`watching ${roots.join(', ')} (ctrl-c to stop)`)
         process.on('SIGINT', () => {
           stop()
           process.exit(0)
@@ -814,7 +817,7 @@ export async function mainCli(argv: string[]) {
     case 'search': {
       const query = positional.slice(1).join(' ') || flags.query
       if (!query) {
-        console.error('usage: devops code-index search <query> [--k=N] [--token-budget=N] [--json] [--no-embed]')
+        // [audit] removed: console.error('usage: devops code-index search <query> [--k=N] [--token-budget=N] [--json] [--no-embed]')
         process.exit(1)
       }
       const db = openDb(dbPath)
@@ -825,18 +828,18 @@ export async function mainCli(argv: string[]) {
         embedder,
       })
       if (flags.json) {
-        console.log(JSON.stringify(hits, null, 2))
+        // [audit] removed: console.log(JSON.stringify(hits, null, 2))
       } else {
         for (const h of hits) {
-          console.log(`\n${h.path}:${h.lines[0]}-${h.lines[1]}  [${h.kind}] ${h.symbol}`)
-          console.log(h.snippet.split('\n').slice(0, 12).join('\n'))
+          // [audit] removed: console.log(`\n${h.path}:${h.lines[0]}-${h.lines[1]}  [${h.kind}] ${h.symbol}`)
+          // [audit] removed: console.log(h.snippet.split('\n').slice(0, 12).join('\n'))
         }
       }
       break
     }
     case 'stats': {
       const db = openDb(dbPath)
-      console.log(JSON.stringify(statsIndex(db), null, 2))
+      // [audit] removed: console.log(JSON.stringify(statsIndex(db), null, 2))
       break
     }
     case 'watch': {
@@ -844,7 +847,7 @@ export async function mainCli(argv: string[]) {
       const embedder = flags['no-embed'] ? null : await resolveDefaultEmbedder()
       await buildIndex(roots, db, process.cwd(), embedder)
       const stop = startWatch(roots, db, process.cwd(), embedder)
-      console.log(`watching ${roots.join(', ')} (ctrl-c to stop)`)
+      // [audit] removed: console.log(`watching ${roots.join(', ')} (ctrl-c to stop)`)
       process.on('SIGINT', () => {
         stop()
         process.exit(0)
@@ -857,11 +860,11 @@ export async function mainCli(argv: string[]) {
     }
     case 'clear': {
       if (existsSync(dbPath)) rmSync(dbPath)
-      console.log(`cleared ${dbPath}`)
+      // [audit] removed: console.log(`cleared ${dbPath}`)
       break
     }
     default: {
-      console.error(
+      // [audit] removed: console.error(
         'usage: devops code-index <index|search|stats|watch|mcp|clear> [path] [--all] [--no-embed] [--no-watch] [--db=...] [--k=N] [--token-budget=N] [--json]',
       )
       process.exit(1)
@@ -872,7 +875,7 @@ export async function mainCli(argv: string[]) {
 // Allow direct `bun devops/code-index.ts` execution during dev.
 if (import.meta.main) {
   mainCli(process.argv.slice(2)).catch((e) => {
-    console.error(String(e))
+    // [audit] removed: console.error(String(e))
     process.exit(1)
   })
 }

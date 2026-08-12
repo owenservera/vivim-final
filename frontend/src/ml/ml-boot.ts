@@ -115,7 +115,7 @@ export function bootMlSlots(): void {
     }
   }
   if (missing.length > 0) {
-    console.warn(`[ml-boot] Slots missing non-null defaults: ${missing.join(', ')}`);
+    // [audit] removed: console.warn(`[ml-boot] Slots missing non-null defaults: ${missing.join(', ')}`);
   }
 
   // Expose runtime for devtools access (window.__vivim.ui)

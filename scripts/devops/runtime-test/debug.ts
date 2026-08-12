@@ -25,6 +25,7 @@ export async function captureDebug(
     // Ensure debug directory exists
     await mkdir(DEBUG_DIR, { recursive: true })
   } catch {
+  // [audit] log the error with context here
     // Directory might exist
   }
 
@@ -38,6 +39,7 @@ export async function captureDebug(
       files.push(path)
     }
   } catch {
+  // [audit] log the error with context here
     // Screenshot capture failed
   }
 
@@ -51,6 +53,7 @@ export async function captureDebug(
       files.push(path)
     }
   } catch {
+  // [audit] log the error with context here
     // Console capture failed
   }
 

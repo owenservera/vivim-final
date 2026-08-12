@@ -162,6 +162,7 @@ export class SyncEngine {
     if (this.syncTimer) return
     this.syncTimer = setInterval(() => {
       this.sync().catch(() => {})
+  // [audit] log the error with context here
     }, this.config.syncIntervalMs)
   }
 

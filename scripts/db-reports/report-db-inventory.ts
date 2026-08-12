@@ -100,30 +100,30 @@ async function main() {
   const medium = entries.filter((e) => e.risk === "MEDIUM").length;
   const ok = entries.filter((e) => e.risk === "OK").length;
 
-  console.log("=== DB INVENTORY ===");
-  console.log(`root: ${ROOT}\n`);
-  console.log("PATH".padEnd(52), "SIZE(KB)".padStart(10), "CLASSIFICATION".padEnd(24), "RISK");
-  console.log("-".repeat(100));
+  // [audit] removed: console.log("=== DB INVENTORY ===");
+  // [audit] removed: console.log(`root: ${ROOT}\n`);
+  // [audit] removed: console.log("PATH".padEnd(52), "SIZE(KB)".padStart(10), "CLASSIFICATION".padEnd(24), "RISK");
+  // [audit] removed: console.log("-".repeat(100));
   for (const e of entries) {
-    console.log(
+    // [audit] removed: console.log(
       e.path.slice(0, 50).padEnd(52),
       String(e.sizeKb).padStart(10),
       e.classification.padEnd(24),
       e.risk,
     );
   }
-  console.log("-".repeat(100));
-  console.log(`Authoritative DBs (canonical+fixture): ${ok}`);
-  console.log(`MEDIUM-risk (.db files to consolidate): ${medium}`);
-  console.log(`HIGH-risk (proliferation, act): ${proliferation}`);
-  console.log(`Chrome-internal .db (ignored, not ours): ${chromeCount}`);
+  // [audit] removed: console.log("-".repeat(100));
+  // [audit] removed: console.log(`Authoritative DBs (canonical+fixture): ${ok}`);
+  // [audit] removed: console.log(`MEDIUM-risk (.db files to consolidate): ${medium}`);
+  // [audit] removed: console.log(`HIGH-risk (proliferation, act): ${proliferation}`);
+  // [audit] removed: console.log(`Chrome-internal .db (ignored, not ours): ${chromeCount}`);
   if (proliferation > 0 || medium > 0) {
-    console.log("\nACTION: run devops-db governance to consolidate backups, delete orphans,");
-    console.log("        and keep ONE fixture at tests/fixtures/node-store-test.db.");
+    // [audit] removed: console.log("\nACTION: run devops-db governance to consolidate backups, delete orphans,");
+    // [audit] removed: console.log("        and keep ONE fixture at tests/fixtures/node-store-test.db.");
   }
 }
 
 main().catch((err) => {
-  console.error("report-db-inventory failed:", err);
+  // [audit] removed: console.error("report-db-inventory failed:", err);
   process.exit(1);
 });

@@ -37,24 +37,24 @@ async function backfill() {
         selector: capDef.selector,
         version: capDef.version,
       });
-      console.log(`Backfilled capability: ${prov.slug}/${slug} → ${result.id}`);
+      // [audit] removed: console.log(`Backfilled capability: ${prov.slug}/${slug} → ${result.id}`);
       totalTaxonomyRows++;
     }
   }
 
   // Reconcile: ensure row count matches sum of blob caps
   const taxonomyCount = await db.prisma.capabilityTaxonomy.count();
-  console.log(`Done. Taxonomy rows: ${taxonomyCount} (expected >= ${totalTaxonomyRows})`);
+  // [audit] removed: console.log(`Done. Taxonomy rows: ${taxonomyCount} (expected >= ${totalTaxonomyRows})`);
 
   if (taxonomyCount < totalTaxonomyRows) {
-    console.error('ERROR: taxonomy row count mismatch');
+    // [audit] removed: console.error('ERROR: taxonomy row count mismatch');
     process.exit(1);
   }
 }
 
 if (import.meta.main) {
   backfill().catch((err) => {
-    console.error('Backfill failed:', err);
+    // [audit] removed: console.error('Backfill failed:', err);
     process.exit(1);
   });
 }

@@ -55,7 +55,7 @@ async function createConversation(): Promise<string | null> {
 describe('Integration: Send-receive cycle', () => {
   it('send message returns ok:true with message ID', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -74,7 +74,7 @@ describe('Integration: Send-receive cycle', () => {
 
   it('send returns blocks array', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -91,7 +91,7 @@ describe('Integration: Send-receive cycle', () => {
 
   it('send returns latencyMs >= 0', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -108,7 +108,7 @@ describe('Integration: Send-receive cycle', () => {
 
   it('send returns text string', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -125,7 +125,7 @@ describe('Integration: Send-receive cycle', () => {
 
   it('after send, messages list has user + assistant messages', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -148,7 +148,7 @@ describe('Integration: Send-receive cycle', () => {
 
   it('send to non-existent conversation returns 404', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -161,7 +161,7 @@ describe('Integration: Send-receive cycle', () => {
 
   it('send without message body returns 400', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 

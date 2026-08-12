@@ -22,7 +22,7 @@ export async function activate(): Promise<void> {
 
   // G1.2 — publish to the canvas (no build step; live hot-swap).
   const published = await publish(def, { apiBase: API_BASE });
-  console.log('[sample-plugin] published:', published);
+  // [audit] removed: console.log('[sample-plugin] published:', published);
 
   // G1.4 — register the bespoke React slot (live UIComponentRegistry hot-swap).
   // This is a browser-only operation (the registry lives in the browser).
@@ -31,9 +31,9 @@ export async function activate(): Promise<void> {
     registerSlot('chat.send', 'sample-plugin', SamplePluginGlowSend, {
       sandbox: ['cap:message:send'],
     });
-    console.log('[sample-plugin] registered slot: chat.send → SamplePluginGlowSend');
+    // [audit] removed: console.log('[sample-plugin] registered slot: chat.send → SamplePluginGlowSend');
   } catch (err) {
-    console.log('[sample-plugin] slot registration skipped (browser-only):', String(err).slice(0, 80));
+    // [audit] removed: console.log('[sample-plugin] slot registration skipped (browser-only):', String(err).slice(0, 80));
   }
 
   // G2 — demo live-config patch: bump html to add a counter, re-publish.
@@ -45,13 +45,13 @@ export async function activate(): Promise<void> {
       }),
       { apiBase: API_BASE },
     );
-    console.log('[sample-plugin] live-patched:', patched);
+    // [audit] removed: console.log('[sample-plugin] live-patched:', patched);
   }
 }
 
 if (require.main === module) {
   activate().catch((err) => {
-    console.error('[sample-plugin] activation failed:', err);
+    // [audit] removed: console.error('[sample-plugin] activation failed:', err);
     process.exit(1);
   });
 }

@@ -33,6 +33,7 @@ export function MediaPanel({ workspaceId }: MediaPanelProps) {
       .then((r) => r.json())
       .then((item) => { if (item.id) setItems((prev) => [item, ...prev]); })
       .catch(() => {});
+  // [audit] log the error with context here
   }, [workspaceId]);
 
   return (

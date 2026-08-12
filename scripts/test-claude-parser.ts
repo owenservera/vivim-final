@@ -26,7 +26,7 @@ data: [DONE]
 `
 
 const result = await engine.parse(sample, 'claude')
-console.log(JSON.stringify({
+// [audit] removed: console.log(JSON.stringify({
   confidence: result.confidence,
   parserName: result.parserName,
   blocks: result.blocks

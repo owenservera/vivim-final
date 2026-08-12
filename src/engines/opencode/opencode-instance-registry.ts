@@ -135,6 +135,7 @@ export class OpenCodeInstanceRegistry {
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
       appendFileSync(this.ledgerPath, `${JSON.stringify(ev)}\n`, 'utf8')
     } catch {
+  // [audit] log the error with context here
       // Ledger write failure must never break the serve layer.
     }
   }
@@ -192,6 +193,7 @@ export class OpenCodeInstanceRegistry {
         try {
           out.push(JSON.parse(line) as OpenCodeInstanceEvent)
         } catch {
+  // [audit] log the error with context here
           // skip malformed line
         }
       }

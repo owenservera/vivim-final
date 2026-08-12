@@ -1,9 +1,10 @@
 use tauri::Manager;
+use tauri::Listener;
 
 /// Shows the main window once the frontend has signalled it is ready.
 /// The window is created with `visible: false` and only revealed here
 /// so the user never sees a blank white flash during boot.
-fn show_window(app: &tauri::App) {
+fn show_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
         let _ = window.set_focus();

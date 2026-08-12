@@ -202,6 +202,7 @@ export class FleetSupervisor {
     this.exitHandlerRegistered = true
     const handler = () => {
       this.killAll().catch(() => {})
+  // [audit] log the error with context here
     }
     process.once('beforeExit', handler)
     process.once('SIGTERM', handler)

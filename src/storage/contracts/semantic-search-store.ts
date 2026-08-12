@@ -27,6 +27,10 @@ export interface SemanticSearchStore {
       limit?: number
       threshold?: number
       entityType?: string
+      /** Filter by model name — prevents cross-dimension NaN in cosine. */
+      model?: string
+      /** Filter by vector dimensions — prevents cross-dimension NaN in cosine. */
+      dimensions?: number
     },
   ): Promise<Array<{ entityId: string; entityType: string; score: number }>>
   deleteEmbedding(entityType: string, entityId: string): Promise<void>

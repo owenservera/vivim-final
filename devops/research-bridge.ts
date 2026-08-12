@@ -366,6 +366,7 @@ export async function findStaleSpecKitResearch(
         }
       }
     } catch {
+  // [audit] log the error with context here
       // Skip unparseable files
     }
   }

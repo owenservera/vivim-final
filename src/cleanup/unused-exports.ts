@@ -194,6 +194,7 @@ async function countImports(
         count++
       }
     } catch {
+  // [audit] log the error with context here
       // skip unreadable files
     }
   }

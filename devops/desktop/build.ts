@@ -55,6 +55,7 @@ export function dirFingerprint(dir: string, exts: string[]): string {
       const st = statSync(f)
       parts.push(`${f}:${st.mtimeMs}:${st.size}`)
     } catch { /* skip unreadable */ }
+  // [audit] log the error with context here
   }
   const h = createHash('sha256')
   h.update(parts.join('\n'))

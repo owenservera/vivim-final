@@ -553,7 +553,7 @@ function mergeCapabilities(existing: CapabilityDef[], expansion: CapabilityDef[]
 }
 
 async function main() {
-  console.log('=== 10x Expansion ===')
+  // [audit] removed: console.log('=== 10x Expansion ===')
 
   // Load existing skeleton
   let existingPlatforms: { slug: string; category: string }[] = []
@@ -561,24 +561,24 @@ async function main() {
     const doc = JSON.parse(readFileSync(SKELETON_PATH, 'utf-8')) as { platforms?: { slug: string; category: string }[] }
     existingPlatforms = doc.platforms ?? []
   }
-  console.log(`  Existing platforms: ${existingPlatforms.length}`)
+  // [audit] removed: console.log(`  Existing platforms: ${existingPlatforms.length}`)
 
   // Merge
   const allPlatforms = mergePlatforms(existingPlatforms, PLATFORMS_10X)
-  console.log(`  After merge: ${allPlatforms.length} platforms`)
+  // [audit] removed: console.log(`  After merge: ${allPlatforms.length} platforms`)
 
   // Count by category
   const byCat = new Map<string, number>()
   for (const p of allPlatforms) byCat.set(p.category, (byCat.get(p.category) ?? 0) + 1)
-  console.log(`  Categories: ${byCat.size}`)
+  // [audit] removed: console.log(`  Categories: ${byCat.size}`)
   for (const [cat, count] of [...byCat.entries()].sort((a, b) => b[1] - a[1])) {
-    console.log(`    ${cat}: ${count}`)
+    // [audit] removed: console.log(`    ${cat}: ${count}`)
   }
 
   // Write skeleton
   if (!existsSync(join(SKELETON_PATH, '..'))) mkdirSync(join(SKELETON_PATH, '..'), { recursive: true })
   writeFileSync(SKELETON_PATH, JSON.stringify({ platforms: allPlatforms }, null, 2))
-  console.log(`  ✅ Written skeleton → ${SKELETON_PATH}`)
+  // [audit] removed: console.log(`  ✅ Written skeleton → ${SKELETON_PATH}`)
 
   // Load existing shared pool capabilities
   let existingCaps: CapabilityDef[] = []
@@ -597,24 +597,24 @@ async function main() {
         tags: n.tags ?? [],
       }))
   }
-  console.log(`  Existing capabilities: ${existingCaps.length}`)
+  // [audit] removed: console.log(`  Existing capabilities: ${existingCaps.length}`)
 
   // Merge capabilities
   const allCaps = mergeCapabilities(existingCaps, CAPABILITIES_10X)
-  console.log(`  After merge: ${allCaps.length} capabilities`)
+  // [audit] removed: console.log(`  After merge: ${allCaps.length} capabilities`)
 
   // Write shared raw
   if (!existsSync(join(SHARED_RAW_PATH, '..'))) mkdirSync(join(SHARED_RAW_PATH, '..'), { recursive: true })
   writeFileSync(SHARED_RAW_PATH, JSON.stringify({ capabilities: allCaps }, null, 2))
-  console.log(`  ✅ Written shared raw → ${SHARED_RAW_PATH}`)
+  // [audit] removed: console.log(`  ✅ Written shared raw → ${SHARED_RAW_PATH}`)
 
-  console.log('')
-  console.log('Next steps:')
-  console.log('  1. bun run taxonomy-gen merge')
-  console.log('  2. bun run devops verify-cross-surface')
+  // [audit] removed: console.log('')
+  // [audit] removed: console.log('Next steps:')
+  // [audit] removed: console.log('  1. bun run taxonomy-gen merge')
+  // [audit] removed: console.log('  2. bun run devops verify-cross-surface')
 }
 
 main().catch((e) => {
-  console.error(e)
+  // [audit] removed: console.error(e)
   process.exit(1)
 })

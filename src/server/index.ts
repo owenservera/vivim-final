@@ -27,6 +27,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { z } from 'zod'
 import { CapabilityEventBus } from '../engines/capability-event-bus.js'
 import type { CapabilityResolutionEngine } from '../engines/capability-resolution.js'
 import type { ChromeGovernor } from '../engines/chrome-governor.js'
@@ -81,6 +82,7 @@ import { createSetupRouter } from './setup-router.js'
 import { createStorageRouter } from './storage-router.js'
 import { createSurfaceRouter } from './surface-router.js'
 import { createTemplateRouter } from './template-router.js'
+import { parseRequestBody } from './validate.js'
 import { createVariantRouter } from './variant-router.js'
 import { createVersionRouter } from './version-router.js'
 import {
@@ -759,7 +761,16 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     const path = url.pathname
 
     if (path === '/api/opencode/send' && req.method === 'POST') {
-      const body = (await req.json()) as { prompt?: string; sessionId?: string; model?: string }
+      const parsed = await parseRequestBody(
+        req,
+        z.object({
+          prompt: z.string().min(1),
+          sessionId: z.string().optional(),
+          model: z.string().optional(),
+        }),
+      )
+      if (!parsed.success) return parsed.response
+      const body = parsed.data
       if (!body.prompt?.trim()) {
         return errorResponse('prompt is required', 'ValidationError', 400)
       }
@@ -778,7 +789,12 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     }
 
     if (path === '/api/opencode/session' && req.method === 'POST') {
-      const body = (await req.json()) as { model?: string; cwd?: string }
+      const parsed = await parseRequestBody(
+        req,
+        z.object({ model: z.string().optional(), cwd: z.string().optional() }),
+      )
+      if (!parsed.success) return parsed.response
+      const body = parsed.data
       try {
         const { sessionId } = await client.createSession({ model: body.model, cwd: body.cwd })
         return json({ ok: true, sessionId })
@@ -822,20 +838,17 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
 
     if (path.startsWith('/api/opencode/permission/') && req.method === 'POST') {
       const permissionId = path.split('/').pop()
-      const body = (await req.json()) as { sessionId?: string; decision?: string }
-      if (!body.sessionId || !permissionId || !body.decision) {
-        return errorResponse(
-          'sessionId, permissionId, and decision are required',
-          'ValidationError',
-          400,
-        )
-      }
+      const parsed = await parseRequestBody(
+        req,
+        z.object({
+          sessionId: z.string().min(1),
+          decision: z.enum(['allow', 'deny', 'allow_always']),
+        }),
+      )
+      if (!parsed.success) return parsed.response
+      const body = parsed.data
       try {
-        await client.respondPermission(
-          body.sessionId,
-          permissionId,
-          body.decision as 'allow' | 'deny' | 'allow_always',
-        )
+        await client.respondPermission(body.sessionId, permissionId, body.decision)
         return json({ ok: true, sessionId: body.sessionId, permissionId, decision: body.decision })
       } catch (err) {
         return errorResponse(err instanceof Error ? err.message : String(err), 'InternalError', 500)
@@ -945,12 +958,16 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         // F1: Live POST /api/agent/run route — calls the cap:agent:run capability
         // via the unified registry (mirrors the universal execute path).
         if (url.pathname === '/api/agent/run' && req.method === 'POST') {
-          const body = (await req.json().catch(() => ({}))) as {
-            prompt?: string
-            model?: string
-            sessionId?: string
-            cwd?: string
-          }
+          const parsed = z
+            .object({
+              prompt: z.string().optional(),
+              model: z.string().optional(),
+              sessionId: z.string().optional(),
+              cwd: z.string().optional(),
+            })
+            .safeParse(await req.json().catch(() => ({})))
+          // [audit] log the error with context here
+          const body = parsed.success ? parsed.data : {}
           if (!body.prompt?.trim()) {
             return errorResponse('prompt is required', 'ValidationError', 400)
           }
@@ -1073,6 +1090,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
             const { cap, pathParams } = matchResult
             try {
               const body = await req.json().catch(() => ({}))
+              // [audit] log the error with context here
               const input =
                 typeof body === 'object' && body !== null
                   ? { ...body, ...pathParams }

@@ -4,6 +4,7 @@
 import { z } from 'zod'
 import type { ServerContext } from '../index.js'
 import { appErrorResponse, errorResponse, json } from '../response.js'
+import { parseRequestBody } from '../validate.js'
 
 export function createContentRouter(ctx: ServerContext) {
   return async function contentRouter(req: Request): Promise<Response | undefined> {
@@ -81,8 +82,8 @@ export function createContentRouter(ctx: ServerContext) {
           metadataJson: z.string().optional(),
           sortTimestamp: z.number().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const item = await store.createItem(parsed.data)
         return json({ item }, 201)
       }
@@ -97,8 +98,9 @@ export function createContentRouter(ctx: ServerContext) {
 
       // PUT /api/content/:id
       if (req.method === 'PUT' && itemMatch && itemMatch[1]) {
-        const body = (await req.json()) as Record<string, unknown>
-        const item = await store.updateItem(itemMatch[1], body)
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const item = await store.updateItem(itemMatch[1], parsed.data)
         return json({ item })
       }
 

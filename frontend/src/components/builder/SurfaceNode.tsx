@@ -59,6 +59,7 @@ export function SurfaceNode({
           setVariantLabel(res.data.active.name);
         }
       } catch {
+  // [audit] log the error with context here
         // Best-effort.
       }
     })();

@@ -7,6 +7,9 @@
 // Then: bun test tests/unit/engines/nlcl/  (must stay green)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { getLogger } from '../../../lib/logger.js'
+
+const log = getLogger('nlcl:generate')
 
 const ROOT = process.cwd()
 const SRC = join(ROOT, 'src', 'engines', 'nlcl', 'catalog.ts')
@@ -61,7 +64,7 @@ const importLines: string[] = []
 for (const cat of CATEGORIES) {
   const block = findBlock(cat.constName)
   if (!block) {
-    console.error(`!! block not found: ${cat.constName}`)
+    log.error(`!! block not found: ${cat.constName}`)
     continue
   }
   const body = lines.slice(block.start, block.end + 1)
@@ -73,7 +76,7 @@ for (const cat of CATEGORIES) {
   const out = `${header + body.join('\n')}\n`
   const fpath = join(CAT_DIR, cat.file)
   writeFileSync(fpath, out)
-  console.log(`wrote ${cat.file} (${body.length} lines)`)
+  log.info(`wrote ${cat.file} (${body.length} lines)`)
   importLines.push(`import { ${cat.constName} } from './categories/${cat.file}'`)
 }
 
@@ -126,4 +129,4 @@ export function getPatternsByCategory(): Record<string, CommandPattern[]> {
 `
 
 writeFileSync(SRC, registry)
-console.log(`\nrewrote catalog.ts as thin registry (${registry.split('\n').length} lines)`)
+log.info(`\nrewrote catalog.ts as thin registry (${registry.split('\n').length} lines)`)

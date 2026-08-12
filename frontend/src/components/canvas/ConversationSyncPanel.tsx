@@ -55,6 +55,7 @@ export function ConversationSyncPanel() {
           setProviders(data.map((p: Provider) => ({ id: p.id, name: p.name, slug: p.slug })))
         }
       } catch {
+  // [audit] log the error with context here
         // Ignore — providers will be empty
       }
     }

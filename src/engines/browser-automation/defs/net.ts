@@ -13,9 +13,11 @@ export const requestIntercept: BrowserCapabilityDef = {
   trust: TRUST.read,
   handler: async (ctx) => {
     await ctx.governor.cdp.send(ctx.slaveId, 'Network.enable', {}).catch(() => {})
+  // [audit] log the error with context here
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [{ urlPattern: '*' }] })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'interception enabled' }
   },
 }
@@ -56,6 +58,7 @@ export const requestContinue: BrowserCapabilityDef = {
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [] })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'interception cleared' }
   },
 }
@@ -81,9 +84,11 @@ export const headerSet: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     await ctx.governor.cdp.send(ctx.slaveId, 'Network.enable', {}).catch(() => {})
+  // [audit] log the error with context here
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Network.setExtraHTTPHeaders', { headers: ctx.params.headers })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'headers set' }
   },
 }
@@ -127,11 +132,13 @@ export const authBasic: BrowserCapabilityDef = {
   handler: async (ctx) => {
     const token = Buffer.from(`${ctx.params.user}:${ctx.params.pass}`).toString('base64')
     await ctx.governor.cdp.send(ctx.slaveId, 'Network.enable', {}).catch(() => {})
+  // [audit] log the error with context here
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Network.setExtraHTTPHeaders', {
         headers: { Authorization: `Basic ${token}` },
       })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'basic auth set' }
   },
 }
@@ -146,6 +153,7 @@ export const proxySet: BrowserCapabilityDef = {
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Network.setRequestInterception', { patterns: [] })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: `proxy config noted: ${ctx.params.proxy}` }
   },
 }

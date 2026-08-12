@@ -104,6 +104,7 @@ export function StorageSettings() {
         fetchStatus();
       }
     } catch {
+  // [audit] log the error with context here
       // non-fatal
     }
   }, [fetchStatus]);

@@ -65,6 +65,7 @@ export function scanLibrary(): LibraryState {
         complete: platforms.filter((p: any) => p.status === 'complete').length,
       }
     } catch {
+  // [audit] log the error with context here
       /* ignore */
     }
   }

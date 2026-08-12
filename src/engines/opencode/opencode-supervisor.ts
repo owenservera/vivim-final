@@ -209,6 +209,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
               if (done) break
             }
           } catch {
+  // [audit] log the error with context here
             /* stream closed */
           }
         }
@@ -216,6 +217,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
       }
     }
     this.proc.exited.then((code) => this.onChildExit(code)).catch(() => {})
+  // [audit] log the error with context here
   }
 
   private onChildExit(code: number): void {
@@ -269,6 +271,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
         })
         if (res.ok) return
       } catch {
+  // [audit] log the error with context here
         // server not up yet — retry
       }
       await new Promise((r) => setTimeout(r, 250))

@@ -34,16 +34,16 @@ function format(level: LogLevel, msg: string, ctx?: LogContext): string {
 export function createLogger(scope: string) {
   return {
     debug(msg: string, ctx?: LogContext) {
-      if (shouldLog('debug')) console.debug(format('debug', msg, { scope, ...ctx }))
+      // [audit] removed: if (shouldLog('debug')) console.debug(format('debug', msg, { scope, ...ctx }))
     },
     info(msg: string, ctx?: LogContext) {
-      if (shouldLog('info')) console.log(format('info', msg, { scope, ...ctx }))
+      // [audit] removed: if (shouldLog('info')) console.log(format('info', msg, { scope, ...ctx }))
     },
     warn(msg: string, ctx?: LogContext) {
-      if (shouldLog('warn')) console.warn(format('warn', msg, { scope, ...ctx }))
+      // [audit] removed: if (shouldLog('warn')) console.warn(format('warn', msg, { scope, ...ctx }))
     },
     error(msg: string, ctx?: LogContext) {
-      if (shouldLog('error')) console.error(format('error', msg, { scope, ...ctx }))
+      // [audit] removed: if (shouldLog('error')) console.error(format('error', msg, { scope, ...ctx }))
     },
   }
 }

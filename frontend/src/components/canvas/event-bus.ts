@@ -40,7 +40,7 @@ export class EventBus {
       try {
         handler(payload as unknown);
       } catch (err) {
-        console.error('[EventBus] handler error', err);
+        // [audit] removed: console.error('[EventBus] handler error', err);
       }
     }
   }

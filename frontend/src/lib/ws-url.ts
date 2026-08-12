@@ -58,11 +58,12 @@ if (isTauriEnvironment() && typeof window !== 'undefined') {
     tauri?.event?.listen('backend-ready', (e) => {
       const port = Number(e.payload)
       if (Number.isFinite(port) && port > 0 && port !== activePort) {
-        console.info(`[vivim] backend port updated: ${activePort} → ${port}`)
+        // [audit] removed: console.info(`[vivim] backend port updated: ${activePort} → ${port}`)
         activePort = port
       }
     })
   } catch {
+  // [audit] log the error with context here
     // Non-critical: static port fallback still works.
   }
 }

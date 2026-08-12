@@ -33,6 +33,7 @@ export async function scaffoldBuild(
       await readFile(componentPath)
       exists = true
     } catch {
+  // [audit] log the error with context here
       // Component doesn't exist, create it
     }
 

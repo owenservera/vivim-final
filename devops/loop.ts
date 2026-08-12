@@ -50,11 +50,11 @@ export async function runLoop(opts: LoopOptions = {}): Promise<LoopResult> {
       // invariant — no second commit, no [PENDING-COMMIT] placeholder left behind).
       await markUnitDoneLoop(sel.id, `${sel.name} [autonomous loop]`)
       done.push(sel.id)
-      console.log(`[loop] ${sel.id} -> done  (${gate.summary})`)
+      // [audit] removed: console.log(`[loop] ${sel.id} -> done  (${gate.summary})`)
     } else {
       await markUnit(sel.id, 'blocked')
       blocked.push(sel.id)
-      console.error(`[loop] ${sel.id} -> BLOCKED  (${gate.summary})`)
+      // [audit] removed: console.error(`[loop] ${sel.id} -> BLOCKED  (${gate.summary})`)
     }
     processed++
   }

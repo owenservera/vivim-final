@@ -1,6 +1,7 @@
 // src/server/conversation-sync-router.ts
 // REST API router — conversation history sync endpoints.
 
+import { z } from 'zod'
 import { ChatGPTAdapter } from '../engines/adapters/chatgpt-adapter.js'
 import { ConversationHistorySyncEngine } from '../engines/conversation-history-sync.js'
 import { getLogger } from '../lib/logger.js'
@@ -10,6 +11,7 @@ import type {
 } from '../storage/contracts/conversation-store.js'
 import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
+import { parseRequestBody } from './validate.js'
 
 const log = getLogger('conversation-sync-router')
 
@@ -74,19 +76,20 @@ export function createConversationSyncRouter(ctx: ServerContext) {
       }
 
       try {
-        const body = (await req.json()) as {
-          accountId: string
-          slaveId: string
-          syncType?: 'full' | 'incremental' | 'selective'
-          conversationIds?: string[]
-          headersOnly?: boolean
-          batchSize?: number
-          maxConversations?: number
-        }
-
-        if (!body.accountId || !body.slaveId) {
-          return errorResponse('accountId and slaveId are required', 'ValidationError', 400)
-        }
+        const parsed = await parseRequestBody(
+          req,
+          z.object({
+            accountId: z.string().min(1),
+            slaveId: z.string().min(1),
+            syncType: z.enum(['full', 'incremental', 'selective']).optional(),
+            conversationIds: z.array(z.string()).optional(),
+            headersOnly: z.boolean().optional(),
+            batchSize: z.number().optional(),
+            maxConversations: z.number().optional(),
+          }),
+        )
+        if (!parsed.success) return parsed.response
+        const body = parsed.data
 
         const result = await engine.sync(body.accountId, body.slaveId, {
           syncType: body.syncType,
@@ -183,7 +186,12 @@ export function createConversationSyncRouter(ctx: ServerContext) {
       }
 
       try {
-        const body = (await req.json()) as { accountId: string; slaveId: string }
+        const parsed = await parseRequestBody(
+          req,
+          z.object({ accountId: z.string().min(1), slaveId: z.string().min(1) }),
+        )
+        if (!parsed.success) return parsed.response
+        const body = parsed.data
 
         if (!body.accountId || !body.slaveId) {
           return errorResponse('accountId and slaveId are required', 'ValidationError', 400)

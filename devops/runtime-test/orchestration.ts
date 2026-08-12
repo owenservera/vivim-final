@@ -232,6 +232,7 @@ export async function deriveGoalFromContext(): Promise<DerivedGoal> {
       }
     }
   } catch {
+  // [audit] log the error with context here
     // fall through to none
   }
   return { goal: '', unitId: '', unitName: '', source: 'none' }

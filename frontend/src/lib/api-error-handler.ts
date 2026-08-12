@@ -23,7 +23,7 @@ export function apiHandler(handler: RouteHandler): RouteHandler {
               : 500
 
       if (process.env.NODE_ENV !== 'production') {
-        console.error(`[APIError] ${req.nextUrl?.pathname ?? 'unknown'} → ${status}`, err)
+        // [audit] removed: console.error(`[APIError] ${req.nextUrl?.pathname ?? 'unknown'} → ${status}`, err)
       }
 
       return NextResponse.json(

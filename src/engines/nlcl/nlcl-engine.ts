@@ -11,6 +11,7 @@ import type { CapStoreDb } from '../../storage/db.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { ConversationManager } from '../conversation-manager.js'
 import { OpenCodeExecutor } from '../opencode/opencode-executor.js'
+import type { EmbeddingProvider } from '../semantic-search.js'
 import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
 import { getDefaultCommandPatterns } from './catalog.js'
 import { CommandPatternRegistry } from './command-registry.js'
@@ -59,7 +60,7 @@ import type {
   NLCLEngineConfig,
   ParsedIntent,
 } from './types.js'
-import { DEFAULT_NLCL_CONFIG, classificationAtLeast } from './types.js'
+import { classificationAtLeast, DEFAULT_NLCL_CONFIG } from './types.js'
 
 export interface NLCLEngineDeps {
   governor?: ChromeGovernor
@@ -107,6 +108,12 @@ export interface NLCLEngineDeps {
     confirmationToken?: string
     error?: string
   }>
+  /**
+   * Embedding provider — booted in the knowledge phase. Passed through to
+   * SemanticResolver, HelpResolver, and LLMSlaveResolver so they use the
+   * same real neural embeddings (HF 768-d) instead of the MiniLM hash fallback.
+   */
+  embeddingProvider?: EmbeddingProvider
 }
 
 // Tier 3 unit 15.10 — COMPOSITE_SPLITTERS table removed.
@@ -143,11 +150,14 @@ export class NLCLEngine {
     this.router = new IntentRouter(deps.registry)
     this.parser = new NLCommandParser(this.registry)
     this.prerouter = new Prerouter(this.registry)
-    this.helpResolver = new HelpResolver(this.registry)
+    this.helpResolver = new HelpResolver(this.registry, {
+      embeddingProvider: deps.embeddingProvider,
+    })
 
     this.resolver = createResolver(this.config.resolver, this.registry, {
       localLLM: deps.localLLM,
       providerLLM: deps.providerLLM,
+      embeddingProvider: deps.embeddingProvider,
     })
 
     this.registerDefaultPatterns()

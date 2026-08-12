@@ -91,6 +91,7 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
         }
       })
       .catch(() => {})
+  // [audit] log the error with context here
       .finally(() => { if (mountedRef.current) setLoading(false); });
 
     return () => {
@@ -123,6 +124,7 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
             stepTimings: result.stepTimings,
             totalDurationMs: result.totalDurationMs,
           }).catch(() => {});
+  // [audit] log the error with context here
         }
       }, 400);
     }
@@ -147,6 +149,7 @@ export function OnboardingTour({ userId, onAction }: OnboardingTourProps) {
         droppedOffAt: result.droppedOffAt,
         stepTimings: result.stepTimings,
       }).catch(() => {});
+  // [audit] log the error with context here
     }, 300);
   }, [stepIdx, analytics, userId]);
 

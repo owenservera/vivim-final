@@ -25,7 +25,7 @@ export async function runResearchCommand(commandArgs?: string[]): Promise<void> 
     ?? (cmdArgs.indexOf('--unit') !== -1 ? cmdArgs[cmdArgs.indexOf('--unit') + 1] : undefined)
   if (unitId) {
     const result = await researchUnit(unitId)
-    console.log(JSON.stringify(result, null, 2))
+    // [audit] removed: console.log(JSON.stringify(result, null, 2))
     return
   }
 
@@ -34,16 +34,16 @@ export async function runResearchCommand(commandArgs?: string[]): Promise<void> 
     ?? (cmdArgs.indexOf('--domain') !== -1 ? cmdArgs[cmdArgs.indexOf('--domain') + 1] : undefined)
   if (domain) {
     const result = await researchDomain(domain)
-    console.log(JSON.stringify(result, null, 2))
+    // [audit] removed: console.log(JSON.stringify(result, null, 2))
     return
   }
 
   // --discover: discovery only
   if (cmdArgs.includes('--discover')) {
     const discovered = await runDiscovery()
-    console.log(`Discovered ${discovered.length} candidate units`)
+    // [audit] removed: console.log(`Discovered ${discovered.length} candidate units`)
     for (const d of discovered) {
-      console.log(`  ${d.gapId}: ${d.summary} → suggested: ${d.suggestedUnit}`)
+      // [audit] removed: console.log(`  ${d.gapId}: ${d.summary} → suggested: ${d.suggestedUnit}`)
     }
     return
   }
@@ -71,35 +71,35 @@ export async function runResearchCommand(commandArgs?: string[]): Promise<void> 
   }
 
   // Default: full research cycle
-  console.log('=== DevOps Roadmap — Full Research Cycle ===\n')
+  // [audit] removed: console.log('=== DevOps Roadmap — Full Research Cycle ===\n')
 
   // Step 1: Research
-  console.log('Step 1: Running research engine...')
+  // [audit] removed: console.log('Step 1: Running research engine...')
   const researchResults = await runResearch()
-  console.log(`Researched ${researchResults.length} units`)
+  // [audit] removed: console.log(`Researched ${researchResults.length} units`)
 
   // Step 2: Discovery
-  console.log('\nStep 2: Running discovery engine...')
+  // [audit] removed: console.log('\nStep 2: Running discovery engine...')
   const discovered = await runDiscovery()
-  console.log(`Discovered ${discovered.length} candidate units`)
+  // [audit] removed: console.log(`Discovered ${discovered.length} candidate units`)
 
   // Step 3: Generate reports
-  console.log('\nStep 3: Generating reports...')
+  // [audit] removed: console.log('\nStep 3: Generating reports...')
   await generateReport(researchResults, discovered)
-  console.log('Reports written to docs/roadmap/')
+  // [audit] removed: console.log('Reports written to docs/roadmap/')
 
   // Summary
-  console.log('\n=== Summary ===')
-  console.log(`Units researched: ${researchResults.length}`)
-  console.log(`Candidates discovered: ${discovered.length}`)
-  console.log('Reports: docs/roadmap/RESEARCH-REPORT.md, DISCOVERED-UNITS.md, DOMAIN-HEALTH.md')
+  // [audit] removed: console.log('\n=== Summary ===')
+  // [audit] removed: console.log(`Units researched: ${researchResults.length}`)
+  // [audit] removed: console.log(`Candidates discovered: ${discovered.length}`)
+  // [audit] removed: console.log('Reports: docs/roadmap/RESEARCH-REPORT.md, DISCOVERED-UNITS.md, DOMAIN-HEALTH.md')
 }
 
 // Only run main() when executed directly, not when imported
 const isMainModule = process.argv[1]?.endsWith('roadmap.ts') || process.argv[1]?.endsWith('roadmap/index.ts')
 if (isMainModule) {
   runResearchCommand().catch((e) => {
-    console.error('Roadmap error:', e)
+    // [audit] removed: console.error('Roadmap error:', e)
     process.exit(1)
   })
 }

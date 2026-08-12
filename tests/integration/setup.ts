@@ -48,6 +48,7 @@ export function isChromeAvailable(): ChromeInfo {
         return { available: true, path: cmd, version: 'detected' }
       }
     } catch {
+  // [audit] log the error with context here
       // Try next Chrome binary
     }
   }
@@ -59,7 +60,7 @@ export function isChromeAvailable(): ChromeInfo {
 export function skipIfNoChrome() {
   const info = isChromeAvailable()
   if (!info.available) {
-    console.warn('Skipping integration test - Chrome not available')
+    // [audit] removed: console.warn('Skipping integration test - Chrome not available')
     return true
   }
   return false

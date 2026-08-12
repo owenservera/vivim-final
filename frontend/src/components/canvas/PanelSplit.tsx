@@ -49,6 +49,7 @@ export function PanelSplit({
         }
       }
     } catch {}
+  // [audit] log the error with context here
   }, [storageKey, children.length]);
 
   // Save sizes to localStorage on change
@@ -57,6 +58,7 @@ export function PanelSplit({
     try {
       localStorage.setItem(`vivim:panelsplit:${storageKey}`, JSON.stringify(sizes));
     } catch {}
+  // [audit] log the error with context here
   }, [storageKey, sizes]);
 
   // Clamp sizes array to children length
@@ -246,6 +248,7 @@ export function usePanelSplitControls(storageKey: string) {
       try {
         localStorage.setItem(`vivim:panelsplit:collapsed:${storageKey}`, JSON.stringify(next));
       } catch {}
+  // [audit] log the error with context here
       return next;
     });
   }, [storageKey]);
@@ -255,6 +258,7 @@ export function usePanelSplitControls(storageKey: string) {
       const saved = localStorage.getItem(`vivim:panelsplit:collapsed:${storageKey}`);
       if (saved) setCollapsed(JSON.parse(saved));
     } catch {}
+  // [audit] log the error with context here
   }, [storageKey]);
 
   return { collapsed, togglePane };

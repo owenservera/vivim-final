@@ -65,9 +65,11 @@ describe('StorageRelocationEngine', () => {
     try {
       rmSync(sourceDir, { recursive: true, force: true })
     } catch {}
+  // [audit] log the error with context here
     try {
       rmSync(targetDir, { recursive: true, force: true })
     } catch {}
+  // [audit] log the error with context here
   })
 
   it('should copy all files from source to target', async () => {

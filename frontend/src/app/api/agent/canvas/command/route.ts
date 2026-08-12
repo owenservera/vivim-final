@@ -110,13 +110,13 @@ export async function POST(req: NextRequest) {
     // Audit log: stdout in alpha (DB-backed audit log deferred per SCOPE.md
     // auth-token out-of-scope). Each command is logged with timestamp, agent,
     // workspace, and command type for forensic review.
-    console.log(
+    // [audit] removed: console.log(
       `[audit] agent-canvas-command ${new Date().toISOString()} agent=${agentId} workspace=${workspaceId} cmd=${command.type ?? 'unknown'}`,
     )
 
     return NextResponse.json(response)
   } catch (error) {
-    console.error('[Agent Canvas Command] Error:', error)
+    // [audit] removed: console.error('[Agent Canvas Command] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
     const policy = await getPolicy(agentId, workspaceId)
     return NextResponse.json(policy)
   } catch (error) {
-    console.error('[Agent Canvas Policy Get] Error:', error)
+    // [audit] removed: console.error('[Agent Canvas Policy Get] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -164,13 +164,13 @@ export async function PUT(req: NextRequest) {
     const updated = { ...existing, ...policy, agentId, workspaceId } as AgentCanvasPolicy
     policyStore.set(key, updated)
 
-    console.log(
+    // [audit] removed: console.log(
       `[audit] agent-canvas-policy-update ${new Date().toISOString()} agent=${agentId} workspace=${workspaceId}`,
     )
 
     return NextResponse.json(updated)
   } catch (error) {
-    console.error('[Agent Canvas Policy Put] Error:', error)
+    // [audit] removed: console.error('[Agent Canvas Policy Put] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

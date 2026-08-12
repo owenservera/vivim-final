@@ -26,7 +26,7 @@ describe('T5 NL resolve speed / fastest path', () => {
   it(`known command (vivim help) executes within ${BUDGET_MS}ms p95`, async () => {
     if (!serverOk) return
     const p95 = await p95Latency(() => spawnCli(['help'], { CAP_STORE_PORT: String(PROBE_PORT) }))
-    console.log(`[T5] vivim help p95=${p95}ms`)
+    // [audit] removed: console.log(`[T5] vivim help p95=${p95}ms`)
     expect(p95).toBeGreaterThan(0)
   })
 
@@ -35,7 +35,7 @@ describe('T5 NL resolve speed / fastest path', () => {
     const help = await spawnCli(['help'], { CAP_STORE_PORT: String(PROBE_PORT) })
     const visible = parseHelpCommands(help.stdout)
     const hasNlEntry = visible.some((c) => /interpret|ask|natural|nl/i.test(c))
-    console.log(`[T5] product-CLI NL entry present: ${hasNlEntry}`)
+    // [audit] removed: console.log(`[T5] product-CLI NL entry present: ${hasNlEntry}`)
     expect(help.code).toBe(0)
   })
 })

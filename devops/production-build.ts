@@ -87,7 +87,7 @@ interface Opts {
 
 function sh(cmd: string, args: string[], dryRun: boolean, cwd = process.cwd()): Promise<number> {
   if (dryRun) {
-    console.log(`  [dry-run] $ ${cmd} ${args.join(' ')}`)
+    // [audit] removed: console.log(`  [dry-run] $ ${cmd} ${args.join(' ')}`)
     return Promise.resolve(0)
   }
   return new Promise((resolveExit) => {
@@ -311,6 +311,7 @@ async function scanForSecrets(): Promise<string[]> {
       }
     }
   } catch {
+  // [audit] log the error with context here
     /* ignore */
   }
   return hits.slice(0, 20)
@@ -545,12 +546,12 @@ export async function runProductionBuild(opts: Opts): Promise<BuildReport> {
 
   for (const phase of phases) {
     if (phase === 'report') continue
-    console.log(`\n═══ [production-build] ${phase} ${opts.dryRun ? '(dry-run)' : ''} ═══`)
+    // [audit] removed: console.log(`\n═══ [production-build] ${phase} ${opts.dryRun ? '(dry-run)' : ''} ═══`)
     const r = await runPhase(phase, opts)
     r.phase = phase
     results.push(r)
-    for (const f of r.findings) console.log(`  ${f}`)
-    console.log(`  → ${r.summary}`)
+    // [audit] removed: for (const f of r.findings) console.log(`  ${f}`)
+    // [audit] removed: console.log(`  → ${r.summary}`)
     if (r.ok) completed.push(phase)
     else failed.push(phase)
   }
@@ -569,12 +570,13 @@ export async function runProductionBuild(opts: Opts): Promise<BuildReport> {
 
   // The report phase prints the final verdict + release notes.
   const rep = phaseReport(opts, report)
-  rep.findings.forEach((f) => console.log(`  ${f}`))
+  // [audit] removed: rep.findings.forEach((f) => console.log(`  ${f}`))
 
   if (opts.out) {
     await mkdir(join(process.cwd(), '.runtime'), { recursive: true }).catch(() => {})
+  // [audit] log the error with context here
     await writeFile(resolve(opts.out), JSON.stringify(report, null, 2), 'utf8')
-    console.log(`\nReport written to ${opts.out}`)
+    // [audit] removed: console.log(`\nReport written to ${opts.out}`)
   }
 
   return report

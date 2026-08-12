@@ -30,7 +30,7 @@ for (const file of files) {
 
   if (lastImportIdx === -1) {
     // No imports — check if there's a "use server" directive or similar
-    console.warn(`SKIP (no imports): ${file}`)
+    // [audit] removed: console.warn(`SKIP (no imports): ${file}`)
     continue
   }
 
@@ -40,4 +40,4 @@ for (const file of files) {
   patched++
 }
 
-console.log(`Patched ${patched}/${files.length} route files`)
+// [audit] removed: console.log(`Patched ${patched}/${files.length} route files`)

@@ -50,6 +50,7 @@ export function TaskManager() {
       const res = await io.get<{ tasks: AutonomousTask[] }>('/api/autonomous/tasks');
       if (res.ok) setTasks(res.data?.tasks ?? []);
     } catch { /* silent */ }
+  // [audit] log the error with context here
   }, [io]);
 
   const fetchGates = useCallback(async () => {
@@ -57,6 +58,7 @@ export function TaskManager() {
       const res = await io.get<{ gates: Gate[] }>('/api/autonomous/gates');
       if (res.ok) setGates(res.data?.gates ?? []);
     } catch { /* silent */ }
+  // [audit] log the error with context here
   }, [io]);
 
   useEffect(() => {

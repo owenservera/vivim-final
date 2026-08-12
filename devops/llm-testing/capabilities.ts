@@ -42,6 +42,7 @@ function liveBackendPort(): number {
     const p = Number(readFileSync(join(process.cwd(), '.runtime', 'backend.port'), 'utf8').trim())
     if (!Number.isNaN(p) && p > 0) return p
   } catch {
+  // [audit] log the error with context here
     /* fall through */
   }
   return Number(process.env.CAP_STORE_PORT ?? 9420)

@@ -34,6 +34,7 @@ export function runGuard(): GuardResult {
       }
     }
   } catch {
+  // [audit] log the error with context here
     // ignore
   }
 

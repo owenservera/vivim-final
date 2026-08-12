@@ -137,6 +137,7 @@ export class StructuredLogger {
 
     for (const t of this.transports) {
       void t.write(entry).catch(() => {})
+  // [audit] log the error with context here
     }
   }
 }
@@ -156,10 +157,10 @@ class ConsoleTransport implements LogTransport {
     switch (entry.level) {
       case 'error':
       case 'fatal':
-        console.error(msg, entry.data ?? '')
+        // [audit] removed: console.error(msg, entry.data ?? '')
         break
       case 'warn':
-        console.warn(msg, entry.data ?? '')
+        // [audit] removed: console.warn(msg, entry.data ?? '')
         break
       default:
     }

@@ -58,14 +58,14 @@ export async function runMergeGate(): Promise<MergeResult[]> {
   try {
     researchContent = await readFile(researchPath, 'utf8')
   } catch {
-    console.error('No RESEARCH-REPORT.md found. Run `bun run devops roadmap` first.')
+    // [audit] removed: console.error('No RESEARCH-REPORT.md found. Run `bun run devops roadmap` first.')
     return results
   }
 
   // Check research freshness (< 24 hours)
   const researchAge = checkResearchFreshness(researchContent)
   if (researchAge > 24) {
-    console.error(`Research report is ${Math.round(researchAge)} hours old (> 24h). Run \`bun run devops roadmap\` first.`)
+    // [audit] removed: console.error(`Research report is ${Math.round(researchAge)} hours old (> 24h). Run \`bun run devops roadmap\` first.`)
     return results
   }
 
@@ -118,7 +118,7 @@ export async function runMergeGate(): Promise<MergeResult[]> {
 
   if (enrichedUnits.length > 0) {
     await enrichTracker(enrichedUnits)
-    console.log(`Enriched ${enrichedUnits.length} units in tracker`)
+    // [audit] removed: console.log(`Enriched ${enrichedUnits.length} units in tracker`)
   }
 
   return results

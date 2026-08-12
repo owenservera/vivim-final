@@ -190,6 +190,7 @@ export async function POST(request: Request) {
         }
       }
     } catch {
+  // [audit] log the error with context here
       // Backend unavailable, fall back to local matching
     }
 
@@ -205,7 +206,7 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error('[Help Search] Error:', error)
+    // [audit] removed: console.error('[Help Search] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

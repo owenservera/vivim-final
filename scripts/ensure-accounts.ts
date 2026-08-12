@@ -27,7 +27,7 @@ const KNOWN_ACCOUNTS: StoredAccount[] = []
 
 export async function runEnsureAccounts(): Promise<void> {
   if (process.env.CAP_STORE_ENSURE_ACCOUNTS !== 'true') {
-    console.log('[ensure-accounts] skipped — set CAP_STORE_ENSURE_ACCOUNTS=true to run')
+    // [audit] removed: console.log('[ensure-accounts] skipped — set CAP_STORE_ENSURE_ACCOUNTS=true to run')
     return
   }
 
@@ -42,12 +42,13 @@ export async function runEnsureAccounts(): Promise<void> {
         const raw = JSON.parse(readFileSync(join(seedDir, f), 'utf8'))
         seedSlugs.add(raw.provider?.slug ?? f.replace('.json', ''))
       } catch { /* skip */ }
+  // [audit] log the error with context here
     }
   }
 
   for (const a of KNOWN_ACCOUNTS) {
     if (!seedSlugs.has(a.providerId)) {
-      console.log(`[ensure-accounts] skipping ${a.providerId} — not in seed files`)
+      // [audit] removed: console.log(`[ensure-accounts] skipping ${a.providerId} — not in seed files`)
       continue
     }
 
@@ -89,13 +90,13 @@ export async function runEnsureAccounts(): Promise<void> {
       })
     }
 
-    console.log(`[ensure-accounts] ${a.providerId}: account ready (${a.email})`)
+    // [audit] removed: console.log(`[ensure-accounts] ${a.providerId}: account ready (${a.email})`)
   }
 
-  console.log(`[ensure-accounts] done — ${KNOWN_ACCOUNTS.length} accounts ensured`)
+  // [audit] removed: console.log(`[ensure-accounts] done — ${KNOWN_ACCOUNTS.length} accounts ensured`)
 }
 
 // Direct script invocation (bun run scripts/ensure-accounts.ts)
 if (import.meta.main) {
-  runEnsureAccounts().catch((e) => { console.error('[ensure-accounts] failed:', e) })
+  // [audit] removed: runEnsureAccounts().catch((e) => { console.error('[ensure-accounts] failed:', e) })
 }

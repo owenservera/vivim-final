@@ -134,6 +134,7 @@ export function registerBuiltinCapabilities(registry: UnifiedCapabilityRegistry)
       registry.register(cap)
       registered++
     } catch {
+  // [audit] log the error with context here
       // Already registered (e.g. from generated pool) — skip
     }
   }

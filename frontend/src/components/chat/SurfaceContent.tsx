@@ -137,6 +137,7 @@ export function SurfaceContent({
         if (!cancelled && res.data?.ok) setDocs(res.data.documents);
       })
       .catch(() => {});
+  // [audit] log the error with context here
     return () => { cancelled = true; };
   }, [activeSurface, io]);
 
@@ -149,6 +150,7 @@ export function SurfaceContent({
         if (!cancelled && res.data?.ok) setMedias(res.data.media);
       })
       .catch(() => {});
+  // [audit] log the error with context here
     return () => { cancelled = true; };
   }, [activeSurface, io]);
 
@@ -161,6 +163,7 @@ export function SurfaceContent({
         if (!cancelled && res.data?.ok) setAutomations(res.data.automations);
       })
       .catch(() => {});
+  // [audit] log the error with context here
     return () => { cancelled = true; };
   }, [activeSurface, io]);
 
@@ -173,6 +176,7 @@ export function SurfaceContent({
         if (!cancelled && res.data?.ok) setAgents(res.data.agents);
       })
       .catch(() => {});
+  // [audit] log the error with context here
     return () => { cancelled = true; };
   }, [activeSurface, io]);
 

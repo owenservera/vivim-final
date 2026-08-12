@@ -57,3 +57,5 @@ export class ClaudeExportParserImpl {
     }
   }
 }
+
+export { toContentParts } from './to-content-parts.js'

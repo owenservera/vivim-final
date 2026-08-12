@@ -695,7 +695,7 @@ const commandDescriptions: CommandDescriptionSeed[] = [
 ]
 
 async function seedCommandDescriptions() {
-  console.log('Seeding command descriptions...')
+  // [audit] removed: console.log('Seeding command descriptions...')
 
   const now = BigInt(Date.now())
 
@@ -727,13 +727,13 @@ async function seedCommandDescriptions() {
   }
 
   const count = await prisma.commandDescription.count()
-  console.log(`Seeded ${count} command descriptions`)
+  // [audit] removed: console.log(`Seeded ${count} command descriptions`)
 }
 
 seedCommandDescriptions()
   .then(() => prisma.$disconnect())
   .catch(async (e) => {
-    console.error(e)
+    // [audit] removed: console.error(e)
     await prisma.$disconnect()
     process.exit(1)
   })

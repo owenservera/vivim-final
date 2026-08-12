@@ -17,14 +17,15 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Notification, NotificationKind } from '../../shared/notification';
 import { useIO } from './UnifiedIOProvider';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { Icon, type IconName } from './Icon';
 
-const KIND_ICON: Record<NotificationKind, string> = {
-  mention: '💬',
-  error: '❌',
-  completion: '✅',
-  hitl: '⏳',
-  system: '⚙️',
-  info: 'ℹ️',
+const KIND_ICON: Record<NotificationKind, IconName> = {
+  mention: 'message-square',
+  error: 'alert',
+  completion: 'check',
+  hitl: 'clock',
+  system: 'settings',
+  info: 'info',
 };
 
 const KIND_LABEL: Record<NotificationKind, string> = {
@@ -70,6 +71,7 @@ export function NotificationsCenter({ userId }: { userId: string }) {
         setUnreadCount(res.data.notifications.filter((n) => !n.read).length);
       }
     } catch {
+  // [audit] log the error with context here
       // ignore
     }
   }, [userId, io]);
@@ -79,6 +81,7 @@ export function NotificationsCenter({ userId }: { userId: string }) {
       const res = await io.get<{ ok: boolean; stats: { unread: number } }>(`/api/notification/stats?userId=${encodeURIComponent(userId)}`);
       if (res.data?.ok) setUnreadCount(res.data.stats.unread);
     } catch {
+  // [audit] log the error with context here
       // ignore
     }
   }, [userId, io]);
@@ -139,7 +142,7 @@ export function NotificationsCenter({ userId }: { userId: string }) {
         }}
         title="Notifications"
       >
-        🔔
+        <Icon name="bell" size={14} style={{ color: 'var(--text)' }} />
         {unreadCount > 0 && (
           <span
             style={{
@@ -194,7 +197,7 @@ export function NotificationsCenter({ userId }: { userId: string }) {
                 Mark all read
               </button>
               <button onClick={() => setShowPrefs(true)} style={btnStyle} title="Preferences">
-                ⚙
+                <Icon name="settings" size={12} />
               </button>
             </div>
           </div>
@@ -234,8 +237,9 @@ export function NotificationsCenter({ userId }: { userId: string }) {
                   color: 'var(--text-subtle)', textTransform: 'uppercase',
                   letterSpacing: '0.05em', background: 'var(--bg-subtle)',
                   borderBottom: '1px solid var(--border)',
+                  display: 'flex', alignItems: 'center', gap: 6,
                 }}>
-                  {KIND_ICON[kind]} {KIND_LABEL[kind]} ({items.length})
+                  <Icon name={KIND_ICON[kind]} size={12} /> {KIND_LABEL[kind]} ({items.length})
                 </div>
                 {items.map((n) => (
                   <div
@@ -246,7 +250,7 @@ export function NotificationsCenter({ userId }: { userId: string }) {
                       display: 'flex', gap: 8,
                     }}
                   >
-                    <span style={{ fontSize: 16 }}>{KIND_ICON[n.kind]}</span>
+                    <Icon name={KIND_ICON[n.kind]} size={16} style={{ marginTop: 2, flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: n.read ? 400 : 600 }}>{n.title}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{n.body}</div>

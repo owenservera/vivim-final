@@ -11,6 +11,7 @@ import type {
 import { catchDebug } from '../lib/catch-logger.js'
 import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
+import { parseRequestBody } from './validate.js'
 
 /** Flatten grouped ResolvedCapabilities into a single ordered array. */
 function flattenResolved(resolved: ResolvedCapabilities): ResolvedCapability[] {
@@ -121,7 +122,11 @@ export function createConversationRouter(ctx: ServerContext) {
         let ok = true
         if (governor?.executeCapability) {
           try {
-            const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
+            const parsed = z
+              .record(z.string(), z.unknown())
+              .safeParse(await req.json().catch(() => ({})))
+            // [audit] log the error with context here
+            const body: Record<string, unknown> = parsed.success ? parsed.data : {}
             executed = await governor.executeCapability(conversationId, slug, {
               resolver: {
                 getConversationProviderId: async (id) => {
@@ -189,8 +194,8 @@ export function createConversationRouter(ctx: ServerContext) {
       if (pathname === '/api/fleet/start' && method === 'POST') {
         if (!ctx.governor) return errorResponse('Engine not wired', 'InternalError', 500)
         const schema = z.object({ providerId: z.string().min(1), accountId: z.string().min(1) })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const slave = await ctx.governor.spawn(parsed.data.providerId, parsed.data.accountId)
         return json(slave, 201)
       }
@@ -208,8 +213,8 @@ export function createConversationRouter(ctx: ServerContext) {
           accountId: z.string().optional(),
           title: z.string().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const session = await ctx.db.ensureProviderSession({
           providerId: parsed.data.providerId,
           accountId: parsed.data.accountId,
@@ -230,8 +235,8 @@ export function createConversationRouter(ctx: ServerContext) {
         if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
         if (!ctx.conversationManager) return errorResponse('Engine not wired', 'InternalError', 500)
         const schema = z.object({ message: z.string().min(1) })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         // 30s timeout — prevents hanging when no Chrome slave is connected.
         const SEND_TIMEOUT_MS = 30_000
         const result = await Promise.race([
@@ -295,10 +300,11 @@ export function createConversationRouter(ctx: ServerContext) {
           return json({ authenticated: false, userId: null, email: null })
         }
         if (method === 'POST') {
-          const body = (await req.json().catch(() => ({}))) as {
-            email?: string
-            action?: string
-          }
+          const parsed = z
+            .object({ email: z.string().optional(), action: z.string().optional() })
+            .safeParse(await req.json().catch(() => ({})))
+          // [audit] log the error with context here
+          const body = parsed.success ? parsed.data : {}
           if (body.action === 'logout') {
             return json({ authenticated: false })
           }
@@ -376,7 +382,9 @@ export function createConversationRouter(ctx: ServerContext) {
 
       // PUT /api/config/governor — update governor config
       if (pathname === '/api/config/governor' && method === 'PUT') {
-        const body = (await req.json()) as Record<string, unknown>
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const body = parsed.data
         await ctx.db.setConfig('governor', JSON.stringify(body))
         return json({ ok: true, note: 'Restart required for fleet config changes' })
       }

@@ -33,14 +33,14 @@ describe('T4 Oracle single-call reachability', () => {
     const oracleLike = visible.filter((c) =>
       /oracle|kernel|topology|system.map|introspect/i.test(c),
     )
-    console.log(`[T4] oracle-like CLI commands: ${oracleLike.join(', ') || '(none)'}`)
+    // [audit] removed: console.log(`[T4] oracle-like CLI commands: ${oracleLike.join(', ') || '(none)'}`)
     expect(help.code).toBe(0)
     expect(Array.isArray(oracleLike)).toBe(true)
   })
 
   it('devops tooling provides offline oracle-equivalent discovery', async () => {
     const r = await spawnDevops(['runtime-test', 'discover', '--offline'])
-    console.log(
+    // [audit] removed: console.log(
       `[T4] devops discover --offline exit=${r.code} output=${r.stdout.length}b in ${r.ms}ms`,
     )
     expect(r.code).toBe(0)

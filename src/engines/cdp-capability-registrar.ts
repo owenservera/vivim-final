@@ -182,6 +182,7 @@ export function registerDiscoveredCdpMethods(
               reason: opts.verified ? 'd2-live-protocol-verified' : 'd2-pending-verification',
             })
             .catch(() => {})
+  // [audit] log the error with context here
           bound.push(desc.fullName)
         } catch (err) {
           catchDebug(err, 'engines:cdp-capability-registrar:185')

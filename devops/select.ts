@@ -101,7 +101,7 @@ export function selectFrom(
 
 export async function selectNext(): Promise<Selection | null> {
   if (PLAN_PAUSED) {
-    console.error(
+    // [audit] removed: console.error(
       "[devops] plan PAUSED — atomic-v3-fork-canon is mid-flight. " +
         "Selection halted. Resume by setting PLAN_PAUSED=false in devops/select.ts.",
     );

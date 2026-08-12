@@ -360,9 +360,9 @@ export async function runSpeckitAudit(args: string[]): Promise<void> {
   const jsonPath = join(outputDir, 'skill-readiness.json')
   await writeFile(jsonPath, JSON.stringify(report, null, 2), 'utf8')
 
-  console.log(`Skill audit complete: ${report.skills.length} skills analyzed`)
-  console.log(`Gap matrix: ${report.gapMatrix.length} gaps identified`)
-  console.log(`Reports written to: ${outputDir}`)
-  console.log(`  - ${mdPath}`)
-  console.log(`  - ${jsonPath}`)
+  // [audit] removed: console.log(`Skill audit complete: ${report.skills.length} skills analyzed`)
+  // [audit] removed: console.log(`Gap matrix: ${report.gapMatrix.length} gaps identified`)
+  // [audit] removed: console.log(`Reports written to: ${outputDir}`)
+  // [audit] removed: console.log(`  - ${mdPath}`)
+  // [audit] removed: console.log(`  - ${jsonPath}`)
 }

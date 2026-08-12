@@ -69,6 +69,7 @@ export class OpenAICompatibleAdapter implements IProviderAdapter {
     this.connection = connection
     // Try to discover models via GET /v1/models (best-effort)
     await this.discoverModels().catch(() => {
+  // [audit] log the error with context here
       // Non-fatal: fall back to manifest-declared models
     })
   }
@@ -86,6 +87,7 @@ export class OpenAICompatibleAdapter implements IProviderAdapter {
       if (!data.data) return
       this.runtimeModels = data.data.map((m) => this.translateDiscoveredModel(m.id))
     } catch {
+  // [audit] log the error with context here
       // Non-fatal
     }
   }

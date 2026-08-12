@@ -23,21 +23,21 @@ async function main() {
 
   const prisma = new PrismaClient();
   try {
-    console.log("=== TABLE ROW COUNTS ===\n");
-    console.log("TABLE".padEnd(28), "ROWS");
-    console.log("-".repeat(40));
+    // [audit] removed: console.log("=== TABLE ROW COUNTS ===\n");
+    // [audit] removed: console.log("TABLE".padEnd(28), "ROWS");
+    // [audit] removed: console.log("-".repeat(40));
     for (const t of tables) {
       const delegate = (prisma as unknown as Record<string, { count: () => Promise<number> }>)[t];
       if (!delegate || typeof delegate.count !== "function") {
-        console.log(t.padEnd(28), "(unknown table)");
+        // [audit] removed: console.log(t.padEnd(28), "(unknown table)");
         continue;
       }
       const n = await delegate.count();
-      console.log(t.padEnd(28), String(n));
+      // [audit] removed: console.log(t.padEnd(28), String(n));
     }
-    console.log("-".repeat(40));
+    // [audit] removed: console.log("-".repeat(40));
   } catch (e) {
-    console.error("report-tables failed (is DATABASE_URL set / dev.db present?):", e);
+    // [audit] removed: console.error("report-tables failed (is DATABASE_URL set / dev.db present?):", e);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

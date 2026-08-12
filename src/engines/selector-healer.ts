@@ -109,6 +109,7 @@ export class SelectorHealer {
             overrideJson: JSON.stringify(result.healed),
           })
           .catch(() => {}) // non-fatal — persistence failure must not break healing
+  // [audit] log the error with context here
       }
     }
 

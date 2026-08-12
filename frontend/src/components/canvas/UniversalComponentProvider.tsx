@@ -26,10 +26,10 @@ export function UniversalComponentProvider({ children }: { children: ReactNode }
     registerAllComponents();
     // Auto-populate the frontend ActionRegistry from backend capabilities.
     autoPopulateActions().catch((e) =>
-      console.warn('[UniversalComponentProvider] autoPopulateActions failed:', e),
+      // [audit] removed: console.warn('[UniversalComponentProvider] autoPopulateActions failed:', e),
     );
     // Log the registry size for verification.
-    console.log(`[UniversalComponentProvider] ${size()} components registered`);
+    // [audit] removed: console.log(`[UniversalComponentProvider] ${size()} components registered`);
   }, []);
 
   return <>{children}</>;

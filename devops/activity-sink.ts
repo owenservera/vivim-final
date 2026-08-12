@@ -19,6 +19,7 @@ export class FileAuditSink implements AuditSink {
       await mkdir(dirname(this.path), { recursive: true })
       await appendFile(this.path, `${JSON.stringify(entry)}\n`, 'utf8')
     } catch {
+  // [audit] log the error with context here
       // Never throw from a sink — logging must not break the automation run.
     }
   }

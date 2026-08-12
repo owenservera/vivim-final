@@ -171,8 +171,9 @@ export function BuilderProvider({ children }: { children: ReactNode }) {
       try {
         const json = JSON.stringify(target, null, 2);
         navigator.clipboard?.writeText(json);
-        console.log('[Builder] edit mutation (Phase 5 will open Reprogram-Modal):', json);
+        // [audit] removed: console.log('[Builder] edit mutation (Phase 5 will open Reprogram-Modal):', json);
       } catch {
+  // [audit] log the error with context here
         // clipboard may be unavailable
       }
     },

@@ -77,10 +77,14 @@ export class SemanticSearchStoreImpl implements SemanticSearchStore {
       limit?: number
       threshold?: number
       entityType?: string
+      model?: string
+      dimensions?: number
     },
   ): Promise<Array<{ entityId: string; entityType: string; score: number }>> {
     const where: Record<string, unknown> = {}
     if (opts.entityType !== undefined) where.entityType = opts.entityType
+    if (opts.model !== undefined) where.model = opts.model
+    if (opts.dimensions !== undefined) where.dimensions = opts.dimensions
     const rows = await this.db.prisma.memoryEmbedding.findMany({ where })
     const threshold = opts.threshold ?? 0.0
     const limit = opts.limit ?? 10

@@ -61,7 +61,7 @@ async function main() {
   const prev = loadBaseline()
   const report = await runBenchmarks(scenarios, { baseline: prev })
   for (const r of report.results) {
-    console.log(
+    // [audit] removed: console.log(
       `${r.name.padEnd(28)} p50=${r.p50Ms.toFixed(3)}ms p95=${r.p95Ms.toFixed(3)}ms (n=${r.iterations})`,
     )
   }
@@ -70,17 +70,17 @@ async function main() {
     const next: Record<string, number> = {}
     for (const r of report.results) next[r.name] = r.p95Ms
     writeFileSync(baselinePath, JSON.stringify(next, null, 2))
-    console.log("\nBaseline recorded (first run).")
+    // [audit] removed: console.log("\nBaseline recorded (first run).")
   }
   if (report.regressions.length > 0) {
-    console.error("\nREGRESSIONS:")
-    for (const g of report.regressions) console.error(`  - ${g}`)
+    // [audit] removed: console.error("\nREGRESSIONS:")
+    // [audit] removed: for (const g of report.regressions) console.error(`  - ${g}`)
     process.exit(1)
   }
-  console.log("\nNo regressions. OK.")
+  // [audit] removed: console.log("\nNo regressions. OK.")
 }
 
 main().catch((e) => {
-  console.error(e)
+  // [audit] removed: console.error(e)
   process.exit(1)
 })

@@ -49,6 +49,7 @@ export async function assessGoal(goal: string, opts?: { probe?: boolean }): Prom
         return { resolved: true, capabilityId: data.capabilityId, needsClarification: false }
       }
     } catch {
+  // [audit] log the error with context here
       // server down — fall through to clarification
     }
   }

@@ -94,6 +94,24 @@ export class UnifiedCapabilityRegistry {
     this.slugIndex.set(capability.slug, capability)
   }
 
+  /**
+   * Register a capability, replacing an existing one that owns the same slug.
+   * This is the deliberate override path for engine-owned capabilities that
+   * shadow a taxonomy-pool stub (e.g. canvas mutation caps, which register
+   * after `registerGeneratedCapabilities`). Unlike `register` it tolerates
+   * slug collisions — the newest registration wins. The replaced stub is
+   * dropped from both maps so it cannot leak into cross-surface dispatch.
+   */
+  registerOrReplace(capability: UnifiedCapability): void {
+    validateCapability(capability)
+    const existing = this.slugIndex.get(capability.slug)
+    if (existing && existing.id !== capability.id) {
+      this.capabilities.delete(existing.id)
+    }
+    this.capabilities.set(capability.id, capability)
+    this.slugIndex.set(capability.slug, capability)
+  }
+
   unregister(id: string): void {
     const cap = this.capabilities.get(id)
     if (!cap) throw new EngineError(`Capability ${id} not found`)

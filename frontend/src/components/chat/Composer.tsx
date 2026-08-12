@@ -6,6 +6,7 @@ import { useWebSocket, type WsMessage } from '@/hooks/useWebSocket';
 import { StreamingIndicator } from '@/components/canvas/StreamingIndicator';
 import { EmptyState } from './EmptyState';
 import { RenderBlocks, type ContentBlock } from './MessageBlock';
+import type { ContentPart } from '@backend/schema/streaming';
 import { LatencyBreakdown, type TimingInfo } from './LatencyBreakdown';
 import { ComposerShell, defaultChatScope } from './ComposerShell';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -31,26 +32,6 @@ interface ComposerProps {
   onRetryMessage?: (text: string) => void;
 }
 
-interface PendingBlock {
-  kind: string;
-  text: string;
-}
-
-function normalizeKind(raw: string | undefined): string {
-  const map: Record<string, string> = {
-    text: 'text',
-    reasoning: 'thinking',
-    code: 'code',
-    file: 'file',
-    'tool-call': 'tool-call',
-    'tool-result': 'tool-result',
-    meta: 'meta',
-    error: 'error',
-    'step-start': 'step-start',
-  }
-  return map[raw ?? ''] ?? 'text'
-}
-
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -71,13 +52,13 @@ export function Composer({ conversationId, wsStatus, wsMessage, onRetryMessage }
   const io = useIO();
   const [messages, setMessages] = useState<Message[]>([]);
   const [streaming, setStreaming] = useState(false);
-  const [streamingBlocks, setStreamingBlocks] = useState<ContentBlock[]>([]);
+  const [streamingBlocks, setStreamingBlocks] = useState<ContentPart[]>([]);
   const [streamingTiming, setStreamingTiming] = useState<TimingInfo | null>(null);
   const [lastEvent, setLastEvent] = useState<string | undefined>();
   const [optimisticText, setOptimisticText] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const pendingBlocksRef = useRef<PendingBlock[]>([]);
+  const pendingBlocksRef = useRef<ContentPart[]>([]);
   const pendingTimingRef = useRef<TimingInfo | null>(null);
   const rafRef = useRef<number | null>(null);
 
@@ -98,14 +79,7 @@ export function Composer({ conversationId, wsStatus, wsMessage, onRetryMessage }
       rafRef.current = null;
       const batch = pendingBlocksRef.current.splice(0);
       if (batch.length > 0) {
-        setStreamingBlocks((prev) => [
-          ...prev,
-          ...batch.map((b, i) => ({
-            kind: b.kind,
-            content: b.text,
-            index: prev.length + i,
-          })),
-        ]);
+        setStreamingBlocks((prev) => [...prev, ...batch]);
       }
       if (pendingTimingRef.current) {
         setStreamingTiming(pendingTimingRef.current);
@@ -119,6 +93,7 @@ export function Composer({ conversationId, wsStatus, wsMessage, onRetryMessage }
       const res = await io.get<{ messages?: Message[] }>(`/api/conversations/${encodeURIComponent(id)}/messages`);
       if (res.data?.messages) setMessages(res.data.messages);
     } catch {
+  // [audit] log the error with context here
       // network error — keep current state
     }
   }, [io]);
@@ -142,15 +117,13 @@ export function Composer({ conversationId, wsStatus, wsMessage, onRetryMessage }
     if (msg.type === 'conversation:block') {
       const payload = msg.payload as {
         conversationId?: string;
-        block?: { type?: string; kind?: string; text?: string; content?: string };
+        block?: ContentPart;
         timing?: TimingInfo;
       };
       if (payload?.conversationId !== activeId) return;
       setStreaming(true);
-      const kind = normalizeKind(payload.block?.type ?? payload.block?.kind);
-      const chunk = payload.block?.text ?? payload.block?.content ?? '';
-      if (chunk) {
-        pendingBlocksRef.current.push({ kind, text: chunk });
+      if (payload.block) {
+        pendingBlocksRef.current.push(payload.block);
         scheduleFlush();
       }
       if (payload.timing) {
@@ -159,15 +132,27 @@ export function Composer({ conversationId, wsStatus, wsMessage, onRetryMessage }
       }
       setLastEvent('block');
     } else if (msg.type === 'conversation:complete') {
-      const payload = msg.payload as { conversationId?: string; timing?: TimingInfo };
+      const payload = msg.payload as {
+        conversationId?: string;
+        timing?: TimingInfo;
+        blocks?: ContentPart[];
+      };
       if (payload?.conversationId !== activeId) return;
-      setStreaming(false);
       setLastEvent('complete');
-      setStreamingBlocks([]);
-      setStreamingTiming(null);
+      // Render immediately from the event (full ContentPart[]), then
+      // reconcile with the persisted row via loadHistory — closes the
+      // perceived-latency gap (upgrade doc Gap 5) without a blank flash.
+      if (payload.blocks) {
+        setStreamingBlocks(payload.blocks);
+      }
+      if (payload.timing) setStreamingTiming(payload.timing);
+      loadHistory(activeId).finally(() => {
+        setStreaming(false);
+        setStreamingBlocks([]);
+        setStreamingTiming(null);
+      });
       pendingTimingRef.current = null;
       pendingBlocksRef.current.splice(0);
-      loadHistory(activeId);
     } else if (msg.type === 'conversation:error') {
       const payload = msg.payload as { conversationId?: string; error?: string };
       if (payload?.conversationId !== activeId) return;
@@ -218,10 +203,12 @@ export function Composer({ conversationId, wsStatus, wsMessage, onRetryMessage }
   }, [copyToClipboard, showToast]);
 
   const getMessageText = useCallback((m: Message): string => {
-    return [
-      m.content,
-      ...(m.blocks?.map(b => b.content) ?? []),
-    ].join(' ');
+    const fromBlocks = (m.blocks ?? []).map((b) => {
+      if (typeof (b as { text?: unknown }).text === 'string') return (b as { text: string }).text
+      if (typeof (b as { content?: unknown }).content === 'string') return (b as { content: string }).content
+      return ''
+    }).join(' ')
+    return [m.content, fromBlocks].join(' ').trim()
   }, []);
 
   const filteredMessages = searchOpen && searchQuery.trim()

@@ -11,14 +11,14 @@ const checksum = await Bun.CryptoHasher.hash('sha256', sql, 'hex')
 
 const existing = await p.migrationLog.findFirst({ where: { filename } })
 if (existing) {
-  console.log('migration already recorded:', filename)
+  // [audit] removed: console.log('migration already recorded:', filename)
 } else {
   await p.migrationLog.create({
     data: { id: newId(), filename, checksum, appliedAt: Date.now() },
   })
-  console.log('recorded migration:', filename, 'checksum', checksum.slice(0, 12))
+  // [audit] removed: console.log('recorded migration:', filename, 'checksum', checksum.slice(0, 12))
 }
 
 const count = await p.node.count()
-console.log('node rows:', count)
+// [audit] removed: console.log('node rows:', count)
 await p.$disconnect()

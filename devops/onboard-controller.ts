@@ -50,12 +50,14 @@ async function loadProviderParserLogic(providerId: string): Promise<string> {
     const row = await store.getActiveParser(providerId)
     if (row?.logicCode) return row.logicCode
   } catch {
+  // [audit] log the error with context here
     // DB read failed — fall through to the seed file.
   }
   try {
     const { LOGIC_CODE } = await import(`../seeds/parsers/harvested/${providerId}-batchexecute.js`)
     return LOGIC_CODE
   } catch {
+  // [audit] log the error with context here
     // No harvested seed for this provider.
   }
   return ''
@@ -79,6 +81,7 @@ async function loadDiscoveredCapabilities(provider?: string): Promise<string[]> 
     const rawCaps = (manifestCaps.capabilities as string[] | undefined) ?? []
     if (rawCaps.length > 0) return rawCaps
   } catch { /* no draft */ }
+  // [audit] log the error with context here
   return ['conversation_send']
 }
 
@@ -164,6 +167,7 @@ export async function modeInfer(opts: OnboardOptions): Promise<OnboardModeResult
   try {
     draft = JSON.parse(await readFile(draftPath, 'utf8'))
   } catch {
+  // [audit] log the error with context here
     // No captured draft: synthesize a minimal seed skeleton from the analyzer defaults.
   }
 
@@ -172,6 +176,7 @@ export async function modeInfer(opts: OnboardOptions): Promise<OnboardModeResult
   try {
     captured = await readFile(capturedPath, 'utf8')
   } catch {
+  // [audit] log the error with context here
     // No captured traffic: analyzer returns unknown transport.
   }
 
@@ -324,10 +329,12 @@ export async function modeTestSelectors(opts: OnboardOptions, selectors: Record<
             }, repairedConfidence >= threshold ? 'success' : 'failure')
           }
         } catch {
+  // [audit] log the error with context here
           // heal failed — leave original result
         }
       }
     } catch {
+  // [audit] log the error with context here
       // SelectorHealer unavailable — keep original failures
     }
   }
@@ -401,6 +408,7 @@ export async function modeTestParse(opts: OnboardOptions, logicCode?: string, ca
         })
       }
     } catch {
+  // [audit] log the error with context here
       // repair failed — keep original failure result
     }
   }
@@ -503,7 +511,9 @@ export async function runOnboard(opts: OnboardOptions): Promise<OnboardRunReport
         await syncTasksToTracker(specDir)
         await activity('onboard.spec-synced', 'provider', { provider, specDir })
       } catch { /* speckit bridge not available */ }
+  // [audit] log the error with context here
     } catch { /* spec dir creation best-effort */ }
+  // [audit] log the error with context here
   }
 
   const runPhases = phasesFrom(ledger, opts.from, opts.resume)
@@ -542,6 +552,7 @@ async function autoResolveCdp(provider?: string, url?: string): Promise<{ client
       return { client: cdp.client, sessionId: cdp.sessionId }
     }
   } catch {
+  // [audit] log the error with context here
     // CDP resolution failed — live phases will be skipped
   }
   return null
@@ -560,6 +571,7 @@ async function checkProviderAuthState(providerSlug?: string): Promise<boolean> {
       try {
         if (await new ProfileAllocator().isAuthenticated(profileDir)) return true
       } catch {
+  // [audit] log the error with context here
         // skip account dirs that fail auth check
       }
     }

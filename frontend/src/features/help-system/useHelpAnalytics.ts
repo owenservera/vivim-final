@@ -66,7 +66,7 @@ export function useHelpAnalytics(userId?: string): UseHelpAnalyticsResult {
 
       // Log to console in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('[Help Analytics]', event)
+        // [audit] removed: console.log('[Help Analytics]', event)
       }
 
       // Send to analytics endpoint (fire-and-forget)
@@ -75,6 +75,7 @@ export function useHelpAnalytics(userId?: string): UseHelpAnalyticsResult {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(event),
       }).catch(() => {
+  // [audit] log the error with context here
         // Silently fail — analytics should never block UI
       })
     },

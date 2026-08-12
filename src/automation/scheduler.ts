@@ -78,6 +78,7 @@ export class AutomationScheduler {
     // Tick every 1 second
     this.tickTimer = setInterval(() => {
       this.tick().catch(() => {
+  // [audit] log the error with context here
         // Best-effort tick; errors logged by runner
       })
     }, 1000)
@@ -93,6 +94,7 @@ export class AutomationScheduler {
         }
       })
       .catch(() => {
+  // [audit] log the error with context here
         // Ignore startup errors
       })
   }
@@ -230,6 +232,7 @@ export class AutomationScheduler {
   private subscribeEvent(sched: AutomationScheduleRow): void {
     const unsub = this.eventBus.on(sched.scheduleValue, (() => {
       this.executeSchedule(sched, Date.now()).catch(() => {
+  // [audit] log the error with context here
         // Best-effort
       })
     }) as Parameters<typeof this.eventBus.on>[1])

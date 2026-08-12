@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState, Suspense, lazy } from 'react';
 import { useIO } from '@/components/canvas/UnifiedIOProvider';
 import { dispatchBehavior } from '@/shared/dispatch-behavior';
 import { GuidedLanding, checkNeedsSetup } from '@/features/guided-landing';
+import { useCanvasUiState } from '@/hooks/use-canvas-ui-state';
 import {
   LivingCanvas,
   LiveConfigProvider,
@@ -39,6 +40,8 @@ import {
   getLayerConfig,
   UpdateNotification,
   MobileNav,
+  QuickActionDock,
+  StreamStatusPill,
 } from '@/components/canvas';
 import { HelpWidget } from '@/features/help-system';
 import { getPanelType } from '@/components/canvas/TabConfig';
@@ -364,7 +367,7 @@ function CanvasApp() {
             try {
               await io.post('/api/interpret', { text: capability });
             } catch {
-              console.error('[Help] Execute failed:', capability);
+              // [audit] removed: console.error('[Help] Execute failed:', capability);
             }
           }
         }}
@@ -372,19 +375,39 @@ function CanvasApp() {
 
       {/* Dev console (Cmd+`) */}
       {devConsoleOpen && (
-        <Suspense fallback={null}>
-          <DevConsoleLazy
-            isOpen={devConsoleOpen}
-            onClose={() => setDevConsoleOpen(false)}
-          />
-        </Suspense>
+        <ErrorBoundary fallback={<div className="fixed bottom-4 right-4 p-3 bg-destructive/10 text-destructive text-xs rounded">DevConsole failed to load</div>}>
+          <Suspense fallback={<div className="fixed bottom-4 right-4 p-2 bg-popover text-popover-foreground text-xs rounded border shadow animate-pulse">Loading DevConsole...</div>}>
+            <DevConsoleLazy
+              isOpen={devConsoleOpen}
+              onClose={() => setDevConsoleOpen(false)}
+            />
+          </Suspense>
+        </ErrorBoundary>
       )}
+
+      {/* Quick Action Dock */}
+      <QuickActionDock
+        onZoomIn={() => {}}
+        onZoomOut={() => {}}
+        onResetView={() => {}}
+        onToggleDevConsole={() => setDevConsoleOpen((o) => !o)}
+        zoomLevel={1.0}
+      />
+
+      {/* Stream Status Pill */}
+      <StreamStatusPill isStreaming={false} providerId={providerIds[0]} />
 
       {/* Update notification */}
       <UpdateNotification />
 
       {/* Mobile bottom navigation bar */}
-      <MobileNav />
+      <MobileNav
+        onOpenSearch={() => setPaletteOpen(true)}
+        onOpenMenu={() => setMenuOpen(true)}
+        onTogglePanel={(panelId) => {
+          dispatch({ type: 'PANEL_TOGGLE', layerId: sessionState.activeLayer, panelId });
+        }}
+      />
 
       {/* Panel palette (Cmd+Shift+P) */}
       <PanelPalette
@@ -393,15 +416,7 @@ function CanvasApp() {
         onSelect={(panelId) => {
           const ss = sessionRef.current;
           const layerId = ss.activeLayer;
-          const layer = ss.layers[layerId];
-          if (layer) {
-            if (layer.openPanels.includes(panelId)) {
-              // If already open, just focus/blur close — here we just close it
-              // In a full impl, this would focus the panel
-            } else {
-              // Open the panel on the active layer
-            }
-          }
+          dispatchRef.current({ type: 'PANEL_TOGGLE', layerId, panelId });
           setPanelPaletteOpen(false);
         }}
       />

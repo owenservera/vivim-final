@@ -68,6 +68,7 @@ export function ReprogramController() {
           setInitialSpec(res.data.spec);
         }
       } catch {
+  // [audit] log the error with context here
         // Best-effort — the modal still works with a placeholder spec.
       } finally {
         setLoadingSpec(false);

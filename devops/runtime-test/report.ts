@@ -12,6 +12,7 @@ export function saveLoopReport(report: unknown): void {
   try {
     writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2), 'utf8')
   } catch {
+  // [audit] log the error with context here
     // best-effort persistence; never throw
   }
 }

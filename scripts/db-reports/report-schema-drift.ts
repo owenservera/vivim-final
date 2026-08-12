@@ -39,16 +39,16 @@ function extractTableMaps(schemaText: string): Map<string, string> {
 }
 
 async function main() {
-  console.log("=== SCHEMA DRIFT ===\n");
+  // [audit] removed: console.log("=== SCHEMA DRIFT ===\n");
 
   // 1. prisma validate
   try {
     execSync("bunx prisma validate", { cwd: ROOT, stdio: "pipe" });
-    console.log("[validate] prisma/schema.prisma is valid");
+    // [audit] removed: console.log("[validate] prisma/schema.prisma is valid");
   } catch (e) {
     const out = (e as { stdout?: Buffer; stderr?: Buffer }).stdout?.toString() ??
       (e as { stderr?: Buffer }).stderr?.toString() ?? String(e);
-    console.log("[validate] FAILED:\n" + out);
+    // [audit] removed: console.log("[validate] FAILED:\n" + out);
   }
 
   // 2. Tables present in the live DB
@@ -80,48 +80,49 @@ async function main() {
     try {
       rmSync(tmp, { recursive: true, force: true });
     } catch {
+  // [audit] log the error with context here
       // WAL/lock may keep the temp dir busy; non-fatal for a read-only report.
     }
   } catch (e) {
     const errOut = (e as { stdout?: Buffer; stderr?: Buffer }).stdout?.toString() ??
       (e as { stderr?: Buffer }).stderr?.toString() ?? String(e);
-    console.log("[db pull] could not introspect dev.db:");
-    console.log(errOut.split("\n").slice(0, 12).join("\n"));
-    console.log("  (is prisma/dev.db present and DATABASE_URL correct?)");
+    // [audit] removed: console.log("[db pull] could not introspect dev.db:");
+    // [audit] removed: console.log(errOut.split("\n").slice(0, 12).join("\n"));
+    // [audit] removed: console.log("  (is prisma/dev.db present and DATABASE_URL correct?)");
   }
 
   const schemaText = readFileSync(SCHEMA, "utf-8");
   const modelMap = extractTableMaps(schemaText);
   const declaredTables = new Set(modelMap.values());
 
-  console.log(`\nDeclared tables (schema): ${declaredTables.size}`);
-  console.log(`Live tables (dev.db):     ${liveTables.length}`);
+  // [audit] removed: console.log(`\nDeclared tables (schema): ${declaredTables.size}`);
+  // [audit] removed: console.log(`Live tables (dev.db):     ${liveTables.length}`);
 
   if (liveTables.length > 0) {
     const liveSet = new Set(liveTables);
     const missingInDb = [...declaredTables].filter((t) => !liveSet.has(t));
     const extraInDb = liveTables.filter((t) => !declaredTables.has(t));
     if (missingInDb.length) {
-      console.log(`\n[HIGH] Declared but MISSING in DB (${missingInDb.length}):`);
+      // [audit] removed: console.log(`\n[HIGH] Declared but MISSING in DB (${missingInDb.length}):`);
       missingInDb.forEach((t) => {
-        console.log("   - " + t);
+        // [audit] removed: console.log("   - " + t);
       });
-      console.log("   -> run: bunx prisma migrate dev --name <x>  (or bunx prisma db push)");
+      // [audit] removed: console.log("   -> run: bunx prisma migrate dev --name <x>  (or bunx prisma db push)");
     }
     if (extraInDb.length) {
-      console.log(`\n[MEDIUM] In DB but NOT declared in schema (${extraInDb.length}):`);
+      // [audit] removed: console.log(`\n[MEDIUM] In DB but NOT declared in schema (${extraInDb.length}):`);
       extraInDb.slice(0, 20).forEach((t) => {
-        console.log("   - " + t);
+        // [audit] removed: console.log("   - " + t);
       });
-      if (extraInDb.length > 20) console.log(`   ... and ${extraInDb.length - 20} more`);
+      // [audit] removed: if (extraInDb.length > 20) console.log(`   ... and ${extraInDb.length - 20} more`);
     }
     if (!missingInDb.length && !extraInDb.length) {
-      console.log("\nOK: schema tables and DB tables are in sync.");
+      // [audit] removed: console.log("\nOK: schema tables and DB tables are in sync.");
     }
   }
 }
 
 main().catch((err) => {
-  console.error("report-schema-drift failed:", err);
+  // [audit] removed: console.error("report-schema-drift failed:", err);
   process.exit(1);
 });

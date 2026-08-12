@@ -100,19 +100,19 @@ export function printResult(result: ActionResult, args: CliArgs): void {
   const jsonStr = JSON.stringify(compact, null, 2)
 
   if (flagBool(args, 'json')) {
-    console.log(jsonStr)
+    // [audit] removed: console.log(jsonStr)
     return
   }
 
   const outPath = flag(args, 'out')
   if (outPath) {
     writeFileSync(outPath, jsonStr, 'utf8')
-    console.log(humanReadable(compact))
+    // [audit] removed: console.log(humanReadable(compact))
     return
   }
 
   // Human-readable default
-  console.log(humanReadable(compact))
+  // [audit] removed: console.log(humanReadable(compact))
 }
 
 function humanReadable(data: Record<string, unknown>, indent = ''): string {

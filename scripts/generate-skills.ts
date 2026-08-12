@@ -39,7 +39,7 @@ ${contentRaw}`
     await mkdir(kilocodeDir, { recursive: true })
     await writeFile(join(kilocodeDir, 'SKILL.md'), opencodeSkill)
 
-    console.log(`Generated: ${manifest.name}`)
+    // [audit] removed: console.log(`Generated: ${manifest.name}`)
   }
 }
 

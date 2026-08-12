@@ -148,7 +148,7 @@ export async function runSession(slug: string, mode: PingMode): Promise<void> {
   if (!section) {
     updatePlatform(st, { ...meta, status: 'complete' })
     await saveState(st)
-    console.log(`✅ ${slug}: all sections complete (${meta.sectionsDone.length}/${DRILLDOWN_SECTIONS.length})`)
+    // [audit] removed: console.log(`✅ ${slug}: all sections complete (${meta.sectionsDone.length}/${DRILLDOWN_SECTIONS.length})`)
     return
   }
 
@@ -167,7 +167,7 @@ export async function runSession(slug: string, mode: PingMode): Promise<void> {
     }
     updatePlatform(st, nextMeta)
     await saveState(st)
-    console.log(`✓ ${slug} section '${section}' applied (${nextMeta.sectionsDone.length}/${DRILLDOWN_SECTIONS.length})`)
+    // [audit] removed: console.log(`✓ ${slug} section '${section}' applied (${nextMeta.sectionsDone.length}/${DRILLDOWN_SECTIONS.length})`)
     return runSession(slug, mode)
   }
 
@@ -176,7 +176,7 @@ export async function runSession(slug: string, mode: PingMode): Promise<void> {
   await ping(prompt, { mode, outputPath: `live/${slug}.${section}.json` })
 
   if (mode === 'agent') {
-    console.log(`\nAgent mode: write ${rawPath}, then re-run \`session ${slug} --mode agent\``)
+    // [audit] removed: console.log(`\nAgent mode: write ${rawPath}, then re-run \`session ${slug} --mode agent\``)
     return
   }
 
@@ -192,6 +192,6 @@ export async function runSession(slug: string, mode: PingMode): Promise<void> {
   }
   updatePlatform(st, nextMeta)
   await saveState(st)
-  console.log(`✓ ${slug} section '${section}' applied`)
+  // [audit] removed: console.log(`✓ ${slug} section '${section}' applied`)
   return runSession(slug, mode)
 }

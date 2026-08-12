@@ -23,13 +23,15 @@ async function kill(pid: number): Promise<void> {
   try {
     process.kill(pid)
   } catch {}
+  // [audit] log the error with context here
   try {
     Bun.spawnSync(['taskkill', '/PID', String(pid), '/F', '/T'])
   } catch {}
+  // [audit] log the error with context here
 }
 
 async function main() {
-  console.log('\n  \x1b[1mvivim\x1b[0m — stopping services\n')
+  // [audit] removed: console.log('\n  \x1b[1mvivim\x1b[0m — stopping services\n')
   for (const { port, label } of PORTS) {
     const pid = await findPidOnPort(port)
     if (pid) {
@@ -39,20 +41,20 @@ async function main() {
         if (!(await findPidOnPort(port))) break
         await new Promise((r) => setTimeout(r, 200))
       }
-      console.log(`  \x1b[92m✓\x1b[0m ${label} stopped (was PID ${pid})`)
+      // [audit] removed: console.log(`  \x1b[92m✓\x1b[0m ${label} stopped (was PID ${pid})`)
     } else {
-      console.log(`  \x1b[90m—\x1b[0m ${label} not running`)
+      // [audit] removed: console.log(`  \x1b[90m—\x1b[0m ${label} not running`)
     }
   }
 
   if (existsSync(RUNTIME)) {
     await rm(RUNTIME, { recursive: true, force: true })
-    console.log('  \x1b[90m—\x1b[0m cleaned .runtime')
+    // [audit] removed: console.log('  \x1b[90m—\x1b[0m cleaned .runtime')
   }
-  console.log()
+  // [audit] removed: console.log()
 }
 
 main().catch((err) => {
-  console.error('stop error:', err)
+  // [audit] removed: console.error('stop error:', err)
   process.exit(1)
 })

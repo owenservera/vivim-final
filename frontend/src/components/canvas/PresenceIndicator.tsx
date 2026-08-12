@@ -26,6 +26,7 @@ export function PresenceIndicator({ workspaceId }: { workspaceId: string }) {
         const cRes = await io.get<{ ok: boolean; cursors: PresenceCursor[] }>(`/api/presence/cursors?workspaceId=${encodeURIComponent(workspaceId)}`);
         if (!cancelled && cRes.data?.ok) setCursors(cRes.data.cursors);
       } catch {
+  // [audit] log the error with context here
         // ignore
       }
     };

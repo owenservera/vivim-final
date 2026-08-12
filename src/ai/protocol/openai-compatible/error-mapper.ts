@@ -61,6 +61,7 @@ function parseOpenAIErrorBody(body: string, providerId: ProviderId, status?: num
       return AI_ERRORS.protocolError(`${code}: ${message}`)
     }
   } catch {
+  // [audit] log the error with context here
     // Not JSON
   }
 

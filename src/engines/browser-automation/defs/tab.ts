@@ -45,6 +45,7 @@ export const tabSwitch: BrowserCapabilityDef = {
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Target.activateTarget', { targetId: ctx.params.targetId })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'tab switched' }
   },
 }
@@ -88,6 +89,7 @@ export const tabPin: BrowserCapabilityDef = {
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Target.attachToTarget', { targetId: ctx.params.targetId, flatten: true })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'tab pin (best-effort)' }
   },
 }
@@ -105,6 +107,7 @@ export const tabMute: BrowserCapabilityDef = {
         muted: ctx.params.muted,
       })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'tab mute (best-effort)' }
   },
 }
@@ -138,6 +141,7 @@ export const windowResize: BrowserCapabilityDef = {
         mobile: false,
       })
       .catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'window resized' }
   },
 }
@@ -150,6 +154,7 @@ export const windowFocus: BrowserCapabilityDef = {
   trust: TRUST.read,
   handler: async (ctx) => {
     await ctx.governor.cdp.send(ctx.slaveId, 'Target.activateTarget', {}).catch(() => {})
+  // [audit] log the error with context here
     return { ok: true, detail: 'window focus (best-effort)' }
   },
 }

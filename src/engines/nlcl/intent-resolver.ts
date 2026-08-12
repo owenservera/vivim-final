@@ -1,4 +1,5 @@
 import { EngineError } from '../../errors.js'
+import type { EmbeddingProvider } from '../semantic-search.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { LayeredResolver } from './layered-resolver.js'
 import { NLCommandParser } from './nl-parser.js'
@@ -196,6 +197,7 @@ export function createResolver(
   adapters?: {
     localLLM?: LocalLLMAdapter
     providerLLM?: ProviderLLMAdapter
+    embeddingProvider?: EmbeddingProvider
   },
 ): IntentResolver {
   switch (config.type) {
@@ -259,6 +261,7 @@ export function createResolver(
         fuzzyThreshold: config.fuzzyThreshold,
         semanticThreshold: config.semanticThreshold,
         llmThreshold: config.llmThreshold ?? config.minConfidence,
+        embeddingProvider: adapters?.embeddingProvider,
       })
     }
   }

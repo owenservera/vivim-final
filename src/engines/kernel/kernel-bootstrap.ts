@@ -252,6 +252,7 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
         for (const slave of slaves) {
           if (slave.status === 'error') {
             await governor.kill(slave.slaveId).catch(() => {})
+  // [audit] log the error with context here
           }
         }
         await governor.launch(providerId)

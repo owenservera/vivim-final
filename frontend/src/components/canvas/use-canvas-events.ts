@@ -89,10 +89,12 @@ export function useCanvasEvents(workspaceId: string | null) {
           // will refetch /api/canvas/resolve and re-render only changed nodes.
           qc.invalidateQueries({ queryKey: ['canvas:resolve'] });
         } catch {
+  // [audit] log the error with context here
           // ignore malformed events
         }
       };
     } catch {
+  // [audit] log the error with context here
       // EventSource not available (e.g. SSR) — silent no-op.
     }
 

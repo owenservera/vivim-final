@@ -8,6 +8,9 @@
 // UnifiedCapability resolved through POST /api/interpret + /api/capabilities/:id/execute.
 
 import { createServerWithEngines } from '../server/index.js'
+import { getLogger } from '../lib/logger.js'
+
+const log = getLogger('vivim-server')
 
 // Skip the 'serve' subcommand if present (launch.bat passes it)
 const argv = process.argv.filter((a) => a !== 'serve')
@@ -125,7 +128,7 @@ function bootstrapDb(): void {
 
   const snapshotPath = candidates.find((p) => fs.existsSync(p))
   if (!snapshotPath) {
-    console.warn('[vivim-server] No seed snapshot found — DB will be empty')
+    log.warn('[vivim-server] No seed snapshot found — DB will be empty')
     return
   }
 
@@ -133,12 +136,14 @@ function bootstrapDb(): void {
     if (dbExists) {
       const backupPath = `${dbPath}.pre-bootstrap-${Date.now()}`
       fs.copyFileSync(dbPath, backupPath)
-      console.log(`[vivim-server] Backed up empty DB to ${backupPath}`)
+      log.info(`[vivim-server] Backed up empty DB to ${backupPath}`)
     }
     fs.copyFileSync(snapshotPath, dbPath)
-    console.log(`[vivim-server] Bootstrapped DB from snapshot → ${dbPath}`)
+    log.info(`[vivim-server] Bootstrapped DB from snapshot → ${dbPath}`)
   } catch (err) {
-    console.error('[vivim-server] Failed to bootstrap DB from snapshot:', err)
+    log.error('[vivim-server] Failed to bootstrap DB from snapshot:', {
+      err: err instanceof Error ? err.message : String(err),
+    })
   }
 }
 
@@ -149,13 +154,13 @@ async function main() {
   // Self-healing: if the requested port is occupied, find the next available one.
   const port = await findAvailablePort(PORT)
   if (port !== PORT) {
-    console.warn(`[vivim-server] port ${PORT} occupied, using ${port}`)
+    log.warn(`[vivim-server] port ${PORT} occupied, using ${port}`)
   }
   const ctx = await createServerWithEngines(port)
-  console.log(`vivim-server listening on http://${HOST}:${ctx.port}`)
+  log.info(`vivim-server listening on http://${HOST}:${ctx.port}`)
 }
 
 main().catch((err) => {
-  console.error('vivim-server fatal:', err)
+  log.error('vivim-server fatal:', { err: err instanceof Error ? err.message : String(err) })
   process.exit(1)
 })

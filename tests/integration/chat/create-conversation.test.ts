@@ -56,7 +56,7 @@ async function isServerUp(): Promise<boolean> {
 describe('Integration: POST /api/conversations', () => {
   it('creates conversation with auto-generated FK chain', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -76,7 +76,7 @@ describe('Integration: POST /api/conversations', () => {
 
   it('returns JSON with correct content-type', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -86,7 +86,7 @@ describe('Integration: POST /api/conversations', () => {
 
   it('conversation list endpoint returns array', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -98,7 +98,7 @@ describe('Integration: POST /api/conversations', () => {
 
   it('messages endpoint returns array for valid conversation', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -117,7 +117,7 @@ describe('Integration: POST /api/conversations', () => {
 
   it('messages endpoint returns 404 for non-existent conversation', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -129,7 +129,7 @@ describe('Integration: POST /api/conversations', () => {
 describe('Integration: BigInt serialization', () => {
   it('conversation creation response has no BigInt crash', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -142,7 +142,7 @@ describe('Integration: BigInt serialization', () => {
 
   it('conversation list has no BigInt crash', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 

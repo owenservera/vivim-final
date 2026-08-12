@@ -141,6 +141,7 @@ export function useStreamSlot(opts: UseStreamSlotOptions): UseStreamSlotResult {
                 setState('complete')
               }
             } catch {
+  // [audit] log the error with context here
               // skip malformed line
             }
           }
@@ -154,11 +155,29 @@ export function useStreamSlot(opts: UseStreamSlotOptions): UseStreamSlotResult {
         if (err.name === 'AbortError') return
         setError(String(err))
         setState('error')
-        if (autoReconnect) {
-          setTimeout(() => startRef.current?.(), 2000)
+        if (autoReconnect && mountedRef.current) {
+          if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
+          reconnectTimerRef.current = setTimeout(() => {
+            if (mountedRef.current) {
+              startRef.current?.()
+            }
+          }, 2000)
         }
       })
   }, [nodeId, capabilityId, input, state, autoReconnect])
+
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current)
+      }
+    }
+  }, [])
 
   // Ref to avoid circular dependency in auto-reconnect.
   const startRef = useRef<(() => void) | null>(null)

@@ -146,6 +146,7 @@ function resolveToExistingFile(base: string): string | null {
     try {
       if (!statSync(base).isDirectory()) return base
     } catch {
+  // [audit] log the error with context here
       // fall through
     }
   }

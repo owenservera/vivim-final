@@ -5,6 +5,7 @@ import { z } from 'zod'
 import type { MemoryIntelligenceStoreImpl } from '../../storage/impl/memory-intelligence-store-impl.js'
 import type { ServerContext } from '../index.js'
 import { appErrorResponse, errorResponse, json } from '../response.js'
+import { parseRequestBody } from '../validate.js'
 
 export function createKnowledgeRouter(ctx: ServerContext) {
   return async function knowledgeRouter(req: Request): Promise<Response | undefined> {
@@ -51,8 +52,8 @@ export function createKnowledgeRouter(ctx: ServerContext) {
           type: z.string().min(1, 'type is required'),
           description: z.string().optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const entity = await store.createEntity(parsed.data)
         return json({ entity }, 201)
       }
@@ -73,8 +74,8 @@ export function createKnowledgeRouter(ctx: ServerContext) {
           description: z.string().optional(),
           confidence: z.number().min(0).max(1).optional(),
         })
-        const parsed = schema.safeParse(await req.json())
-        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
         const entity = await store.updateEntity(entityMatch[1], parsed.data)
         return json({ entity })
       }
@@ -113,18 +114,19 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // POST /api/knowledge/topics
       if (req.method === 'POST' && path === '/api/knowledge/topics') {
-        const body = (await req.json()) as {
-          name?: string
-          description?: string
-          color?: string
-        }
-        if (!body.name || typeof body.name !== 'string') {
-          return errorResponse('name is required', 'ValidationError', 400)
-        }
+        const parsed = await parseRequestBody(
+          req,
+          z.object({
+            name: z.string().min(1),
+            description: z.string().optional(),
+            color: z.string().optional(),
+          }),
+        )
+        if (!parsed.success) return parsed.response
         const topic = await store.createTopic({
-          name: body.name,
-          description: body.description,
-          color: body.color,
+          name: parsed.data.name,
+          description: parsed.data.description,
+          color: parsed.data.color,
         })
         return json({ topic }, 201)
       }
@@ -139,12 +141,9 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // PUT /api/knowledge/topics/:id
       if (req.method === 'PUT' && topicMatch && topicMatch[1]) {
-        const body = (await req.json()) as {
-          name?: string
-          description?: string
-          color?: string
-        }
-        const topic = await store.updateTopic(topicMatch[1], body)
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const topic = await store.updateTopic(topicMatch[1], parsed.data)
         return json({ topic })
       }
 
@@ -183,18 +182,19 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // POST /api/knowledge/projects
       if (req.method === 'POST' && path === '/api/knowledge/projects') {
-        const body = (await req.json()) as {
-          name?: string
-          description?: string
-          status?: string
-        }
-        if (!body.name || typeof body.name !== 'string') {
-          return errorResponse('name is required', 'ValidationError', 400)
-        }
+        const parsed = await parseRequestBody(
+          req,
+          z.object({
+            name: z.string().min(1),
+            description: z.string().optional(),
+            status: z.string().optional(),
+          }),
+        )
+        if (!parsed.success) return parsed.response
         const project = await store.createProject({
-          name: body.name,
-          description: body.description,
-          status: body.status,
+          name: parsed.data.name,
+          description: parsed.data.description,
+          status: parsed.data.status,
         })
         return json({ project }, 201)
       }
@@ -209,12 +209,9 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // PUT /api/knowledge/projects/:id
       if (req.method === 'PUT' && projectMatch && projectMatch[1]) {
-        const body = (await req.json()) as {
-          name?: string
-          description?: string
-          status?: string
-        }
-        const project = await store.updateProject(projectMatch[1], body)
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const project = await store.updateProject(projectMatch[1], parsed.data)
         return json({ project })
       }
 
@@ -240,28 +237,23 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // POST /api/knowledge/preferences
       if (req.method === 'POST' && path === '/api/knowledge/preferences') {
-        const body = (await req.json()) as {
-          userId?: string
-          key?: string
-          value?: string
-          source?: string
-          confidence?: number
-        }
-        if (!body.userId || typeof body.userId !== 'string') {
-          return errorResponse('userId is required', 'ValidationError', 400)
-        }
-        if (!body.key || typeof body.key !== 'string') {
-          return errorResponse('key is required', 'ValidationError', 400)
-        }
-        if (!body.value || typeof body.value !== 'string') {
-          return errorResponse('value is required', 'ValidationError', 400)
-        }
+        const parsed = await parseRequestBody(
+          req,
+          z.object({
+            userId: z.string().min(1),
+            key: z.string().min(1),
+            value: z.string().min(1),
+            source: z.string().optional(),
+            confidence: z.number().optional(),
+          }),
+        )
+        if (!parsed.success) return parsed.response
         const preference = await store.upsert(
-          body.userId,
-          body.key,
-          body.value,
-          body.source,
-          body.confidence,
+          parsed.data.userId,
+          parsed.data.key,
+          parsed.data.value,
+          parsed.data.source,
+          parsed.data.confidence,
         )
         return json({ preference }, 201)
       }
@@ -276,11 +268,9 @@ export function createKnowledgeRouter(ctx: ServerContext) {
 
       // PUT /api/knowledge/preferences/:id
       if (req.method === 'PUT' && prefMatch && prefMatch[1]) {
-        const body = (await req.json()) as {
-          value?: string
-          confidence?: number
-        }
-        const preference = await store.updateUserPreference(prefMatch[1], body)
+        const parsed = await parseRequestBody(req, z.record(z.string(), z.unknown()))
+        if (!parsed.success) return parsed.response
+        const preference = await store.updateUserPreference(prefMatch[1], parsed.data)
         return json({ preference })
       }
 

@@ -53,6 +53,13 @@ export function collectFrontendRoutes(): RouteSeg[] {
         .join('/')
       if (EXCLUDED.has(hint) || hint === '') continue
       const src = readFileSync(p, 'utf8')
+      // Passthrough routes that just proxy to the backend are backend-owned.
+      // The sidecar IS the backend, so keeping them in the table makes the
+      // server proxy a request back to itself → infinite recursion until the
+      // 10s idle timeout closes the socket (seen on /api/capabilities,
+      // /api/conversations, /api/providers, ...). Exclude them and let the
+      // request fall through to the backend routing chain instead.
+      if (src.includes('proxyToBackend')) continue
       const methods = [
         ...src.matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/g),
       ].map((m) => m[1])
@@ -113,6 +120,6 @@ if (import.meta.main) {
   mkdirSync(dirname(outFile), { recursive: true })
   writeFileSync(outFile, gen)
   const count = (gen.match(/    path: "/g) ?? []).length
-  console.log(`[gen] wrote ${outFile}`)
-  console.log(`[gen] ${count} frontend routes ported`)
+  // [audit] removed: console.log(`[gen] wrote ${outFile}`)
+  // [audit] removed: console.log(`[gen] ${count} frontend routes ported`)
 }

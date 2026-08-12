@@ -133,6 +133,7 @@ export class McpAdapter implements SurfaceAdapter {
             }
           }
         } catch {
+  // [audit] log the error with context here
           // ignore non-JSON messages
         }
       }

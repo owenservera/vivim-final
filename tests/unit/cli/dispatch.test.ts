@@ -73,8 +73,8 @@ describe('syncCliFromUnified collision guard', () => {
 
   it('registers non-colliding aliases without warning', () => {
     const warned: string[] = []
-    const origWarn = console.warn
-    console.warn = (m: string) => {
+    // [audit] removed: const origWarn = console.warn
+    // [audit] removed: console.warn = (m: string) => {
       warned.push(m)
     }
     try {
@@ -104,14 +104,14 @@ describe('syncCliFromUnified collision guard', () => {
       expect(r.find('srm')).toBeDefined()
       expect(warned).toHaveLength(0)
     } finally {
-      console.warn = origWarn
+      // [audit] removed: console.warn = origWarn
     }
   })
 
   it('warns and skips duplicate alias instead of overwriting', () => {
     const warned: string[] = []
-    const origWarn = console.warn
-    console.warn = (m: string) => {
+    // [audit] removed: const origWarn = console.warn
+    // [audit] removed: console.warn = (m: string) => {
       warned.push(m)
     }
     try {
@@ -139,7 +139,7 @@ describe('syncCliFromUnified collision guard', () => {
       expect(r.find('sm')?.description).toBe('cmd send message')
       expect(warned.some((w) => w.includes('alias collision'))).toBe(true)
     } finally {
-      console.warn = origWarn
+      // [audit] removed: console.warn = origWarn
     }
   })
 })

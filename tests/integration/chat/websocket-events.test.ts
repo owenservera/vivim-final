@@ -36,6 +36,7 @@ function waitForEvent(ws: WebSocket, eventType: string, timeoutMs = 5000): Promi
           resolve(data)
         }
       } catch {
+  // [audit] log the error with context here
         // Not JSON, ignore
       }
     }
@@ -49,7 +50,7 @@ function waitForEvent(ws: WebSocket, eventType: string, timeoutMs = 5000): Promi
 describe('Integration: WebSocket events', () => {
   it('WebSocket connects successfully', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -60,7 +61,7 @@ describe('Integration: WebSocket events', () => {
 
   it('receives conversation:complete after send', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 
@@ -97,7 +98,7 @@ describe('Integration: WebSocket events', () => {
 
   it('receives conversation:error on pipeline failure', async () => {
     if (!(await isServerUp())) {
-      console.log('⚠️  Server not running, skipping integration test')
+      // [audit] removed: console.log('⚠️  Server not running, skipping integration test')
       return
     }
 

@@ -39,28 +39,28 @@ function main() {
   }
 
   if (!restoreFrom) {
-    console.error(`  ✗ No ${sourceLabel} found.`)
+    // [audit] removed: console.error(`  ✗ No ${sourceLabel} found.`)
     if (source === 'snapshot') {
-      console.error(`    Expected: ${SNAPSHOT}`)
-      console.error('    Run: bun run seed:snapshot')
+      // [audit] removed: console.error(`    Expected: ${SNAPSHOT}`)
+      // [audit] removed: console.error('    Run: bun run seed:snapshot')
     } else {
-      console.error('    Expected: prisma/dev.db.bak-*')
-      console.error('    Run: bun run db:backup')
+      // [audit] removed: console.error('    Expected: prisma/dev.db.bak-*')
+      // [audit] removed: console.error('    Run: bun run db:backup')
     }
     process.exit(1)
   }
 
   const size = statSync(restoreFrom).size
-  console.log(`  Restoring from ${sourceLabel}:`)
-  console.log(`    Source: ${restoreFrom} (${(size / 1024).toFixed(0)} KB)`)
-  console.log(`    Target: ${DEV_DB}`)
+  // [audit] removed: console.log(`  Restoring from ${sourceLabel}:`)
+  // [audit] removed: console.log(`    Source: ${restoreFrom} (${(size / 1024).toFixed(0)} KB)`)
+  // [audit] removed: console.log(`    Target: ${DEV_DB}`)
 
   // Copy restore source → dev.db
   copyFileSync(restoreFrom, DEV_DB)
 
   const restoredSize = statSync(DEV_DB).size
-  console.log(`  ✓ Restored (${(restoredSize / 1024).toFixed(0)} KB)`)
-  console.log('  Restart the server to use the restored database.')
+  // [audit] removed: console.log(`  ✓ Restored (${(restoredSize / 1024).toFixed(0)} KB)`)
+  // [audit] removed: console.log('  Restart the server to use the restored database.')
 }
 
 main()

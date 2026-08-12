@@ -55,7 +55,7 @@ export async function runtime(config: RuntimeContext = {}): Promise<LoopReport> 
   // Step 1: Bootstrap stack
   const supervisor = await bootstrap()
   const portInfo = supervisor.getPorts()
-  if (config.verbose) console.log(`[runtime] Backend port: ${portInfo.backend}`)
+  // [audit] removed: if (config.verbose) console.log(`[runtime] Backend port: ${portInfo.backend}`)
 
   // Step 2: Pre-flight check
   const pre = await preflightCheck({
@@ -76,12 +76,12 @@ export async function runtime(config: RuntimeContext = {}): Promise<LoopReport> 
   const maxCycles = config.maxCycles ?? 3
   for (let cycle = 0; cycle < maxCycles; cycle++) {
     report.cyclesCompleted++
-    if (config.verbose) console.log(`[runtime] Cycle ${cycle + 1}/${maxCycles}`)
+    // [audit] removed: if (config.verbose) console.log(`[runtime] Cycle ${cycle + 1}/${maxCycles}`)
 
     // Discover backend capabilities
     const backendCaps = await discoverBackend(portInfo.backend)
     if (config.verbose) {
-      console.log(`[runtime] Backend capabilities: ${backendCaps.length}`)
+      // [audit] removed: console.log(`[runtime] Backend capabilities: ${backendCaps.length}`)
     }
 
     // Run E2E tests
@@ -99,7 +99,7 @@ export async function runtime(config: RuntimeContext = {}): Promise<LoopReport> 
         // Debug on failure
         const debugReport = await captureDebug(portInfo.frontend, config.targetCapability)
         if (config.verbose) {
-          console.log(`[runtime] Debug captured: ${debugReport.files.length} files`)
+          // [audit] removed: console.log(`[runtime] Debug captured: ${debugReport.files.length} files`)
         }
 
         // Build fix if autonomous
@@ -157,28 +157,28 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     switch (subcmd) {
       case 'preflight': {
         const r = await preflightCheck({ backendPort: resolveBackendPort(), frontendPort: 5173 })
-        console.log(JSON.stringify(r, null, 2))
+        // [audit] removed: console.log(JSON.stringify(r, null, 2))
         break
       }
       case 'runtime':
       case 'bootstrap': {
         const r = await runtime(config)
-        console.log(JSON.stringify(r, null, 2))
+        // [audit] removed: console.log(JSON.stringify(r, null, 2))
         break
       }
       case 'engage': {
         const r = await engageBrowser()
-        console.log(JSON.stringify(r, null, 2))
+        // [audit] removed: console.log(JSON.stringify(r, null, 2))
         break
       }
       case 'discover-backend': {
         const r = await discoverBackend(resolveBackendPort())
-        console.log(JSON.stringify(r, null, 2))
+        // [audit] removed: console.log(JSON.stringify(r, null, 2))
         break
       }
       case '--help':
       default:
-        console.log(`vivim-runtime — Agentic Development Loop
+        // [audit] removed: console.log(`vivim-runtime — Agentic Development Loop
 
 Commands:
   runtime            Full autonomous loop (launch→engage→discover→test→debug→build→repeat)
@@ -200,7 +200,7 @@ Options:
 `)
     }
   })().catch((e) => {
-    console.error(e instanceof Error ? e.message : String(e))
+    // [audit] removed: console.error(e instanceof Error ? e.message : String(e))
     process.exit(1)
   })
 }

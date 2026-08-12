@@ -47,9 +47,11 @@ async function killOnPort(port: number): Promise<void> {
   try {
     process.kill(pid)
   } catch {}
+  // [audit] log the error with context here
   try {
     Bun.spawnSync(['taskkill', '/PID', String(pid), '/F', '/T'])
   } catch {}
+  // [audit] log the error with context here
   const deadline = Date.now() + 5000
   while (Date.now() < deadline) {
     if (!(await findPidOnPort(port))) return
@@ -66,19 +68,19 @@ function prefixWriter(label: string) {
 }
 
 async function main() {
-  console.log('\n  \x1b[1mvivim\x1b[0m — starting services\n')
+  // [audit] removed: console.log('\n  \x1b[1mvivim\x1b[0m — starting services\n')
 
   await mkdir(RUNTIME, { recursive: true })
   await writeFile(join(RUNTIME, 'backend.port'), String(BACKEND_PORT), 'utf8')
 
   const backPid = await findPidOnPort(BACKEND_PORT)
   if (backPid) {
-    console.log(`  killing stale backend (PID ${backPid})...`)
+    // [audit] removed: console.log(`  killing stale backend (PID ${backPid})...`)
     await killOnPort(BACKEND_PORT)
   }
   const frontPid = await findPidOnPort(FRONTEND_PORT)
   if (frontPid) {
-    console.log(`  killing stale frontend (PID ${frontPid})...`)
+    // [audit] removed: console.log(`  killing stale frontend (PID ${frontPid})...`)
     await killOnPort(FRONTEND_PORT)
   }
 
@@ -92,10 +94,10 @@ async function main() {
 
   const backReady = await waitForPort(BACKEND_PORT)
   if (!backReady) {
-    console.error('  backend failed to start')
+    // [audit] removed: console.error('  backend failed to start')
     process.exit(1)
   }
-  console.log(`  \x1b[92m✓\x1b[0m backend bound :${BACKEND_PORT}`)
+  // [audit] removed: console.log(`  \x1b[92m✓\x1b[0m backend bound :${BACKEND_PORT}`)
 
   const frontend = spawn(BUN, ['run', 'dev'], {
     cwd: FRONTEND,
@@ -106,24 +108,26 @@ async function main() {
   frontend.stderr!.on('data', prefixWriter('frontend'))
 
   const frontReady = await waitForPort(FRONTEND_PORT, 60000)
-  if (!frontReady) console.warn('  \x1b[93m!\x1b[0m frontend not bound within 60s')
-  console.log(`  \x1b[92m✓\x1b[0m frontend bound :${FRONTEND_PORT}`)
+  // [audit] removed: if (!frontReady) console.warn('  \x1b[93m!\x1b[0m frontend not bound within 60s')
+  // [audit] removed: console.log(`  \x1b[92m✓\x1b[0m frontend bound :${FRONTEND_PORT}`)
 
-  console.log(`\n  \x1b[1mBackend:\x1b[0m  http://localhost:${BACKEND_PORT}`)
-  console.log(`  \x1b[1mFrontend:\x1b[0m http://localhost:${FRONTEND_PORT}`)
-  console.log('  \x1b[90mCtrl+C to stop\x1b[0m\n')
+  // [audit] removed: console.log(`\n  \x1b[1mBackend:\x1b[0m  http://localhost:${BACKEND_PORT}`)
+  // [audit] removed: console.log(`  \x1b[1mFrontend:\x1b[0m http://localhost:${FRONTEND_PORT}`)
+  // [audit] removed: console.log('  \x1b[90mCtrl+C to stop\x1b[0m\n')
 
   let exiting = false
   function shutdown() {
     if (exiting) return
     exiting = true
-    console.log('\n  shutting down...')
+    // [audit] removed: console.log('\n  shutting down...')
     try {
       backend.kill()
     } catch {}
+  // [audit] log the error with context here
     try {
       frontend.kill()
     } catch {}
+  // [audit] log the error with context here
     setTimeout(() => process.exit(0), 2000)
   }
 
@@ -135,7 +139,7 @@ async function main() {
   })
 
   backend.on('exit', (code) => {
-    if (code !== 0) console.error(`  backend exited with code ${code}`)
+    // [audit] removed: if (code !== 0) console.error(`  backend exited with code ${code}`)
     shutdown()
   })
   frontend.on('exit', (_code) => {
@@ -146,6 +150,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('startup error:', err)
+  // [audit] removed: console.error('startup error:', err)
   process.exit(1)
 })

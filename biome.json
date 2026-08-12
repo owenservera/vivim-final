@@ -1,19 +1,22 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.8/schema.json",
   "files": {
-    "include": ["src/", "tests/", "seeds/", "frontend/src/"],
-    "ignore": [
-      "seeds/taxonomy/openclaw-harvest.json",
-      "seeds/taxonomy/pool.taxonomy.json",
-      "seeds/taxonomy/surface-projections.json",
-      "src/__generated__/**"
+    "includes": [
+      "**/src/**",
+      "**/tests/**",
+      "**/seeds/**",
+      "**/frontend/src/**",
+      "!**/seeds/taxonomy/openclaw-harvest.json",
+      "!**/seeds/taxonomy/pool.taxonomy.json",
+      "!**/seeds/taxonomy/surface-projections.json",
+      "!**/src/__generated__/**"
     ],
     "maxSize": 5242880
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "correctness": {
         "noUnusedImports": "warn",
         "noUnusedVariables": "warn"
@@ -48,11 +51,42 @@
   },
   "overrides": [
     {
-      "include": ["tests/**/*.ts", "tests/**/*.tsx"],
+      "includes": ["**/tests/**/*.ts", "**/tests/**/*.tsx"],
       "linter": {
         "rules": {
           "suspicious": {
             "noAssignInExpressions": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/src/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {},
+          "suspicious": {
+            "noConsole": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/src/cli/**/*.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/logger.ts", "**/*.test.ts", "**/__tests__/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
           }
         }
       }

@@ -273,6 +273,7 @@ export class TestOrchestrator {
       try {
         await adapter.cleanup()
       } catch {
+  // [audit] log the error with context here
         // ignore cleanup errors
       }
     }

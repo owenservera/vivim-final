@@ -47,6 +47,7 @@ export function DrawerSystem({ workspaceId, children }: { workspaceId: string; c
           };
         }
       } catch {}
+  // [audit] log the error with context here
       setConfig(fetchedConfig);
       // Save collapsed states for next time
       const collapsed: Record<string, boolean> = {};
@@ -54,6 +55,7 @@ export function DrawerSystem({ workspaceId, children }: { workspaceId: string; c
         collapsed[edge] = fetchedConfig.drawers[edge]?.collapsed ?? false;
       }
       try { localStorage.setItem(`${STORAGE_KEY}:${workspaceId}`, JSON.stringify(collapsed)); } catch {}
+  // [audit] log the error with context here
     }
   };
 
@@ -61,25 +63,30 @@ export function DrawerSystem({ workspaceId, children }: { workspaceId: string; c
     fetchConfig();
   }, [workspaceId]);
 
-  const toggle = async (edge: DrawerEdge) => {
+  const toggle = (edge: DrawerEdge) => {
     if (!config) return;
     const updated = { ...config, drawers: { ...config.drawers, [edge]: { ...config.drawers[edge], collapsed: !config.drawers[edge].collapsed } } };
     setConfig(updated);
-    // Persist collapsed state
+    // Instant LocalStorage sync
     try {
       const existing = localStorage.getItem(`${STORAGE_KEY}:${workspaceId}`);
       const collapsed = existing ? JSON.parse(existing) : {};
       collapsed[edge] = updated.drawers[edge].collapsed;
       localStorage.setItem(`${STORAGE_KEY}:${workspaceId}`, JSON.stringify(collapsed));
     } catch {}
-    await io.post('/api/drawer/toggle', { workspaceId, edge });
+  // [audit] log the error with context here
+    // Non-blocking server sync
+    io.post('/api/drawer/toggle', { workspaceId, edge }).catch(() => {});
+  // [audit] log the error with context here
   };
 
-  const setActivePanel = async (edge: DrawerEdge, panelId: string) => {
+  const setActivePanel = (edge: DrawerEdge, panelId: string) => {
     if (!config) return;
     const updated = { ...config, drawers: { ...config.drawers, [edge]: { ...config.drawers[edge], activePanelId: panelId } } };
     setConfig(updated);
-    await io.post('/api/drawer/set_active_panel', { workspaceId, edge, panelId });
+    // Non-blocking server sync
+    io.post('/api/drawer/set_active_panel', { workspaceId, edge, panelId }).catch(() => {});
+  // [audit] log the error with context here
   };
 
   if (!config) return <>{children}</>;
@@ -381,6 +388,7 @@ function NotificationsPanel() {
         if (res.data?.ok) setItems(res.data.notifications);
       })
       .catch(() => {});
+  // [audit] log the error with context here
   }, [io]);
   return (
     <div style={{ padding: 8 }}>
@@ -403,6 +411,7 @@ function PresencePanel({ workspaceId }: { workspaceId: string }) {
         if (res.data?.ok) setUsers(res.data.users);
       })
       .catch(() => {});
+  // [audit] log the error with context here
   }, [workspaceId, io]);
   return (
     <div style={{ padding: 8 }}>
@@ -425,6 +434,7 @@ function AuditPanel() {
         if (res.data?.ok) setEntries(res.data.entries);
       })
       .catch(() => {});
+  // [audit] log the error with context here
   }, [io]);
   return (
     <div style={{ padding: 8 }}>

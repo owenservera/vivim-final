@@ -41,6 +41,7 @@ export async function discoverCdpProtocol(debugPort = 9222): Promise<DiscoverCdp
       }
     }
   } catch {
+  // [audit] log the error with context here
     // fall through to catalog
   }
 

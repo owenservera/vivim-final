@@ -92,6 +92,7 @@ export function Panel({
         if (state.position) setPosition(state.position);
         if (state.isMinimized) setIsMinimized(state.isMinimized);
       } catch {}
+  // [audit] log the error with context here
     }
   }, [config.id]);
 

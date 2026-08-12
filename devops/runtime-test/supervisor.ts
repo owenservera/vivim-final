@@ -247,6 +247,7 @@ export class Supervisor {
       try {
         execSync(`taskkill /PID ${pid} /T /F 2>nul`, { timeout: STOP_TIMEOUT_MS })
       } catch {
+  // [audit] log the error with context here
         // already dead or no such process
       }
     } else {
@@ -254,6 +255,7 @@ export class Supervisor {
       try {
         process.kill(pid, 'SIGTERM')
       } catch {
+  // [audit] log the error with context here
         // already dead
       }
       await sleep(STOP_TIMEOUT_MS)
@@ -263,6 +265,7 @@ export class Supervisor {
           process.kill(pid, 'SIGKILL')
         }
       } catch {
+  // [audit] log the error with context here
         // ok
       }
     }
@@ -274,6 +277,7 @@ function writePidFile(name: string, pid: number | undefined): void {
   try {
     writeFileSync(`${RUNTIME_DIR}/${name}.pid`, String(pid), 'utf8')
   } catch {
+  // [audit] log the error with context here
     // best-effort
   }
 }
@@ -282,6 +286,7 @@ function removePidFile(name: string): void {
   try {
     rmSync(`${RUNTIME_DIR}/${name}.pid`, { force: true })
   } catch {
+  // [audit] log the error with context here
     // best-effort
   }
 }

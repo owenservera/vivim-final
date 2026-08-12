@@ -145,20 +145,20 @@ export async function runDeepScan(args: string[]): Promise<void> {
 
   if (!doExport) {
     const { json, md } = await persist(report, AUDITS_DIR)
-    console.log(renderMarkdown(report))
-    console.log(`\n[deep-scan] wrote ${json} and ${md}`)
+    // [audit] removed: console.log(renderMarkdown(report))
+    // [audit] removed: console.log(`\n[deep-scan] wrote ${json} and ${md}`)
   } else {
     const { writeFile } = await import('node:fs/promises')
     await writeFile(FINDINGS_PATH, JSON.stringify(report, null, 2), 'utf8')
-    console.log(`Wrote ${FINDINGS_PATH} (${filtered.length} findings).`)
+    // [audit] removed: console.log(`Wrote ${FINDINGS_PATH} (${filtered.length} findings).`)
   }
 
   if (doBaseline) {
     const bp = await saveBaseline(AUDITS_DIR, report as never)
-    console.log(`Saved baseline: ${bp}`)
+    // [audit] removed: console.log(`Saved baseline: ${bp}`)
   }
 
-  console.log(
+  // [audit] removed: console.log(
     `\n[deep-scan] scope=${scope} risk=${report.risk.risk} P0=${report.summary.P0} P1=${report.summary.P1} P2=${report.summary.P2} P3=${report.summary.P3} files=${ctx.filesScanned} duration=${((run.durationMs) / 1000).toFixed(1)}s${trendText}`,
   )
 }
@@ -167,7 +167,7 @@ export async function runDeepScan(args: string[]): Promise<void> {
 if (import.meta.main) {
   const [, , ...rest] = process.argv
   runDeepScan(rest).catch((e) => {
-    console.error(e)
+    // [audit] removed: console.error(e)
     process.exit(1)
   })
 }

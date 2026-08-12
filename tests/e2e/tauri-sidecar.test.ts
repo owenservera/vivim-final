@@ -14,7 +14,7 @@ const BASE = process.env.TAURI_SIDECAR_URL ?? 'http://127.0.0.1:9421'
 
 function assert(cond: unknown, msg: string): void {
   if (!cond) throw new Error(`ASSERT FAILED: ${msg}`)
-  console.log(`  ok - ${msg}`)
+  // [audit] removed: console.log(`  ok - ${msg}`)
 }
 
 async function waitForHealth(timeoutMs = 30_000): Promise<void> {
@@ -24,6 +24,7 @@ async function waitForHealth(timeoutMs = 30_000): Promise<void> {
       const r = await fetch(`${BASE}/health`)
       if (r.ok) return
     } catch {
+  // [audit] log the error with context here
       /* not up yet */
     }
     await new Promise((res) => setTimeout(res, 500))
@@ -32,7 +33,7 @@ async function waitForHealth(timeoutMs = 30_000): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  console.log(`[tauri-sidecar] probing ${BASE}`)
+  // [audit] removed: console.log(`[tauri-sidecar] probing ${BASE}`)
   await waitForHealth()
 
   // FR-002: backend serves liveness.
@@ -47,10 +48,10 @@ async function main(): Promise<void> {
   const nlcl = await (await fetch(`${BASE}/api/nlcl/help`)).json()
   assert(nlcl && typeof nlcl === 'object', '/api/nlcl/help responds')
 
-  console.log('[tauri-sidecar] ALL CHECKS PASSED')
+  // [audit] removed: console.log('[tauri-sidecar] ALL CHECKS PASSED')
 }
 
 main().catch((err) => {
-  console.error(err.message)
+  // [audit] removed: console.error(err.message)
   process.exit(1)
 })

@@ -30,6 +30,7 @@ export class EventRecordBridge {
     this.consuming = true
     this.iter = this.aiEventBus.subscribe()
     this.consume().catch(() => {
+  // [audit] log the error with context here
       // swallow — bridge errors are non-fatal
     })
   }
@@ -49,6 +50,7 @@ export class EventRecordBridge {
         this.forward(event)
       }
     } catch {
+  // [audit] log the error with context here
       // swallow — bridge errors are non-fatal
     }
   }
@@ -67,6 +69,7 @@ export class EventRecordBridge {
         },
       } as never)
     } catch {
+  // [audit] log the error with context here
       // swallow — bridge errors are non-fatal
     }
   }

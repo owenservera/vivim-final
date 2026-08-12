@@ -29,13 +29,13 @@ describe('T2 Latency budget', () => {
     const { cold, warmP95 } = await coldPlusWarm(() =>
       spawnDevops(['runtime-test', 'discover', '--offline']),
     )
-    console.log(`[T2] devops discover --offline cold=${cold}ms warmP95=${warmP95}ms`)
+    // [audit] removed: console.log(`[T2] devops discover --offline cold=${cold}ms warmP95=${warmP95}ms`)
     expect(warmP95).toBeLessThan(BUDGET_MS)
   })
 
   it(`devops report p95 < ${BUDGET_MS}ms`, async () => {
     const { cold, warmP95 } = await coldPlusWarm(() => spawnDevops(['report']))
-    console.log(`[T2] devops report cold=${cold}ms warmP95=${warmP95}ms`)
+    // [audit] removed: console.log(`[T2] devops report cold=${cold}ms warmP95=${warmP95}ms`)
     expect(warmP95).toBeLessThan(BUDGET_MS)
   })
 
@@ -43,7 +43,7 @@ describe('T2 Latency budget', () => {
     const { cold, warmP95 } = await coldPlusWarm(() =>
       spawnCli(['help'], { CAP_STORE_PORT: String(PROBE_PORT) }),
     )
-    console.log(`[T2] vivim help cold=${cold}ms warmP95=${warmP95}ms`)
+    // [audit] removed: console.log(`[T2] vivim help cold=${cold}ms warmP95=${warmP95}ms`)
     expect(warmP95).toBeLessThan(BUDGET_MS)
   })
 })

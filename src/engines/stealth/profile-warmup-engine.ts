@@ -55,6 +55,7 @@ export class ProfileWarmupModule implements StealthModule {
             sameSite: cookie.sameSite ?? 'Lax',
           })
           .catch(() => {})
+  // [audit] log the error with context here
       }
     }
 

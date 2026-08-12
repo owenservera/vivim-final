@@ -92,5 +92,6 @@ export async function discoverProtocol(
     }
   } finally {
     await cdp.client.disconnect().catch(() => {})
+  // [audit] log the error with context here
   }
 }

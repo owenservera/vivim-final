@@ -63,6 +63,7 @@ export class PluginHotReload {
         }
       });
     } catch {
+  // [audit] log the error with context here
       // Directory may not exist yet — file watch is best-effort.
     }
 
@@ -122,6 +123,7 @@ export class PluginHotReload {
         }
       }
     } catch {
+  // [audit] log the error with context here
       // Directory may not exist yet — that's OK.
     }
   }

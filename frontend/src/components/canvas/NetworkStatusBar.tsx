@@ -31,12 +31,7 @@ export function NetworkStatusBar({ position = 'bottom' }: NetworkStatusBarProps)
         textAlign: 'center',
       }}
     >
-      Connection lost. Chat and search are unavailable.
-      {latencyMs !== null && (
-        <span style={{ marginLeft: 8, opacity: 0.7 }}>
-          (last ping: {latencyMs}ms)
-        </span>
-      )}
+      Working offline. Reconnecting automatically...
     </div>
   );
 }

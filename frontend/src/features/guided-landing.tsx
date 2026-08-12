@@ -673,6 +673,7 @@ export function GuidedLanding({
                 port: launchResultRef.current.debugPort,
               })
               .catch(() => {})
+  // [audit] log the error with context here
             if (!mountedRef.current) return
             pushAgent('Creating your first conversation…')
             const { data: conv } = await io.post<Conversation>('/api/conversations', {

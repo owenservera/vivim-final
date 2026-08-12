@@ -223,26 +223,63 @@ export function LivingCanvas(props: LivingCanvasProps) {
   }, [surface, effectiveLayouts, pinnedNodes, connections, containerSize, slotsToResolve, layouts, history]);
 
   const zoomTier = getZoomTier(viewport.zoom);
-  const visibleSlots = useMemo(() => {
-    if (!surface) return [] as ResolvedSlot[];
-    const vpBB = { x: viewport.x - containerSize.w / viewport.zoom, y: viewport.y - containerSize.h / viewport.zoom, width: containerSize.w / viewport.zoom * 2, height: containerSize.h / viewport.zoom * 2 };
-    const qt = new QuadTree<{ slot: ResolvedSlot; layout: CanvasLayout }>({ x: -10_000, y: -10_000, width: 20_000, height: 20_000 });
+
+  // Persistent QuadTree spatial index ref to prevent allocations on every wheel tick
+  const quadTreeRef = useRef<QuadTree<{ slot: ResolvedSlot; layout: CanvasLayout }> | null>(null);
+
+  // Rebuild QuadTree ONLY when slots or node layouts change
+  useEffect(() => {
+    if (!surface?.slots) {
+      quadTreeRef.current = null;
+      return;
+    }
+    const qt = new QuadTree<{ slot: ResolvedSlot; layout: CanvasLayout }>({
+      x: -10_000,
+      y: -10_000,
+      width: 20_000,
+      height: 20_000,
+    });
     for (const slot of surface.slots) {
       const key = `${slot.providerId}:${slot.slotId}`;
       const layout = effectiveLayouts[key];
       if (!layout) continue;
       qt.insert({ bb: { x: layout.x, y: layout.y, width: layout.w, height: layout.h }, data: { slot, layout } });
     }
-    return qt.queryBB(vpBB).map((e) => e.slot);
-  }, [surface, effectiveLayouts, viewport, containerSize]);
+    quadTreeRef.current = qt;
+  }, [surface?.slots, effectiveLayouts]);
 
+  // Fast Bounding Box spatial query using persistent QuadTree
+  const visibleSlots = useMemo(() => {
+    if (!surface || !quadTreeRef.current) return surface?.slots ?? ([] as ResolvedSlot[]);
+    const vpBB = {
+      x: viewport.x - containerSize.w / viewport.zoom,
+      y: viewport.y - containerSize.h / viewport.zoom,
+      width: (containerSize.w / viewport.zoom) * 2,
+      height: (containerSize.h / viewport.zoom) * 2,
+    };
+    return quadTreeRef.current.queryBB(vpBB).map((e) => e.slot);
+  }, [surface, viewport, containerSize]);
+
+  // Throttled Viewport Wheel Handler
+  const wheelRafRef = useRef<number | null>(null);
   const onWheel = useCallback((e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      setViewport((vp) => ({ ...vp, zoom: Math.max(0.1, Math.min(5, vp.zoom * delta)) }));
-    } else {
-      setViewport((vp) => ({ x: vp.x + e.deltaX / vp.zoom, y: vp.y + e.deltaY / vp.zoom, zoom: vp.zoom }));
+    const deltaX = e.deltaX;
+    const deltaY = e.deltaY;
+    const isZoom = e.ctrlKey || e.metaKey;
+
+    if (wheelRafRef.current !== null) {
+      cancelAnimationFrame(wheelRafRef.current);
     }
+
+    wheelRafRef.current = requestAnimationFrame(() => {
+      if (isZoom) {
+        const delta = deltaY > 0 ? 0.92 : 1.08;
+        setViewport((vp) => ({ ...vp, zoom: Math.max(0.1, Math.min(5, vp.zoom * delta)) }));
+      } else {
+        setViewport((vp) => ({ x: vp.x + deltaX / vp.zoom, y: vp.y + deltaY / vp.zoom, zoom: vp.zoom }));
+      }
+      wheelRafRef.current = null;
+    });
   }, []);
 
   const zoomToFit = useCallback(() => {
