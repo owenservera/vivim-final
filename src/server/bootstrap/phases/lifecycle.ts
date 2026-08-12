@@ -90,6 +90,28 @@ export async function bootstrapLifecyclePhase(ctx: BootstrapContext): Promise<vo
     registerNlInterpretCapability(registry, nlclEngine)
   }
 
+  // Phase 1 — Capability parity audit.
+  // Runs after NLCL engine and registry are both populated.
+  // Logs warnings; errors are non-fatal in this phase (visibility, not enforcement).
+  try {
+    const { CapabilityParityAuditor } = await import(
+      '../../../engines/capability-parity.js'
+    )
+    const auditor = new CapabilityParityAuditor()
+    const nlclPatterns = nlclEngine.listCommands()
+    const report = auditor.audit(nlclPatterns, registry!)
+    log.info(
+      `[boot] capability parity: ${report.nlclPatternCount} NLCL patterns, ${report.capabilityCount} capabilities, ${report.errorCount} errors, ${report.warningCount} warnings`,
+    )
+    if (report.errorCount > 0) {
+      log.warn(`[boot] parity audit ERRORS:\n${auditor.formatReport(report)}`)
+    }
+    // Attach to globalThis for devops introspection
+    ;(globalThis as Record<string, unknown>).__capabilityParityReport = report
+  } catch (err) {
+    log.warn({ err }, '[boot] capability parity audit failed (non-fatal)')
+  }
+
   // #1 + #2: Construct LLMSlaveResolver (BM25+MiniLM+RRF RAG pipeline) — the advanced
   // catalog-grounded intent resolver. Was: never instantiated (rg "new LLMSlaveResolver" = 0).
   // Now: constructed with the GatewayProviderLLMAdapter (#1) + HarnessRepairEngine (#2)

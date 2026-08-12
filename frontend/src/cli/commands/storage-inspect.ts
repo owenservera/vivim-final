@@ -16,8 +16,8 @@ async function main() {
   // [audit] removed: console.log('  ────────────────────────────────────────────────')
   // [audit] removed: console.log(`  provider:          ${report.provider}`)
   // [audit] removed: console.log(
-    `  migration:         ${report.migrationProgress.migrated}/${report.migrationProgress.total} (${report.migrationProgress.pct}%)`,
-  )
+//     `  migration:         ${report.migrationProgress.migrated}/${report.migrationProgress.total} (${report.migrationProgress.pct}%)`,
+//   )
   // [audit] removed: console.log(`  generated at:      ${report.generatedAt}`)
   // [audit] removed: console.log('')
 
@@ -36,16 +36,16 @@ async function main() {
 
   // [audit] removed: console.log(`  ${'store'.padEnd(nameW)}  ${'impl'.padEnd(implW)}  ready  count  error`)
   // [audit] removed: console.log(
-    `  ${'─'.repeat(nameW)}  ${'─'.repeat(implW)}  ─────  ─────  ──────────────────────────────`,
-  )
+//     `  ${'─'.repeat(nameW)}  ${'─'.repeat(implW)}  ─────  ─────  ──────────────────────────────`,
+//   )
 
   for (const r of rows) {
     const ready = r.ready ? 'yes' : 'NO'
     const count = r.count === null ? '—' : String(r.count)
     const error = r.error ?? ''
     // [audit] removed: console.log(
-      `  ${r.name.padEnd(nameW)}  ${r.impl.padEnd(implW)}  ${ready.padEnd(5)}  ${count.padEnd(5)}  ${error}`,
-    )
+//       `  ${r.name.padEnd(nameW)}  ${r.impl.padEnd(implW)}  ${ready.padEnd(5)}  ${count.padEnd(5)}  ${error}`,
+//     )
   }
 
   // [audit] removed: console.log('')

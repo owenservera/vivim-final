@@ -19,12 +19,12 @@ function pushEvent(event: TourAnalyticsEvent): void {
     buffer.shift()
   }
   // [audit] removed: console.log(
-    JSON.stringify({
-      level: 'info',
-      msg: 'onboarding-analytics',
-      event,
-    }),
-  )
+//     JSON.stringify({
+//       level: 'info',
+//       msg: 'onboarding-analytics',
+//       event,
+//     }),
+//   )
 }
 
 export async function POST(req: NextRequest) {

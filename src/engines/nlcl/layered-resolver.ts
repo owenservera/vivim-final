@@ -75,6 +75,7 @@ export class LayeredResolver implements IntentResolver {
     if (det) {
       this.lastLayer = 'deterministic'
       this.lastScores = scores
+      this.setContextTelemetry(ctx, 'deterministic', scores)
       return det
     }
 
@@ -84,6 +85,7 @@ export class LayeredResolver implements IntentResolver {
     if (fz && fz.confidence >= this.fuzzyThreshold) {
       this.lastLayer = 'fuzzy'
       this.lastScores = scores
+      this.setContextTelemetry(ctx, 'fuzzy', scores)
       return fz
     }
 
@@ -93,6 +95,7 @@ export class LayeredResolver implements IntentResolver {
     if (sem && sem.confidence >= this.semanticThreshold) {
       this.lastLayer = 'semantic'
       this.lastScores = scores
+      this.setContextTelemetry(ctx, 'semantic', scores)
       if (fz) sem.alternatives.unshift(fz)
       return sem
     }
@@ -104,6 +107,7 @@ export class LayeredResolver implements IntentResolver {
       if (cls && cls.confidence >= this.classifierThreshold) {
         this.lastLayer = 'classifier'
         this.lastScores = scores
+        this.setContextTelemetry(ctx, 'classifier', scores)
         const alts = [fz, sem].filter(Boolean) as ParsedIntent[]
         cls.alternatives = [...alts, ...cls.alternatives]
         return cls
@@ -117,6 +121,7 @@ export class LayeredResolver implements IntentResolver {
       if (llm && llm.confidence >= this.llmThreshold) {
         this.lastLayer = 'llm'
         this.lastScores = scores
+        this.setContextTelemetry(ctx, 'llm', scores)
         const alts = [fz, sem].filter(Boolean) as ParsedIntent[]
         llm.alternatives = [...alts, ...llm.alternatives]
         return llm
@@ -126,7 +131,23 @@ export class LayeredResolver implements IntentResolver {
     // No layer cleared its gate — return best-effort for clarification, or null.
     this.lastLayer = 'none'
     this.lastScores = scores
+    this.setContextTelemetry(ctx, 'none', scores)
     return fz ?? sem ?? null
+  }
+
+  /**
+   * Set resolution telemetry on the context so downstream consumers
+   * (ResponseInterpreter, logs) can see which layer resolved the intent.
+   */
+  private setContextTelemetry(
+    ctx: NLCContext,
+    layer: ResolutionLayer,
+    scores: Partial<Record<ResolutionLayer, number>>,
+  ): void {
+    ctx.resolutionLayer = layer
+    // Use the score from the winning layer as the confidence.
+    const layerScore = scores[layer]
+    ctx.confidence = layerScore ?? 0
   }
 
   getLastLayer(): ResolutionLayer {

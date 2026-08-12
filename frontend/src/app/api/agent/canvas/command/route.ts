@@ -111,8 +111,8 @@ export async function POST(req: NextRequest) {
     // auth-token out-of-scope). Each command is logged with timestamp, agent,
     // workspace, and command type for forensic review.
     // [audit] removed: console.log(
-      `[audit] agent-canvas-command ${new Date().toISOString()} agent=${agentId} workspace=${workspaceId} cmd=${command.type ?? 'unknown'}`,
-    )
+//       `[audit] agent-canvas-command ${new Date().toISOString()} agent=${agentId} workspace=${workspaceId} cmd=${command.type ?? 'unknown'}`,
+//     )
 
     return NextResponse.json(response)
   } catch (error) {
@@ -165,8 +165,8 @@ export async function PUT(req: NextRequest) {
     policyStore.set(key, updated)
 
     // [audit] removed: console.log(
-      `[audit] agent-canvas-policy-update ${new Date().toISOString()} agent=${agentId} workspace=${workspaceId}`,
-    )
+//       `[audit] agent-canvas-policy-update ${new Date().toISOString()} agent=${agentId} workspace=${workspaceId}`,
+//     )
 
     return NextResponse.json(updated)
   } catch (error) {

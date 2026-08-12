@@ -46,7 +46,11 @@ export interface IntentClassifierProvider {
    *   (single-label / labels compete against each other — matches how
    *   NLCL intents are mutually exclusive per command).
    */
-  classify(text: string, candidateLabels: string[], multiLabel?: boolean): Promise<ClassificationResult>
+  classify(
+    text: string,
+    candidateLabels: string[],
+    multiLabel?: boolean,
+  ): Promise<ClassificationResult>
   dispose(): void
 }
 

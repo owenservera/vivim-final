@@ -395,4 +395,81 @@ export type {
   SarifLog,
 } from './engines/code-audit/types.js'
 
+// Phase 0: ActionPlan contract
+export {
+  ActionPlanSchema,
+  ActionNodeSchema,
+  CapabilityRiskSchema,
+  VerifySpecSchema,
+  ExecutionEvidenceSchema,
+  GroundedReferenceSchema,
+  validateActionPlan,
+  topologicalOrder,
+  requiresConfirmation,
+  maxRiskTier,
+  ActionPlanValidationError,
+  RISK_TIER,
+} from './engines/action-plan.js'
+export type {
+  ActionPlan,
+  ActionNode,
+  CapabilityRisk,
+  VerifyType,
+  VerifySpec,
+  ExecutionEvidence,
+  GroundedReference,
+  CapabilityDefinition,
+} from './engines/action-plan.js'
 
+// Phase 0: ActionPlan compiler
+export { ActionPlanCompiler } from './engines/action-plan-compiler.js'
+export type {
+  PlanCandidate,
+  PlanCompilerInput,
+} from './engines/action-plan-compiler.js'
+
+// Phase 0: Browser action types
+export {
+  BrowserActionSchema,
+  BrowserRefSchema,
+  compactSnapshot,
+} from './engines/browser-action-types.js'
+export type {
+  BrowserAction,
+  BrowserRef,
+  GroundedElement,
+  BrowserSnapshot,
+  BrowserGrounder,
+} from './engines/browser-action-types.js'
+
+// Phase 0/4: Knowledge envelope + pipeline
+export {
+  KnowledgeEnvelopeSchema,
+  normalizeKnowledge,
+} from './engines/knowledge-envelope.js'
+export type {
+  KnowledgeEnvelope,
+  VersionedKnowledgeEnvelope,
+} from './engines/knowledge-envelope.js'
+export { KnowledgeIndexPipeline } from './engines/knowledge-index-pipeline.js'
+export type {
+  KnowledgeChunk,
+  KnowledgeExtraction,
+  KnowledgePipelineDeps,
+} from './engines/knowledge-index-pipeline.js'
+
+// Phase 1: Capability parity auditor
+export { CapabilityParityAuditor } from './engines/capability-parity.js'
+export type {
+  ParityFinding,
+  ParityReport,
+  ParitySeverity,
+} from './engines/capability-parity.js'
+
+// Phase 2: ActionPlan bridge, reference grounding, plan validation
+export { ActionPlanBridge } from './engines/action-plan-bridge.js'
+export type { PlanResult } from './engines/action-plan-bridge.js'
+export { ReferenceGroundingEngine } from './engines/reference-grounding.js'
+export type { ReferencePattern } from './engines/reference-grounding.js'
+export { PlanValidationGate } from './engines/plan-validation-gate.js'
+export type { PlanValidationResult, PlanValidationConfig } from './engines/plan-validation-gate.js'

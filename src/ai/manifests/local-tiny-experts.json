@@ -39,7 +39,11 @@
         "url": "https://huggingface.co/sentence-transformers/all-mpnet-base-v2"
       },
       "_role": "embedding",
-      "_usedBy": ["src/engines/embedding-hf.ts", "src/engines/nlcl/semantic-resolver.ts", "src/engines/nlcl/llm-slave-resolver.ts"]
+      "_usedBy": [
+        "src/engines/embedding-hf.ts",
+        "src/engines/nlcl/semantic-resolver.ts",
+        "src/engines/nlcl/llm-slave-resolver.ts"
+      ]
     },
     {
       "id": "nli:deberta-v3-xsmall",
@@ -79,7 +83,11 @@
       "parameters": 500000000,
       "quantization": "q4",
       "artifact": { "format": "onnx" },
-      "resourceRequirements": { "diskBytes": 350000000, "recommendedRamMB": 1024, "gpuRequired": false },
+      "resourceRequirements": {
+        "diskBytes": 350000000,
+        "recommendedRamMB": 1024,
+        "gpuRequired": false
+      },
       "license": {
         "name": "Apache-2.0",
         "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct"

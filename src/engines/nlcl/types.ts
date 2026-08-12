@@ -48,6 +48,18 @@ export interface NLCContext {
   metadata: Record<string, unknown>
   canvasState?: Record<string, unknown>
   activeSessionId?: string
+
+  // ── Response Interpreter Telemetry (populated by LayeredResolver) ─────
+  /** Which layer resolved the intent (deterministic/fuzzy/semantic/llm/none). */
+  resolutionLayer?: 'deterministic' | 'fuzzy' | 'semantic' | 'llm' | 'none'
+  /** Confidence score from the resolver (0-1). */
+  confidence?: number
+
+  // ── Dialogue Continuity (populated by DialogueSessionStore) ──────────
+  /** Number of turns in this dialogue session. */
+  dialogueTurnCount?: number
+  /** Entity names from recent turns (for continuity hints). */
+  recentEntities?: string[]
 }
 
 /** Raw request context from HTTP/CLI transport for bindContext. */
@@ -75,6 +87,10 @@ export interface CommandResult {
   classification: ActionClassification
   /** Unit 25.1 — resolved UnifiedCapability id (or slug) so downstream transports can act directly. */
   capabilityId?: string
+  /** Phase 2 — canonical ActionPlan produced for this command (if applicable). */
+  actionPlan?: import('../action-plan.js').ActionPlan
+  /** Phase 2 — grounded references resolved from the user's natural language. */
+  groundedRefs?: import('../action-plan.js').GroundedReference[]
   confirmation?: {
     token: string
     prompt: string

@@ -4,12 +4,19 @@
 
 import { newId } from '../../../ids.js'
 import type { CapabilityContext, UnifiedCapabilityRegistry } from '../../unified-registry.js'
+import { createNoOpResponseInterpreter, type ResponseInterpreter } from '../response-interpreter.js'
 import type { CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
 
 export class CapabilityExecutor implements CommandExecutor {
   readonly id = 'capability' as const
+  private responseInterpreter: ResponseInterpreter
 
-  constructor(private registry?: UnifiedCapabilityRegistry) {}
+  constructor(
+    private registry?: UnifiedCapabilityRegistry,
+    responseInterpreter?: ResponseInterpreter,
+  ) {
+    this.responseInterpreter = responseInterpreter ?? createNoOpResponseInterpreter()
+  }
 
   async execute(intent: ParsedIntent, ctx: NLCContext): Promise<CommandResult> {
     const start = Date.now()
@@ -44,15 +51,27 @@ export class CapabilityExecutor implements CommandExecutor {
 
       const result = await this.registry.execute(cap.id, input, capCtx)
 
-      return {
+      const raw: CommandResult = {
         ok: true,
         intent: intent.intent,
         output: result,
-        text: typeof result === 'string' ? result : `${cap.name} executed`,
+        text: typeof result === 'string' ? result : undefined,
         latencyMs: Date.now() - start,
         traceId,
         classification: cap.requiresConfirmation ? 'write' : 'read',
       }
+
+      // Enrich the response text via ResponseInterpreter.
+      // Extracts meaningful text from structured output, applies hedging,
+      // and adds dialogue continuity hints.
+      return this.responseInterpreter.enrich(raw, {
+        resolutionLayer: ctx.resolutionLayer,
+        confidence: ctx.confidence,
+        dialogueTurnCount: ctx.dialogueTurnCount,
+        recentEntities: ctx.recentEntities,
+        conversationId: ctx.conversationId,
+        providerId: ctx.providerId,
+      })
     } catch (err) {
       return this.fail(intent, traceId, start, err instanceof Error ? err.message : String(err))
     }

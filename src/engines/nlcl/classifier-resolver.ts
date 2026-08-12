@@ -30,7 +30,13 @@ import type { IntentClassifierProvider } from '../classifier-nli.js'
 import { NliClassifierProvider } from '../classifier-nli.js'
 import type { CommandPatternRegistry } from './command-registry.js'
 import { extractPatternInput } from './pattern-match.js'
-import type { CommandPattern, IntentResolver, NLCContext, NLCLSurface, ParsedIntent } from './types.js'
+import type {
+  CommandPattern,
+  IntentResolver,
+  NLCContext,
+  NLCLSurface,
+  ParsedIntent,
+} from './types.js'
 
 export interface ClassifierResolverOpts {
   /** Tiny NLI classifier provider. Defaults to NliClassifierProvider. */
@@ -102,9 +108,5 @@ export class ClassifierResolver implements IntentResolver {
 
 /** "system.logs.show" -> "show the system logs" (best-effort, cheap heuristic). */
 function humanizeIntent(intent: string): string {
-  return intent
-    .split(/[._-]/)
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
+  return intent.split(/[._-]/).filter(Boolean).join(' ').toLowerCase()
 }

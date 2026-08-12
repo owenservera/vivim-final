@@ -25,9 +25,7 @@ export function UniversalComponentProvider({ children }: { children: ReactNode }
     // Register all components (idempotent — re-registration hot-swaps).
     registerAllComponents();
     // Auto-populate the frontend ActionRegistry from backend capabilities.
-    autoPopulateActions().catch((e) =>
-      // [audit] removed: console.warn('[UniversalComponentProvider] autoPopulateActions failed:', e),
-    );
+    autoPopulateActions().catch(() => {});
     // Log the registry size for verification.
     // [audit] removed: console.log(`[UniversalComponentProvider] ${size()} components registered`);
   }, []);

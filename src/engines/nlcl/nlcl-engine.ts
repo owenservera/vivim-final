@@ -18,9 +18,9 @@ import { CommandPatternRegistry } from './command-registry.js'
 import { detectCompositeSplit } from './composite-splitter.js'
 import { type ConfirmationStore, InMemoryConfirmationStore } from './confirmation-store.js'
 import {
+  computeDialogueSessionKey,
   type DialogueSessionStore,
   InMemoryDialogueSessionStore,
-  computeDialogueSessionKey,
   resumePendingTurn,
 } from './dialogue-session-store.js'
 import type { DynamicEntityLinker } from './dynamic-entity-linker.js'
@@ -38,9 +38,9 @@ import {
 } from './executors/index.js'
 import { HelpResolver } from './help-resolver.js'
 import {
+  createResolver,
   type LocalLLMAdapter,
   type ProviderLLMAdapter,
-  createResolver,
   unresolvedIntent,
 } from './intent-resolver.js'
 import { type CompositeIntent, IntentRouter } from './intent-router.js'
@@ -51,6 +51,10 @@ import {
   validateInput,
 } from './parameter-extraction.js'
 import { Prerouter } from './prerouter.js'
+import { createResponseInterpreter, type ResponseInterpreter } from './response-interpreter.js'
+import type { ActionPlan, GroundedReference } from '../action-plan.js'
+import { ActionPlanBridge } from '../action-plan-bridge.js'
+import { PlanValidationGate } from '../plan-validation-gate.js'
 import type {
   CommandExecutor,
   CommandPattern,
@@ -120,6 +124,13 @@ export interface NLCLEngineDeps {
    * cheap pre-filter (layer 3.5). See nlcl/classifier-resolver.ts.
    */
   classifierResolver?: IntentResolver
+  /**
+   * Response interpreter — enriches command result text by extracting
+   * meaningful text from structured output, applying confidence hedging,
+   * and adding dialogue continuity hints. If omitted, a default interpreter
+   * is created.
+   */
+  responseInterpreter?: ResponseInterpreter
 }
 
 // Tier 3 unit 15.10 — COMPOSITE_SPLITTERS table removed.
@@ -138,6 +149,11 @@ export class NLCLEngine {
   private prerouter: Prerouter
   private entityLinker: DynamicEntityLinker | null
   private helpResolver: HelpResolver
+  private responseInterpreter: ResponseInterpreter
+  /** Phase 2 — converts ParsedIntent → ActionPlan for plan-carrying results. */
+  private actionPlanBridge: ActionPlanBridge
+  /** Phase 2 — pre-execution validation gate for ActionPlans. */
+  private planValidationGate: PlanValidationGate
   private auditLog: Array<{
     ts: number
     input: string
@@ -152,6 +168,9 @@ export class NLCLEngine {
     this.confirmationStore = deps.confirmationStore ?? new InMemoryConfirmationStore()
     this.dialogueSessionStore = deps.dialogueSessionStore ?? new InMemoryDialogueSessionStore()
     this.entityLinker = deps.entityLinker ?? null
+    this.responseInterpreter = deps.responseInterpreter ?? createResponseInterpreter()
+    this.actionPlanBridge = new ActionPlanBridge()
+    this.planValidationGate = new PlanValidationGate()
     this.registry = new CommandPatternRegistry()
     this.router = new IntentRouter(deps.registry)
     this.parser = new NLCommandParser(this.registry)
@@ -512,6 +531,28 @@ export class NLCLEngine {
       }
     }
 
+    // Phase 2 — Produce ActionPlan from the resolved intent (before execution).
+    // The plan is SUPPLEMENTARY: execution of the resolved intent is the answer.
+    // Plan production is defensive — if it fails for any reason (unknown
+    // capability, missing catalog entry, validation error), we still execute
+    // the command. Per the upgrade-pack directive: assume we were "not smart
+    // enough" to fully classify the plan, but the resolved intent stands.
+    let actionPlan: ActionPlan | undefined
+    let groundedRefs: GroundedReference[] = []
+    try {
+      const planResult = this.actionPlanBridge.intentToPlan(intent, ctx)
+      actionPlan = planResult.plan ?? undefined
+      groundedRefs = planResult.groundedRefs
+      // Validation is observability-only — it must never block execution.
+      if (actionPlan) {
+        this.planValidationGate.validate(actionPlan)
+      }
+    } catch {
+      // Plan production is best-effort; swallow and continue with execution.
+      actionPlan = undefined
+      groundedRefs = []
+    }
+
     // Check for confirmation requirement (25.6)
     // Audit finding A.1 fix — mint a REAL confirmation via ConfirmationStore (HMAC-signed,
     // 5-min sliding TTL, one-shot consume, audit-logged). The previous code minted an
@@ -535,10 +576,18 @@ export class NLCLEngine {
           prompt: `Confirm: ${pattern.description}`,
         },
         capabilityId: pattern.capabilityId,
+        actionPlan,
+        groundedRefs,
       }
     }
 
-    return this.router.route(intent, ctx)
+    const routeResult = await this.router.route(intent, ctx)
+
+    // Phase 2 — Attach plan + grounded refs to the route result.
+    routeResult.actionPlan = actionPlan
+    routeResult.groundedRefs = groundedRefs
+
+    return routeResult
   }
 
   private isDestructive(classification: string): boolean {
@@ -658,7 +707,7 @@ export class NLCLEngine {
     const llmExec = new ProviderLLMExecutor(conversationManager, conversationStore)
     const systemExec = new SystemExecutor(db, governor, registry)
     const convExec = new ConversationExecutor(conversationManager)
-    const capExec = new CapabilityExecutor(registry)
+    const capExec = new CapabilityExecutor(registry, this.responseInterpreter)
     const emailExec = new EmailExecutor()
     const appExec = new AppExecutor()
     const workflowExec = new WorkflowExecutor(registry)
@@ -717,17 +766,35 @@ export class NLCLEngine {
     composite: CompositeIntent,
     ctx: NLCContext,
   ): Promise<CommandResult> {
-    if (composite.joinStrategy === 'pipeline') {
-      return this.executePipeline(composite.steps, ctx)
+    // Phase 2 — Produce a multi-step ActionPlan for composite intents.
+    // Defensive: plan is supplementary; never block composite execution.
+    let actionPlan: ActionPlan | undefined
+    let groundedRefs: GroundedReference[] = []
+    try {
+      const planResult = this.actionPlanBridge.intentsToPlan(composite.steps, ctx)
+      actionPlan = planResult.plan ?? undefined
+      groundedRefs = planResult.groundedRefs
+    } catch {
+      actionPlan = undefined
+      groundedRefs = []
     }
-    return this.router.routeComposite(composite, ctx)
+    let result: CommandResult
+    if (composite.joinStrategy === 'pipeline') {
+      result = await this.executePipeline(composite.steps, ctx)
+    } else {
+      result = await this.router.routeComposite(composite, ctx)
+    }
+    // Attach plan + grounded refs to the composite result.
+    result.actionPlan = actionPlan ?? undefined
+    result.groundedRefs = groundedRefs
+    return result
   }
 
   private async executePipeline(steps: ParsedIntent[], ctx: NLCContext): Promise<CommandResult> {
     const start = Date.now()
     const traceId = newId()
     const results: CommandResult[] = []
-    let pipelineData: unknown = undefined
+    let pipelineData: unknown
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i]
