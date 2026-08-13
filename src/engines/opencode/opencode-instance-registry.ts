@@ -91,6 +91,20 @@ function shimmedCommandLine(cmd: string): string {
   return cmd ?? ''
 }
 
+/**
+ * Validate a port before interpolating it into a PowerShell script.
+ * Defense-in-depth for AU-0017: `runPowershellSafe` executes a `-Command`
+ * string, so every interpolated value must be a trusted, bounded integer —
+ * never a raw string from an external source. Returns null if the value is
+ * not a valid TCP port, short-circuiting the exec rather than risk injection.
+ */
+function safePort(port: unknown): number | null {
+  if (typeof port !== 'number' || !Number.isInteger(port) || port < 1 || port > 65535) {
+    return null
+  }
+  return port
+}
+
 export class OpenCodeInstanceRegistry {
   private readonly ledgerPath: string
   private readonly listProcesses: () => Array<{ pid: number; commandLine: string }>
@@ -118,8 +132,12 @@ export class OpenCodeInstanceRegistry {
     this.ownerOfPort =
       opts.ownerOfPort ??
       ((port: number) => {
+        const p = safePort(port)
+        if (p === null) return null
+        // Script is a trusted constant with a bounded integer interpolated
+        // (never raw/external input) — see safePort() above (AU-0017).
         const out = runPowershellSafe(
-          `Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess`,
+          `Get-NetTCPConnection -LocalPort ${p} -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess`,
           5_000,
           5_000,
         )
@@ -135,7 +153,7 @@ export class OpenCodeInstanceRegistry {
       if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
       appendFileSync(this.ledgerPath, `${JSON.stringify(ev)}\n`, 'utf8')
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Ledger write failure must never break the serve layer.
     }
   }
@@ -193,7 +211,7 @@ export class OpenCodeInstanceRegistry {
         try {
           out.push(JSON.parse(line) as OpenCodeInstanceEvent)
         } catch {
-  // [audit] log the error with context here
+          // [audit] log the error with context here
           // skip malformed line
         }
       }
