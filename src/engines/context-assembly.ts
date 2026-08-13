@@ -7,10 +7,9 @@ import { catchDebug } from '../lib/catch-logger.js'
 import { safeJsonParse } from '../lib/safe-json.js'
 import type { ContextAssemblyStore } from '../storage/contracts/context-assembly-store.js'
 import type { CapStoreDb } from '../storage/db.js'
-import type { EmbeddingProvider } from './semantic-search.js'
-import { cosineSimilarity } from './onboarding/webapp-fingerprint.js'
 import type { MemoryEngine } from './memory-engine.js'
-import type { SemanticSearchEngine } from './semantic-search.js'
+import { cosineSimilarity } from './onboarding/webapp-fingerprint.js'
+import type { EmbeddingProvider, SemanticSearchEngine } from './semantic-search.js'
 import type { SituationDetector, SituationSignal, TaskType } from './situation-detector.js'
 
 // ── Types (from atomic 17.2) ───────────────────────────────────────────────
@@ -625,7 +624,7 @@ export class ContextAssemblyEngine {
     if (!userMessage || !this.embeddingProvider) return content
 
     // Split into paragraphs (non-empty lines)
-    const paragraphs = content.split(/\n{2,}/).filter(p => p.trim().length > 0)
+    const paragraphs = content.split(/\n{2,}/).filter((p) => p.trim().length > 0)
     if (paragraphs.length <= 1) return content
 
     try {
@@ -633,7 +632,7 @@ export class ContextAssemblyEngine {
       if (!userEmbedding) return content
 
       const paraEmbeddings = await this.embeddingProvider.embedBatch(
-        paragraphs.map(p => p.trim().slice(0, 512)), // Truncate long paragraphs for embedding
+        paragraphs.map((p) => p.trim().slice(0, 512)), // Truncate long paragraphs for embedding
       )
 
       // Score each paragraph by cosine similarity to user message
@@ -646,7 +645,7 @@ export class ContextAssemblyEngine {
       // Sort by relevance (highest first), then join back
       return scored
         .sort((a, b) => b.score - a.score)
-        .map(s => s.para)
+        .map((s) => s.para)
         .join('\n\n')
     } catch {
       // Fail-open: if embedding fails, return original content

@@ -4,17 +4,18 @@ import type {
   ParserCandidateRow,
   ParserCandidateStoreContract,
 } from '../../contracts/onboarding/parser-candidate-store.js'
+import type { PrismaClient } from '../../../prisma.js'
 import type { CapStoreDb } from '../../db.js'
 
 export class ParserCandidateStoreImpl implements ParserCandidateStoreContract {
-  private db: any
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db as unknown as any
+    this.db = db.prisma
   }
 
-  private get p(): any {
-    return (this.db as { prisma: any }).prisma
+  private get p() {
+    return this.db
   }
 
   async create(row: ParserCandidateCreateInput): Promise<void> {

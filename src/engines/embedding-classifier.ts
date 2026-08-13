@@ -3,8 +3,8 @@
 // Uses prototype embeddings for each category (technology, person, project).
 // Falls back gracefully when embedding provider is unavailable.
 
-import type { EmbeddingProvider } from './semantic-search.js'
 import { cosineSimilarity } from './onboarding/webapp-fingerprint.js'
+import type { EmbeddingProvider } from './semantic-search.js'
 
 export interface CategoryAnchor {
   category: string

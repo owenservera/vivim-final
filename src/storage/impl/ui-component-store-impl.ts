@@ -10,19 +10,18 @@ import type {
   UiComponentRow,
   UiComponentStore,
 } from '../contracts/ui-component-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class UiComponentStoreImpl implements UiComponentStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async create(input: UiComponentInput): Promise<UiComponentRow> {

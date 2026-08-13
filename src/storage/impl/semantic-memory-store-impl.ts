@@ -2,19 +2,18 @@
 // SemanticMemoryStoreImpl — Prisma-backed semantic memory store
 
 import type { SemanticMemory, SemanticMemoryStore } from '../../engines/memory-engine.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async save(fact: SemanticMemory): Promise<void> {
@@ -36,7 +35,7 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
   }
 
   async findBySubject(subject: string, predicate?: string): Promise<SemanticMemory[]> {
-    const where: PrismaLoose = { subject }
+    const where = { subject }
     if (predicate) where.predicate = predicate
 
     const rows = await this.p.semanticMemory.findMany({
@@ -44,7 +43,7 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
       orderBy: { timestamp: 'desc' },
     })
 
-    return (rows as PrismaLoose[]).map((r) => ({
+    return rows.map((r) => ({
       id: r.id as string,
       subject: r.subject as string,
       predicate: r.predicate as string,
@@ -65,7 +64,7 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
       orderBy: { timestamp: 'desc' },
     })
 
-    return (rows as PrismaLoose[]).map((r) => ({
+    return rows.map((r) => ({
       id: r.id as string,
       subject: r.subject as string,
       predicate: r.predicate as string,
@@ -88,7 +87,7 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
     id: string,
     patch: Partial<Pick<SemanticMemory, 'subject' | 'predicate' | 'object' | 'confidence'>>,
   ): Promise<void> {
-    const data: PrismaLoose = {}
+    const data: Record<string, unknown> = {}
     if (patch.subject !== undefined) data.subject = patch.subject
     if (patch.predicate !== undefined) data.predicate = patch.predicate
     if (patch.object !== undefined) data.objectJson = JSON.stringify(patch.object)

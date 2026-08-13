@@ -7,19 +7,18 @@ import type {
   ProviderTypeRow,
   ProviderTypeStore,
 } from '../contracts/provider-type-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class ProviderTypeStoreImpl implements ProviderTypeStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async create(input: ProviderTypeInput): Promise<ProviderTypeRow> {

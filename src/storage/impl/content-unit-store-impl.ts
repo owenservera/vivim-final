@@ -3,9 +3,8 @@
 
 import type { Prisma } from '@prisma/client'
 import type { ContentUnitRow, ContentUnitStore } from '../contracts/content-unit-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
-
-type PrismaLoose = any
 
 type ContentUnitPrismaRow = Prisma.ContentUnitGetPayload<Record<string, never>>
 
@@ -25,14 +24,14 @@ function toRow(r: ContentUnitPrismaRow): ContentUnitRow {
 }
 
 export class ContentUnitStoreImpl implements ContentUnitStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async storeUnits(units: ContentUnitRow[]): Promise<void> {

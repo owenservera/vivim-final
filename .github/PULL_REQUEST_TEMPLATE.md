@@ -1,56 +1,51 @@
 ## Description
 
-<!-- Describe your changes in detail -->
+Brief description of the changes in this PR.
 
-## Motivation and Context
+## Type of Change
 
-<!-- Why is this change required? What problem does it solve? -->
-<!-- If it fixes an open issue, please link to the issue here. -->
-
-Fixes # (issue)
-
-## How Has This Been Tested?
-
-<!-- Please describe the tests that you ran to verify your changes. -->
-<!-- Provide instructions so we can reproduce. -->
-
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] E2E tests
-- [ ] Manual testing
-
-**Test Environment:**
-- OS: 
-- Browser: 
-- Provider: 
-
-## Types of Changes
-
-<!-- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
 - [ ] Documentation update
 - [ ] Refactoring (no functional changes)
-- [ ] CI/CD or build process changes
+- [ ] Test update
 
-## Checklist
+## Related Issues
 
-<!-- Go over all the following points, and put an `x` in all the boxes that apply. -->
+Closes #(issue number)
 
-- [ ] My code follows the [code style](https://github.com/owenservera/vivim-final/blob/master/CONTRIBUTING.md) of this project
-- [ ] I have updated the documentation accordingly
-- [ ] I have added tests to cover my changes
-- [ ] I have read the **CONTRIBUTING** document
-- [ ] All new and existing tests passed
-- [ ] My changes generate no new warnings
-- [ ] Any dependent changes have been merged and published
+## Changes Made
+
+- Change 1
+- Change 2
+- Change 3
+
+## Testing
+
+Describe the tests you ran to verify your changes:
+
+```bash
+# Commands used
+bun test
+bun run typecheck
+bun run lint
+```
+
+- [ ] Tests pass locally
+- [ ] Type checking passes
+- [ ] Linting passes
 
 ## Screenshots (if applicable)
 
-<!-- Add screenshots to illustrate the changes -->
+Add screenshots to show visual changes.
 
-## Additional Notes
+## Checklist
 
-<!-- Add any other information about the pull request here -->
+- [ ] My code follows the project's coding standards
+- [ ] I have performed a self-review of my code
+- [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have updated the documentation accordingly
+- [ ] My changes generate no new warnings
+- [ ] I have added tests that prove my fix is effective or my feature works
+- [ ] New and existing unit tests pass locally with my changes

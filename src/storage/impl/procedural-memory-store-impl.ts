@@ -6,19 +6,18 @@ import type {
   ProceduralRule,
   RuleContext,
 } from '../../engines/memory-engine.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class ProceduralMemoryStoreImpl implements ProceduralMemoryStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async save(rule: ProceduralRule): Promise<void> {
@@ -41,7 +40,7 @@ export class ProceduralMemoryStoreImpl implements ProceduralMemoryStore {
   }
 
   async findByContext(ctx: RuleContext): Promise<ProceduralRule[]> {
-    const where: PrismaLoose = {}
+    const where = {}
     if (ctx.providerId) where.condition = { contains: ctx.providerId }
     if (ctx.capabilityId) where.condition = { contains: ctx.capabilityId }
     if (ctx.action) where.action = ctx.action
@@ -51,7 +50,7 @@ export class ProceduralMemoryStoreImpl implements ProceduralMemoryStore {
       orderBy: { confidence: 'desc' },
     })
 
-    return (rows as PrismaLoose[]).map((r) => ({
+    return rows.map((r) => ({
       id: r.id as string,
       name: r.name as string,
       condition: r.condition as string,
@@ -70,7 +69,7 @@ export class ProceduralMemoryStoreImpl implements ProceduralMemoryStore {
       orderBy: { confidence: 'desc' },
     })
 
-    return (rows as PrismaLoose[]).map((r) => ({
+    return rows.map((r) => ({
       id: r.id as string,
       name: r.name as string,
       condition: r.condition as string,

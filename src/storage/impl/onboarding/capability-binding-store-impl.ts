@@ -8,17 +8,18 @@
 // lives in capability-binding-store.ts and is unchanged.
 
 import type { CapabilityBindingStoreContract } from '../../contracts/onboarding/capability-binding-store.js'
+import type { PrismaClient } from '../../../prisma.js'
 import type { CapStoreDb } from '../../db.js'
 
 export class CapabilityBindingStoreImpl implements CapabilityBindingStoreContract {
-  private db: any
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db as unknown as any
+    this.db = db.prisma
   }
 
-  private get p(): any {
-    return (this.db as { prisma: any }).prisma
+  private get p() {
+    return this.db
   }
 
   async create(input: {

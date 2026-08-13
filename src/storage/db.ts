@@ -9,22 +9,8 @@ import { type PrismaClient, closePrisma, getPrisma } from './prisma.js'
 
 const log = getLogger('db')
 
-/**
- * Loose type for Prisma model delegates — eliminates per-file `as any` casts.
- * Centralizes all dynamic Prisma access to this single getter.
- */
-export type PrismaLoose = any // eslint-disable-line @typescript-eslint/no-explicit-any
-
 export class CapStoreDb {
   public readonly prisma: PrismaClient
-
-  /**
-   * Loose-typed access to all Prisma model delegates.
-   * Use this instead of `(db.prisma as any).modelName` in store impls.
-   */
-  get loose(): PrismaLoose {
-    return { prisma: this.prisma } as unknown as PrismaLoose
-  }
 
   constructor(_path?: string) {
     // _path kept for backward compat but ignored — Prisma uses DATABASE_URL
@@ -264,8 +250,9 @@ export class CapStoreDb {
         },
         update: { updatedAt: now },
       })
-      .catch(() => {})
-  // [audit] log the error with context here
+      .catch((err) => {
+        log.warn({ err, providerId }, 'Provider upsert failed during bootstrap')
+      })
 
     const vivimSession = await this.prisma.vivimSession.create({
       data: { id: newId(), state: 'idle', contextJson: '{}', createdAt: now, updatedAt: now },

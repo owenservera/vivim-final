@@ -5,8 +5,8 @@ export class CapStoreError extends Error {
   public readonly code: string
   public readonly details?: unknown
 
-  constructor(code: string, message: string, details?: unknown) {
-    super(message)
+  constructor(code: string, message: string, details?: unknown, options?: ErrorOptions) {
+    super(message, options)
     this.name = 'CapStoreError'
     this.code = code
     this.details = details

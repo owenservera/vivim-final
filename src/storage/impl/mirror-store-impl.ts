@@ -13,15 +13,14 @@ import type {
   SnapshotInput,
   SnapshotRow,
 } from '../contracts/mirror-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class MirrorStoreImpl implements MirrorStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {

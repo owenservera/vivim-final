@@ -1,8 +1,8 @@
 <![CDATA[<div align="center">
 
-# Vivim Desktop
+# Vivim
 
-**Local-first AI conversation platform with multi-provider support**
+**Talk to every AI from one place.**
 
 [![GitHub release](https://img.shields.io/github/v/release/owenservera/vivim-final?include-prereleases)](https://github.com/owenservera/vivim-final/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -10,9 +10,53 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-%23000000?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-7.0-%23007ACC?logo=typescript)](https://www.typescriptlang.org)
 
-[Download](#download) • [Documentation](#documentation) • [Features](#features) • [Architecture](#architecture) • [Contributing](#contributing)
+[Download](#download) • [How It Works](#how-it-works) • [Quick Start](#quick-start) • [Architecture](#architecture) • [Docs](#documentation) • [Contributing](#contributing)
 
 </div>
+
+---
+
+## What Is Vivim?
+
+Vivim is a **local-first AI conversation platform** that connects to ChatGPT, Claude, Gemini, DeepSeek, Qwen, and Grok through a single interface. It runs entirely on your machine — no cloud account required.
+
+Instead of writing provider-specific code, Vivim uses a **capability system**: every provider interaction is a typed, composable operation with a single API. You describe what you want in natural language, and the system figures out how to do it.
+
+---
+
+## How It Works
+
+Three core concepts make Vivim work:
+
+### Capabilities
+
+A **capability** is an atomic operation — `send_message`, `select_model`, `create_chat`, `upload_file`. Every capability has a unique ID (like `cap:chat:send_message`), a category, and bindings to multiple surfaces (CLI, API, MCP, UI).
+
+When you type "send a message to Claude," the **Capability Resolution Engine** translates that into a resolved capability with a confidence score, then executes it against the right provider.
+
+```
+You: "send a message to Claude"
+  ↓
+Capability Resolution: cap:chat:send_message (confidence: 0.95)
+  ↓
+Provider Routing: Claude
+  ↓
+Execution via Chrome Governor
+  ↓
+Response streamed back to you
+```
+
+### Providers
+
+Each AI provider is described by a **manifest** — a declarative JSON document that declares endpoints, browser selectors, streaming parsers, model lists, and capabilities. Vivim currently supports **16 registered providers** with full streaming support for ChatGPT, Claude, Gemini, DeepSeek, Qwen, and Grok.
+
+Providers are connected through authenticated Chrome browser profiles — Vivim interacts with them the same way you would in a browser, but automated.
+
+### Chrome Governor
+
+The **ChromeGovernor** is the single point of control for all browser interaction. It manages Chrome processes, proxies commands through the Chrome DevTools Protocol (CDP), logs traces for debugging, and enforces a hard architectural rule: **no other engine touches the browser directly**.
+
+This keeps the system predictable and debuggable.
 
 ---
 
@@ -30,218 +74,116 @@ Download the latest installer from [GitHub Releases](https://github.com/owenserv
 ### Manual Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/owenservera/vivim-final.git
 cd vivim-final
 
-# Install root dependencies
 bun install
+cd frontend && bun install && cd ..
 
-# Install frontend dependencies
-cd frontend
-bun install
-cd ..
-
-# Copy env example and configure if needed (defaults work for dev)
 cp .env.example .env
-
-# Generate Prisma client
 bun run prisma:generate
-
-# Apply migrations (REQUIRED — creates tables)
-# Use `prisma migrate dev` for development (creates new migrations if schema changes)
-# Use `prisma migrate deploy` for production (applies pending migrations only)
 bun x prisma migrate dev
-
-# Seed the database (boots server once, runs all seeds)
 bun run seed
-
-# Start development server
 bun run dev
 ```
 
 This starts:
-- **Backend** at `http://localhost:9420` (REST API + WebSocket)
-- **Frontend** at `http://localhost:3000` (Next.js dev server)
+- **Backend** at `http://localhost:9420` (API + WebSocket)
+- **Frontend** at `http://localhost:3000` (Next.js)
 
-Open `http://localhost:3000` in your browser. The Next.js frontend proxies `/api/*` requests to the backend on `:9420`.
-
----
-
-## Documentation
-
-The live documentation set lives in [`docs/`](docs/README.md) (single source of
-truth — anything stale is archived, never deleted).
-
-### Quick Start
-
-1. **Install** the Windows installer or clone the repository
-2. **Configure** your API keys in `.env` (see [Configuration](#configuration))
-3. **Launch** Vivim Desktop from Start Menu or run `bun run dev`
-4. **Access** the web interface at `http://localhost:3000`
-
-### Developer Documentation
-
-- **[Architecture — Overview](docs/architecture/OVERVIEW.md)** — The 30-second mental model of the system
-- **[Architecture — Engines](docs/architecture/ENGINES.md)** — What each engine does and where its code lives
-- **[Architecture — Data](docs/architecture/DATA.md)** — Schema, migrations, stores, Node model
-- **[Architecture — API & Surface Map](docs/architecture/API.md)** — Routes, entry points, event stream
-- **[Architecture — Frontend](docs/architecture/FRONTEND.md)** — React UI consuming the backend
-- **[Alpha scope](docs/ALPHA.md)** — What ships in alpha vs what waits
-- **[Decisions](docs/decisions/README.md)** — ADR log
-
-### Operations & Runbooks
-
-- **[Dev loop](docs/runbooks/DEV.md)** — How to run it locally, port gotchas
-- **[Desktop build/test](docs/runbooks/DESKTOP.md)** — Tauri build + verified desktop loop
-- **[Providers](docs/runbooks/PROVIDERS.md)** — Set up and test chatgpt/claude/gemini/…
-
-> **Note:** the older user-facing `docs/` files linked here before (USER-GUIDE,
-> ARCHITECTURE, API, PROVIDERS, ENGINES, FRONTEND, DEPLOYMENT, CONFIGURATION,
-> TROUBLESHOOTING, DESKTOP-BUILD) were archived during the 2026-08-06 cleanup.
-> The current set is documented in `docs/README.md`.
+Open `http://localhost:3000` to start chatting.
 
 ---
 
-## Features
+## Quick Start
 
-### Multi-Provider AI Support
+### 1. Install
 
-Connect to multiple AI providers simultaneously:
+Either download the Windows installer or clone the repo (see above).
 
-| Provider | Status | Models |
-|----------|--------|--------|
-| **ChatGPT** | ✅ Full Support | GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo |
-| **Claude** | ✅ Full Support | Claude 3.5 Sonnet, Claude 3 Opus |
-| **Gemini** | ✅ Full Support | Gemini 1.5 Pro, Gemini 1.5 Flash |
-| **DeepSeek** | ✅ Supported | DeepSeek Chat, DeepSeek Coder |
-| **Qwen** | ✅ Supported | Qwen-Turbo, Qwen-Plus |
-| **Grok** | ✅ Supported | Grok-2, Grok-2 Mini |
+### 2. Configure
 
-### Capability System
+Set your API keys in `.env` (defaults work for local dev — keys only needed for live provider connections):
 
-- **Unified Capabilities** — Single API for all provider operations
-- **Natural Language Interface** — Execute capabilities using plain English
-- **Custom Capabilities** — Build and register your own capabilities
-- **Cross-Surface Parity** — Same capabilities via CLI, API, MCP, and UI
+```bash
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_API_KEY=...
+```
 
-### Desktop Application
+### 3. Launch
 
-- **Native Windows Installer** — One-click installation
-- **System Tray** — Runs in background
-- **Auto-Updates** — Automatic version management
-- **Offline Support** — Local-first architecture
+```bash
+bun run dev
+```
 
-### Developer Experience
+### 4. Use
 
-- **TypeScript** — Full type safety across the stack
-- **Bun Runtime** — Fast development and production builds
-- **Prisma ORM** — Type-safe database operations
-- **Hot Reload** — Instant feedback during development
+Open `http://localhost:3000` and start a conversation. The CLI is also available:
+
+```bash
+bun run src/cli/index.ts
+```
 
 ---
 
 ## Architecture
 
-### System Overview
+### System Layers
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      Vivim Desktop                          │
-├─────────────────────────────────────────────────────────────┤
-│  Frontend (Next.js 16)          Backend (Bun + TypeScript)  │
-│  ┌─────────────────┐            ┌─────────────────┐        │
-│  │  React 19 UI    │◄──────────►│  API Server     │        │
-│  │  Tailwind CSS   │  WebSocket │  Port 9420      │        │
-│  │  Radix UI       │            │                 │        │
-│  └─────────────────┘            └────────┬────────┘        │
-│                                          │                  │
-│                              ┌───────────▼───────────┐     │
-│                              │    Engine Layer       │     │
-│                              │  ┌─────────────────┐  │     │
-│                              │  │ CapabilityEngine│  │     │
-│                              │  │ ProviderEngine  │  │     │
-│                              │  │ SessionEngine   │  │     │
-│                              │  │ StreamEngine    │  │     │
-│                              │  └─────────────────┘  │     │
-│                              └───────────┬───────────┘     │
-│                                          │                  │
-│                              ┌───────────▼───────────┐     │
-│                              │    Storage Layer      │     │
-│                              │  ┌─────────────────┐  │     │
-│                              │  │ Prisma + SQLite  │  │     │
-│                              │  │ Local Database   │  │     │
-│                              │  └─────────────────┘  │     │
-│                              └───────────────────────┘     │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│                   SURFACES                            │
+│   CLI  ·  HTTP API  ·  WebSocket  ·  MCP  ·  UI     │
+├──────────────────────────────────────────────────────┤
+│                CAPABILITY LAYER                       │
+│   Resolution  ·  Execution  ·  Taxonomy  ·  Events  │
+├──────────────────────────────────────────────────────┤
+│               PROVIDER LAYER                          │
+│   Registrar  ·  Health  ·  Parsers  ·  Chrome Gov.   │
+├──────────────────────────────────────────────────────┤
+│                 DATA LAYER                            │
+│   Prisma (SQLite)  ·  Node Model  ·  Store Contracts │
+└──────────────────────────────────────────────────────┘
 ```
 
 ### Engine Architecture
 
-The original **13-engine architecture** is organized in layers (see
-[`docs/architecture/ENGINES.md`](docs/architecture/ENGINES.md) for every engine,
-its job, and its code path — the surface has since grown well beyond 13):
+The system is built around **13 core engines** organized in layers, with 455+ engine files total:
 
-| Layer | Engines | Purpose |
-|-------|---------|---------|
-| **L0-L1** | ProviderRegistrar, ProviderHealthKernel | Provider knowledge graph |
-| **L2-L3** | CapabilityResolutionEngine, CapabilityEngine | Capability system |
-| **L4** | ConversationManager, StreamBlockStore | Session & state management |
-| **Chrome** | ChromeGovernor | CDP proxy, lifecycle, trace, health |
-| **Cross-cutting** | CapabilityEventBus, ConfigManager, StreamParserEngine | Shared infrastructure |
-| **Lifecycle** | RegistrationAuditor, VersionManager, TelemetryAggregator | System lifecycle |
+| Layer | Engines | Job |
+|-------|---------|-----|
+| **Provider KG** | ProviderRegistrar, ProviderHealthKernel | Register providers, track health |
+| **Capabilities** | CapabilityResolutionEngine, CapabilityEngine | Resolve & execute operations |
+| **Session** | ConversationManager, StreamBlockStore | State, history, streaming |
+| **Chrome** | ChromeGovernor | Browser automation, CDP proxy |
+| **Cross-cutting** | EventBus, ConfigManager, StreamParser | Shared infrastructure |
 
 ### Data Flow
 
-1. **User Input** → Frontend captures user message
-2. **Capability Resolution** → System resolves which capability to execute
-3. **Provider Routing** → Request routed to appropriate AI provider
-4. **Stream Processing** → Real-time streaming of provider responses
-5. **State Management** → Conversation state persisted to local database
-6. **UI Update** → Frontend renders response in real-time
+1. You type a message
+2. The system resolves which capability to execute
+3. The request is routed to the appropriate AI provider
+4. The response streams back in real-time
+5. Everything is persisted to a local SQLite database
+
+See [Architecture Docs](docs/architecture/OVERVIEW.md) for the full picture.
 
 ---
 
-## Configuration
+## Documentation
 
-### Environment Variables
-
-Create a `.env` file in the project root:
-
-```bash
-# Database
-DATABASE_URL="file:./data/vivim.db"
-
-# Server
-PORT=9420
-NODE_ENV=production
-
-# API Keys (configure as needed)
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-GOOGLE_API_KEY=...
-
-# Desktop App
-FRONTEND_DIR=./frontend/out
-```
-
-### Provider Configuration
-
-Providers are configured via seed files in `seeds/providers/`:
-
-```json
-{
-  "slug": "chatgpt",
-  "name": "ChatGPT",
-  "endpoints": {
-    "chat": "https://api.openai.com/v1/chat/completions"
-  },
-  "models": ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
-  "capabilities": ["send_message", "select_model"]
-}
-```
-
-See [Provider Documentation](docs/runbooks/PROVIDERS.md) for detailed configuration.
+| Area | Document | What It Covers |
+|------|----------|----------------|
+| **Architecture** | [Overview](docs/architecture/OVERVIEW.md) | 30-second mental model |
+| | [Engines](docs/architecture/ENGINES.md) | Every engine and its code path |
+| | [Data](docs/architecture/DATA.md) | Schema, Node model, store contracts |
+| | [API](docs/architecture/API.md) | Routes, WebSocket, surfaces |
+| | [Frontend](docs/architecture/FRONTEND.md) | React UI, canvas, slots |
+| **Runbooks** | [Dev](docs/runbooks/DEV.md) | Local development |
+| | [Desktop](docs/runbooks/DESKTOP.md) | Tauri build & testing |
+| | [Providers](docs/runbooks/PROVIDERS.md) | Provider setup & testing |
+| **Decisions** | [ADR Index](docs/decisions/README.md) | Architecture decisions |
 
 ---
 
@@ -250,83 +192,85 @@ See [Provider Documentation](docs/runbooks/PROVIDERS.md) for detailed configurat
 ### Prerequisites
 
 - **Bun** 1.3.14+ ([Install](https://bun.sh))
-- **Node.js** 18+ (for compatibility)
+- **Node.js** 20+ ([Install](https://nodejs.org))
 - **Git** ([Install](https://git-scm.com))
 
 ### Setup
 
 ```bash
-# Clone repository
 git clone https://github.com/owenservera/vivim-final.git
 cd vivim-final
 
-# Install dependencies
 bun install
-
-# Set up database
 bun run prisma:generate
 bun run seed
-
-# Start development server
 bun run dev
 ```
 
-### Available Scripts
+### Scripts
 
 | Command | Description |
 |---------|-------------|
-| `bun run dev` | Start development server (backend + frontend) |
-| `bun run build` | Build for production |
-| `bun run test` | Run test suite |
+| `bun run dev` | Start dev server (backend + frontend) |
+| `bun run build` | Production build |
+| `bun run test` | Run all tests |
+| `bun run test:fast` | Unit + architecture tests |
 | `bun run typecheck` | Type-check the codebase |
 | `bun run lint` | Lint with Biome |
 | `bun run format` | Format code with Biome |
+| `bun run seed` | Re-seed database |
+| `bun run stop` | Kill orphaned dev processes |
 
-### Building for Production
+### Desktop Build
 
 ```bash
-# Build the backend (tsup → dist/index.js)
-bun run build
+# Full desktop build (NSIS installer)
+pwsh scripts/tauri/build.ps1
 
-# Build the frontend (Next.js standalone)
-cd frontend && bun run build
-
-# Or build + run via Docker (recommended for deployment)
-docker compose up -d --build
+# DevOps toolkit (hash-gated rebuild + test)
+bun run devops desktop-loop run --version <x.y.z>
 ```
 
-See [Deploy Runbook](docs/runbooks/DEPLOY.md) for the full deployment guide
-(Docker, docker-compose, bare-metal, env vars, health, backups, upgrading).
+See [Desktop Runbook](docs/runbooks/DESKTOP.md) for details.
 
-> **Desktop build:** The Tauri/NSIS desktop installer is owned by the
-> downstream Tauri shell repo. See [docs/runbooks/DESKTOP.md](docs/runbooks/DESKTOP.md)
-> for the manual build procedure.
+### Testing
+
+```bash
+bun test                    # All tests
+bun run test:unit           # Unit only
+bun run test:integration    # Integration only
+bun run test:e2e            # E2E (Playwright)
+bun run test:arch           # Architecture boundary tests
+```
 
 ---
 
-## Testing
+## Project Structure
 
-### Test Types
-
-```bash
-# Unit tests
-bun run test:unit
-
-# Integration tests
-bun run test:integration
-
-# E2E tests
-bun run test:e2e
-
-# All tests
-bun test
 ```
-
-### Test Coverage
-
-- **Unit Tests**: Individual function and component tests
-- **Integration Tests**: Engine interaction tests
-- **E2E Tests**: Full stack tests with Playwright
+vivim-final/
+├── src/
+│   ├── engines/          # 455+ engine files (core logic)
+│   ├── server/           # HTTP API + WebSocket
+│   ├── cli/              # CLI entry point
+│   ├── storage/          # Database contracts + implementations
+│   ├── schema/           # Zod validation schemas
+│   └── mcp/              # Model Context Protocol
+├── frontend/
+│   └── src/
+│       ├── app/          # Next.js App Router
+│       ├── components/   # React components
+│       ├── canvas/       # Canvas live-config
+│       ├── engines/      # Frontend engines
+│       └── ui/           # Slot system
+├── prisma/
+│   └── schema.prisma     # 196 models, 3,800+ lines
+├── seeds/                # Provider manifests, parsers, capabilities
+├── tests/                # Unit, integration, E2E
+├── docs/                 # Documentation
+├── devops/               # DevOps toolkit
+└── scripts/              # Build & utility scripts
+```
 
 ---
 
@@ -334,26 +278,33 @@ bun test
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Development Workflow
+### Quick Start for Contributors
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'feat: add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
+```bash
+git clone https://github.com/owenservera/vivim-final.git
+cd vivim-final
+bun install && bun run prisma:generate && bun run seed
+bun run dev
+```
+
+### What to Work On
+
+- **Bug fixes** — Check [issues](https://github.com/owenservera/vivim-final/issues)
+- **New capabilities** — Register in `src/engines/capability-bootstrap/`
+- **Provider support** — Add manifests in `seeds/providers/manifests.ts`
+- **Documentation** — Improve docs in `docs/`
+- **Tests** — Increase coverage in `tests/`
 
 ### Code Standards
 
-- **TypeScript** — Strict mode with full type safety
+- **TypeScript** — Strict mode, no `any`
 - **Biome** — Formatting and linting
-- **Conventional Commits** — Commit message format
-- **Tests** — Required for new features
+- **Conventional Commits** — `feat:`, `fix:`, `docs:`, etc.
+- **Store Contracts** — Never import `impl/` directly from engines
 
 ---
 
 ## Security
-
-### Reporting Vulnerabilities
 
 If you discover a security vulnerability, please report it responsibly:
 
@@ -371,41 +322,9 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-## Support
-
-### Documentation
-
-- **[Doc set / map](docs/README.md)** — the live documentation home
-- **[Developer Docs](docs/architecture/OVERVIEW.md)** — Technical documentation
-- **[API / Surface Map](docs/architecture/API.md)** — API documentation
-
-### Community
-
-- **[GitHub Discussions](https://github.com/owenservera/vivim-final/discussions)** — Ask questions, share ideas
-- **[Issue Tracker](https://github.com/owenservera/vivim-final/issues)** — Report bugs, request features
-
-### Professional Support
-
-- **Email**: support@vivim.dev
-- **Response Time**: 24-48 hours
-
----
-
-## Acknowledgments
-
-Built with:
-
-- **[Bun](https://bun.sh)** — Fast JavaScript runtime
-- **[Next.js](https://nextjs.org)** — React framework
-- **[Prisma](https://www.prisma.io)** — Database ORM
-- **[Radix UI](https://www.radix-ui.com)** — UI components
-- **[Tailwind CSS](https://tailwindcss.com)** — Utility-first CSS
-
----
-
 <div align="center">
 
-**[Download Vivim Desktop](https://github.com/owenservera/vivim-final/releases/latest/download/vivim-desktop-setup.exe)** • **[Read the Docs](docs/)** • **[Get Started](#quick-start)**
+**[Download Vivim Desktop](https://github.com/owenservera/vivim-final/releases/latest/download/vivim-desktop-setup.exe)** • **[Read the Docs](docs/)** • **[GitHub](https://github.com/owenservera/vivim-final)**
 
 </div>
 ]]>

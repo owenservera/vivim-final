@@ -2,9 +2,8 @@
 // Prisma-backed ParserStore for StreamParserEngine.
 
 import type { ParserStore, ProviderParserRow } from '../contracts/parser-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
-
-type PrismaLoose = any
 
 interface PrismaParserRow {
   id: string
@@ -59,14 +58,14 @@ function toParserRow(r: PrismaParserRow): ProviderParserRow {
 }
 
 export class ParserStoreImpl implements ParserStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async getParser(providerId: string): Promise<ProviderParserRow | null> {

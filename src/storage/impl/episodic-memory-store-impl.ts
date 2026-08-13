@@ -6,19 +6,18 @@ import type {
   EpisodicMemory,
   EpisodicMemoryStore,
 } from '../../engines/memory-engine.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class EpisodicMemoryStoreImpl implements EpisodicMemoryStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async save(episode: EpisodicMemory): Promise<void> {
@@ -43,7 +42,7 @@ export class EpisodicMemoryStoreImpl implements EpisodicMemoryStore {
   }
 
   async query(opts: EpisodeQueryOpts): Promise<EpisodicMemory[]> {
-    const where: PrismaLoose = {}
+    const where = {}
     if (opts.providerId) where.providerId = opts.providerId
     if (opts.capabilityId) where.capabilityId = opts.capabilityId
     if (opts.action) where.action = opts.action
@@ -56,7 +55,7 @@ export class EpisodicMemoryStoreImpl implements EpisodicMemoryStore {
       take: opts.limit ?? 50,
     })
 
-    return (rows as PrismaLoose[]).map((r) => ({
+    return rows.map((r) => ({
       id: r.id as string,
       providerId: r.providerId as string,
       capabilityId: (r.capabilityId as string) ?? undefined,
@@ -80,7 +79,7 @@ export class EpisodicMemoryStoreImpl implements EpisodicMemoryStore {
       orderBy: { timestamp: 'desc' },
     })
 
-    return (rows as PrismaLoose[]).map((r) => ({
+    return rows.map((r) => ({
       id: r.id as string,
       providerId: r.providerId as string,
       capabilityId: (r.capabilityId as string) ?? undefined,

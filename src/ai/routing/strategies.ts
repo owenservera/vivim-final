@@ -5,9 +5,9 @@
  * Pluggable scoring strategies that compose into the default router.
  */
 
+import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 import type { AIRequest, ProviderManifest, RoutingCandidate } from '../core/types.js'
 import type { IRoutingStrategy, RoutingDependencies } from './router.js'
-import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 
 /**
  * Explicit: caller pinned providerId + modelId. Just return that candidate
@@ -90,9 +90,7 @@ export class LowestCostStrategy implements IRoutingStrategy {
     return [...candidates]
       .map((c) => {
         // Read pricing from model extensions if available
-        const pricing = (c as any).extensions?.pricing as
-          | { inputPer1k?: number; outputPer1k?: number }
-          | undefined
+        const pricing = (c as RoutingCandidate & { extensions?: { pricing?: { inputPer1k?: number; outputPer1k?: number } } }).extensions?.pricing
         if (!pricing) return { ...c, score: c.score } // No pricing info = no penalty
         const avgCost = ((pricing.inputPer1k ?? 0) + (pricing.outputPer1k ?? 0)) / 2
         const costPenalty = Math.min(1, avgCost / 0.1) // Normalize: $0.10/1k tokens = full penalty

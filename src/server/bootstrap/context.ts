@@ -17,8 +17,8 @@ import type { IdempotencyGuard } from '../../engines/idempotency-guard.js'
 import type { Kernel } from '../../engines/kernel/kernel-context.js'
 import type { KnowledgeIngestionEngine } from '../../engines/knowledge-ingestion.js'
 import type { LockManager } from '../../engines/lock-manager.js'
-import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 import type { NLCLEngine } from '../../engines/nlcl/nlcl-engine.js'
+import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 import type { ProviderHealthKernel } from '../../engines/provider-health.js'
 import type { ProviderMuxEngine } from '../../engines/provider-mux.js'
 import type { ProviderRegistrar } from '../../engines/provider-registrar.js'
@@ -99,6 +99,10 @@ export interface BootstrapContext {
   contactStore?: import('../../storage/impl/contact-store-impl.js').ContactStoreImpl
   syncStore?: import('../../storage/impl/sync-store-impl.js').SyncStoreImpl
   mediaStore?: import('../../storage/impl/media-store-impl.js').MediaStoreImpl
+  collectionEngine?: import('../../engines/collection-engine.js').CollectionEngine
+  lifecycleEngine?: import('../../engines/lifecycle-engine.js').LifecycleEngine
+  compactionManager?: import('../../engines/compaction-manager.js').CompactionManager
+  backupManager?: import('../../engines/backup-manager.js').BackupManager
 
   // Optional engines surfaced on the result but not always present
   conceptualModel?: ConceptualModelService
@@ -145,6 +149,10 @@ export interface BootstrapEnginesResult {
   contactStore: import('../../storage/impl/contact-store-impl.js').ContactStoreImpl
   syncStore: import('../../storage/impl/sync-store-impl.js').SyncStoreImpl
   mediaStore: import('../../storage/impl/media-store-impl.js').MediaStoreImpl
+  collectionEngine?: import('../../engines/collection-engine.js').CollectionEngine
+  lifecycleEngine?: import('../../engines/lifecycle-engine.js').LifecycleEngine
+  compactionManager?: import('../../engines/compaction-manager.js').CompactionManager
+  backupManager?: import('../../engines/backup-manager.js').BackupManager
 }
 
 /** Create an empty context. Phases fill it; the orchestrator resolves it. */

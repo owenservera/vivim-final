@@ -11,9 +11,9 @@
  * PolicyDecision — they cannot be accidentally swapped.
  */
 
+import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 import type { AIRequest, ExecutionPolicy, RoutingCandidate, ToolDefinition } from '../core/types.js'
 import type { CandidateInput, IPolicyEnforcer, IPolicyEvaluator, PolicyDecision } from './policy.js'
-import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 
 /**
  * Score candidates using historical outcome data from OutcomeTracker.
@@ -38,7 +38,11 @@ export class DefaultPolicyEvaluator implements IPolicyEvaluator {
         modelId: model.id,
         score: outcomeScore,
         reasons: [
-          { factor: 'availability', score: outcomeScore, explanation: `Outcome EMA: ${outcomeScore.toFixed(2)}` },
+          {
+            factor: 'availability',
+            score: outcomeScore,
+            explanation: `Outcome EMA: ${outcomeScore.toFixed(2)}`,
+          },
         ],
       }
     })

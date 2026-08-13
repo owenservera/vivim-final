@@ -10,12 +10,9 @@ import type {
   TaxonomyVersionRow,
   VersionStore,
 } from '../contracts/version-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-// Loosely-typed Prisma handle. The generated client types are verbose and add
-// no safety at the call site, so we keep the public API typed but the internal
-// Prisma access loosely typed via a permissive structural alias.
-type PrismaLoose = any
 // ── Prisma row shapes ────────────────────────────────────────────────────────
 
 interface PrismaTaxonomyVersion {
@@ -131,18 +128,14 @@ function toMetricRow(r: PrismaProgramMetric): ProgramMetricRow {
 // ── Impl ─────────────────────────────────────────────────────────────────────
 
 export class VersionStoreImpl implements VersionStore {
-  // Prisma client is generated/verbose; typed access gives no safety benefit at
-  // the call site, so we keep it loosely typed while the public API stays typed.
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
-  // Contained escape hatch: the generated Prisma client types are verbose and
-  // add no safety at the call site. Typed through `any` here only.
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   // ── Taxonomy versions ───────────────────────────────────────────────────────

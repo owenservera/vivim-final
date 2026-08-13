@@ -49,6 +49,11 @@ export async function bootstrapStoresPhase(ctx: BootstrapContext): Promise<void>
   const { ProceduralMemoryStoreImpl } = await import(
     '../../../storage/impl/procedural-memory-store-impl.js'
   )
+  const { CollectionStoreImpl } = await import('../../../storage/impl/collection-store-impl.js')
+  const { CollectionEngine } = await import('../../../engines/collection-engine.js')
+  const { LifecycleEngine } = await import('../../../engines/lifecycle-engine.js')
+  const { CompactionManager } = await import('../../../engines/compaction-manager.js')
+  const { BackupManager } = await import('../../../engines/backup-manager.js')
 
   // Store instances
   const convStore = new ConversationStoreImpl(db)
@@ -61,6 +66,11 @@ export async function bootstrapStoresPhase(ctx: BootstrapContext): Promise<void>
   const episodicStore = new EpisodicMemoryStoreImpl(db)
   const semanticStore = new SemanticMemoryStoreImpl(db)
   const proceduralStore = new ProceduralMemoryStoreImpl(db)
+  const collectionStore = new CollectionStoreImpl(db)
+  const collectionEngine = new CollectionEngine(collectionStore)
+  const lifecycleEngine = new LifecycleEngine(db)
+  const compactionManager = new CompactionManager(db)
+  const backupManager = new BackupManager()
 
   // Engine instances
   const resolutionEngine = new CapabilityResolutionEngine(resStore)
@@ -161,4 +171,12 @@ export async function bootstrapStoresPhase(ctx: BootstrapContext): Promise<void>
   ctx.governor = governor
   ctx.conversationManager = conversationManager
   ctx.cdpTransport = cdpTransport
+  ctx.collectionEngine = collectionEngine
+  ctx.lifecycleEngine = lifecycleEngine
+  ctx.compactionManager = compactionManager
+  ctx.backupManager = backupManager
+
+  // Start lifecycle and compaction engines
+  lifecycleEngine.start()
+  compactionManager.start()
 }

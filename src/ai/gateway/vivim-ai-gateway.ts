@@ -93,8 +93,9 @@ export class VivimAIGateway implements IVIVIMGateway {
       }
     } finally {
       // Ensure the handle's event iterator is closed
-      if (typeof (handle.events as any)?.return === 'function') {
-        await (handle.events as any).return()
+      const events = handle.events as AsyncIterator<unknown> & { return?: () => Promise<unknown> }
+      if (typeof events?.return === 'function') {
+        await events.return()
       }
     }
   }
@@ -123,11 +124,12 @@ export class VivimAIGateway implements IVIVIMGateway {
 
       decision = await this.opts.router.route(request, routingDeps)
     } catch (err) {
+      const aiError = err instanceof VivimAIErrorFromExecution
+          ? err.error
+          : AI_ERRORS.unknown(String(err), err).toJSON()
       await this.opts.executionManager.recordFailed(
         handle.executionId,
-        err instanceof VivimAIErrorFromExecution
-          ? (err as any).error
-          : AI_ERRORS.unknown(String(err), err).toJSON(),
+        aiError,
         false,
       )
       throw err
@@ -194,7 +196,7 @@ export class VivimAIGateway implements IVIVIMGateway {
       } catch (err) {
         const aiErr =
           err instanceof VivimAIErrorFromExecution
-            ? (err as any).error
+            ? err.error
             : AI_ERRORS.unknown(String(err), err).toJSON()
         await this.opts.executionManager.recordFailed(handle.executionId, aiErr, false)
       }

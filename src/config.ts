@@ -252,12 +252,24 @@ function resolveDbPath(): string {
   return process.env.CAP_STORE_DB_PATH ?? `${resolveDataDir()}/cap-store.sqlite`
 }
 
+/** Parse an env var as a positive integer, falling back to `fallback` if unset or invalid. */
+function envInt(name: string, fallback: number): number {
+  const raw = process.env[name]
+  if (raw == null || raw === '') return fallback
+  const n = Number.parseInt(raw, 10)
+  if (Number.isNaN(n) || n < 0) {
+    getLogger('config').warn({ env: name, raw }, `Invalid integer, using fallback ${fallback}`)
+    return fallback
+  }
+  return n
+}
+
 // ── Config values ───────────────────────────────────────────────────────────
 
 export const config = {
   // Server
   host: process.env.CAP_STORE_HOST ?? '127.0.0.1',
-  port: Number.parseInt(process.env.CAP_STORE_PORT ?? '9420', 10),
+  port: envInt('CAP_STORE_PORT', 9420),
 
   // Data — runtime-mutable via setStoragePaths()
   dataDir: resolveDataDir(),
@@ -282,18 +294,18 @@ export const config = {
   profileBaseDir:
     process.env.CAP_STORE_PROFILE_DIR ??
     (isWin ? `${resolveDataDir()}\\chrome-profiles` : `${resolveDataDir()}/chrome-profiles`),
-  fleetPortRangeStart: Number.parseInt(process.env.CAP_STORE_FLEET_PORT_START ?? '9222', 10),
-  fleetPortRangeEnd: Number.parseInt(process.env.CAP_STORE_FLEET_PORT_END ?? '9250', 10),
+  fleetPortRangeStart: envInt('CAP_STORE_FLEET_PORT_START', 9222),
+  fleetPortRangeEnd: envInt('CAP_STORE_FLEET_PORT_END', 9250),
 
   // Health
-  healthProbeIntervalMs: Number.parseInt(process.env.CAP_STORE_HEALTH_PROBE_MS ?? '30000', 10),
+  healthProbeIntervalMs: envInt('CAP_STORE_HEALTH_PROBE_MS', 30000),
 
   // Circuit breaker
-  circuitBreakerThreshold: Number.parseInt(process.env.CAP_STORE_CIRCUIT_THRESHOLD ?? '5', 10),
-  circuitBreakerResetMs: Number.parseInt(process.env.CAP_STORE_CIRCUIT_RESET_MS ?? '30000', 10),
+  circuitBreakerThreshold: envInt('CAP_STORE_CIRCUIT_THRESHOLD', 5),
+  circuitBreakerResetMs: envInt('CAP_STORE_CIRCUIT_RESET_MS', 30000),
 
   // HPE retention
-  hpeRetentionDays: Number.parseInt(process.env.CAP_STORE_HPE_RETENTION_DAYS ?? '30', 10),
+  hpeRetentionDays: envInt('CAP_STORE_HPE_RETENTION_DAYS', 30),
 
   // Storage hardening (Unit 36.1)
   storage: {
@@ -311,14 +323,13 @@ export const config = {
 
   // OpenCode server
   opencodeServeEnabled: process.env.OPENCODE_SERVE_ENABLED === '1',
-  opencodeServePort: Number.parseInt(process.env.OPENCODE_SERVE_PORT ?? '0', 10) || undefined,
+  opencodeServePort: envInt('OPENCODE_SERVE_PORT', 0) || undefined,
   opencodeServerPassword: process.env.OPENCODE_SERVER_PASSWORD ?? '',
   opencodeServerUsername: process.env.OPENCODE_SERVER_USERNAME ?? 'opencode',
 
   // OpenCode model sync (daily free-model refresh; off via '0')
   opencodeModelSyncEnabled: process.env.OPENCODE_MODEL_SYNC_ENABLED !== '0',
-  opencodeModelSyncIntervalHours:
-    Number.parseInt(process.env.OPENCODE_MODEL_SYNC_INTERVAL_HOURS ?? '24', 10) || 24,
+  opencodeModelSyncIntervalHours: envInt('OPENCODE_MODEL_SYNC_INTERVAL_HOURS', 24) || 24,
   opencodeModelSyncRefresh: process.env.OPENCODE_MODEL_SYNC_REFRESH === '1',
 
   // AI Gateway (src/ai/) — canonical AI execution layer.
@@ -337,11 +348,11 @@ export const config = {
     allowFinancial: process.env.VIVIM_EXECUTION_KERNEL_ALLOW_FINANCIAL === '1',
     allowCommunication: process.env.VIVIM_EXECUTION_KERNEL_ALLOW_COMMUNICATION === '1',
     allowSecuritySensitive: process.env.VIVIM_EXECUTION_KERNEL_ALLOW_SECURITY === '1',
-    maxRiskTier: Number.parseInt(process.env.VIVIM_EXECUTION_KERNEL_MAX_RISK_TIER ?? '3', 10),
+    maxRiskTier: envInt('VIVIM_EXECUTION_KERNEL_MAX_RISK_TIER', 3),
   },
 
   // MCP
-  mcpPort: Number.parseInt(process.env.MCP_PORT ?? '0', 10) || undefined,
+  mcpPort: envInt('MCP_PORT', 0) || undefined,
 
   // Tunnel + P2P
   tunnel: {
@@ -349,52 +360,43 @@ export const config = {
     serverUrl: process.env.VIVIM_TUNNEL_URL ?? 'wss://tunnel.vivim.live/connect',
     subdomain: process.env.VIVIM_SUBDOMAIN ?? '',
     authToken: process.env.VIVIM_TUNNEL_TOKEN ?? null,
-    heartbeatIntervalMs: Number.parseInt(process.env.VIVIM_TUNNEL_HEARTBEAT_MS ?? '30000', 10),
-    heartbeatTimeoutMs: Number.parseInt(
-      process.env.VIVIM_TUNNEL_HEARTBEAT_TIMEOUT_MS ?? '10000',
-      10,
-    ),
-    reconnectInitialDelayMs: Number.parseInt(
-      process.env.VIVIM_TUNNEL_RECONNECT_INITIAL_MS ?? '1000',
-      10,
-    ),
-    reconnectMaxDelayMs: Number.parseInt(process.env.VIVIM_TUNNEL_RECONNECT_MAX_MS ?? '30000', 10),
+    heartbeatIntervalMs: envInt('VIVIM_TUNNEL_HEARTBEAT_MS', 30000),
+    heartbeatTimeoutMs: envInt('VIVIM_TUNNEL_HEARTBEAT_TIMEOUT_MS', 10000),
+    reconnectInitialDelayMs: envInt('VIVIM_TUNNEL_RECONNECT_INITIAL_MS', 1000),
+    reconnectMaxDelayMs: envInt('VIVIM_TUNNEL_RECONNECT_MAX_MS', 30000),
     reconnectJitterFactor: Number.parseFloat(process.env.VIVIM_TUNNEL_RECONNECT_JITTER ?? '0.3'),
-    maxConcurrentRequests: Number.parseInt(process.env.VIVIM_TUNNEL_MAX_REQUESTS ?? '50', 10),
-    requestTimeoutMs: Number.parseInt(process.env.VIVIM_TUNNEL_REQUEST_TIMEOUT_MS ?? '60000', 10),
+    maxConcurrentRequests: envInt('VIVIM_TUNNEL_MAX_REQUESTS', 50),
+    requestTimeoutMs: envInt('VIVIM_TUNNEL_REQUEST_TIMEOUT_MS', 60000),
   },
   p2p: {
     enabled: process.env.VIVIM_P2P_ENABLED !== 'false',
     bootstrapNodes: (process.env.VIVIM_P2P_BOOTSTRAP ?? '').split(',').filter(Boolean),
     mdnsEnabled: process.env.VIVIM_P2P_MDNS !== 'false',
-    mdnsInterval: Number.parseInt(process.env.VIVIM_P2P_MDNS_INTERVAL_MS ?? '300000', 10),
+    mdnsInterval: envInt('VIVIM_P2P_MDNS_INTERVAL_MS', 300000),
     dhtEnabled: process.env.VIVIM_P2P_DHT !== 'false',
     relayEnabled: process.env.VIVIM_P2P_RELAY !== 'false',
-    maxPeers: Number.parseInt(process.env.VIVIM_P2P_MAX_PEERS ?? '50', 10),
-    maxConcurrentTransfers: Number.parseInt(process.env.VIVIM_P2P_MAX_TRANSFERS ?? '5', 10),
-    maxFileSize: Number.parseInt(process.env.VIVIM_P2P_MAX_FILE_SIZE ?? '104857600', 10),
+    maxPeers: envInt('VIVIM_P2P_MAX_PEERS', 50),
+    maxConcurrentTransfers: envInt('VIVIM_P2P_MAX_TRANSFERS', 5),
+    maxFileSize: envInt('VIVIM_P2P_MAX_FILE_SIZE', 104857600),
     identityPath: process.env.VIVIM_P2P_IDENTITY_PATH ?? '',
   },
   localServer: {
     enabled: process.env.VIVIM_LOCAL_SERVER_ENABLED !== 'false',
     host: process.env.VIVIM_LOCAL_SERVER_HOST ?? '127.0.0.1',
-    port: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_PORT ?? '8080', 10),
+    port: envInt('VIVIM_LOCAL_SERVER_PORT', 8080),
     corsEnabled: process.env.VIVIM_LOCAL_SERVER_CORS !== 'false',
     corsOrigins: (process.env.VIVIM_LOCAL_SERVER_CORS_ORIGINS ?? 'http://localhost:3000').split(
       ',',
     ),
-    rateLimitPerMinute: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_RATE_LIMIT ?? '60', 10),
-    maxRequestBodyBytes: Number.parseInt(process.env.VIVIM_LOCAL_SERVER_MAX_BODY ?? '10485760', 10),
+    rateLimitPerMinute: envInt('VIVIM_LOCAL_SERVER_RATE_LIMIT', 60),
+    maxRequestBodyBytes: envInt('VIVIM_LOCAL_SERVER_MAX_BODY', 10485760),
     staticDir: process.env.VIVIM_LOCAL_SERVER_STATIC_DIR ?? './workspace-ui',
   },
   orchestrator: {
-    healthCheckIntervalMs: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_HEALTH_MS ?? '30000', 10),
-    restartDelayMs: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_RESTART_DELAY_MS ?? '5000', 10),
-    maxRestartAttempts: Number.parseInt(process.env.VIVIM_ORCHESTRATOR_MAX_RESTARTS ?? '3', 10),
-    statusReportIntervalMs: Number.parseInt(
-      process.env.VIVIM_ORCHESTRATOR_STATUS_MS ?? '60000',
-      10,
-    ),
+    healthCheckIntervalMs: envInt('VIVIM_ORCHESTRATOR_HEALTH_MS', 30000),
+    restartDelayMs: envInt('VIVIM_ORCHESTRATOR_RESTART_DELAY_MS', 5000),
+    maxRestartAttempts: envInt('VIVIM_ORCHESTRATOR_MAX_RESTARTS', 3),
+    statusReportIntervalMs: envInt('VIVIM_ORCHESTRATOR_STATUS_MS', 60000),
   },
 
   // CLI / moments
@@ -406,13 +408,14 @@ export const config = {
 } as const
 
 // ── Ensure data directories exist on startup ──────────────────────────────
-// Safely creates dataDir and profileBaseDir so engines don't crash on first
-// boot in the Tauri sidecar or fresh install.
+// Intentional side effect: creates dataDir and profileBaseDir at import time
+// so engines don't crash on first boot in the Tauri sidecar or fresh install.
+// This runs once per process and is safe for tests (idempotent mkdirSync).
 try {
   mkdirSync(config.dataDir, { recursive: true })
   mkdirSync(config.profileBaseDir, { recursive: true })
 } catch (e) {
-  catchDebug(e, 'config: profileBaseDir creation failed')
+  catchDebug(e, 'config: dataDir/profileBaseDir creation failed')
 }
 
 /**
@@ -429,7 +432,17 @@ export function getOtelConfig(): { endpoint: string | null; serviceName: string 
  * Engines must read this through the config authority, never `process.env` directly (B5).
  */
 export function getConfirmationSecret(): string {
-  return process.env.VIVIM_CONFIRMATION_SECRET ?? 'dev-insecure-do-not-use-in-prod'
+  const secret = process.env.VIVIM_CONFIRMATION_SECRET
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'VIVIM_CONFIRMATION_SECRET must be set in production. ' +
+          'Generate one with: openssl rand -hex 32',
+      )
+    }
+    return 'dev-insecure-do-not-use-in-prod'
+  }
+  return secret
 }
 
 /**

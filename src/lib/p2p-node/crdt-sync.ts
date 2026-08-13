@@ -20,6 +20,12 @@ import type { P2PMetrics } from './types.js'
 
 const log = getLogger('crdt-sync')
 
+/** Legacy stream shape with source/sink (pre-MessageStream libp2p versions). */
+interface LegacyStream {
+  source?: AsyncIterable<Uint8Array>
+  sink?: (source: AsyncIterable<Uint8Array>) => Promise<void>
+}
+
 /**
  * Simple CRDT document store using Lamport clocks.
  * In production, this would use a proper CRDT library like Yjs or Automerge.
@@ -63,12 +69,13 @@ export class CRDTSyncHandler extends EventEmitter {
   }
 
   registerHandler(): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- libp2p handler signature varies across versions
     ;(this.node as any).handle(P2P_PROTOCOLS.CRDT_SYNC, async (data: any) => {
       log.info('Incoming CRDT sync request')
       const stream = data.stream ?? data
 
       try {
-        const source = (stream as any).source ?? stream
+        const source = (stream as unknown as LegacyStream).source ?? stream
         const reader = source[Symbol.asyncIterator]()
 
         const { value: requestChunk } = await reader.next()
@@ -91,7 +98,7 @@ export class CRDTSyncHandler extends EventEmitter {
           operations: doc.getOperationsSince(request.localClock),
         }
 
-        const sink = (stream as any).sink
+        const sink = (stream as unknown as LegacyStream).sink
         if (typeof sink === 'function') {
           await sink([new TextEncoder().encode(JSON.stringify(response))])
         }
@@ -121,6 +128,7 @@ export class CRDTSyncHandler extends EventEmitter {
     log.info({ peerId, documentId, localClock: doc.getClock() }, 'Starting CRDT sync with peer')
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- libp2p dialProtocol signature varies across versions
       const stream = await (this.node as any).dialProtocol(peerId, P2P_PROTOCOLS.CRDT_SYNC)
 
       const request: CRDTSyncRequest = {

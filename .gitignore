@@ -73,8 +73,12 @@ frontend/download/
 .skills/
 
 # Dev database backups
+prisma/dev.db
 prisma/dev.db.bak-*
 prisma/prisma/dev.db
+
+# Package lockfiles (bun.lock is canonical)
+package-lock.json
 
 # Docs (regenerable, not source)
 docs/

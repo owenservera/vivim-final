@@ -57,6 +57,7 @@ import { createAutonomousRouter } from './autonomous-router.js'
 import { bootstrapEngines } from './bootstrap-engines.js'
 import { createCapabilityRouter } from './capability-router.js'
 import { createChromeRouter } from './chrome-router.js'
+import { createCollectionRouter } from './collection-router.js'
 import { createConversationRouter } from './conversation-router.js'
 import { createConversationSyncRouter } from './conversation-sync-router.js'
 import { createGenerativeRouter } from './generative-router.js'
@@ -140,6 +141,7 @@ export interface ServerContext {
   contactStore?: import('../storage/impl/contact-store-impl.js').ContactStoreImpl
   syncStore?: import('../storage/impl/sync-store-impl.js').SyncStoreImpl
   mediaStore?: import('../storage/impl/media-store-impl.js').MediaStoreImpl
+  collectionEngine?: import('../engines/collection-engine.js').CollectionEngine
 }
 
 const log = getLogger('server')
@@ -298,6 +300,7 @@ export async function createServer(port = 9420): Promise<ServerContext> {
   const syncRouter = createSyncRouter(ctx)
   const conversationSyncRouter = createConversationSyncRouter(ctx)
   const mediaRouter = createMediaRouter(ctx)
+  const collectionRouter = createCollectionRouter(ctx)
 
   // NodeStoreImpl for the minimal server context (node graph queries)
   const nodeStoreMinimal = new (await import('../storage/impl/node-store-impl.js')).NodeStoreImpl(
@@ -329,7 +332,15 @@ export async function createServer(port = 9420): Promise<ServerContext> {
         const withTrace = (res: Response): Response => {
           const headers = new Headers(res.headers)
           if (!headers.has('X-Trace-Id')) headers.set('X-Trace-Id', traceId)
-          headers.set('Access-Control-Allow-Origin', '*')
+          const origin = req.headers.get('origin')
+          const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+          ]
+          const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
+          headers.set('Access-Control-Allow-Origin', corsOrigin ?? 'http://localhost:3000')
           headers.set('Access-Control-Expose-Headers', 'X-Trace-Id')
           return new Response(res.body, {
             status: res.status,
@@ -338,12 +349,20 @@ export async function createServer(port = 9420): Promise<ServerContext> {
           })
         }
 
-        // CORS preflight — allow all origins, methods, headers
+        // CORS preflight — restrict to localhost origins
         if (req.method === 'OPTIONS') {
+          const origin = req.headers.get('origin')
+          const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+          ]
+          const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
           return withTrace(
             new Response(null, {
               headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': corsOrigin ?? 'http://localhost:3000',
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
                 'Access-Control-Allow-Headers':
                   'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',
@@ -472,6 +491,11 @@ export async function createServer(port = 9420): Promise<ServerContext> {
         // Node graph query routes (universal node layer)
         if (url.pathname.startsWith('/api/nodes/')) {
           return nodeRouter(req)
+        }
+
+        // Collection routes
+        if (url.pathname.startsWith('/api/collections')) {
+          return collectionRouter(req)
         }
 
         // Chrome automation routes
@@ -871,7 +895,15 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         const withTrace = (res: Response): Response => {
           const headers = new Headers(res.headers)
           if (!headers.has('X-Trace-Id')) headers.set('X-Trace-Id', traceId)
-          headers.set('Access-Control-Allow-Origin', '*')
+          const origin = req.headers.get('origin')
+          const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+          ]
+          const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
+          headers.set('Access-Control-Allow-Origin', corsOrigin ?? 'http://localhost:3000')
           headers.set('Access-Control-Expose-Headers', 'X-Trace-Id')
           return new Response(res.body, {
             status: res.status,
@@ -881,10 +913,18 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
         }
 
         if (req.method === 'OPTIONS') {
+          const origin = req.headers.get('origin')
+          const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3001',
+          ]
+          const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
           return withTrace(
             new Response(null, {
               headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': corsOrigin ?? 'http://localhost:3000',
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, QUERY',
                 'Access-Control-Allow-Headers':
                   'Content-Type, Authorization, X-Source, X-Trace-Id, X-Request-Id',

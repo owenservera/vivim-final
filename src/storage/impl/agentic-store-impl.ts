@@ -110,8 +110,7 @@ export class AgenticStoreImpl implements AgenticStoreContract {
     data.reputation = rep
     await this.nodes.updateNode(agentId, {
       dataJson: JSON.stringify(data),
-      contentHash: undefined,
-    } as never)
+    })
   }
 
   // ── Governance ─────────────────────────────────────────────────────────
@@ -129,7 +128,7 @@ export class AgenticStoreImpl implements AgenticStoreContract {
         costBudgetCents: spec.costBudgetCents,
         reputationFloor: spec.reputationFloor,
         preferLowerCost: spec.preferLowerCost ?? false,
-        stopConditionsJson: (spec.stopConditionsJson as any) ?? {},
+        stopConditionsJson: (spec.stopConditionsJson as Record<string, unknown>) ?? {},
       },
       { id },
     )

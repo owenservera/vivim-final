@@ -5,9 +5,8 @@ import type {
   ProviderStreamConfigRow,
   StreamConfigStore,
 } from '../contracts/stream-config-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
-
-type PrismaLoose = any
 
 interface PrismaStreamConfigRow {
   id: string
@@ -46,10 +45,10 @@ function toStreamConfigRow(r: PrismaStreamConfigRow): ProviderStreamConfigRow {
 }
 
 export class StreamConfigStoreImpl implements StreamConfigStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {

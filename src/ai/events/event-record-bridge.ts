@@ -37,8 +37,8 @@ export class EventRecordBridge {
 
   stop(): void {
     this.consuming = false
-    if (this.iter && typeof (this.iter as any)?.return === 'function') {
-      void (this.iter as any).return()
+    if (this.iter && typeof (this.iter as AsyncIterator<unknown> & { return?: () => Promise<unknown> })?.return === 'function') {
+      void (this.iter as AsyncIterator<unknown> & { return?: () => Promise<unknown> }).return()
     }
   }
 

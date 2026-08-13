@@ -179,6 +179,7 @@ export type RichText = string | { ast: RichNode[] }
 // Recursive discriminated unions produce overly-broad inferred types in Zod.
 // Use z.any() for recursive children — the TS interfaces are the source of truth;
 // these schemas are for runtime boundary validation only.
+/* eslint-disable @typescript-eslint/no-explicit-any -- Zod schema type inference limitation */
 
 export const PhrasingContentSchema: z.ZodType<PhrasingContent> = z.lazy(() =>
   z.discriminatedUnion('type', [

@@ -185,8 +185,8 @@ describe('Phase 2 — HarnessFraming Engine', () => {
 
     expect(framed.recipeSteps).toBeDefined()
     expect(framed.recipeSteps).toHaveLength(2)
-    expect((framed.recipeSteps?.[0] as any)?.kind).toBe('type_text')
-    expect((framed.recipeSteps?.[1] as any)?.kind).toBe('submit')
+    expect((framed.recipeSteps?.[0] as { kind?: string })?.kind).toBe('type_text')
+    expect((framed.recipeSteps?.[1] as { kind?: string })?.kind).toBe('submit')
   })
 
   it('StubChatGptFramingAdapter parses an SSE chunk', async () => {

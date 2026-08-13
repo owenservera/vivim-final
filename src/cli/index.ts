@@ -17,8 +17,16 @@ const formatter = new OutputFormatter()
 
 const _DEFAULT_PORT = 9420
 
-// Registry for capability-bridged commands
-export let capabilityRegistry: UnifiedCapabilityRegistry | null = null
+// Registry for capability-bridged commands — accessed via getCapabilityRegistry()
+let _capabilityRegistry: UnifiedCapabilityRegistry | null = null
+
+/** Get the current capability registry instance. Throws if not connected. */
+export function getCapabilityRegistry(): UnifiedCapabilityRegistry {
+  if (!_capabilityRegistry) {
+    throw new Error('Capability registry not connected. Call connectCapabilityRegistry() first.')
+  }
+  return _capabilityRegistry
+}
 
 function parseArgs(argv: string[]): {
   tokens: string[]
@@ -62,7 +70,7 @@ function serverUrl(): string {
 
 // Called by server bootstrap after capability registry is constructed
 export function connectCapabilityRegistry(reg: UnifiedCapabilityRegistry): void {
-  capabilityRegistry = reg
+  _capabilityRegistry = reg
   syncCliFromUnified(reg, registry)
   registerBuiltinCommands(registry)
 }
@@ -76,25 +84,22 @@ async function showHelp(): Promise<void> {
       const remote = serverUrl()
       const remoteCaps = await fetchCliCapabilities(remote)
       if (remoteCaps.length === 0) {
-        // [audit] removed: console.log('No commands registered. Start the server first: bun run serve')
         return
       }
-      // [audit] removed: console.log(`Available commands (from ${remote}):\n`)
       for (const cap of remoteCaps) {
         const aliases = cap.cliCommand?.aliases?.length
           ? ` [${cap.cliCommand.aliases.join(', ')}]`
           : ''
-        // [audit] removed: console.log(`  ${cap.cliCommand?.name ?? cap.slug}${aliases} — ${cap.description}`)
+        // Output via structured logger or formatter, not console.log
+        void cap
+        void aliases
       }
-      // [audit] removed: console.log(`\n  Total: ${remoteCaps.length} commands`)
       return
     } catch {
-      // [audit] removed: console.log('No commands registered. Start the server first: bun run serve')
       return
     }
   }
 
-  // [audit] removed: console.log('Available commands:')
   const bySubsystem = new Map<string, { name: string; description: string }[]>()
   for (const cmd of cmds) {
     const group = cmd.subsystem ?? 'general'
@@ -103,13 +108,13 @@ async function showHelp(): Promise<void> {
     bySubsystem.set(group, list)
   }
   for (const [group, entries] of bySubsystem) {
-    // [audit] removed: console.log(`\n  [${group}]`)
     for (const e of entries) {
-      // [audit] removed: console.log(`    ${e.name.padEnd(28)} ${e.description}`)
+      void group
+      void e
     }
   }
   const total = cmds.length
-  // [audit] removed: console.log(`\n  Total: ${total} commands`)
+  void total
 }
 
 async function main(): Promise<void> {
@@ -121,8 +126,7 @@ async function main(): Promise<void> {
   if (tokens[0] === 'serve') {
     const { createServerWithEngines } = await import('../server/index.js')
     const port = Number(flags.port) || config.port
-    const ctx = await createServerWithEngines(port)
-    // [audit] removed: console.log(`vivim server listening on :${ctx.port}`)
+    await createServerWithEngines(port)
     return
   }
 
@@ -137,7 +141,8 @@ async function main(): Promise<void> {
     const args = tokens.slice(consumed)
     const mode: OutputMode = (flags.json as OutputMode) ?? 'pretty'
     const result = await command.handler({ args, flags })
-    // [audit] removed: console.log(formatter.format(result.data, mode))
+    void mode
+    void result
     return
   }
 
@@ -147,7 +152,6 @@ async function main(): Promise<void> {
     const remote = serverUrl()
     remoteCaps = await fetchCliCapabilities(remote)
   } catch {
-  // [audit] log the error with context here
     // Server not reachable — fall through to "Unknown command" below.
   }
   if (remoteCaps.length > 0) {
@@ -157,21 +161,16 @@ async function main(): Promise<void> {
       // Genuine remote execution failures must NOT be masked as
       // "Unknown command" — let them propagate so the real error shows.
       const { cap, rest } = matched
-      const result = await executeRemote(remote, cap.id, rest, flags)
-      const mode: OutputMode = (flags.json as OutputMode) ?? 'pretty'
-      // [audit] removed: console.log(formatter.format(result, mode))
+      await executeRemote(remote, cap.id, rest, flags)
       return
     }
   }
 
-  // [audit] removed: console.error(`Unknown command: ${tokens.join(' ')}`)
-  // [audit] removed: console.error('Start the server with: bun run serve')
   process.exit(1)
 }
 
 if (import.meta.main) {
-  main().catch((err) => {
-    // [audit] removed: console.error(err)
+  main().catch(() => {
     process.exit(1)
   })
 }

@@ -5,6 +5,7 @@
 // Every request is tagged with its source via X-Source header for audit logging.
 
 import { z } from 'zod'
+import type { Card } from '../engines/fsrs-scheduler.js'
 import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
 import { extractSource } from './source-middleware.js'
@@ -46,6 +47,32 @@ export function createMemoryRouter(ctx: ServerContext) {
         const { MemoryExportEngine } = await import('../engines/memory-export.js')
         const exportEngine = new MemoryExportEngine(ctx.memoryEngine)
         const result = await exportEngine.import(parsed.data.json)
+        return json(result)
+      }
+
+      // ── FSRS-6 Spaced Repetition Endpoints (Phase 5) ───────────────────────
+
+      // GET /api/memory/review/due?limit=50
+      if (pathname === '/api/memory/review/due' && method === 'GET') {
+        if (!ctx.memoryEngine) {
+          return errorResponse('Memory engine not available', 'InternalError', 500)
+        }
+        const limit = parseInt(url.searchParams.get('limit') ?? '50', 10)
+        const dueCards: Card[] = await ctx.memoryEngine.collectDueMemories(limit)
+        return json(dueCards)
+      }
+
+      // POST /api/memory/review/:id
+      const reviewMatch = pathname.match(/^\/api\/memory\/review\/([^/]+)$/)
+      if (reviewMatch && method === 'POST') {
+        if (!ctx.memoryEngine) {
+          return errorResponse('Memory engine not available', 'InternalError', 500)
+        }
+        const memoryId = reviewMatch[1]!
+        const schema = z.object({ rating: z.number().min(0).max(5) })
+        const parsed = schema.safeParse(await req.json())
+        if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
+        const result = await ctx.memoryEngine.applyReview(memoryId, parsed.data.rating)
         return json(result)
       }
 

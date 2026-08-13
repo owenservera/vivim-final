@@ -49,6 +49,13 @@ interface PrismaMessage {
   model: string | null
   metadataJson: string
   createdAt: number
+  // Message identity for deduplication
+  providerMessageId: string | null
+  identityHash: string | null
+  // Message metadata
+  isPinned: number
+  isArchived: number
+  readStatus: string
 }
 
 interface PrismaAccount {
@@ -109,6 +116,13 @@ function toMessageRow(r: PrismaMessage): ConversationMessageRow {
     model: r.model,
     metadataJson: r.metadataJson,
     createdAt: r.createdAt,
+    // Message identity for deduplication
+    providerMessageId: r.providerMessageId,
+    identityHash: r.identityHash,
+    // Message metadata
+    isPinned: r.isPinned,
+    isArchived: r.isArchived,
+    readStatus: r.readStatus,
   }
 }
 
@@ -302,6 +316,73 @@ export class ConversationStoreImpl implements ConversationStore {
     if (patch.blocksJson !== undefined) data.blocksJson = patch.blocksJson
     if (patch.metadataJson !== undefined) data.metadataJson = patch.metadataJson
     await this.db.prisma.conversationMessage.update({ where: { id }, data })
+  }
+
+  async getMessageByIdentityHash(identityHash: string): Promise<ConversationMessageRow | null> {
+    const row = await this.db.prisma.conversationMessage.findFirst({
+      where: { identityHash },
+    })
+    return row ? toMessageRow(row as unknown as PrismaMessage) : null
+  }
+
+  async createMessageWithIdentity(
+    input: MessageInput & { identityHash: string },
+  ): Promise<ConversationMessageRow> {
+    const row = await this.db.prisma.conversationMessage.create({
+      data: {
+        id: newId(),
+        conversationId: input.conversationId,
+        role: input.role,
+        content: input.content ?? null,
+        blocksJson: input.blocksJson ?? '[]',
+        blockCount: input.blockCount ?? 0,
+        parentMessageId: input.parentMessageId ?? null,
+        sequenceIndex: input.sequenceIndex ?? 0,
+        latencyMs: input.latencyMs ?? null,
+        tokenCount: input.tokenCount ?? null,
+        model: input.model ?? null,
+        metadataJson: input.metadataJson ?? '{}',
+        // Message identity for deduplication
+        providerMessageId: input.providerMessageId ?? null,
+        identityHash: input.identityHash,
+        // Message metadata defaults
+        isPinned: 0,
+        isArchived: 0,
+        readStatus: 'unread',
+        createdAt: Date.now(),
+      },
+    })
+    return toMessageRow(row as unknown as PrismaMessage)
+  }
+
+  async updateMessageMetadata(
+    id: string,
+    metadata: Partial<Pick<ConversationMessageRow, 'isPinned' | 'isArchived' | 'readStatus'>>,
+  ): Promise<void> {
+    const data: Record<string, unknown> = {}
+    if (metadata.isPinned !== undefined) data.isPinned = metadata.isPinned
+    if (metadata.isArchived !== undefined) data.isArchived = metadata.isArchived
+    if (metadata.readStatus !== undefined) data.readStatus = metadata.readStatus
+    await this.db.prisma.conversationMessage.update({ where: { id }, data })
+  }
+
+  async queryMessagesByMetadata(filters: {
+    conversationId?: string
+    isPinned?: number
+    isArchived?: number
+    readStatus?: string
+  }): Promise<ConversationMessageRow[]> {
+    const where: Record<string, unknown> = {}
+    if (filters.conversationId) where.conversationId = filters.conversationId
+    if (filters.isPinned !== undefined) where.isPinned = filters.isPinned
+    if (filters.isArchived !== undefined) where.isArchived = filters.isArchived
+    if (filters.readStatus) where.readStatus = filters.readStatus
+
+    const rows = await this.db.prisma.conversationMessage.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    })
+    return rows.map((r) => toMessageRow(r as unknown as PrismaMessage))
   }
 
   async createAttachment(input: {

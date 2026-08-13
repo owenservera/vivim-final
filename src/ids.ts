@@ -41,6 +41,7 @@ export function hashContent(content: string): string {
     const crypto = require('node:crypto')
     return crypto.createHash('sha256').update(content, 'utf8').digest('hex')
   } catch {
+    // FNV-1a is NOT collision-resistant. Use only for dedup keys, NOT for integrity.
     let h = 0x811c9dc5
     for (let i = 0; i < content.length; i++) {
       h ^= content.charCodeAt(i)

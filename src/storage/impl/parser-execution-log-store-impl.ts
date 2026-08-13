@@ -7,9 +7,8 @@ import type {
   ParserExecutionLogRow,
   ParserExecutionLogStore,
 } from '../contracts/parser-execution-log-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
-
-type PrismaLoose = any
 
 type ParserExecutionLogPrismaRow = Prisma.ParserExecutionLogGetPayload<Record<string, never>>
 
@@ -37,14 +36,14 @@ function toLogRow(r: ParserExecutionLogPrismaRow): ParserExecutionLogRow {
 }
 
 export class ParserExecutionLogStoreImpl implements ParserExecutionLogStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async logExecution(row: Omit<ParserExecutionLogRow, 'id' | 'createdAt'>): Promise<void> {

@@ -307,10 +307,11 @@ export class KnowledgeExtractor {
           const key = [names[i], names[j]].sort().join('|||')
           const existing = entityPairs.get(key)
           if (existing) existing.count++
-          else           entityPairs.set(key, {
-            count: 1,
-            entities: [names[i] as string, names[j] as string],
-          })
+          else
+            entityPairs.set(key, {
+              count: 1,
+              entities: [names[i] as string, names[j] as string],
+            })
         }
       }
     }

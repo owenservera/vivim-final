@@ -1,284 +1,130 @@
-// tests/unit/engines/autonomous-execution.test.ts
-import { beforeEach, describe, expect, it } from 'bun:test'
-import {
-  AutonomousExecutionEngine,
-  type AutonomousGoal,
-} from '../../../src/engines/autonomous-execution.js'
-import { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
-import { ExecutionPolicyEngine, type PolicyStore } from '../../../src/engines/execution-policy.js'
+import { describe, expect, it } from 'bun:test'
+import { planStepsFromIntent, planStepsLocally } from '../../../src/engines/autonomous-planner.js'
+// resolvePlanner is imported through the engine module to prove the
+// backward-compat re-export still resolves (Phase 1.3 extraction).
+import { resolvePlanner } from '../../../src/engines/autonomous-execution.js'
+import { ConsentViolationError } from '../../../src/errors.js'
+import type { AutonomousGoal, ParsedIntent } from '../../../src/engines/autonomous-types.js'
 
-// ── Mock stores ─────────────────────────────────────────────────────────
+const baseGoal = (overrides?: Partial<AutonomousGoal>): AutonomousGoal => ({
+  description: 'a test goal',
+  maxSteps: 10,
+  maxDurationMs: 60_000,
+  requireApprovalAbove: 'financial',
+  allowBrowser: false,
+  costBudgetCents: 100,
+  tokenBudget: 1000,
+  iterationBudget: 10,
+  ...overrides,
+})
 
-function mockAutonomousStore() {
-  const tasks = new Map<string, Record<string, unknown>>()
-  const steps = new Map<string, Record<string, unknown>>()
-  const gates = new Map<string, Record<string, unknown>>()
+const intent = (overrides?: Partial<ParsedIntent>): ParsedIntent => ({
+  capabilityId: 'cap:test:action',
+  classification: 'read',
+  input: { query: 'test' },
+  confidence: 0.9,
+  intent: 'Test action',
+  patternId: 'test',
+  rawInput: 'test',
+  matchedPattern: 'test',
+  alternatives: [],
+  resolvedAt: Date.now(),
+  ...overrides,
+})
 
-  return {
-    tasks,
-    steps,
-    gates,
-    async createTask(task: Record<string, unknown>) {
-      tasks.set(task.id as string, task)
-    },
-    async updateTask(id: string, patch: Record<string, unknown>) {
-      const t = tasks.get(id)
-      if (t) Object.assign(t, patch)
-    },
-    async getTask(id: string) {
-      return tasks.get(id) ?? null
-    },
-    async listTasks(opts?: { status?: string; limit?: number }) {
-      let rows = Array.from(tasks.values())
-      if (opts?.status) rows = rows.filter((r) => r.status === opts.status)
-      return rows.slice(0, opts?.limit ?? 50)
-    },
-    async createStep(step: Record<string, unknown>) {
-      steps.set(step.id as string, step)
-    },
-    async updateStep(id: string, patch: Record<string, unknown>) {
-      const s = steps.get(id)
-      if (s) Object.assign(s, patch)
-    },
-    async getSteps(taskId: string) {
-      return Array.from(steps.values())
-        .filter((s) => s.taskId === taskId)
-        .sort((a, b) => (a.stepIndex as number) - (b.stepIndex as number))
-    },
-    async getStep(id: string) {
-      return steps.get(id) ?? null
-    },
-    async createHitlGate(gate: Record<string, unknown>) {
-      gates.set(gate.id as string, gate)
-    },
-    async updateHitlGate(id: string, patch: Record<string, unknown>) {
-      const g = gates.get(id)
-      if (g) Object.assign(g, patch)
-    },
-    async getPendingGates(taskId?: string) {
-      return Array.from(gates.values()).filter(
-        (g) => g.status === 'pending' && (!taskId || g.taskId === taskId),
-      )
-    },
-    async getGate(id: string) {
-      return gates.get(id) ?? null
-    },
-  }
-}
+describe('planStepsLocally (Unit 8.9 keyword matrix)', () => {
+  it('composite: prefix emits a single composite step', () => {
+    const steps = planStepsLocally(baseGoal({ description: 'composite:cap:test:run' }))
+    expect(steps).toHaveLength(1)
+    expect(steps[0]?.action).toBe('composite:cap:test:run')
+    expect(steps[0]?.classification).toBe('read')
+  })
 
-function mockPolicyStore(): PolicyStore & {
-  rules: Map<string, Record<string, unknown>>
-  occurrences: Map<string, number[]>
-} {
-  const rules = new Map<string, Record<string, unknown>>()
-  const occurrences = new Map<string, number[]>()
-  return {
-    rules,
-    occurrences,
-    async createRule(rule) {
-      rules.set(rule.id as string, rule)
-    },
-    async updateRule(id, patch) {
-      const r = rules.get(id)
-      if (r) Object.assign(r, patch)
-    },
-    async getRule(id) {
-      return rules.get(id) ?? null
-    },
-    async listRules() {
-      return Array.from(rules.values())
-    },
-    async getRecentOccurrences(action, windowMs) {
-      const now = Date.now()
-      return (occurrences.get(action) ?? []).filter((t) => now - t < windowMs).length
-    },
-  }
-}
-
-function mockRegistry() {
-  const caps = new Map<string, { id: string; handler: (input: unknown) => Promise<unknown> }>()
-  return {
-    caps,
-    register(id: string, handler: (input: unknown) => Promise<unknown>) {
-      caps.set(id, { id, handler })
-    },
-    async execute(capId: string, input: Record<string, unknown>) {
-      const cap = caps.get(capId)
-      if (!cap) throw new Error(`Capability not found: ${capId}`)
-      return cap.handler(input)
-    },
-    list() {
-      return []
-    },
-  }
-}
-
-function mockGovernor() {
-  return {
-    cdp: {
-      async send(_slaveId: string, _method: string, _params: unknown) {
-        return {}
-      },
-      async captureScreenshot(_slaveId: string) {
-        return 'base64-screenshot'
-      },
-      async getPageState(_slaveId: string) {
-        return { readyState: 'complete' }
-      },
-    },
-    async ensureRunning(_profile: string) {
-      return { slaveId: 'test-slave' }
-    },
-  }
-}
-
-// ── Tests ───────────────────────────────────────────────────────────────
-
-describe('AutonomousExecutionEngine', () => {
-  let store: ReturnType<typeof mockAutonomousStore>
-  let policyStore: ReturnType<typeof mockPolicyStore>
-  let policyEngine: ExecutionPolicyEngine
-  let registry: ReturnType<typeof mockRegistry>
-  let governor: ReturnType<typeof mockGovernor>
-  let eventBus: CapabilityEventBus
-  let engine: AutonomousExecutionEngine
-
-  beforeEach(async () => {
-    store = mockAutonomousStore()
-    policyStore = mockPolicyStore()
-    policyEngine = new ExecutionPolicyEngine(policyStore)
-    await policyEngine.initialize()
-    registry = mockRegistry()
-    governor = mockGovernor()
-    eventBus = new CapabilityEventBus()
-    engine = new AutonomousExecutionEngine(
-      store as never,
-      registry as never,
-      policyEngine as never,
-      governor as never,
-      eventBus,
+  it('URL in description emits a navigate step with the url', () => {
+    const steps = planStepsLocally(baseGoal({ description: 'go to https://example.com/page' }))
+    expect(steps[0]?.action).toBe('navigate')
+    expect((steps[0]?.actionInput as Record<string, unknown>).url).toBe(
+      'https://example.com/page',
     )
   })
 
-  it('navigate + screenshot completes without approval', async () => {
-    const goal: AutonomousGoal = {
-      description: 'Take a screenshot of example.com',
-      maxSteps: 10,
-      maxDurationMs: 30_000,
-      requireApprovalAbove: 'write',
-      allowBrowser: true,
-      costBudgetCents: 100,
-      tokenBudget: 1000,
-      iterationBudget: 10,
-    }
-    const task = await engine.execute(goal)
-    expect(task.status).toBe('complete')
-    expect(task.steps.length).toBeGreaterThan(0)
-    expect(task.steps.some((s) => s.action === 'screenshot')).toBe(true)
+  it('screenshot keyword emits a screenshot step', () => {
+    const steps = planStepsLocally(baseGoal({ description: 'take a screenshot' }))
+    expect(steps.some((s) => s.action === 'screenshot')).toBe(true)
+    expect(steps.some((s) => s.classification === 'read')).toBe(true)
   })
 
-  it('destructive action triggers HITL gate then resolves', async () => {
-    const goal: AutonomousGoal = {
-      description: 'Delete permanent the database',
-      maxSteps: 5,
-      maxDurationMs: 30_000,
-      requireApprovalAbove: 'read',
-      allowBrowser: true,
-      costBudgetCents: 100,
-      tokenBudget: 1000,
-      iterationBudget: 10,
-    }
-    // Execute in background, resolve gate when created
-    const taskPromise = engine.execute(goal)
-    // Wait a tick for the gate to be created
-    await new Promise((r) => setTimeout(r, 50))
-    const gates = await engine.getPendingGates()
-    if (gates.length > 0 && gates[0]) {
-      await engine.resolveGate(gates[0].id, 'approve', 'test-user')
-    }
-    const task = await taskPromise
-    // Task should have proceeded after approval
-    expect(task.steps.length).toBeGreaterThan(0)
+  it('destructive keywords classify the step as destructive', () => {
+    const steps = planStepsLocally(baseGoal({ description: 'delete the temp folder permanently' }))
+    expect(steps.some((s) => s.classification === 'destructive')).toBe(true)
   })
 
-  it('max steps limit prevents infinite loops', async () => {
-    const goal: AutonomousGoal = {
-      description: 'Do everything',
-      maxSteps: 2,
-      maxDurationMs: 30_000,
-      requireApprovalAbove: 'financial',
-      allowBrowser: false,
-      costBudgetCents: 100,
-      tokenBudget: 1000,
-      iterationBudget: 10,
-    }
-    const task = await engine.execute(goal)
-    expect(task.steps.length).toBeLessThanOrEqual(2)
+  it('search without a URL emits a search step carrying the description', () => {
+    const steps = planStepsLocally(baseGoal({ description: 'find the release notes' }))
+    expect(steps[0]?.action).toBe('search')
+    expect((steps[0]?.actionInput as Record<string, unknown>).query).toBe(
+      'find the release notes',
+    )
   })
 
-  it('cancel stops execution', async () => {
-    const goal: AutonomousGoal = {
-      description: 'Navigate to example.com',
-      maxSteps: 10,
-      maxDurationMs: 30_000,
-      requireApprovalAbove: 'financial',
-      allowBrowser: true,
-      costBudgetCents: 100,
-      tokenBudget: 1000,
-      iterationBudget: 10,
-    }
-    // Start execution and immediately cancel
-    const taskPromise = engine.execute(goal)
-    // Get the task ID from the store
-    const taskIds = Array.from(store.tasks.keys())
-    if (taskIds.length > 0 && taskIds[0]) {
-      await engine.cancel(taskIds[0])
-    }
-    const task = await taskPromise
-    // Should have been cancelled or completed
-    expect(task.status === 'cancelled' || task.status === 'complete').toBe(true)
+  it('no matching keywords falls back to a read task step', () => {
+    const steps = planStepsLocally(baseGoal({ description: 'zzz something unusual' }))
+    expect(steps).toHaveLength(1)
+    expect(steps[0]?.action).toBe('task')
+    expect(steps[0]?.classification).toBe('read')
   })
 
-  it('getStatus returns task from store', async () => {
-    const goal: AutonomousGoal = {
-      description: 'Navigate to example.com',
-      maxSteps: 5,
-      maxDurationMs: 30_000,
-      requireApprovalAbove: 'financial',
-      allowBrowser: true,
-      costBudgetCents: 100,
-      tokenBudget: 1000,
-      iterationBudget: 10,
-    }
-    const task = await engine.execute(goal)
-    const status = await engine.getStatus(task.id)
-    expect(status).not.toBeNull()
-    expect(status?.id).toBe(task.id)
+  it('respects maxSteps by stopping emission', () => {
+    const steps = planStepsLocally(
+      baseGoal({
+        description: 'go to https://a.com then screenshot then find things and summarize it',
+        maxSteps: 2,
+      }),
+    )
+    expect(steps.length).toBeLessThanOrEqual(2)
+  })
+})
+
+describe('planStepsFromIntent', () => {
+  it('null intent produces zero steps', () => {
+    expect(planStepsFromIntent(baseGoal(), null)).toHaveLength(0)
   })
 
-  it('getStatus returns null for unknown task', async () => {
-    const status = await engine.getStatus('nonexistent')
-    expect(status).toBeNull()
+  it('expands alternatives into ordered steps with inputMapping', () => {
+    const goal = baseGoal({ description: 'primary task' })
+    const steps = planStepsFromIntent(goal, intent({ alternatives: [intent({})] }))
+    expect(steps).toHaveLength(2)
+    expect(steps[0]?.action).toBe('cap:test:action')
+    expect((steps[0]?.actionInput as Record<string, unknown>).inputMapping).toBeDefined()
+    expect(steps[0]?.stepIndex).toBe(0)
+    expect(steps[1]?.stepIndex).toBe(1)
   })
 
-  it('policy blocks disallowed actions then resolves', async () => {
-    const goal: AutonomousGoal = {
-      description: 'Create a new file',
-      maxSteps: 5,
-      maxDurationMs: 30_000,
-      requireApprovalAbove: 'read',
-      allowBrowser: false,
-      costBudgetCents: 100,
-      tokenBudget: 1000,
-      iterationBudget: 10,
-    }
-    const taskPromise = engine.execute(goal)
-    await new Promise((r) => setTimeout(r, 50))
-    const gates = await engine.getPendingGates()
-    if (gates.length > 0 && gates[0]) {
-      await engine.resolveGate(gates[0].id, 'approve', 'test-user')
-    }
-    const task = await taskPromise
-    expect(task.status === 'complete' || task.status === 'waiting_approval').toBe(true)
+  it('slices steps down to maxSteps', () => {
+    const goal = baseGoal({ maxSteps: 1 })
+    const many = Array.from({ length: 5 }, () => intent({}))
+    const steps = planStepsFromIntent(
+      goal,
+      intent({ alternatives: many }),
+    )
+    expect(steps).toHaveLength(1)
+  })
+})
+
+describe('resolvePlanner re-exported via engine module (36.2)', () => {
+  it('airgap off + no override still uses the local planner', () => {
+    const r = resolvePlanner(baseGoal(), { airgap: false, consented: false })
+    expect(r).toEqual({ provider: 'local', local: true })
+  })
+
+  it('cloud override honored when consented, rejected without', () => {
+    const goal = baseGoal({ llmProvider: 'claude' })
+    expect(resolvePlanner(goal, { airgap: false, consented: true })).toEqual({
+      provider: 'claude',
+      local: false,
+    })
+    expect(() => resolvePlanner(goal, { airgap: false, consented: false })).toThrow(
+      ConsentViolationError,
+    )
   })
 })

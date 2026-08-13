@@ -25,6 +25,7 @@ import { decomposeToContentUnits } from './content-unit-decomposer.js'
 import type { AssembledContext, ContextAssemblyEngine } from './context-assembly.js'
 import type { ExecutionMemoizer } from './execution-memoizer.js'
 import type { AgentMemoryContext, MemoryEngine } from './memory-engine.js'
+import { MessageIdentity } from './message-identity.js'
 import {
   COMPOSER_SELECTORS,
   PROVIDER_URLS,
@@ -51,6 +52,14 @@ export type {
 export type { CapabilityResolutionEngine, ResolvedCapabilities } from './capability-resolution.js'
 export type { StreamBlockStore } from './stream-block-store.js'
 export { CapabilityEventBus } from './capability-event-bus.js'
+
+// ── Message Metadata Types ───────────────────────────────────────────────────
+
+export interface MessageMetadataInput {
+  isPinned?: number
+  isArchived?: number
+  readStatus?: string
+}
 
 // ── Local subset type for send pipeline ──────────────────────────────────
 
@@ -561,23 +570,57 @@ export class ConversationManager {
       t0 = Date.now()
 
       // [8a] STORE USER MESSAGE (Unit 2.7 — was previously missing)
-      await this.store.createMessage({
+      const userMessageInput = {
         conversationId,
         role: 'user',
         content: message,
         blocksJson: JSON.stringify([{ type: 'text', text: message }]),
         blockCount: 1,
         latencyMs: 0,
-      })
+      }
+      
+      // Generate identity hash for user message
+      const userIdentityInput = MessageIdentity.fromMessageInput(
+        userMessageInput,
+        conv.providerId,
+        account?.email || ''
+      )
+      const userIdentityHash = MessageIdentity.generate(userIdentityInput)
+      
+      // Check if user message already exists (deduplication)
+      const existingUserMessage = await this.store.getMessageByIdentityHash(userIdentityHash)
+      if (!existingUserMessage) {
+        await this.store.createMessageWithIdentity({
+          ...userMessageInput,
+          identityHash: userIdentityHash,
+        })
+      }
 
-      const msgRow = await this.store.createMessage({
+      const assistantMessageInput = {
         conversationId,
         role: 'assistant',
         content: extractText(parseResult.blocks),
         blocksJson: JSON.stringify(parseResult.blocks),
         blockCount: parseResult.blocks.length,
         latencyMs: Date.now() - totalStart,
-      })
+      }
+      
+      // Generate identity hash for assistant message
+      const assistantIdentityInput = MessageIdentity.fromMessageInput(
+        assistantMessageInput,
+        conv.providerId,
+        account?.email || ''
+      )
+      const assistantIdentityHash = MessageIdentity.generate(assistantIdentityInput)
+      
+      // Check if assistant message already exists (deduplication)
+      const existingAssistantMessage = await this.store.getMessageByIdentityHash(assistantIdentityHash)
+      const msgRow = existingAssistantMessage 
+        ? existingAssistantMessage 
+        : await this.store.createMessageWithIdentity({
+            ...assistantMessageInput,
+            identityHash: assistantIdentityHash,
+          })
 
       // Store blocks with parser metadata for diagnostics
       const blockMeta: BlockMeta = {
@@ -1078,5 +1121,44 @@ export class ConversationManager {
     for (const msg of toDelete) {
       await this.store.deleteConversation(msg.id)
     }
+  }
+
+  // ── Message Metadata Methods ───────────────────────────────────────────────
+
+  async pinMessage(messageId: string): Promise<void> {
+    await this.store.updateMessageMetadata(messageId, { isPinned: 1 })
+  }
+
+  async unpinMessage(messageId: string): Promise<void> {
+    await this.store.updateMessageMetadata(messageId, { isPinned: 0 })
+  }
+
+  async archiveMessage(messageId: string): Promise<void> {
+    await this.store.updateMessageMetadata(messageId, { isArchived: 1 })
+  }
+
+  async unarchiveMessage(messageId: string): Promise<void> {
+    await this.store.updateMessageMetadata(messageId, { isArchived: 0 })
+  }
+
+  async markMessageAsRead(messageId: string): Promise<void> {
+    await this.store.updateMessageMetadata(messageId, { readStatus: 'read' })
+  }
+
+  async markMessageAsUnread(messageId: string): Promise<void> {
+    await this.store.updateMessageMetadata(messageId, { readStatus: 'unread' })
+  }
+
+  async updateMessageMetadata(messageId: string, metadata: MessageMetadataInput): Promise<void> {
+    await this.store.updateMessageMetadata(messageId, metadata)
+  }
+
+  async queryMessagesByMetadata(filters: {
+    conversationId?: string
+    isPinned?: number
+    isArchived?: number
+    readStatus?: string
+  }): Promise<ConversationMessageRow[]> {
+    return this.store.queryMessagesByMetadata(filters)
   }
 }

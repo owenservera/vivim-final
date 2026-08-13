@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { WorkspaceSwitcher } from '@/components/canvas';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CollectionsPanel } from '@/components/collections/CollectionsPanel';
 import type { AccountContext } from '@/shared/route-context';
 
 interface ChatSidebarProps {
@@ -138,8 +139,13 @@ function SidebarContent({
         })}
       </div>
 
+      {/* Collections Panel */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <CollectionsPanel />
+      </div>
+
       {/* Trace Info */}
-      <div style={{ padding: 8, flex: 1, overflowY: 'auto' }}>
+      <div style={{ padding: 8, borderTop: '1px solid var(--border)' }}>
         <div style={{ marginBottom: 6, ...labelStyle }}>Trace</div>
         <div style={{ fontSize: 11, color: 'var(--text-subtle)' }}>
           No active trace

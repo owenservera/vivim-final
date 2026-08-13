@@ -1,0 +1,37 @@
+{
+  "name": "vivim-final",
+  "description": "cap-store v1 Knowledge Graph Rebuild - local-first AI conversation platform",
+  "runtime": "bun",
+  "language": "typescript",
+  "build_system": "tsup",
+  "package_manager": "bun",
+  "testing_framework": "bun test",
+  "orm": "prisma",
+  "linter": "biome",
+  "git_hooks": "lefthook",
+  "key_directories": {
+    "src": "Source code (13 engines in layers)",
+    "seeds": "Provider manifests, parsers, adapters",
+    "docs": "Architecture docs, runbooks, decisions",
+    "devops": "DevOps tooling and desktop build toolkit",
+    "frontend": "Next.js frontend",
+    "src-tauri": "Tauri desktop app (Rust)",
+    "chrome-profiles": "Chrome profile storage (canonical location)"
+  },
+  "verification_commands": {
+    "typecheck": "bun run tsc",
+    "lint": "bun run biome check",
+    "test": "bun test",
+    "build": "bun run build",
+    "desktop_build": "pwsh scripts/tauri/build.ps1"
+  },
+  "critical_patterns": {
+    "provider_system": "16 registered providers, CDP-based, parsers in DB only",
+    "desktop_build": "Use devops/desktop-loop toolkit, not raw build scripts",
+    "comment_preservation": "ALWAYS preserve all existing code comments",
+    "chrome_profiles": "Canonical location: chrome-profiles/<provider>/<account>",
+    "protocol_data": "DB is source of truth, provider-protocol.ts generated via bun run gen:protocol"
+  },
+  "skills_path": ".opencode/skill",
+  "project_instructions": "AGENTS.md"
+}

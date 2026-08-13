@@ -1,3 +1,5 @@
+import { cosineSimilarity } from '../onboarding/webapp-fingerprint.js'
+import type { EmbeddingProvider } from '../semantic-search.js'
 import type {
   CategoryColor,
   CommandCategory,
@@ -5,8 +7,6 @@ import type {
   CommandIntent,
   PatternMatchResult,
 } from './types.js'
-import type { EmbeddingProvider } from '../semantic-search.js'
-import { cosineSimilarity } from '../onboarding/webapp-fingerprint.js'
 
 // ─── Category → Color Map ────────────────────────────────────────────
 const CATEGORY_COLORS: Record<CommandCategory, CategoryColor> = {
@@ -242,10 +242,16 @@ export async function matchPatterns(
     category?: string
     prefix?: string
     minConfidence?: number
-    embeddingProvider?: EmbeddingProvider  // NEW: optional semantic rerank
+    embeddingProvider?: EmbeddingProvider // NEW: optional semantic rerank
   } = {},
 ): Promise<PatternMatchResult[]> {
-  const { limit = 5, category, prefix, minConfidence = DEFAULT_CONFIDENCE_THRESHOLD, embeddingProvider } = options
+  const {
+    limit = 5,
+    category,
+    prefix,
+    minConfidence = DEFAULT_CONFIDENCE_THRESHOLD,
+    embeddingProvider,
+  } = options
 
   // Early return for empty input
   if (!input || input.trim().length === 0) {
@@ -371,7 +377,7 @@ async function semanticRerank(
   const inputEmbedding = await embeddingProvider.embed(input)
   if (!inputEmbedding) return candidates.sort((a, b) => b.confidence - a.confidence).slice(0, limit)
 
-  const descriptionTexts = candidates.map(c => c.description)
+  const descriptionTexts = candidates.map((c) => c.description)
   const descriptionEmbeddings = await embeddingProvider.embedBatch(descriptionTexts)
 
   return candidates

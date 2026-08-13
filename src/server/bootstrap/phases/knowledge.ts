@@ -6,6 +6,7 @@
 //         providerMux, costOptimizer on ctx.
 
 import type { EmbeddingProvider } from '../../../engines/semantic-search.js'
+import type { CapabilityEvent } from '../../../engines/capability-event-bus.js'
 import { catchDebug } from '../../../lib/catch-logger.js'
 import { getLogger } from '../../../lib/logger.js'
 import type { BootstrapContext } from '../context.js'
@@ -146,7 +147,7 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
         providerId: embedding.name,
         from: 'neural',
         to: 'degraded',
-      } as any)
+      } as CapabilityEvent)
     }
 
     semanticSearch = new SemanticSearchEngine(ssStore, embedding, db)

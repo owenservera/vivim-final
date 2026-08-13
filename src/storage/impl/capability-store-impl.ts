@@ -14,9 +14,8 @@ import type {
   SelectorStrategyRow,
   SnapshotRow,
 } from '../contracts/capability-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
-
-type PrismaLoose = any
 
 interface PrismaTaxonomy {
   id: string
@@ -192,14 +191,14 @@ function toSelectorRow(r: PrismaSelector): SelectorStrategyRow {
 }
 
 export class CapabilityStoreImpl implements CapabilityStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async getCapability(id: string): Promise<CapabilityTaxonomyRow | null> {
@@ -376,7 +375,7 @@ export class CapabilityStoreImpl implements CapabilityStore {
   }
 
   async listBindings(providers?: string[]): Promise<CapabilityBindingMatrixRow[]> {
-    const where: PrismaLoose = providers?.length ? { providerId: { in: providers } } : {}
+    const where = providers?.length ? { providerId: { in: providers } } : {}
     const rows = await this.p.capabilityBinding.findMany({
       where,
       select: {

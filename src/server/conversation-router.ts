@@ -264,8 +264,71 @@ export function createConversationRouter(ctx: ServerContext) {
         const conversationId = msgsMatch[1]
         if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
         const limit = Number(url.searchParams.get('limit') ?? '100')
+
+        // Check for metadata filters
+        const isPinned = url.searchParams.get('isPinned')
+        const isArchived = url.searchParams.get('isArchived')
+        const readStatus = url.searchParams.get('readStatus')
+
+        if (isPinned !== null || isArchived !== null || readStatus !== null) {
+          // Use metadata query
+          if (!ctx.conversationManager)
+            return errorResponse('Engine not wired', 'InternalError', 500)
+          const filters: Record<string, unknown> = { conversationId }
+          if (isPinned !== null) filters.isPinned = Number(isPinned)
+          if (isArchived !== null) filters.isArchived = Number(isArchived)
+          if (readStatus !== null) filters.readStatus = readStatus
+          const messages = await ctx.conversationManager.queryMessagesByMetadata(filters)
+          return json(messages)
+        }
+
         const messages = await ctx.db.getMessages(conversationId, { limit })
         return json(messages)
+      }
+
+      // PATCH /api/conversations/:id/messages/:mid — update message metadata
+      const msgMetaMatch = pathname.match(/^\/api\/conversations\/([^/]+)\/messages\/([^/]+)$/)
+      if (msgMetaMatch && method === 'PATCH') {
+        const conversationId = msgMetaMatch[1]
+        const messageId = msgMetaMatch[2]
+        if (!conversationId || !messageId)
+          return errorResponse('Invalid conversation or message id', 'ValidationError', 400)
+        if (!ctx.conversationManager) return errorResponse('Engine not wired', 'InternalError', 500)
+
+        const schema = z.object({
+          isPinned: z.number().optional(),
+          isArchived: z.number().optional(),
+          readStatus: z.string().optional(),
+        })
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
+
+        await ctx.conversationManager.updateMessageMetadata(messageId, parsed.data)
+        return json({ ok: true })
+      }
+
+      // PATCH /api/conversations/:id/messages/batch — batch update metadata
+      const batchMetaMatch = pathname.match(/^\/api\/conversations\/([^/]+)\/messages\/batch$/)
+      if (batchMetaMatch && method === 'PATCH') {
+        const conversationId = batchMetaMatch[1]
+        if (!conversationId) return errorResponse('Invalid conversation id', 'ValidationError', 400)
+        if (!ctx.conversationManager) return errorResponse('Engine not wired', 'InternalError', 500)
+
+        const schema = z.object({
+          messageIds: z.array(z.string()).min(1),
+          metadata: z.object({
+            isPinned: z.number().optional(),
+            isArchived: z.number().optional(),
+            readStatus: z.string().optional(),
+          }),
+        })
+        const parsed = await parseRequestBody(req, schema)
+        if (!parsed.success) return parsed.response
+
+        for (const messageId of parsed.data.messageIds) {
+          await ctx.conversationManager.updateMessageMetadata(messageId, parsed.data.metadata)
+        }
+        return json({ ok: true, updated: parsed.data.messageIds.length })
       }
 
       // DELETE /api/conversations/:id — delegate to ConversationStore.deleteConversation()

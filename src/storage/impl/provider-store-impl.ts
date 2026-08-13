@@ -10,19 +10,18 @@ import type {
   ProviderParserRow,
   ProviderStreamConfigRow,
 } from '../../schema/types.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class ProviderStoreImpl {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   // ── Definitions ────────────────────────────────────────────────────────────

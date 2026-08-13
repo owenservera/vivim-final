@@ -38,6 +38,13 @@ export interface ConversationMessageRow {
   model: string | null
   metadataJson: string
   createdAt: number
+  // Message identity for deduplication
+  providerMessageId: string | null
+  identityHash: string | null
+  // Message metadata
+  isPinned: number
+  isArchived: number
+  readStatus: string
 }
 
 export interface ProviderAccountRow {
@@ -86,6 +93,9 @@ export interface MessageInput {
   tokenCount?: number
   model?: string
   metadataJson?: string
+  // Message identity for deduplication
+  providerMessageId?: string
+  identityHash?: string
 }
 
 // ── Contract ───────────────────────────────────────────────────────────────
@@ -155,6 +165,32 @@ export interface ConversationStore {
     patch: Partial<Pick<ConversationMessageRow, 'content' | 'blocksJson' | 'metadataJson'>>,
   ): Promise<void>
   getAccount(sessionId: string): Promise<ProviderAccountRow | null>
+
+  // ── Message Identity Methods ──────────────────────────────────────────────
+
+  /** Get message by identity hash (for deduplication) */
+  getMessageByIdentityHash(identityHash: string): Promise<ConversationMessageRow | null>
+
+  /** Create message with identity hash (for deduplication) */
+  createMessageWithIdentity(
+    input: MessageInput & { identityHash: string },
+  ): Promise<ConversationMessageRow>
+
+  // ── Message Metadata Methods ───────────────────────────────────────────────
+
+  /** Update message metadata (pin, archive, read status) */
+  updateMessageMetadata(
+    id: string,
+    metadata: Partial<Pick<ConversationMessageRow, 'isPinned' | 'isArchived' | 'readStatus'>>,
+  ): Promise<void>
+
+  /** Query messages by metadata filters */
+  queryMessagesByMetadata(filters: {
+    conversationId?: string
+    isPinned?: number
+    isArchived?: number
+    readStatus?: string
+  }): Promise<ConversationMessageRow[]>
   createAttachment(input: {
     messageId: string
     filename: string

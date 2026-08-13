@@ -9,7 +9,7 @@ import type {
   SelectorStrategyRow,
 } from '../storage/contracts/capability-store.js'
 import type { ChromeGovernor } from './chrome-governor.js'
-import type { CapabilityEventBus } from './conversation-manager.js'
+import type { CapabilityEventBus } from './capability-event-bus.js'
 
 export interface CapabilityExecutionResult {
   ok: boolean

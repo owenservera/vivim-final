@@ -9,19 +9,18 @@ import type {
   LatencyLogInput,
   LatencyLogRow,
 } from '../contracts/cost-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class CostStoreImpl implements CostStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async createCostLog(input: CostLogInput): Promise<void> {

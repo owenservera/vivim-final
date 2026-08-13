@@ -3,19 +3,18 @@
 
 import { type Primitive, rowToPrimitive } from 'shared/conceptual-model.js'
 import type { PrimitiveInput, PrimitiveRow, PrimitiveStore } from '../contracts/primitive-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
-type PrismaLoose = any
-
 export class PrimitiveStoreImpl implements PrimitiveStore {
-  private db: PrismaLoose
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async create(input: PrimitiveInput): Promise<PrimitiveRow> {

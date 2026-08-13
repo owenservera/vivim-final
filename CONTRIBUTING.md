@@ -33,13 +33,11 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 ### Prerequisites
 
 - **Bun** 1.3.14+ ([Install](https://bun.sh))
-- **Node.js** 18+ (for compatibility)
+- **Node.js** 20+ ([Install](https://nodejs.org))
 - **Git** ([Install](https://git-scm.com))
 - **VS Code** (recommended) with extensions:
   - Bun
   - TypeScript
-  - ESLint
-  - Prettier
 
 ### Fork and Clone
 
@@ -67,6 +65,12 @@ bun run seed
 # Start development server
 bun run dev
 ```
+
+This starts:
+- **Backend** at `http://localhost:9420`
+- **Frontend** at `http://localhost:3000`
+
+See [Dev Runbook](docs/runbooks/DEV.md) for detailed setup and gotchas.
 
 ---
 
@@ -177,14 +181,16 @@ bun run lint
 
 ```
 src/
-├── engines/           # Core engines (one file per engine)
+├── engines/           # Core engines (455+ files)
 ├── storage/           # Database access layer
-│   ├── contracts/     # Storage interfaces
-│   └── impl/         # Storage implementations
+│   ├── contracts/     # Storage interfaces (use these)
+│   └── impl/         # Storage implementations (never import from engines)
 ├── server/            # HTTP server and API routes
-├── cli/              # CLI entry points
-└── errors.ts         # Custom error classes
+├── cli/               # CLI entry points
+└── errors.ts          # Custom error classes
 ```
+
+**Critical rule:** Engines depend on `src/storage/contracts/*.ts`, never `src/storage/impl/*.ts`.
 
 ---
 
@@ -294,6 +300,7 @@ Describe tests added/updated
 | Unit | `tests/unit/` | Test individual functions |
 | Integration | `tests/integration/` | Test engine interactions |
 | E2E | `tests/e2e/` | Test full stack |
+| Architecture | `tests/arch/` | Test boundary invariants |
 
 ### Writing Tests
 
@@ -328,6 +335,12 @@ bun run test:integration
 # E2E tests only
 bun run test:e2e
 
+# Architecture boundary tests
+bun run test:arch
+
+# Fast (unit + arch)
+bun run test:fast
+
 # Specific test file
 bun test tests/unit/engines/capability-engine.test.ts
 ```
@@ -348,9 +361,9 @@ Aim for:
 
 | Type | Location | Purpose |
 |------|----------|---------|
-| User Guide | `docs/USER-GUIDE.md` | End-user documentation |
-| Architecture | `docs/ARCHITECTURE.md` | Technical design |
-| API Reference | `docs/API.md` | API documentation |
+| Architecture | [docs/architecture/](docs/architecture/) | System design and engine catalog |
+| Runbooks | [docs/runbooks/](docs/runbooks/) | Operational guides |
+| Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records |
 | Code Comments | Source code | Inline documentation |
 
 ### Writing Documentation
@@ -365,10 +378,22 @@ Aim for:
 When adding features:
 
 - [ ] Update README if needed
-- [ ] Add/update API documentation
-- [ ] Add code comments
-- [ ] Update CHANGELOG
+- [ ] Add/update relevant docs in `docs/`
+- [ ] Add code comments for complex logic
+- [ ] Update CHANGELOG if applicable
 - [ ] Add examples
+
+---
+
+## Architecture Overview
+
+New to the codebase? Start with these docs:
+
+1. **[Architecture Overview](docs/architecture/OVERVIEW.md)** — The 30-second mental model
+2. **[Engine Catalog](docs/architecture/ENGINES.md)** — What each engine does
+3. **[Data Layer](docs/architecture/DATA.md)** — Schema and Node model
+4. **[API Reference](docs/architecture/API.md)** — Routes and surfaces
+5. **[Dev Runbook](docs/runbooks/DEV.md)** — Local development setup
 
 ---
 
@@ -376,9 +401,8 @@ When adding features:
 
 ### Getting Help
 
-- **GitHub Discussions** — Ask questions, share ideas
-- **Issue Tracker** — Report bugs, request features
-- **Discord** — Real-time chat (coming soon)
+- **[GitHub Discussions](https://github.com/owenservera/vivim-final/discussions)** — Ask questions, share ideas
+- **[Issue Tracker](https://github.com/owenservera/vivim-final/issues)** — Report bugs, request features
 
 ### Contributing Areas
 
@@ -415,10 +439,9 @@ Contributors will be recognized in:
 
 If you have questions about contributing:
 
-1. **Check** this guide and documentation
+1. **Check** this guide and [documentation](docs/)
 2. **Search** existing issues and discussions
-3. **Ask** in GitHub Discussions
-4. **Email** contribute@vivim.dev
+3. **Ask** in [GitHub Discussions](https://github.com/owenservera/vivim-final/discussions)
 
 ---
 

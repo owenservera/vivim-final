@@ -66,6 +66,10 @@ function resolveResult(ctx: BootstrapContext): BootstrapEnginesResult {
     contactStore: ctx.contactStore!,
     syncStore: ctx.syncStore!,
     mediaStore: ctx.mediaStore!,
+    collectionEngine: ctx.collectionEngine,
+    lifecycleEngine: ctx.lifecycleEngine,
+    compactionManager: ctx.compactionManager,
+    backupManager: ctx.backupManager,
   }
 }
 

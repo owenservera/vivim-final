@@ -11,6 +11,7 @@ import type {
   LocalAgentProviderRow,
   LocalAgentStore,
 } from '../contracts/local-agent-store.js'
+import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
 
 const DEFAULT_TIMEOUT_MS = 180_000
@@ -29,14 +30,14 @@ function toModelRow(m: any): LocalAgentModelRow {
 }
 
 export class LocalAgentStoreImpl implements LocalAgentStore {
-  private db: CapStoreDb
+  private db: PrismaClient
 
   constructor(db: CapStoreDb) {
-    this.db = db.loose
+    this.db = db.prisma
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async getAgentProvider(slug: string): Promise<LocalAgentProviderRow | null> {

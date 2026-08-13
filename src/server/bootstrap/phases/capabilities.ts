@@ -10,8 +10,8 @@
 
 import { connectCapabilityRegistry } from '../../../cli/index.js'
 import { config } from '../../../config.js'
-import { registerGeneratedCapabilities } from '../../../engines/capability-bootstrap-generated.js'
 import { registerDefaultCapabilities } from '../../../engines/capability-bootstrap.js'
+import { registerGeneratedCapabilities } from '../../../engines/capability-bootstrap-generated.js'
 import {
   type CdpBindingStore,
   registerDiscoveredCdpMethods,
@@ -510,9 +510,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
           const opencodeServe = (globalThis as Record<string, unknown>).__opencodeServe as
             | {
                 client: import('../../../engines/opencode/opencode-client.js').OpenCodeClient
-                supervisor: import(
-                  '../../../engines/opencode/opencode-supervisor.js'
-                ).OpenCodeSupervisor
+                supervisor: import('../../../engines/opencode/opencode-supervisor.js').OpenCodeSupervisor
               }
             | undefined
 
@@ -549,33 +547,32 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
             aiBundle.gateway.registerAdapter(OPENCODE_PROVIDER_ID, openCodeAdapter)
 
             // Register a TS supervisor delegate for OpenCode (so stop/restart work)
-            const openCodeDelegate: import(
-              '../../../ai/runtime/ts-supervisor.js'
-            ).ISupervisorDelegate = {
-              providerId: OPENCODE_PROVIDER_ID,
-              async start() {
-                const { port } = await opencodeServe.supervisor.start()
-                return { transport: 'http', baseUrl: `http://127.0.0.1:${port}` }
-              },
-              async stop(_graceful?: boolean) {
-                await opencodeServe.supervisor.stop()
-              },
-              async restart() {
-                await opencodeServe.supervisor.stop()
-                const { port } = await opencodeServe.supervisor.start()
-                return { transport: 'http', baseUrl: `http://127.0.0.1:${port}` }
-              },
-              async getHealth() {
-                return {
-                  status: 'healthy' as const,
-                  state: 'active' as const,
-                  checkedAt: new Date().toISOString(),
-                }
-              },
-              async getState() {
-                return 'active' as const
-              },
-            }
+            const openCodeDelegate: import('../../../ai/runtime/ts-supervisor.js').ISupervisorDelegate =
+              {
+                providerId: OPENCODE_PROVIDER_ID,
+                async start() {
+                  const { port } = await opencodeServe.supervisor.start()
+                  return { transport: 'http', baseUrl: `http://127.0.0.1:${port}` }
+                },
+                async stop(_graceful?: boolean) {
+                  await opencodeServe.supervisor.stop()
+                },
+                async restart() {
+                  await opencodeServe.supervisor.stop()
+                  const { port } = await opencodeServe.supervisor.start()
+                  return { transport: 'http', baseUrl: `http://127.0.0.1:${port}` }
+                },
+                async getHealth() {
+                  return {
+                    status: 'healthy' as const,
+                    state: 'active' as const,
+                    checkedAt: new Date().toISOString(),
+                  }
+                },
+                async getState() {
+                  return 'active' as const
+                },
+              }
             aiBundle.supervisor.registerDelegate(openCodeDelegate)
 
             log.info(
@@ -633,7 +630,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
             update: { updatedAt: now },
           })
           .catch(() => {})
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         await db.prisma.capabilityBinding
           .upsert({
             where: {
@@ -661,7 +658,7 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
             },
           })
           .catch(() => {})
-  // [audit] log the error with context here
+        // [audit] log the error with context here
       },
     }
 

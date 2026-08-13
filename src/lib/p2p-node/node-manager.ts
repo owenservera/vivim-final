@@ -60,10 +60,12 @@ export class NodeManager extends EventEmitter {
         transports: [circuitRelayTransport(), webSockets(), tcp()],
         connectionEncrypters: [noise()],
         streamMuxers: [yamux()],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- libp2p peerDiscovery type mismatch between transport factories
         peerDiscovery: this.buildDiscoveryConfig() as any,
         services: {
           autoNAT: autoNAT(),
           identify: identify(),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- libp2p service type mismatch between DHT factory and createLibp2p
           dht: kadDHT({ clientMode: true }) as any,
         },
         addresses: {

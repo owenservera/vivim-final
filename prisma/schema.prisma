@@ -645,6 +645,19 @@ model ConversationMessage {
   createdAt       BigInt  @map("created_at")
   updatedAt       BigInt? @map("updated_at")
 
+  // Message identity for deduplication
+  providerMessageId String? @map("provider_message_id")
+  identityHash      String? @unique @map("identity_hash")
+  
+  // Message metadata
+  isPinned          Int     @default(0) @map("is_pinned")
+  isArchived        Int     @default(0) @map("is_archived")
+  readStatus        String  @default("unread") @map("read_status")
+  
+  // Lifecycle management
+  expiresAt         BigInt? @map("expires_at")
+  ttlSeconds        Int?    @map("ttl_seconds")
+
   conversation    Conversation          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   parent          ConversationMessage?  @relation("MessageParent", fields: [parentMessageId], references: [id], onDelete: SetNull)
   children        ConversationMessage[] @relation("MessageParent")
@@ -657,7 +670,51 @@ model ConversationMessage {
 
   @@index([conversationId, sequenceIndex], map: "idx_cm_conv")
   @@index([role], map: "idx_cm_role")
+  @@index([identityHash], map: "idx_cm_identity")
+  @@index([isPinned], map: "idx_cm_pinned")
+  @@index([isArchived], map: "idx_cm_archived")
+  @@index([readStatus], map: "idx_cm_read")
   @@map("conversation_message")
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Collections System (Phase 3)
+// ═══════════════════════════════════════════════════════════════════
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  parentId    String?  @map("parent_id")
+  userId      String   @map("user_id")
+  description String?
+  color       String?
+  icon        String?
+  createdAt   BigInt   @map("created_at")
+  updatedAt   BigInt   @map("updated_at")
+
+  parent      Collection?   @relation("CollectionHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Collection[]  @relation("CollectionHierarchy")
+  items       CollectionItem[]
+
+  @@index([userId], map: "idx_coll_user")
+  @@index([parentId], map: "idx_coll_parent")
+  @@map("collection")
+}
+
+model CollectionItem {
+  id            String   @id @default(cuid())
+  collectionId  String   @map("collection_id")
+  itemType      String   @map("item_type")
+  itemId        String   @map("item_id")
+  order         Int      @default(0)
+  addedAt       BigInt   @map("added_at")
+
+  collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, itemType, itemId])
+  @@index([collectionId], map: "idx_ci_coll")
+  @@index([itemType, itemId], map: "idx_ci_item")
+  @@map("collection_item")
 }
 
 model MessageAttachment {
@@ -805,6 +862,9 @@ model Node {
   // Temporal validity window (OG validFrom / validUntil).
   validFrom        BigInt? @map("valid_from")
   validUntil       BigInt? @map("valid_until")
+  // Lifecycle management (Phase 4)
+  expiresAt        BigInt? @map("expires_at")
+  ttlSeconds       Int?    @map("ttl_seconds")
   // Predecessor version in the version chain (OG LCG parent).
   parentVersion    Int?    @map("parent_version")
   // ── ACU fields (Phase 0 — doc 00 §9) ──

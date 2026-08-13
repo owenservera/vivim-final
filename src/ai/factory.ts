@@ -1,3 +1,4 @@
+import type { OutcomeTracker } from '../engines/outcome-tracker.js'
 import type { ProviderId } from './core/types.js'
 import { InMemoryEventBus } from './events/in-memory-bus.js'
 import { InMemoryExecutionManager } from './execution/in-memory-manager.js'
@@ -10,7 +11,6 @@ import { InMemoryProviderRegistry } from './registry/in-memory-provider-registry
 import { DefaultRouter } from './routing/default-router.js'
 import { InMemoryResourceManager } from './runtime/in-memory-resource-manager.js'
 import { TSRuntimeSupervisor } from './runtime/ts-supervisor.js'
-import type { OutcomeTracker } from '../engines/outcome-tracker.js'
 
 export interface CreateGatewayOptions {
   /** Additional adapters to register (e.g., OpenCodeAdapter, OpenAICompatibleAdapter). */

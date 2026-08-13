@@ -6,6 +6,7 @@ import { newId } from '../ids.js'
 import type { MemoryIntelligenceStore } from '../storage/contracts/memory-intelligence-store.js'
 import type { NodeStoreContract } from '../storage/contracts/node-store.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
+import { type Card, type CardState, FsrsScheduler, type ReviewResult } from './fsrs-scheduler.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -154,6 +155,7 @@ export interface ProceduralMemoryStore {
 export class MemoryEngine {
   private consolidationTimer?: ReturnType<typeof setInterval>
   private intelligenceStore?: MemoryIntelligenceStore
+  private fsrsScheduler = new FsrsScheduler()
 
   constructor(
     private readonly episodic: EpisodicMemoryStore,
@@ -354,7 +356,7 @@ export class MemoryEngine {
           updatedAt: now,
         })
         .catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
     this.eventBus.emit({ type: 'memory:recorded', data: { id, category: input.category } })
     return id
@@ -791,6 +793,78 @@ export class MemoryEngine {
   }
 
   // ── Lifecycle ───────────────────────────────────────────────────────
+
+  // ── FSRS-6 Spaced Repetition (Phase 5) ───────────────────────────────
+
+  async collectDueMemories(limit = 50): Promise<Card[]> {
+    // Get all facts from semantic memory
+    const facts = await this.semantic.findAll()
+
+    // Convert facts to cards (using metadata for FSRS state if available)
+    const cards: Card[] = facts.map((fact) => {
+      const meta = fact.object as Record<string, unknown> | null
+      return {
+        id: fact.id,
+        state: (meta?.fsrsState as CardState) ?? 'new',
+        due: (meta?.fsrsDue as number) ?? Date.now(),
+        interval: (meta?.fsrsInterval as number) ?? 0,
+        difficulty: (meta?.fsrsDifficulty as number) ?? 5,
+        stability: (meta?.fsrsStability as number) ?? 0,
+        lastReview: (meta?.fsrsLastReview as number) ?? undefined,
+        reps: (meta?.fsrsReps as number) ?? 0,
+        lapses: (meta?.fsrsLapses as number) ?? 0,
+      }
+    })
+
+    // Filter for due cards and limit
+    const dueCards = this.fsrsScheduler.getDueCards(cards)
+    return dueCards.slice(0, limit)
+  }
+
+  async applyReview(memoryId: string, rating: number): Promise<ReviewResult> {
+    // Get the memory
+    const fact = await this.semantic.findById(memoryId)
+    if (!fact) throw new NotFoundError(`Memory ${memoryId} not found`)
+
+    // Extract current FSRS state
+    const meta = fact.object as Record<string, unknown> | null
+    const card: Card = {
+      id: fact.id,
+      state: (meta?.fsrsState as CardState) ?? 'new',
+      due: (meta?.fsrsDue as number) ?? Date.now(),
+      interval: (meta?.fsrsInterval as number) ?? 0,
+      difficulty: (meta?.fsrsDifficulty as number) ?? 5,
+      stability: (meta?.fsrsStability as number) ?? 0,
+      lastReview: (meta?.fsrsLastReview as number) ?? undefined,
+      reps: (meta?.fsrsReps as number) ?? 0,
+      lapses: (meta?.fsrsLapses as number) ?? 0,
+    }
+
+    // Calculate next state using FSRS
+    const result = this.fsrsScheduler.calculate(card, rating)
+
+    // Update memory with new FSRS state
+    const updatedMeta = {
+      ...(meta ?? {}),
+      fsrsState: result.state,
+      fsrsDue: result.due,
+      fsrsInterval: result.interval,
+      fsrsDifficulty: result.difficulty,
+      fsrsStability: result.stability,
+      fsrsLastReview: Date.now(),
+      fsrsReps: result.reps,
+      fsrsLapses: result.lapses,
+    }
+
+    await this.semantic.update(memoryId, { object: updatedMeta })
+
+    this.eventBus.emit({
+      type: 'memory:review_applied',
+      data: { id: memoryId, rating, result },
+    })
+
+    return result
+  }
 
   startConsolidation(intervalMs = 300_000): void {
     this.consolidationTimer = setInterval(async () => {

@@ -30,6 +30,7 @@ import { projectNodeSchema, taskNodeSchema } from './task.js'
 // Zod discriminated unions produce overly-broad inferred types (e.g. optional `data`
 // on CustomPart). Cast to `any` at registration — the schemas are correct at runtime;
 // the mismatch is a Zod inference limitation, not a real type error.
+/* eslint-disable @typescript-eslint/no-explicit-any -- Zod schema type inference limitation */
 
 export function registerAllSchemas(): void {
   schemaRegistry.register(messageNodeSchema as any)
