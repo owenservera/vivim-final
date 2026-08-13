@@ -7,6 +7,8 @@ import { catchDebug } from '../lib/catch-logger.js'
 import { safeJsonParse } from '../lib/safe-json.js'
 import type { ContextAssemblyStore } from '../storage/contracts/context-assembly-store.js'
 import type { CapStoreDb } from '../storage/db.js'
+import type { EmbeddingProvider } from './semantic-search.js'
+import { cosineSimilarity } from './onboarding/webapp-fingerprint.js'
 import type { MemoryEngine } from './memory-engine.js'
 import type { SemanticSearchEngine } from './semantic-search.js'
 import type { SituationDetector, SituationSignal, TaskType } from './situation-detector.js'
@@ -268,6 +270,8 @@ export class ContextAssemblyEngine {
     /** Optional per-agent frozen memory snapshot provider (spec 024 FR-005). */
     private memorySnapshotProvider?: (conversationId: string) => Promise<string | null>,
     private conversationStore?: CapStoreDb,
+    /** Optional embedding provider for relevance-based context truncation (§5). */
+    private embeddingProvider?: EmbeddingProvider,
   ) {}
 
   async assemble(conversationId: string, userMessage: string): Promise<AssembledContext> {
@@ -311,7 +315,8 @@ export class ContextAssemblyEngine {
     const ranked = this.rank(rawLayers, situation.type)
 
     // Stage 4: BUDGET — allocate token budget using task-specific percentages (17.4)
-    const { layers, truncated } = this.allocateBudget(ranked, situation.type)
+    // Pass userMessage for relevance-based reordering within layers (§5).
+    const { layers, truncated } = await this.allocateBudget(ranked, situation.type, userMessage)
 
     // Stage 5: INJECT — persist layers for caching
     await this.persistLayers(conversationId, layers)
@@ -569,10 +574,11 @@ export class ContextAssemblyEngine {
 
   // ── Stage 4: BUDGET (17.4 — budget percentages per task type) ──────────
 
-  private allocateBudget(
+  private async allocateBudget(
     ranked: ContextLayer[],
     taskType: TaskType,
-  ): { layers: ContextLayer[]; truncated: boolean } {
+    userMessage?: string,
+  ): Promise<{ layers: ContextLayer[]; truncated: boolean }> {
     const allocation = BUDGET_ALLOCATION[taskType] ?? BUDGET_ALLOCATION.general
     let remaining = this.budget
     const included: ContextLayer[] = []
@@ -592,9 +598,12 @@ export class ContextAssemblyEngine {
         included.push(layer)
         remaining -= layer.tokenCount
       } else {
-        // Partial inclusion — truncate content to fit
+        // Partial inclusion — relevance-based truncation (§5).
+        // Split content into paragraphs, score by similarity to user message,
+        // keep most relevant first, truncate from least relevant end.
+        const reordered = await this.relevanceReorder(layer.content, userMessage)
         const maxChars = allowedTokens * CHARS_PER_TOKEN
-        const truncatedContent = `${layer.content.slice(0, maxChars)}…`
+        const truncatedContent = `${reordered.slice(0, maxChars)}…`
         included.push({
           ...layer,
           content: truncatedContent,
@@ -606,6 +615,43 @@ export class ContextAssemblyEngine {
     }
 
     return { layers: included, truncated }
+  }
+
+  /**
+   * Reorder content paragraphs by relevance to the user message.
+   * Falls back to original order if no embedding provider is available.
+   */
+  private async relevanceReorder(content: string, userMessage?: string): Promise<string> {
+    if (!userMessage || !this.embeddingProvider) return content
+
+    // Split into paragraphs (non-empty lines)
+    const paragraphs = content.split(/\n{2,}/).filter(p => p.trim().length > 0)
+    if (paragraphs.length <= 1) return content
+
+    try {
+      const userEmbedding = await this.embeddingProvider.embed(userMessage)
+      if (!userEmbedding) return content
+
+      const paraEmbeddings = await this.embeddingProvider.embedBatch(
+        paragraphs.map(p => p.trim().slice(0, 512)), // Truncate long paragraphs for embedding
+      )
+
+      // Score each paragraph by cosine similarity to user message
+      const scored = paragraphs.map((para, i) => {
+        const paraEmbed = paraEmbeddings[i]
+        const score = paraEmbed ? cosineSimilarity(userEmbedding, paraEmbed) : 0
+        return { para, score }
+      })
+
+      // Sort by relevance (highest first), then join back
+      return scored
+        .sort((a, b) => b.score - a.score)
+        .map(s => s.para)
+        .join('\n\n')
+    } catch {
+      // Fail-open: if embedding fails, return original content
+      return content
+    }
   }
 
   // ── Stage 5: INJECT (persist) ─────────────────────────────────────────

@@ -145,6 +145,30 @@ export class CozoLayer {
       }
     }
     this.initialized = true
+
+    // Create HNSW indexes for vector columns (768-d matches HF embedding model).
+    // These are idempotent — if they already exist, Cozo tolerates it.
+    await this.ensureHnswIndexes()
+  }
+
+  /**
+   * Create HNSW approximate nearest-neighbor indexes on vector columns.
+   * Called once after initSchema. Fail-open: logged, never thrown.
+   */
+  private async ensureHnswIndexes(): Promise<void> {
+    const hnswStatements = [
+      '::hnsw create Entity {embedding} L2 M 16 efConstruction 200',
+      '::hnsw create ConvMeta {centroid} L2 M 16 efConstruction 200',
+    ]
+    for (const stmt of hnswStatements) {
+      try {
+        await this.runScript(stmt)
+        log.info(`[cozo] HNSW index created: ${stmt.slice(0, 50)}...`)
+      } catch (err) {
+        // Fail-open: index may already exist or Cozo version may not support HNSW.
+        log.warn(`[cozo] HNSW index warn (ignored): ${(err as Error).message}`)
+      }
+    }
   }
 
   /**

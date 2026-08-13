@@ -10,6 +10,7 @@ import { InMemoryProviderRegistry } from './registry/in-memory-provider-registry
 import { DefaultRouter } from './routing/default-router.js'
 import { InMemoryResourceManager } from './runtime/in-memory-resource-manager.js'
 import { TSRuntimeSupervisor } from './runtime/ts-supervisor.js'
+import type { OutcomeTracker } from '../engines/outcome-tracker.js'
 
 export interface CreateGatewayOptions {
   /** Additional adapters to register (e.g., OpenCodeAdapter, OpenAICompatibleAdapter). */
@@ -19,6 +20,8 @@ export interface CreateGatewayOptions {
   }>
   /** Disable the built-in simulator adapter (default: false = simulator enabled). */
   readonly disableSimulator?: boolean
+  /** OutcomeTracker for learned routing — enables best-fit strategy + real scoring. */
+  readonly outcomeTracker?: OutcomeTracker
 }
 
 /**
@@ -46,8 +49,8 @@ export function createGateway(opts: CreateGatewayOptions = {}): {
   const executionManager = new InMemoryExecutionManager()
   const providerRegistry = new InMemoryProviderRegistry(eventBus)
   const modelRegistry = new InMemoryModelRegistry()
-  const router = new DefaultRouter()
-  const policyEvaluator = new DefaultPolicyEvaluator()
+  const router = new DefaultRouter(opts.outcomeTracker)
+  const policyEvaluator = new DefaultPolicyEvaluator(opts.outcomeTracker)
   const policyEnforcer = new DefaultPolicyEnforcer()
   const resourceManager = new InMemoryResourceManager()
   const supervisor = new TSRuntimeSupervisor(resourceManager)

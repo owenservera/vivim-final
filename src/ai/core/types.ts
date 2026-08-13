@@ -579,6 +579,20 @@ export interface ResponseCancelledEvent extends BaseAIEvent {
   readonly reason?: string
 }
 
+/**
+ * Outcome event — emitted when a downstream consumer implicitly signals
+ * success or failure of a routed provider, recalled entity, or context layer.
+ * Consumed by OutcomeTracker (§7) for adaptive scoring across routing,
+ * entity confidence decay, and context ranking.
+ */
+export interface OutcomeEvent extends BaseAIEvent {
+  readonly type: 'outcome.recorded'
+  readonly subjectId: string
+  readonly subjectType: 'provider' | 'entity' | 'contextLayer' | 'commandIntent'
+  readonly outcome: 'reinforced' | 'ignored' | 'rejected'
+  readonly metadata?: Readonly<Record<string, unknown>>
+}
+
 export type AIEvent =
   | RequestStartedEvent
   | ResponseStartedEvent
@@ -593,6 +607,7 @@ export type AIEvent =
   | ResponseCompletedEvent
   | ResponseFailedEvent
   | ResponseCancelledEvent
+  | OutcomeEvent
 
 export function isTerminalAIEvent(
   e: AIEvent,

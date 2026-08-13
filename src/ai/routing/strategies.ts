@@ -7,6 +7,7 @@
 
 import type { AIRequest, ProviderManifest, RoutingCandidate } from '../core/types.js'
 import type { IRoutingStrategy, RoutingDependencies } from './router.js'
+import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 
 /**
  * Explicit: caller pinned providerId + modelId. Just return that candidate
@@ -74,8 +75,9 @@ export class LocalOnlyStrategy implements IRoutingStrategy {
 }
 
 /**
- * Lowest-cost: prefer models with lower (or zero) pricing.
- * (Future: read pricing from ModelDescriptor.extensions.pricing.)
+ * Lowest-cost: prefer models with lower pricing.
+ * Reads pricing from candidate extensions if available (ModelDescriptor.extensions.pricing).
+ * Free models (no pricing info) get no penalty.
  */
 export class LowestCostStrategy implements IRoutingStrategy {
   readonly name = 'lowest-cost' as const
@@ -85,13 +87,52 @@ export class LowestCostStrategy implements IRoutingStrategy {
     candidates: readonly RoutingCandidate[],
     _deps: RoutingDependencies,
   ): Promise<readonly RoutingCandidate[]> {
-    // Models with no pricing info get score 0.5; priced models get penalized
     return [...candidates]
-      .map((c) => ({
-        ...c,
-        // Free models (no pricing) score highest; we'd need pricing data to be precise
-        score: c.score * 0.5,
-      }))
+      .map((c) => {
+        // Read pricing from model extensions if available
+        const pricing = (c as any).extensions?.pricing as
+          | { inputPer1k?: number; outputPer1k?: number }
+          | undefined
+        if (!pricing) return { ...c, score: c.score } // No pricing info = no penalty
+        const avgCost = ((pricing.inputPer1k ?? 0) + (pricing.outputPer1k ?? 0)) / 2
+        const costPenalty = Math.min(1, avgCost / 0.1) // Normalize: $0.10/1k tokens = full penalty
+        return { ...c, score: c.score * (1 - costPenalty * 0.5) }
+      })
+      .sort((a, b) => b.score - a.score)
+  }
+}
+
+/**
+ * Learned: route based on historical outcome scores from OutcomeTracker.
+ * Blends policy score (eligibility) + health + outcome EMA + task affinity.
+ * Only scores providers with enough observations (minSamples).
+ */
+export class LearnedStrategy implements IRoutingStrategy {
+  readonly name = 'best-fit' as const
+
+  constructor(private outcomeTracker: OutcomeTracker) {}
+
+  async score(
+    _request: AIRequest,
+    candidates: readonly RoutingCandidate[],
+    _deps: RoutingDependencies,
+  ): Promise<readonly RoutingCandidate[]> {
+    return [...candidates]
+      .map((c) => {
+        const outcomeScore = this.outcomeTracker.getScoreOrDefault(c.providerId)
+        // Blend: policy base (60%) + outcome EMA (40%)
+        // outcomeScore is only reliable if sampleCount >= minSamples,
+        // but getScoreOrDefault already returns 0.5 for unknowns.
+        const blended = c.score * 0.6 + outcomeScore * 0.4
+        const reasons = [
+          {
+            factor: 'outcome-ema',
+            score: outcomeScore,
+            explanation: `Outcome EMA: ${outcomeScore.toFixed(2)}`,
+          },
+        ]
+        return { ...c, score: blended, reasons }
+      })
       .sort((a, b) => b.score - a.score)
   }
 }

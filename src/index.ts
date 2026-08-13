@@ -331,6 +331,7 @@ export type {
 } from './engines/provider-discovery.js'
 export { ProviderDiscoveryEngine } from './engines/provider-discovery.js'
 export { ProviderHealthKernel } from './engines/provider-health.js'
+export { OutcomeTracker } from './engines/outcome-tracker.js'
 export { ProviderMuxEngine } from './engines/provider-mux.js'
 export { ProviderRegistrar } from './engines/provider-registrar.js'
 export type { HarnessOutcome } from './engines/provider-test-harness.js'

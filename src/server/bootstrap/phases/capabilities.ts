@@ -477,8 +477,8 @@ export async function bootstrapCapabilitiesPhase(ctx: BootstrapContext): Promise
           } = await import('../../../ai/index.js')
           const { providerId, modelId } = await import('../../../ai/index.js')
 
-          // Build the gateway with in-memory defaults + simulator
-          const aiBundle = createGateway()
+          // Build the gateway with in-memory defaults + simulator + OutcomeTracker
+          const aiBundle = createGateway({ outcomeTracker: ctx.outcomeTracker })
 
           // Register the simulator provider + model in the gateway's registries
           const simManifest = (await import('../../../ai/protocol/simulator-adapter.js'))

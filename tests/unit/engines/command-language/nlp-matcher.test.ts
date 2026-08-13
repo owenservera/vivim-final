@@ -64,103 +64,103 @@ const sampleDescriptions: CommandDescriptionRow[] = [
 
 describe('matchPatterns', () => {
   // ─── Exact Matches ───────────────────────────────────────────
-  test('matches exact pattern', () => {
-    const results = matchPatterns('health', sampleDescriptions)
+  test('matches exact pattern', async () => {
+    const results = await matchPatterns('health', sampleDescriptions)
     expect(results.length).toBeGreaterThan(0)
     expect(results[0]?.commandId).toBe('health')
     expect(results[0]?.confidence).toBeGreaterThanOrEqual(0.8)
   })
 
-  test('matches partial pattern', () => {
-    const results = matchPatterns('check health', sampleDescriptions)
+  test('matches partial pattern', async () => {
+    const results = await matchPatterns('check health', sampleDescriptions)
     expect(results.length).toBeGreaterThan(0)
     expect(results[0]?.commandId).toBe('health')
   })
 
   // ─── Fuzzy Matching ──────────────────────────────────────────
-  test('matches fuzzy input', () => {
-    const results = matchPatterns('health check', sampleDescriptions, { minConfidence: 0.2 })
+  test('matches fuzzy input', async () => {
+    const results = await matchPatterns('health check', sampleDescriptions, { minConfidence: 0.2 })
     expect(results.length).toBeGreaterThan(0)
     expect(results[0]?.commandId).toBe('health')
   })
 
-  test('matches partial word', () => {
-    const results = matchPatterns('switch', sampleDescriptions)
+  test('matches partial word', async () => {
+    const results = await matchPatterns('switch', sampleDescriptions)
     expect(results.length).toBeGreaterThan(0)
     expect(results[0]?.commandId).toBe('switch_provider')
   })
 
   // ─── Confidence Threshold ────────────────────────────────────
-  test('respects minConfidence threshold', () => {
-    const results = matchPatterns('health', sampleDescriptions, { minConfidence: 0.95 })
+  test('respects minConfidence threshold', async () => {
+    const results = await matchPatterns('health', sampleDescriptions, { minConfidence: 0.95 })
     expect(results.length).toBe(0)
   })
 
-  test('returns results above threshold', () => {
-    const results = matchPatterns('health', sampleDescriptions, { minConfidence: 0.3 })
+  test('returns results above threshold', async () => {
+    const results = await matchPatterns('health', sampleDescriptions, { minConfidence: 0.3 })
     expect(results.length).toBeGreaterThan(0)
   })
 
   // ─── Category Filtering ──────────────────────────────────────
-  test('filters by category', () => {
-    const results = matchPatterns('health', sampleDescriptions, { category: 'provider' })
+  test('filters by category', async () => {
+    const results = await matchPatterns('health', sampleDescriptions, { category: 'provider' })
     expect(results.every((r) => r.category === 'provider')).toBe(true)
   })
 
   // ─── Disabled Commands ───────────────────────────────────────
-  test('excludes disabled commands', () => {
-    const results = matchPatterns('disabled', sampleDescriptions)
+  test('excludes disabled commands', async () => {
+    const results = await matchPatterns('disabled', sampleDescriptions)
     expect(results.every((r) => r.commandId !== 'disabled_cmd')).toBe(true)
   })
 
   // ─── Limit ───────────────────────────────────────────────────
-  test('respects limit', () => {
-    const results = matchPatterns('health', sampleDescriptions, { limit: 1 })
+  test('respects limit', async () => {
+    const results = await matchPatterns('health', sampleDescriptions, { limit: 1 })
     expect(results.length).toBeLessThanOrEqual(1)
   })
 
   // ─── Empty Input ─────────────────────────────────────────────
-  test('handles empty input', () => {
-    const results = matchPatterns('', sampleDescriptions)
+  test('handles empty input', async () => {
+    const results = await matchPatterns('', sampleDescriptions)
     expect(results).toEqual([])
   })
 
   // ─── No Match ────────────────────────────────────────────────
-  test('returns empty for no matches', () => {
-    const results = matchPatterns('zzzznonexistent', sampleDescriptions)
+  test('returns empty for no matches', async () => {
+    const results = await matchPatterns('zzzznonexistent', sampleDescriptions)
     expect(results).toEqual([])
   })
 })
 
 describe('detectIntent', () => {
-  test('detects health intent', () => {
-    const intent = detectIntent('health check', sampleDescriptions)
+  test('detects health intent', async () => {
+    const intent = await detectIntent('health check', sampleDescriptions)
     expect(intent).not.toBeNull()
     expect(intent?.commandId).toBe('health')
     expect(intent?.confidence).toBeGreaterThanOrEqual(0.4)
     expect(intent?.source).toBe('nlp')
   })
 
-  test('detects provider switch intent', () => {
-    const intent = detectIntent('switch to claude', sampleDescriptions)
+  test('detects provider switch intent', async () => {
+    const intent = await detectIntent('switch to claude', sampleDescriptions)
     expect(intent).not.toBeNull()
     expect(intent?.commandId).toBe('switch_provider')
   })
 
-  test('returns null for low confidence', () => {
-    const intent = detectIntent('zzzznonexistent', sampleDescriptions)
+  test('returns null for low confidence', async () => {
+    const intent = await detectIntent('zzzznonexistent', sampleDescriptions)
     expect(intent).toBeNull()
   })
 
-  test('returns color for detected intent', () => {
-    const intent = detectIntent('health', sampleDescriptions)
+  test('returns color for detected intent', async () => {
+    const intent = await detectIntent('health', sampleDescriptions)
     expect(intent).not.toBeNull()
     expect(intent?.color).toBeDefined()
     expect(typeof intent?.color.primary).toBe('string')
   })
 
-  test('filters by category', () => {
-    const intent = detectIntent('health', sampleDescriptions, { category: 'provider' })
+  test('filters by category', async () => {
+    const intent = await detectIntent('health', sampleDescriptions, { category: 'provider' })
     expect(intent).toBeNull()
   })
 })

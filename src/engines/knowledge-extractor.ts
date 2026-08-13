@@ -1,8 +1,11 @@
 // src/engines/knowledge-extractor.ts
 // KnowledgeExtractor — analyze messages and extract entities, decisions, facts.
+// §5: Embedding-based entity classification + dedup (optional, fail-open).
 
 import { newId } from '../ids.js'
 import type { KnowledgeExtractorStore } from '../storage/contracts/knowledge-extractor-store.js'
+import type { EmbeddingProvider } from './semantic-search.js'
+import { EmbeddingClassifier } from './embedding-classifier.js'
 
 export type ExtractionType =
   | 'fact'
@@ -50,10 +53,18 @@ const DECISION_PATTERNS = [
 const FACT_PATTERNS = [/\b(.+?) (?:is|are|was|were) (.+?)[.]/g]
 
 export class KnowledgeExtractor {
+  private classifier?: EmbeddingClassifier
+
   constructor(
     private store: KnowledgeExtractorStore,
     private config: KnowledgeExtractorConfig,
-  ) {}
+    /** Optional embedding provider for §5: entity classification + dedup. */
+    private embeddingProvider?: EmbeddingProvider,
+  ) {
+    if (embeddingProvider) {
+      this.classifier = new EmbeddingClassifier(embeddingProvider)
+    }
+  }
 
   async extractFromMessage(
     conversationId: string,
@@ -79,7 +90,23 @@ export class KnowledgeExtractor {
                 : type === 'project'
                   ? 'entity_project'
                   : 'entity_concept'
-          const confidence = normalizedType === 'entity_technology' ? 0.9 : 0.7
+
+          // §5: Validate entity type with embedding classifier (fail-open).
+          let confidence = normalizedType === 'entity_technology' ? 0.9 : 0.7
+          if (this.classifier) {
+            try {
+              const category = await this.classifier.topCategory(name)
+              if (category && category !== type) {
+                // Classifier disagrees with regex — lower confidence but don't discard
+                confidence *= 0.7
+              } else if (category === type) {
+                // Classifier agrees — boost confidence
+                confidence = Math.min(1.0, confidence + 0.1)
+              }
+            } catch {
+              // Fail-open: keep regex-derived confidence
+            }
+          }
 
           const existing = await this.store.findEntityByName(name, normalizedType)
           if (existing) {
@@ -233,15 +260,75 @@ export class KnowledgeExtractor {
   ): Promise<{ totalExtracted: number; byType: Record<ExtractionType, number> }> {
     const byType: Record<string, number> = {}
     let total = 0
+    const allResults: ExtractionResult[] = []
 
     for (const conv of conversations) {
       const results = await this.extractFromConversation(conv.id, conv.messages)
       for (const r of results) {
         byType[r.type] = (byType[r.type] ?? 0) + 1
         total++
+        allResults.push(r)
+      }
+    }
+
+    // §9: Pattern mining — find entity co-occurrence patterns across conversations.
+    if (this.config.enablePatternMining && allResults.length > 10) {
+      const patternResults = this.mineCoOccurrencePatterns(allResults)
+      for (const r of patternResults) {
+        byType[r.type] = (byType[r.type] ?? 0) + 1
+        total++
       }
     }
 
     return { totalExtracted: total, byType: byType as Record<ExtractionType, number> }
+  }
+
+  /**
+   * §9: Mine entity co-occurrence patterns.
+   * Finds entity pairs that appear together in 3+ conversations.
+   */
+  private mineCoOccurrencePatterns(all: ExtractionResult[]): ExtractionResult[] {
+    const entityPairs = new Map<string, { count: number; entities: [string, string] }>()
+
+    // Group entities by conversation
+    const byConv = new Map<string, ExtractionResult[]>()
+    for (const r of all) {
+      if (!r.type.startsWith('entity_')) continue
+      const existing = byConv.get(r.sourceConversationId)
+      if (existing) existing.push(r)
+      else byConv.set(r.sourceConversationId, [r])
+    }
+
+    // Count co-occurrences within each conversation
+    for (const [, extractions] of byConv) {
+      const names = extractions.map((e) => e.subject)
+      for (let i = 0; i < names.length; i++) {
+        for (let j = i + 1; j < names.length; j++) {
+          const key = [names[i], names[j]].sort().join('|||')
+          const existing = entityPairs.get(key)
+          if (existing) existing.count++
+          else entityPairs.set(key, { count: 1, entities: [names[i]!, names[j]!] })
+        }
+      }
+    }
+
+    // Emit patterns for pairs appearing in 3+ conversations
+    const results: ExtractionResult[] = []
+    for (const [, { count, entities }] of entityPairs) {
+      if (count >= 3) {
+        results.push({
+          type: 'pattern',
+          subject: entities[0]!,
+          predicate: 'co_occurs',
+          object: entities[1]!,
+          confidence: Math.min(0.9, count * 0.15),
+          sourceConversationId: 'batch',
+          sourceMessageId: 'mined',
+          context: `Co-occurs in ${count} conversations`,
+        })
+      }
+    }
+
+    return results
   }
 }

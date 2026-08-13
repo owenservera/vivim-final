@@ -18,6 +18,42 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
   const convStore = ctx.convStore!
   const streamBlocks = ctx.streamBlocks!
 
+  // ── OutcomeTracker (§7 — adaptive scoring foundation) ────────────────────
+  try {
+    const { OutcomeTracker } = await import('../../../engines/outcome-tracker.js')
+    const outcomeTracker = new OutcomeTracker({ alpha: 0.1, minSamples: 5 })
+    ctx.outcomeTracker = outcomeTracker
+    _log.info('OutcomeTracker initialized (alpha=0.1, minSamples=5)')
+
+    // Auto-record provider outcomes from capability events
+    eventBus.on('capability:executed', (evt) => {
+      outcomeTracker.record({
+        type: 'outcome.recorded',
+        eventId: '' as never,
+        requestId: '' as never,
+        sequence: 0,
+        timestamp: new Date().toISOString(),
+        subjectId: evt.providerId,
+        subjectType: 'provider',
+        outcome: evt.ok ? 'reinforced' : 'ignored',
+      })
+    })
+    eventBus.on('capability:failed', (evt) => {
+      outcomeTracker.record({
+        type: 'outcome.recorded',
+        eventId: '' as never,
+        requestId: '' as never,
+        sequence: 0,
+        timestamp: new Date().toISOString(),
+        subjectId: evt.providerId,
+        subjectType: 'provider',
+        outcome: 'rejected',
+      })
+    })
+  } catch (e) {
+    catchDebug(e, 'bootstrap: outcome tracker not available')
+  }
+
   // Knowledge engines (optional — wired if stores are available)
   let knowledgeIngestion:
     | import('../../../engines/knowledge-ingestion.js').KnowledgeIngestionEngine
@@ -89,6 +125,30 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
     }
     embeddingProvider = embedding // #5: expose on phase scope
 
+    // §8: Embedding provider observability — log tier + emit degradation event.
+    const providerTier =
+      embedding.name === 'hf:mpnet-base-v2'
+        ? 'neural'
+        : embedding.name.startsWith('ollama:')
+          ? 'neural-remote'
+          : 'fallback-hash'
+
+    _log.info(`Embedding provider active: ${embedding.name} (tier: ${providerTier})`)
+
+    if (providerTier === 'fallback-hash') {
+      _log.warn(
+        '⚠ Embedding degraded: using hash-based fallback. Semantic search quality is reduced.',
+      )
+      // Emit telemetry event for degraded embedding state
+      eventBus.emit({
+        type: 'capability:status_changed',
+        capabilityId: 'embedding',
+        providerId: embedding.name,
+        from: 'neural',
+        to: 'degraded',
+      } as any)
+    }
+
     semanticSearch = new SemanticSearchEngine(ssStore, embedding, db)
   } catch (e) {
     catchDebug(e, 'bootstrap: semantic search not available')
@@ -102,12 +162,12 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
       '../../../storage/impl/cross-conversation-synth-store-impl.js'
     )
     const synthStore = new CrossConversationSynthesizerStoreImpl(db)
-    // #1: Replace noopLlm with GatewayProviderLLMAdapter — routes synthesis through the AI Gateway.
-    // Falls back to a stub message when the gateway is disabled (preserves existing behavior).
+    // #1: Pick a real synthesis provider from the gateway registry.
+    // Falls back to simulator only if no real provider is registered.
     const { getGatewayProviderLLMAdapter } = await import(
       '../../../engines/gateway-provider-llm-adapter.js'
     )
-    const synthLlm = getGatewayProviderLLMAdapter({ providerId: 'simulator' })
+    const synthLlm = pickSynthesisProvider(getGatewayProviderLLMAdapter)
     if (semanticSearch)
       synthesizer = new CrossConversationSynthesizer(synthStore, semanticSearch, synthLlm)
   } catch (e) {
@@ -275,4 +335,30 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
   ctx.embeddingProvider = embeddingProvider // #5: for MemoryFabric
   ctx.providerMux = providerMux
   ctx.costOptimizer = costOptimizer
+}
+
+/**
+ * Pick the best available provider for cross-conversation synthesis.
+ * Tries real registered providers first (higher quality), then falls back
+ * to the simulator (in-process, no real LLM).
+ */
+function pickSynthesisProvider(
+  getAdapter: typeof import('../../../engines/gateway-provider-llm-adapter.js').getGatewayProviderLLMAdapter,
+) {
+  // Preferred providers in quality order — Claude > Gemini > ChatGPT > DeepSeek > Grok.
+  // These are the 6 UI-facing chat providers in the knowledge graph.
+  const preferred = ['claude', 'gemini', 'chatgpt', 'deepseek', 'grok']
+
+  // Try to find a registered provider in the gateway.
+  const gw = globalThis.__aiGateway
+  if (gw?.providers) {
+    for (const id of preferred) {
+      if (gw.providers.has(id)) {
+        return getAdapter({ providerId: id })
+      }
+    }
+  }
+
+  // No real provider available — fall back to simulator (works without a GPU).
+  return getAdapter({ providerId: 'simulator' })
 }

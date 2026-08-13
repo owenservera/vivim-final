@@ -5,6 +5,8 @@ import type {
   CommandIntent,
   PatternMatchResult,
 } from './types.js'
+import type { EmbeddingProvider } from '../semantic-search.js'
+import { cosineSimilarity } from '../onboarding/webapp-fingerprint.js'
 
 // ─── Category → Color Map ────────────────────────────────────────────
 const CATEGORY_COLORS: Record<CommandCategory, CategoryColor> = {
@@ -232,7 +234,7 @@ const HIGH_CONFIDENCE_THRESHOLD = 0.7
  * Match user input against CommandDescription patterns.
  * Returns top matches with confidence scores.
  */
-export function matchPatterns(
+export async function matchPatterns(
   input: string,
   descriptions: CommandDescriptionRow[],
   options: {
@@ -240,9 +242,10 @@ export function matchPatterns(
     category?: string
     prefix?: string
     minConfidence?: number
+    embeddingProvider?: EmbeddingProvider  // NEW: optional semantic rerank
   } = {},
-): PatternMatchResult[] {
-  const { limit = 5, category, prefix, minConfidence = DEFAULT_CONFIDENCE_THRESHOLD } = options
+): Promise<PatternMatchResult[]> {
+  const { limit = 5, category, prefix, minConfidence = DEFAULT_CONFIDENCE_THRESHOLD, embeddingProvider } = options
 
   // Early return for empty input
   if (!input || input.trim().length === 0) {
@@ -291,6 +294,11 @@ export function matchPatterns(
     }
   }
 
+  // Phase 2: If embedding provider available, re-rank with semantic similarity
+  if (embeddingProvider && results.length > 0) {
+    return semanticRerank(input, results, embeddingProvider, limit)
+  }
+
   return results.sort((a, b) => b.confidence - a.confidence).slice(0, limit)
 }
 
@@ -298,17 +306,17 @@ export function matchPatterns(
  * Detect intent from plain text input.
  * Returns the best matching CommandIntent or null.
  */
-export function detectIntent(
+export async function detectIntent(
   input: string,
   descriptions: CommandDescriptionRow[],
   options: {
     threshold?: number
     category?: string
   } = {},
-): CommandIntent | null {
+): Promise<CommandIntent | null> {
   const { threshold = DEFAULT_CONFIDENCE_THRESHOLD, category } = options
 
-  const matches = matchPatterns(input, descriptions, {
+  const matches = await matchPatterns(input, descriptions, {
     limit: 1,
     category,
     minConfidence: threshold,
@@ -345,4 +353,35 @@ export function getConfidenceLevel(confidence: number): 'low' | 'medium' | 'high
   if (confidence >= HIGH_CONFIDENCE_THRESHOLD) return 'high'
   if (confidence >= 0.55) return 'medium'
   return 'low'
+}
+
+/**
+ * Semantic rerank: re-score candidates by cosine similarity between input
+ * embedding and description embedding. Catches paraphrases that fuzzy
+ * matching misses (e.g. "show me the logs" → "list conversations").
+ */
+async function semanticRerank(
+  input: string,
+  candidates: PatternMatchResult[],
+  embeddingProvider: EmbeddingProvider,
+  limit: number,
+): Promise<PatternMatchResult[]> {
+  if (candidates.length === 0) return []
+
+  const inputEmbedding = await embeddingProvider.embed(input)
+  if (!inputEmbedding) return candidates.sort((a, b) => b.confidence - a.confidence).slice(0, limit)
+
+  const descriptionTexts = candidates.map(c => c.description)
+  const descriptionEmbeddings = await embeddingProvider.embedBatch(descriptionTexts)
+
+  return candidates
+    .map((c, i) => {
+      const descEmbedding = descriptionEmbeddings[i]
+      const semanticScore = descEmbedding ? cosineSimilarity(inputEmbedding, descEmbedding) : 0
+      // Blend: fuzzy (40%) + semantic (60%) — semantic captures paraphrase better
+      const blended = c.confidence * 0.4 + semanticScore * 0.6
+      return { ...c, confidence: blended }
+    })
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, limit)
 }

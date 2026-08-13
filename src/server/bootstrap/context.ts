@@ -17,6 +17,7 @@ import type { IdempotencyGuard } from '../../engines/idempotency-guard.js'
 import type { Kernel } from '../../engines/kernel/kernel-context.js'
 import type { KnowledgeIngestionEngine } from '../../engines/knowledge-ingestion.js'
 import type { LockManager } from '../../engines/lock-manager.js'
+import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 import type { NLCLEngine } from '../../engines/nlcl/nlcl-engine.js'
 import type { ProviderHealthKernel } from '../../engines/provider-health.js'
 import type { ProviderMuxEngine } from '../../engines/provider-mux.js'
@@ -67,6 +68,9 @@ export interface BootstrapContext {
   // Phase: mux/cost (optional)
   providerMux?: ProviderMuxEngine
   costOptimizer?: CostOptimizer
+
+  // Phase: outcome tracking (§7 — adaptive scoring foundation)
+  outcomeTracker?: OutcomeTracker
 
   // Phase: capabilities + autonomous
   autonomousEngine?: import('../../engines/autonomous-execution.js').AutonomousExecutionEngine
@@ -120,6 +124,7 @@ export interface BootstrapEnginesResult {
   exportEngine?: ExportEngine
   providerMux?: ProviderMuxEngine
   costOptimizer?: CostOptimizer
+  outcomeTracker?: OutcomeTracker
   autonomousEngine?: import('../../engines/autonomous-execution.js').AutonomousExecutionEngine
   policyEngine?: import('../../engines/execution-policy.js').ExecutionPolicyEngine
   registry: UnifiedCapabilityRegistry

@@ -13,22 +13,35 @@
 
 import type { AIRequest, ExecutionPolicy, RoutingCandidate, ToolDefinition } from '../core/types.js'
 import type { CandidateInput, IPolicyEnforcer, IPolicyEvaluator, PolicyDecision } from './policy.js'
+import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 
-const NEUTRAL_SCORE = 0.5
+/**
+ * Score candidates using historical outcome data from OutcomeTracker.
+ * Falls back to NEUTRAL_SCORE when no observations exist for a provider.
+ */
+function scoreFromOutcome(outcomeTracker: OutcomeTracker | undefined, providerId: string): number {
+  if (!outcomeTracker) return 0.5
+  return outcomeTracker.getScoreOrDefault(providerId).score
+}
 
 export class DefaultPolicyEvaluator implements IPolicyEvaluator {
+  constructor(private outcomeTracker?: OutcomeTracker) {}
+
   async scoreCandidates(
     _request: AIRequest,
     candidates: readonly CandidateInput[],
   ): Promise<readonly RoutingCandidate[]> {
-    return candidates.map(({ provider, model }) => ({
-      providerId: provider.id,
-      modelId: model.id,
-      score: NEUTRAL_SCORE,
-      reasons: [
-        { factor: 'capability', score: NEUTRAL_SCORE, explanation: 'Default neutral score' },
-      ],
-    }))
+    return candidates.map(({ provider, model }) => {
+      const outcomeScore = scoreFromOutcome(this.outcomeTracker, provider.id)
+      return {
+        providerId: provider.id,
+        modelId: model.id,
+        score: outcomeScore,
+        reasons: [
+          { factor: 'availability', score: outcomeScore, explanation: `Outcome EMA: ${outcomeScore.toFixed(2)}` },
+        ],
+      }
+    })
   }
 
   async isEligible(request: AIRequest, candidate: CandidateInput): Promise<PolicyDecision> {

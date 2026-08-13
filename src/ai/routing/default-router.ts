@@ -21,16 +21,22 @@ import type {
   RoutingDependencies,
   RoutingStrategyName,
 } from './router.js'
-import { ExplicitStrategy, LocalOnlyStrategy, PriorityStrategy } from './strategies.js'
+import { ExplicitStrategy, LearnedStrategy, LocalOnlyStrategy, LowestCostStrategy, PriorityStrategy } from './strategies.js'
+import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 
 export class DefaultRouter implements IRouter {
   private readonly strategies = new Map<RoutingStrategyName, IRoutingStrategy>()
 
-  constructor() {
+  constructor(outcomeTracker?: OutcomeTracker) {
     // Register default strategies
     this.registerStrategy(new ExplicitStrategy())
     this.registerStrategy(new PriorityStrategy())
     this.registerStrategy(new LocalOnlyStrategy())
+    this.registerStrategy(new LowestCostStrategy())
+    // Register LearnedStrategy only if OutcomeTracker is available
+    if (outcomeTracker) {
+      this.registerStrategy(new LearnedStrategy(outcomeTracker))
+    }
   }
 
   registerStrategy(strategy: IRoutingStrategy): void {
@@ -102,6 +108,14 @@ export class DefaultRouter implements IRouter {
     const locality = request.policy?.locality
     if (locality === 'local-only' || locality === 'local-preferred') {
       return 'local-only'
+    }
+    // If policy is lowest-cost, use lowest-cost strategy
+    if (request.policy?.priority === 'cost') {
+      return 'lowest-cost'
+    }
+    // If we have a learned strategy (OutcomeTracker available), use it for general requests
+    if (this.strategies.has('best-fit')) {
+      return 'best-fit'
     }
     // Default
     return 'priority'
