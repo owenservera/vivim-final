@@ -4,11 +4,8 @@
 // Falls back gracefully on any Cozo error (fail-open).
 
 import { catchDebug } from '../../lib/catch-logger.js'
-import { getLogger } from '../../lib/logger.js'
-import type { CozoLayer } from '../cozo/cozo-layer.js'
 import type { SemanticSearchStore } from '../contracts/semantic-search-store.js'
-
-const log = getLogger('cozo-semantic-search')
+import type { CozoLayer } from '../cozo/cozo-layer.js'
 
 export class CozoSemanticSearchStore implements SemanticSearchStore {
   constructor(private cozo: CozoLayer) {}
@@ -119,7 +116,7 @@ export class CozoSemanticSearchStore implements SemanticSearchStore {
     }
   }
 
-  async deleteEmbedding(entityType: string, entityId: string): Promise<void> {
+  async deleteEmbedding(_entityType: string, entityId: string): Promise<void> {
     try {
       await this.cozo.runMut(
         `?[id] <- [[ $id ]]

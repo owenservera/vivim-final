@@ -2,8 +2,8 @@
 // OutcomeTracker — EMA scoring unit tests.
 
 import { describe, expect, it } from 'bun:test'
-import { OutcomeTracker } from '../../../src/engines/outcome-tracker.js'
 import type { OutcomeEvent } from '../../../src/ai/core/types.js'
+import { OutcomeTracker } from '../../../src/engines/outcome-tracker.js'
 
 function makeEvent(
   subjectId: string,
@@ -29,8 +29,8 @@ describe('OutcomeTracker', () => {
 
     const score = tracker.getScore('claude')
     expect(score).not.toBeNull()
-    expect(score!.sampleCount).toBe(1)
-    expect(score!.score).toBeCloseTo(0.99, 2) // clamped from 1.0
+    expect(score?.sampleCount).toBe(1)
+    expect(score?.score).toBeCloseTo(0.99, 2) // clamped from 1.0
   })
 
   it('EMA converges to 1.0 on sustained reinforcement', () => {
@@ -39,9 +39,10 @@ describe('OutcomeTracker', () => {
       tracker.record(makeEvent('claude', 'reinforced'))
     }
 
-    const score = tracker.getScore('claude')!
-    expect(score.score).toBeGreaterThan(0.95)
-    expect(score.sampleCount).toBe(20)
+    const score = tracker.getScore('claude')
+    expect(score).not.toBeNull()
+    expect(score?.score).toBeGreaterThan(0.95)
+    expect(score?.sampleCount).toBe(20)
   })
 
   it('EMA drops on rejection', () => {
@@ -50,13 +51,13 @@ describe('OutcomeTracker', () => {
     for (let i = 0; i < 10; i++) {
       tracker.record(makeEvent('claude', 'reinforced'))
     }
-    const before = tracker.getScore('claude')!.score
+    const before = tracker.getScore('claude')?.score ?? 0
 
     // Apply 5 rejections
     for (let i = 0; i < 5; i++) {
       tracker.record(makeEvent('claude', 'rejected'))
     }
-    const after = tracker.getScore('claude')!.score
+    const after = tracker.getScore('claude')?.score ?? 0
 
     expect(after).toBeLessThan(before)
     expect(after).toBeGreaterThan(0.1) // Doesn't drop to zero immediately
@@ -65,8 +66,9 @@ describe('OutcomeTracker', () => {
   it('ignored outcome maps to 0.5 (neutral)', () => {
     const tracker = new OutcomeTracker({ alpha: 0.5 })
     tracker.record(makeEvent('gpt', 'ignored'))
-    const score = tracker.getScore('gpt')!
-    expect(score.score).toBeCloseTo(0.5, 2)
+    const score = tracker.getScore('gpt')
+    expect(score).not.toBeNull()
+    expect(score?.score).toBeCloseTo(0.5, 2)
   })
 
   it('recovers after outage (rejection streak then reinforcement)', () => {
@@ -79,13 +81,13 @@ describe('OutcomeTracker', () => {
     for (let i = 0; i < 10; i++) {
       tracker.record(makeEvent('gemini', 'rejected'))
     }
-    const lowPoint = tracker.getScore('gemini')!.score
+    const lowPoint = tracker.getScore('gemini')?.score ?? 0
 
     // Recovery
     for (let i = 0; i < 15; i++) {
       tracker.record(makeEvent('gemini', 'reinforced'))
     }
-    const recovered = tracker.getScore('gemini')!.score
+    const recovered = tracker.getScore('gemini')?.score ?? 0
 
     expect(recovered).toBeGreaterThan(lowPoint)
     expect(recovered).toBeGreaterThan(0.7) // Should recover significantly
@@ -127,7 +129,7 @@ describe('OutcomeTracker', () => {
     tracker.recordRaw('test:entity', 'entity', 'reinforced')
     const score = tracker.getScore('test:entity')
     expect(score).not.toBeNull()
-    expect(score!.score).toBeCloseTo(0.99, 2) // clamped from 1.0
+    expect(score?.score).toBeCloseTo(0.99, 2) // clamped from 1.0
   })
 
   it('score is clamped between 0.01 and 0.99', () => {
@@ -136,7 +138,7 @@ describe('OutcomeTracker', () => {
     for (let i = 0; i < 50; i++) {
       tracker.record(makeEvent('x', 'rejected'))
     }
-    const score = tracker.getScore('x')!.score
+    const score = tracker.getScore('x')?.score ?? 0
     expect(score).toBeGreaterThanOrEqual(0.01)
     expect(score).toBeLessThanOrEqual(0.99)
   })

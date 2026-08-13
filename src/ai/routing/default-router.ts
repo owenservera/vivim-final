@@ -6,6 +6,7 @@
  * Throws PROVIDER_UNAVAILABLE-coded VivimAIError if no candidate survives.
  */
 
+import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
 import { AI_ERRORS } from '../core/errors.js'
 import type {
   AIRequest,
@@ -21,8 +22,13 @@ import type {
   RoutingDependencies,
   RoutingStrategyName,
 } from './router.js'
-import { ExplicitStrategy, LearnedStrategy, LocalOnlyStrategy, LowestCostStrategy, PriorityStrategy } from './strategies.js'
-import type { OutcomeTracker } from '../../engines/outcome-tracker.js'
+import {
+  ExplicitStrategy,
+  LearnedStrategy,
+  LocalOnlyStrategy,
+  LowestCostStrategy,
+  PriorityStrategy,
+} from './strategies.js'
 
 export class DefaultRouter implements IRouter {
   private readonly strategies = new Map<RoutingStrategyName, IRoutingStrategy>()
@@ -57,7 +63,7 @@ export class DefaultRouter implements IRouter {
         ),
       )
     }
-    const winner = candidates[0]!
+    const winner = candidates[0] as RoutingCandidate
     return {
       providerId: winner.providerId,
       modelId: winner.modelId,

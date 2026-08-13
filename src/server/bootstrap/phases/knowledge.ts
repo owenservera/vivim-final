@@ -13,10 +13,10 @@ import type { BootstrapContext } from '../context.js'
 const _log = getLogger('bootstrap:knowledge')
 
 export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<void> {
-  const db = ctx.db!
-  const eventBus = ctx.eventBus!
-  const convStore = ctx.convStore!
-  const streamBlocks = ctx.streamBlocks!
+  const db = ctx.db as NonNullable<BootstrapContext['db']>
+  const eventBus = ctx.eventBus as NonNullable<BootstrapContext['eventBus']>
+  const convStore = ctx.convStore as NonNullable<BootstrapContext['convStore']>
+  const streamBlocks = ctx.streamBlocks as NonNullable<BootstrapContext['streamBlocks']>
 
   // ── OutcomeTracker (§7 — adaptive scoring foundation) ────────────────────
   try {

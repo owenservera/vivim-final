@@ -6,7 +6,7 @@
 import type { OutcomeEvent } from '../ai/core/types.js'
 import { getLogger } from '../lib/logger.js'
 
-const log = getLogger('outcome-tracker')
+const _log = getLogger('outcome-tracker')
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 

@@ -4,8 +4,8 @@
 
 import { newId } from '../ids.js'
 import type { KnowledgeExtractorStore } from '../storage/contracts/knowledge-extractor-store.js'
-import type { EmbeddingProvider } from './semantic-search.js'
 import { EmbeddingClassifier } from './embedding-classifier.js'
+import type { EmbeddingProvider } from './semantic-search.js'
 
 export type ExtractionType =
   | 'fact'
@@ -59,7 +59,7 @@ export class KnowledgeExtractor {
     private store: KnowledgeExtractorStore,
     private config: KnowledgeExtractorConfig,
     /** Optional embedding provider for §5: entity classification + dedup. */
-    private embeddingProvider?: EmbeddingProvider,
+    embeddingProvider?: EmbeddingProvider,
   ) {
     if (embeddingProvider) {
       this.classifier = new EmbeddingClassifier(embeddingProvider)
@@ -307,7 +307,10 @@ export class KnowledgeExtractor {
           const key = [names[i], names[j]].sort().join('|||')
           const existing = entityPairs.get(key)
           if (existing) existing.count++
-          else entityPairs.set(key, { count: 1, entities: [names[i]!, names[j]!] })
+          else           entityPairs.set(key, {
+            count: 1,
+            entities: [names[i] as string, names[j] as string],
+          })
         }
       }
     }
@@ -318,9 +321,9 @@ export class KnowledgeExtractor {
       if (count >= 3) {
         results.push({
           type: 'pattern',
-          subject: entities[0]!,
+          subject: entities[0],
           predicate: 'co_occurs',
-          object: entities[1]!,
+          object: entities[1],
           confidence: Math.min(0.9, count * 0.15),
           sourceConversationId: 'batch',
           sourceMessageId: 'mined',
