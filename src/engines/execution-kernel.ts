@@ -14,7 +14,7 @@
 //  - No secret values in journal events.
 
 import { newId } from '../ids.js'
-import type { ActionPlan, ActionNode } from './action-plan.js'
+import type { ActionNode, ActionPlan } from './action-plan.js'
 
 // ── Policy Decision ──────────────────────────────────────────────────────
 
@@ -87,10 +87,7 @@ export class ExecutionKernel {
   ): Promise<ExecutionResult<T>> {
     const executionId = newId()
 
-    const emit = (
-      phase: ExecutionEvent['phase'],
-      data?: Record<string, unknown>,
-    ) =>
+    const emit = (phase: ExecutionEvent['phase'], data?: Record<string, unknown>) =>
       this.deps.journal.append({
         executionId,
         actionId: plan.goal,

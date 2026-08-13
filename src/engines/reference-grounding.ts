@@ -136,9 +136,7 @@ export class ReferenceGroundingEngine {
     existingRefs: GroundedReference[],
   ): GroundedReference | null {
     // Check existing refs first
-    const existing = existingRefs.find(
-      (r) => r.raw.toLowerCase() === ref.toLowerCase(),
-    )
+    const existing = existingRefs.find((r) => r.raw.toLowerCase() === ref.toLowerCase())
     if (existing) return existing
 
     // Try grounding the reference as a fresh input

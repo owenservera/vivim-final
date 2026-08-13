@@ -1,7 +1,7 @@
 // tests/unit/engines/knowledge-index-pipeline.test.ts
 // Phase 0 — Tests for the knowledge indexing pipeline.
 
-import { describe, expect, test, mock } from 'bun:test'
+import { describe, expect, mock, test } from 'bun:test'
 import { KnowledgeIndexPipeline } from '../../../src/engines/knowledge-index-pipeline.js'
 
 function createMockDeps() {

@@ -1,4 +1,3 @@
-import type { TourAnalyticsEvent } from '@/shared/onboarding'
 /**
  * POST /api/onboarding/analytics
  *
@@ -7,6 +6,7 @@ import type { TourAnalyticsEvent } from '@/shared/onboarding'
  * and logs at info level.
  */
 import { type NextRequest, NextResponse } from 'next/server'
+import type { TourAnalyticsEvent } from '@/shared/onboarding'
 
 export const dynamic = 'force-static'
 
@@ -18,13 +18,6 @@ function pushEvent(event: TourAnalyticsEvent): void {
   if (buffer.length > BUFFER_MAX) {
     buffer.shift()
   }
-  // [audit] removed: console.log(
-//     JSON.stringify({
-//       level: 'info',
-//       msg: 'onboarding-analytics',
-//       event,
-//     }),
-//   )
 }
 
 export async function POST(req: NextRequest) {

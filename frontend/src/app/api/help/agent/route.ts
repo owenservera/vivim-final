@@ -216,7 +216,6 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    // [audit] removed: console.error('[Help Agent] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

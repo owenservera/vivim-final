@@ -58,7 +58,6 @@ export function usePerformanceMonitor(options?: {
           rating,
           timestamp: Date.now(),
         };
-        // [audit] removed: console.log(`[perf] LCP: ${lcp.toFixed(0)}ms (${rating})`);
         onMetric?.(metric);
       }),
     );
@@ -75,7 +74,6 @@ export function usePerformanceMonitor(options?: {
           rating,
           timestamp: Date.now(),
         };
-        // [audit] removed: console.log(`[perf] FID: ${fid.toFixed(0)}ms (${rating})`);
         onMetric?.(metric);
       }),
     );
@@ -102,7 +100,6 @@ export function usePerformanceMonitor(options?: {
         timestamp: Date.now(),
       };
       if (clsValue > 0) {
-        // [audit] removed: console.log(`[perf] CLS: ${clsValue.toFixed(3)} (${rating})`);
         onMetric?.(metric);
       }
     };
@@ -121,7 +118,6 @@ export function usePerformanceMonitor(options?: {
             rating,
             timestamp: Date.now(),
           };
-          // [audit] removed: console.log(`[perf] FCP: ${fcp.toFixed(0)}ms (${rating})`);
           onMetric?.(metric);
         }
       }),

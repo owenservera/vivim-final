@@ -6,10 +6,14 @@
 
 import { describe, expect, test } from 'bun:test'
 import { ExecutionKernel, MemoryJournal } from '../../../../src/engines/execution-kernel.js'
-import { P0PolicyEngine } from '../../../../src/engines/policy-engine.js'
 import { IntentRouter } from '../../../../src/engines/nlcl/intent-router.js'
+import type {
+  ActionClassification,
+  NLCContext,
+  ParsedIntent,
+} from '../../../../src/engines/nlcl/types.js'
+import { P0PolicyEngine } from '../../../../src/engines/policy-engine.js'
 import type { UnifiedCapabilityRegistry } from '../../../../src/engines/unified-registry.js'
-import type { ActionClassification, NLCContext, ParsedIntent } from '../../../../src/engines/nlcl/types.js'
 
 interface FakeRegistry {
   calls: Array<{ id: string; input: Record<string, unknown>; ctx: unknown }>

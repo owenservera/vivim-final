@@ -3,10 +3,7 @@
 
 import { describe, expect, test } from 'bun:test'
 import type { ActionPlan } from '../../../src/engines/action-plan.js'
-import {
-  ExecutionKernel,
-  MemoryJournal,
-} from '../../../src/engines/execution-kernel.js'
+import { ExecutionKernel, MemoryJournal } from '../../../src/engines/execution-kernel.js'
 import { P0PolicyEngine } from '../../../src/engines/policy-engine.js'
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -68,10 +65,7 @@ describe('ExecutionKernel', () => {
       journal,
     })
 
-    const result = await kernel.execute(
-      makePlan(),
-      async (_node, input) => ({ ok: true, input }),
-    )
+    const result = await kernel.execute(makePlan(), async (_node, input) => ({ ok: true, input }))
 
     expect(result.ok).toBe(true)
     expect(result.output).toEqual({ ok: true, input: { x: 1 } })
@@ -194,21 +188,13 @@ describe('ExecutionKernel', () => {
       journal,
     })
 
-    const result = await kernel.execute(
-      makePlan(),
-      async () => {
-        throw new Error('Boom!')
-      },
-    )
+    const result = await kernel.execute(makePlan(), async () => {
+      throw new Error('Boom!')
+    })
 
     expect(result.ok).toBe(false)
     expect(result.error).toBe('Boom!')
-    expect(journal.events.map((e) => e.phase)).toEqual([
-      'planned',
-      'policy',
-      'started',
-      'failed',
-    ])
+    expect(journal.events.map((e) => e.phase)).toEqual(['planned', 'policy', 'started', 'failed'])
   })
 
   test('runs verification when node has non-none verify spec', async () => {
@@ -265,12 +251,7 @@ describe('ExecutionKernel', () => {
 
     expect(result.ok).toBe(false)
     expect(result.error).toBe('File hash mismatch')
-    expect(journal.events.map((e) => e.phase)).toEqual([
-      'planned',
-      'policy',
-      'started',
-      'failed',
-    ])
+    expect(journal.events.map((e) => e.phase)).toEqual(['planned', 'policy', 'started', 'failed'])
   })
 
   test('does not run verification when verify dep is absent', async () => {
@@ -370,17 +351,13 @@ describe('P0PolicyEngine', () => {
 
   test('blocks security_sensitive by default', () => {
     const engine = new P0PolicyEngine()
-    const decision = engine.evaluate(
-      makeNodePlan({ risk: 'security_sensitive' }),
-    )
+    const decision = engine.evaluate(makeNodePlan({ risk: 'security_sensitive' }))
     expect(decision.allowed).toBe(false)
   })
 
   test('requires confirmation for external_communication', () => {
     const engine = new P0PolicyEngine({ allowCommunication: true })
-    const decision = engine.evaluate(
-      makeNodePlan({ risk: 'external_communication' }),
-    )
+    const decision = engine.evaluate(makeNodePlan({ risk: 'external_communication' }))
     expect(decision.allowed).toBe(true)
     expect(decision.requiresConfirmation).toBe(true)
   })
@@ -394,9 +371,7 @@ describe('P0PolicyEngine', () => {
 
   test('maxRiskTier blocks above threshold', () => {
     const engine = new P0PolicyEngine({ maxRiskTier: 1 })
-    const decision = engine.evaluate(
-      makeNodePlan({ risk: 'external_communication' }),
-    )
+    const decision = engine.evaluate(makeNodePlan({ risk: 'external_communication' }))
     expect(decision.allowed).toBe(false)
     expect(decision.reason).toContain('exceeds')
   })

@@ -7,11 +7,11 @@
 //         contentStore, notificationStore, contactStore, syncStore, mediaStore
 //         on ctx.
 
+import { config } from '../../../config.js'
 import { bootstrapKernel } from '../../../engines/kernel/kernel-bootstrap.js'
 import { NLCLEngine } from '../../../engines/nlcl/nlcl-engine.js'
 import { getLogger } from '../../../lib/logger.js'
 import { onShutdown } from '../../index.js'
-import { config } from '../../../config.js'
 import type { BootstrapContext } from '../context.js'
 
 const log = getLogger('bootstrap:lifecycle')

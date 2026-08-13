@@ -3,8 +3,8 @@
 
 import { describe, expect, test } from 'bun:test'
 import { CapabilityParityAuditor } from '../../../src/engines/capability-parity.js'
-import { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { CommandPattern } from '../../../src/engines/nlcl/types.js'
+import { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 
 function makePattern(overrides: Partial<CommandPattern>): CommandPattern {
   return {

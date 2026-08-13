@@ -66,7 +66,6 @@ export function useHelpAnalytics(userId?: string): UseHelpAnalyticsResult {
 
       // Log to console in development
       if (process.env.NODE_ENV === 'development') {
-        // [audit] removed: console.log('[Help Analytics]', event)
       }
 
       // Send to analytics endpoint (fire-and-forget)

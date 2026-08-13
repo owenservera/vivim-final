@@ -69,7 +69,6 @@ export function logError(error: unknown, context?: string, componentStack?: stri
 
   // Console output for dev
   if (process.env.NODE_ENV !== 'production') {
-    // [audit] removed: console.error(`[ErrorLogger:${classified.type}] ${context ?? 'uncaught'}`, classified.message)
   }
 
   startFlushTimer()

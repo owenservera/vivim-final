@@ -12,6 +12,7 @@ import type { ActionPlan, GroundedReference } from '../action-plan.js'
 import { ActionPlanBridge } from '../action-plan-bridge.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import type { ConversationManager } from '../conversation-manager.js'
+import type { ExecutionKernel } from '../execution-kernel.js'
 import { OpenCodeExecutor } from '../opencode/opencode-executor.js'
 import { PlanValidationGate } from '../plan-validation-gate.js'
 import type { EmbeddingProvider } from '../semantic-search.js'
@@ -39,7 +40,6 @@ import {
   SystemExecutor,
   WorkflowExecutor,
 } from './executors/index.js'
-import type { ExecutionKernel } from '../execution-kernel.js'
 import { HelpResolver } from './help-resolver.js'
 import {
   createResolver,

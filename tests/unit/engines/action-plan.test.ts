@@ -4,14 +4,14 @@
 import { describe, expect, test } from 'bun:test'
 import { z } from 'zod'
 import {
-  validateActionPlan,
-  topologicalOrder,
-  requiresConfirmation,
-  maxRiskTier,
   ActionPlanSchema,
-  CapabilityRiskSchema,
-  RISK_TIER,
   type CapabilityDefinition,
+  CapabilityRiskSchema,
+  maxRiskTier,
+  RISK_TIER,
+  requiresConfirmation,
+  topologicalOrder,
+  validateActionPlan,
 } from '../../../src/engines/action-plan.js'
 import { ActionPlanCompiler } from '../../../src/engines/action-plan-compiler.js'
 
@@ -101,9 +101,7 @@ describe('ActionPlanSchema', () => {
       dependsOn: [],
       risk: 'reversible_write',
     }))
-    expect(() =>
-      ActionPlanSchema.parse({ version: 1, goal: 'too many', nodes }),
-    ).toThrow()
+    expect(() => ActionPlanSchema.parse({ version: 1, goal: 'too many', nodes })).toThrow()
   })
 })
 
@@ -118,7 +116,13 @@ describe('CapabilityRisk', () => {
   })
 
   test('all risk values parse', () => {
-    for (const risk of ['read', 'reversible_write', 'external_communication', 'destructive', 'security_sensitive']) {
+    for (const risk of [
+      'read',
+      'reversible_write',
+      'external_communication',
+      'destructive',
+      'security_sensitive',
+    ]) {
       expect(CapabilityRiskSchema.parse(risk)).toBe(risk)
     }
   })
@@ -343,16 +347,48 @@ describe('validateActionPlan', () => {
 describe('topologicalOrder', () => {
   test('returns nodes in dependency order', () => {
     const order = topologicalOrder([
-      { id: 'n2', capability: 'x', input: {}, dependsOn: ['n1'], risk: 'read', requiresConfirmation: false, verify: { type: 'none' as const } },
-      { id: 'n1', capability: 'x', input: {}, dependsOn: [], risk: 'read', requiresConfirmation: false, verify: { type: 'none' as const } },
+      {
+        id: 'n2',
+        capability: 'x',
+        input: {},
+        dependsOn: ['n1'],
+        risk: 'read',
+        requiresConfirmation: false,
+        verify: { type: 'none' as const },
+      },
+      {
+        id: 'n1',
+        capability: 'x',
+        input: {},
+        dependsOn: [],
+        risk: 'read',
+        requiresConfirmation: false,
+        verify: { type: 'none' as const },
+      },
     ])
     expect(order).toEqual(['n1', 'n2'])
   })
 
   test('handles independent nodes', () => {
     const order = topologicalOrder([
-      { id: 'n1', capability: 'x', input: {}, dependsOn: [], risk: 'read', requiresConfirmation: false, verify: { type: 'none' as const } },
-      { id: 'n2', capability: 'x', input: {}, dependsOn: [], risk: 'read', requiresConfirmation: false, verify: { type: 'none' as const } },
+      {
+        id: 'n1',
+        capability: 'x',
+        input: {},
+        dependsOn: [],
+        risk: 'read',
+        requiresConfirmation: false,
+        verify: { type: 'none' as const },
+      },
+      {
+        id: 'n2',
+        capability: 'x',
+        input: {},
+        dependsOn: [],
+        risk: 'read',
+        requiresConfirmation: false,
+        verify: { type: 'none' as const },
+      },
     ])
     expect(order).toContain('n1')
     expect(order).toContain('n2')
@@ -367,7 +403,13 @@ describe('requiresConfirmation', () => {
       version: 1,
       goal: 'x',
       nodes: [
-        { id: 'n1', capability: 'browser.navigate', input: { url: 'https://x.com' }, dependsOn: [], risk: 'read' },
+        {
+          id: 'n1',
+          capability: 'browser.navigate',
+          input: { url: 'https://x.com' },
+          dependsOn: [],
+          risk: 'read',
+        },
       ],
     })
     expect(requiresConfirmation(plan)).toBe(false)
@@ -378,8 +420,21 @@ describe('requiresConfirmation', () => {
       version: 1,
       goal: 'x',
       nodes: [
-        { id: 'n1', capability: 'browser.navigate', input: { url: 'https://x.com' }, dependsOn: [], risk: 'read' },
-        { id: 'n2', capability: 'file.delete', input: { path: '/tmp' }, dependsOn: [], risk: 'destructive', requiresConfirmation: true },
+        {
+          id: 'n1',
+          capability: 'browser.navigate',
+          input: { url: 'https://x.com' },
+          dependsOn: [],
+          risk: 'read',
+        },
+        {
+          id: 'n2',
+          capability: 'file.delete',
+          input: { path: '/tmp' },
+          dependsOn: [],
+          risk: 'destructive',
+          requiresConfirmation: true,
+        },
       ],
     })
     expect(requiresConfirmation(plan)).toBe(true)
@@ -408,9 +463,7 @@ describe('ActionPlanCompiler', () => {
   test('compiles candidates into a valid plan', () => {
     const plan = compiler.compile({
       goal: 'click submit',
-      candidates: [
-        { capability: 'browser.click', input: { ref: 'E1' } },
-      ],
+      candidates: [{ capability: 'browser.click', input: { ref: 'E1' } }],
     })
     expect(plan.version).toBe(1)
     expect(plan.nodes).toHaveLength(1)

@@ -12,10 +12,10 @@
  * contract: no remote unauthenticated access.
  */
 
+import { type NextRequest, NextResponse } from 'next/server'
 import { createCanvasCommandExecutor } from '@/engines/canvas-command-executor'
 import type { AgentCanvasCommand, AgentCanvasPolicy } from '@/shared/agent-canvas'
 import { DEFAULT_POLICY } from '@/shared/agent-canvas'
-import { type NextRequest, NextResponse } from 'next/server'
 
 // In-memory policy store (replace with DB in production)
 const policyStore = new Map<string, AgentCanvasPolicy>()
@@ -110,13 +110,9 @@ export async function POST(req: NextRequest) {
     // Audit log: stdout in alpha (DB-backed audit log deferred per SCOPE.md
     // auth-token out-of-scope). Each command is logged with timestamp, agent,
     // workspace, and command type for forensic review.
-    // [audit] removed: console.log(
-//       `[audit] agent-canvas-command ${new Date().toISOString()} agent=${agentId} workspace=${workspaceId} cmd=${command.type ?? 'unknown'}`,
-//     )
 
     return NextResponse.json(response)
   } catch (error) {
-    // [audit] removed: console.error('[Agent Canvas Command] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -137,7 +133,6 @@ export async function GET(req: NextRequest) {
     const policy = await getPolicy(agentId, workspaceId)
     return NextResponse.json(policy)
   } catch (error) {
-    // [audit] removed: console.error('[Agent Canvas Policy Get] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -164,13 +159,9 @@ export async function PUT(req: NextRequest) {
     const updated = { ...existing, ...policy, agentId, workspaceId } as AgentCanvasPolicy
     policyStore.set(key, updated)
 
-    // [audit] removed: console.log(
-//       `[audit] agent-canvas-policy-update ${new Date().toISOString()} agent=${agentId} workspace=${workspaceId}`,
-//     )
 
     return NextResponse.json(updated)
   } catch (error) {
-    // [audit] removed: console.error('[Agent Canvas Policy Put] Error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

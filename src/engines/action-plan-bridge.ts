@@ -32,10 +32,19 @@ function registerDefaultCaps() {
     ['cap:browser:type', { name: 'Type', risk: 'read', requiresConfirmation: false }],
     ['cap:browser:scroll', { name: 'Scroll', risk: 'read', requiresConfirmation: false }],
     ['cap:browser:screenshot', { name: 'Screenshot', risk: 'read', requiresConfirmation: false }],
-    ['cap:browser:close_tab', { name: 'Close Tab', risk: 'reversible_write', requiresConfirmation: true }],
+    [
+      'cap:browser:close_tab',
+      { name: 'Close Tab', risk: 'reversible_write', requiresConfirmation: true },
+    ],
     ['cap:browser:summarize', { name: 'Summarize', risk: 'read', requiresConfirmation: false }],
-    ['cap:conversation:send_message', { name: 'Send Message', risk: 'external_communication', requiresConfirmation: false }],
-    ['cap:conversation:create', { name: 'Create Conversation', risk: 'reversible_write', requiresConfirmation: false }],
+    [
+      'cap:conversation:send_message',
+      { name: 'Send Message', risk: 'external_communication', requiresConfirmation: false },
+    ],
+    [
+      'cap:conversation:create',
+      { name: 'Create Conversation', risk: 'reversible_write', requiresConfirmation: false },
+    ],
     ['cap:system:help', { name: 'Help', risk: 'read', requiresConfirmation: false }],
   ]
   for (const [id, def] of caps) {
@@ -90,14 +99,8 @@ export class ActionPlanBridge {
    * Produce a multi-step ActionPlan from multiple resolved intents.
    * Used for composite/multi-step commands.
    */
-  intentsToPlan(
-    intents: ParsedIntent[],
-    ctx: NLCContext,
-  ): PlanResult {
-    const groundedRefs = this.grounder.ground(
-      intents.map((i) => i.rawInput).join(' '),
-      ctx,
-    )
+  intentsToPlan(intents: ParsedIntent[], ctx: NLCContext): PlanResult {
+    const groundedRefs = this.grounder.ground(intents.map((i) => i.rawInput).join(' '), ctx)
 
     // Defensive: plan production is supplementary for composite commands too.
     try {

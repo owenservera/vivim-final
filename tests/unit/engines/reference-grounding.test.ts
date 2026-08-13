@@ -2,8 +2,8 @@
 // Phase 2 — ReferenceGroundingEngine unit tests.
 
 import { describe, expect, it } from 'bun:test'
-import { ReferenceGroundingEngine } from '../../../src/engines/reference-grounding.js'
 import type { NLCContext } from '../../../src/engines/nlcl/types.js'
+import { ReferenceGroundingEngine } from '../../../src/engines/reference-grounding.js'
 
 const CTX: NLCContext = {
   conversationId: 'conv-ground-test',
@@ -28,15 +28,13 @@ describe('ReferenceGroundingEngine', () => {
 
   it('should resolve "the report" pattern', () => {
     const refs = engine.ground('summarize the report', CTX)
-    const reportRef = refs.find((r) =>
-      r.raw.toLowerCase().includes('report'),
-    )
+    const reportRef = refs.find((r) => r.raw.toLowerCase().includes('report'))
     expect(reportRef).toBeDefined()
     expect(reportRef!.resolvedType).toBe('entity')
   })
 
   it('should resolve temporal references', () => {
-    const refs = engine.ground('show me yesterday\'s messages', CTX_EMPTY)
+    const refs = engine.ground("show me yesterday's messages", CTX_EMPTY)
     const yesterdayRef = refs.find((r) => r.raw === 'yesterday')
     expect(yesterdayRef).toBeDefined()
     expect(yesterdayRef!.resolvedType).toBe('entity')
@@ -48,9 +46,7 @@ describe('ReferenceGroundingEngine', () => {
   it('should resolve browser context references', () => {
     const ctxWithSlave: NLCContext = { ...CTX_EMPTY, slaveId: 'chrome-1' }
     const refs = engine.ground('take a screenshot of the current page', ctxWithSlave)
-    const pageRef = refs.find((r) =>
-      r.raw.toLowerCase().includes('page'),
-    )
+    const pageRef = refs.find((r) => r.raw.toLowerCase().includes('page'))
     expect(pageRef).toBeDefined()
     expect(pageRef!.resolvedType).toBe('browser_element')
     expect(pageRef!.resolvedValue).toBe('browser:chrome-1')
@@ -70,11 +66,7 @@ describe('ReferenceGroundingEngine', () => {
   })
 
   it('should return null for unresolvable reference', () => {
-    const resolved = engine.resolveReference(
-      'quantum entanglement device',
-      CTX_EMPTY,
-      [],
-    )
+    const resolved = engine.resolveReference('quantum entanglement device', CTX_EMPTY, [])
     expect(resolved).toBeNull()
   })
 })

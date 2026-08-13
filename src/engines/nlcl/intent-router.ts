@@ -276,7 +276,8 @@ export class IntentRouter {
     traceId: string,
   ): Promise<CommandResult> {
     try {
-      const cap = this.registry!.get(intent.capabilityId!) ?? this.registry!.getBySlug(intent.capabilityId!)
+      const cap =
+        this.registry!.get(intent.capabilityId!) ?? this.registry!.getBySlug(intent.capabilityId!)
       if (!cap) {
         return {
           ok: false,

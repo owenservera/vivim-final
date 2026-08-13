@@ -30,7 +30,6 @@ export function CapabilityBar({ surface = "ui", onExecute }: CapabilityBarProps)
       const result = await execute(capabilityId)
       onExecute?.(capabilityId, result)
     } catch (err) {
-      // [audit] removed: console.error("Capability execution failed:", err)
     } finally {
       setExecuting(null)
     }

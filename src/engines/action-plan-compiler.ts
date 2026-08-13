@@ -3,16 +3,17 @@
 // Bridges the existing NLCL resolver output to the ActionPlan contract.
 // Phase 2 will add the full compiler; this is the Phase 0 contract + adapter.
 
-import type { ParsedIntent } from './nlcl/types.js'
 import {
-  ActionPlanSchema,
-  type ActionPlan,
   type ActionNode,
+  type ActionPlan,
+  ActionPlanSchema,
+  ActionPlanValidationError,
   type CapabilityDefinition,
   type CapabilityRisk,
   type GroundedReference,
   type VerifySpec,
 } from './action-plan.js'
+import type { ParsedIntent } from './nlcl/types.js'
 
 // ── Compiler Input ───────────────────────────────────────────────────────
 
@@ -43,12 +44,19 @@ export class ActionPlanCompiler {
    */
   compile(input: PlanCompilerInput): ActionPlan {
     const nodes: ActionNode[] = input.candidates.map((candidate, i) => {
-      // Tolerant compilation: if the capability is not in the catalog, assume
-      // we were "not smart enough" to classify it and emit a best-effort node
-      // rather than throwing. The resolved intent (the answer) must still flow
-      // through; the plan is supplementary, never a hard gate.
+      // The ActionPlan contract requires every capability slug to exist in the
+      // UnifiedCapabilityRegistry (here represented by the catalog). If it does
+      // not, the plan is invalid and compilation must fail loudly — the bridge
+      // catches this and degrades to "no plan" without blocking the actual
+      // command execution, so strictness here never becomes a hard runtime gate.
       const cap = this.capabilities.get(candidate.capability)
-      const fallbackRisk = candidate.risk ?? cap?.risk ?? 'read'
+      if (!cap) {
+        throw new ActionPlanValidationError(
+          `Unknown capability: ${candidate.capability}`,
+          { nodeId: `n${i + 1}`, field: 'capability' },
+        )
+      }
+      const fallbackRisk = candidate.risk ?? cap.risk
 
       return {
         id: `n${i + 1}`,
@@ -57,8 +65,7 @@ export class ActionPlanCompiler {
         dependsOn: candidate.dependsOn ?? [],
         outputKey: candidate.outputKey,
         risk: fallbackRisk,
-        requiresConfirmation:
-          candidate.requiresConfirmation ?? cap?.requiresConfirmation ?? false,
+        requiresConfirmation: candidate.requiresConfirmation ?? cap.requiresConfirmation ?? false,
         verify: candidate.verify ?? { type: 'output_present' as const },
       }
     })
@@ -106,7 +113,10 @@ export class ActionPlanCompiler {
    * Guards: only catalogued slugs, strict schema, max nodes, no cycles.
    */
   llmToCandidates(
-    llmPlan: { goal: string; nodes: Array<{ capability: string; input: Record<string, unknown>; dependsOn?: string[] }> },
+    llmPlan: {
+      goal: string
+      nodes: Array<{ capability: string; input: Record<string, unknown>; dependsOn?: string[] }>
+    },
     maxNodes = 16,
   ): PlanCompilerInput {
     if (llmPlan.nodes.length > maxNodes) {

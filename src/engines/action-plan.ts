@@ -130,6 +130,8 @@ export type ActionPlan = z.infer<typeof ActionPlanSchema>
 
 export interface CapabilityDefinition {
   slug: string
+  /** Optional display name — used by the bridge for human-readable plan goals. */
+  name?: string
   description: string
   risk: CapabilityRisk
   inputSchema: z.ZodType

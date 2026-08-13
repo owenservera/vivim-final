@@ -58,7 +58,6 @@ if (isTauriEnvironment() && typeof window !== 'undefined') {
     tauri?.event?.listen('backend-ready', (e) => {
       const port = Number(e.payload)
       if (Number.isFinite(port) && port > 0 && port !== activePort) {
-        // [audit] removed: console.info(`[vivim] backend port updated: ${activePort} → ${port}`)
         activePort = port
       }
     })

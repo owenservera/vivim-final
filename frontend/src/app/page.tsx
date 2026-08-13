@@ -367,7 +367,6 @@ function CanvasApp() {
             try {
               await io.post('/api/interpret', { text: capability });
             } catch {
-              // [audit] removed: console.error('[Help] Execute failed:', capability);
             }
           }
         }}

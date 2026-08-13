@@ -18,8 +18,6 @@ export async function tauriBoot(): Promise<void> {
     // Give React a tick to hydrate before signaling
     await new Promise((r) => requestAnimationFrame(r))
     await tauriInvoke('backend_ready')
-    // [audit] removed: console.log('[tauri-boot] backend-ready signaled, window should be visible')
   } catch (err) {
-    // [audit] removed: console.warn('[tauri-boot] failed to signal backend-ready:', err)
   }
 }

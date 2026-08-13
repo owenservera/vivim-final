@@ -10,7 +10,6 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // [audit] removed: console.error('[RouteErrorBoundary]', error);
   }, [error]);
 
   return (

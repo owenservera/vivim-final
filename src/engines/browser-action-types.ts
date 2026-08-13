@@ -83,14 +83,18 @@ export function compactSnapshot(snapshot: BrowserSnapshot): string {
   return [
     `URL: ${snapshot.url}`,
     `TITLE: ${snapshot.title}`,
-    ...snapshot.elements.slice(0, 120).map((e) =>
-      [
-        e.ref,
-        e.role ? `role=${e.role}` : '',
-        e.name ? `name=${JSON.stringify(e.name)}` : '',
-        e.text ? `text=${JSON.stringify(e.text.slice(0, 120))}` : '',
-      ].filter(Boolean).join(' '),
-    ),
+    ...snapshot.elements
+      .slice(0, 120)
+      .map((e) =>
+        [
+          e.ref,
+          e.role ? `role=${e.role}` : '',
+          e.name ? `name=${JSON.stringify(e.name)}` : '',
+          e.text ? `text=${JSON.stringify(e.text.slice(0, 120))}` : '',
+        ]
+          .filter(Boolean)
+          .join(' '),
+      ),
   ].join('\n')
 }
 

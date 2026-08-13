@@ -134,7 +134,6 @@ export function DevConsole({ isOpen, onClose }: DevConsoleProps) {
     try {
       await dispatchBehavior('nl-inject', text, null, io);
     } catch (e) {
-      // [audit] removed: console.error('[DevConsole] NL inject failed:', e);
     }
   };
 

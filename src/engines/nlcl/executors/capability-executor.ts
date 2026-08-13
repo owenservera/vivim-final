@@ -9,7 +9,13 @@ import type { ActionPlan, CapabilityRisk } from '../../action-plan.js'
 import type { ExecutionKernel } from '../../execution-kernel.js'
 import type { CapabilityContext, UnifiedCapabilityRegistry } from '../../unified-registry.js'
 import { createNoOpResponseInterpreter, type ResponseInterpreter } from '../response-interpreter.js'
-import type { ActionClassification, CommandExecutor, CommandResult, NLCContext, ParsedIntent } from '../types.js'
+import type {
+  ActionClassification,
+  CommandExecutor,
+  CommandResult,
+  NLCContext,
+  ParsedIntent,
+} from '../types.js'
 
 /** Map NLCL classification to ActionPlan risk tier. */
 function classificationToRisk(classification?: ActionClassification): CapabilityRisk {

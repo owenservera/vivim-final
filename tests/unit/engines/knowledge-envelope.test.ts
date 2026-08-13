@@ -3,8 +3,8 @@
 
 import { describe, expect, test } from 'bun:test'
 import {
-  normalizeKnowledge,
   KnowledgeEnvelopeSchema,
+  normalizeKnowledge,
 } from '../../../src/engines/knowledge-envelope.js'
 
 describe('KnowledgeEnvelopeSchema', () => {

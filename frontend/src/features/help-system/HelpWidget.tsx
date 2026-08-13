@@ -100,7 +100,6 @@ export function HelpWidget({ userId, onAction }: HelpWidgetProps) {
   const handleResultClick = useCallback(
     (result: { id: string; type: string; slug?: string; title: string }) => {
       // Navigate to capability or help location
-      // [audit] removed: console.log('[Help] Navigate to:', result.type, result.slug || result.id);
       if (result.slug) {
         onAction?.(`execute:${result.slug}`);
       } else {
@@ -114,7 +113,6 @@ export function HelpWidget({ userId, onAction }: HelpWidgetProps) {
     (query: string) => {
       setActiveTab('chat');
       // Pass query to AIChat (placeholder)
-      // [audit] removed: console.log('[Help] Ask AI:', query);
     },
     []
   );
@@ -179,7 +177,6 @@ export function HelpWidget({ userId, onAction }: HelpWidgetProps) {
               io={io}
               onAction={onAction}
               onExecute={(capability, params) => {
-                // [audit] removed: console.log('[Help] Execute:', capability, params);
                 onAction?.(`execute:${capability}`);
               }}
             />
@@ -200,7 +197,6 @@ export function HelpWidget({ userId, onAction }: HelpWidgetProps) {
                     await dispatchBehavior('execute', action.capability, null, io);
                     onAction?.(`execute:${action.capability}`);
                   } catch {
-                    // [audit] removed: console.error('[Help] Execute failed:', action.capability);
                   }
                 }
               }}

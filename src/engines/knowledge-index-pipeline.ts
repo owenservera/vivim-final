@@ -55,9 +55,7 @@ export class KnowledgeIndexPipeline {
    * Ingest a single knowledge envelope through the full pipeline.
    * Returns whether the content was skipped (already indexed) or processed.
    */
-  async ingest(
-    envelope: KnowledgeEnvelope,
-  ): Promise<{ skipped: boolean; sourceId: string }> {
+  async ingest(envelope: KnowledgeEnvelope): Promise<{ skipped: boolean; sourceId: string }> {
     // Step 1: Normalize (trim, compute hash)
     const { normalizeKnowledge } = await import('./knowledge-envelope.js')
     const normalized = normalizeKnowledge(envelope)

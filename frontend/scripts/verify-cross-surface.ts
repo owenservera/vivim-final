@@ -706,12 +706,7 @@ try {
 
 // Report
 const allOk = checks.every((c) => c.ok);
-// [audit] removed: console.log('\n═ verify-cross-surface ═════════════════════════════════════════');
 for (const c of checks) {
-  // [audit] removed: console.log(`  ${c.ok ? '✓' : '✗'}  ${c.name.padEnd(36)} ${c.detail ?? ''}`);
 }
-// [audit] removed: console.log('═ ═════════════════════════════════════════════════════════════ ');
-// [audit] removed: console.log(`  ${checks.filter((c) => c.ok).length}/${checks.length} checks passed — ${allOk ? 'CROSS-SURFACE OK' : 'FAILED'}`);
-// [audit] removed: console.log('');
 
 if (!allOk) process.exit(1);

@@ -16,8 +16,8 @@
  */
 
 import { useEffect } from 'react';
-import { registerSlot, type AnyComponent } from '@/sdk/canvas/register-slot';
 import { useIO } from '@/components/canvas/UnifiedIOProvider';
+import { type AnyComponent, registerSlot } from '@/sdk/canvas/register-slot';
 
 // ── Catalog of swappable components ──────────────────────────────────────────
 // Components that can be referenced by name in uiSlots overrides.
@@ -70,27 +70,19 @@ export function useSlotOverrides(providerSlug?: string): void {
             if (!override.component) continue;
 
             const component = COMPONENT_CATALOG[override.component];
-            if (!component) {
-              // [audit] removed: console.warn(
-//                 `[useSlotOverrides] Unknown catalog key "${override.component}" for slot "${slot}"`,
-//               );
-//               continue;
-//             }
+            if (!component) continue;
 
             try {
               registerSlot(slot, cap.slug, component, {
                 sandbox: override.sandbox,
               });
-            } catch (e) {
-              // [audit] removed: console.warn(
-//                 `[useSlotOverrides] Failed to register slot ${slot} for ${cap.slug}:`,
-//                 e,
-//               );
-//             }
-//           }
-//         }
-      } catch (e) {
-        // [audit] removed: console.warn('[useSlotOverrides] Failed to fetch capabilities:', e);
+            } catch {
+              // slot registration failure tolerated
+            }
+          }
+        }
+      } catch {
+        // capability fetch/parse failure tolerated
       }
     }
 

@@ -9,7 +9,7 @@
 //
 // This is a read-only audit — no side effects, no mutations.
 
-import { CapabilityRiskSchema, type CapabilityRisk, RISK_TIER } from './action-plan.js'
+import { type CapabilityRisk, CapabilityRiskSchema, RISK_TIER } from './action-plan.js'
 import type { CommandPattern } from './nlcl/types.js'
 import type { UnifiedCapability, UnifiedCapabilityRegistry } from './unified-registry.js'
 
@@ -134,8 +134,7 @@ export class CapabilityParityAuditor {
     )
 
     for (const cap of capabilities) {
-      const hasNlcl =
-        nlclCapabilityIds.has(cap.id) || nlclCapabilityIds.has(cap.slug)
+      const hasNlcl = nlclCapabilityIds.has(cap.id) || nlclCapabilityIds.has(cap.slug)
 
       if (!hasNlcl && cap.surfaces.includes('ui')) {
         // UI capabilities without NLCL patterns are expected (pure UI actions)

@@ -44,9 +44,7 @@ describe('ActionPlanBridge', () => {
 
     expect(result.groundedRefs.length).toBeGreaterThan(0)
     // Should resolve "the report" from context
-    const reportRef = result.groundedRefs.find((r) =>
-      r.raw.toLowerCase().includes('report'),
-    )
+    const reportRef = result.groundedRefs.find((r) => r.raw.toLowerCase().includes('report'))
     expect(reportRef).toBeDefined()
     expect(reportRef!.resolvedValue).toBe('the report')
   })

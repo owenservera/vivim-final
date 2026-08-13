@@ -17,13 +17,11 @@ export async function activate(): Promise<void> {
     sandbox: ['cap:message:compose'],
   });
 
-  // [audit] removed: console.log('[demo-plugin] plugin activated: def=${def.slug}, slot=chat.composer');
 }
 
 // Auto-activate when run directly.
 if (require.main === module) {
   activate().catch((err) => {
-    // [audit] removed: console.error('[demo-plugin] activation failed:', err);
     process.exit(1);
   });
 }
