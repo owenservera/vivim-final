@@ -6,8 +6,8 @@
  * - Provider-specific updates
  */
 
-import { useIO } from '@/components/canvas/UnifiedIOProvider'
 import { useCallback, useEffect, useState } from 'react'
+import { useIO } from '@/components/canvas/UnifiedIOProvider'
 
 interface UpdateInfo {
   currentVersion: string
@@ -216,8 +216,7 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
           const update = data.update
           setProviderUpdates((prev) => new Map(prev).set(slug, update))
         }
-      } catch (err) {
-      }
+      } catch (err) {}
     },
     [io],
   )
@@ -237,8 +236,7 @@ export function useUpdateChecker(): UseUpdateCheckerReturn {
           await checkProviderUpdate(provider.slug)
         }
       }
-    } catch (err) {
-    }
+    } catch (err) {}
   }, [io, checkProviderUpdate])
 
   const installProviderUpdate = useCallback(

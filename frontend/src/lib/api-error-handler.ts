@@ -1,6 +1,6 @@
-import { classify } from '@/lib/errorClassifier'
 /** Next.js API route error wrapper — catches thrown errors and returns JSON */
 import { type NextRequest, NextResponse } from 'next/server'
+import { classify } from '@/lib/errorClassifier'
 
 type RouteHandler = (
   req: NextRequest,

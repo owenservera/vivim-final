@@ -11,7 +11,6 @@ async function main() {
   const provider = getStorageProvider()
   const report = await probeStorage(provider)
 
-
   const rows = STORE_NAMES.map((name) => ({
     name,
     ...report.stores[name],
@@ -25,13 +24,11 @@ async function main() {
   const nameW = Math.max(...rows.map((r) => r.name.length), 20)
   const implW = Math.max(...rows.map((r) => r.impl.length), 24)
 
-
   for (const r of rows) {
     const ready = r.ready ? 'yes' : 'NO'
     const count = r.count === null ? '—' : String(r.count)
     const error = r.error ?? ''
   }
-
 
   const allReady = rows.every((r) => r.ready)
   if (!allReady) {

@@ -33,13 +33,9 @@ function format(level: LogLevel, msg: string, ctx?: LogContext): string {
 
 export function createLogger(scope: string) {
   return {
-    debug(msg: string, ctx?: LogContext) {
-    },
-    info(msg: string, ctx?: LogContext) {
-    },
-    warn(msg: string, ctx?: LogContext) {
-    },
-    error(msg: string, ctx?: LogContext) {
-    },
+    debug(msg: string, ctx?: LogContext) {},
+    info(msg: string, ctx?: LogContext) {},
+    warn(msg: string, ctx?: LogContext) {},
+    error(msg: string, ctx?: LogContext) {},
   }
 }

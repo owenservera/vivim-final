@@ -170,7 +170,6 @@ export type { EncryptedData, EncryptionConfig } from './engines/encryption.js'
 export { EncryptionEngine } from './engines/encryption.js'
 export type { EventRecordInput, EventRecordRow, EventSource } from './engines/event-record-store.js'
 export { EventRecordStore } from './engines/event-record-store.js'
-export { ExecutionMemoizer } from './engines/execution-memoizer.js'
 // P0 Alpha Hardening — Execution Kernel
 export type {
   ExecutionEvent,
@@ -181,10 +180,11 @@ export type {
   VerificationResult,
 } from './engines/execution-kernel.js'
 export { ExecutionKernel, MemoryJournal } from './engines/execution-kernel.js'
-// P0 Alpha Hardening — Policy Engine (deterministic, kernel-scoped)
-export { P0PolicyEngine } from './engines/policy-engine.js'
-export type { P0PolicyEngineOptions } from './engines/policy-engine.js'
-export type { PolicyDecision as ExecutionPolicyDecision, PolicyRule } from './engines/execution-policy.js'
+export { ExecutionMemoizer } from './engines/execution-memoizer.js'
+export type {
+  PolicyDecision as ExecutionPolicyDecision,
+  PolicyRule,
+} from './engines/execution-policy.js'
 export { ExecutionPolicyEngine } from './engines/execution-policy.js'
 export type {
   ExportFormat,
@@ -300,6 +300,9 @@ export type { PlanValidationConfig, PlanValidationResult } from './engines/plan-
 export { PlanValidationGate } from './engines/plan-validation-gate.js'
 export type { ProviderPlugin } from './engines/plugin-hot-reload.js'
 export { PluginHotReload } from './engines/plugin-hot-reload.js'
+export type { P0PolicyEngineOptions } from './engines/policy-engine.js'
+// P0 Alpha Hardening — Policy Engine (deterministic, kernel-scoped)
+export { P0PolicyEngine } from './engines/policy-engine.js'
 export type {
   AdapterErrorCode,
   AuthContext,

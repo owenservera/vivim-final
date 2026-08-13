@@ -51,10 +51,10 @@ export class ActionPlanCompiler {
       // command execution, so strictness here never becomes a hard runtime gate.
       const cap = this.capabilities.get(candidate.capability)
       if (!cap) {
-        throw new ActionPlanValidationError(
-          `Unknown capability: ${candidate.capability}`,
-          { nodeId: `n${i + 1}`, field: 'capability' },
-        )
+        throw new ActionPlanValidationError(`Unknown capability: ${candidate.capability}`, {
+          nodeId: `n${i + 1}`,
+          field: 'capability',
+        })
       }
       const fallbackRisk = candidate.risk ?? cap.risk
 

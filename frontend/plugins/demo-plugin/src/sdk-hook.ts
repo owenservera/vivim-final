@@ -1,6 +1,6 @@
-import { defineComponent, publish, registerSlot } from '../../../src/sdk/canvas';
-import { DemoPluginComposer } from '../components/sample-slot';
-import sampleDef from '../components/sample-def.json';
+import { defineComponent, publish, registerSlot } from '../../../src/sdk/canvas'
+import sampleDef from '../components/sample-def.json'
+import { DemoPluginComposer } from '../components/sample-slot'
 
 /**
  * demo-plugin — SDK entry point. Called by the plugin loader on install.
@@ -9,19 +9,18 @@ import sampleDef from '../components/sample-def.json';
  */
 export async function activate(): Promise<void> {
   // 1. Publish the CanvasDefinition row (no build step).
-  const def = defineComponent(sampleDef);
-  await publish(def);
+  const def = defineComponent(sampleDef)
+  await publish(def)
 
   // 2. Register the bespoke UIComponentRegistry slot (live hot-swap).
   registerSlot('chat.composer', 'demo-plugin', DemoPluginComposer, {
     sandbox: ['cap:message:compose'],
-  });
-
+  })
 }
 
 // Auto-activate when run directly.
 if (require.main === module) {
   activate().catch((err) => {
-    process.exit(1);
-  });
+    process.exit(1)
+  })
 }

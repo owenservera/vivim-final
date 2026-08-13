@@ -159,7 +159,6 @@ export async function PUT(req: NextRequest) {
     const updated = { ...existing, ...policy, agentId, workspaceId } as AgentCanvasPolicy
     policyStore.set(key, updated)
 
-
     return NextResponse.json(updated)
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

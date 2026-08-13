@@ -110,8 +110,7 @@ class AgentBridgeImpl {
           this.eventListeners.forEach((fn) => fn(msg))
           break
       }
-    } catch (err) {
-    }
+    } catch (err) {}
   }
 
   private async handleCommand(msg: AgentCommand): Promise<void> {

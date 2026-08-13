@@ -74,7 +74,7 @@ export function useHelpAnalytics(userId?: string): UseHelpAnalyticsResult {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(event),
       }).catch(() => {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // Silently fail — analytics should never block UI
       })
     },

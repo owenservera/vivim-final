@@ -62,7 +62,7 @@ async function classifyIntentViaBackend(query: string): Promise<AgentMode> {
       }
     }
   } catch {
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     // Backend unavailable, fall back to keyword classification
   }
 

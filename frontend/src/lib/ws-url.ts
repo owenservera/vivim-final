@@ -62,7 +62,7 @@ if (isTauriEnvironment() && typeof window !== 'undefined') {
       }
     })
   } catch {
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     // Non-critical: static port fallback still works.
   }
 }

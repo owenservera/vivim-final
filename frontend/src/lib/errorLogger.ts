@@ -1,7 +1,7 @@
 // frontend/src/lib/errorLogger.ts
 // Lightweight error logger that buffers errors and sends to backend when available.
 
-import { classify, type ClassifiedError } from './errorClassifier'
+import { type ClassifiedError, classify } from './errorClassifier'
 
 interface LogEntry {
   id: string
@@ -15,7 +15,7 @@ interface LogEntry {
 const MAX_BUFFER = 50
 const FLUSH_INTERVAL = 10_000
 
-let buffer: LogEntry[] = []
+const buffer: LogEntry[] = []
 let flushTimer: ReturnType<typeof setInterval> | null = null
 let enabled = true
 
@@ -36,11 +36,11 @@ function flush() {
       body: JSON.stringify({ errors: batch }),
       keepalive: true,
     }).catch(() => {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Silent — logging should never break the app
     })
   } catch {
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     // Silent
   }
 }
@@ -50,7 +50,11 @@ function startFlushTimer() {
   flushTimer = setInterval(flush, FLUSH_INTERVAL)
 }
 
-export function logError(error: unknown, context?: string, componentStack?: string): ClassifiedError {
+export function logError(
+  error: unknown,
+  context?: string,
+  componentStack?: string,
+): ClassifiedError {
   const classified = classify(error)
 
   if (!enabled) return classified

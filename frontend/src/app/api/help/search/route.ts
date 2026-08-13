@@ -190,7 +190,7 @@ export async function POST(request: Request) {
         }
       }
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Backend unavailable, fall back to local matching
     }
 

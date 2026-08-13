@@ -18,6 +18,5 @@ export async function tauriBoot(): Promise<void> {
     // Give React a tick to hydrate before signaling
     await new Promise((r) => requestAnimationFrame(r))
     await tauriInvoke('backend_ready')
-  } catch (err) {
-  }
+  } catch (err) {}
 }
