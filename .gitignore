@@ -130,7 +130,18 @@ test-sidecar*
 *.exe
 *.bun-build
 
+# Temporary / scratch directories
+bench/
+specs/
+schemas/
 
+# Docker (not used in this project)
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Legacy config
+kilo.json
 
 # Frontend workspace/upload artifacts
 frontend/workspace-*
