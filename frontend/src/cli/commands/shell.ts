@@ -381,8 +381,8 @@ export function registerDefaultCommands(store: ShellCommandStore): void {
         const lines = ['═ Registered UI Components ══════════════'];
         const byKind: Record<string, typeof all> = {};
         for (const c of all) {
-          if (!byKind[c.kind]) byKind[c.kind] = [];
-          byKind[c.kind].push(c);
+          const bucket = (byKind[c.kind] ??= [])
+          bucket.push(c);
         }
         for (const [kind, comps] of Object.entries(byKind)) {
           lines.push(`\n  ${kind} (${comps.length}):`);

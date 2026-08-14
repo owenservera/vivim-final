@@ -3,7 +3,7 @@
 // Tests that system pressure is checked before spawn.
 
 import { describe, expect, it } from 'bun:test'
-import { type SlaveLifecycle, computeSuperState } from '../../src/executor/slave-states.js'
+import { computeSuperState, type SlaveLifecycle } from '../../src/executor/slave-states.js'
 
 describe('Pressure Gate (US4)', () => {
   it('fleet shows idle when no slaves', () => {

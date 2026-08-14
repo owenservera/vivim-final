@@ -1,8 +1,11 @@
 // src/server/autonomous-router.ts
 // REST API for autonomous task execution and observability
 
-import type { AutonomousExecutionEngine, AutonomousGoal } from '../engines/autonomous-execution.js'
-import type { ActionClassification } from '../engines/autonomous-execution.js'
+import type {
+  ActionClassification,
+  AutonomousExecutionEngine,
+  AutonomousGoal,
+} from '../engines/autonomous-execution.js'
 import type { ExecutionPolicyEngine } from '../engines/execution-policy.js'
 import {
   AutonomousExecuteSchema,
@@ -102,7 +105,7 @@ export function createAutonomousRouter(deps: AutonomousRouterDeps) {
     const replayMatch = path.match(/^\/api\/autonomous\/([^/]+)\/replay$/)
     if (replayMatch && req.method === 'POST') {
       const parsed = ReplaySchema.safeParse(await req.json().catch(() => ({})))
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       const fromStep = parsed.success ? (parsed.data.fromStep ?? 0) : 0
       const taskId = await autonomousEngine.replay(replayMatch[1] ?? '', {
         fromStep,

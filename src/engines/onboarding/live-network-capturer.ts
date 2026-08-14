@@ -40,7 +40,7 @@ export class LiveNetworkCapturer {
   async capture(slaveId: string, durationMs: number): Promise<NetworkEvent[]> {
     // Enable Network domain (best-effort — fails silently if slave is gone).
     await this.governor.cdp.send(slaveId, 'Network.enable').catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
 
     const events: NetworkEvent[] = []
     const seen = new Set<string>()

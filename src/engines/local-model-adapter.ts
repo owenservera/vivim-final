@@ -153,7 +153,7 @@ export class LocalModelAdapter {
           const chunk = JSON.parse(line) as { response?: string }
           if (chunk.response) yield chunk.response
         } catch {
-  // [audit] log the error with context here
+          // [audit] log the error with context here
           // skip malformed lines
         }
       }

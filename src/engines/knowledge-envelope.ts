@@ -19,7 +19,7 @@ export const KnowledgeEnvelopeSchema = z.object({
   updatedAt: z.number().optional(),
   author: z.string().optional(),
   participants: z.array(z.string()).default([]),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
 })
 
 export type KnowledgeEnvelope = z.infer<typeof KnowledgeEnvelopeSchema>

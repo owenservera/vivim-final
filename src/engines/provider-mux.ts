@@ -121,10 +121,10 @@ export class ProviderMuxEngine {
   constructor(
     private store: MuxStore,
     private dispatcher: MuxDispatcher,
-    private router: Router,
+    _router: Router,
     private eventBus: CapabilityEventBus,
-    private channelStore?: ChannelStore,
-    private governor?: ChromeGovernor,
+    _channelStore?: ChannelStore,
+    _governor?: ChromeGovernor,
   ) {}
 
   // Phase 27.6: Subscribe a channel to route messages to a conversation

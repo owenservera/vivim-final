@@ -277,7 +277,7 @@ export class IntentRouter {
   ): Promise<CommandResult> {
     try {
       const cap =
-        this.registry!.get(intent.capabilityId!) ?? this.registry!.getBySlug(intent.capabilityId!)
+        this.registry?.get(intent.capabilityId!) ?? this.registry?.getBySlug(intent.capabilityId!)
       if (!cap) {
         return {
           ok: false,
@@ -323,15 +323,15 @@ export class IntentRouter {
         },
       }
 
-      const kernelResult = await this.kernel!.execute(plan, async (_node, nodeInput) =>
-        this.registry!.execute(cap.id, nodeInput, toCapCtx(ctx)),
+      const kernelResult = await this.kernel?.execute(plan, async (_node, nodeInput) =>
+        this.registry?.execute(cap.id, nodeInput, toCapCtx(ctx)),
       )
 
-      if (!kernelResult.ok) {
+      if (!kernelResult?.ok) {
         return {
           ok: false,
           intent: intent.intent,
-          error: kernelResult.error ?? 'Execution failed',
+          error: kernelResult?.error ?? 'Execution failed',
           latencyMs: Date.now() - start,
           traceId,
           classification: 'system',

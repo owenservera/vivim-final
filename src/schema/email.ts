@@ -32,35 +32,35 @@ export interface EmailData {
 }
 
 export const EmailAddressSchema = z.object({
-  name: z.string().optional(),
-  address: z.string().email(),
+  name: z.string({ error: 'Invalid string' }).optional(),
+  address: z.string({ error: 'Invalid string' }).email(),
 })
 
 export const EmailAttachmentSchema = z.object({
-  filename: z.string(),
-  mediaType: z.string(),
-  size: z.number().int().positive().optional(),
-  nodeId: z.string().optional(),
+  filename: z.string({ error: 'Invalid string' }),
+  mediaType: z.string({ error: 'Invalid string' }),
+  size: z.number({ error: 'Invalid number' }).int().positive().optional(),
+  nodeId: z.string({ error: 'Invalid string' }).optional(),
 })
 
 export const EmailDataSchema = z.object({
-  messageId: z.string(),
-  subject: z.string(),
+  messageId: z.string({ error: 'Invalid string' }),
+  subject: z.string({ error: 'Invalid string' }),
   from: EmailAddressSchema,
   to: z.array(EmailAddressSchema),
   cc: z.array(EmailAddressSchema).optional(),
   bcc: z.array(EmailAddressSchema).optional(),
-  body: z.string(),
+  body: z.string({ error: 'Invalid string' }),
   bodyType: z.enum(['plain', 'html', 'markdown']),
-  headers: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string({ error: 'Invalid string' })).optional(),
   attachments: z.array(EmailAttachmentSchema).optional(),
-  threadId: z.string().optional(),
-  inReplyTo: z.string().optional(),
-  references: z.array(z.string()).optional(),
-  receivedAt: z.number(),
-  labels: z.array(z.string()).optional(),
-  folder: z.string().optional(),
-  read: z.boolean().optional(),
+  threadId: z.string({ error: 'Invalid string' }).optional(),
+  inReplyTo: z.string({ error: 'Invalid string' }).optional(),
+  references: z.array(z.string({ error: 'Invalid string' })).optional(),
+  receivedAt: z.number({ error: 'Invalid number' }),
+  labels: z.array(z.string({ error: 'Invalid string' })).optional(),
+  folder: z.string({ error: 'Invalid string' }).optional(),
+  read: z.boolean({ error: 'Invalid boolean' }).optional(),
 })
 
 // ── EmailThreadNode (cap-store.email-thread) ──────────────────────────────
@@ -77,13 +77,13 @@ export interface EmailThreadData {
 }
 
 export const EmailThreadDataSchema = z.object({
-  threadId: z.string(),
-  subject: z.string(),
-  participants: z.array(z.string()),
-  emailIds: z.array(z.string()),
-  latestAt: z.number(),
-  messageCount: z.number().int().positive(),
-  labels: z.array(z.string()).optional(),
+  threadId: z.string({ error: 'Invalid string' }),
+  subject: z.string({ error: 'Invalid string' }),
+  participants: z.array(z.string({ error: 'Invalid string' })),
+  emailIds: z.array(z.string({ error: 'Invalid string' })),
+  latestAt: z.number({ error: 'Invalid number' }),
+  messageCount: z.number({ error: 'Invalid number' }).int().positive(),
+  labels: z.array(z.string({ error: 'Invalid string' })).optional(),
 })
 
 // ── Node schemas for registration ─────────────────────────────────────────

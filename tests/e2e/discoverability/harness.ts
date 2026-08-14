@@ -99,16 +99,16 @@ export async function startServer(port = 9421): Promise<ServerHandle> {
             try {
               proc.kill()
               await proc.exited.catch(() => {})
-  // [audit] log the error with context here
+              // [audit] log the error with context here
             } catch {
-  // [audit] log the error with context here
+              // [audit] log the error with context here
               /* gone */
             }
           },
         }
       }
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // not up yet
     }
     await Bun.sleep(1_000)
@@ -120,9 +120,9 @@ export async function startServer(port = 9421): Promise<ServerHandle> {
       try {
         proc.kill()
         await proc.exited.catch(() => {})
-  // [audit] log the error with context here
+        // [audit] log the error with context here
       } catch {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         /* gone */
       }
     },

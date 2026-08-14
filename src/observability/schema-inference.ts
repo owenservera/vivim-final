@@ -17,7 +17,8 @@
 
 /** Subset of JSON Schema used for inferred types. */
 export interface JsonSchema {
-  type?: string
+  /** JSON type name, or a union of type names after merging. */
+  type?: string | string[]
   properties?: Record<string, JsonSchema>
   required?: string[]
   items?: JsonSchema
@@ -176,8 +177,8 @@ export function diffSchemas(oldSchema: JsonSchema, newSchema: JsonSchema): Schem
       }
     } else {
       // Check type change for existing property
-      const oldType = oldProps[key].type
-      const newType = newProps[key].type
+      const oldType = oldProps[key]?.type
+      const newType = newProps[key]?.type
       if (oldType && newType && oldType !== newType) {
         changes.push({
           type: 'type_changed',
@@ -280,8 +281,8 @@ export class SchemaEvolutionTracker {
 
     return {
       totalSamples: this.history.length,
-      firstSeen: this.history[0]!.timestamp,
-      lastSeen: this.history[this.history.length - 1]!.timestamp,
+      firstSeen: this.history[0]?.timestamp ?? null,
+      lastSeen: this.history[this.history.length - 1]?.timestamp ?? null,
       stabilityScore: Math.max(0, Math.min(1, stabilityScore)),
       diffs,
     }
@@ -290,6 +291,6 @@ export class SchemaEvolutionTracker {
   /** Get the current (latest) schema. */
   get currentSchema(): JsonSchema | null {
     if (this.history.length === 0) return null
-    return this.history[this.history.length - 1]!.schema
+    return this.history[this.history.length - 1]?.schema ?? null
   }
 }

@@ -8,16 +8,13 @@
 
 // Existing alerting core
 export { Alerter } from './alerter'
-
-// Sliding-window metric aggregation
-export { SlidingWindow } from './sliding-window'
-export type { SlidingWindowEntry } from './sliding-window'
-
-// Alert deduplication
-export { AlertDedup } from './dedup'
-
 // Alert cooldown tracking
 export { AlertCooldown } from './cooldown'
+// Alert deduplication
+export { AlertDedup } from './dedup'
+export type { SlidingWindowEntry } from './sliding-window'
+// Sliding-window metric aggregation
+export { SlidingWindow } from './sliding-window'
 
 // Webhook delivery
 export { sendWebhook } from './webhook'

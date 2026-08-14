@@ -3,8 +3,10 @@
 // resolution, F4 AX-tree root selection, F6 no data-vivim-text mutation.
 
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { parseSelector } from '../../../src/engines/browser-automation/registry.js'
-import { BrowserCapabilityRegistry } from '../../../src/engines/browser-automation/registry.js'
+import {
+  BrowserCapabilityRegistry,
+  parseSelector,
+} from '../../../src/engines/browser-automation/registry.js'
 import { SemanticGroundingEngine } from '../../../src/engines/browser-automation/semantic-grounding.js'
 import type { ResolvedElement } from '../../../src/engines/browser-automation/types.js'
 

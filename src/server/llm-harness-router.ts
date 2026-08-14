@@ -47,6 +47,7 @@ export function __setConfirmationStoreForTest(store: ConfirmationStore | null): 
 // ── LLM harness agent (lazy singleton; tests can inject via __setAgentForTest) ──
 
 import type { LlmHarnessAgent } from '../engines/reprogrammability/llm-harness-agent.js'
+
 let agent: LlmHarnessAgent | null = null
 let agentFactory: (() => LlmHarnessAgent) | null = null
 

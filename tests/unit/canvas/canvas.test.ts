@@ -5,6 +5,7 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
 
 type MockFn = (...args: any[]) => any
+
 import { CanvasEngine } from '../../../src/canvas/canvas-engine.js'
 import { CanvasMirror, InMemoryCanvasMirrorStore } from '../../../src/canvas/canvas-mirror.js'
 import { CanvasRegistry } from '../../../src/canvas/canvas-registry.js'

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test } from 'bun:test'
 import { CapabilityShapeRegistry } from '../../../src/engines/capability-shape-registry.js'
 import { ManifestInferenceEngine } from '../../../src/engines/manifest-inference.js'
 import { ProviderDiscoveryEngine } from '../../../src/engines/provider-discovery.js'
-import { type DiscoveryMcpServer, createDiscoveryMcpServer } from '../../../src/mcp/server.js'
+import { createDiscoveryMcpServer, type DiscoveryMcpServer } from '../../../src/mcp/server.js'
 
 function makeGovernor() {
   const domJson = JSON.stringify({

@@ -258,7 +258,7 @@ const SIGNAL_PATTERNS: SignalPattern[] = [
 export class SituationDetector {
   constructor(
     private store: SituationStore,
-    private memory?: MemoryEngine,
+    _memory?: MemoryEngine,
   ) {}
 
   async detect(input: DetectionInput): Promise<SituationSignal> {

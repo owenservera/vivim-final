@@ -11,8 +11,12 @@ import { SandboxPermissionError, SandboxTimeoutError } from '../errors.js'
 import type { CanvasStore } from '../storage/contracts/canvas-store.js'
 import { rowToDefinition } from '../storage/contracts/canvas-store.js'
 import { canUseCapability } from './schema.js'
-import type { BridgeMessage, CapabilityExecutor, PrimitiveReader } from './types.js'
-import type { CanvasDefinition } from './types.js'
+import type {
+  BridgeMessage,
+  CanvasDefinition,
+  CapabilityExecutor,
+  PrimitiveReader,
+} from './types.js'
 
 /** A sandboxed iframe's messaging port (window or MessageChannel port). */
 export interface SandboxPort {

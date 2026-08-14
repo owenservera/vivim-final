@@ -21,8 +21,7 @@ import type {
   ProviderManifest,
   RequestId,
 } from '../core/types.js'
-import { createEventId, modelId, providerId } from '../core/types.js'
-import { VIVIM_AI_PROTOCOL } from '../core/types.js'
+import { createEventId, modelId, providerId, VIVIM_AI_PROTOCOL } from '../core/types.js'
 import type { IProviderAdapter, ProviderAdapterFactory, ProviderConnection } from './adapter.js'
 
 export interface SimulatorConfig {
@@ -258,4 +257,4 @@ export function isSimulatorManifest(manifest: ProviderManifest): boolean {
   return manifest.id === SIMULATOR_PROVIDER_ID
 }
 
-export { SIMULATOR_PROVIDER_ID, SIMULATOR_MODEL_ID, SIMULATOR_MANIFEST, SIMULATOR_MODEL }
+export { SIMULATOR_MANIFEST, SIMULATOR_MODEL, SIMULATOR_MODEL_ID, SIMULATOR_PROVIDER_ID }

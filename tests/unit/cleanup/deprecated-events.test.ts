@@ -1,13 +1,13 @@
 // tests/unit/cleanup/deprecated-events.test.ts
 
 import { describe, expect, it } from 'bun:test'
+import type { DeprecatedEvent } from '../../../src/cleanup/deprecated-events.js'
 import {
   DEPRECATED_EVENTS,
   deprecationWarning,
   getActiveDeprecatedEvents,
   isEventDeprecated,
 } from '../../../src/cleanup/deprecated-events.js'
-import type { DeprecatedEvent } from '../../../src/cleanup/deprecated-events.js'
 
 describe('deprecated-events registry', () => {
   it('contains exactly 10 deprecated event types', () => {

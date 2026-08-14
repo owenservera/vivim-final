@@ -7,11 +7,11 @@
 
 import { describe, expect, it, mock } from 'bun:test'
 import {
+  createGateway,
   SIMULATOR_MANIFEST,
   SIMULATOR_MODEL,
   SIMULATOR_PROVIDER_ID,
   SimulatorAdapter,
-  createGateway,
 } from '../../../src/ai/index.js'
 import {
   GatewayProviderLLMAdapter,
@@ -109,7 +109,7 @@ describe('#2 + #3 — Boot wiring globals', () => {
       pluginId: 'p' as never,
       name: 'Test',
       version: '1.0.0',
-      protocolVersion: '1.1',
+      protocolVersion: '1.1' as const,
       kind: 'local' as const,
       trust: 'official' as const,
       capabilities: { chat: { supported: true } } as never,
@@ -123,9 +123,8 @@ describe('#2 + #3 — Boot wiring globals', () => {
 
 describe('#5 — MemoryOracle real embedding', () => {
   it('MemoryOracleDeps accepts an embeddingProvider', async () => {
-    const { MemoryOracleDeps } = (await import('../../../src/engines/memory/memory-oracle.js')) as {
-      MemoryOracleDeps: unknown
-    }
+    const mod = await import('../../../src/engines/memory/memory-oracle.js')
+    void mod // type-level test: module loads
     // Type-level test: the interface accepts embeddingProvider
     const deps = {
       nodeStore: {} as never,
@@ -143,9 +142,8 @@ describe('#5 — MemoryOracle real embedding', () => {
   })
 
   it('MemoryFabricDeps accepts an embeddingProvider', async () => {
-    const { MemoryFabricDeps } = (await import('../../../src/engines/memory/memory-fabric.js')) as {
-      MemoryFabricDeps: unknown
-    }
+    const mod = await import('../../../src/engines/memory/memory-fabric.js')
+    void mod // type-level test: module loads
     const deps = {
       agenticStore: {} as never,
       registry: {} as never,

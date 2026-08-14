@@ -59,7 +59,7 @@ export const canvasPatterns: CommandPattern[] = [
     inputSchema: z.object({
       kind: z.string().optional(),
       title: z.string().optional(),
-      config: z.record(z.unknown()).optional(),
+      config: z.record(z.string(), z.unknown()).optional(),
     }),
     executor: 'capability',
     category: 'canvas',

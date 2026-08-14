@@ -1,0 +1,42 @@
+{
+  "seed_version": "2026.08.14",
+  "targets_schema_version": "2026.08.14-014",
+  "description": "System-side seeds: providers, parsers, taxonomy, harness commands",
+  "seeds": [
+    {
+      "id": "providers",
+      "file": "../../seeds/providers/manifests.ts",
+      "function": "seedAll",
+      "target": "system",
+      "description": "Provider manifests, models, endpoints"
+    },
+    {
+      "id": "parsers",
+      "file": "../../seeds/parsers/harvest.seed.ts",
+      "function": "seedHarvestedParsers",
+      "target": "system",
+      "description": "Harvested parser variants"
+    },
+    {
+      "id": "stream-configs",
+      "file": "../../seeds/parsers/harvest.seed.ts",
+      "function": "seedStreamConfigs",
+      "target": "system",
+      "description": "Provider stream configs"
+    },
+    {
+      "id": "taxonomy",
+      "file": "../../seeds/taxonomy/taxonomy-seed.ts",
+      "function": "ensureTaxonomySeeded",
+      "target": "system",
+      "description": "Capability taxonomy hierarchy"
+    },
+    {
+      "id": "harness-commands",
+      "file": "../../seeds/harness/commands.seed.ts",
+      "function": "seedHarnessCommands",
+      "target": "system",
+      "description": "Harness command registry"
+    }
+  ]
+}

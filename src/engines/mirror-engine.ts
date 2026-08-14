@@ -5,8 +5,10 @@ import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { CapabilityResolutionEngine } from './capability-resolution.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { ExecutionMemoizer } from './execution-memoizer.js'
-import type { ObservationTap } from './observation-tap.js'
-import type { ObservationOptions as ObservationTapOptions } from './observation-tap.js'
+import type {
+  ObservationTap,
+  ObservationOptions as ObservationTapOptions,
+} from './observation-tap.js'
 
 // ── Store contract ───────────────────────────────────────────────────────
 
@@ -144,10 +146,10 @@ export class MirrorEngine {
 
   constructor(
     private governor: ChromeGovernor,
-    private resolution: CapabilityResolutionEngine,
+    _resolution: CapabilityResolutionEngine,
     private store: MirrorStore,
-    private eventBus: CapabilityEventBus,
-    private memoizer: ExecutionMemoizer,
+    _eventBus: CapabilityEventBus,
+    _memoizer: ExecutionMemoizer,
     observationTap?: ObservationTap,
   ) {
     this.observationTap = observationTap

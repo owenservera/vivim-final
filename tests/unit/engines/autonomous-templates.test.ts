@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type { AutonomousTask } from '../../../src/engines/autonomous-execution.js'
+import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
 import type { ExecutionPolicyEngine } from '../../../src/engines/execution-policy.js'

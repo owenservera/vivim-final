@@ -153,7 +153,7 @@ async function portStreamConfigs(): Promise<number> {
 
 async function portTaxonomy(): Promise<number> {
   const rows = og.query('SELECT * FROM capability_taxonomy').all() as any[]
-  let count = 0
+  let _count = 0
   for (const r of rows) {
     await prisma.capabilityTaxonomy.upsert({
       where: { id: r.id },
@@ -174,7 +174,7 @@ async function portTaxonomy(): Promise<number> {
         updatedAt: BigInt(r.updated_at),
       },
     })
-    count++
+    _count++
     // [audit] removed: if (count % 50 === 0) console.log(`  taxonomy: ${count}/${rows.length}`)
   }
   return rows.length
@@ -184,7 +184,7 @@ async function portTaxonomy(): Promise<number> {
 
 async function portBindings(): Promise<number> {
   const rows = og.query('SELECT * FROM capability_binding').all() as any[]
-  let count = 0
+  let _count = 0
   for (const r of rows) {
     // Map OG status (tested|stable|flaky|broken) to vivim-final style
     // Keep OG status as-is since vivim-final has no CHECK constraint
@@ -212,7 +212,7 @@ async function portBindings(): Promise<number> {
         updatedAt: BigInt(r.updated_at),
       },
     })
-    count++
+    _count++
     // [audit] removed: if (count % 25 === 0) console.log(`  bindings: ${count}/${rows.length}`)
   }
   return rows.length
@@ -302,7 +302,7 @@ async function portAccounts(): Promise<number> {
 
 async function portOutcomes(): Promise<number> {
   const rows = og.query('SELECT * FROM outcome').all() as any[]
-  let count = 0
+  let _count = 0
   for (const r of rows) {
     // OG outcome has binding_id but no capability_id. Resolve from binding.
     // If binding doesn't exist yet, use binding_id as a proxy.
@@ -311,7 +311,7 @@ async function portOutcomes(): Promise<number> {
       const binding = await prisma.capabilityBinding.findUnique({ where: { id: r.binding_id } })
       if (binding) capId = binding.globalId
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       /* leave as binding_id */
     }
 
@@ -338,7 +338,7 @@ async function portOutcomes(): Promise<number> {
         durationMs: r.duration_ms ?? null,
       },
     })
-    count++
+    _count++
     // [audit] removed: if (count % 100 === 0) console.log(`  outcomes: ${count}/${rows.length}`)
   }
   return rows.length
@@ -417,7 +417,7 @@ async function portStateTransitions(): Promise<number> {
 
 async function portFleetEvents(): Promise<number> {
   const rows = og.query('SELECT * FROM fleet_event').all() as any[]
-  let count = 0
+  let _count = 0
   for (const r of rows) {
     const payload = typeof r.payload === 'string' ? JSON.parse(r.payload) : r.payload
     const providerId = payload?.providerId || null
@@ -438,7 +438,7 @@ async function portFleetEvents(): Promise<number> {
         eventDataJson: r.payload || '{}',
       },
     })
-    count++
+    _count++
     // [audit] removed: if (count % 50 === 0) console.log(`  fleet events: ${count}/${rows.length}`)
   }
   return rows.length
@@ -503,9 +503,9 @@ async function main() {
   for (const step of steps) {
     process.stdout.write(`  ${step.name} … `)
     try {
-      const count = await step.fn()
+      const _count = await step.fn()
       // [audit] removed: console.log(`${count} rows`)
-    } catch (err) {
+    } catch (_err) {
       // [audit] removed: console.error(`ERROR: ${err}`)
     }
   }
@@ -528,7 +528,7 @@ async function main() {
   for (const [ogTable, vfModel] of checks) {
     const ogCount = (og.query(`SELECT COUNT(*) as cnt FROM \`${ogTable}\``).get() as any).cnt
     const vfCount = await (prisma as any)[vfModel as keyof typeof prisma].count()
-    const ok = ogCount === vfCount ? '✓' : '✗'
+    const _ok = ogCount === vfCount ? '✓' : '✗'
     // [audit] removed: console.log(`  ${ok} ${ogTable} → ${vfModel}: OG=${ogCount} VF=${vfCount}`)
   }
 
@@ -538,7 +538,7 @@ async function main() {
   // [audit] removed: console.log('\n═══ Done ═══')
 }
 
-main().catch((err) => {
+main().catch((_err) => {
   // [audit] removed: console.error('FATAL:', err)
   process.exit(1)
 })

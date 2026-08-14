@@ -2,8 +2,8 @@
 // Tests for the ModuleRegistry with topological sort, cycle detection, and bootstrap.
 
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { ModuleRegistry } from '../../../src/server/module-registry.js'
 import type { ModuleDefinition } from '../../../src/server/module-registry.js'
+import { ModuleRegistry } from '../../../src/server/module-registry.js'
 import { ServiceContainer } from '../../../src/server/service-container.js'
 
 describe('ModuleRegistry', () => {

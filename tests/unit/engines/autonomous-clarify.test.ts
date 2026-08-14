@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type { AutonomousStep } from '../../../src/engines/autonomous-execution.js'
+import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
 import type { AutonomousExecutionStore } from '../../../src/storage/contracts/autonomous-store.js'
 

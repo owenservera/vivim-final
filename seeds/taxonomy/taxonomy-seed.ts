@@ -94,10 +94,7 @@ export async function ensureTaxonomySeeded(
   // Filter to capability nodes only
   const capabilityNodes = pool.nodes.filter((n) => n.kind === 'capability')
 
-  // [audit] removed: console.log(
-    `[seed] ${force ? 'Force-' : ''}seeding ${capabilityNodes.length} capability taxonomy entries ` +
-      `(existing=${existing}, pool=${pool.nodes.length} total nodes)...`,
-  )
+  // [audit] removed: console.log — seeding capability taxonomy entries
 
   const now = BigInt(Date.now())
   const slugToId = new Map<string, string>()
@@ -187,7 +184,7 @@ export async function ensureTaxonomySeeded(
         },
       })
       upserted++
-    } catch (err) {
+    } catch (_err) {
       // [audit] removed: console.error(`  ❌ ${node.slug}: ${err}`)
     }
   }
@@ -200,16 +197,14 @@ async function main() {
 
   // Load pool for node/edge stats
   const pool = loadJson<TaxonomyPool>(join(rootDir, 'seeds', 'taxonomy', 'pool.taxonomy.json'))
-  const capabilityCount = pool.nodes.filter((n) => n.kind === 'capability').length
-  // [audit] removed: console.log(
-    `[seed] Pool: ${pool.nodes.length} nodes (${capabilityCount} capabilities), ${pool.edges.length} edges`,
-  )
+  const _capabilityCount = pool.nodes.filter((n) => n.kind === 'capability').length
+  // [audit] removed: console.log(`[seed] Pool: ${pool.nodes.length} nodes (${capabilityCount} capabilities), ${pool.edges.length} edges`)
 
   // Seed capability taxonomy (idempotent — force to overwrite existing rows)
   const { upserted } = await ensureTaxonomySeeded(prisma, true)
 
   // Summary
-  const count = await prisma.capabilityTaxonomy.count()
+  const _count = await prisma.capabilityTaxonomy.count()
   // [audit] removed: console.log(`\n[seed] Upserted ${upserted} rows. Total CapabilityTaxonomy rows: ${count}`)
 
   await prisma.$disconnect()
@@ -219,7 +214,7 @@ async function main() {
 // Only run the CLI when this file is the entry point. Importing the module
 // (e.g. from server boot for `ensureTaxonomySeeded`) must NOT execute seeds.
 if (import.meta.main) {
-  main().catch((e) => {
+  main().catch((_e) => {
     // [audit] removed: console.error('[seed] Fatal:', e)
     process.exit(1)
   })

@@ -6,8 +6,14 @@
 // Also provides the CapabilityEventBus mirror helper (the event bus itself is
 // created by the orchestrator; this module stays transport-agnostic).
 
-import { openSync, writeSync, closeSync } from 'node:fs'
-import type { AuditStreamCallbacks, Finding, PhaseResult, StreamEvent, AuditPhase } from './types.js'
+import { closeSync, openSync, writeSync } from 'node:fs'
+import type {
+  AuditPhase,
+  AuditStreamCallbacks,
+  Finding,
+  PhaseResult,
+  StreamEvent,
+} from './types.js'
 
 export class NdjsonWriter {
   private fd: number
@@ -21,7 +27,7 @@ export class NdjsonWriter {
     try {
       closeSync(this.fd)
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       /* already closed */
     }
   }

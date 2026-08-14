@@ -9,8 +9,8 @@ import type {
   LatencyLogInput,
   LatencyLogRow,
 } from '../contracts/cost-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class CostStoreImpl implements CostStore {
   private db: PrismaClient

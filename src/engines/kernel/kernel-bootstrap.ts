@@ -16,9 +16,9 @@ import type { NLCLEngine } from '../nlcl/nlcl-engine.js'
 import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
 import {
   ConsoleKernelLogger,
+  createKernel,
   type Kernel,
   type KernelContext,
-  createKernel,
 } from './kernel-context.js'
 import { KernelProvenance } from './kernel-provenance.js'
 import { KernelRegistry } from './kernel-registry.js'
@@ -252,7 +252,7 @@ export function bootstrapKernel(deps: KernelBootstrapDeps): Kernel {
         for (const slave of slaves) {
           if (slave.status === 'error') {
             await governor.kill(slave.slaveId).catch(() => {})
-  // [audit] log the error with context here
+            // [audit] log the error with context here
           }
         }
         await governor.launch(providerId)

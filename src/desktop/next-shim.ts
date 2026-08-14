@@ -15,10 +15,6 @@
  * RequestInit semantics match the Web `Response` constructor (status, headers).
  */
 export class NextResponse extends Response {
-  constructor(body?: BodyInit | null, init?: ResponseInit) {
-    super(body, init)
-  }
-
   static json(body: unknown, init?: ResponseInit): NextResponse {
     const res = new NextResponse(typeof body === 'string' ? body : JSON.stringify(body), init)
     if (!res.headers.has('content-type')) {

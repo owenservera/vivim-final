@@ -2,6 +2,7 @@
 // Smoke test harness. No browser required.
 
 import { beforeAll, describe, expect, it } from 'bun:test'
+
 const BASE = `http://127.0.0.1:${process.env.CAP_STORE_PORT ?? 9420}`
 
 async function fetchJson(path: string, init?: RequestInit): Promise<{ status: number; body: any }> {

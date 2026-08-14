@@ -2,7 +2,7 @@
 // Unit 24.8 — JSON Schema ⇄ Zod / argv helpers (promoted from the deleted
 // cli/commands/registry-bridge.ts).
 import { describe, expect, it } from 'bun:test'
-import { type JsonSchema, argvToInput, jsonSchemaToZod } from '../../../src/cli/json-schema.js'
+import { argvToInput, type JsonSchema, jsonSchemaToZod } from '../../../src/cli/json-schema.js'
 
 describe('jsonSchemaToZod', () => {
   it('builds an object schema with required coercion', () => {

@@ -1,20 +1,35 @@
 // src/storage/db.ts
-// Typed wrapper over PrismaClient.
+// Typed wrapper over dual PrismaClients.
 // The CapStoreDb class provides typed access to all tables
 // using Prisma ORM with the same public API shape.
 
 import { newId } from '../ids.js'
 import { getLogger } from '../lib/logger.js'
-import { type PrismaClient, closePrisma, getPrisma } from './prisma.js'
+import {
+  closePrisma,
+  getSystemPrisma,
+  getUserPrisma,
+  type FullPrismaClient,
+  type SystemPrismaClient,
+  type UserPrismaClient,
+} from './prisma.js'
 
 const log = getLogger('db')
 
 export class CapStoreDb {
-  public readonly prisma: PrismaClient
+  /** System-side client (providers, capabilities, routing, telemetry, health, config, etc.) */
+  public readonly systemPrisma: SystemPrismaClient
+  /** User-side client (conversations, nodes, memory, sessions, etc.) */
+  public readonly userPrisma: UserPrismaClient
+  /** Backward-compat shim — full @prisma/client. Deprecated, use systemPrisma/userPrisma. */
+  public readonly prisma: FullPrismaClient
 
   constructor(_path?: string) {
     // _path kept for backward compat but ignored — Prisma uses DATABASE_URL
-    this.prisma = getPrisma()
+    this.systemPrisma = getSystemPrisma()
+    this.userPrisma = getUserPrisma()
+    // Cast systemPrisma to FullPrismaClient for backward compat — system models are a subset
+    this.prisma = this.systemPrisma as unknown as FullPrismaClient
   }
 
   async close(): Promise<void> {
@@ -24,15 +39,15 @@ export class CapStoreDb {
   // ── L1: Provider CRUD ──────────────────────────────────────────────────
 
   async getProvider(id: string) {
-    return this.prisma.providerDefinition.findUnique({ where: { id } })
+    return this.systemPrisma.providerDefinition.findUnique({ where: { id } })
   }
 
   async getProviderBySlug(slug: string) {
-    return this.prisma.providerDefinition.findUnique({ where: { slug } })
+    return this.systemPrisma.providerDefinition.findUnique({ where: { slug } })
   }
 
   async listProviders(opts?: { isActive?: boolean }) {
-    return this.prisma.providerDefinition.findMany({
+    return this.systemPrisma.providerDefinition.findMany({
       where: opts?.isActive !== undefined ? { isActive: opts.isActive ? 1 : 0 } : undefined,
       orderBy: { displayName: 'asc' },
     })
@@ -58,7 +73,7 @@ export class CapStoreDb {
     createdAt?: number
   }) {
     const now = Date.now()
-    return this.prisma.providerDefinition.upsert({
+    return this.systemPrisma.providerDefinition.upsert({
       where: { id: def.id },
       create: {
         id: def.id,
@@ -103,11 +118,11 @@ export class CapStoreDb {
 
   // Account
   async getAccount(id: string) {
-    return this.prisma.providerAccount.findUnique({ where: { id } })
+    return this.systemPrisma.providerAccount.findUnique({ where: { id } })
   }
 
   async getAccountsByProvider(providerId: string) {
-    return this.prisma.providerAccount.findMany({
+    return this.systemPrisma.providerAccount.findMany({
       where: { providerId },
       orderBy: { isDefault: 'desc' },
     })
@@ -130,7 +145,7 @@ export class CapStoreDb {
     createdAt?: number
   }) {
     const now = Date.now()
-    return this.prisma.providerAccount.upsert({
+    return this.systemPrisma.providerAccount.upsert({
       where: { id: account.id },
       create: {
         id: account.id,
@@ -163,21 +178,21 @@ export class CapStoreDb {
   // ── L3: Capability CRUD ────────────────────────────────────────────────
 
   async getCapability(id: string) {
-    return this.prisma.capabilityTaxonomy.findUnique({ where: { id } })
+    return this.systemPrisma.capabilityTaxonomy.findUnique({ where: { id } })
   }
 
   async getCapabilityBySlug(slug: string) {
-    return this.prisma.capabilityTaxonomy.findUnique({ where: { slug } })
+    return this.systemPrisma.capabilityTaxonomy.findUnique({ where: { slug } })
   }
 
   async getBinding(globalId: string, providerId: string) {
-    return this.prisma.capabilityBinding.findUnique({
+    return this.systemPrisma.capabilityBinding.findUnique({
       where: { globalId_providerId: { globalId, providerId } },
     })
   }
 
   async getSelectors(capabilityId: string, providerId: string) {
-    return this.prisma.selectorStrategy.findMany({
+    return this.systemPrisma.selectorStrategy.findMany({
       where: { capabilityId, providerId, isActive: 1 },
       orderBy: { priority: 'asc' },
     })
@@ -186,11 +201,11 @@ export class CapStoreDb {
   // ── L4: Conversation CRUD ──────────────────────────────────────────────
 
   async getConversation(id: string) {
-    return this.prisma.conversation.findUnique({ where: { id } })
+    return this.userPrisma.conversation.findUnique({ where: { id } })
   }
 
   async listConversations(opts?: { providerId?: string; limit?: number }) {
-    return this.prisma.conversation.findMany({
+    return this.userPrisma.conversation.findMany({
       where: opts?.providerId ? { providerId: opts.providerId } : undefined,
       orderBy: { createdAt: 'desc' },
       take: opts?.limit ?? 50,
@@ -204,7 +219,7 @@ export class CapStoreDb {
     title?: string
   }) {
     const now = Date.now()
-    return this.prisma.conversation.create({
+    return this.userPrisma.conversation.create({
       data: {
         id: input.id,
         providerSessionId: input.providerSessionId,
@@ -232,13 +247,14 @@ export class CapStoreDb {
     const accountId = input.accountId ?? `${providerId}_default`
     const now = Date.now()
 
-    const existing = await this.prisma.providerSession.findFirst({
+    const existing = await this.userPrisma.providerSession.findFirst({
       where: { providerId, accountId },
       select: { id: true },
     })
     if (existing) return { id: existing.id }
 
-    await this.prisma.providerDefinition
+    // Upsert provider in system DB (bootstrap)
+    await this.systemPrisma.providerDefinition
       .upsert({
         where: { id: providerId },
         create: {
@@ -254,11 +270,11 @@ export class CapStoreDb {
         log.warn({ err, providerId }, 'Provider upsert failed during bootstrap')
       })
 
-    const vivimSession = await this.prisma.vivimSession.create({
+    const vivimSession = await this.userPrisma.vivimSession.create({
       data: { id: newId(), state: 'idle', contextJson: '{}', createdAt: now, updatedAt: now },
     })
 
-    await this.prisma.providerAccount.upsert({
+    await this.systemPrisma.providerAccount.upsert({
       where: { id: accountId },
       create: {
         id: accountId,
@@ -276,7 +292,7 @@ export class CapStoreDb {
       update: { updatedAt: now },
     })
 
-    const session = await this.prisma.providerSession.create({
+    const session = await this.userPrisma.providerSession.create({
       data: {
         id: newId(),
         vivimSessionId: vivimSession.id,
@@ -301,7 +317,7 @@ export class CapStoreDb {
     metadata?: Record<string, unknown>
   }) {
     const now = Date.now()
-    return this.prisma.conversationMessage.create({
+    return this.userPrisma.conversationMessage.create({
       data: {
         id: input.id,
         conversationId: input.conversationId,
@@ -318,7 +334,7 @@ export class CapStoreDb {
   }
 
   async getMessages(conversationId: string, opts?: { limit?: number; before?: string }) {
-    return this.prisma.conversationMessage.findMany({
+    return this.userPrisma.conversationMessage.findMany({
       where: {
         conversationId,
         ...(opts?.before ? { id: { lt: opts.before } } : {}),
@@ -341,7 +357,7 @@ export class CapStoreDb {
     selectorUsed?: string
     selectorHit?: number
   }) {
-    return this.prisma.outcome.create({
+    return this.systemPrisma.outcome.create({
       data: {
         id: input.id,
         capabilityId: input.capabilityId,
@@ -373,7 +389,7 @@ export class CapStoreDb {
     ok: boolean
     error?: string
   }) {
-    return this.prisma.traceEntry.create({
+    return this.systemPrisma.traceEntry.create({
       data: {
         id: input.id,
         engine: input.engine,
@@ -395,21 +411,21 @@ export class CapStoreDb {
   // ── L8: Config ─────────────────────────────────────────────────────────
 
   async getConfig(engineId: string) {
-    return this.prisma.configEntry.findMany({
+    return this.systemPrisma.configEntry.findMany({
       where: { engineId },
     })
   }
 
   async setConfig(engineId: string, configJson: string) {
-    const existing = await this.prisma.configEntry.findFirst({ where: { engineId } })
+    const existing = await this.systemPrisma.configEntry.findFirst({ where: { engineId } })
     const now = Date.now()
     if (existing) {
-      return this.prisma.configEntry.update({
+      return this.systemPrisma.configEntry.update({
         where: { id: existing.id },
         data: { configJson },
       })
     }
-    return this.prisma.configEntry.create({
+    return this.systemPrisma.configEntry.create({
       data: {
         id: `cfg_${engineId}_${Date.now()}`,
         engineId,
@@ -423,9 +439,7 @@ export class CapStoreDb {
   }
 
   async getConfigValue(engineId: string, _key: string) {
-    // ConfigEntry doesn't have a config_key field — it uses engineId + scopeType + scopeId
-    // This method is kept for backward compat but may need adjustment
-    const entry = await this.prisma.configEntry.findFirst({
+    const entry = await this.systemPrisma.configEntry.findFirst({
       where: { engineId },
     })
     return entry?.configJson ?? null
@@ -498,26 +512,32 @@ const DEFAULT_PRAGMAS: DbPragmaPolicy = {
   foreignKeys: true,
 }
 
+async function applyPragmas(
+  prisma: SystemPrismaClient | UserPrismaClient,
+  pragmas: DbPragmaPolicy,
+): Promise<void> {
+  await prisma.$queryRawUnsafe(`PRAGMA journal_mode = ${pragmas.journalMode}`)
+  await prisma.$queryRawUnsafe(`PRAGMA synchronous = ${pragmas.synchronous}`)
+  await prisma.$queryRawUnsafe(`PRAGMA cache_size = ${pragmas.cacheSize}`)
+  await prisma.$queryRawUnsafe(`PRAGMA temp_store = ${pragmas.tempStore}`)
+  await prisma.$queryRawUnsafe(`PRAGMA mmap_size = ${pragmas.mmapSize}`)
+  await prisma.$queryRawUnsafe(`PRAGMA busy_timeout = ${pragmas.busyTimeoutMs}`)
+  await prisma.$queryRawUnsafe(`PRAGMA wal_autocheckpoint = ${pragmas.walAutocheckpoint}`)
+  await prisma.$queryRawUnsafe(`PRAGMA foreign_keys = ${pragmas.foreignKeys ? 'ON' : 'OFF'}`)
+}
+
 export async function configurePrisma(
   db: CapStoreDb,
   policy?: Partial<DbPragmaPolicy>,
 ): Promise<void> {
   const pragmas = { ...DEFAULT_PRAGMAS, ...policy }
 
-  // All pragmas may return a row (e.g. journal_mode echoes the new mode,
-  // mmap_size/busy_timeout echo the value). $executeRawUnsafe rejects returned
-  // rows on SQLite (P2010), so every pragma write goes through $queryRawUnsafe.
-  await db.prisma.$queryRawUnsafe(`PRAGMA journal_mode = ${pragmas.journalMode}`)
-  await db.prisma.$queryRawUnsafe(`PRAGMA synchronous = ${pragmas.synchronous}`)
-  await db.prisma.$queryRawUnsafe(`PRAGMA cache_size = ${pragmas.cacheSize}`)
-  await db.prisma.$queryRawUnsafe(`PRAGMA temp_store = ${pragmas.tempStore}`)
-  await db.prisma.$queryRawUnsafe(`PRAGMA mmap_size = ${pragmas.mmapSize}`)
-  await db.prisma.$queryRawUnsafe(`PRAGMA busy_timeout = ${pragmas.busyTimeoutMs}`)
-  await db.prisma.$queryRawUnsafe(`PRAGMA wal_autocheckpoint = ${pragmas.walAutocheckpoint}`)
-  await db.prisma.$queryRawUnsafe(`PRAGMA foreign_keys = ${pragmas.foreignKeys ? 'ON' : 'OFF'}`)
+  // Apply to both clients
+  await applyPragmas(db.systemPrisma, pragmas)
+  await applyPragmas(db.userPrisma, pragmas)
 
   const journalMode =
-    await db.prisma.$queryRawUnsafe<{ journal_mode: string }[]>('PRAGMA journal_mode')
+    await db.systemPrisma.$queryRawUnsafe<{ journal_mode: string }[]>('PRAGMA journal_mode')
   log.info(`[db] pragmas configured — journal_mode=${journalMode[0]?.journal_mode}`)
 }
 

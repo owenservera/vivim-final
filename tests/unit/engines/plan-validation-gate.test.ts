@@ -7,7 +7,6 @@ import { PlanValidationGate } from '../../../src/engines/plan-validation-gate.js
 
 function makePlan(overrides?: Partial<ActionPlan>): ActionPlan {
   return {
-    id: 'plan-test-001',
     version: 1,
     goal: 'test goal',
     nodes: [
@@ -75,7 +74,7 @@ describe('PlanValidationGate', () => {
   it('should reject risk tier exceeding max', () => {
     const strictGate = new PlanValidationGate({ maxRiskTier: 'A' })
     const plan = makePlan({
-      risk: { tier: 'C', reason: 'test', mitigation: 'none' },
+      metadata: { risk: { tier: 'C', reason: 'test', mitigation: 'none' } },
     })
     const result = strictGate.validate(plan)
     expect(result.valid).toBe(false)
@@ -126,7 +125,7 @@ describe('PlanValidationGate', () => {
   })
 
   it('should warn when confirmation required but no prompt', () => {
-    const plan = makePlan({ requiresConfirmation: true })
+    const plan = makePlan({ metadata: { requiresConfirmation: true } })
     const result = gate.validate(plan)
     expect(result.warnings.some((w) => w.includes('confirmationPrompt'))).toBe(true)
   })

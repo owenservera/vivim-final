@@ -9,7 +9,6 @@
 import { AI_ERRORS } from '../core/errors.js'
 import type { AIRequest, ProviderId, RequestId } from '../core/types.js'
 import type { IExecutionManager } from './manager.js'
-import { EXECUTION_TRANSITIONS, canTransition } from './types.js'
 import type {
   AIExecution,
   ExecutionFilter,
@@ -17,7 +16,7 @@ import type {
   ExecutionId,
   ExecutionSnapshot,
 } from './types.js'
-import { executionId } from './types.js'
+import { canTransition, EXECUTION_TRANSITIONS, executionId } from './types.js'
 
 const STALE_TTL_MS = 60 * 60 * 1000 // 1 hour
 
@@ -87,14 +86,17 @@ export class InMemoryExecutionManager implements IExecutionManager {
 
           return {
             async next(): Promise<IteratorResult<import('./types.js').ExecutionEvent>> {
-              if (done) return { value: undefined, done: true }
+              if (done) return { value: undefined as any, done: true }
               if (queue.length > 0) {
-                return { value: queue.shift()?.event, done: false }
+                const item = queue.shift()
+                if (item) {
+                  return { value: item.event, done: false }
+                }
               }
               return new Promise((resolve) => {
                 waiting = (event) => {
                   if (event === null) {
-                    resolve({ value: undefined, done: true })
+                    resolve({ value: undefined as any, done: true })
                   } else {
                     resolve({ value: event, done: false })
                   }
@@ -293,7 +295,7 @@ export class InMemoryExecutionManager implements IExecutionManager {
       try {
         listener(event)
       } catch {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // Listener errors are ignored — the bus must not crash
       }
     }

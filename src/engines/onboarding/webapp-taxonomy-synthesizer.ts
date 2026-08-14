@@ -14,7 +14,7 @@
 
 import { ulid } from 'ulid'
 import type { WebAppTaxonomyStoreContract } from '../../storage/contracts/onboarding/webapp-taxonomy-store.js'
-import { type Result, ok } from './result.js'
+import { ok, type Result } from './result.js'
 import type { WebAppFingerprintVector } from './types.js'
 import { cosineSimilarity, toNumericVector } from './webapp-fingerprint.js'
 

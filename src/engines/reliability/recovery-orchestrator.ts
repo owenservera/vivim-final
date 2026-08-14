@@ -8,7 +8,7 @@ import { getMetrics } from '../../observability/metrics.js'
 import type { FailureClass, RecoveryStrategy } from '../actor/messages.js'
 import type { EventBus, FleetEvent } from '../events/event-bus.js'
 import { classifyFailure } from './classifier.js'
-import { type RecoveryContext, type StrategyResult, executeRecovery } from './strategies.js'
+import { executeRecovery, type RecoveryContext, type StrategyResult } from './strategies.js'
 
 export interface RecoveryAttempt {
   failureClass: FailureClass

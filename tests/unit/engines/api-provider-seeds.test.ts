@@ -2,7 +2,6 @@
 // Unit 5.3 — Validate API provider JSON manifests
 
 import { describe, expect, it } from 'bun:test'
-import { z } from 'zod'
 import { ProviderManifestSchema } from '../../../src/schema/provider-manifest.js'
 
 const providers = ['openai-api', 'anthropic-api', 'openrouter']

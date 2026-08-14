@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  TextNormalizer,
   normalizeText,
+  TextNormalizer,
   tokenizeText,
 } from '../../../../src/engines/nlcl/text-normalizer.js'
 

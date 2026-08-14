@@ -12,12 +12,13 @@ import { getLogger } from '../lib/logger.js'
 import { ContentPartSchema, isLegacyBlock, migrateLegacyParts } from '../schema/streaming.js'
 
 const log = getLogger('stream-parser')
+
 import type { ContentPart } from '../schema/streaming.js'
 import type { ParserExecutionLogStore } from '../storage/contracts/parser-execution-log-store.js'
 import type { ParserStore, ProviderParserRow } from '../storage/contracts/parser-store.js'
 import { repairLowConfidenceParser } from './parser-repair.js'
-import { SandboxRunner } from './sandbox-runner.js'
 import type { SandboxPermissions } from './sandbox-runner.js'
+import { SandboxRunner } from './sandbox-runner.js'
 
 export type ContentBlock = ContentPart
 
@@ -218,7 +219,7 @@ export class StreamParserEngine {
   constructor(
     private store: ParserStore,
     private config?: ParserConfig,
-    private sandbox?: SandboxRunner,
+    private sandbox?: InstanceType<typeof SandboxRunner>,
     private logStore?: ParserExecutionLogStore,
   ) {}
 
@@ -577,6 +578,6 @@ export class StreamParserEngine {
         }),
       })
       .catch(() => {}) // swallow — diagnostic logging is best-effort
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 }

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import type { CapStoreDb } from '../../src/storage/db.js'
 
 type CommandDescriptionSeed = {
   commandId: string
@@ -694,13 +692,13 @@ const commandDescriptions: CommandDescriptionSeed[] = [
   },
 ]
 
-async function seedCommandDescriptions() {
+async function seedCommandDescriptions(db: CapStoreDb) {
   // [audit] removed: console.log('Seeding command descriptions...')
 
   const now = BigInt(Date.now())
 
   for (const desc of commandDescriptions) {
-    await prisma.commandDescription.upsert({
+    await db.systemPrisma.commandDescription.upsert({
       where: { commandId: desc.commandId },
       create: {
         id: `cmd_${desc.commandId.replace(/[^a-z0-9]/gi, '_')}`,
@@ -726,14 +724,16 @@ async function seedCommandDescriptions() {
     })
   }
 
-  const count = await prisma.commandDescription.count()
+  const _count = await db.systemPrisma.commandDescription.count()
   // [audit] removed: console.log(`Seeded ${count} command descriptions`)
 }
 
-seedCommandDescriptions()
-  .then(() => prisma.$disconnect())
-  .catch(async (e) => {
-    // [audit] removed: console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+if (import.meta.main) {
+  const { getDb } = await import('../../src/storage/db.js')
+  const db = getDb()
+  try {
+    await seedCommandDescriptions(db)
+  } finally {
+    await db.close()
+  }
+}

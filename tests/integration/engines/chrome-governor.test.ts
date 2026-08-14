@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'bun:test'
-import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
 import type {
-  CDPTransport,
   CaptureResult,
+  CDPTransport,
   PageState,
 } from '../../../src/engines/chrome-governor.js'
+import { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
 import type { GovernorStore } from '../../../src/storage/contracts/governor-store.js'
 
 // ── Mock transport ───────────────────────────────────────────────────────────

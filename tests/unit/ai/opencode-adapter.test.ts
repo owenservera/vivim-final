@@ -4,11 +4,11 @@
 
 import { describe, expect, it, mock } from 'bun:test'
 import {
+  createRequestId,
   OPENCODE_DEFAULT_MODEL,
   OPENCODE_MANIFEST,
   OPENCODE_PROVIDER_ID,
   OpenCodeAdapter,
-  createRequestId,
 } from '../../../src/ai/index.js'
 import type { OpenCodeClient } from '../../../src/engines/opencode/opencode-client.js'
 import type { OpencodeEvent } from '../../../src/engines/opencode/types.js'
@@ -54,7 +54,7 @@ function createMockOpenCodeClient(): OpenCodeClient {
 
 describe('AI Gateway — OpenCodeAdapter', () => {
   it('has the correct provider manifest', () => {
-    expect(OPENCODE_PROVIDER_ID).toBe('opencode-serve')
+    expect(OPENCODE_PROVIDER_ID as string).toBe('opencode-serve')
     expect(OPENCODE_MANIFEST.kind).toBe('local')
     expect(OPENCODE_MANIFEST.trust).toBe('official')
     expect(OPENCODE_MANIFEST.capabilities.chat?.supported).toBe(true)
@@ -162,7 +162,7 @@ describe('AI Gateway — OpenAICompatibleAdapter (manifest)', () => {
       capabilities: ['chat', 'streaming'],
     }
     const validated = validateManifest(manifest)
-    expect(validated.providerId).toBe('test-provider')
+    expect(validated.providerId as string).toBe('test-provider')
     expect(validated.baseURL).toBe('http://localhost:8080/v1')
   })
 

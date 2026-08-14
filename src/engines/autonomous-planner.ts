@@ -7,11 +7,7 @@
 
 import { ConsentViolationError } from '../errors.js'
 import { newId } from '../ids.js'
-import type {
-  ActionClassification,
-  AutonomousGoal,
-  AutonomousStep,
-} from './autonomous-types.js'
+import type { ActionClassification, AutonomousGoal, AutonomousStep } from './autonomous-types.js'
 import { classificationAtLeast, toAutonomousClassification } from './autonomous-types.js'
 import type { ParsedIntent } from './nlcl/types.js'
 
@@ -75,7 +71,7 @@ export function planStepsFromIntent(
   goal: AutonomousGoal,
   intent: ParsedIntent | null,
 ): AutonomousStep[] {
-  if (!intent || !intent.capabilityId) return []
+  if (!intent?.capabilityId) return []
   const nodes: ParsedIntent[] = [intent, ...(intent.alternatives ?? [])]
   const steps: AutonomousStep[] = []
   for (const node of nodes) {

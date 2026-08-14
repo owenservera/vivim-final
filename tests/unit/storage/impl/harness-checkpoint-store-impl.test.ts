@@ -19,7 +19,10 @@ function createMockDb() {
       async findFirst({
         where,
         orderBy,
-      }: { where: Record<string, unknown>; orderBy?: Record<string, string> }) {
+      }: {
+        where: Record<string, unknown>
+        orderBy?: Record<string, string>
+      }) {
         const filtered = checkpoints.filter((c) => {
           if (where.slaveId) return c.slaveId === where.slaveId
           if (where.conversationId) return c.conversationId === where.conversationId

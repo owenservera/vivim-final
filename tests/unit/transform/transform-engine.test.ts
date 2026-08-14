@@ -75,7 +75,7 @@ function transformData(
   return engine.transform(entity, row, direction as any, version as any).data as Record<string, any>
 }
 
-function transformArrayData(
+function _transformArrayData(
   engine: TransformEngine,
   entity: string,
   rows: Record<string, unknown>[],

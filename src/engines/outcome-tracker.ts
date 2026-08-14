@@ -89,7 +89,11 @@ export class OutcomeTracker {
   }
 
   /** Record a raw outcome (for callers that don't have a full OutcomeEvent). */
-  recordRaw(subjectId: string, subjectType: string, outcome: OutcomeKind): void {
+  recordRaw(
+    subjectId: string,
+    subjectType: OutcomeEvent['subjectType'],
+    outcome: OutcomeKind,
+  ): void {
     this.record({
       type: 'outcome.recorded' as const,
       eventId: '' as never,

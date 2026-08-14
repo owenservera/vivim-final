@@ -34,7 +34,7 @@ export class LocalLLMResolver implements IntentResolver {
   readonly name = 'local-llm'
   private adapter: LocalLLMAdapter
   private registry: CommandPatternRegistry
-  private minConfidence: number
+  private minConfidence = 0.5
 
   constructor(adapter: LocalLLMAdapter, registry: CommandPatternRegistry, minConfidence = 0.5) {
     this.adapter = adapter

@@ -1,13 +1,12 @@
 // src/engines/agentic-loop.ts
 // AgenticLoopEngine — observation-action loop: SENSE→PLAN→ACT→OBSERVE→REFLECT→ADAPT
 
+import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
+import { LoopDetector } from './loop-detector.js'
 import type { MirrorEngine } from './mirror-engine.js'
 import type { ObservationTap } from './observation-tap.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
-
-import { catchDebug } from '../lib/catch-logger.js'
-import { LoopDetector } from './loop-detector.js'
 
 const log = getLogger('agentic-loop')
 

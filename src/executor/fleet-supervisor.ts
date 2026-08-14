@@ -7,8 +7,8 @@ import { BunCdpClient } from './cdp.js'
 import { FleetLimiter } from './fleet-limiter.js'
 import {
   type ChromeLaunchOptions,
-  type LaunchResult,
   killChrome,
+  type LaunchResult,
   launchChrome,
 } from './launcher.js'
 import { PortReaper } from './port-reaper.js'
@@ -202,23 +202,11 @@ export class FleetSupervisor {
     this.exitHandlerRegistered = true
     const handler = () => {
       this.killAll().catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
     process.once('beforeExit', handler)
     process.once('SIGTERM', handler)
     process.once('SIGINT', handler)
-  }
-
-  /**
-   * Reap a Chrome PID and its child tree (renderer/gpu/helper processes).
-   * Reuses PortReaper.reapProcess which already does a Windows `/T` tree kill.
-   */
-  private async reapTree(pid: number): Promise<void> {
-    try {
-      await this.portReaper.reapProcess(pid)
-    } catch (e) {
-      catchDebug(e, 'fleet-supervisor: reap process failed')
-    }
   }
 
   // ── Boot ───────────────────────────────────────────────────────────────

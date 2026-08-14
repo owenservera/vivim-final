@@ -40,7 +40,7 @@ export class SlaveRead {
     // DISC-3: Runtime.enable is owned by ChromeGovernor.enableDomains — never
     // enable the Runtime domain directly here (would double-enable / race the governor).
     await this.cdp.send('Page.enable').catch(() => {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Page domain optional for pure read operations
     })
   }

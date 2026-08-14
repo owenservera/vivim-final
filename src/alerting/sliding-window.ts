@@ -63,7 +63,7 @@ export class SlidingWindow {
   private prune(now: number): void {
     const cutoff = now - this.windowMs
     // Entries are appended in order, so we can shift from the front.
-    while (this.entries.length > 0 && this.entries[0].ts < cutoff) {
+    while (this.entries.length > 0 && this.entries[0]!.ts < cutoff) {
       this.entries.shift()
     }
   }
@@ -87,7 +87,7 @@ export class SlidingWindow {
       case 'sum': {
         let total = 0
         for (let i = 0; i < this.entries.length; i++) {
-          total += this.entries[i].value
+          total += this.entries[i]!.value
         }
         return total
       }
@@ -95,7 +95,7 @@ export class SlidingWindow {
       case 'avg': {
         let total = 0
         for (let i = 0; i < this.entries.length; i++) {
-          total += this.entries[i].value
+          total += this.entries[i]!.value
         }
         return total / this.entries.length
       }
@@ -103,7 +103,7 @@ export class SlidingWindow {
       case 'max': {
         let m = Number.NEGATIVE_INFINITY
         for (let i = 0; i < this.entries.length; i++) {
-          if (this.entries[i].value > m) m = this.entries[i].value
+          if (this.entries[i]!.value > m) m = this.entries[i]!.value
         }
         return m
       }
@@ -111,7 +111,7 @@ export class SlidingWindow {
       case 'min': {
         let m = Number.POSITIVE_INFINITY
         for (let i = 0; i < this.entries.length; i++) {
-          if (this.entries[i].value < m) m = this.entries[i].value
+          if (this.entries[i]!.value < m) m = this.entries[i]!.value
         }
         return m
       }
@@ -124,7 +124,7 @@ export class SlidingWindow {
    */
   size(): number {
     if (this.entries.length > 0) {
-      this.prune(this.entries[this.entries.length - 1].ts)
+      this.prune(this.entries[this.entries.length - 1]!.ts)
     }
     return this.entries.length
   }

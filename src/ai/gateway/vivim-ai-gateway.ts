@@ -7,33 +7,30 @@
  * and (optionally) IToolOrchestrator behind the IVIVIMGateway public API.
  */
 
+import { AI_ERRORS } from '../core/errors.js'
 import type {
   AIEvent,
   AIRequest,
   ModelDescriptor,
+  PluginId,
   ProviderHealth,
   ProviderId,
   ProviderManifest,
   RequestId,
   RoutingDecision,
 } from '../core/types.js'
-import type { PluginId } from '../core/types.js'
-import type { GatewayEvent, GatewayEventFilter } from '../events/bus.js'
-import type { IEventBus } from '../events/bus.js'
+import type { GatewayEvent, GatewayEventFilter, IEventBus } from '../events/bus.js'
 import type { IExecutionManagerInternal } from '../execution/internal.js'
 import type { ExecutionHandle, ExecutionId } from '../execution/types.js'
 import type { IPolicyEnforcer, IPolicyEvaluator } from '../policy/policy.js'
 import type { IProviderAdapter } from '../protocol/adapter.js'
-import type { IProviderRegistry } from '../registry/registry.js'
-import type { IModelRegistry } from '../registry/registry.js'
+import type { IModelRegistry, IProviderRegistry } from '../registry/registry.js'
 import type { IRouter, RoutingDependencies } from '../routing/router.js'
 import type { IResourceMonitor } from '../runtime/resources.js'
 import type { IRuntimeSupervisor } from '../runtime/supervisor.js'
+import type { TSRuntimeSupervisor } from '../runtime/ts-supervisor.js'
 import type { IToolOrchestrator } from '../tools/orchestrator.js'
 import type { IVIVIMGateway, ModelFilter, ProviderFilter } from './gateway.js'
-
-import { AI_ERRORS } from '../core/errors.js'
-import type { TSRuntimeSupervisor } from '../runtime/ts-supervisor.js'
 
 export interface VivimAIGatewayOptions {
   readonly executionManager: IExecutionManagerInternal
@@ -93,8 +90,10 @@ export class VivimAIGateway implements IVIVIMGateway {
       }
     } finally {
       // Ensure the handle's event iterator is closed
-      const events = handle.events as AsyncIterator<unknown> & { return?: () => Promise<unknown> }
-      if (typeof events?.return === 'function') {
+      const events = handle.events as unknown as AsyncIterator<unknown> & {
+        return?: () => Promise<unknown>
+      }
+      if (events && typeof events.return === 'function') {
         await events.return()
       }
     }
@@ -124,14 +123,11 @@ export class VivimAIGateway implements IVIVIMGateway {
 
       decision = await this.opts.router.route(request, routingDeps)
     } catch (err) {
-      const aiError = err instanceof VivimAIErrorFromExecution
+      const aiError =
+        err instanceof VivimAIErrorFromExecution
           ? err.error
           : AI_ERRORS.unknown(String(err), err).toJSON()
-      await this.opts.executionManager.recordFailed(
-        handle.executionId,
-        aiError,
-        false,
-      )
+      await this.opts.executionManager.recordFailed(handle.executionId, aiError, false)
       throw err
     }
 

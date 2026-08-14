@@ -14,9 +14,9 @@ import type { EventRecordStore } from '../event-record-store.js'
 import { parseOpencodeJson } from '../local-agent/local-agent-executor.js'
 import type { OpenCodeClient } from './opencode-client.js'
 import {
+  autoDenyTier,
   type OpencodeEvent,
   type PermissionDecision,
-  autoDenyTier,
   riskTierForTool,
 } from './types.js'
 
@@ -106,7 +106,7 @@ export class OpenCodeIngest {
         payload: ev as unknown,
       })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
 
     const thread = this.threadBySession.get(sessionId)
     if (!thread) return

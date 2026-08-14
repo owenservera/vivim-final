@@ -5,8 +5,8 @@ import type {
   ProviderStreamConfigRow,
   StreamConfigStore,
 } from '../contracts/stream-config-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 interface PrismaStreamConfigRow {
   id: string
@@ -21,8 +21,8 @@ interface PrismaStreamConfigRow {
   isActive: number
   version: number
   supersededById: string | null
-  createdAt: number
-  updatedAt: number
+  createdAt: number | bigint
+  updatedAt: number | bigint
 }
 
 function toStreamConfigRow(r: PrismaStreamConfigRow): ProviderStreamConfigRow {
@@ -39,8 +39,8 @@ function toStreamConfigRow(r: PrismaStreamConfigRow): ProviderStreamConfigRow {
     isActive: r.isActive,
     version: r.version,
     supersededById: r.supersededById,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    createdAt: typeof r.createdAt === 'bigint' ? Number(r.createdAt) : r.createdAt,
+    updatedAt: typeof r.updatedAt === 'bigint' ? Number(r.updatedAt) : r.updatedAt,
   }
 }
 
@@ -52,7 +52,7 @@ export class StreamConfigStoreImpl implements StreamConfigStore {
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async getConfig(providerId: string, transport: string): Promise<ProviderStreamConfigRow | null> {
@@ -72,7 +72,7 @@ export class StreamConfigStoreImpl implements StreamConfigStore {
   }
 
   async upsertConfig(config: ProviderStreamConfigRow): Promise<void> {
-    const now = Date.now()
+    const now = BigInt(Date.now())
     await this.p.providerStreamConfig.upsert({
       where: {
         providerId_streamTransport_version: {
@@ -94,7 +94,7 @@ export class StreamConfigStoreImpl implements StreamConfigStore {
         isActive: config.isActive,
         version: config.version,
         supersededById: config.supersededById,
-        createdAt: config.createdAt || now,
+        createdAt: config.createdAt ? BigInt(config.createdAt) : now,
         updatedAt: now,
       },
       update: {
@@ -120,7 +120,7 @@ export class StreamConfigStoreImpl implements StreamConfigStore {
   }
 
   async supersedeConfig(id: string, supersededById: string): Promise<void> {
-    const now = Date.now()
+    const now = BigInt(Date.now())
     await this.p.providerStreamConfig.update({
       where: { id },
       data: {

@@ -14,6 +14,7 @@ export class DiscoveryMcpServer {
       ) => Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }>
     }
   > = new Map()
+
   private ctx: DiscoveryServerContext
 
   constructor(ctx: DiscoveryServerContext) {

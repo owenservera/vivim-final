@@ -2,11 +2,11 @@
 // MuxStore — re-exports the contract defined in provider-mux.ts
 
 export type {
-  MuxStore,
-  MuxSessionInput,
-  MuxSessionRow,
   MuxResponseInput,
   MuxResponseRow,
+  MuxSessionInput,
+  MuxSessionRow,
+  MuxStore,
   RoutingPreferenceInput,
   RoutingPreferenceRow,
 } from '../../engines/provider-mux.js'

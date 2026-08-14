@@ -113,8 +113,8 @@ function findDiffOperator(input: string): number {
     if (input[i] === '(') depth++
     if (input[i] === ')') depth--
     if (depth === 0 && input[i] === '-') {
-      const left = i > 0 ? input[i - 1] : ''
-      const right = i < input.length - 1 ? input[i + 1] : ''
+      const left = input[i - 1] ?? ''
+      const right = input[i + 1] ?? ''
       if (/\s/.test(left) || /\s/.test(right)) {
         foundIndex = i
       }

@@ -139,6 +139,8 @@ describe('MemoryFabric', () => {
     await fabric.provisionAgentMemory('agentB', 'runB')
     const oa = fabric.getSubsystem('agentA')?.oracle
     const ob = fabric.getSubsystem('agentB')?.oracle
+    if (!oa) throw new Error('oa is undefined')
+    if (!ob) throw new Error('ob is undefined')
     await oa.consolidate({ userContent: 'secret A', assistantContent: 'reply A', sessionId: 's' })
     await ob.consolidate({ userContent: 'secret B', assistantContent: 'reply B', sessionId: 's' })
     const ra = await oa.recall('secret')
@@ -155,6 +157,7 @@ describe('MemoryFabric', () => {
     await fabric.provisionAgentMemory('agentA', 'runA')
     await fabric.provisionAgentMemory('agentB', 'runB')
     const oa = fabric.getSubsystem('agentA')?.oracle
+    if (!oa) throw new Error('oa is undefined')
     await oa.consolidate({ userContent: 'fact', assistantContent: 'r', sessionId: 's' })
     // The persisted node must carry conversationId = agentMem:agentA
     const scoped = await nodeStore.listNodes({
@@ -183,10 +186,12 @@ describe('MemoryFabric', () => {
     const { fabric } = makeFabric()
     await fabric.provisionAgentMemory('parent', 'runP')
     const op = fabric.getSubsystem('parent')?.oracle
+    if (!op) throw new Error('op is undefined')
     await op.consolidate({ userContent: 'parent fact', assistantContent: 'x', sessionId: 's' })
     const { agentId: child } = { agentId: 'child' }
     await fabric.provisionAgentMemory(child, 'runC', 'parent')
     const oc = fabric.getSubsystem(child)?.oracle
+    if (!oc) throw new Error('oc is undefined')
     const recalled = await oc.recall('parent fact')
     expect(recalled.some((t) => t.includes('parent fact'))).toBe(true)
   })

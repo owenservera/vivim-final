@@ -9,8 +9,8 @@
 import { config } from '../../config.js'
 import { OpenCodeServeError } from '../../errors.js'
 import {
-  type OpenCodeInstanceRegistry,
   createInstanceRegistry,
+  type OpenCodeInstanceRegistry,
 } from './opencode-instance-registry.js'
 
 const HOSTNAME = '127.0.0.1'
@@ -162,7 +162,11 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
       }
       this.spawnOnce()
       await this.waitForReady()
-      this.registry.recordReady(this.instanceId ?? '', this.proc?.pid, this.port)
+      this.registry.recordReady(
+        this.instanceId ?? '',
+        this.getPid() ?? undefined,
+        this.port ?? undefined,
+      )
     }
     this.running = true
     this.emit('ready', { port })
@@ -209,7 +213,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
               if (done) break
             }
           } catch {
-  // [audit] log the error with context here
+            // [audit] log the error with context here
             /* stream closed */
           }
         }
@@ -217,7 +221,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
       }
     }
     this.proc.exited.then((code) => this.onChildExit(code)).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 
   private onChildExit(code: number): void {
@@ -234,7 +238,11 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
             this.waitForReady()
               .then(() => {
                 this.running = true
-                this.registry.recordReady(this.instanceId ?? '', this.proc?.pid, this.port)
+                this.registry.recordReady(
+                  this.instanceId ?? '',
+                  this.getPid() ?? undefined,
+                  this.port ?? undefined,
+                )
                 this.emit('ready', { port: this.port })
               })
               .catch((e) => {
@@ -271,7 +279,7 @@ export class OpenCodeSupervisor implements OpenCodeSupervisorHandle {
         })
         if (res.ok) return
       } catch {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // server not up yet — retry
       }
       await new Promise((r) => setTimeout(r, 250))

@@ -1,11 +1,12 @@
 // src/storage/impl/onboarding/protocol-fingerprint-store-impl.ts
+
 import type {
   ProtocolFingerprintCreateInput,
   ProtocolFingerprintRow,
   ProtocolFingerprintStoreContract,
 } from '../../contracts/onboarding/protocol-fingerprint-store.js'
-import type { PrismaClient } from '../../../prisma.js'
 import type { CapStoreDb } from '../../db.js'
+import type { PrismaClient } from '../../prisma.js'
 
 export class ProtocolFingerprintStoreImpl implements ProtocolFingerprintStoreContract {
   private db: PrismaClient

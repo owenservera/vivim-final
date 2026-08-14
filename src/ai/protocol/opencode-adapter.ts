@@ -28,7 +28,7 @@ import type {
   ProviderManifest,
   RequestId,
 } from '../core/types.js'
-import { VIVIM_AI_PROTOCOL, createEventId, modelId, providerId } from '../core/types.js'
+import { createEventId, modelId, providerId, VIVIM_AI_PROTOCOL } from '../core/types.js'
 import type { IProviderAdapter, ProviderConnection } from './adapter.js'
 
 const OPENCODE_PROVIDER_ID = providerId('opencode-serve')
@@ -443,8 +443,8 @@ export class OpenCodeAdapter implements IProviderAdapter {
 }
 
 export {
-  OPENCODE_PROVIDER_ID,
   OPENCODE_DEFAULT_MODEL,
-  OPENCODE_MANIFEST,
   OPENCODE_DEFAULT_MODEL_DESCRIPTOR,
+  OPENCODE_MANIFEST,
+  OPENCODE_PROVIDER_ID,
 }

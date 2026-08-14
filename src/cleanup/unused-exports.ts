@@ -5,7 +5,7 @@
 // (e.g. src/index.ts), resolves each named export to its source module, then
 // counts how many other .ts files in the codebase import that symbol.
 
-import { readFile, readdir } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { extname, join, relative } from 'node:path'
 
 export interface UnusedExport {
@@ -194,7 +194,7 @@ async function countImports(
         count++
       }
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // skip unreadable files
     }
   }

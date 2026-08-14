@@ -18,17 +18,17 @@ import type {
 
 // Re-export shared types for convenience
 export type {
-  TunnelFrame,
-  HttpRequestFrame,
-  HttpResponseFrame,
-  HttpChunkFrame,
-  HttpAbortFrame,
-  PingFrame,
-  PongFrame,
   AssignedFrame,
   ErrorFrame,
+  HttpAbortFrame,
+  HttpChunkFrame,
+  HttpRequestFrame,
+  HttpResponseFrame,
+  PingFrame,
+  PongFrame,
   StatusFrame,
   TunnelConfig,
+  TunnelFrame,
 }
 
 export type TunnelConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting'

@@ -59,7 +59,6 @@ export class BrowserScheduler {
   private policy: SchedulerPolicy
   private logger: ReturnType<typeof getLogger>
   private metrics = getMetrics()
-  private taskIdCounter = 0
 
   constructor(
     private slaveId: string,

@@ -100,7 +100,8 @@ export class CRDTSyncHandler extends EventEmitter {
 
         const sink = (stream as unknown as LegacyStream).sink
         if (typeof sink === 'function') {
-          await sink([new TextEncoder().encode(JSON.stringify(response))])
+          const payload = new TextEncoder().encode(JSON.stringify(response))
+          await sink([payload] as unknown as AsyncIterable<Uint8Array>)
         }
 
         const { value: ackChunk } = await reader.next()

@@ -7,27 +7,26 @@
 //
 // CONTRACT_VERSION: 1
 
+export type {
+  InsertMutation,
+  RebindMutation,
+  RemoveMutation,
+  ReorderMutation,
+  ReplaceMutation,
+  RestyleMutation,
+  SetPropertyMutation,
+  SetSlotMutation,
+  SurfaceMutation,
+  SurfaceMutationPlan,
+} from '../mutation-schema.js'
 export {
-  SurfaceMutationSchema,
-  SurfaceMutationPlanSchema,
   MUTATION_OPS,
   PROVENANCE_TAGS,
   ProvenanceEnumSchema,
+  SurfaceMutationPlanSchema,
+  SurfaceMutationSchema,
 } from '../mutation-schema.js'
-export type {
-  SurfaceMutation,
-  SurfaceMutationPlan,
-  ReplaceMutation,
-  InsertMutation,
-  RemoveMutation,
-  ReorderMutation,
-  RestyleMutation,
-  RebindMutation,
-  SetPropertyMutation,
-  SetSlotMutation,
-} from '../mutation-schema.js'
-
-export { parseMutation, parseMutationList, parseShorthand, DslParseError } from './parser.js'
+export type { AppliedMutationRecord, ApplyPlanResult } from './executor.js'
 
 export { MutationExecutor, mutationExecutor } from './executor.js'
-export type { AppliedMutationRecord, ApplyPlanResult } from './executor.js'
+export { DslParseError, parseMutation, parseMutationList, parseShorthand } from './parser.js'

@@ -334,7 +334,7 @@ export function resetProviderPluginRegistry(): void {
   if (globalRegistry) {
     // Attempt graceful shutdown
     globalRegistry.stopAll().catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
   globalRegistry = null
 }

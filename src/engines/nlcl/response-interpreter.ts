@@ -12,7 +12,7 @@ import type { CommandResult } from './types.js'
 /** Context for response interpretation — telemetry from resolver + dialogue state. */
 export interface ResponseInterpreterContext {
   /** Which layer resolved the intent (from LayeredResolver telemetry). */
-  resolutionLayer?: 'deterministic' | 'fuzzy' | 'semantic' | 'llm' | 'none'
+  resolutionLayer?: 'deterministic' | 'fuzzy' | 'semantic' | 'classifier' | 'llm' | 'none'
   /** Confidence score from the resolver (0-1). */
   confidence?: number
   /** Number of turns in this dialogue session. */

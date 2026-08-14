@@ -7,12 +7,12 @@
 // so existing `import { ... } from './capability-bootstrap.js'` continues
 // to work without changes.
 
-export {
-  makeCapability,
-  type BootstrapServices,
-} from './capability-bootstrap/types.js'
 export { registerDefaultCapabilities } from './capability-bootstrap/default.js'
-export { seedLocalAgentProvider } from './capability-bootstrap/seed.js'
-export { registerNlInterpretCapability } from './capability-bootstrap/nl-interpret.js'
-export { registerKernelCapabilities } from './capability-bootstrap/kernel.js'
 export { registerDiscoveryCapabilities } from './capability-bootstrap/discovery.js'
+export { registerKernelCapabilities } from './capability-bootstrap/kernel.js'
+export { registerNlInterpretCapability } from './capability-bootstrap/nl-interpret.js'
+export { seedLocalAgentProvider } from './capability-bootstrap/seed.js'
+export {
+  type BootstrapServices,
+  makeCapability,
+} from './capability-bootstrap/types.js'

@@ -104,7 +104,7 @@ export type GroundedReference = z.infer<typeof GroundedReferenceSchema>
 export const ActionNodeSchema = z.object({
   id: z.string().min(1),
   capability: z.string().min(1),
-  input: z.record(z.unknown()).default({}),
+  input: z.record(z.string(), z.unknown()).default({}),
   dependsOn: z.array(z.string()).default([]),
   outputKey: z.string().optional(),
   risk: CapabilityRiskSchema.default('read'),
@@ -121,7 +121,7 @@ export const ActionPlanSchema = z.object({
   goal: z.string().min(1),
   nodes: z.array(ActionNodeSchema).min(1).max(32),
   groundedRefs: z.array(GroundedReferenceSchema).default([]),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
 })
 
 export type ActionPlan = z.infer<typeof ActionPlanSchema>
@@ -262,7 +262,7 @@ export function topologicalOrder(nodes: readonly ActionNode[]): string[] {
     inDegree.set(node.id, node.dependsOn.length)
     for (const dep of node.dependsOn) {
       if (!adjacency.has(dep)) adjacency.set(dep, [])
-      adjacency.get(dep)!.push(node.id)
+      adjacency.get(dep)?.push(node.id)
     }
   }
 

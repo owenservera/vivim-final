@@ -18,7 +18,7 @@ export function createAuthMiddleware(): (req: Request) => Response | null {
     if (!token) return null
 
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return json({ error: 'Authentication required', code: 'AuthError' }, 401)
     }
 

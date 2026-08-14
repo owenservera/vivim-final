@@ -17,7 +17,7 @@ import type {
   ProviderManifest,
   RequestId,
 } from '../../core/types.js'
-import { VIVIM_AI_PROTOCOL, modelId } from '../../core/types.js'
+import { modelId, VIVIM_AI_PROTOCOL } from '../../core/types.js'
 import type { IProviderAdapter, ProviderConnection } from '../adapter.js'
 import { resolveAuthHeaders } from './auth.js'
 import { mapOpenAIError } from './error-mapper.js'
@@ -69,7 +69,7 @@ export class OpenAICompatibleAdapter implements IProviderAdapter {
     this.connection = connection
     // Try to discover models via GET /v1/models (best-effort)
     await this.discoverModels().catch(() => {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Non-fatal: fall back to manifest-declared models
     })
   }
@@ -87,7 +87,7 @@ export class OpenAICompatibleAdapter implements IProviderAdapter {
       if (!data.data) return
       this.runtimeModels = data.data.map((m) => this.translateDiscoveredModel(m.id))
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Non-fatal
     }
   }

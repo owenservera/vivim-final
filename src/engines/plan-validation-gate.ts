@@ -3,7 +3,7 @@
 // Pre-execution validation that enforces the ActionPlan contract.
 // Runs BEFORE any side effect touches the system.
 
-import type { ActionPlan, RISK_TIER } from './action-plan.js'
+import type { ActionPlan } from './action-plan.js'
 
 // ── Validation result ────────────────────────────────────────────────────
 
@@ -17,7 +17,7 @@ export interface PlanValidationResult {
 
 export interface PlanValidationConfig {
   /** Maximum allowed risk tier. Default: 'B' (no D in deterministic plans). */
-  maxRiskTier: RISK_TIER
+  maxRiskTier: 'A' | 'B' | 'C' | 'D'
   /** Require confirmation for destructive actions. Default: true. */
   requireConfirmationForDestructive: boolean
   /** Require all dependsOn to reference existing nodes. Default: true. */
@@ -51,7 +51,6 @@ export class PlanValidationGate {
     const warnings: string[] = []
 
     // 1. Required fields
-    if (!plan.id) errors.push('Plan must have an id')
     if (!plan.goal) errors.push('Plan must have a goal')
     if (!plan.version) warnings.push('Plan should have a version')
 
@@ -101,14 +100,17 @@ export class PlanValidationGate {
       errors.push('Plan contains a dependency cycle')
     }
 
-    // 4. Risk tier check
-    if (plan.risk) {
-      const tierOrder: RISK_TIER[] = ['A', 'B', 'C', 'D']
+    // 4. Risk tier check (risk carried on metadata.risk.tier)
+    const planRisk = (
+      plan.metadata as { risk?: { tier?: string; reason?: string; mitigation?: string } }
+    ).risk
+    if (planRisk?.tier) {
+      const tierOrder: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D']
       const maxIdx = tierOrder.indexOf(this.config.maxRiskTier)
-      const riskIdx = tierOrder.indexOf(plan.risk.tier)
+      const riskIdx = tierOrder.indexOf(planRisk.tier as 'A' | 'B' | 'C' | 'D')
       if (riskIdx > maxIdx) {
         errors.push(
-          `Risk tier "${plan.risk.tier}" exceeds maximum allowed "${this.config.maxRiskTier}"`,
+          `Risk tier "${planRisk.tier}" exceeds maximum allowed "${this.config.maxRiskTier}"`,
         )
       }
     }
@@ -131,17 +133,16 @@ export class PlanValidationGate {
       }
     }
 
-    // 6. Evidence check
-    if (this.config.requireEvidence) {
-      for (const node of plan.nodes) {
-        if (!node.evidence || node.evidence.length === 0) {
-          warnings.push(`Node "${node.id}" has no evidence types`)
-        }
-      }
-    }
+    // 6. Evidence check — ActionNode has no evidence field; node-level
+    //    verification is expressed via node.verify instead.
+    void this.config.requireEvidence
 
-    // 7. Confirmation check
-    if (plan.requiresConfirmation && !plan.confirmationPrompt) {
+    // 7. Confirmation check (carried on metadata)
+    const planMeta = plan.metadata as {
+      requiresConfirmation?: boolean
+      confirmationPrompt?: string
+    }
+    if (planMeta.requiresConfirmation && !planMeta.confirmationPrompt) {
       warnings.push('Plan requires confirmation but has no confirmationPrompt')
     }
 

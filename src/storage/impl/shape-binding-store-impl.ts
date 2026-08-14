@@ -53,7 +53,7 @@ export class ShapeBindingStoreImpl implements ShapeBindingStore {
 
   async delete(id: string): Promise<void> {
     await this.db.prisma.providerShapeBinding.delete({ where: { id } }).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 
   async setActive(id: string, active: boolean): Promise<void> {

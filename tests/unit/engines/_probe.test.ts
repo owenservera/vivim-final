@@ -1,6 +1,7 @@
 import { describe, it, mock } from 'bun:test'
 import { writeFileSync } from 'node:fs'
 import { ConversationManager } from '../../../src/engines/conversation-manager.js'
+
 function makeConv(o?: any) {
   return {
     id: 'conv_1',

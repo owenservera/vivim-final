@@ -1,0 +1,21 @@
+{
+  "seed_version": "2026.08.14",
+  "targets_schema_version": "2026.08.14-014",
+  "description": "User-side seeds: automation, memory intelligence",
+  "seeds": [
+    {
+      "id": "automation",
+      "file": "../../seeds/automation/automation.seed.ts",
+      "function": "seedAutomation",
+      "target": "user",
+      "description": "Agent loop runs and steps"
+    },
+    {
+      "id": "memory-intelligence",
+      "file": "../../seeds/memory-intelligence.ts",
+      "function": "seedMemoryIntelligence",
+      "target": "user",
+      "description": "Entities, topics, projects, user preferences"
+    }
+  ]
+}

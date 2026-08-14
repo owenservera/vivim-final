@@ -18,18 +18,18 @@ import type {
 } from '../../lib/tunnel-shared/types.js'
 
 export type {
-  FileSyncRequest,
-  FileSyncAccept,
-  FileSyncReject,
-  FileComplete,
-  FileVerify,
+  CRDTOperation,
+  CRDTSyncAck,
   CRDTSyncRequest,
   CRDTSyncResponse,
-  CRDTSyncAck,
-  CRDTOperation,
-  PresenceUpdate,
-  PresenceAck,
+  FileComplete,
+  FileSyncAccept,
+  FileSyncReject,
+  FileSyncRequest,
+  FileVerify,
   P2PConfig,
+  PresenceAck,
+  PresenceUpdate,
 }
 
 export type P2PNodeState = 'stopped' | 'starting' | 'running' | 'stopping' | 'error'

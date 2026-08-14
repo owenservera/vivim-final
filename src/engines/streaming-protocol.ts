@@ -33,9 +33,9 @@ export interface ParserModule {
 export class StreamingProtocol {
   private handlers: StreamingEventHandler[] = []
   private blockBuffer: ContentBlock[] = []
+  private eventBus: CapabilityEventBus | null = null
   private currentConversationId = ''
   private currentMessageId = ''
-  private eventBus: CapabilityEventBus | null = null
 
   constructor(
     private readonly parser: ParserModule,

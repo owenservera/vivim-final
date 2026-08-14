@@ -7,14 +7,17 @@
 //   bun run ci --fix     # auto-fix lint/format issues first, then run gate
 //
 // Gate steps (in order):
-//   1. prisma generate   — regenerate client from schema
-//   2. typecheck         — bun x tsc --noEmit
-//   3. lint              — bun run lint (biome check src/ tests/ seeds/)
-//   4. unit tests        — bun test tests/unit/
-//   5. arch tests        — bun test tests/arch/
-//   6. build             — bun run build (tsup)
-//   7. docs:openapi      — bun run docs:openapi
-//   8. docs:manual       — bun run docs:manual
+//   1. prisma generate (system)  — regenerate system client
+//   2. prisma generate (user)    — regenerate user client
+//   3. prisma drift check (system) — schema vs migrations drift
+//   4. prisma drift check (user)   — schema vs migrations drift
+//   5. typecheck         — bun x tsc --noEmit
+//   6. lint              — bun run lint (biome check src/ tests/ seeds/)
+//   7. unit tests        — bun test tests/unit/
+//   8. arch tests        — bun test tests/arch/
+//   9. build             — bun run build (tsup)
+//  10. docs:openapi      — bun run docs:openapi
+//  11. docs:manual       — bun run docs:manual
 //
 // Each step prints a clear PASS/FAIL banner. On failure, the script exits
 // immediately with the failing step's exit code so the user can fix and
@@ -36,8 +39,20 @@ interface Step {
 
 const steps: Step[] = [
   {
-    name: 'prisma generate',
-    cmd: ['bun', 'x', 'prisma', 'generate'],
+    name: 'prisma generate (system)',
+    cmd: ['bun', 'x', 'prisma', 'generate', '--schema=prisma/system/schema.prisma'],
+  },
+  {
+    name: 'prisma generate (user)',
+    cmd: ['bun', 'x', 'prisma', 'generate', '--schema=prisma/user/schema.prisma'],
+  },
+  {
+    name: 'prisma drift check (system)',
+    cmd: ['bun', 'x', 'prisma', 'migrate', 'diff', '--from-migrations', 'prisma/system/migrations', '--to-schema-datamodel', 'prisma/system/schema.prisma', '--exit-code'],
+  },
+  {
+    name: 'prisma drift check (user)',
+    cmd: ['bun', 'x', 'prisma', 'migrate', 'diff', '--from-migrations', 'prisma/user/migrations', '--to-schema-datamodel', 'prisma/user/schema.prisma', '--exit-code'],
   },
   {
     name: 'typecheck',

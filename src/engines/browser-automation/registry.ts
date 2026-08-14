@@ -20,7 +20,7 @@ import * as state from './defs/state.js'
 import * as tab from './defs/tab.js'
 import * as wait from './defs/wait.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
-import type { BrowserCapabilityDef, CapCtx, CapResult, CapabilityAxis } from './types.js'
+import type { BrowserCapabilityDef, CapabilityAxis, CapCtx, CapResult } from './types.js'
 
 export class BrowserCapabilityRegistry {
   private defs = new Map<string, BrowserCapabilityDef>()
@@ -70,7 +70,7 @@ export class BrowserCapabilityRegistry {
     ctx: { slaveId: string; runId?: string },
   ): Promise<CapResult> {
     const def = this.resolve(capabilityId)
-    const parsed = def.params.parse(params)
+    const parsed = def.params.parse(params) as Record<string, unknown>
     const capCtx: CapCtx = {
       slaveId: ctx.slaveId,
       governor: this.governor,
@@ -126,7 +126,7 @@ export class BrowserCapabilityRegistry {
  */
 export function parseSelector(
   params: Record<string, unknown>,
-  exclude: Set<string> = EMPTY_EXCLUDE,
+  exclude: ReadonlySet<string> = EMPTY_EXCLUDE,
 ): import('./types.js').SemanticSelector | null {
   const candidates: import('./types.js').SemanticSelector[] = []
   if (typeof params.testid === 'string' && !exclude.has('testid'))
@@ -142,7 +142,7 @@ export function parseSelector(
   if (typeof params.selector === 'string' && !exclude.has('selector'))
     candidates.push({ css: params.selector })
   if (candidates.length === 0) return null
-  if (candidates.length === 1) return candidates[0]
+  if (candidates.length === 1) return candidates[0]!
   return { composite: candidates }
 }
 

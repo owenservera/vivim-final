@@ -205,7 +205,7 @@ export class ExecutionKernel {
       }
 
       // Return the last node's output as the plan result
-      const lastNodeId = order[order.length - 1]
+      const lastNodeId = order[order.length - 1]!
       const lastOutput = outputs.get(lastNodeId) as T | undefined
       return { executionId, ok: true, output: lastOutput }
     } catch (error) {
@@ -226,7 +226,7 @@ function topologicalOrder(nodes: readonly ActionNode[]): string[] {
     inDegree.set(node.id, node.dependsOn.length)
     for (const dep of node.dependsOn) {
       if (!adjacency.has(dep)) adjacency.set(dep, [])
-      adjacency.get(dep)!.push(node.id)
+      adjacency.get(dep)?.push(node.id)
     }
   }
 

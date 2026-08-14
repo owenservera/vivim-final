@@ -3,8 +3,8 @@
 
 import type { Prisma } from '@prisma/client'
 import type { ContentUnitRow, ContentUnitStore } from '../contracts/content-unit-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 type ContentUnitPrismaRow = Prisma.ContentUnitGetPayload<Record<string, never>>
 

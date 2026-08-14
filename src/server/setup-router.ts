@@ -2,15 +2,14 @@
 // REST API routes for workspace selection + provider setup wizard.
 
 import { z } from 'zod'
+// Provider login URLs (consumer-friendly names in UI) — loaded from DB via ProviderRegistry
+import { getProviderRegistry } from '../config/provider-registry.js'
 import { BunCdpClient } from '../executor/cdp.js'
 import { killChrome, launchChrome } from '../executor/launcher.js'
 import { ProfileAllocator } from '../executor/profile-allocator.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
-
-// Provider login URLs (consumer-friendly names in UI) — loaded from DB via ProviderRegistry
-import { getProviderRegistry } from '../config/provider-registry.js'
 
 function getLoginUrl(providerId: string, _ctx?: ServerContext): string {
   if (providerId === 'gemini') return 'https://gemini.google.com/app'
@@ -251,7 +250,7 @@ export function createSetupRouter(ctx: ServerContext) {
               }
 
               await client.send('Target.detachFromTarget', { sessionId }).catch(() => {})
-  // [audit] log the error with context here
+              // [audit] log the error with context here
             } catch (e) {
               catchDebug(e, 'setup-router: login detection failed')
               const indicator = LOGIN_INDICATORS[providerId]
@@ -284,7 +283,7 @@ export function createSetupRouter(ctx: ServerContext) {
           return json({ ok: true, ...result })
         } catch (err) {
           await client.disconnect().catch(() => {})
-  // [audit] log the error with context here
+          // [audit] log the error with context here
           return errorResponse(`Verify failed: ${String(err)}`, 'ExecutionError', 500)
         }
       }
@@ -341,7 +340,7 @@ export function createSetupRouter(ctx: ServerContext) {
       if (pathname === '/api/setup/restore' && method === 'POST') {
         const schema = z.object({ workspace: z.string().optional() })
         const parsed = schema.safeParse(await req.json().catch(() => ({})))
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         const workspace =
           (parsed.success ? parsed.data.workspace : null) ??
           (await ctx.db.getWorkspaceHint?.()) ??

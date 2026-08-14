@@ -1,10 +1,10 @@
 // tests/unit/executor/slave-states.test.ts
 import { describe, expect, it } from 'bun:test'
 import {
-  type SlaveLifecycle,
   backoffDelay,
   computeSuperState,
   nextState,
+  type SlaveLifecycle,
 } from '../../../src/executor/slave-states.js'
 
 describe('computeSuperState (FR-3)', () => {

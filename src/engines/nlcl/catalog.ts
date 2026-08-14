@@ -28,7 +28,7 @@ import type { CommandPattern } from './types.js'
 
 // ── Registry ────────────────────────────────────────────────────────────────
 
-export { extractEmails, dayToCron } from './categories/builder.js'
+export { dayToCron, extractEmails } from './categories/builder.js'
 export function getDefaultCommandPatterns(): CommandPattern[] {
   return [
     ...filePatterns,

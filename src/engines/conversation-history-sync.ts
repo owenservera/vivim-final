@@ -64,7 +64,7 @@ export class ConversationHistorySyncEngine {
     private readonly adapter: ProviderConversationAdapter,
     private readonly conversationStore: ConversationStore,
     private readonly syncStateStore: ConversationSyncStateStore,
-    private readonly governorHandle: {
+    readonly _governorHandle: {
       send(slaveId: string, method: string, params?: Record<string, unknown>): Promise<unknown>
     },
   ) {}

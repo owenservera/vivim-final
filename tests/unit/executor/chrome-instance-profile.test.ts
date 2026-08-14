@@ -4,9 +4,9 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
+  buildChromeArgs,
   type ChromeChannel,
   type ChromeMode,
-  buildChromeArgs,
   makeProfile,
   resolveChromeBinary,
 } from '../../../src/executor/chrome-instance-profile.js'

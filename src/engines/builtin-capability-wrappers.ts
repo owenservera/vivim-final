@@ -6,11 +6,22 @@
 
 import { getLogger } from '../lib/logger.js'
 import { makeCapability } from './capability-bootstrap.js'
-import type { UnifiedCapabilityRegistry } from './unified-registry.js'
+import type { CapabilitySurface, UnifiedCapabilityRegistry } from './unified-registry.js'
 
 const log = getLogger('builtin-capability-wrappers')
 
-const BUILTIN_SPECS = [
+const BUILTIN_SPECS: Array<{
+  id: string
+  slug: string
+  name: string
+  description: string
+  category: string
+  surfaces: CapabilitySurface[]
+  apiEndpoint: { method: string; path: string }
+  cliCommand: { name: string; aliases: string[]; examples: string[] }
+  inputSchema: Record<string, unknown>
+  outputSchema: Record<string, unknown>
+}> = [
   {
     id: 'builtin:automate',
     slug: 'automate',
@@ -34,6 +45,13 @@ const BUILTIN_SPECS = [
         },
       },
       required: ['args'],
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        result: { type: 'string' },
+      },
     },
   },
   {
@@ -60,6 +78,13 @@ const BUILTIN_SPECS = [
       },
       required: ['args'],
     },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        result: { type: 'string' },
+      },
+    },
   },
   {
     id: 'builtin:seed',
@@ -80,6 +105,13 @@ const BUILTIN_SPECS = [
         },
       },
     },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        result: { type: 'string' },
+      },
+    },
   },
   {
     id: 'builtin:migrate',
@@ -94,6 +126,13 @@ const BUILTIN_SPECS = [
       type: 'object',
       properties: {
         args: { type: 'array', items: { type: 'string' }, description: 'Migration targets' },
+      },
+    },
+    outputSchema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+        result: { type: 'string' },
       },
     },
   },
@@ -134,7 +173,7 @@ export function registerBuiltinCapabilities(registry: UnifiedCapabilityRegistry)
       registry.register(cap)
       registered++
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Already registered (e.g. from generated pool) — skip
     }
   }

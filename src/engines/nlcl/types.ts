@@ -51,7 +51,7 @@ export interface NLCContext {
 
   // ── Response Interpreter Telemetry (populated by LayeredResolver) ─────
   /** Which layer resolved the intent (deterministic/fuzzy/semantic/llm/none). */
-  resolutionLayer?: 'deterministic' | 'fuzzy' | 'semantic' | 'llm' | 'none'
+  resolutionLayer?: 'deterministic' | 'fuzzy' | 'semantic' | 'classifier' | 'llm' | 'none'
   /** Confidence score from the resolver (0-1). */
   confidence?: number
 

@@ -35,7 +35,7 @@ export interface IntentClarification {
 export const CapabilityDagNodeSchema = z.object({
   id: z.string(),
   capabilitySlug: z.string(),
-  inputMapping: z.record(z.unknown()),
+  inputMapping: z.record(z.string(), z.unknown()),
   outputKey: z.string().optional(),
   dependsOn: z.array(z.string()),
 })

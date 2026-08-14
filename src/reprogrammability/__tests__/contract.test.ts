@@ -15,8 +15,7 @@ import {
   UnsupportedMutationError,
 } from '../index.js'
 import type { SurfaceMutation } from '../mutation-schema.js'
-import type { SurfaceSpec } from '../schema/spec.js'
-import type { PanelSpec } from '../schema/spec.js'
+import type { PanelSpec, SurfaceSpec } from '../schema/spec.js'
 
 /** A minimal toy surface that implements the contract. */
 class ToyPanelSurface implements ReprogrammableSurface {

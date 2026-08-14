@@ -230,16 +230,6 @@ afterAll(() => {
     runs: audit,
   }
   writeFileSync(file, JSON.stringify(summary, null, 2))
-  // eslint-disable-next-line no-console
-  // [audit] removed: console.log(`\n[AGENT4 AUDIT] report -> ${file}`)
-  // [audit] removed: console.log(
-    `[AGENT4 AUDIT] ok=${summary.okRuns}/${summary.totalRuns} pd=${summary.permissionDenied}`,
-  )
-  // [audit] removed: console.log(
-    `[AGENT4 AUDIT] p50=${
-      [...summary.latenciesMs].sort((a, b) => a - b)[Math.floor(summary.latenciesMs.length / 2)] ??
-      0
-    }ms max=${Math.max(0, ...summary.latenciesMs)}ms`,
-  )
+  // [audit] removed: console.log — report written
   // keep the file for inspection; uncomment to auto-clean: rmSync(dir, { recursive: true, force: true })
 })

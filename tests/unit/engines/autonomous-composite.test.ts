@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type {
   AutonomousGoal,
   AutonomousStep,
   AutonomousTask,
 } from '../../../src/engines/autonomous-execution.js'
+import { AutonomousExecutionEngine } from '../../../src/engines/autonomous-execution.js'
 import type {
   CapabilityComposer,
   CompositeCapability,

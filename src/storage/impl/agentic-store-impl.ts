@@ -7,11 +7,11 @@
 
 import type { PrismaClient } from '@prisma/client'
 import { newId } from '../../ids.js'
-import { AGENTIC_EDGE, type ActorRef, actorDid } from '../../schema/agentic.js'
+import { type ActorRef, AGENTIC_EDGE, actorDid } from '../../schema/agentic.js'
 import { createNode } from '../../schema/node.js'
 import type {
-  AgentSpec,
   AgenticStoreContract,
+  AgentSpec,
   BeliefSpec,
   GovernancePolicySpec,
   InboxTask,

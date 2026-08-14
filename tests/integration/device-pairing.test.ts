@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { EncryptionEngine } from '../../src/engines/encryption.js'
-import { SyncEngine } from '../../src/engines/sync.js'
 import type { SyncConfig, SyncPeer, SyncStore } from '../../src/engines/sync.js'
+import { SyncEngine } from '../../src/engines/sync.js'
 
 // In-memory SyncStore satisfying the contract used by the pairing flow.
 class MemorySyncStore implements SyncStore {

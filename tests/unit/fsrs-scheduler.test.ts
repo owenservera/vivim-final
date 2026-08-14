@@ -146,7 +146,7 @@ describe('FsrsScheduler', () => {
 
       const dueCards = scheduler.getDueCards(cards)
       expect(dueCards).toHaveLength(1)
-      expect(dueCards[0]!.id).toBe('test-1')
+      expect(dueCards[0]?.id).toBe('test-1')
     })
 
     it('should return empty array when no cards are due', () => {
@@ -215,7 +215,7 @@ describe('FsrsScheduler', () => {
       }
 
       const result = scheduler.calculate(card, 0)
-      expect(result.difficulty!).toBeLessThanOrEqual(10)
+      expect(result.difficulty).toBeLessThanOrEqual(10)
     })
 
     it('should floor difficulty at 1', () => {
@@ -231,7 +231,7 @@ describe('FsrsScheduler', () => {
       }
 
       const result = scheduler.calculate(card, 5)
-      expect(result.difficulty!).toBeGreaterThanOrEqual(1)
+      expect(result.difficulty).toBeGreaterThanOrEqual(1)
     })
   })
 })

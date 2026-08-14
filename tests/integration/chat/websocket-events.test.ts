@@ -36,7 +36,7 @@ function waitForEvent(ws: WebSocket, eventType: string, timeoutMs = 5000): Promi
           resolve(data)
         }
       } catch {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // Not JSON, ignore
       }
     }

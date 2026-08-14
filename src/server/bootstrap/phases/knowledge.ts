@@ -5,8 +5,8 @@
 // Writes: knowledgeIngestion, semanticSearch, synthesizer, exportEngine,
 //         providerMux, costOptimizer on ctx.
 
-import type { EmbeddingProvider } from '../../../engines/semantic-search.js'
 import type { CapabilityEvent } from '../../../engines/capability-event-bus.js'
+import type { EmbeddingProvider } from '../../../engines/semantic-search.js'
 import { catchDebug } from '../../../lib/catch-logger.js'
 import { getLogger } from '../../../lib/logger.js'
 import type { BootstrapContext } from '../context.js'
@@ -34,9 +34,9 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
         requestId: '' as never,
         sequence: 0,
         timestamp: new Date().toISOString(),
-        subjectId: evt.providerId,
+        subjectId: (evt as { providerId?: string }).providerId ?? '',
         subjectType: 'provider',
-        outcome: evt.ok ? 'reinforced' : 'ignored',
+        outcome: (evt as { ok?: boolean }).ok ? 'reinforced' : 'ignored',
       })
     })
     eventBus.on('capability:failed', (evt) => {
@@ -46,7 +46,7 @@ export async function bootstrapKnowledgePhase(ctx: BootstrapContext): Promise<vo
         requestId: '' as never,
         sequence: 0,
         timestamp: new Date().toISOString(),
-        subjectId: evt.providerId,
+        subjectId: (evt as { providerId?: string }).providerId ?? '',
         subjectType: 'provider',
         outcome: 'rejected',
       })
@@ -351,7 +351,9 @@ function pickSynthesisProvider(
   const preferred = ['claude', 'gemini', 'chatgpt', 'deepseek', 'grok']
 
   // Try to find a registered provider in the gateway.
-  const gw = globalThis.__aiGateway
+  const gw = (globalThis as Record<string, unknown>).__aiGateway as
+    | { providers?: Map<string, unknown> }
+    | undefined
   if (gw?.providers) {
     for (const id of preferred) {
       if (gw.providers.has(id)) {

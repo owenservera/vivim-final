@@ -162,13 +162,12 @@ export class CdpWatchdog {
  * Phase 2: Moved from ChromeGovernor inner class.
  */
 export class HealthMonitor {
-  private logger = getLogger('HealthMonitor')
   private lastCheck = 0
   private consecutiveFailures = 0
 
   constructor(
-    private slaveId: string,
-    private intervalMs = 30_000,
+    _slaveId: string,
+    _intervalMs = 30_000,
     private timeoutMs = 5_000,
   ) {}
 
@@ -286,7 +285,7 @@ export class BrowserRuntime {
 
   constructor(
     private transport: CDPTransport,
-    private reconnectPolicy?: ReconnectPolicy,
+    _reconnectPolicy?: ReconnectPolicy,
   ) {}
 
   /**

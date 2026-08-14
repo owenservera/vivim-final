@@ -8,8 +8,12 @@
 import { EventEmitter } from 'node:events'
 import { ServiceCrashError } from '../tunnel-shared/errors.js'
 import { getLogger } from '../tunnel-shared/logger.js'
-import type { OrchestratorStatus, ServiceState, ServiceStatus } from '../tunnel-shared/types.js'
-import type { VivimConfig } from '../tunnel-shared/types.js'
+import type {
+  OrchestratorStatus,
+  ServiceState,
+  ServiceStatus,
+  VivimConfig,
+} from '../tunnel-shared/types.js'
 
 const log = getLogger('health-monitor')
 

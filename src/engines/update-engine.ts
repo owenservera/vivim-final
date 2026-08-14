@@ -9,7 +9,7 @@
 
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { config } from '../config.js'
 import { UpdateError } from '../errors.js'
@@ -404,7 +404,7 @@ export class UpdateEngine {
       onStatus?.('Checking for updates...')
 
       const updateInfo = await this.checkForAppUpdates()
-      if (!updateInfo || !updateInfo.available) {
+      if (!updateInfo?.available) {
         onStatus?.('App is up to date')
         return false
       }

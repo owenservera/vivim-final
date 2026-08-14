@@ -16,6 +16,7 @@ describe('MESSAGING_ARCHETYPES', () => {
         timestamp: 1234567890,
         id: 'w1',
       })
+      if (!msg) throw new Error('Message normalization failed')
       expect(msg.channelId).toBe('whatsapp')
       expect(msg.author).toBe('Alice')
       expect(msg.text).toBe('Hello!')
@@ -25,6 +26,7 @@ describe('MESSAGING_ARCHETYPES', () => {
 
     it('handles missing fields gracefully', () => {
       const msg = MESSAGING_ARCHETYPES.whatsapp?.normalize({})
+      if (!msg) throw new Error('Message normalization failed')
       expect(msg.author).toBe('unknown')
       expect(msg.text).toBe('')
     })
@@ -37,6 +39,7 @@ describe('MESSAGING_ARCHETYPES', () => {
         message: 'Hey there',
         time: 9999,
       })
+      if (!msg) throw new Error('Message normalization failed')
       expect(msg.channelId).toBe('facebook')
       expect(msg.author).toBe('Bob')
       expect(msg.text).toBe('Hey there')
@@ -52,6 +55,7 @@ describe('MESSAGING_ARCHETYPES', () => {
         text: 'Hi',
         date: 5555,
       })
+      if (!msg) throw new Error('Message normalization failed')
       expect(msg.channelId).toBe('telegram:12345')
       expect(msg.author).toBe('charlie')
     })
@@ -62,6 +66,7 @@ describe('MESSAGING_ARCHETYPES', () => {
         from: { first_name: 'Dave' },
         text: 'yo',
       })
+      if (!msg) throw new Error('Message normalization failed')
       expect(msg.author).toBe('Dave')
     })
   })
@@ -74,6 +79,7 @@ describe('MESSAGING_ARCHETYPES', () => {
         text: 'slack msg',
         ts: 7777,
       })
+      if (!msg) throw new Error('Message normalization failed')
       expect(msg.channelId).toBe('C123')
       expect(msg.author).toBe('U456')
       expect(msg.text).toBe('slack msg')

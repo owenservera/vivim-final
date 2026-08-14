@@ -271,7 +271,7 @@ describe('scanBoundaryViolations (mock filesystem)', () => {
     try {
       rmSync(TMP, { recursive: true, force: true })
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       /* ok */
     }
   }

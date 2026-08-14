@@ -48,9 +48,12 @@ export interface MockTable {
   createMany(args: { data: Row[] }): Promise<{ count: number }>
   findUnique(args: { where: Where }): Promise<Row | null>
   findFirst(args: { where?: Where; orderBy?: OrderBy }): Promise<Row | null>
-  findMany(args?: { where?: Where; orderBy?: OrderBy; take?: number; skip?: number }): Promise<
-    Row[]
-  >
+  findMany(args?: {
+    where?: Where
+    orderBy?: OrderBy
+    take?: number
+    skip?: number
+  }): Promise<Row[]>
   upsert(args: { where: Where; create: Row; update: Row }): Promise<Row>
   update(args: { where: Where; data: Row }): Promise<Row>
   delete(args: { where: Where }): Promise<Row>

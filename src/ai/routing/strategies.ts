@@ -41,7 +41,9 @@ export class PriorityStrategy implements IRoutingStrategy {
   ): Promise<readonly RoutingCandidate[]> {
     const providers = await deps.providerRegistry.list()
     const priorityById = new Map<ProviderManifest['id'], number>()
-    providers.forEach((p, i) => priorityById.set(p.id, providers.length - i))
+    for (let i = 0; i < providers.length; i++) {
+      priorityById.set(providers[i]!.id, providers.length - i)
+    }
 
     return [...candidates]
       .map((c) => ({
@@ -90,7 +92,11 @@ export class LowestCostStrategy implements IRoutingStrategy {
     return [...candidates]
       .map((c) => {
         // Read pricing from model extensions if available
-        const pricing = (c as RoutingCandidate & { extensions?: { pricing?: { inputPer1k?: number; outputPer1k?: number } } }).extensions?.pricing
+        const pricing = (
+          c as RoutingCandidate & {
+            extensions?: { pricing?: { inputPer1k?: number; outputPer1k?: number } }
+          }
+        ).extensions?.pricing
         if (!pricing) return { ...c, score: c.score } // No pricing info = no penalty
         const avgCost = ((pricing.inputPer1k ?? 0) + (pricing.outputPer1k ?? 0)) / 2
         const costPenalty = Math.min(1, avgCost / 0.1) // Normalize: $0.10/1k tokens = full penalty
@@ -117,14 +123,14 @@ export class LearnedStrategy implements IRoutingStrategy {
   ): Promise<readonly RoutingCandidate[]> {
     return [...candidates]
       .map((c) => {
-        const outcomeScore = this.outcomeTracker.getScoreOrDefault(c.providerId)
+        const outcomeScore = this.outcomeTracker.getScoreOrDefault(c.providerId).score
         // Blend: policy base (60%) + outcome EMA (40%)
         // outcomeScore is only reliable if sampleCount >= minSamples,
         // but getScoreOrDefault already returns 0.5 for unknowns.
         const blended = c.score * 0.6 + outcomeScore * 0.4
-        const reasons = [
+        const reasons: RoutingCandidate['reasons'] = [
           {
-            factor: 'outcome-ema',
+            factor: 'quality',
             score: outcomeScore,
             explanation: `Outcome EMA: ${outcomeScore.toFixed(2)}`,
           },

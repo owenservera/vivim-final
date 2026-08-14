@@ -373,7 +373,9 @@ describe('P0PolicyEngine', () => {
     const engine = new P0PolicyEngine({ maxRiskTier: 1 })
     const decision = engine.evaluate(makeNodePlan({ risk: 'external_communication' }))
     expect(decision.allowed).toBe(false)
-    expect(decision.reason).toContain('exceeds')
+    if (!decision.allowed) {
+      expect(decision.reason).toContain('exceeds')
+    }
   })
 })
 
@@ -390,9 +392,9 @@ describe('MemoryJournal', () => {
     })
 
     expect(journal.events).toHaveLength(1)
-    expect(journal.events[0].executionId).toBe('e1')
+    expect(journal.events[0]?.executionId).toBe('e1')
 
     // Events should be frozen
-    expect(Object.isFrozen(journal.events[0])).toBe(true)
+    expect(journal.events[0] && Object.isFrozen(journal.events[0])).toBe(true)
   })
 })

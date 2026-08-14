@@ -54,7 +54,7 @@ export interface ContentItemRow {
 export class ContentItemStoreImpl {
   protected readonly prisma: PrismaClient
 
-  constructor(private readonly db: CapStoreDb) {
+  constructor(readonly db: CapStoreDb) {
     this.prisma = db.prisma
   }
 

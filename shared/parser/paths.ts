@@ -59,6 +59,7 @@ function traverse(current: any, segments: ArrayPath): any {
   }
 
   try {
+    if (first === undefined) return undefined
     const next = current[first]
     return traverse(next, rest)
   } catch {

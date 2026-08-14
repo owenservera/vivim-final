@@ -10,12 +10,11 @@
 //
 // Agent-safe: all operations have bounded timeouts.
 
-import { EngineError } from '../errors.js'
 import { launchChrome } from '../executor/launcher.js'
 import type { ProfileAllocator } from '../executor/profile-allocator.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import type { CapStoreDb } from '../storage/db.js'
-import { PROVIDER_URL_PATTERNS, getProviderLoginUrl } from './provider-selectors.js'
+import { getProviderLoginUrl, PROVIDER_URL_PATTERNS } from './provider-selectors.js'
 
 const LOGIN_POLL_INTERVAL_MS = 2_000
 const LOGIN_TIMEOUT_MS = 300_000 // 5 minutes to complete login
@@ -176,43 +175,6 @@ export class ChromeSetupWizard {
       profileDir,
       debugPort: actualPort,
     }
-  }
-
-  /**
-   * Navigate Chrome to a URL via CDP HTTP API.
-   * Retries up to 10 times (2s apart) waiting for Chrome to be ready.
-   */
-  private async navigateAndWait(debugPort: number, url: string): Promise<void> {
-    const MAX_RETRIES = 10
-    const RETRY_DELAY_MS = 2_000
-
-    // Wait for Chrome CDP to be ready
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const resp = await fetch(`http://127.0.0.1:${debugPort}/json/version`, {
-          signal: AbortSignal.timeout(3_000),
-        })
-        if (resp.ok) break
-      } catch {
-        if (attempt === MAX_RETRIES) {
-          throw new EngineError(
-            `Chrome not responding on port ${debugPort} after ${MAX_RETRIES} retries`,
-          )
-        }
-        await Bun.sleep(RETRY_DELAY_MS)
-      }
-    }
-
-    const navResp = await fetch(
-      `http://127.0.0.1:${debugPort}/json/new?${encodeURIComponent(url)}`,
-      {
-        signal: AbortSignal.timeout(5_000),
-      },
-    )
-    if (!navResp.ok) throw new EngineError(`Failed to create tab: ${navResp.status}`)
-
-    // Wait for the page to load
-    await Bun.sleep(3_000)
   }
 
   /**

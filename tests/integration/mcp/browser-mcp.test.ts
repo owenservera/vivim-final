@@ -5,8 +5,8 @@ import { createInterface } from 'node:readline'
 import { BrowserCapabilityRegistry } from '../../../src/engines/browser-automation/registry.js'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
 import { assembleTools, createJsonRpcHandler } from '../../../src/mcp/browser-mcp.js'
-import { BrowserSession } from '../../../src/mcp/browser-session.js'
 import type { BrowserStack } from '../../../src/mcp/browser-session.js'
+import { BrowserSession } from '../../../src/mcp/browser-session.js'
 import { InMemoryHealStore } from '../../../src/mcp/in-memory-heal-store.js'
 import type {
   SelectorHealStore,
@@ -118,6 +118,7 @@ describe('BrowserSession', () => {
       registry,
       grounding: null as never,
       healer: null as never,
+      db: null as never,
     }
     return { session: new BrowserSession(stack), getSpawnCount }
   }
@@ -189,6 +190,7 @@ describe('full protocol round-trip (createJsonRpcHandler + assembleTools)', () =
       registry,
       grounding: null as never,
       healer: null as never,
+      db: null as never,
     }
     const session = new BrowserSession(stack)
     const handle = createJsonRpcHandler({

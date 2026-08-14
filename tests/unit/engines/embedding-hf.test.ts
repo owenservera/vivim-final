@@ -68,7 +68,7 @@ describe('HfEmbeddingProvider', () => {
     expect(results[0]).toHaveLength(768)
     expect(results[1]).toHaveLength(768)
     // Vectors should be different
-    expect(results[0][0]).not.toBe(results[1][0])
+    expect(results[0]?.[0]).not.toBe(results[1]?.[0])
   })
 
   it('init is idempotent — double init does not recreate pipeline', async () => {
@@ -142,8 +142,8 @@ describe('HfEmbeddingProvider — semantic quality (mock)', () => {
       return dot / (Math.sqrt(na) * Math.sqrt(nb))
     }
 
-    const simCatKitten = cos(catEmb, kittenEmb)
-    const simCatCar = cos(catEmb, carEmb)
+    const simCatKitten = cos(catEmb ?? [], kittenEmb ?? [])
+    const simCatCar = cos(catEmb ?? [], carEmb ?? [])
 
     expect(simCatKitten).toBeGreaterThan(simCatCar)
   })

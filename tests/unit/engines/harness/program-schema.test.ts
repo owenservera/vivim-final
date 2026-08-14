@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  PROGRAM_STATUS,
   configToProgram,
+  PROGRAM_STATUS,
   recipeToConfig,
 } from '../../../../src/engines/harness/program-schema.js'
 import { ValidationError } from '../../../../src/errors.js'

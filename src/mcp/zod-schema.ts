@@ -13,8 +13,10 @@ export function zodToJsonSchema(schema: ZodType): Record<string, unknown> {
 }
 
 function convert(schema: ZodType): unknown {
-  const def = (schema as { _def: { typeName: string } })._def
-  switch (def.typeName) {
+  const def = schema._def
+  const typeName = (def as unknown as { typeName: string }).typeName
+
+  switch (typeName) {
     case 'ZodString':
       return { type: 'string' }
     case 'ZodNumber':
@@ -25,21 +27,21 @@ function convert(schema: ZodType): unknown {
     case 'ZodAny':
       return {}
     case 'ZodLiteral': {
-      const v = (def as { value: unknown }).value
+      const v = (def as unknown as { value: unknown }).value
       return { type: typeof v, const: v }
     }
     case 'ZodEnum':
-      return { type: 'string', enum: (def as { values: string[] }).values }
+      return { type: 'string', enum: (def as unknown as { values: string[] }).values }
     case 'ZodArray': {
-      const items = (def as { type: ZodType }).type
+      const items = (def as unknown as { type: ZodType }).type
       return { type: 'array', items: convert(items) }
     }
     case 'ZodRecord': {
-      const valueType = (def as { valueType: ZodType }).valueType
+      const valueType = (def as unknown as { valueType: ZodType }).valueType
       return { type: 'object', additionalProperties: convert(valueType) }
     }
     case 'ZodObject': {
-      const shape = (def as { shape: () => Record<string, ZodType> }).shape()
+      const shape = (def as unknown as { shape: () => Record<string, ZodType> }).shape()
       const properties: Record<string, unknown> = {}
       const required: string[] = []
       for (const [key, field] of Object.entries(shape)) {
@@ -50,14 +52,14 @@ function convert(schema: ZodType): unknown {
       return { type: 'object', properties, required }
     }
     case 'ZodOptional': {
-      const inner = (def as { innerType: ZodType }).innerType
+      const inner = (def as unknown as { innerType: ZodType }).innerType
       const converted = convertField(inner)
       // Bubble up "optional": a defaulted field is also not required.
       return { schema: converted.schema, optional: true }
     }
     case 'ZodDefault': {
-      const inner = (def as { innerType: ZodType }).innerType
-      const defaultValue = (def as { defaultValue: () => unknown }).defaultValue
+      const inner = (def as unknown as { innerType: ZodType }).innerType
+      const defaultValue = (def as unknown as { defaultValue: () => unknown }).defaultValue
       const converted = convertField(inner)
       const schema = {
         ...(converted.schema as Record<string, unknown>),
@@ -68,9 +70,9 @@ function convert(schema: ZodType): unknown {
     case 'ZodEffects':
       // e.g. z.string().url() is a ZodString with effects at the inner level;
       // but a bare ZodEffects (e.g. z.string().refine(...)) unwraps to its inner.
-      return convertField((def as { innerType: ZodType }).innerType).schema
+      return convertField((def as unknown as { innerType: ZodType }).innerType).schema
     default:
-      throw new EngineError(`zodToJsonSchema: unsupported zod type "${def.typeName}"`)
+      throw new EngineError(`zodToJsonSchema: unsupported zod type "${typeName}"`)
   }
 }
 

@@ -35,7 +35,7 @@ describe('Send Pipeline E2E', () => {
       try {
         await fetch(`${BASE}/api/conversations/${conversationId}`, { method: 'DELETE' })
       } catch {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // cleanup — ignore errors
       }
     }

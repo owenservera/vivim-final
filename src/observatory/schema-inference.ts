@@ -124,7 +124,7 @@ export function inferShape(val: unknown): unknown {
  * @returns Lower-case hex SHA-256 string (64 characters).
  */
 export function computeHash(shape: unknown): string {
-  const canonical = JSON.stringify(
+  const _canonical = JSON.stringify(
     shape,
     Object.keys.bind(null, shape as object).length ? sortKeys : undefined,
   )

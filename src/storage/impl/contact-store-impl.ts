@@ -54,7 +54,7 @@ type ContactIdentityPrismaRow = Prisma.ContactIdentityGetPayload<Record<string, 
 export class ContactStoreImpl {
   private readonly prisma: PrismaClient
 
-  constructor(private readonly db: CapStoreDb) {
+  constructor(readonly db: CapStoreDb) {
     this.prisma = db.prisma
   }
 

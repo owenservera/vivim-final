@@ -31,7 +31,7 @@ import {
 } from '../../reprogrammability/mutation-schema.js'
 import { surfaceRegistry } from '../../reprogrammability/registry.js'
 import type { ProviderLLMAdapter } from '../nlcl/llm-slave-resolver.js'
-import { type LlmPromptInput, buildLlmHarnessPrompt } from './llm-prompt.js'
+import { buildLlmHarnessPrompt, type LlmPromptInput } from './llm-prompt.js'
 
 const log = getLogger('llm-harness-agent')
 

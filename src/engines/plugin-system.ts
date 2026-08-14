@@ -153,7 +153,7 @@ export class PluginManagerImpl implements PluginManager {
           }
         })
         .catch(() => {
-  // [audit] log the error with context here
+          // [audit] log the error with context here
           // Best-effort.
         })
     }

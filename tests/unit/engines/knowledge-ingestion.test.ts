@@ -70,6 +70,11 @@ function mockConversationStore(): ConversationStore {
         model: null,
         metadataJson: '{}',
         createdAt: Date.now(),
+        providerMessageId: null,
+        identityHash: null,
+        isPinned: 0,
+        isArchived: 0,
+        readStatus: 'unread',
       }
       return row
     },
@@ -78,6 +83,32 @@ function mockConversationStore(): ConversationStore {
     getLastMessage: async () => null,
     updateMessage: async () => {},
     getAccount: async () => null,
+    getMessageByIdentityHash: async () => null,
+    createMessageWithIdentity: async () => {
+      const row: ConversationMessageRow = {
+        id: `msg-${Date.now()}`,
+        conversationId: 'conv-1',
+        role: 'user',
+        content: null,
+        blocksJson: '[]',
+        blockCount: 0,
+        parentMessageId: null,
+        sequenceIndex: 0,
+        latencyMs: null,
+        tokenCount: null,
+        model: null,
+        metadataJson: '{}',
+        createdAt: Date.now(),
+        providerMessageId: null,
+        identityHash: null,
+        isPinned: 0,
+        isArchived: 0,
+        readStatus: 'unread',
+      }
+      return row
+    },
+    updateMessageMetadata: async () => {},
+    queryMessagesByMetadata: async () => [],
     createAttachment: async () => ({
       id: 'att',
       messageId: 'msg',

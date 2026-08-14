@@ -4,9 +4,9 @@
 // in-process check), recording a verifiable result instead of dead stubs.
 
 import { spawn } from 'node:child_process'
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import type { Finding, VerificationStatus } from './types.js'
 
 interface ProbePlan {
@@ -88,7 +88,10 @@ function runBunTest(file: string): Promise<{ exitCode: number; stdout: string; s
  * generated files in a temp dir with a hard timeout, so it can never hang the
  * audit. Returns a map of findingId -> result (mutates the findings' dynamicVerification).
  */
-export async function runDynamicProbes(findings: Finding[], enabled = true): Promise<Map<string, DynamicTestResult>> {
+export async function runDynamicProbes(
+  findings: Finding[],
+  enabled = true,
+): Promise<Map<string, DynamicTestResult>> {
   const results = new Map<string, DynamicTestResult>()
   if (!enabled) {
     for (const f of findings) {
@@ -137,7 +140,10 @@ export async function runDynamicProbes(findings: Finding[], enabled = true): Pro
 }
 
 /** Attach probe results back onto findings (mutates in place). */
-export function applyDynamicResults(findings: Finding[], results: Map<string, DynamicTestResult>): Finding[] {
+export function applyDynamicResults(
+  findings: Finding[],
+  results: Map<string, DynamicTestResult>,
+): Finding[] {
   for (const f of findings) {
     const r = results.get(f.id)
     if (!r) continue

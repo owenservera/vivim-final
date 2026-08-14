@@ -42,10 +42,7 @@ export class AuditTrail {
   private sinks: AuditSink[] = []
   private policy: AuditPolicy = DEFAULT_POLICY
 
-  constructor(
-    policy?: Partial<AuditPolicy>,
-    private logger?: Logger,
-  ) {
+  constructor(policy?: Partial<AuditPolicy>, _logger?: Logger) {
     if (policy) this.policy = { ...DEFAULT_POLICY, ...policy }
   }
 
@@ -76,7 +73,7 @@ export class AuditTrail {
 
     for (const sink of this.sinks) {
       void sink.record(full).catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
   }
 }

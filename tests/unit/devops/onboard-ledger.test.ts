@@ -5,11 +5,11 @@ import { mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
-  ONBOARD_PHASES,
   initOnboardLedger,
   loadOnboardLedger,
   markPhase,
   nextPendingIndex,
+  ONBOARD_PHASES,
   phasesFrom,
   saveOnboardLedger,
 } from '../../../devops/onboard-ledger.js'

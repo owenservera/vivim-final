@@ -60,7 +60,7 @@ export interface ProviderRegistrarAuditor {
 // ── ProviderRegistrar ───────────────────────────────────────────────────────────
 
 export class ProviderRegistrar {
-  private readonly seedsDir: string
+  private seedsDir: string
 
   constructor(
     private store: ProviderStore,

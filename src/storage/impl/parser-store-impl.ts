@@ -2,14 +2,14 @@
 // Prisma-backed ParserStore for StreamParserEngine.
 
 import type { ParserStore, ProviderParserRow } from '../contracts/parser-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 interface PrismaParserRow {
   id: string
   providerId: string
-  name: string
-  version: number
+  parserName: string
+  parserVersion: number
   parserLogicType: string
   parserFilePath: string | null
   parserLogicCode: string | null
@@ -17,8 +17,8 @@ interface PrismaParserRow {
   sampleBody: string | null
   isActive: number
   fallbackParserId: string | null
-  createdAt: number
-  updatedAt: number
+  createdAt: bigint
+  updatedAt: bigint
 }
 
 // Semver helpers (mirrors harness-command-registry). Parser versions are stored
@@ -43,8 +43,8 @@ function toParserRow(r: PrismaParserRow): ProviderParserRow {
   return {
     id: r.id,
     providerId: r.providerId,
-    name: r.name,
-    version: r.version,
+    name: r.parserName,
+    version: r.parserVersion,
     logicType: r.parserLogicType,
     filePath: r.parserFilePath,
     logicCode: r.parserLogicCode,
@@ -52,8 +52,8 @@ function toParserRow(r: PrismaParserRow): ProviderParserRow {
     sampleBody: r.sampleBody ?? null,
     isActive: r.isActive,
     fallbackParserId: r.fallbackParserId,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    createdAt: Number(r.createdAt),
+    updatedAt: Number(r.updatedAt),
   }
 }
 
@@ -106,8 +106,8 @@ export class ParserStoreImpl implements ParserStore {
     const target = parseSemver(version)
     // Highest version <= target (semver-aware, not lexicographic).
     const candidates = rows
-      .filter((r) => cmpSemver(`${r.version}.0.0`, `${target[0]}.0.0`) >= 0)
-      .sort((a, b) => cmpSemver(`${b.version}.0.0`, `${a.version}.0.0`))
+      .filter((r) => cmpSemver(`${r.parserVersion}.0.0`, `${target[0]}.0.0`) >= 0)
+      .sort((a, b) => cmpSemver(`${b.parserVersion}.0.0`, `${a.parserVersion}.0.0`))
     const chosen = candidates[0] ?? rows[0]
     if (!chosen) return null
     return toParserRow(chosen)
@@ -119,14 +119,14 @@ export class ParserStoreImpl implements ParserStore {
   }
 
   async upsertParser(parser: ProviderParserRow): Promise<void> {
-    const now = Date.now()
+    const now = BigInt(Date.now())
     await this.p.providerParser.upsert({
       where: { id: parser.id },
       create: {
         id: parser.id,
         providerId: parser.providerId,
-        name: parser.name,
-        version: parser.version,
+        parserName: parser.name,
+        parserVersion: parser.version,
         parserLogicType: parser.logicType,
         parserFilePath: parser.filePath,
         parserLogicCode: parser.logicCode,
@@ -134,12 +134,12 @@ export class ParserStoreImpl implements ParserStore {
         sampleBody: parser.sampleBody,
         isActive: parser.isActive,
         fallbackParserId: parser.fallbackParserId,
-        createdAt: parser.createdAt || now,
+        createdAt: parser.createdAt ? BigInt(parser.createdAt) : now,
         updatedAt: now,
       },
       update: {
-        name: parser.name,
-        version: parser.version,
+        parserName: parser.name,
+        parserVersion: parser.version,
         parserLogicType: parser.logicType,
         parserFilePath: parser.filePath,
         parserLogicCode: parser.logicCode,

@@ -2,13 +2,13 @@
 // MirrorStore — re-exports the contract defined in mirror-engine.ts
 
 export type {
-  MirrorStore,
-  MirrorStateRow,
-  MirrorStateInput,
-  OptimisticUpdateRow,
-  OptimisticUpdateInput,
   LatencyMeasurementInput,
   LatencyReport,
-  SnapshotRow,
+  MirrorStateInput,
+  MirrorStateRow,
+  MirrorStore,
+  OptimisticUpdateInput,
+  OptimisticUpdateRow,
   SnapshotInput,
+  SnapshotRow,
 } from '../../engines/mirror-engine.js'

@@ -495,8 +495,8 @@ export function detectFiletype(input: {
 export function filetypesByCategory(): Record<string, DocumentFiletypeSpec[]> {
   const out: Record<string, DocumentFiletypeSpec[]> = {}
   for (const f of DOCUMENT_FILETYPES) {
-    if (!out[f.category]) out[f.category] = []
-    out[f.category].push(f)
+    const bucket = (out[f.category] ??= [])
+    bucket.push(f)
   }
   return out
 }

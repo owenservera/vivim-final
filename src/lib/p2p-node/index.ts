@@ -19,7 +19,7 @@ import type { P2PNodeState } from './types.js'
 
 const log = getLogger('p2p-node')
 
-export type { P2PNodeState, P2PPeerInfo, FileTransferProgress, P2PMetrics }
+export type { FileTransferProgress, P2PMetrics, P2PNodeState, P2PPeerInfo }
 
 export class P2PNode {
   private nodeManager: NodeManager

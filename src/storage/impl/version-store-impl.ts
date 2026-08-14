@@ -10,8 +10,8 @@ import type {
   TaxonomyVersionRow,
   VersionStore,
 } from '../contracts/version-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 // ── Prisma row shapes ────────────────────────────────────────────────────────
 
@@ -77,7 +77,7 @@ function toTaxonomyRow(r: PrismaTaxonomyVersion): TaxonomyVersionRow {
     changeSummary: r.changeSummary,
     changedFieldsJson: r.changedFieldsJson,
     actor: r.actor,
-    createdAt: r.createdAt,
+    createdAt: Number(r.createdAt),
   }
 }
 
@@ -95,7 +95,7 @@ function toStatusRow(r: PrismaStatusLog): StatusLogRow {
     reason: r.reason,
     actor: r.actor,
     metadataJson: r.metadataJson,
-    ts: r.ts,
+    ts: Number(r.ts),
   }
 }
 
@@ -112,16 +112,16 @@ function toMetricRow(r: PrismaProgramMetric): ProgramMetricRow {
     p50LatencyMs: r.p50LatencyMs,
     p95LatencyMs: r.p95LatencyMs,
     p99LatencyMs: r.p99LatencyMs,
-    lastExecutedAt: r.lastExecutedAt,
-    firstExecutedAt: r.firstExecutedAt,
+    lastExecutedAt: r.lastExecutedAt ? Number(r.lastExecutedAt) : null,
+    firstExecutedAt: r.firstExecutedAt ? Number(r.firstExecutedAt) : null,
     window1hTotal: r.window1hTotal,
     window1hSuccess: r.window1hSuccess,
     window24hTotal: r.window24hTotal,
     window24hSuccess: r.window24hSuccess,
     window7dTotal: r.window7dTotal,
     window7dSuccess: r.window7dSuccess,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    createdAt: Number(r.createdAt),
+    updatedAt: Number(r.updatedAt),
   }
 }
 
@@ -183,7 +183,7 @@ export class VersionStoreImpl implements VersionStore {
       orderBy: { version: 'desc' },
       take: limit ?? 100,
     })
-    return rows.map((r: PrismaTaxonomyVersion) => toTaxonomyRow(r))
+    return rows.map((r: any) => toTaxonomyRow(r))
   }
 
   async pruneOldVersions(capabilityId: string, maxVersions: number): Promise<number> {
@@ -238,7 +238,7 @@ export class VersionStoreImpl implements VersionStore {
       orderBy: { ts: 'desc' },
       take: opts?.limit ?? 100,
     })
-    return rows.map((r: PrismaStatusLog) => toStatusRow(r))
+    return rows.map((r: any) => toStatusRow(r))
   }
 
   async getLastStatusChange(bindingId: string): Promise<StatusLogRow | null> {
@@ -273,8 +273,8 @@ export class VersionStoreImpl implements VersionStore {
         p50LatencyMs: input.p50LatencyMs ?? 0,
         p95LatencyMs: input.p95LatencyMs ?? 0,
         p99LatencyMs: input.p99LatencyMs ?? 0,
-        lastExecutedAt: input.lastExecutedAt ?? null,
-        firstExecutedAt: input.firstExecutedAt ?? now,
+        lastExecutedAt: input.lastExecutedAt ? Number(input.lastExecutedAt) : null,
+        firstExecutedAt: input.firstExecutedAt ? Number(input.firstExecutedAt) : now,
         window1hTotal: input.window1hTotal ?? 0,
         window1hSuccess: input.window1hSuccess ?? 0,
         window24hTotal: input.window24hTotal ?? 0,
@@ -292,7 +292,8 @@ export class VersionStoreImpl implements VersionStore {
         p50LatencyMs: input.p50LatencyMs ?? 0,
         p95LatencyMs: input.p95LatencyMs ?? 0,
         p99LatencyMs: input.p99LatencyMs ?? 0,
-        lastExecutedAt: input.lastExecutedAt ?? null,
+        lastExecutedAt: input.lastExecutedAt ? Number(input.lastExecutedAt) : null,
+        firstExecutedAt: input.firstExecutedAt ? Number(input.firstExecutedAt) : null,
         window1hTotal: input.window1hTotal ?? 0,
         window1hSuccess: input.window1hSuccess ?? 0,
         window24hTotal: input.window24hTotal ?? 0,
@@ -310,7 +311,7 @@ export class VersionStoreImpl implements VersionStore {
       where: { bindingId, ...(programId ? { programId } : {}) },
       orderBy: { programVersion: 'desc' },
     })
-    return rows.map((r: PrismaProgramMetric) => toMetricRow(r))
+    return rows.map((r) => toMetricRow(r as unknown as PrismaProgramMetric))
   }
 
   async getProgramMetric(

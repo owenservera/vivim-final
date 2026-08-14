@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
-import { KnowledgeExtractorContinuous } from '../../../src/engines/knowledge-extractor-continuous.js'
 import type { KnowledgeExtractor } from '../../../src/engines/knowledge-extractor.js'
+import { KnowledgeExtractorContinuous } from '../../../src/engines/knowledge-extractor-continuous.js'
 import type { MemoryEngine, SemanticMemoryInput } from '../../../src/engines/memory-engine.js'
 
 function mockExtractor(): KnowledgeExtractor {

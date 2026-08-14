@@ -210,7 +210,7 @@ export class CapabilityEventBus {
           payload: event as unknown,
         })
         .catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
 
     // Fire regular handlers

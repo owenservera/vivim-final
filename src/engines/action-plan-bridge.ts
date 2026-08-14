@@ -4,6 +4,7 @@
 // then attaches the plan + grounded refs to CommandResult.
 // This is the thin layer between NLCL resolution and execution.
 
+import { z } from 'zod'
 import type { ActionPlan, CapabilityDefinition, GroundedReference } from './action-plan.js'
 import { ActionPlanCompiler } from './action-plan-compiler.js'
 import type { NLCContext, ParsedIntent } from './nlcl/types.js'
@@ -26,26 +27,127 @@ const DEFAULT_CAPABILITIES = new Map<string, CapabilityDefinition>()
 
 function registerDefaultCaps() {
   const caps: Array<[string, CapabilityDefinition]> = [
-    ['cap:browser:open_url', { name: 'Open URL', risk: 'read', requiresConfirmation: false }],
-    ['cap:browser:navigate', { name: 'Navigate', risk: 'read', requiresConfirmation: false }],
-    ['cap:browser:click', { name: 'Click', risk: 'read', requiresConfirmation: false }],
-    ['cap:browser:type', { name: 'Type', risk: 'read', requiresConfirmation: false }],
-    ['cap:browser:scroll', { name: 'Scroll', risk: 'read', requiresConfirmation: false }],
-    ['cap:browser:screenshot', { name: 'Screenshot', risk: 'read', requiresConfirmation: false }],
+    [
+      'cap:browser:open_url',
+      {
+        slug: 'cap:browser:open_url',
+        name: 'Open URL',
+        description: 'Open a URL in the browser',
+        risk: 'read',
+        requiresConfirmation: false,
+        inputSchema: z.object({ url: z.string() }),
+      },
+    ],
+    [
+      'cap:browser:navigate',
+      {
+        slug: 'cap:browser:navigate',
+        name: 'Navigate',
+        description: 'Navigate to a URL',
+        risk: 'read',
+        requiresConfirmation: false,
+        inputSchema: z.object({ url: z.string() }),
+      },
+    ],
+    [
+      'cap:browser:click',
+      {
+        slug: 'cap:browser:click',
+        name: 'Click',
+        description: 'Click on an element',
+        risk: 'read',
+        requiresConfirmation: false,
+        inputSchema: z.object({ selector: z.string() }),
+      },
+    ],
+    [
+      'cap:browser:type',
+      {
+        slug: 'cap:browser:type',
+        name: 'Type',
+        description: 'Type text into an element',
+        risk: 'read',
+        requiresConfirmation: false,
+        inputSchema: z.object({ selector: z.string(), text: z.string() }),
+      },
+    ],
+    [
+      'cap:browser:scroll',
+      {
+        slug: 'cap:browser:scroll',
+        name: 'Scroll',
+        description: 'Scroll the page',
+        risk: 'read',
+        requiresConfirmation: false,
+        inputSchema: z.object({ direction: z.string(), amount: z.number() }),
+      },
+    ],
+    [
+      'cap:browser:screenshot',
+      {
+        slug: 'cap:browser:screenshot',
+        name: 'Screenshot',
+        description: 'Take a screenshot',
+        risk: 'read',
+        requiresConfirmation: false,
+        inputSchema: z.object({}),
+      },
+    ],
     [
       'cap:browser:close_tab',
-      { name: 'Close Tab', risk: 'reversible_write', requiresConfirmation: true },
+      {
+        slug: 'cap:browser:close_tab',
+        name: 'Close Tab',
+        description: 'Close the current tab',
+        risk: 'reversible_write',
+        requiresConfirmation: true,
+        inputSchema: z.object({}),
+      },
     ],
-    ['cap:browser:summarize', { name: 'Summarize', risk: 'read', requiresConfirmation: false }],
+    [
+      'cap:browser:summarize',
+      {
+        slug: 'cap:browser:summarize',
+        name: 'Summarize',
+        description: 'Summarize the current page',
+        risk: 'read',
+        requiresConfirmation: false,
+        inputSchema: z.object({}),
+      },
+    ],
     [
       'cap:conversation:send_message',
-      { name: 'Send Message', risk: 'external_communication', requiresConfirmation: false },
+      {
+        slug: 'cap:conversation:send_message',
+        name: 'Send Message',
+        description: 'Send a message in a conversation',
+        risk: 'external_communication',
+        requiresConfirmation: false,
+        inputSchema: z.object({ message: z.string() }),
+      },
     ],
     [
       'cap:conversation:create',
-      { name: 'Create Conversation', risk: 'reversible_write', requiresConfirmation: false },
+      {
+        slug: 'cap:conversation:create',
+        name: 'Create Conversation',
+        description: 'Create a new conversation',
+        risk: 'reversible_write',
+        requiresConfirmation: false,
+        inputSchema: z.object({}),
+      },
     ],
-    ['cap:system:help', { name: 'Help', risk: 'read', requiresConfirmation: false }],
+    [
+      'cap:system:help',
+      {
+        slug: 'cap:system:help',
+        name: 'Help',
+        description: 'Get help information',
+        risk: 'read',
+        requiresConfirmation: false,
+        inputSchema: z.object({}),
+      },
+    ],
   ]
   for (const [id, def] of caps) {
     DEFAULT_CAPABILITIES.set(id, def)

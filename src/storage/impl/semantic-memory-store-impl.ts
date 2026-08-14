@@ -2,8 +2,8 @@
 // SemanticMemoryStoreImpl — Prisma-backed semantic memory store
 
 import type { SemanticMemory, SemanticMemoryStore } from '../../engines/memory-engine.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
   private db: PrismaClient
@@ -26,16 +26,16 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
         objectJson: JSON.stringify(fact.object),
         confidence: fact.confidence,
         source: fact.source,
-        timestamp: fact.timestamp,
-        expiresAt: fact.expiresAt ?? null,
-        createdAt: Date.now(),
+        timestamp: BigInt(fact.timestamp),
+        expiresAt: fact.expiresAt ? BigInt(fact.expiresAt) : null,
+        createdAt: BigInt(Date.now()),
       },
       update: {},
     })
   }
 
   async findBySubject(subject: string, predicate?: string): Promise<SemanticMemory[]> {
-    const where = { subject }
+    const where: any = { subject }
     if (predicate) where.predicate = predicate
 
     const rows = await this.p.semanticMemory.findMany({
@@ -47,11 +47,11 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
       id: r.id as string,
       subject: r.subject as string,
       predicate: r.predicate as string,
-      object: JSON.parse((r.object_json as string) ?? '{}') as unknown,
+      object: JSON.parse((r.objectJson as string) ?? '{}') as unknown,
       confidence: r.confidence as number,
       source: r.source as string,
-      timestamp: r.timestamp as number,
-      expiresAt: (r.expires_at as number) ?? undefined,
+      timestamp: Number(r.timestamp),
+      expiresAt: r.expiresAt ? Number(r.expiresAt) : undefined,
     }))
   }
 
@@ -68,11 +68,11 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
       id: r.id as string,
       subject: r.subject as string,
       predicate: r.predicate as string,
-      object: JSON.parse((r.object_json as string) ?? '{}') as unknown,
+      object: JSON.parse((r.objectJson as string) ?? '{}') as unknown,
       confidence: r.confidence as number,
       source: r.source as string,
-      timestamp: r.timestamp as number,
-      expiresAt: (r.expires_at as number) ?? undefined,
+      timestamp: Number(r.timestamp),
+      expiresAt: r.expiresAt ? Number(r.expiresAt) : undefined,
     }))
   }
 
@@ -102,11 +102,11 @@ export class SemanticMemoryStoreImpl implements SemanticMemoryStore {
       id: row.id as string,
       subject: row.subject as string,
       predicate: row.predicate as string,
-      object: JSON.parse((row.object_json as string) ?? '{}') as unknown,
+      object: JSON.parse((row.objectJson as string) ?? '{}') as unknown,
       confidence: row.confidence as number,
       source: row.source as string,
-      timestamp: row.timestamp as number,
-      expiresAt: (row.expires_at as number) ?? undefined,
+      timestamp: Number(row.timestamp),
+      expiresAt: row.expiresAt ? Number(row.expiresAt) : undefined,
     }
   }
 }

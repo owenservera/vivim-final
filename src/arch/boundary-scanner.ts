@@ -7,7 +7,7 @@
 // architectural layers, and checks the import against the declared rules.
 
 import { existsSync, statSync } from 'node:fs'
-import { readFile, readdir } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 
 import { BOUNDARY_RULES, type BoundaryRule, classifyPath, resolveAlias } from './boundary-rules.js'
@@ -146,7 +146,7 @@ function resolveToExistingFile(base: string): string | null {
     try {
       if (!statSync(base).isDirectory()) return base
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // fall through
     }
   }

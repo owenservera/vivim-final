@@ -112,6 +112,7 @@ export function extractAttachments(text: string | null, rawNode?: any): Attachme
     while ((match = mdImageRegex.exec(text)) !== null) {
       const name = match[1] || 'Image'
       const url = match[2]
+      if (!url) continue
       if (seenUrls.has(url)) continue
       seenUrls.add(url)
       attachments.push({ name, url, type: 'image', mimeType: 'image/png' })
@@ -120,6 +121,7 @@ export function extractAttachments(text: string | null, rawNode?: any): Attachme
     // 2. Text-based image references: [Image: DALL-E prompt]
     const textImageRegex = /\[Image:\s*([^\]]+)\]/gi
     while ((match = textImageRegex.exec(text)) !== null) {
+      if (!match[1]) continue
       attachments.push({ name: match[1], type: 'image' })
     }
   }

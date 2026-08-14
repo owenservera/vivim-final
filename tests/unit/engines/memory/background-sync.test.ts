@@ -4,8 +4,8 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import {
-  BackgroundSyncQueue,
   _SYNC_DRAIN_TIMEOUT_MS,
+  BackgroundSyncQueue,
 } from '../../../../src/engines/memory/background-sync.js'
 
 describe('BackgroundSyncQueue', () => {

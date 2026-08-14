@@ -1,6 +1,4 @@
 import type { UnifiedCapabilityRegistry } from '../unified-registry.js'
-import { seedLocalAgentProvider } from './seed.js'
-import type { BootstrapServices } from './types.js'
 import {
   buildAdminCaps,
   buildAgentCaps,
@@ -15,6 +13,8 @@ import {
   buildSystemCaps,
   buildTelemetryCaps,
 } from './default-caps.js'
+import { seedLocalAgentProvider } from './seed.js'
+import type { BootstrapServices } from './types.js'
 
 /**
  * Registers all default unified capabilities into the registry.

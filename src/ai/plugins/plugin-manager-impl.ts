@@ -29,7 +29,7 @@ export class TrustedPluginManager implements IPluginManager {
 
   constructor(
     private readonly inner: PluginManagerImpl,
-    private readonly eventBus: CapabilityEventBus,
+    readonly _eventBus: CapabilityEventBus,
   ) {}
 
   async discover(source: PluginPackageRef): Promise<PluginValidationResult> {

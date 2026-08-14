@@ -25,7 +25,7 @@ import { z } from 'zod'
 
 export const ActorRefSchema = z.object({
   kind: z.enum(['user', 'agent']),
-  id: z.string().min(1),
+  id: z.string({ error: 'Invalid string' }).min(1),
 })
 export type ActorRef = z.infer<typeof ActorRefSchema>
 
@@ -66,23 +66,23 @@ export const AGENTIC_EDGE = {
 // ── 1. cap-store.agent — Agent as an actor ──────────────────────────────────
 
 export const AgentReputationSchema = z.object({
-  score: z.number().min(0).max(1).default(0.5),
-  runsCompleted: z.number().int().nonnegative().default(0),
-  runsFailed: z.number().int().nonnegative().default(0),
-  avgQuality: z.number().min(0).max(1).default(0.5),
-  avgCostCents: z.number().nonnegative().default(0),
+  score: z.number({ error: 'Invalid number' }).min(0).max(1).default(0.5),
+  runsCompleted: z.number({ error: 'Invalid number' }).int().nonnegative().default(0),
+  runsFailed: z.number({ error: 'Invalid number' }).int().nonnegative().default(0),
+  avgQuality: z.number({ error: 'Invalid number' }).min(0).max(1).default(0.5),
+  avgCostCents: z.number({ error: 'Invalid number' }).nonnegative().default(0),
 })
 export type AgentReputation = z.infer<typeof AgentReputationSchema>
 
 export const AgentDataSchema = z.object({
-  handle: z.string().min(1),
-  displayName: z.string().min(1),
-  personaJson: z.record(z.unknown()).default({}),
-  modelPrefsJson: z.record(z.unknown()).default({}),
-  capabilitiesJson: z.record(z.unknown()).default({}),
-  reputation: AgentReputationSchema.default({}),
+  handle: z.string({ error: 'Invalid string' }).min(1),
+  displayName: z.string({ error: 'Invalid string' }).min(1),
+  personaJson: z.record(z.string(), z.unknown()).default({}),
+  modelPrefsJson: z.record(z.string(), z.unknown()).default({}),
+  capabilitiesJson: z.record(z.string(), z.unknown()).default({}),
+  reputation: AgentReputationSchema.prefault({}),
   status: z.enum(['draft', 'active', 'paused', 'retired']).default('draft'),
-  parentAgentId: z.string().optional(),
+  parentAgentId: z.string({ error: 'Invalid string' }).optional(),
   createdByActor: ActorRefSchema,
 })
 export type AgentData = z.infer<typeof AgentDataSchema>
@@ -90,18 +90,18 @@ export type AgentData = z.infer<typeof AgentDataSchema>
 // ── 2. cap-store.role — a governance slot ───────────────────────────────────
 
 export const RoleDataSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().default(''),
-  requiredCapabilitiesJson: z.record(z.unknown()).default({}),
+  name: z.string({ error: 'Invalid string' }).min(1),
+  description: z.string({ error: 'Invalid string' }).default(''),
+  requiredCapabilitiesJson: z.record(z.string(), z.unknown()).default({}),
   constraintsJson: z
     .object({
-      maxCostCents: z.number().nonnegative().optional(),
-      maxTokens: z.number().int().nonnegative().optional(),
-      allowBrowser: z.boolean().default(false),
-      allowTools: z.boolean().default(true),
-      maxSteps: z.number().int().nonnegative().optional(),
+      maxCostCents: z.number({ error: 'Invalid number' }).nonnegative().optional(),
+      maxTokens: z.number({ error: 'Invalid number' }).int().nonnegative().optional(),
+      allowBrowser: z.boolean({ error: 'Invalid boolean' }).default(false),
+      allowTools: z.boolean({ error: 'Invalid boolean' }).default(true),
+      maxSteps: z.number({ error: 'Invalid number' }).int().nonnegative().optional(),
     })
-    .default({}),
+    .prefault({}),
 })
 export type RoleData = z.infer<typeof RoleDataSchema>
 
@@ -112,16 +112,16 @@ export type RoleData = z.infer<typeof RoleDataSchema>
 // round-robin cursor.
 
 export const GovernanceRoleBindingSchema = z.object({
-  roleId: z.string(),
-  candidateAgentIds: z.array(z.string()).default([]),
-  weights: z.array(z.number().min(0)).default([]),
-  models: z.array(z.string()).default([]),
-  fallbackAgentIds: z.array(z.string()).default([]),
+  roleId: z.string({ error: 'Invalid string' }),
+  candidateAgentIds: z.array(z.string({ error: 'Invalid string' })).default([]),
+  weights: z.array(z.number({ error: 'Invalid number' }).min(0)).default([]),
+  models: z.array(z.string({ error: 'Invalid string' })).default([]),
+  fallbackAgentIds: z.array(z.string({ error: 'Invalid string' })).default([]),
 })
 export type GovernanceRoleBinding = z.infer<typeof GovernanceRoleBindingSchema>
 
 export const GovernancePolicyDataSchema = z.object({
-  name: z.string().min(1),
+  name: z.string({ error: 'Invalid string' }).min(1),
   strategy: z
     .enum([
       'round_robin',
@@ -133,52 +133,54 @@ export const GovernancePolicyDataSchema = z.object({
     ])
     .default('round_robin'),
   roles: z.array(GovernanceRoleBindingSchema).default([]),
-  allocationJson: z.record(z.unknown()).default({}),
-  rotationStateJson: z.record(z.unknown()).default({}),
+  allocationJson: z.record(z.string(), z.unknown()).default({}),
+  rotationStateJson: z.record(z.string(), z.unknown()).default({}),
   // Economic + reputation coupling (the real differentiator):
-  costBudgetCents: z.number().nonnegative().optional(),
-  reputationFloor: z.number().min(0).max(1).optional(),
-  preferLowerCost: z.boolean().default(false),
+  costBudgetCents: z.number({ error: 'Invalid number' }).nonnegative().optional(),
+  reputationFloor: z.number({ error: 'Invalid number' }).min(0).max(1).optional(),
+  preferLowerCost: z.boolean({ error: 'Invalid boolean' }).default(false),
   stopConditionsJson: z
     .object({
-      maxSteps: z.number().int().nonnegative().optional(),
-      convergeOn: z.string().optional(),
-      deadlineAt: z.number().optional(),
+      maxSteps: z.number({ error: 'Invalid number' }).int().nonnegative().optional(),
+      convergeOn: z.string({ error: 'Invalid string' }).optional(),
+      deadlineAt: z.number({ error: 'Invalid number' }).optional(),
     })
-    .default({}),
+    .prefault({}),
 })
 export type GovernancePolicyData = z.infer<typeof GovernancePolicyDataSchema>
 
 // ── 4. cap-store.agent_run — durable, resumable, forkable ───────────────────
 
 export const AgentRunDataSchema = z.object({
-  goalJson: z.record(z.unknown()).default({}),
-  objectiveId: z.string().optional(),
-  governancePolicyId: z.string().optional(),
-  roleBindingsJson: z.record(z.unknown()).default({}),
+  goalJson: z.record(z.string(), z.unknown()).default({}),
+  objectiveId: z.string({ error: 'Invalid string' }).optional(),
+  governancePolicyId: z.string({ error: 'Invalid string' }).optional(),
+  roleBindingsJson: z.record(z.string(), z.unknown()).default({}),
   status: z
     .enum(['queued', 'running', 'paused', 'awaiting_human', 'done', 'failed', 'superseded'])
     .default('queued'),
-  parentRunId: z.string().optional(),
-  rootRunId: z.string().optional(),
-  checkpointJson: z.record(z.unknown()).default({}),
+  parentRunId: z.string({ error: 'Invalid string' }).optional(),
+  rootRunId: z.string({ error: 'Invalid string' }).optional(),
+  checkpointJson: z.record(z.string(), z.unknown()).default({}),
   costJson: z
     .object({
-      totalCostCents: z.number().nonnegative().default(0),
-      perProvider: z.record(z.number().nonnegative()).default({}),
-      totalTokens: z.number().int().nonnegative().default(0),
+      totalCostCents: z.number({ error: 'Invalid number' }).nonnegative().default(0),
+      perProvider: z
+        .record(z.string(), z.number({ error: 'Invalid number' }).nonnegative())
+        .default({}),
+      totalTokens: z.number({ error: 'Invalid number' }).int().nonnegative().default(0),
     })
-    .default({}),
-  resultJson: z.record(z.unknown()).optional(),
+    .prefault({}),
+  resultJson: z.record(z.string(), z.unknown()).optional(),
 })
 export type AgentRunData = z.infer<typeof AgentRunDataSchema>
 
 // ── 5. cap-store.agent_step — atomic unit of work (CAUSAL PROVENANCE) ────────
 
 export const AgentStepDataSchema = z.object({
-  runId: z.string(),
-  stepIndex: z.number().int().nonnegative(),
-  roleId: z.string().optional(),
+  runId: z.string({ error: 'Invalid string' }),
+  stepIndex: z.number({ error: 'Invalid number' }).int().nonnegative(),
+  roleId: z.string({ error: 'Invalid string' }).optional(),
   actor: ActorRefSchema,
   actionType: z.enum([
     'llm_call',
@@ -189,45 +191,45 @@ export const AgentStepDataSchema = z.object({
     'observe',
     'reflect',
   ]),
-  modelRef: z.string().optional(),
-  inputJson: z.record(z.unknown()).default({}),
-  outputJson: z.record(z.unknown()).default({}),
-  toolCallId: z.string().optional(),
-  success: z.boolean().default(true),
-  durationMs: z.number().int().nonnegative().default(0),
+  modelRef: z.string({ error: 'Invalid string' }).optional(),
+  inputJson: z.record(z.string(), z.unknown()).default({}),
+  outputJson: z.record(z.string(), z.unknown()).default({}),
+  toolCallId: z.string({ error: 'Invalid string' }).optional(),
+  success: z.boolean({ error: 'Invalid boolean' }).default(true),
+  durationMs: z.number({ error: 'Invalid number' }).int().nonnegative().default(0),
   costJson: z
     .object({
-      costCents: z.number().nonnegative().default(0),
-      tokens: z.number().int().nonnegative().default(0),
+      costCents: z.number({ error: 'Invalid number' }).nonnegative().default(0),
+      tokens: z.number({ error: 'Invalid number' }).int().nonnegative().default(0),
     })
-    .default({}),
+    .prefault({}),
   // Causal provenance: node ids this step emitted (memory/artifact/belief/objective).
-  emitsNodeIds: z.array(z.string()).default([]),
+  emitsNodeIds: z.array(z.string({ error: 'Invalid string' })).default([]),
 })
 export type AgentStepData = z.infer<typeof AgentStepDataSchema>
 
 // ── 6. cap-store.tool — generated / registered tool ─────────────────────────
 
 export const ToolDataSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().default(''),
+  name: z.string({ error: 'Invalid string' }).min(1),
+  description: z.string({ error: 'Invalid string' }).default(''),
   kind: z.enum(['generated', 'mcp', 'builtin', 'imported']).default('generated'),
-  codeRef: z.string().default(''),
-  inputSchemaJson: z.record(z.unknown()).default({}),
-  outputSchemaJson: z.record(z.unknown()).default({}),
+  codeRef: z.string({ error: 'Invalid string' }).default(''),
+  inputSchemaJson: z.record(z.string(), z.unknown()).default({}),
+  outputSchemaJson: z.record(z.string(), z.unknown()).default({}),
   sandboxJson: z
     .object({
-      timeoutMs: z.number().int().positive().default(5000),
-      allowNetwork: z.boolean().default(false),
-      allowFs: z.boolean().default(false),
-      allowBrowser: z.boolean().default(false),
-      permissions: z.array(z.string()).default([]),
+      timeoutMs: z.number({ error: 'Invalid number' }).int().positive().default(5000),
+      allowNetwork: z.boolean({ error: 'Invalid boolean' }).default(false),
+      allowFs: z.boolean({ error: 'Invalid boolean' }).default(false),
+      allowBrowser: z.boolean({ error: 'Invalid boolean' }).default(false),
+      permissions: z.array(z.string({ error: 'Invalid string' })).default([]),
     })
-    .default({}),
-  version: z.number().int().positive().default(1),
+    .prefault({}),
+  version: z.number({ error: 'Invalid number' }).int().positive().default(1),
   status: z.enum(['draft', 'active', 'deprecated']).default('draft'),
   generatedByActor: ActorRefSchema,
-  provenanceJson: z.record(z.unknown()).default({}),
+  provenanceJson: z.record(z.string(), z.unknown()).default({}),
 })
 export type ToolData = z.infer<typeof ToolDataSchema>
 
@@ -237,27 +239,27 @@ export type ToolData = z.infer<typeof ToolDataSchema>
 // persists intent across runs — this is the missing spine.
 
 export const ObjectiveAgendaItemSchema = z.object({
-  id: z.string(),
+  id: z.string({ error: 'Invalid string' }),
   kind: z.enum(['task', 'wait_for_event', 'human_check', 'sleep_until', 'review']),
-  payloadJson: z.record(z.unknown()).default({}),
+  payloadJson: z.record(z.string(), z.unknown()).default({}),
   status: z.enum(['pending', 'active', 'done', 'skipped', 'blocked']).default('pending'),
 })
 export type ObjectiveAgendaItem = z.infer<typeof ObjectiveAgendaItemSchema>
 
 export const ObjectiveDataSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().default(''),
-  goalJson: z.record(z.unknown()).default({}),
+  title: z.string({ error: 'Invalid string' }).min(1),
+  description: z.string({ error: 'Invalid string' }).default(''),
+  goalJson: z.record(z.string(), z.unknown()).default({}),
   status: z
     .enum(['draft', 'active', 'paused', 'blocked', 'succeeded', 'failed', 'archived'])
     .default('active'),
   agenda: z.array(ObjectiveAgendaItemSchema).default([]),
-  agendaCursor: z.number().int().nonnegative().default(0),
-  progress: z.number().min(0).max(1).default(0),
+  agendaCursor: z.number({ error: 'Invalid number' }).int().nonnegative().default(0),
+  progress: z.number({ error: 'Invalid number' }).min(0).max(1).default(0),
   ownerActor: ActorRefSchema,
-  parentObjectiveId: z.string().optional(),
-  wakeAt: z.number().optional(),
-  successCriteriaJson: z.record(z.unknown()).default({}),
+  parentObjectiveId: z.string({ error: 'Invalid string' }).optional(),
+  wakeAt: z.number({ error: 'Invalid number' }).optional(),
+  successCriteriaJson: z.record(z.string(), z.unknown()).default({}),
 })
 export type ObjectiveData = z.infer<typeof ObjectiveDataSchema>
 
@@ -267,13 +269,13 @@ export type ObjectiveData = z.infer<typeof ObjectiveDataSchema>
 
 export const AgentBeliefDataSchema = z.object({
   ownerKind: z.enum(['agent', 'objective']),
-  ownerId: z.string(),
-  topic: z.string().min(1),
-  claim: z.string().min(1),
-  confidence: z.number().min(0).max(1).default(0.5),
-  evidenceNodeIds: z.array(z.string()).default([]),
-  retracted: z.boolean().default(false),
-  sourceStepId: z.string().optional(),
+  ownerId: z.string({ error: 'Invalid string' }),
+  topic: z.string({ error: 'Invalid string' }).min(1),
+  claim: z.string({ error: 'Invalid string' }).min(1),
+  confidence: z.number({ error: 'Invalid number' }).min(0).max(1).default(0.5),
+  evidenceNodeIds: z.array(z.string({ error: 'Invalid string' })).default([]),
+  retracted: z.boolean({ error: 'Invalid boolean' }).default(false),
+  sourceStepId: z.string({ error: 'Invalid string' }).optional(),
 })
 export type AgentBeliefData = z.infer<typeof AgentBeliefDataSchema>
 
@@ -281,7 +283,7 @@ export type AgentBeliefData = z.infer<typeof AgentBeliefDataSchema>
 
 export const BuilderRunDataSchema = z.object({
   initiatorActor: ActorRefSchema,
-  intentJson: z.record(z.unknown()).default({}),
+  intentJson: z.record(z.string(), z.unknown()).default({}),
   mode: z.enum(['human_led', 'agent_led']).default('human_led'),
   stage: z
     .enum(['discover', 'infer', 'draft', 'validate', 'spawn', 'done', 'failed'])
@@ -289,7 +291,7 @@ export const BuilderRunDataSchema = z.object({
   producedAgentId: z.string().optional(),
   producedRunId: z.string().optional(),
   status: z.enum(['pending', 'running', 'done', 'failed']).default('pending'),
-  resultJson: z.record(z.unknown()).default({}),
+  resultJson: z.record(z.string(), z.unknown()).default({}),
 })
 export type BuilderRunData = z.infer<typeof BuilderRunDataSchema>
 

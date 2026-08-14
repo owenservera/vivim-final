@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { BrowserCapabilityRegistry } from '../../../src/engines/browser-automation/registry.js'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
-import { buildConvenienceTools, buildTools } from '../../../src/mcp/browser-tools.js'
 import type { ToolCtx } from '../../../src/mcp/browser-tools.js'
+import { buildConvenienceTools, buildTools } from '../../../src/mcp/browser-tools.js'
 
 /**
  * Minimal governor stub — BrowserCapabilityRegistry only touches the governor
@@ -106,7 +106,7 @@ const SERP_HTML = `
 `
 
 /** Governor stub that answers evaluate with the SERP html and records calls. */
-function makeSerpGovernor(): ChromeGovernor {
+function makeSerpGovernor(): ChromeGovernor & { calls: string[] } {
   const calls: string[] = []
   return {
     calls,
@@ -116,7 +116,7 @@ function makeSerpGovernor(): ChromeGovernor {
       return null
     },
     captureScreenshot: async () => 'iVBORw0KGgo=' as unknown as string,
-  } as unknown as ChromeGovernor
+  } as unknown as ChromeGovernor & { calls: string[] }
 }
 
 function makeFullCtx(governor: ChromeGovernor): ToolCtx {

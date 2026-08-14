@@ -42,7 +42,8 @@ export function parseNetstat(raw: string): Map<number, number> {
     if (cols.length < 5) continue
     const [state, localAddr] = [cols[3], cols[1]]
     if (state !== 'LISTENING') continue
-    const colon = localAddr?.lastIndexOf(':')
+    if (!localAddr) continue
+    const colon = localAddr.lastIndexOf(':')
     if (colon === undefined || colon < 0) continue
     const port = Number(localAddr.slice(colon + 1))
     const pid = Number(cols[4])

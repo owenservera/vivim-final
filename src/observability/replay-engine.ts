@@ -164,7 +164,7 @@ export class ReplayEngine {
           const statusMatch = response.status === entry.expected.status
           const bodyMatch =
             entry.expected.body === undefined || this.fuzzy
-              ? normalize(response.body ?? '') === normalize(entry.expected.body)
+              ? normalize(response.body ?? '') === normalize(entry.expected.body ?? '')
               : (response.body ?? '') === entry.expected.body
 
           if (statusMatch && bodyMatch) {

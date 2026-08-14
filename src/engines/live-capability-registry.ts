@@ -67,14 +67,14 @@ const memoryAuditStore: SandboxAuditStore = {
 // ── Registry ────────────────────────────────────────────────────────────────
 
 export class LiveCapabilityRegistry extends UnifiedCapabilityRegistry {
-  private readonly sandbox: SandboxRunner
+  private readonly sandbox: typeof SandboxRunner.prototype
   private readonly mcp?: McpClientAdapter
   private readonly audit?: TelemetryAudit
 
   constructor(
     private readonly liveStore: LiveCapabilityStore,
     private readonly bus: CapabilityEventBus,
-    sandbox?: SandboxRunner,
+    sandbox?: InstanceType<typeof SandboxRunner>,
     mcp?: McpClientAdapter,
     audit?: TelemetryAudit,
   ) {

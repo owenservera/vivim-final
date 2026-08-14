@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'bun:test'
-import { planStepsFromIntent, planStepsLocally } from '../../../src/engines/autonomous-planner.js'
 // resolvePlanner is imported through the engine module to prove the
 // backward-compat re-export still resolves (Phase 1.3 extraction).
 import { resolvePlanner } from '../../../src/engines/autonomous-execution.js'
+import { planStepsFromIntent, planStepsLocally } from '../../../src/engines/autonomous-planner.js'
+import type { AutonomousGoal } from '../../../src/engines/autonomous-types.js'
+import type { ParsedIntent } from '../../../src/engines/nlcl/types.js'
 import { ConsentViolationError } from '../../../src/errors.js'
-import type { AutonomousGoal, ParsedIntent } from '../../../src/engines/autonomous-types.js'
 
 const baseGoal = (overrides?: Partial<AutonomousGoal>): AutonomousGoal => ({
   description: 'a test goal',
@@ -43,9 +44,7 @@ describe('planStepsLocally (Unit 8.9 keyword matrix)', () => {
   it('URL in description emits a navigate step with the url', () => {
     const steps = planStepsLocally(baseGoal({ description: 'go to https://example.com/page' }))
     expect(steps[0]?.action).toBe('navigate')
-    expect((steps[0]?.actionInput as Record<string, unknown>).url).toBe(
-      'https://example.com/page',
-    )
+    expect((steps[0]?.actionInput as Record<string, unknown>).url).toBe('https://example.com/page')
   })
 
   it('screenshot keyword emits a screenshot step', () => {
@@ -62,9 +61,7 @@ describe('planStepsLocally (Unit 8.9 keyword matrix)', () => {
   it('search without a URL emits a search step carrying the description', () => {
     const steps = planStepsLocally(baseGoal({ description: 'find the release notes' }))
     expect(steps[0]?.action).toBe('search')
-    expect((steps[0]?.actionInput as Record<string, unknown>).query).toBe(
-      'find the release notes',
-    )
+    expect((steps[0]?.actionInput as Record<string, unknown>).query).toBe('find the release notes')
   })
 
   it('no matching keywords falls back to a read task step', () => {
@@ -103,10 +100,7 @@ describe('planStepsFromIntent', () => {
   it('slices steps down to maxSteps', () => {
     const goal = baseGoal({ maxSteps: 1 })
     const many = Array.from({ length: 5 }, () => intent({}))
-    const steps = planStepsFromIntent(
-      goal,
-      intent({ alternatives: many }),
-    )
+    const steps = planStepsFromIntent(goal, intent({ alternatives: many }))
     expect(steps).toHaveLength(1)
   })
 })

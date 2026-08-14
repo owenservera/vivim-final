@@ -3,10 +3,19 @@
 // All writes are additive — never touches ProviderDefinition/ProviderModel tables.
 
 import type { PrismaClient } from '@prisma/client'
-import type { ModelId, ProviderId, RequestId, SessionId } from '../../ai/core/types.js'
-import type { RequestPriority } from '../../ai/core/types.js'
-import type { AIExecution, ExecutionEvent, ExecutionId } from '../../ai/execution/types.js'
-import type { ExecutionState } from '../../ai/execution/types.js'
+import type {
+  ModelId,
+  ProviderId,
+  RequestId,
+  RequestPriority,
+  SessionId,
+} from '../../ai/core/types.js'
+import type {
+  AIExecution,
+  ExecutionEvent,
+  ExecutionId,
+  ExecutionState,
+} from '../../ai/execution/types.js'
 import type {
   AIExecutionEventRow,
   AIExecutionRow,

@@ -17,11 +17,11 @@ export interface Edge {
 }
 
 export const EdgeSchema = z.object({
-  type: z.string().min(1),
-  targetId: z.string().min(1),
-  label: z.string().optional(),
-  weight: z.number().optional(),
-  properties: z.record(z.unknown()).optional(),
+  type: z.string({ error: 'Invalid string' }).min(1),
+  targetId: z.string({ error: 'Invalid string' }).min(1),
+  label: z.string({ error: 'Invalid string' }).optional(),
+  weight: z.number({ error: 'Invalid number' }).optional(),
+  properties: z.record(z.string(), z.unknown()).optional(),
 })
 
 // ── Node ACL (access control) ─────────────────────────────────────────────

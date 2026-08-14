@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { catchDebug } from './lib/catch-logger.js'
+import { getLogger } from './lib/logger.js'
 import { safeJsonParse } from './lib/safe-json.js'
 
 // ── Platform detection ──────────────────────────────────────────────────────
@@ -252,6 +253,16 @@ function resolveDbPath(): string {
   return process.env.CAP_STORE_DB_PATH ?? `${resolveDataDir()}/cap-store.sqlite`
 }
 
+function resolveSystemDbPath(): string {
+  return process.env.SYSTEM_DATABASE_URL?.replace(/^file:/, '')
+    ?? `${resolveDataDir()}/prisma/data/system.db`
+}
+
+function resolveUserDbPath(): string {
+  return process.env.USER_DATABASE_URL?.replace(/^file:/, '')
+    ?? `${resolveDataDir()}/prisma/data/user.db`
+}
+
 /** Parse an env var as a positive integer, falling back to `fallback` if unset or invalid. */
 function envInt(name: string, fallback: number): number {
   const raw = process.env[name]
@@ -274,6 +285,8 @@ export const config = {
   // Data — runtime-mutable via setStoragePaths()
   dataDir: resolveDataDir(),
   dbPath: resolveDbPath(),
+  systemDbPath: resolveSystemDbPath(),
+  userDbPath: resolveUserDbPath(),
 
   // Auth
   authToken: process.env.CAP_STORE_AUTH_TOKEN ?? null,

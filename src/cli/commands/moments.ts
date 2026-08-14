@@ -125,7 +125,7 @@ export async function runMoments(args: string[]): Promise<void> {
           console.error('Usage: moments verify <port> <providerId>')
           process.exit(1)
         }
-        await SUBCOMMANDS.verify(Number.parseInt(args[1]), args[2])
+        await SUBCOMMANDS.verify(Number.parseInt(args[1], 10), args[2])
         break
       case 'complete':
         if (!args[1] || !args[2] || !args[3] || !args[4]) {
@@ -134,7 +134,7 @@ export async function runMoments(args: string[]): Promise<void> {
           )
           process.exit(1)
         }
-        await SUBCOMMANDS.complete(args[1], args[2], args[3], Number.parseInt(args[4]))
+        await SUBCOMMANDS.complete(args[1], args[2], args[3], Number.parseInt(args[4], 10))
         break
       case 'health':
         await SUBCOMMANDS.health()

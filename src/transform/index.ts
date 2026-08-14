@@ -6,9 +6,9 @@
 //   const engine = createTransformEngine()
 //   const { data, warnings } = engine.transform('conversation', row)
 
+export * from './specs/index.js'
 export { TransformEngine } from './transform-engine.js'
 export * from './types.js'
-export * from './specs/index.js'
 
 import {
   capabilityTransformSpec,

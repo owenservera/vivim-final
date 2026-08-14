@@ -33,6 +33,9 @@ describe('OpenCodeInstanceRegistry', () => {
 
     const ledger = r.readLedger()
     expect(ledger).toHaveLength(3)
+    if (!ledger[0]) throw new Error('Ledger entry 0 is undefined')
+    if (!ledger[1]) throw new Error('Ledger entry 1 is undefined')
+    if (!ledger[2]) throw new Error('Ledger entry 2 is undefined')
     expect(ledger[0].kind).toBe('spawn')
     expect(ledger[0].instanceId).toBe(id)
     expect(ledger[0].pid).toBe(1001)
@@ -60,6 +63,7 @@ describe('OpenCodeInstanceRegistry', () => {
     const managed = live.filter((p) => p.managed)
     const external = live.filter((p) => !p.managed)
     expect(managed).toHaveLength(1)
+    if (!managed[0]) throw new Error('Managed instance is undefined')
     expect(managed[0].pid).toBe(1001)
     expect(managed[0].kind).toBe('serve')
     expect(managed[0].instanceId).toBe(id)
@@ -107,14 +111,16 @@ describe('OpenCodeInstanceRegistry', () => {
     })
     expect(r2.readLedger()).toHaveLength(2)
     expect(r2.liveInstances()).toHaveLength(1)
-    expect(r2.liveInstances()[0].instanceId).toBe(id)
-    expect(r2.liveInstances()[0].pid).toBe(1001)
+    const live0 = r2.liveInstances()[0]
+    if (!live0) throw new Error('liveInstances()[0] is undefined')
+    expect(live0.instanceId).toBe(id)
+    expect(live0.pid).toBe(1001)
 
     // cleanup
     try {
       rmSync(ledgerPath, { recursive: true, force: true })
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       /* best-effort */
     }
   })

@@ -4,9 +4,9 @@
 
 import { describe, expect, it } from 'bun:test'
 import {
-  type SlaveLifecycle,
   computeSuperState,
   nextState,
+  type SlaveLifecycle,
 } from '../../src/executor/slave-states.js'
 
 describe('Circuit Breaker (US2)', () => {

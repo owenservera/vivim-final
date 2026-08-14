@@ -166,7 +166,7 @@ function generateOpenAiSseLogicCode(name: string, providerId: string): string {
   return blocks;
 }
 function detectCompletion(rawBody) {
-  return String(rawBody).includes('[DONE]') || /"finish_reason"\s*:\s*"(stop|length)"/.test(rawBody);
+  return String(rawBody).includes('[DONE]') || /"finish_reason"s*:s*"(stop|length)"/.test(rawBody);
 }
 function getConfidence(rawBody) {
   var b = String(rawBody);
@@ -396,7 +396,7 @@ function generateLogicCode(opts: {
 }
 
 export class StreamingResponseAnalyzer {
-  constructor(private minConfidence = 0.7) {}
+  constructor(_minConfidence = 0.7) {}
 
   /** Run analysis over a captured raw body. */
   analyze(rawBody: string): StreamAnalysis {

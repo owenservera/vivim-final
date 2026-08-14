@@ -451,6 +451,9 @@ export interface ExecutionPolicy {
   readonly requiredCapabilities?: readonly AICapability[]
   readonly deniedCapabilities?: readonly AICapability[]
 
+  /** Routing priority when multiple strategies could apply. */
+  readonly priority?: 'cost' | 'quality' | 'latency' | 'balanced'
+
   readonly allowedNetworkHosts?: readonly string[]
 }
 

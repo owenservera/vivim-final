@@ -45,6 +45,10 @@ describe('normalizeKnowledge', () => {
       sourceType: 'conversation',
       sourceId: 'conv-1',
       content: '  Hello world  \r\n',
+      contentType: 'text/plain',
+      version: 1,
+      participants: [],
+      metadata: {},
     })
     expect(env.content).toBe('Hello world')
     expect(env.contentHash).toMatch(/^[a-f0-9]{64}$/)
@@ -55,11 +59,19 @@ describe('normalizeKnowledge', () => {
       sourceType: 'file',
       sourceId: 'f-1',
       content: 'same content',
+      contentType: 'text/plain',
+      version: 1,
+      participants: [],
+      metadata: {},
     })
     const b = normalizeKnowledge({
       sourceType: 'file',
       sourceId: 'f-1',
       content: 'same content',
+      contentType: 'text/plain',
+      version: 1,
+      participants: [],
+      metadata: {},
     })
     expect(a.contentHash).toBe(b.contentHash)
   })
@@ -69,11 +81,19 @@ describe('normalizeKnowledge', () => {
       sourceType: 'file',
       sourceId: 'f-1',
       content: 'content A',
+      contentType: 'text/plain',
+      version: 1,
+      participants: [],
+      metadata: {},
     })
     const b = normalizeKnowledge({
       sourceType: 'file',
       sourceId: 'f-1',
       content: 'content B',
+      contentType: 'text/plain',
+      version: 1,
+      participants: [],
+      metadata: {},
     })
     expect(a.contentHash).not.toBe(b.contentHash)
   })
@@ -83,11 +103,19 @@ describe('normalizeKnowledge', () => {
       sourceType: 'conversation',
       sourceId: 'x',
       content: 'same',
+      contentType: 'text/plain',
+      version: 1,
+      participants: [],
+      metadata: {},
     })
     const b = normalizeKnowledge({
       sourceType: 'file',
       sourceId: 'x',
       content: 'same',
+      contentType: 'text/plain',
+      version: 1,
+      participants: [],
+      metadata: {},
     })
     expect(a.contentHash).not.toBe(b.contentHash)
   })

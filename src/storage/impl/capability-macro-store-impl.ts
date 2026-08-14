@@ -71,6 +71,6 @@ export class CapabilityMacroStoreImpl implements CapabilityMacroStore {
 
   async delete(id: string): Promise<void> {
     await this.db.prisma.capabilityMacro.delete({ where: { id } }).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 }

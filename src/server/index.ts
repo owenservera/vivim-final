@@ -861,7 +861,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
     }
 
     if (path.startsWith('/api/opencode/permission/') && req.method === 'POST') {
-      const permissionId = path.split('/').pop()
+      const permissionId = path.split('/').pop() ?? ''
       const parsed = await parseRequestBody(
         req,
         z.object({
@@ -1207,7 +1207,7 @@ export async function createServerWithEngines(port = 9420): Promise<ServerContex
           handleWebSocket.close(ws, engines.eventBus)
         },
       },
-    },
+    } as Parameters<typeof Bun.serve>[0],
     port,
   )
 

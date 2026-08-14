@@ -8,16 +8,24 @@ import type { EmbeddingProvider } from './semantic-search.js'
 const MODEL = 'Xenova/all-mpnet-base-v2'
 const DEFAULT_DIMENSIONS = 768
 
-// Lazy singleton for the pipeline — created once, reused across embed calls.
-let _pipePromise: ReturnType<typeof import('@huggingface/transformers').pipeline> | null = null
+/** Structural shape of the transformers feature-extraction pipeline we call. */
+type EmbedPipe = (
+  inputs: string | string[],
+  options?: { pooling?: string; normalize?: boolean },
+) => Promise<{ data: ArrayLike<number> }>
 
-function getPipeline() {
+// Lazy singleton for the pipeline — created once, reused across embed calls.
+let _pipePromise: Promise<EmbedPipe> | null = null
+
+function getPipeline(): Promise<EmbedPipe> {
   if (!_pipePromise) {
-    _pipePromise = import('@huggingface/transformers').then(({ pipeline }) =>
-      pipeline('feature-extraction', MODEL, {
-        quantized: true,
-        cache_dir: process.env.VIVIM_MODEL_CACHE ?? 'data/models',
-      }),
+    const pipeOptions = {
+      quantized: true,
+      cache_dir: process.env.VIVIM_MODEL_CACHE ?? 'data/models',
+    }
+    _pipePromise = import('@huggingface/transformers').then(
+      ({ pipeline }) =>
+        pipeline('feature-extraction', MODEL, pipeOptions as never) as unknown as EmbedPipe,
     )
   }
   return _pipePromise

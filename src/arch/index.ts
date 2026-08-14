@@ -7,18 +7,18 @@
 
 export {
   BOUNDARY_RULES,
+  type BoundaryRule,
   classifyPath,
   getRule,
+  type ImportVerdict,
   isImportAllowed,
   resolveAlias,
-  type BoundaryRule,
-  type ImportVerdict,
 } from './boundary-rules.js'
 
 export {
+  type ScanOptions,
+  type ScanResult,
   scanBoundaryViolations,
   scanFile,
   type Violation,
-  type ScanResult,
-  type ScanOptions,
 } from './boundary-scanner.js'

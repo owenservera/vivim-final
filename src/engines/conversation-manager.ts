@@ -28,9 +28,9 @@ import type { AgentMemoryContext, MemoryEngine } from './memory-engine.js'
 import { MessageIdentity } from './message-identity.js'
 import {
   COMPOSER_SELECTORS,
-  PROVIDER_URLS,
-  PROVIDER_URL_PATTERNS,
   findWorkingSelector,
+  PROVIDER_URL_PATTERNS,
+  PROVIDER_URLS,
 } from './provider-selectors.js'
 import type { StreamBlockStore } from './stream-block-store.js'
 import type { StreamingProtocol } from './streaming-protocol.js'
@@ -41,17 +41,17 @@ import type { ContentBlock, ParseResult, StreamParserEngine } from './stream-par
 
 export type {
   ContentBlock,
+  ParseResult,
   ParserConfig,
   ParserModule,
-  ParseResult,
   StreamParserEngine,
 } from './stream-parser.js'
 
 // ── Re-export real engine types ──────────────────────────────────────────
 
+export { CapabilityEventBus } from './capability-event-bus.js'
 export type { CapabilityResolutionEngine, ResolvedCapabilities } from './capability-resolution.js'
 export type { StreamBlockStore } from './stream-block-store.js'
-export { CapabilityEventBus } from './capability-event-bus.js'
 
 // ── Message Metadata Types ───────────────────────────────────────────────────
 
@@ -317,7 +317,7 @@ export class ConversationManager {
         updatedAt: now,
       })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return nodeId
   }
 
@@ -578,15 +578,15 @@ export class ConversationManager {
         blockCount: 1,
         latencyMs: 0,
       }
-      
+
       // Generate identity hash for user message
       const userIdentityInput = MessageIdentity.fromMessageInput(
         userMessageInput,
         conv.providerId,
-        account?.email || ''
+        account?.email || '',
       )
       const userIdentityHash = MessageIdentity.generate(userIdentityInput)
-      
+
       // Check if user message already exists (deduplication)
       const existingUserMessage = await this.store.getMessageByIdentityHash(userIdentityHash)
       if (!existingUserMessage) {
@@ -604,19 +604,20 @@ export class ConversationManager {
         blockCount: parseResult.blocks.length,
         latencyMs: Date.now() - totalStart,
       }
-      
+
       // Generate identity hash for assistant message
       const assistantIdentityInput = MessageIdentity.fromMessageInput(
         assistantMessageInput,
         conv.providerId,
-        account?.email || ''
+        account?.email || '',
       )
       const assistantIdentityHash = MessageIdentity.generate(assistantIdentityInput)
-      
+
       // Check if assistant message already exists (deduplication)
-      const existingAssistantMessage = await this.store.getMessageByIdentityHash(assistantIdentityHash)
-      const msgRow = existingAssistantMessage 
-        ? existingAssistantMessage 
+      const existingAssistantMessage =
+        await this.store.getMessageByIdentityHash(assistantIdentityHash)
+      const msgRow = existingAssistantMessage
+        ? existingAssistantMessage
         : await this.store.createMessageWithIdentity({
             ...assistantMessageInput,
             identityHash: assistantIdentityHash,
@@ -635,7 +636,7 @@ export class ConversationManager {
       if (this.contentUnitStore) {
         const units = decomposeToContentUnits(parseResult.blocks, conversationId, msgRow.id)
         await this.contentUnitStore.storeUnits(units).catch(() => {})
-  // [audit] log the error with context here
+        // [audit] log the error with context here
       }
 
       // Universal capture — persist both messages as Nodes (fully compliant DB).
@@ -689,7 +690,7 @@ export class ConversationManager {
             tags: ['conversation', conv.providerId],
           })
           .catch(() => {}) // fire-and-forget
-  // [audit] log the error with context here
+        // [audit] log the error with context here
       }
 
       return {
@@ -992,7 +993,7 @@ export class ConversationManager {
     if (this.contentUnitStore) {
       const units = decomposeToContentUnits(parseResult.blocks, conversationId, msgRow.id)
       await this.contentUnitStore.storeUnits(units).catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
 
     // Universal capture — persist both messages as Nodes (fully compliant DB).

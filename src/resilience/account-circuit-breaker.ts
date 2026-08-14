@@ -112,7 +112,7 @@ export class AccountCircuitBreaker {
   private pruneFailures(s: AccountSlot, now: number): void {
     const cutoff = now - this.config.windowMs
     // Failures are always appended in order, so we can shift from the front.
-    while (s.failures.length > 0 && s.failures[0].timestamp < cutoff) {
+    while (s.failures.length > 0 && (s.failures[0]?.timestamp ?? 0) < cutoff) {
       s.failures.shift()
     }
   }
@@ -230,7 +230,7 @@ export class AccountCircuitBreaker {
    */
   getRetryAfterMs(accountKey: string): number {
     const s = this.accounts.get(accountKey)
-    if (!s || s.state !== 'open' || s.openedAt === null) return 0
+    if (s?.state !== 'open' || s.openedAt === null) return 0
 
     const elapsed = Date.now() - s.openedAt
     const remaining = s.currentCooldownMs - elapsed

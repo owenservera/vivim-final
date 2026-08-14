@@ -6,9 +6,9 @@
 import { beforeAll, describe, expect, it } from 'bun:test'
 import {
   PROBE_PORT,
-  type ServerHandle,
   p95Latency,
   parseHelpCommands,
+  type ServerHandle,
   spawnCli,
   startServer,
 } from './harness.ts'
@@ -34,7 +34,7 @@ describe('T5 NL resolve speed / fastest path', () => {
     if (!serverOk) return
     const help = await spawnCli(['help'], { CAP_STORE_PORT: String(PROBE_PORT) })
     const visible = parseHelpCommands(help.stdout)
-    const hasNlEntry = visible.some((c) => /interpret|ask|natural|nl/i.test(c))
+    const _hasNlEntry = visible.some((c) => /interpret|ask|natural|nl/i.test(c))
     // [audit] removed: console.log(`[T5] product-CLI NL entry present: ${hasNlEntry}`)
     expect(help.code).toBe(0)
   })

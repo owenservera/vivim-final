@@ -16,7 +16,7 @@ export class BrowserExecutor implements CommandExecutor {
 
   constructor(
     private governor?: ChromeGovernor,
-    private conversationManager?: ConversationManager,
+    _conversationManager?: ConversationManager,
   ) {}
 
   async execute(intent: ParsedIntent, ctx: NLCContext): Promise<CommandResult> {

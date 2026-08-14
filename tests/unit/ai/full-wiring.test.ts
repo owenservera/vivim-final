@@ -106,7 +106,7 @@ describe('NLCL — AI category patterns', () => {
     const matchPattern = executePattern.patterns[0]!
     const m = 'ask the ai to explain this codebase'.match(matchPattern.regex)
     expect(m).not.toBeNull()
-    const extracted = matchPattern.extract?.(m!)
+    const extracted = matchPattern.extract?.(m!, 'ask the ai to explain this codebase')
     expect(extracted.messages).toEqual([{ role: 'user', content: 'explain this codebase' }])
   })
 

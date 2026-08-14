@@ -2,11 +2,11 @@
 // Unit 2.2 — IntentDecomposer LLM strategy.
 
 import { describe, expect, it } from 'bun:test'
-import { IntentDecomposer } from '../../../src/engines/intent-decomposer.js'
 import type {
   DecomposeContext,
   IntentDecomposerStore,
 } from '../../../src/engines/intent-decomposer.js'
+import { IntentDecomposer } from '../../../src/engines/intent-decomposer.js'
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 

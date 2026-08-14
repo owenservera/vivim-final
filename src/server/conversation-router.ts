@@ -40,7 +40,13 @@ export function createConversationRouter(ctx: ServerContext) {
       if (pathname.match(/^\/api\/providers\/[^/]+$/) && method === 'GET') {
         const id = pathname.split('/')[3]
         if (!id) return errorResponse('Invalid provider id', 'ValidationError', 400)
-        const provider = await ctx.db.getProvider(id)
+        // Use cross-boundary cache for provider lookups (system-side, rarely changes)
+        const { getCrossBoundaryCache } = await import('../storage/cross-boundary-cache.js')
+        const cache = getCrossBoundaryCache()
+        const provider = await cache.get(
+          `provider:${id}`,
+          () => ctx.db.getProvider(id),
+        )
         if (!provider) return errorResponse('Provider not found', 'NotFound', 404)
         return json(provider)
       }
@@ -345,6 +351,7 @@ export function createConversationRouter(ctx: ServerContext) {
       // so the frontend health route can distinguish backend-up from db-up.
       // Returns 503 when the DB is unreachable so load balancers can route
       // around a degraded instance.
+      // Step 11: Added `dbs` sub-object with health telemetry for both DBs.
       if (pathname === '/api/health' && method === 'GET') {
         let dbStatus: 'ok' | 'unreachable' = 'ok'
         try {
@@ -354,7 +361,29 @@ export function createConversationRouter(ctx: ServerContext) {
           dbStatus = 'unreachable'
         }
         const status = dbStatus === 'ok' ? 'ok' : 'degraded'
-        return json({ status, db: dbStatus }, dbStatus === 'ok' ? 200 : 503)
+
+        // DB health telemetry (non-blocking, best-effort)
+        let dbs: Record<string, unknown> | undefined
+        try {
+          const { getDbHealth } = await import('../../storage/db-health.js')
+          const health = await getDbHealth()
+          dbs = {
+            system: {
+              integrityCheck: health.system.integrityCheck,
+              fileSizeBytes: health.system.fileSizeBytes,
+              schemaVersion: health.system.schemaVersion,
+            },
+            user: {
+              integrityCheck: health.user.integrityCheck,
+              fileSizeBytes: health.user.fileSizeBytes,
+              schemaVersion: health.user.schemaVersion,
+            },
+          }
+        } catch {
+          // Health telemetry is best-effort — don't fail the endpoint
+        }
+
+        return json({ status, db: dbStatus, dbs }, dbStatus === 'ok' ? 200 : 503)
       }
 
       // Session — local-first stub (no real auth; returns success for login)

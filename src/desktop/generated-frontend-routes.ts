@@ -5,82 +5,80 @@
 
 /* eslint-disable */
 
-import * as _m0 from "../../frontend/src/app/api/agent/canvas/route.ts"
-import * as _m1 from "../../frontend/src/app/api/agent/canvas/command/route.ts"
-import * as _m2 from "../../frontend/src/app/api/agent/invoke/route.ts"
-import * as _m3 from "../../frontend/src/app/api/agent/list/route.ts"
-import * as _m4 from "../../frontend/src/app/api/audit/export/route.ts"
-import * as _m5 from "../../frontend/src/app/api/audit/list/route.ts"
-import * as _m6 from "../../frontend/src/app/api/audit/stats/route.ts"
-import * as _m7 from "../../frontend/src/app/api/automation/execute/route.ts"
-import * as _m8 from "../../frontend/src/app/api/automation/list/route.ts"
-import * as _m9 from "../../frontend/src/app/api/canvas/definition/route.ts"
-import * as _m10 from "../../frontend/src/app/api/canvas/definition/[id]/route.ts"
-import * as _m11 from "../../frontend/src/app/api/canvas/events/route.ts"
-import * as _m12 from "../../frontend/src/app/api/canvas/node/[id]/execute/route.ts"
-import * as _m13 from "../../frontend/src/app/api/canvas/node/stream/route.ts"
-import * as _m14 from "../../frontend/src/app/api/canvas/resolve/route.ts"
-import * as _m15 from "../../frontend/src/app/api/canvas/shell/route.ts"
-import * as _m16 from "../../frontend/src/app/api/canvas/workspace/switch/route.ts"
-import * as _m17 from "../../frontend/src/app/api/document/edit/apply_op/route.ts"
-import * as _m18 from "../../frontend/src/app/api/document/edit/redo/route.ts"
-import * as _m19 from "../../frontend/src/app/api/document/edit/save/route.ts"
-import * as _m20 from "../../frontend/src/app/api/document/edit/session/route.ts"
-import * as _m21 from "../../frontend/src/app/api/document/edit/start/route.ts"
-import * as _m22 from "../../frontend/src/app/api/document/edit/undo/route.ts"
-import * as _m23 from "../../frontend/src/app/api/document/filetypes/route.ts"
-import * as _m24 from "../../frontend/src/app/api/document/open/route.ts"
-import * as _m25 from "../../frontend/src/app/api/documents/route.ts"
-import * as _m26 from "../../frontend/src/app/api/drawer/add_panel/route.ts"
-import * as _m27 from "../../frontend/src/app/api/drawer/get/route.ts"
-import * as _m28 from "../../frontend/src/app/api/drawer/remove_panel/route.ts"
-import * as _m29 from "../../frontend/src/app/api/drawer/reset/route.ts"
-import * as _m30 from "../../frontend/src/app/api/drawer/set_active_panel/route.ts"
-import * as _m31 from "../../frontend/src/app/api/drawer/toggle/route.ts"
-import * as _m32 from "../../frontend/src/app/api/drawer/update/route.ts"
-import * as _m33 from "../../frontend/src/app/api/help/agent/route.ts"
-import * as _m34 from "../../frontend/src/app/api/help/search/route.ts"
-import * as _m35 from "../../frontend/src/app/api/media/route.ts"
-import * as _m36 from "../../frontend/src/app/api/media/open/route.ts"
-import * as _m37 from "../../frontend/src/app/api/notification/list/route.ts"
-import * as _m38 from "../../frontend/src/app/api/notification/mark_all_read/route.ts"
-import * as _m39 from "../../frontend/src/app/api/notification/mark_read/route.ts"
-import * as _m40 from "../../frontend/src/app/api/notification/seed/route.ts"
-import * as _m41 from "../../frontend/src/app/api/notification/stats/route.ts"
-import * as _m42 from "../../frontend/src/app/api/onboarding/analytics/route.ts"
-import * as _m43 from "../../frontend/src/app/api/onboarding/complete/route.ts"
-import * as _m44 from "../../frontend/src/app/api/onboarding/complete-tour/route.ts"
-import * as _m45 from "../../frontend/src/app/api/onboarding/dismiss/route.ts"
-import * as _m46 from "../../frontend/src/app/api/onboarding/reset/route.ts"
-import * as _m47 from "../../frontend/src/app/api/onboarding/state/route.ts"
-import * as _m48 from "../../frontend/src/app/api/plugins/install/route.ts"
-import * as _m49 from "../../frontend/src/app/api/presence/cursors/route.ts"
-import * as _m50 from "../../frontend/src/app/api/presence/list/route.ts"
-import * as _m51 from "../../frontend/src/app/api/rbac/check/route.ts"
-import * as _m52 from "../../frontend/src/app/api/rbac/grant/route.ts"
-import * as _m53 from "../../frontend/src/app/api/rbac/members/route.ts"
-import * as _m54 from "../../frontend/src/app/api/rbac/revoke/route.ts"
-import * as _m55 from "../../frontend/src/app/api/rbac/roles/route.ts"
-import * as _m56 from "../../frontend/src/app/api/rbac/update_role/route.ts"
-import * as _m57 from "../../frontend/src/app/api/search/route.ts"
-import * as _m58 from "../../frontend/src/app/api/storage/health/route.ts"
-import * as _m59 from "../../frontend/src/app/api/template/instantiate/route.ts"
-import * as _m60 from "../../frontend/src/app/api/template/list/route.ts"
-import * as _m61 from "../../frontend/src/app/api/ui/blueprint/route.ts"
-import * as _m62 from "../../frontend/src/app/api/ui/component/[id]/spec/route.ts"
-import * as _m63 from "../../frontend/src/app/api/ui/extend/route.ts"
-import * as _m64 from "../../frontend/src/app/api/ui/list/route.ts"
-import * as _m65 from "../../frontend/src/app/api/ui/set_property/route.ts"
-import * as _m66 from "../../frontend/src/app/api/workspace/list/route.ts"
-import * as _m67 from "../../frontend/src/app/api/zlayer/get/route.ts"
-import * as _m68 from "../../frontend/src/app/api/zlayer/reorder/route.ts"
-import * as _m69 from "../../frontend/src/app/api/zlayer/reset/route.ts"
-import * as _m70 from "../../frontend/src/app/api/zlayer/set_active/route.ts"
-import * as _m71 from "../../frontend/src/app/api/zlayer/update/route.ts"
+import * as _m1 from '../../frontend/src/app/api/agent/canvas/command/route.ts'
+import * as _m0 from '../../frontend/src/app/api/agent/canvas/route.ts'
+import * as _m2 from '../../frontend/src/app/api/agent/invoke/route.ts'
+import * as _m3 from '../../frontend/src/app/api/agent/list/route.ts'
+import * as _m4 from '../../frontend/src/app/api/audit/export/route.ts'
+import * as _m5 from '../../frontend/src/app/api/audit/list/route.ts'
+import * as _m6 from '../../frontend/src/app/api/audit/stats/route.ts'
+import * as _m7 from '../../frontend/src/app/api/automation/execute/route.ts'
+import * as _m8 from '../../frontend/src/app/api/automation/list/route.ts'
+import * as _m10 from '../../frontend/src/app/api/canvas/definition/[id]/route.ts'
+import * as _m9 from '../../frontend/src/app/api/canvas/definition/route.ts'
+import * as _m11 from '../../frontend/src/app/api/canvas/events/route.ts'
+import * as _m12 from '../../frontend/src/app/api/canvas/node/[id]/execute/route.ts'
+import * as _m13 from '../../frontend/src/app/api/canvas/node/stream/route.ts'
+import * as _m14 from '../../frontend/src/app/api/canvas/resolve/route.ts'
+import * as _m15 from '../../frontend/src/app/api/canvas/shell/route.ts'
+import * as _m16 from '../../frontend/src/app/api/canvas/workspace/switch/route.ts'
+import * as _m17 from '../../frontend/src/app/api/document/edit/apply_op/route.ts'
+import * as _m18 from '../../frontend/src/app/api/document/edit/redo/route.ts'
+import * as _m19 from '../../frontend/src/app/api/document/edit/save/route.ts'
+import * as _m20 from '../../frontend/src/app/api/document/edit/session/route.ts'
+import * as _m21 from '../../frontend/src/app/api/document/edit/start/route.ts'
+import * as _m22 from '../../frontend/src/app/api/document/edit/undo/route.ts'
+import * as _m23 from '../../frontend/src/app/api/document/filetypes/route.ts'
+import * as _m24 from '../../frontend/src/app/api/document/open/route.ts'
+import * as _m25 from '../../frontend/src/app/api/documents/route.ts'
+import * as _m26 from '../../frontend/src/app/api/drawer/add_panel/route.ts'
+import * as _m27 from '../../frontend/src/app/api/drawer/get/route.ts'
+import * as _m28 from '../../frontend/src/app/api/drawer/remove_panel/route.ts'
+import * as _m29 from '../../frontend/src/app/api/drawer/reset/route.ts'
+import * as _m30 from '../../frontend/src/app/api/drawer/set_active_panel/route.ts'
+import * as _m31 from '../../frontend/src/app/api/drawer/toggle/route.ts'
+import * as _m32 from '../../frontend/src/app/api/drawer/update/route.ts'
+import * as _m33 from '../../frontend/src/app/api/help/agent/route.ts'
+import * as _m34 from '../../frontend/src/app/api/help/search/route.ts'
+import * as _m36 from '../../frontend/src/app/api/media/open/route.ts'
+import * as _m35 from '../../frontend/src/app/api/media/route.ts'
+import * as _m37 from '../../frontend/src/app/api/notification/list/route.ts'
+import * as _m38 from '../../frontend/src/app/api/notification/mark_all_read/route.ts'
+import * as _m39 from '../../frontend/src/app/api/notification/mark_read/route.ts'
+import * as _m40 from '../../frontend/src/app/api/notification/seed/route.ts'
+import * as _m41 from '../../frontend/src/app/api/notification/stats/route.ts'
+import * as _m42 from '../../frontend/src/app/api/onboarding/analytics/route.ts'
+import * as _m43 from '../../frontend/src/app/api/onboarding/complete/route.ts'
+import * as _m44 from '../../frontend/src/app/api/onboarding/complete-tour/route.ts'
+import * as _m45 from '../../frontend/src/app/api/onboarding/dismiss/route.ts'
+import * as _m46 from '../../frontend/src/app/api/onboarding/reset/route.ts'
+import * as _m47 from '../../frontend/src/app/api/onboarding/state/route.ts'
+import * as _m48 from '../../frontend/src/app/api/plugins/install/route.ts'
+import * as _m49 from '../../frontend/src/app/api/presence/cursors/route.ts'
+import * as _m50 from '../../frontend/src/app/api/presence/list/route.ts'
+import * as _m51 from '../../frontend/src/app/api/rbac/check/route.ts'
+import * as _m52 from '../../frontend/src/app/api/rbac/grant/route.ts'
+import * as _m53 from '../../frontend/src/app/api/rbac/members/route.ts'
+import * as _m54 from '../../frontend/src/app/api/rbac/revoke/route.ts'
+import * as _m55 from '../../frontend/src/app/api/rbac/roles/route.ts'
+import * as _m56 from '../../frontend/src/app/api/rbac/update_role/route.ts'
+import * as _m57 from '../../frontend/src/app/api/search/route.ts'
+import * as _m58 from '../../frontend/src/app/api/storage/health/route.ts'
+import * as _m59 from '../../frontend/src/app/api/template/instantiate/route.ts'
+import * as _m60 from '../../frontend/src/app/api/template/list/route.ts'
+import * as _m61 from '../../frontend/src/app/api/ui/blueprint/route.ts'
+import * as _m62 from '../../frontend/src/app/api/ui/component/[id]/spec/route.ts'
+import * as _m63 from '../../frontend/src/app/api/ui/extend/route.ts'
+import * as _m64 from '../../frontend/src/app/api/ui/list/route.ts'
+import * as _m65 from '../../frontend/src/app/api/ui/set_property/route.ts'
+import * as _m66 from '../../frontend/src/app/api/workspace/list/route.ts'
+import * as _m67 from '../../frontend/src/app/api/zlayer/get/route.ts'
+import * as _m68 from '../../frontend/src/app/api/zlayer/reorder/route.ts'
+import * as _m69 from '../../frontend/src/app/api/zlayer/reset/route.ts'
+import * as _m70 from '../../frontend/src/app/api/zlayer/set_active/route.ts'
+import * as _m71 from '../../frontend/src/app/api/zlayer/update/route.ts'
 
-export interface FrontendHandler {
-  (req: Request, params: Record<string, string>): unknown
-}
+export type FrontendHandler = (req: Request, params: Record<string, string>) => unknown
 
 export interface FrontendRouteEntry {
   path: string
@@ -89,442 +87,526 @@ export interface FrontendRouteEntry {
 
 export const frontendRoutes: FrontendRouteEntry[] = [
   {
-    path: "/api/agent/canvas",
+    path: '/api/agent/canvas',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m0.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m0.POST?.(req as Parameters<typeof _m0.POST>[0]),
     },
   },
   {
-    path: "/api/agent/canvas/command",
+    path: '/api/agent/canvas/command',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m1.POST?.(req, { params: Promise.resolve(params) }),
-    GET: (req: Request, params: Record<string, string>) => _m1.GET?.(req, { params: Promise.resolve(params) }),
-    PUT: (req: Request, params: Record<string, string>) => _m1.PUT?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m1.POST?.(req as Parameters<typeof _m1.POST>[0]),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m1.GET?.(req as Parameters<typeof _m1.GET>[0]),
+      PUT: (req: Request, params: Record<string, string>) =>
+        _m1.PUT?.(req as Parameters<typeof _m1.PUT>[0]),
     },
   },
   {
-    path: "/api/agent/invoke",
+    path: '/api/agent/invoke',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m2.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m2.POST?.(req as Parameters<typeof _m2.POST>[0]),
     },
   },
   {
-    path: "/api/agent/list",
+    path: '/api/agent/list',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m3.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m3.GET?.(req as Parameters<typeof _m3.GET>[0]),
     },
   },
   {
-    path: "/api/audit/export",
+    path: '/api/audit/export',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m4.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m4.GET?.(req as Parameters<typeof _m4.GET>[0]),
     },
   },
   {
-    path: "/api/audit/list",
+    path: '/api/audit/list',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m5.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m5.GET?.(req as Parameters<typeof _m5.GET>[0]),
     },
   },
   {
-    path: "/api/audit/stats",
+    path: '/api/audit/stats',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m6.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m6.GET?.(req as Parameters<typeof _m6.GET>[0]),
     },
   },
   {
-    path: "/api/automation/execute",
+    path: '/api/automation/execute',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m7.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m7.POST?.(req as Parameters<typeof _m7.POST>[0]),
     },
   },
   {
-    path: "/api/automation/list",
+    path: '/api/automation/list',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m8.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m8.GET?.(req as Parameters<typeof _m8.GET>[0]),
     },
   },
   {
-    path: "/api/canvas/definition",
+    path: '/api/canvas/definition',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m9.POST?.(req, { params: Promise.resolve(params) }),
-    GET: (req: Request, params: Record<string, string>) => _m9.GET?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m9.POST?.(req as Parameters<typeof _m9.POST>[0]),
+      GET: (req: Request, params: Record<string, string>) => _m9.GET?.(),
     },
   },
   {
-    path: "/api/canvas/definition/[id]",
+    path: '/api/canvas/definition/[id]',
     handlers: {
-    PATCH: (req: Request, params: Record<string, string>) => _m10.PATCH?.(req, { params: Promise.resolve(params) }),
-    GET: (req: Request, params: Record<string, string>) => _m10.GET?.(req, { params: Promise.resolve(params) }),
+      PATCH: (req: Request, params: Record<string, string>) =>
+        _m10.PATCH?.(
+          req as Parameters<typeof _m10.PATCH>[0],
+          { params: Promise.resolve(params) } as Parameters<typeof _m10.PATCH>[1],
+        ),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m10.GET?.(
+          req as Parameters<typeof _m10.GET>[0],
+          { params: Promise.resolve(params) } as Parameters<typeof _m10.GET>[1],
+        ),
     },
   },
   {
-    path: "/api/canvas/events",
+    path: '/api/canvas/events',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m11.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m11.GET?.(req as Parameters<typeof _m11.GET>[0]),
     },
   },
   {
-    path: "/api/canvas/node/[id]/execute",
+    path: '/api/canvas/node/[id]/execute',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m12.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m12.POST?.(
+          req as Parameters<typeof _m12.POST>[0],
+          { params: Promise.resolve(params) } as Parameters<typeof _m12.POST>[1],
+        ),
     },
   },
   {
-    path: "/api/canvas/node/stream",
+    path: '/api/canvas/node/stream',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m13.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m13.POST?.(req as Parameters<typeof _m13.POST>[0]),
     },
   },
   {
-    path: "/api/canvas/resolve",
+    path: '/api/canvas/resolve',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m14.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m14.POST?.(req as Parameters<typeof _m14.POST>[0]),
     },
   },
   {
-    path: "/api/canvas/shell",
+    path: '/api/canvas/shell',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m15.POST?.(req, { params: Promise.resolve(params) }),
-    GET: (req: Request, params: Record<string, string>) => _m15.GET?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m15.POST?.(req as Parameters<typeof _m15.POST>[0]),
+      GET: (req: Request, params: Record<string, string>) => _m15.GET?.(),
     },
   },
   {
-    path: "/api/canvas/workspace/switch",
+    path: '/api/canvas/workspace/switch',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m16.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m16.POST?.(req as Parameters<typeof _m16.POST>[0]),
     },
   },
   {
-    path: "/api/document/edit/apply_op",
+    path: '/api/document/edit/apply_op',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m17.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m17.POST?.(req as Parameters<typeof _m17.POST>[0]),
     },
   },
   {
-    path: "/api/document/edit/redo",
+    path: '/api/document/edit/redo',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m18.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m18.POST?.(req as Parameters<typeof _m18.POST>[0]),
     },
   },
   {
-    path: "/api/document/edit/save",
+    path: '/api/document/edit/save',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m19.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m19.POST?.(req as Parameters<typeof _m19.POST>[0]),
     },
   },
   {
-    path: "/api/document/edit/session",
+    path: '/api/document/edit/session',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m20.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m20.GET?.(req as Parameters<typeof _m20.GET>[0]),
     },
   },
   {
-    path: "/api/document/edit/start",
+    path: '/api/document/edit/start',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m21.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m21.POST?.(req as Parameters<typeof _m21.POST>[0]),
     },
   },
   {
-    path: "/api/document/edit/undo",
+    path: '/api/document/edit/undo',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m22.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m22.POST?.(req as Parameters<typeof _m22.POST>[0]),
     },
   },
   {
-    path: "/api/document/filetypes",
+    path: '/api/document/filetypes',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m23.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) => _m23.GET?.(),
     },
   },
   {
-    path: "/api/document/open",
+    path: '/api/document/open',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m24.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m24.POST?.(req as Parameters<typeof _m24.POST>[0]),
     },
   },
   {
-    path: "/api/documents",
+    path: '/api/documents',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m25.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m25.GET?.(req as Parameters<typeof _m25.GET>[0]),
     },
   },
   {
-    path: "/api/drawer/add_panel",
+    path: '/api/drawer/add_panel',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m26.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m26.POST?.(req as Parameters<typeof _m26.POST>[0]),
     },
   },
   {
-    path: "/api/drawer/get",
+    path: '/api/drawer/get',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m27.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m27.GET?.(req as Parameters<typeof _m27.GET>[0]),
     },
   },
   {
-    path: "/api/drawer/remove_panel",
+    path: '/api/drawer/remove_panel',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m28.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m28.POST?.(req as Parameters<typeof _m28.POST>[0]),
     },
   },
   {
-    path: "/api/drawer/reset",
+    path: '/api/drawer/reset',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m29.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m29.POST?.(req as Parameters<typeof _m29.POST>[0]),
     },
   },
   {
-    path: "/api/drawer/set_active_panel",
+    path: '/api/drawer/set_active_panel',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m30.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m30.POST?.(req as Parameters<typeof _m30.POST>[0]),
     },
   },
   {
-    path: "/api/drawer/toggle",
+    path: '/api/drawer/toggle',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m31.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m31.POST?.(req as Parameters<typeof _m31.POST>[0]),
     },
   },
   {
-    path: "/api/drawer/update",
+    path: '/api/drawer/update',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m32.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m32.POST?.(req as Parameters<typeof _m32.POST>[0]),
     },
   },
   {
-    path: "/api/help/agent",
+    path: '/api/help/agent',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m33.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m33.POST?.(req as Parameters<typeof _m33.POST>[0]),
     },
   },
   {
-    path: "/api/help/search",
+    path: '/api/help/search',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m34.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m34.POST?.(req as Parameters<typeof _m34.POST>[0]),
     },
   },
   {
-    path: "/api/media",
+    path: '/api/media',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m35.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m35.GET?.(req as Parameters<typeof _m35.GET>[0]),
     },
   },
   {
-    path: "/api/media/open",
+    path: '/api/media/open',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m36.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m36.POST?.(req as Parameters<typeof _m36.POST>[0]),
     },
   },
   {
-    path: "/api/notification/list",
+    path: '/api/notification/list',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m37.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m37.GET?.(req as Parameters<typeof _m37.GET>[0]),
     },
   },
   {
-    path: "/api/notification/mark_all_read",
+    path: '/api/notification/mark_all_read',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m38.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m38.POST?.(req as Parameters<typeof _m38.POST>[0]),
     },
   },
   {
-    path: "/api/notification/mark_read",
+    path: '/api/notification/mark_read',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m39.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m39.POST?.(req as Parameters<typeof _m39.POST>[0]),
     },
   },
   {
-    path: "/api/notification/seed",
+    path: '/api/notification/seed',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m40.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) => _m40.POST?.(),
     },
   },
   {
-    path: "/api/notification/stats",
+    path: '/api/notification/stats',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m41.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m41.GET?.(req as Parameters<typeof _m41.GET>[0]),
     },
   },
   {
-    path: "/api/onboarding/analytics",
+    path: '/api/onboarding/analytics',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m42.POST?.(req, { params: Promise.resolve(params) }),
-    GET: (req: Request, params: Record<string, string>) => _m42.GET?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m42.POST?.(req as Parameters<typeof _m42.POST>[0]),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m42.GET?.(req as Parameters<typeof _m42.GET>[0]),
     },
   },
   {
-    path: "/api/onboarding/complete",
+    path: '/api/onboarding/complete',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m43.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m43.POST?.(req as Parameters<typeof _m43.POST>[0]),
     },
   },
   {
-    path: "/api/onboarding/complete-tour",
+    path: '/api/onboarding/complete-tour',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m44.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m44.POST?.(req as Parameters<typeof _m44.POST>[0]),
     },
   },
   {
-    path: "/api/onboarding/dismiss",
+    path: '/api/onboarding/dismiss',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m45.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m45.POST?.(req as Parameters<typeof _m45.POST>[0]),
     },
   },
   {
-    path: "/api/onboarding/reset",
+    path: '/api/onboarding/reset',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m46.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m46.POST?.(req as Parameters<typeof _m46.POST>[0]),
     },
   },
   {
-    path: "/api/onboarding/state",
+    path: '/api/onboarding/state',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m47.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m47.GET?.(req as Parameters<typeof _m47.GET>[0]),
     },
   },
   {
-    path: "/api/plugins/install",
+    path: '/api/plugins/install',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m48.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m48.POST?.(req as Parameters<typeof _m48.POST>[0]),
     },
   },
   {
-    path: "/api/presence/cursors",
+    path: '/api/presence/cursors',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m49.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m49.GET?.(req as Parameters<typeof _m49.GET>[0]),
     },
   },
   {
-    path: "/api/presence/list",
+    path: '/api/presence/list',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m50.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m50.GET?.(req as Parameters<typeof _m50.GET>[0]),
     },
   },
   {
-    path: "/api/rbac/check",
+    path: '/api/rbac/check',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m51.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m51.POST?.(req as Parameters<typeof _m51.POST>[0]),
     },
   },
   {
-    path: "/api/rbac/grant",
+    path: '/api/rbac/grant',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m52.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m52.POST?.(req as Parameters<typeof _m52.POST>[0]),
     },
   },
   {
-    path: "/api/rbac/members",
+    path: '/api/rbac/members',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m53.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m53.GET?.(req as Parameters<typeof _m53.GET>[0]),
     },
   },
   {
-    path: "/api/rbac/revoke",
+    path: '/api/rbac/revoke',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m54.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m54.POST?.(req as Parameters<typeof _m54.POST>[0]),
     },
   },
   {
-    path: "/api/rbac/roles",
+    path: '/api/rbac/roles',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m55.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) => _m55.GET?.(),
     },
   },
   {
-    path: "/api/rbac/update_role",
+    path: '/api/rbac/update_role',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m56.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m56.POST?.(req as Parameters<typeof _m56.POST>[0]),
     },
   },
   {
-    path: "/api/search",
+    path: '/api/search',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m57.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m57.POST?.(req as Parameters<typeof _m57.POST>[0]),
     },
   },
   {
-    path: "/api/storage/health",
+    path: '/api/storage/health',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m58.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) => _m58.GET?.(),
     },
   },
   {
-    path: "/api/template/instantiate",
+    path: '/api/template/instantiate',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m59.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m59.POST?.(req as Parameters<typeof _m59.POST>[0]),
     },
   },
   {
-    path: "/api/template/list",
+    path: '/api/template/list',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m60.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) => _m60.GET?.(),
     },
   },
   {
-    path: "/api/ui/blueprint",
+    path: '/api/ui/blueprint',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m61.GET?.(req, { params: Promise.resolve(params) }),
-    POST: (req: Request, params: Record<string, string>) => _m61.POST?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m61.GET?.(req as Parameters<typeof _m61.GET>[0]),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m61.POST?.(req as Parameters<typeof _m61.POST>[0]),
     },
   },
   {
-    path: "/api/ui/component/[id]/spec",
+    path: '/api/ui/component/[id]/spec',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m62.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m62.GET?.(
+          req as Parameters<typeof _m62.GET>[0],
+          { params: Promise.resolve(params) } as Parameters<typeof _m62.GET>[1],
+        ),
     },
   },
   {
-    path: "/api/ui/extend",
+    path: '/api/ui/extend',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m63.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m63.POST?.(req as Parameters<typeof _m63.POST>[0]),
     },
   },
   {
-    path: "/api/ui/list",
+    path: '/api/ui/list',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m64.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m64.GET?.(req as Parameters<typeof _m64.GET>[0]),
     },
   },
   {
-    path: "/api/ui/set_property",
+    path: '/api/ui/set_property',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m65.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m65.POST?.(req as Parameters<typeof _m65.POST>[0]),
     },
   },
   {
-    path: "/api/workspace/list",
+    path: '/api/workspace/list',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m66.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m66.GET?.(req as Parameters<typeof _m66.GET>[0]),
     },
   },
   {
-    path: "/api/zlayer/get",
+    path: '/api/zlayer/get',
     handlers: {
-    GET: (req: Request, params: Record<string, string>) => _m67.GET?.(req, { params: Promise.resolve(params) }),
+      GET: (req: Request, params: Record<string, string>) =>
+        _m67.GET?.(req as Parameters<typeof _m67.GET>[0]),
     },
   },
   {
-    path: "/api/zlayer/reorder",
+    path: '/api/zlayer/reorder',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m68.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m68.POST?.(req as Parameters<typeof _m68.POST>[0]),
     },
   },
   {
-    path: "/api/zlayer/reset",
+    path: '/api/zlayer/reset',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m69.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m69.POST?.(req as Parameters<typeof _m69.POST>[0]),
     },
   },
   {
-    path: "/api/zlayer/set_active",
+    path: '/api/zlayer/set_active',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m70.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m70.POST?.(req as Parameters<typeof _m70.POST>[0]),
     },
   },
   {
-    path: "/api/zlayer/update",
+    path: '/api/zlayer/update',
     handlers: {
-    POST: (req: Request, params: Record<string, string>) => _m71.POST?.(req, { params: Promise.resolve(params) }),
+      POST: (req: Request, params: Record<string, string>) =>
+        _m71.POST?.(req as Parameters<typeof _m71.POST>[0]),
     },
-  }
+  },
 ]

@@ -4,15 +4,15 @@
  */
 
 export { OpenAICompatibleAdapter } from './adapter.js'
-export {
-  type OpenAICompatibleManifest,
-  type ModelManifestEntry,
-  type AuthMethod,
-  validateManifest,
-  loadManifestFromFile,
-  modelEntryToCapabilityMap,
-} from './manifest.js'
 export { resolveAuthHeaders } from './auth.js'
+export { assertOkResponse, mapOpenAIError } from './error-mapper.js'
+export {
+  type AuthMethod,
+  loadManifestFromFile,
+  type ModelManifestEntry,
+  modelEntryToCapabilityMap,
+  type OpenAICompatibleManifest,
+  validateManifest,
+} from './manifest.js'
 export { buildChatCompletionRequest } from './request-builder.js'
 export { parseSSEStream } from './stream-parser.js'
-export { mapOpenAIError, assertOkResponse } from './error-mapper.js'

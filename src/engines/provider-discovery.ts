@@ -148,8 +148,8 @@ export class ProviderDiscoveryEngine {
     private readonly governor: ChromeGovernor,
     private readonly shapeRegistry: CapabilityShapeRegistry,
     private readonly store: DiscoveryStore | null,
-    private readonly providerRegistrar: ProviderRegistrar | null,
-    private readonly manifestInference: ManifestInferenceEngine | null,
+    readonly _providerRegistrar: ProviderRegistrar | null,
+    readonly _manifestInference: ManifestInferenceEngine | null,
     private readonly eventBus: CapabilityEventBus,
     private readonly providerStore?: ProviderStore | null,
   ) {}
@@ -411,14 +411,14 @@ export class ProviderDiscoveryEngine {
     const slave = await this.governor.ensureRunning('default')
     const cdp = this.governor.cdp
     await cdp.send(slave.slaveId, 'Network.enable', {}).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 
   async stopObservation(_sessionId: string): Promise<void> {
     const slave = await this.governor.ensureRunning('default')
     const cdp = this.governor.cdp
     await cdp.send(slave.slaveId, 'Network.disable', {}).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 
   async getObservations(

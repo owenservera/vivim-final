@@ -414,7 +414,7 @@ export class TelemetryAggregator {
   async runCycle(scheduleName: string): Promise<CycleResult> {
     const start = Date.now()
     const schedule = this.config.schedules.find((s) => s.name === scheduleName)
-    if (!schedule || !schedule.enabled) {
+    if (!schedule?.enabled) {
       return {
         scheduleName,
         rowsWritten: 0,

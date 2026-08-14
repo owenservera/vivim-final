@@ -8,7 +8,7 @@ export async function seedAutomation(db: CapStoreDb): Promise<number> {
 
   for (const role of AGENT_ROLES) {
     const runId = `seed:agent:${role}`
-    await db.prisma.agentLoopRun.upsert({
+    await db.userPrisma.agentLoopRun.upsert({
       where: { id: runId },
       create: {
         id: runId,
@@ -26,7 +26,7 @@ export async function seedAutomation(db: CapStoreDb): Promise<number> {
         completedAt: now,
       },
     })
-    await db.prisma.agentStep.upsert({
+    await db.userPrisma.agentStep.upsert({
       where: { id: `${runId}:0` },
       create: {
         id: `${runId}:0`,

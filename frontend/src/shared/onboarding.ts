@@ -202,7 +202,7 @@ export type TourAnalyticsEvent =
 
 /** Returns the first step that hasn't been completed, or null if all done. */
 export function nextPendingStep(state: OnboardingState | null): OnboardingStep | null {
-  if (!state) return ONBOARDING_STEPS[0]
+  if (!state) return ONBOARDING_STEPS[0] ?? null
   if (state.dismissed) return null
   for (const step of ONBOARDING_STEPS) {
     if (!state.completedSteps.includes(step.id)) {

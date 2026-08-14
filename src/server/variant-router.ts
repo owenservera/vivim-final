@@ -2,11 +2,11 @@ import { ulid } from 'ulid'
 import { getLogger } from '../lib/logger.js'
 import { mutationExecutor } from '../reprogrammability/dsl/executor.js'
 import { surfaceRegistry } from '../reprogrammability/registry.js'
+import type { SurfaceVariant } from '../reprogrammability/variant-schema.js'
 import {
   SurfaceVariantSchema,
   UpsertSurfaceVariantInputSchema,
 } from '../reprogrammability/variant-schema.js'
-import type { SurfaceVariant } from '../reprogrammability/variant-schema.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
 
 const log = getLogger('variant-router')

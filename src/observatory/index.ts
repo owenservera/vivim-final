@@ -17,38 +17,38 @@
 
 export type {
   ChangeSeverity,
+  CompatibilityReport,
   DiffOp,
   SchemaSnapshot,
-  CompatibilityReport,
 } from './schema-inference.js'
 
 export {
-  inferShape,
+  assessCompatibility,
   computeHash,
   diffShapes,
-  assessCompatibility,
+  inferShape,
 } from './schema-inference.js'
 
 // ─── Traffic Recorder ──────────────────────────────────────────────────
 
 export type {
   TrafficEnvelope,
-  TrafficStore,
   TrafficRecorder,
+  TrafficStore,
 } from './traffic-recorder.js'
 
 export {
-  redactSecrets,
   createTrafficRecorder,
+  redactSecrets,
 } from './traffic-recorder.js'
 
 // ─── Replay Engine ─────────────────────────────────────────────────────
 
 export type {
+  ReplayEngine,
+  ReplayEngineDeps,
   ReplayMode,
   ReplayResult,
-  ReplayEngineDeps,
-  ReplayEngine,
 } from './replay-engine.js'
 
 export { createReplayEngine } from './replay-engine.js'

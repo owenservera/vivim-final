@@ -5,8 +5,12 @@
 import { catchDebug } from '../lib/catch-logger.js'
 import { safeJsonParse } from '../lib/safe-json.js'
 import { SelectorCache } from './selector-cache.js'
-import type { AccessibilityNode, ScreenshotRegion, SemanticSelector } from './semantic-grounding.js'
-import type { SemanticGroundingEngine } from './semantic-grounding.js'
+import type {
+  AccessibilityNode,
+  ScreenshotRegion,
+  SemanticGroundingEngine,
+  SemanticSelector,
+} from './semantic-grounding.js'
 import type { McpClientAdapter } from './workflow-engine.js'
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -109,7 +113,7 @@ export class SelectorHealer {
             overrideJson: JSON.stringify(result.healed),
           })
           .catch(() => {}) // non-fatal — persistence failure must not break healing
-  // [audit] log the error with context here
+        // [audit] log the error with context here
       }
     }
 
@@ -461,7 +465,7 @@ export function classifyFailure(reason: string, selector: string): FailureClassi
   const primary = sorted[0]
   const failureType = primary?.type ?? 'unknown'
   const totalScore = sorted.reduce((sum, s) => sum + s.score, 0)
-  const confidence = totalScore > 0 ? Math.min(primary!.score / totalScore, 1) : 0.5
+  const confidence = totalScore > 0 ? Math.min((primary?.score ?? 0) / totalScore, 1) : 0.5
 
   // Boost strategy suggestions based on the actual selector
   let strategies = STRATEGY_SUGGESTIONS[failureType] ?? []

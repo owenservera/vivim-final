@@ -11,8 +11,8 @@ import type {
   LocalAgentProviderRow,
   LocalAgentStore,
 } from '../contracts/local-agent-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 const DEFAULT_TIMEOUT_MS = 180_000
 const MODELS_LAST_SYNC_KEY = 'models_last_synced_at'

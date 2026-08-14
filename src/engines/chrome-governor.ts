@@ -14,15 +14,14 @@ import type {
   TraceEntryRow,
 } from '../storage/contracts/governor-store.js'
 import type { CapabilitySnapshot, CapabilitySnapshotEntry } from './capability-snapshot.js'
-import type { CdpWatchdog } from './cdp-watchdog.js'
 import { configToProgram } from './harness/program-schema.js'
 import { registerDefaultStealthModules } from './stealth/register-defaults.js'
 import { StealthModuleEngine } from './stealth/stealth-module-engine.js'
-import type { StealthProfileStore } from './stealth/stealth-profile-store.js'
 import type {
   LaunchProfileRow,
   ModuleProfileRow,
   StealthPolicyRow,
+  StealthProfileStore,
 } from './stealth/stealth-profile-store.js'
 
 // ── In-memory stealth store fallback (test/dev only) ───────────────────────
@@ -72,35 +71,34 @@ function createInMemoryStealthStore(): StealthProfileStore {
 // Re-export everything so existing `import { ... } from './chrome-governor.js'`
 // continues to work without changes.
 
-export type {
-  SlaveStatus,
-  SuperState,
-  CircuitState,
-  FleetConfig,
-  LaunchOptions,
-  ChromeSlave,
-  CaptureResult,
-  PageState,
-  HarnessResult,
-  HarnessDAG,
-  HarnessNode,
-  HarnessEdge,
-  SlaveHealth,
-  GovernorEventBus,
-  CDPTransport,
-} from './chrome/types.js'
-
 export { AsyncMutex } from './chrome/async-mutex.js'
+export { CDPProxy } from './chrome/cdp-proxy.js'
 export {
   type CircuitBreaker,
-  createCircuitBreaker,
-  circuitRecordSuccess,
   circuitRecordFailure,
+  circuitRecordSuccess,
   circuitTryAcquire,
+  createCircuitBreaker,
 } from './chrome/circuit-breaker.js'
-export { TraceLog } from './chrome/trace-log.js'
 export { HealthMonitor } from './chrome/health-monitor.js'
-export { CDPProxy } from './chrome/cdp-proxy.js'
+export { TraceLog } from './chrome/trace-log.js'
+export type {
+  CaptureResult,
+  CDPTransport,
+  ChromeSlave,
+  CircuitState,
+  FleetConfig,
+  GovernorEventBus,
+  HarnessDAG,
+  HarnessEdge,
+  HarnessNode,
+  HarnessResult,
+  LaunchOptions,
+  PageState,
+  SlaveHealth,
+  SlaveStatus,
+  SuperState,
+} from './chrome/types.js'
 
 import type { AsyncMutex } from './chrome/async-mutex.js'
 import { CDPProxy } from './chrome/cdp-proxy.js'
@@ -129,8 +127,6 @@ export class ChromeGovernor {
   private traceLog: TraceLog | null = null
   private healthMonitor: HealthMonitor | null = null
   private circuitBreakers = new Map<string, CircuitBreaker>()
-  /** Watchdog instances per slave for dialog/crash recovery. */
-  private watchdogs = new Map<string, CdpWatchdog>()
   /** Memoized provider-free generic browser slave (automation backbone). */
   private _genericSlaveId: string | null = null
   /** Extended browser-automation recipe actions (set by bootstrap). */
@@ -150,7 +146,7 @@ export class ChromeGovernor {
   }
 
   constructor(
-    private store: GovernorStore,
+    store: GovernorStore,
     private config: FleetConfig,
     private eventBus?: GovernorEventBus,
     transport?: CDPTransport,
@@ -455,7 +451,7 @@ export class ChromeGovernor {
   ): Promise<void> {
     for (const domain of domains) {
       await this.cdp.send(slaveId, `${domain}.enable`).catch(() => {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // Some domains are optional depending on the page/profile; non-fatal.
       })
     }
@@ -547,7 +543,7 @@ export class ChromeGovernor {
         durationMs: Date.now() - start,
         error: null,
       }).catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       return result
     } catch (err) {
       const message = err instanceof Error ? err.message : 'execution failed'
@@ -560,7 +556,7 @@ export class ChromeGovernor {
         durationMs: Date.now() - start,
         error: message,
       }).catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       throw err
     }
   }

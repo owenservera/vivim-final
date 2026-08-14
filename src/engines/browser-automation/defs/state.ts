@@ -142,7 +142,7 @@ export const geoSet: BrowserCapabilityDef = {
         accuracy: 100,
       })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return { ok: true, detail: 'geo override set' }
   },
 }
@@ -157,7 +157,7 @@ export const permissionGrant: BrowserCapabilityDef = {
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Browser.grantPermissions', { permissions: [ctx.params.permission] })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return { ok: true, detail: `permission granted: ${ctx.params.permission}` }
   },
 }
@@ -170,7 +170,7 @@ export const permissionDeny: BrowserCapabilityDef = {
   trust: TRUST.write,
   handler: async (ctx) => {
     await ctx.governor.cdp.send(ctx.slaveId, 'Browser.resetPermissions', {}).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return { ok: true, detail: `permission reset: ${ctx.params.permission}` }
   },
 }

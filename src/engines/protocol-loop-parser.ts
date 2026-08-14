@@ -26,8 +26,7 @@ export interface LoopState {
 
 export class ProtocolLoopParser {
   private state: LoopState = { running: false, cycleCount: 0 }
-  private frameBuffer: string[] = []
-  private bufferPosition = 0
+  private frameBuffer: ProtocolFrame[] = []
 
   constructor(
     private readonly eventBus: CapabilityEventBus,

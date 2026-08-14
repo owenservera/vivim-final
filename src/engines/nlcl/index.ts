@@ -2,88 +2,85 @@
 // Natural Language Command Layer (NLCL) — barrel exports.
 // The "comms system" that makes the entire platform controllable via natural language.
 
-export { NLCLEngine, type NLCLEngineDeps } from './nlcl-engine.js'
-export { CommandPatternRegistry } from './command-registry.js'
-export { NLCommandParser, type ParseOptions } from './nl-parser.js'
-export {
-  DeterministicResolver,
-  LocalLLMResolver,
-  ProviderLLMResolver,
-  HybridResolver,
-  createResolver,
-  unresolvedIntent,
-  type LocalLLMAdapter,
-  type ProviderLLMAdapter,
-} from './intent-resolver.js'
-export { IntentRouter, type CompositeIntent } from './intent-router.js'
 export { getDefaultCommandPatterns, getPatternsByCategory } from './catalog.js'
-
-// ── SOTA NLU pipeline layers ───────────────────────────────────────────────
+export { CommandPatternRegistry } from './command-registry.js'
+export { bindContext, resolvePronouns } from './context-binder.js'
 export {
-  TextNormalizer,
-  defaultNormalizer,
-  normalizeText,
-  tokenizeText,
-} from './text-normalizer.js'
-export {
-  levenshtein,
-  levenshteinSimilarity,
-  jaroWinkler,
-  diceCoefficient,
-  fuzzySimilarity,
-} from './fuzzy-matcher.js'
-export { Tfidf, cosineSimilarity, type SparseVector, type TfidfOptions } from './tfidf.js'
-export {
+  normalizeBoolean,
+  normalizeNumberWords,
   normalizeRelativeDate,
   normalizeRelativeTime,
-  normalizeNumberWords,
-  normalizeBoolean,
   resolveEntityValues,
 } from './entity-resolution.js'
-export { extractPatternInput, buildIntentFromPattern } from './pattern-match.js'
-export { SemanticResolver } from './semantic-resolver.js'
-export { FuzzyResolver } from './fuzzy-resolver.js'
 export {
-  LayeredResolver,
-  type ResolutionLayer,
-  type LayeredResolverOptions,
-  type LayerTelemetry,
-} from './layered-resolver.js'
-
-// ── Phase 25 additions ─────────────────────────────────────────────────────
-export {
-  extractParameters,
-  validateInput,
-  coerceValues,
-  type ExtractResult,
-} from './parameter-extraction.js'
-export { bindContext, resolvePronouns } from './context-binder.js'
-export { LLMSlaveResolver } from './llm-slave-resolver.js'
-
-export {
-  FileExecutor,
+  AppExecutor,
   BrowserExecutor,
+  CapabilityExecutor,
+  ConversationExecutor,
+  EmailExecutor,
+  FileExecutor,
+  type MailAdapter,
   ProviderLLMExecutor,
   SystemExecutor,
-  ConversationExecutor,
-  CapabilityExecutor,
-  EmailExecutor,
-  AppExecutor,
-  type MailAdapter,
 } from './executors/index.js'
+export {
+  diceCoefficient,
+  fuzzySimilarity,
+  jaroWinkler,
+  levenshtein,
+  levenshteinSimilarity,
+} from './fuzzy-matcher.js'
+export { FuzzyResolver } from './fuzzy-resolver.js'
+export {
+  createResolver,
+  DeterministicResolver,
+  HybridResolver,
+  type LocalLLMAdapter,
+  LocalLLMResolver,
+  type ProviderLLMAdapter,
+  ProviderLLMResolver,
+  unresolvedIntent,
+} from './intent-resolver.js'
+export { type CompositeIntent, IntentRouter } from './intent-router.js'
+export {
+  LayeredResolver,
+  type LayeredResolverOptions,
+  type LayerTelemetry,
+  type ResolutionLayer,
+} from './layered-resolver.js'
+export { LLMSlaveResolver } from './llm-slave-resolver.js'
+export { NLCommandParser, type ParseOptions } from './nl-parser.js'
+export { NLCLEngine, type NLCLEngineDeps } from './nlcl-engine.js'
+// ── Phase 25 additions ─────────────────────────────────────────────────────
+export {
+  coerceValues,
+  type ExtractResult,
+  extractParameters,
+  validateInput,
+} from './parameter-extraction.js'
+export { buildIntentFromPattern, extractPatternInput } from './pattern-match.js'
+export { SemanticResolver } from './semantic-resolver.js'
+// ── SOTA NLU pipeline layers ───────────────────────────────────────────────
+export {
+  defaultNormalizer,
+  normalizeText,
+  TextNormalizer,
+  tokenizeText,
+} from './text-normalizer.js'
+export { cosineSimilarity, type SparseVector, Tfidf, type TfidfOptions } from './tfidf.js'
 
 export type {
+  ActionClassification,
+  CommandExecutor,
   CommandPattern,
-  ParsedIntent,
   CommandResult,
+  ExecutorId,
+  IntentResolver,
   NLCContext,
   NLCLEngineConfig,
-  IntentResolver,
-  ResolverConfig,
-  CommandExecutor,
-  ExecutorId,
-  ActionClassification,
   NLCLSurface,
   NLPattern,
+  ParsedIntent,
+  ResolverConfig,
 } from './types.js'
-export { DEFAULT_NLCL_CONFIG, classificationAtLeast } from './types.js'
+export { classificationAtLeast, DEFAULT_NLCL_CONFIG } from './types.js'

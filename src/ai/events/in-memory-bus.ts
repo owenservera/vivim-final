@@ -7,8 +7,7 @@
  * drops oldest and emits a `resource.pressure` event.
  */
 
-import type { ResourceUsage } from '../core/types.js'
-import type { ProviderId } from '../core/types.js'
+import type { ProviderId, ResourceUsage } from '../core/types.js'
 import type { GatewayEvent, GatewayEventFilter, IEventBus } from './bus.js'
 
 interface Subscriber {

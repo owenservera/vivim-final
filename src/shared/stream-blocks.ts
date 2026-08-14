@@ -2,20 +2,19 @@
 // Shared stream block types for frontend rendering (PRD-C6).
 // Re-exports from canonical schema — this file exists only for import compat with web/ui.
 
+export type { MessageData } from '../schema/message.js'
 export type {
+  CodePart,
   ContentBlock,
   ContentPart,
-  TextPart,
-  ReasoningPart,
-  CodePart,
-  FilePart,
-  ToolCallPart,
-  ToolResultPart,
-  SourcePart,
   CustomPart,
   ErrorPart,
+  FilePart,
   MetaPart,
+  ReasoningPart,
+  SourcePart,
   StepStartPart,
+  TextPart,
+  ToolCallPart,
+  ToolResultPart,
 } from '../schema/streaming.js'
-
-export type { MessageData } from '../schema/message.js'

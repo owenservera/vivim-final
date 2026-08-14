@@ -178,7 +178,7 @@ export class TelemetryStoreImpl implements TelemetryStore {
         ts,
       },
     })
-    return { ...input, tablesAffected, id, actor: row.actor, ts: row.ts }
+    return { ...input, tablesAffected, id, actor: row.actor as string, ts: row.ts as number }
   }
 
   async getManifestChangeHistory(
@@ -214,7 +214,7 @@ export class TelemetryStoreImpl implements TelemetryStore {
         data: { scheduleName, rowsWritten, durationMs, error: error ?? null, ts: Date.now() },
       })
       .catch(() => {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // Table may not exist in all deployments; cyclic logging is best-effort.
       })
   }

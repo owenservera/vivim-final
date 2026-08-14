@@ -7,10 +7,10 @@ import { rmSync } from 'node:fs'
 import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 import {
+  buildChromeArgs,
   type ChromeChannel,
   type ChromeInstanceProfile,
   type ChromeMode,
-  buildChromeArgs,
   makeProfile,
   resolveChromeBinary,
 } from './chrome-instance-profile.js'
@@ -211,7 +211,7 @@ export async function killChrome(pid: number): Promise<void> {
       stderr: 'ignore',
     })
     await proc.exited.catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return
   }
   try {
@@ -252,5 +252,5 @@ export async function isChromeRunning(pid: number): Promise<boolean> {
   }
 }
 
-export { resolveChromeBinary, buildChromeArgs, makeProfile }
-export type { ChromeInstanceProfile, ChromeChannel, ChromeMode }
+export type { ChromeChannel, ChromeInstanceProfile, ChromeMode }
+export { buildChromeArgs, makeProfile, resolveChromeBinary }

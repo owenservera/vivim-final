@@ -4,20 +4,20 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 import {
   type AsyncMutex,
+  type CaptureResult,
   CDPProxy,
   type CDPTransport,
-  type CaptureResult,
   ChromeGovernor,
   type CircuitBreaker,
+  circuitRecordFailure,
+  circuitRecordSuccess,
+  circuitTryAcquire,
+  createCircuitBreaker,
   type FleetConfig,
   type GovernorEventBus,
   HealthMonitor,
   type PageState,
   TraceLog,
-  circuitRecordFailure,
-  circuitRecordSuccess,
-  circuitTryAcquire,
-  createCircuitBreaker,
 } from '../../../src/engines/chrome-governor.js'
 import type { FleetSupervisor } from '../../../src/storage/contracts/fleet-supervisor.js'
 import type {

@@ -186,7 +186,7 @@ export function createNLCLRouter(engine: NLCLEngine) {
       }
 
       case 'audit': {
-        const limit = Number.parseInt(url.searchParams.get('limit') ?? '50')
+        const limit = Number.parseInt(url.searchParams.get('limit') ?? '50', 10)
         const log = engine.getAuditLog(limit)
         return json({ entries: log, count: log.length })
       }

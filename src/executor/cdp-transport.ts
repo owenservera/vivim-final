@@ -9,7 +9,7 @@
 // --no-startup-window have no target until one is created, so we create one
 // when none exists.
 
-import type { CDPTransport, CaptureResult, PageState } from '../engines/chrome-governor.js'
+import type { CaptureResult, CDPTransport, PageState } from '../engines/chrome-governor.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import { BunCdpClient } from './cdp.js'
 

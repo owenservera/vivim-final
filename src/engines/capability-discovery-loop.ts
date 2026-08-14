@@ -34,7 +34,7 @@ export class CapabilityDiscoveryLoop {
   constructor(
     private readonly eventBus: CapabilityEventBus,
     private readonly registry: UnifiedCapabilityRegistry,
-    private readonly store?: KernelStore,
+    readonly _store?: KernelStore,
     private readonly opts: DiscoveryOptions = {},
   ) {}
 

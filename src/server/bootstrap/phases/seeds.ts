@@ -5,7 +5,7 @@
 import { config } from '../../../config.js'
 import { getLogger } from '../../../lib/logger.js'
 import { getDb } from '../../../storage/db.js'
-import { runIndividualSeeds } from '../../bootstrap-seeds.js'
+import { runSystemSeeds, runUserSeeds } from '../../bootstrap-seeds.js'
 import type { BootstrapContext } from '../context.js'
 
 const log = getLogger('bootstrap:seeds')
@@ -13,6 +13,38 @@ const log = getLogger('bootstrap:seeds')
 export async function bootstrapSeedsPhase(ctx: BootstrapContext): Promise<void> {
   const db = getDb()
   ctx.db = db
+
+  // ── SchemaMeta compat check (before any engine touches DB data) ──────
+  try {
+    const { verifySchemaCompat } = await import('../../../storage/verify-compat.js')
+    const { getSystemPrisma, getUserPrisma } = await import('../../../storage/prisma.js')
+    await verifySchemaCompat(getSystemPrisma(), 'system')
+    await verifySchemaCompat(getUserPrisma(), 'user')
+  } catch (err) {
+    log.error({ err }, 'SchemaMeta compat check failed — aborting boot')
+    throw err
+  }
+
+  // ── DB health telemetry (integrity check on boot) ────────────────────
+  try {
+    const { checkIntegrityOnBoot, getDbHealth } = await import('../../../storage/db-health.js')
+    const healthy = await checkIntegrityOnBoot()
+    if (!healthy) {
+      log.error('DB integrity check failed — aborting boot (data may be corrupted)')
+      throw new Error('DB integrity check failed on boot')
+    }
+    // Log health summary at INFO level
+    const health = await getDbHealth()
+    log.info({
+      systemSize: health.system.fileSizeBytes,
+      userSize: health.user.fileSizeBytes,
+      systemSchema: health.system.schemaVersion,
+      userSchema: health.user.schemaVersion,
+    }, 'DB health check passed')
+  } catch (err) {
+    log.error({ err }, 'DB health check failed — aborting boot')
+    throw err
+  }
 
   // ── Data migrations (SchemaMeta-backed, complements Prisma DDL) ────────
   // The MigrationRunner handles DATA transformations (column-value reshaping,
@@ -38,7 +70,7 @@ export async function bootstrapSeedsPhase(ctx: BootstrapContext): Promise<void> 
     needsSeed = true
   } else {
     try {
-      needsSeed = (await db.prisma.providerDefinition.count()) === 0
+      needsSeed = (await db.systemPrisma.providerDefinition.count()) === 0
     } catch (err: unknown) {
       // P2021 = "no such table" — DB exists but schema wasn't applied
       const code = (err as { code?: string })?.code
@@ -84,10 +116,12 @@ export async function bootstrapSeedsPhase(ctx: BootstrapContext): Promise<void> 
         // Skip individual seeds — snapshot is fully seeded
       } else {
         log.warn(`Snapshot not found at ${snapshotPath} — running individual seeds`)
-        await runIndividualSeeds(db, registrar, providerStore, log)
+        await runSystemSeeds(db, registrar, providerStore, log)
+        await runUserSeeds(db, log)
       }
     } else {
-      await runIndividualSeeds(db, registrar, providerStore, log)
+      await runSystemSeeds(db, registrar, providerStore, log)
+      await runUserSeeds(db, log)
     }
   } else {
     log.info('DB already seeded — skipping boot seeds (set FORCE_SEED=true to re-run)')
@@ -96,7 +130,7 @@ export async function bootstrapSeedsPhase(ctx: BootstrapContext): Promise<void> 
     // insert-only + cheap (one count, one select, missing-slug inserts).
     try {
       const { ensureTaxonomySeeded } = await import('../../../../seeds/taxonomy/taxonomy-seed.js')
-      const tax = await ensureTaxonomySeeded(db.prisma, false, true)
+      const tax = await ensureTaxonomySeeded(db.systemPrisma as any, false, true)
       if (tax.upserted > 0) {
         log.info({ count: tax.upserted }, 'Converged capability-taxonomy rows on seeded DB')
       }

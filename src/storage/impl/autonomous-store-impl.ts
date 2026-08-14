@@ -39,9 +39,10 @@ export class AutonomousStoreImpl implements AutonomousExecutionStore {
     return row as unknown as Record<string, unknown> | null
   }
 
-  async listTasks(opts?: { status?: string; limit?: number }): Promise<
-    Array<Record<string, unknown>>
-  > {
+  async listTasks(opts?: {
+    status?: string
+    limit?: number
+  }): Promise<Array<Record<string, unknown>>> {
     const where = opts?.status ? { status: opts.status } : {}
     const rows = await prisma.autonomousTask.findMany({
       where,

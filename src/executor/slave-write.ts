@@ -4,10 +4,18 @@
 import { BunCdpClient } from './cdp.js'
 
 /** Minimal CDP response types for the methods we use. */
-interface CdpNodeResponse { nodeId: number }
-interface CdpBoxModelResponse { model: { content: number[][] } }
-interface CdpEvaluateResponse { result: { value: unknown } }
-interface CdpScreenshotResponse { data: string }
+interface CdpNodeResponse {
+  nodeId: number
+}
+interface CdpBoxModelResponse {
+  model: { content: number[][] }
+}
+interface CdpEvaluateResponse {
+  result: { value: unknown }
+}
+interface CdpScreenshotResponse {
+  data: string
+}
 
 export class SlaveWriteError extends Error {
   constructor(
@@ -23,8 +31,8 @@ export class SlaveWriteError extends Error {
 export class SlaveWrite {
   private cdp: BunCdpClient
 
-  constructor(private debugUrl: string) {
-    this.cdp = new BunCdpClient(debugUrl)
+  constructor(_debugUrl: string) {
+    this.cdp = new BunCdpClient(_debugUrl)
   }
 
   async connect(): Promise<void> {

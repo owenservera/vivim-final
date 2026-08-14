@@ -137,7 +137,7 @@ export class StructuredLogger {
 
     for (const t of this.transports) {
       void t.write(entry).catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
   }
 }
@@ -153,7 +153,7 @@ class ConsoleTransport implements LogTransport {
   async write(entry: StructuredLog): Promise<void> {
     if ((LEVEL_RANK[entry.level] ?? 0) < this.minRank) return
     const prefix = `[${entry.level.toUpperCase()}]${entry.engine ? ` [${entry.engine}]` : ''}`
-    const msg = `${prefix} ${entry.msg}`
+    const _msg = `${prefix} ${entry.msg}`
     switch (entry.level) {
       case 'error':
       case 'fatal':

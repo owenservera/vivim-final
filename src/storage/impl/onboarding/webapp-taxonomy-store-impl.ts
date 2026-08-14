@@ -6,8 +6,8 @@ import type {
   WebAppTaxonomyRow,
   WebAppTaxonomyStoreContract,
 } from '../../contracts/onboarding/webapp-taxonomy-store.js'
-import type { PrismaClient } from '../../../prisma.js'
 import type { CapStoreDb } from '../../db.js'
+import type { PrismaClient } from '../../prisma.js'
 
 export class WebAppTaxonomyStoreImpl implements WebAppTaxonomyStoreContract {
   private db: PrismaClient

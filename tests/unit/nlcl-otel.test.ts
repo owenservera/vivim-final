@@ -77,7 +77,9 @@ describe('withNlclSpan (active sink)', () => {
     )
     expect(result).toBe('done')
     expect(emit).toHaveBeenCalled()
-    const [level, body] = emit.mock.calls[0]
+    const call0 = emit.mock.calls[0]
+    if (!call0) throw new Error('emit.mock.calls[0] is undefined')
+    const [level, body] = call0
     expect(level).toBe('info')
     expect(String(body)).toContain('deterministic')
   })
@@ -89,7 +91,9 @@ describe('withNlclSpan (active sink)', () => {
       }),
     ).rejects.toThrow('fail')
     expect(emit).toHaveBeenCalled()
-    const [level, body, attrs] = emit.mock.calls[0]
+    const call0 = emit.mock.calls[0]
+    if (!call0) throw new Error('emit.mock.calls[0] is undefined')
+    const [level, body, attrs] = call0
     expect(level).toBe('error')
     expect(String(body)).toContain('llm-fallback')
     expect((attrs as Record<string, unknown>).outcome).toBe('error')

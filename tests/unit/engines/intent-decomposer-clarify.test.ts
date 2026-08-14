@@ -3,11 +3,11 @@
 
 import { describe, expect, it } from 'bun:test'
 import type { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
-import { IntentDecomposer } from '../../../src/engines/intent-decomposer.js'
 import type {
   DecomposeContext,
   IntentDecomposerStore,
 } from '../../../src/engines/intent-decomposer.js'
+import { IntentDecomposer } from '../../../src/engines/intent-decomposer.js'
 import { EngineError } from '../../../src/errors.js'
 
 class MockStore implements IntentDecomposerStore {

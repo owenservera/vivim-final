@@ -48,7 +48,7 @@ export function isChromeAvailable(): ChromeInfo {
         return { available: true, path: cmd, version: 'detected' }
       }
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Try next Chrome binary
     }
   }

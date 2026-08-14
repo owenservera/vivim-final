@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import {
-  isVivimOwner,
-  isVivimImageName,
-  pidsForPortRange,
-} from '../../../devops/desktop/verify.ts'
+import { isVivimImageName, isVivimOwner, pidsForPortRange } from '../../../devops/desktop/verify.ts'
 
 describe('pidsForPortRange', () => {
   const netstat = `

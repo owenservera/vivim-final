@@ -98,7 +98,7 @@ export class UIAutomator {
       await this.client
         .send('Target.detachFromTarget', { sessionId: this.sessionId })
         .catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
     await this.client.disconnect()
   }

@@ -1,7 +1,6 @@
 // tests/unit/executor/fleet-supervisor.test.ts
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
-import { mkdtempSync } from 'node:fs'
-import { rmSync } from 'node:fs'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -53,7 +52,7 @@ mock.module('../../../src/executor/launcher.js', () => {
         try {
           rmSync(`${dir}/${n}`, { force: true })
         } catch {}
-  // [audit] log the error with context here
+        // [audit] log the error with context here
       }
     },
   }
@@ -250,7 +249,7 @@ describe('FleetSupervisor pressure gate (ADR-015)', () => {
       cpuOverloadPct: 0,
     })
     await fs.spawn('claude', 'acc1').catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     expect(events.some((e) => e.eventType === 'spawn_rejected_pressure')).toBe(true)
   })
 })

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  type UnitState,
   computeStats,
   parseUnits,
+  type UnitState,
   updateHeader,
   updateState,
 } from '../../../devops/tracker.ts'

@@ -5,82 +5,78 @@
 //
 // CONTRACT_VERSION: 1
 
-export {
-  CONTRACT_VERSION,
-  UnsupportedMutationError,
-  InvalidMutationPayloadError,
-} from './contract.js'
 export type {
+  MutationOp,
+  MutationProvenance,
   ReprogrammableSurface,
   SurfaceKind,
-  MutationProvenance,
-  MutationOp,
 } from './contract.js'
-
 export {
-  SurfaceSpecSchema,
-  CardSpecSchema,
-  PanelSpecSchema,
-  LayerSpecSchema,
-  PrimitiveSpecSchema,
-  ChromeSpecSchema,
-  SlotSpecSchema,
-  CustomSpecSchema,
-  defaultSpecSchemaForKind,
-} from './schema/spec.js'
+  CONTRACT_VERSION,
+  InvalidMutationPayloadError,
+  UnsupportedMutationError,
+} from './contract.js'
 export type {
-  SurfaceSpec,
-  CardSpec,
-  PanelSpec,
-  LayerSpec,
-  PrimitiveSpec,
-  ChromeSpec,
-  SlotSpec,
-  CustomSpec,
-} from './schema/spec.js'
-
-export {
-  SurfaceMutationSchema,
-  SurfaceMutationPlanSchema,
-  MUTATION_OPS,
-  PROVENANCE_TAGS,
-  ProvenanceEnumSchema,
-  MutationTargetSchema,
-  ReplaceMutationSchema,
-  InsertMutationSchema,
-  RemoveMutationSchema,
-  ReorderMutationSchema,
-  RestyleMutationSchema,
-  RebindMutationSchema,
-  SetPropertyMutationSchema,
-  SetSlotMutationSchema,
-} from './mutation-schema.js'
-export type {
-  SurfaceMutation,
-  SurfaceMutationPlan,
-  ReplaceMutation,
   InsertMutation,
+  RebindMutation,
   RemoveMutation,
   ReorderMutation,
+  ReplaceMutation,
   RestyleMutation,
-  RebindMutation,
   SetPropertyMutation,
   SetSlotMutation,
+  SurfaceMutation,
+  SurfaceMutationPlan,
 } from './mutation-schema.js'
-
 export {
-  SurfaceVariantSchema,
-  UpsertSurfaceVariantInputSchema,
-} from './variant-schema.js'
+  InsertMutationSchema,
+  MUTATION_OPS,
+  MutationTargetSchema,
+  PROVENANCE_TAGS,
+  ProvenanceEnumSchema,
+  RebindMutationSchema,
+  RemoveMutationSchema,
+  ReorderMutationSchema,
+  ReplaceMutationSchema,
+  RestyleMutationSchema,
+  SetPropertyMutationSchema,
+  SetSlotMutationSchema,
+  SurfaceMutationPlanSchema,
+  SurfaceMutationSchema,
+} from './mutation-schema.js'
+export type { SurfaceRegistryListener } from './registry.js'
+export {
+  DuplicateSurfaceError,
+  SurfaceNotFoundError,
+  SurfaceRegistry,
+  surfaceRegistry,
+} from './registry.js'
+export type {
+  CardSpec,
+  ChromeSpec,
+  CustomSpec,
+  LayerSpec,
+  PanelSpec,
+  PrimitiveSpec,
+  SlotSpec,
+  SurfaceSpec,
+} from './schema/spec.js'
+export {
+  CardSpecSchema,
+  ChromeSpecSchema,
+  CustomSpecSchema,
+  defaultSpecSchemaForKind,
+  LayerSpecSchema,
+  PanelSpecSchema,
+  PrimitiveSpecSchema,
+  SlotSpecSchema,
+  SurfaceSpecSchema,
+} from './schema/spec.js'
 export type {
   SurfaceVariant,
   UpsertSurfaceVariantInput,
 } from './variant-schema.js'
-
 export {
-  SurfaceRegistry,
-  surfaceRegistry,
-  SurfaceNotFoundError,
-  DuplicateSurfaceError,
-} from './registry.js'
-export type { SurfaceRegistryListener } from './registry.js'
+  SurfaceVariantSchema,
+  UpsertSurfaceVariantInputSchema,
+} from './variant-schema.js'
