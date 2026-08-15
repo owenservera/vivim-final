@@ -6,6 +6,9 @@ dist/
 build/
 .build-test/
 
+# Generated clients + native binaries (~40MB+ in src/generated/)
+src/generated/
+
 # Environment (local overrides only)
 .env.local
 .env.*.local
@@ -127,6 +130,12 @@ src/audit-results.sarif
 
 # Local model downloads
 data/
+
+# Generated taxonomy (~8MB)
+seeds/taxonomy/pool.taxonomy.json
+
+# Test fixture database (regenerable)
+tests/fixtures/node-store-test.db
 
 
 # Tauri desktop build artifacts (source is kept!)
