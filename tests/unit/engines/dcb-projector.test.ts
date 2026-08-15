@@ -2,9 +2,17 @@
 // DcbProjector — DynamicContextBundle → text surface rendering tests
 
 import { describe, expect, test } from 'bun:test'
-import { project, type DynamicContextBundle, type LayerItem, type Surface } from '../../../src/engines/dcb-projector.js'
+import {
+  type DynamicContextBundle,
+  type LayerItem,
+  project,
+  type Surface,
+} from '../../../src/engines/dcb-projector.js'
 
-function makeBundle(layers: LayerItem[], profile: DynamicContextBundle['profile'] = 'continuum'): DynamicContextBundle {
+function makeBundle(
+  layers: LayerItem[],
+  profile: DynamicContextBundle['profile'] = 'continuum',
+): DynamicContextBundle {
   return {
     id: 'dcb-1',
     profile,
@@ -94,7 +102,16 @@ describe('project', () => {
 
   test('panel_card with no included sections shows app count', () => {
     const out = project(
-      { ...makeBundle([]), layers: [{ ...trimmedItem, included: false, provenance: { source: 'x', label: 'y', provider: 'gemini' } }] },
+      {
+        ...makeBundle([]),
+        layers: [
+          {
+            ...trimmedItem,
+            included: false,
+            provenance: { source: 'x', label: 'y', provider: 'gemini' },
+          },
+        ],
+      },
       'panel_card',
     )
     expect(out).toContain('apps active')

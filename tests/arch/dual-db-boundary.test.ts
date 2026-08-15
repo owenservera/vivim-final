@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -33,9 +33,7 @@ function extractRelations(schema: string): Array<{
       continue
     }
 
-    const relMatch = line.match(
-      /(\w+)\s+.*@relation\(.*references:\s*\[(\w+)\]/,
-    )
+    const relMatch = line.match(/(\w+)\s+.*@relation\(.*references:\s*\[(\w+)\]/)
     if (relMatch && currentModel) {
       relations.push({
         fromModel: currentModel,
@@ -54,10 +52,10 @@ describe('dual-db boundary enforcement', () => {
       const systemModels = extractModelNames(SYSTEM_SCHEMA)
       const userRelations = extractRelations(USER_SCHEMA)
 
-      const violations = userRelations.filter(r => systemModels.has(r.targetModel))
+      const violations = userRelations.filter((r) => systemModels.has(r.targetModel))
       if (violations.length > 0) {
         const details = violations
-          .map(v => `  ${v.fromModel}.${v.fieldName} -> ${v.targetModel}`)
+          .map((v) => `  ${v.fromModel}.${v.fieldName} -> ${v.targetModel}`)
           .join('\n')
         expect(`Cross-boundary relations in user schema:\n${details}`).toBe('')
       }
@@ -67,10 +65,10 @@ describe('dual-db boundary enforcement', () => {
       const userModels = extractModelNames(USER_SCHEMA)
       const systemRelations = extractRelations(SYSTEM_SCHEMA)
 
-      const violations = systemRelations.filter(r => userModels.has(r.targetModel))
+      const violations = systemRelations.filter((r) => userModels.has(r.targetModel))
       if (violations.length > 0) {
         const details = violations
-          .map(v => `  ${v.fromModel}.${v.fieldName} -> ${v.targetModel}`)
+          .map((v) => `  ${v.fromModel}.${v.fieldName} -> ${v.targetModel}`)
           .join('\n')
         expect(`Cross-boundary relations in system schema:\n${details}`).toBe('')
       }

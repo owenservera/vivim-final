@@ -7,9 +7,9 @@ import { newId } from '../ids.js'
 import { getLogger } from '../lib/logger.js'
 import {
   closePrisma,
+  type FullPrismaClient,
   getSystemPrisma,
   getUserPrisma,
-  type FullPrismaClient,
   type SystemPrismaClient,
   type UserPrismaClient,
 } from './prisma.js'

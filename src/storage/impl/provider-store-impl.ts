@@ -10,9 +10,9 @@ import type {
   ProviderParserRow,
   ProviderStreamConfigRow,
 } from '../../schema/types.js'
+import { getCrossBoundaryCache } from '../cross-boundary-cache.js'
 import type { CapStoreDb } from '../db.js'
 import type { PrismaClient } from '../prisma.js'
-import { getCrossBoundaryCache } from '../cross-boundary-cache.js'
 
 export class ProviderStoreImpl {
   private db: PrismaClient

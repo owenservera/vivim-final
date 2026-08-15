@@ -2,7 +2,11 @@
 // SafeExpression — AST-based workflow DSL evaluator tests
 
 import { describe, expect, test } from 'bun:test'
-import { compileExpression, parseMigrationScript, safeEval } from '../../../src/engines/safe-expression.js'
+import {
+  compileExpression,
+  parseMigrationScript,
+  safeEval,
+} from '../../../src/engines/safe-expression.js'
 
 describe('safeEval', () => {
   test('evaluates comparison operators', () => {
@@ -26,7 +30,9 @@ describe('safeEval', () => {
   test('resolves bracket property access and array index', () => {
     expect(safeEval("user['age'] > 18", { user: { age: 21 } })).toBe(true)
     expect(safeEval('items[0] == "x"', { items: ['x', 'y'] })).toBe(true)
-    expect(safeEval("user['address']['city'] == \"NYC\"", { user: { address: { city: 'NYC' } } })).toBe(true)
+    expect(
+      safeEval("user['address']['city'] == \"NYC\"", { user: { address: { city: 'NYC' } } }),
+    ).toBe(true)
   })
 
   test('dot property access is NOT supported (lexer drops ".") — known gap', () => {

@@ -1,15 +1,20 @@
 // tests/unit/storage/snapshot.test.ts
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+
 import { randomUUID } from 'crypto'
-import { mkdtemp, rm, writeFile, readFile, stat } from 'fs/promises'
+import { mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock config
 vi.mock('../../../src/config.js', () => ({
   config: {
-    get systemDbPath() { return join(testDir, 'system.db') },
-    get userDbPath() { return join(testDir, 'user.db') },
+    get systemDbPath() {
+      return join(testDir, 'system.db')
+    },
+    get userDbPath() {
+      return join(testDir, 'user.db')
+    },
   },
 }))
 
@@ -32,21 +37,19 @@ describe('snapshot metadata', () => {
 
   it('creates snapshot directory structure', async () => {
     const snapshotDir = join(testDir, 'snapshots', `snap-${Date.now()}`)
-    await import('fs/promises').then(fs => fs.mkdir(snapshotDir, { recursive: true }))
+    await import('fs/promises').then((fs) => fs.mkdir(snapshotDir, { recursive: true }))
 
     // Create mock DB files
     await writeFile(join(testDir, 'system.db'), 'mock system db')
     await writeFile(join(testDir, 'user.db'), 'mock user db')
 
     // Simulate snapshot copy
-    await import('fs/promises').then(fs => fs.copyFile(
-      join(testDir, 'system.db'),
-      join(snapshotDir, 'system.db'),
-    ))
-    await import('fs/promises').then(fs => fs.copyFile(
-      join(testDir, 'user.db'),
-      join(snapshotDir, 'user.db'),
-    ))
+    await import('fs/promises').then((fs) =>
+      fs.copyFile(join(testDir, 'system.db'), join(snapshotDir, 'system.db')),
+    )
+    await import('fs/promises').then((fs) =>
+      fs.copyFile(join(testDir, 'user.db'), join(snapshotDir, 'user.db')),
+    )
 
     const systemStat = await stat(join(snapshotDir, 'system.db'))
     const userStat = await stat(join(snapshotDir, 'user.db'))

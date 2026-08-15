@@ -35,12 +35,15 @@ export async function bootstrapSeedsPhase(ctx: BootstrapContext): Promise<void> 
     }
     // Log health summary at INFO level
     const health = await getDbHealth()
-    log.info({
-      systemSize: health.system.fileSizeBytes,
-      userSize: health.user.fileSizeBytes,
-      systemSchema: health.system.schemaVersion,
-      userSchema: health.user.schemaVersion,
-    }, 'DB health check passed')
+    log.info(
+      {
+        systemSize: health.system.fileSizeBytes,
+        userSize: health.user.fileSizeBytes,
+        systemSchema: health.system.schemaVersion,
+        userSchema: health.user.schemaVersion,
+      },
+      'DB health check passed',
+    )
   } catch (err) {
     log.error({ err }, 'DB health check failed — aborting boot')
     throw err

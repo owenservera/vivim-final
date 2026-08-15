@@ -20,7 +20,11 @@ export class CanvasCommandExecutor {
   private agentId: string
   private pendingConfirmations = new Map<
     string,
-    { command: AgentCanvasCommand; resolve: (approved: boolean) => void; timer?: ReturnType<typeof setTimeout> }
+    {
+      command: AgentCanvasCommand
+      resolve: (approved: boolean) => void
+      timer?: ReturnType<typeof setTimeout>
+    }
   >()
 
   constructor(policy: AgentCanvasPolicy) {

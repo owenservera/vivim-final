@@ -75,7 +75,10 @@ export async function applyPendingMigrations(opts?: { dryRun?: boolean }) {
   if (!opts?.dryRun) {
     try {
       snapshotDir = createPreMigrationSnapshot()
-      log.info({ snapshotDir, migrationCount: plan.migrations.length }, 'Pre-migration snapshot created')
+      log.info(
+        { snapshotDir, migrationCount: plan.migrations.length },
+        'Pre-migration snapshot created',
+      )
     } catch (err) {
       log.error({ err }, 'Failed to create pre-migration snapshot — aborting migration')
       throw err

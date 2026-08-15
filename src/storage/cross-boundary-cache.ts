@@ -150,13 +150,16 @@ export function getCrossBoundaryCache(): CrossBoundaryCache {
  * System-side data changes rarely, so cache aggressively (60s TTL).
  */
 export async function getCachedProvider(
-  db: { systemPrisma: { providerDefinition: { findUnique: (args: { where: { id: string } }) => Promise<unknown> } } },
+  db: {
+    systemPrisma: {
+      providerDefinition: { findUnique: (args: { where: { id: string } }) => Promise<unknown> }
+    }
+  },
   providerId: string,
 ): Promise<unknown> {
   const cache = getCrossBoundaryCache()
-  return cache.get(
-    `provider:${providerId}`,
-    () => db.systemPrisma.providerDefinition.findUnique({ where: { id: providerId } }),
+  return cache.get(`provider:${providerId}`, () =>
+    db.systemPrisma.providerDefinition.findUnique({ where: { id: providerId } }),
   )
 }
 
@@ -164,13 +167,16 @@ export async function getCachedProvider(
  * Get a capability from system DB with caching.
  */
 export async function getCachedCapability(
-  db: { systemPrisma: { capabilityBinding: { findUnique: (args: { where: { id: string } }) => Promise<unknown> } } },
+  db: {
+    systemPrisma: {
+      capabilityBinding: { findUnique: (args: { where: { id: string } }) => Promise<unknown> }
+    }
+  },
   capabilityId: string,
 ): Promise<unknown> {
   const cache = getCrossBoundaryCache()
-  return cache.get(
-    `capability:${capabilityId}`,
-    () => db.systemPrisma.capabilityBinding.findUnique({ where: { id: capabilityId } }),
+  return cache.get(`capability:${capabilityId}`, () =>
+    db.systemPrisma.capabilityBinding.findUnique({ where: { id: capabilityId } }),
   )
 }
 
@@ -178,7 +184,13 @@ export async function getCachedCapability(
  * Get all capabilities for a provider from system DB with caching.
  */
 export async function getCachedProviderCapabilities(
-  db: { systemPrisma: { capabilityBinding: { findMany: (args: { where: { providerId: string } }) => Promise<unknown[]> } } },
+  db: {
+    systemPrisma: {
+      capabilityBinding: {
+        findMany: (args: { where: { providerId: string } }) => Promise<unknown[]>
+      }
+    }
+  },
   providerId: string,
 ): Promise<unknown[]> {
   const cache = getCrossBoundaryCache()

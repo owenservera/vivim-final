@@ -254,13 +254,17 @@ function resolveDbPath(): string {
 }
 
 function resolveSystemDbPath(): string {
-  return process.env.SYSTEM_DATABASE_URL?.replace(/^file:/, '')
-    ?? `${resolveDataDir()}/prisma/data/system.db`
+  return (
+    process.env.SYSTEM_DATABASE_URL?.replace(/^file:/, '') ??
+    `${resolveDataDir()}/prisma/data/system.db`
+  )
 }
 
 function resolveUserDbPath(): string {
-  return process.env.USER_DATABASE_URL?.replace(/^file:/, '')
-    ?? `${resolveDataDir()}/prisma/data/user.db`
+  return (
+    process.env.USER_DATABASE_URL?.replace(/^file:/, '') ??
+    `${resolveDataDir()}/prisma/data/user.db`
+  )
 }
 
 /** Parse an env var as a positive integer, falling back to `fallback` if unset or invalid. */

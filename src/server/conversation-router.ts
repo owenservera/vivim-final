@@ -12,6 +12,7 @@ import { catchDebug } from '../lib/catch-logger.js'
 import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
 import { parseRequestBody } from './validate.js'
+import { getDbHealth } from '../storage/db-health.ts'
 
 /** Flatten grouped ResolvedCapabilities into a single ordered array. */
 function flattenResolved(resolved: ResolvedCapabilities): ResolvedCapability[] {
@@ -43,10 +44,7 @@ export function createConversationRouter(ctx: ServerContext) {
         // Use cross-boundary cache for provider lookups (system-side, rarely changes)
         const { getCrossBoundaryCache } = await import('../storage/cross-boundary-cache.js')
         const cache = getCrossBoundaryCache()
-        const provider = await cache.get(
-          `provider:${id}`,
-          () => ctx.db.getProvider(id),
-        )
+        const provider = await cache.get(`provider:${id}`, () => ctx.db.getProvider(id))
         if (!provider) return errorResponse('Provider not found', 'NotFound', 404)
         return json(provider)
       }
@@ -365,7 +363,6 @@ export function createConversationRouter(ctx: ServerContext) {
         // DB health telemetry (non-blocking, best-effort)
         let dbs: Record<string, unknown> | undefined
         try {
-          const { getDbHealth } = await import('../../storage/db-health.js')
           const health = await getDbHealth()
           dbs = {
             system: {

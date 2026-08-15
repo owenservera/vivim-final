@@ -6,9 +6,9 @@ import {
   allocate,
   applyPressure,
   defaultLayerConfigs,
-  packItems,
   type PackItem,
   type PressureSignals,
+  packItems,
 } from '../../../src/engines/cortex-budget.js'
 
 describe('defaultLayerConfigs', () => {
@@ -27,24 +27,40 @@ describe('applyPressure', () => {
   const base = defaultLayerConfigs()
 
   test('squeezes L2Topic under conversation pressure', () => {
-    const pressure: PressureSignals = { conversationPressure: true, entityCount: 0, messageHistoryRatio: 0 }
+    const pressure: PressureSignals = {
+      conversationPressure: true,
+      entityCount: 0,
+      messageHistoryRatio: 0,
+    }
     const out = applyPressure(base, pressure)
     const topic = out.find((c) => c.layer === 'L2Topic')!
     expect(topic.idealTokens).toBeLessThan(base.find((c) => c.layer === 'L2Topic')!.idealTokens)
   })
 
   test('expands L3Entity on high entity count', () => {
-    const pressure: PressureSignals = { conversationPressure: false, entityCount: 50, messageHistoryRatio: 0 }
+    const pressure: PressureSignals = {
+      conversationPressure: false,
+      entityCount: 50,
+      messageHistoryRatio: 0,
+    }
     const out = applyPressure(base, pressure)
     const entity = out.find((c) => c.layer === 'L3Entity')!
-    expect(entity.idealTokens).toBeGreaterThan(base.find((c) => c.layer === 'L3Entity')!.idealTokens)
+    expect(entity.idealTokens).toBeGreaterThan(
+      base.find((c) => c.layer === 'L3Entity')!.idealTokens,
+    )
   })
 
   test('decays L6RecentHistory when ratio high', () => {
-    const pressure: PressureSignals = { conversationPressure: false, entityCount: 0, messageHistoryRatio: 4.0 }
+    const pressure: PressureSignals = {
+      conversationPressure: false,
+      entityCount: 0,
+      messageHistoryRatio: 4.0,
+    }
     const out = applyPressure(base, pressure)
     const hist = out.find((c) => c.layer === 'L6RecentHistory')!
-    expect(hist.idealTokens).toBeLessThan(base.find((c) => c.layer === 'L6RecentHistory')!.idealTokens)
+    expect(hist.idealTokens).toBeLessThan(
+      base.find((c) => c.layer === 'L6RecentHistory')!.idealTokens,
+    )
   })
 
   test('does not mutate input', () => {
@@ -121,7 +137,10 @@ describe('packItems', () => {
     const packed = packItems(items, 1000)
     const conv = packed.filter((p) => p.layer === 'L4Conversation')
     // 'a' (0.9) before 'b' (0.5)
-    expect(packed.indexOf(conv.find((p) => p.id === 'a')!) < packed.indexOf(conv.find((p) => p.id === 'b')!)).toBe(true)
+    expect(
+      packed.indexOf(conv.find((p) => p.id === 'a')!) <
+        packed.indexOf(conv.find((p) => p.id === 'b')!),
+    ).toBe(true)
   })
 
   test('does not exceed budget', () => {

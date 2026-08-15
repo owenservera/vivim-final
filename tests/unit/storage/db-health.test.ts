@@ -1,5 +1,5 @@
 // tests/unit/storage/db-health.test.ts
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 // Mock config
 vi.mock('../../../src/config.js', () => ({
@@ -11,7 +11,13 @@ vi.mock('../../../src/config.js', () => ({
 
 describe('db-health metadata', () => {
   it('defines health check dimensions', () => {
-    const dimensions = ['integrityCheck', 'fileSizeBytes', 'walCheckpointLag', 'pragmaValues', 'schemaVersion'] as const
+    const dimensions = [
+      'integrityCheck',
+      'fileSizeBytes',
+      'walCheckpointLag',
+      'pragmaValues',
+      'schemaVersion',
+    ] as const
     expect(dimensions).toHaveLength(5)
   })
 

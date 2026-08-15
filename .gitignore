@@ -36,6 +36,7 @@ tests/**/.tmp-export-test/
 
 # Runtime scratch (dev probes, dumps, debug scripts — never commit)
 .runtime/
+.runtime-scratch/
 
 # Bun
 .bunv/
@@ -67,7 +68,6 @@ docs/audits/
 frontend/tool-results/
 frontend/playwright-report/
 frontend/test-results/
-frontend/download/
 
 # Kilo skills (duplicate of .opencode/skill/)
 .skills/
@@ -80,8 +80,23 @@ prisma/prisma/dev.db
 # Package lockfiles (bun.lock is canonical)
 package-lock.json
 
-# Docs (regenerable, not source)
-docs/
+# Legacy docs archive (kept for reference but not active)
+.archive/
+# Specific archived documentation folders
+.archive/docs-legacy-2026-08-15/
+.archive/frontend-docs-assessment-reviews/
+.archive/frontend-download/
+.archive/frontend-upload/
+.archive/intelligence-pack-acu-dcb-storage/
+.archive/prd-merged/
+.archive/context-pack-md/
+.archive/runtime-scratch/
+.archive/claude-investigate/
+
+# Regenerable docs (not source of truth)
+docs/dev-code-impl/
+docs/audits/
+docs/review-system/runs/
 
 # Dev scratch / proof-of-concept
 dev-poc/
@@ -95,7 +110,6 @@ chrome-profiles/
 prov_claude/
 uploads/
 .playwright-mcp/
-.archive/
 C0-BlackBoxProject-0/
 nil/
 agent-brief/
@@ -149,7 +163,6 @@ kilo.json
 
 # Frontend workspace/upload artifacts
 frontend/workspace-*
-frontend/upload/
 frontend/frontend/
 
 # embedded agent clones (scratch, not source)

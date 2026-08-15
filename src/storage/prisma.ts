@@ -6,9 +6,9 @@
 import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { env } from 'node:process'
+import { config } from '../config.js'
 import { PrismaClient as SystemPrismaClient } from '../generated/system-client/index.js'
 import { PrismaClient as UserPrismaClient } from '../generated/user-client/index.js'
-import { config } from '../config.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import { getLogger } from '../lib/logger.js'
 
@@ -17,7 +17,7 @@ const log = getLogger('prisma')
 // ── System client singleton ────────────────────────────────────────
 
 let systemClient: SystemPrismaClient | null = null
-let systemWalApplied = false
+const systemWalApplied = false
 
 export function getSystemPrisma(): SystemPrismaClient {
   if (!systemClient) {
@@ -51,7 +51,7 @@ export function getSystemPrisma(): SystemPrismaClient {
 // ── User client singleton ──────────────────────────────────────────
 
 let userClient: UserPrismaClient | null = null
-let userWalApplied = false
+const userWalApplied = false
 
 export function getUserPrisma(): UserPrismaClient {
   if (!userClient) {
@@ -106,13 +106,14 @@ export type { SystemPrismaClient, UserPrismaClient }
 // Legacy backward-compat: full PrismaClient type from @prisma/client (all 200 models)
 // Used by store impls that haven't migrated to typed system/user clients yet.
 import type { PrismaClient as FullPrismaClient } from '@prisma/client'
-export type { FullPrismaClient }
 
 // Named alias for backward compat: files that do `import { PrismaClient } from '../prisma.js'`
-export type { FullPrismaClient as PrismaClient }
+export type { FullPrismaClient, FullPrismaClient as PrismaClient }
 
 // WAL mode helper — applies WAL journal mode to any PrismaClient instance.
-export async function initPrismaWal(client: { $executeRawUnsafe: (sql: string) => Promise<unknown> }): Promise<void> {
+export async function initPrismaWal(client: {
+  $executeRawUnsafe: (sql: string) => Promise<unknown>
+}): Promise<void> {
   try {
     await client.$executeRawUnsafe('PRAGMA journal_mode=WAL')
   } catch (err) {

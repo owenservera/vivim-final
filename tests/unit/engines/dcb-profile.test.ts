@@ -2,7 +2,12 @@
 // DcbProfile — profile → active layers + depth mode mapping tests
 
 import { describe, expect, test } from 'bun:test'
-import { activeLayers, DCB_PROFILES, profileToDepth, type DcbProfile } from '../../../src/engines/dcb-profile.js'
+import {
+  activeLayers,
+  DCB_PROFILES,
+  type DcbProfile,
+  profileToDepth,
+} from '../../../src/engines/dcb-profile.js'
 
 describe('activeLayers', () => {
   test('seed profile is minimal (identity + prefs + query)', () => {

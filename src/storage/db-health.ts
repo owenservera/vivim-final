@@ -35,10 +35,10 @@ export interface DualDbHealth {
 function runIntegrityCheck(dbPath: string): 'ok' | 'error' | 'unknown' {
   try {
     const { execSync } = require('node:child_process') as typeof import('node:child_process')
-    const result = execSync(
-      `sqlite3 "${dbPath}" "PRAGMA integrity_check;"`,
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
-    )
+    const result = execSync(`sqlite3 "${dbPath}" "PRAGMA integrity_check;"`, {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
     return result.trim() === 'ok' ? 'ok' : 'error'
   } catch {
     return 'unknown'
@@ -48,9 +48,11 @@ function runIntegrityCheck(dbPath: string): 'ok' | 'error' | 'unknown' {
 /**
  * Get WAL checkpoint lag (pages not yet checkpointed).
  */
-async function getWalCheckpointLag(client: { $queryRawUnsafe: (sql: string) => Promise<unknown> }): Promise<number> {
+async function getWalCheckpointLag(client: {
+  $queryRawUnsafe: <T = unknown>(sql: string) => Promise<T>
+}): Promise<number> {
   try {
-    const result = await client.$queryRawUnsafe<{ wal_checkpoint: number }[]>(
+    const result = await client.$queryRawUnsafe<{ wal_checkpoint: number }>(
       'PRAGMA wal_checkpoint(PASSIVE)',
     )
     // wal_checkpoint returns [busy, log, checkpointed] — log - checkpointed = lag
@@ -67,18 +69,27 @@ async function getWalCheckpointLag(client: { $queryRawUnsafe: (sql: string) => P
 /**
  * Get current PRAGMA values for a client.
  */
-async function getPragmaValues(client: { $queryRawUnsafe: (sql: string) => Promise<unknown> }): Promise<Record<string, unknown>> {
+async function getPragmaValues(client: {
+  $queryRawUnsafe: <T = unknown>(sql: string) => Promise<T>
+}): Promise<Record<string, unknown>> {
   const pragmas: Record<string, unknown> = {}
-  const keys = ['journal_mode', 'synchronous', 'cache_size', 'busy_timeout', 'foreign_keys', 'wal_autocheckpoint']
+  const keys = [
+    'journal_mode',
+    'synchronous',
+    'cache_size',
+    'busy_timeout',
+    'foreign_keys',
+    'wal_autocheckpoint',
+  ]
 
   for (const key of keys) {
     try {
-      const result = await client.$queryRawUnsafe<Record<string, unknown>[]>(
-        `PRAGMA ${key}`,
+      const result = await client.$queryRawUnsafe<Record<string, unknown>>(
+        `PRAGMA ${key}`
       )
       const row = Array.isArray(result) ? result[0] : result
       if (row) {
-        pragmas[key] = row[key] ?? row[Object.keys(row)[0]]
+        pragmas[key] = row[key] ?? row[Object.keys(row)[0] ?? '']
       }
     } catch {
       pragmas[key] = 'error'
@@ -112,11 +123,15 @@ async function getSingleDbHealth(
   dbPath: string,
   client: { $queryRawUnsafe: (sql: string) => Promise<unknown> },
 ): Promise<DbHealthSnapshot> {
+  // Use type assertion since Prisma client $queryRawUnsafe has broader signature
+  const safeClient = client as {
+    $queryRawUnsafe: <T = unknown>(sql: string) => Promise<T>
+  }
   const [integrityCheck, fileSizeBytes, walCheckpointLag, pragmaValues] = await Promise.all([
     Promise.resolve(runIntegrityCheck(dbPath)),
     Promise.resolve(statSync(dbPath).size),
-    getWalCheckpointLag(client),
-    getPragmaValues(client),
+    getWalCheckpointLag(safeClient),
+    getPragmaValues(safeClient),
   ])
 
   const schemaVersion = getSchemaVersion(dbPath)

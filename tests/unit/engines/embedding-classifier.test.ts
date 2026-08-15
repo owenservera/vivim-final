@@ -2,7 +2,10 @@
 // EmbeddingClassifier — cosine-similarity category classification tests
 
 import { describe, expect, test, vi } from 'bun:test'
-import { EmbeddingClassifier, type CategoryAnchor } from '../../../src/engines/embedding-classifier.js'
+import {
+  type CategoryAnchor,
+  EmbeddingClassifier,
+} from '../../../src/engines/embedding-classifier.js'
 import type { EmbeddingProvider } from '../../../src/engines/semantic-search.js'
 
 // Deterministic provider: maps a unique token to a unique axis so anchors and

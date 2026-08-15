@@ -1,6 +1,9 @@
 // tests/unit/storage/cross-boundary-cache.test.ts
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { CrossBoundaryCache, getCrossBoundaryCache } from '../../../src/storage/cross-boundary-cache.js'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  CrossBoundaryCache,
+  getCrossBoundaryCache,
+} from '../../../src/storage/cross-boundary-cache.js'
 
 describe('CrossBoundaryCache', () => {
   let cache: CrossBoundaryCache

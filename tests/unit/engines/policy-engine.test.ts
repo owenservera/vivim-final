@@ -4,7 +4,15 @@
 import { describe, expect, test } from 'bun:test'
 import { P0PolicyEngine } from '../../../src/engines/policy-engine.js'
 
-type PlanNode = { risk: 'read' | 'reversible_write' | 'external_communication' | 'destructive' | 'security_sensitive'; requiresConfirmation?: boolean }
+type PlanNode = {
+  risk:
+    | 'read'
+    | 'reversible_write'
+    | 'external_communication'
+    | 'destructive'
+    | 'security_sensitive'
+  requiresConfirmation?: boolean
+}
 function plan(nodes: PlanNode[]): any {
   return { version: 1, goal: 'g', nodes, metadata: {} }
 }
@@ -64,7 +72,9 @@ describe('P0PolicyEngine.evaluate', () => {
 
   test('first blocking node short-circuits the decision', () => {
     const engine = new P0PolicyEngine()
-    const d = engine.evaluate(plan([{ risk: 'read' }, { risk: 'destructive' }, { risk: 'external_communication' }]))
+    const d = engine.evaluate(
+      plan([{ risk: 'read' }, { risk: 'destructive' }, { risk: 'external_communication' }]),
+    )
     expect(d.allowed).toBe(false)
     expect((d as { reason?: string }).reason).toMatch(/destructive/i)
   })

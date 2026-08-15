@@ -4,8 +4,17 @@
 // and restores from snapshot on failure. Reuses WAL checkpoint and SchemaMeta
 // patterns from scripts/backup-db.ts.
 
-import { existsSync, copyFileSync, mkdirSync, writeFileSync, readFileSync, statSync, readdirSync, rmSync } from 'node:fs'
 import { execSync } from 'node:child_process'
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
 import { join, resolve } from 'node:path'
 import { config } from '../config.js'
 import { getLogger } from '../lib/logger.js'
@@ -19,17 +28,20 @@ const SNAPSHOTS_DIR = join(resolve(import.meta.dir, '..', '..'), 'snapshots')
 function walCheckpoint(dbPath: string): void {
   try {
     execSync(`sqlite3 "${dbPath}" "PRAGMA wal_checkpoint(TRUNCATE);"`, {
-      encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
     })
-  } catch { /* non-fatal — DB may be locked */ }
+  } catch {
+    /* non-fatal — DB may be locked */
+  }
 }
 
 function readSchemaMeta(dbPath: string): Record<string, string> {
   try {
-    const rows = execSync(
-      `sqlite3 "${dbPath}" "SELECT key, value FROM SchemaMeta;"`,
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
-    )
+    const rows = execSync(`sqlite3 "${dbPath}" "SELECT key, value FROM SchemaMeta;"`, {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
     const meta: Record<string, string> = {}
     for (const line of rows.trim().split('\n')) {
       const [key, ...rest] = line.split('|')
@@ -43,10 +55,10 @@ function readSchemaMeta(dbPath: string): Record<string, string> {
 
 function integrityCheck(dbPath: string): boolean {
   try {
-    const result = execSync(
-      `sqlite3 "${dbPath}" "PRAGMA integrity_check;"`,
-      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
-    )
+    const result = execSync(`sqlite3 "${dbPath}" "PRAGMA integrity_check;"`, {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
     return result.trim() === 'ok'
   } catch {
     return false
@@ -88,9 +100,12 @@ export function createPreMigrationSnapshot(): string {
   for (const db of [systemDb, userDb]) {
     try {
       execSync(`sqlite3 "${db}" "PRAGMA optimize;"`, {
-        encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
       })
-    } catch { /* non-fatal */ }
+    } catch {
+      /* non-fatal */
+    }
   }
 
   // WAL checkpoint to flush pending writes
@@ -120,7 +135,14 @@ export function createPreMigrationSnapshot(): string {
   writeFileSync(join(snapDir, 'user-meta.json'), JSON.stringify(userMeta, null, 2))
   writeFileSync(join(snapDir, 'snapshot.json'), JSON.stringify(metadata, null, 2))
 
-  log.info({ snapDir, systemSchema: metadata.system_schema_version, userSchema: metadata.user_schema_version }, 'Pre-migration snapshot created')
+  log.info(
+    {
+      snapDir,
+      systemSchema: metadata.system_schema_version,
+      userSchema: metadata.user_schema_version,
+    },
+    'Pre-migration snapshot created',
+  )
   return snapDir
 }
 
@@ -223,7 +245,9 @@ export function listPreMigrationSnapshots(): Array<{
         const raw = readFileSync(join(dirPath, 'snapshot.json'), 'utf-8')
         const snap: SnapshotMetadata = JSON.parse(raw)
         timestamp = snap.timestamp
-      } catch { /* empty */ }
+      } catch {
+        /* empty */
+      }
       return { dirName: e.name, path: dirPath, timestamp }
     })
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp))

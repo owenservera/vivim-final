@@ -1,9 +1,10 @@
 // tests/integration/storage/hardening.test.ts
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+
 import { randomUUID } from 'crypto'
-import { mkdtemp, rm, writeFile, readFile, stat, readdir } from 'fs/promises'
+import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 let testDir: string
 
@@ -18,7 +19,7 @@ afterAll(async () => {
 describe('hardening infrastructure integration', () => {
   it('snapshot preserves DB files', async () => {
     const snapshotDir = join(testDir, `snap-${Date.now()}`)
-    await import('fs/promises').then(fs => fs.mkdir(snapshotDir, { recursive: true }))
+    await import('fs/promises').then((fs) => fs.mkdir(snapshotDir, { recursive: true }))
 
     // Create mock DBs
     const systemDb = join(testDir, 'system.db')
@@ -27,8 +28,8 @@ describe('hardening infrastructure integration', () => {
     await writeFile(userDb, 'mock user data ' + randomUUID())
 
     // Copy to snapshot
-    await import('fs/promises').then(fs => fs.copyFile(systemDb, join(snapshotDir, 'system.db')))
-    await import('fs/promises').then(fs => fs.copyFile(userDb, join(snapshotDir, 'user.db')))
+    await import('fs/promises').then((fs) => fs.copyFile(systemDb, join(snapshotDir, 'system.db')))
+    await import('fs/promises').then((fs) => fs.copyFile(userDb, join(snapshotDir, 'user.db')))
 
     // Verify snapshot contains both files
     const files = await readdir(snapshotDir)
@@ -38,7 +39,7 @@ describe('hardening infrastructure integration', () => {
 
   it('rollback restores previous state', async () => {
     const snapshotDir = join(testDir, `rollback-${Date.now()}`)
-    await import('fs/promises').then(fs => fs.mkdir(snapshotDir, { recursive: true }))
+    await import('fs/promises').then((fs) => fs.mkdir(snapshotDir, { recursive: true }))
 
     // Save original data
     const systemDb = join(testDir, 'system-rollback.db')
@@ -48,16 +49,16 @@ describe('hardening infrastructure integration', () => {
     await writeFile(userDb, originalData)
 
     // Snapshot
-    await import('fs/promises').then(fs => fs.copyFile(systemDb, join(snapshotDir, 'system.db')))
-    await import('fs/promises').then(fs => fs.copyFile(userDb, join(snapshotDir, 'user.db')))
+    await import('fs/promises').then((fs) => fs.copyFile(systemDb, join(snapshotDir, 'system.db')))
+    await import('fs/promises').then((fs) => fs.copyFile(userDb, join(snapshotDir, 'user.db')))
 
     // Corrupt DBs
     await writeFile(systemDb, 'corrupted')
     await writeFile(userDb, 'corrupted')
 
     // Rollback
-    await import('fs/promises').then(fs => fs.copyFile(join(snapshotDir, 'system.db'), systemDb))
-    await import('fs/promises').then(fs => fs.copyFile(join(snapshotDir, 'user.db'), userDb))
+    await import('fs/promises').then((fs) => fs.copyFile(join(snapshotDir, 'system.db'), systemDb))
+    await import('fs/promises').then((fs) => fs.copyFile(join(snapshotDir, 'user.db'), userDb))
 
     // Verify restored
     const restoredSystem = await readFile(systemDb, 'utf-8')
@@ -86,13 +87,13 @@ describe('hardening infrastructure integration', () => {
 
   it('cleanup removes old snapshots', async () => {
     const snapshotsDir = join(testDir, 'cleanup-test')
-    await import('fs/promises').then(fs => fs.mkdir(snapshotsDir, { recursive: true }))
+    await import('fs/promises').then((fs) => fs.mkdir(snapshotsDir, { recursive: true }))
 
     // Create fake snapshots
     const snap1 = join(snapshotsDir, 'snap-1')
     const snap2 = join(snapshotsDir, 'snap-2')
-    await import('fs/promises').then(fs => fs.mkdir(snap1))
-    await import('fs/promises').then(fs => fs.mkdir(snap2))
+    await import('fs/promises').then((fs) => fs.mkdir(snap1))
+    await import('fs/promises').then((fs) => fs.mkdir(snap2))
     await writeFile(join(snap1, 'system.db'), 'old')
     await writeFile(join(snap2, 'system.db'), 'new')
 

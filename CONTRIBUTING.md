@@ -70,7 +70,7 @@ This starts:
 - **Backend** at `http://localhost:9420`
 - **Frontend** at `http://localhost:3000`
 
-See [Dev Runbook](docs/runbooks/DEV.md) for detailed setup and gotchas.
+See [Dev Runbook](docs/runbooks/dev.md) for detailed setup and gotchas.
 
 ---
 
@@ -251,7 +251,8 @@ Before submitting a PR, ensure:
 - [ ] Tests pass (`bun test`)
 - [ ] Type checking passes (`bun run typecheck`)
 - [ ] Linting passes (`bun run lint`)
-- [ ] Documentation is updated
+- [ ] Documentation is updated **in the same PR as the code**
+- [ ] If making a non-obvious decision, new ADR written using TEMPLATE.md
 - [ ] Commit messages follow format
 - [ ] PR description explains changes
 
@@ -357,31 +358,48 @@ Aim for:
 
 ## Documentation
 
+### Documentation Protocol (CRITICAL)
+
+**Docs-as-a-byproduct-of-work:** Every time code changes in a way that affects how the system works, the relevant doc gets touched in the *same commit/PR*. Not later. Not "I'll circle back."
+
+**Rule:** If you touch code that changes behavior, architecture, an API contract, or a decision — you touch the matching doc in the same change. No exceptions, no "TODO: update docs."
+
 ### Types of Documentation
 
-| Type | Location | Purpose |
-|------|----------|---------|
-| Architecture | [docs/architecture/](docs/architecture/) | System design and engine catalog |
-| Runbooks | [docs/runbooks/](docs/runbooks/) | Operational guides |
-| Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records |
-| Code Comments | Source code | Inline documentation |
+| Type | Location | Purpose | Update Trigger |
+|------|----------|---------|----------------|
+| Architecture | [docs/architecture/](docs/architecture/) | System design and engine catalog | New service/module added or component responsibility changes |
+| Modules | [docs/modules/](docs/modules/) | Per-component documentation | Module's public interface changes or new module created |
+| Runbooks | [docs/runbooks/](docs/runbooks/) | Operational guides | Deploy process changes or new failure mode discovered |
+| Decisions | [docs/decisions/](docs/decisions/) | Architecture Decision Records (ADRs) | Any non-trivial decision between alternatives |
+| API Docs | [docs/api/](docs/api/) | Auto-generated API reference | API changes (regenerated automatically) |
+| Glossary | [docs/GLOSSARY.md](docs/GLOSSARY.md) | Domain terms and shorthand | New domain terminology introduced |
+| Code Comments | Source code | Inline documentation | Complex logic implementation |
 
 ### Writing Documentation
 
 - **Clear and Concise** — Write for your audience
 - **Examples** — Include code examples
-- **Up-to-Date** — Keep documentation current
+- **Up-to-Date** — Keep documentation current (update in same PR as code)
 - **Accessible** — Use plain language
+- **Keep it short** — Each doc file under ~300 lines. Split if growing past that.
+
+### ADR Guidelines
+
+- **Never edit old ADRs** — If a decision is reversed, write a new ADR that supersedes it and link both ways
+- **Write at the moment of decision** — The "why" cannot be reconstructed later
+- **Use the TEMPLATE** — Copy `docs/decisions/TEMPLATE.md` for new ADRs
 
 ### Documentation Checklist
 
 When adding features:
 
-- [ ] Update README if needed
-- [ ] Add/update relevant docs in `docs/`
+- [ ] Update relevant docs in `docs/` **in the same PR as the code**
+- [ ] If making a non-obvious decision, write a new ADR using TEMPLATE.md
 - [ ] Add code comments for complex logic
-- [ ] Update CHANGELOG if applicable
-- [ ] Add examples
+- [ ] Update CHANGELOG for user/API-visible changes
+- [ ] Add new domain terms to GLOSSARY.md
+- [ ] Keep module docs under 300 lines; split if needed
 
 ---
 
@@ -389,11 +407,11 @@ When adding features:
 
 New to the codebase? Start with these docs:
 
-1. **[Architecture Overview](docs/architecture/OVERVIEW.md)** — The 30-second mental model
-2. **[Engine Catalog](docs/architecture/ENGINES.md)** — What each engine does
-3. **[Data Layer](docs/architecture/DATA.md)** — Schema and Node model
-4. **[API Reference](docs/architecture/API.md)** — Routes and surfaces
-5. **[Dev Runbook](docs/runbooks/DEV.md)** — Local development setup
+1. **[Architecture Overview](docs/architecture/overview.md)** — The 30-second mental model
+2. **[Engine Catalog](docs/architecture/backend.md)** — What each engine does
+3. **[Data Layer](docs/architecture/data-model.md)** — Schema and Node model
+4. **[API Reference](docs/architecture/api-philosophy.md)** — Routes and surfaces
+5. **[Dev Runbook](docs/runbooks/dev.md)** — Local development setup
 
 ---
 
