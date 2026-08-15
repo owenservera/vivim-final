@@ -84,9 +84,7 @@ async function getPragmaValues(client: {
 
   for (const key of keys) {
     try {
-      const result = await client.$queryRawUnsafe<Record<string, unknown>>(
-        `PRAGMA ${key}`
-      )
+      const result = await client.$queryRawUnsafe<Record<string, unknown>>(`PRAGMA ${key}`)
       const row = Array.isArray(result) ? result[0] : result
       if (row) {
         pragmas[key] = row[key] ?? row[Object.keys(row)[0] ?? '']

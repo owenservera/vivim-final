@@ -9,10 +9,10 @@ import type {
   ResolvedCapability,
 } from '../engines/capability-resolution.js'
 import { catchDebug } from '../lib/catch-logger.js'
+import { getDbHealth } from '../storage/db-health.ts'
 import type { ServerContext } from './index.js'
 import { appErrorResponse, errorResponse, json } from './response.js'
 import { parseRequestBody } from './validate.js'
-import { getDbHealth } from '../storage/db-health.ts'
 
 /** Flatten grouped ResolvedCapabilities into a single ordered array. */
 function flattenResolved(resolved: ResolvedCapabilities): ResolvedCapability[] {
