@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 
 let testDir: string
 
@@ -100,7 +100,7 @@ describe('hardening infrastructure integration', () => {
     // Keep only 1 snapshot
     const snapEntries = await readdir(snapshotsDir)
     if (snapEntries.length > 1) {
-      await rm(join(snapshotsDir, snapEntries[0]), { recursive: true })
+      await rm(join(snapshotsDir, snapEntries[0]!), { recursive: true })
     }
 
     const remaining = await readdir(snapshotsDir)

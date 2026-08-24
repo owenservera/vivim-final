@@ -9,7 +9,8 @@
       "!**/seeds/taxonomy/openclaw-harvest.json",
       "!**/seeds/taxonomy/pool.taxonomy.json",
       "!**/seeds/taxonomy/surface-projections.json",
-      "!**/src/__generated__/**"
+      "!**/src/__generated__/**",
+      "!**/src/generated/**"
     ],
     "maxSize": 5242880
   },

@@ -1,8 +1,8 @@
 // tests/unit/storage/db-health.test.ts
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, mock } from 'bun:test'
 
-// Mock config
-vi.mock('../../../src/config.js', () => ({
+// Mock config — migrated from vitest vi.mock to bun:test mock.module
+mock.module('../../../src/config.js', () => ({
   config: {
     systemDbPath: '/test/system.db',
     userDbPath: '/test/user.db',

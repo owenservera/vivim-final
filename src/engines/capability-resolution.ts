@@ -103,7 +103,10 @@ const TIER_RANK: Record<PlanTier, number> = {
 }
 
 function tierRank(tier: string): number {
-  return TIER_RANK[tier as PlanTier] ?? 0
+  const normalized = tier.toLowerCase().trim()
+  const rank = (TIER_RANK as Record<string, number | undefined>)[normalized]
+  // Fail closed: an unrecognized tier must be gated, not treated as the open default.
+  return rank === undefined ? Number.POSITIVE_INFINITY : rank
 }
 
 function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
@@ -272,6 +275,13 @@ export class CapabilityResolutionEngine {
       aliases: safeJsonParse<string[]>(row.aliases_json, []),
       availability: safeJsonParse<AvailabilityGating>(row.availability_json, {}),
       prefetch: row.prefetch === 1,
+      // Convention (Hybrid, see candidates/capability-override-precedence.md):
+      // the 17 base UI fields below are read from the PRE-MERGED base columns, so
+      // `*_from` records the ORIGIN of that merged value (provenance), not a
+      // runtime-applied override. Only `uiSlots` is applied at resolve time, from
+      // `ui_component_override`. To keep value and provenance consistent, every
+      // field that is actually taken from base reports its origin; `uiSlots`
+      // reports 'provider' when an override is present, else 'global'.
       overrideSources: {
         uiComponent: toOverrideSource(row.component_from),
         uiLabel: toOverrideSource(row.label_from),
@@ -291,6 +301,7 @@ export class CapabilityResolutionEngine {
         dataFlow: toOverrideSource(row.data_flow_from),
         minPlanTier: toOverrideSource(row.plan_tier_from),
         dependsOn: toOverrideSource(row.depends_from),
+        uiSlots: row.ui_component_override ? 'provider' : 'global',
       },
       bindingStatus: row.binding_status,
       bindingConfidence: row.binding_confidence,
@@ -319,7 +330,10 @@ export class CapabilityResolutionEngine {
     context?: Record<string, unknown>,
   ): boolean {
     if (!rule || rule.trim() === '') return true
-    if (!context) return true
+    // Fail closed: a rule that references the conversation context must NOT be
+    // vacuously satisfied when no context is supplied. Omitting context means
+    // "cannot prove the condition holds" -> exclude the capability (H6).
+    if (!context) return false
 
     const expr = rule.trim()
 

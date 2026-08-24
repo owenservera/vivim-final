@@ -71,7 +71,14 @@ export class KernelRegistry {
     let result = [...this.engines.values()]
     if (filter?.layer) result = result.filter((e) => e.layer === filter.layer)
     if (filter?.kind) result = result.filter((e) => e.kind === filter.kind)
-    if (filter?.status) result = result.filter((e) => e.status === filter.status)
+    if (filter?.status) {
+      // Match either the lifecycle status (registered/wired/running/error/stopped)
+      // or the health status (healthy/degraded/unhealthy/unknown). Callers have
+      // historically passed a health word, which previously matched nothing.
+      result = result.filter(
+        (e) => e.status === filter.status || e.health?.status === filter.status,
+      )
+    }
     return result
   }
 
@@ -88,9 +95,14 @@ export class KernelRegistry {
     for (const depId of queue) {
       if (visited.has(depId)) continue
       visited.add(depId)
-      deps.push(depId)
-      const dep = this.engines.get(depId)
-      if (dep) queue.push(...dep.dependencies)
+      // Only return dependencies that actually resolve to a registered engine.
+      // Unregistered ("ghost") dependency ids are dropped rather than returned
+      // as if they were real references.
+      if (this.engines.has(depId)) {
+        deps.push(depId)
+        const dep = this.engines.get(depId)!
+        queue.push(...dep.dependencies)
+      }
     }
     return deps
   }
@@ -108,14 +120,19 @@ export class KernelRegistry {
   updateHealth(id: string, health: HealthState): void {
     const desc = this.engines.get(id)
     if (!desc) throw new EngineError(`Engine ${id} not found in registry`)
-    const _from = desc.status
     desc.health = health
     desc.updatedAt = Date.now()
     if (health.status === 'healthy') {
       this.markRunning(id)
     } else if (health.status === 'unhealthy') {
       this.markError(id, health.details ? JSON.stringify(health.details) : 'unhealthy')
+    } else if (health.status === 'degraded') {
+      // Still operational but impaired — lifecycle status stays running (or
+      // whatever it already was); the impairment is captured in desc.health.
+      this.markRunning(id)
     }
+    // 'unknown' health: leave the lifecycle status unchanged; only desc.health
+    // is recorded above.
   }
 
   markWired(id: string): void {

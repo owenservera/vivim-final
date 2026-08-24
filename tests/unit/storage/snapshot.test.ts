@@ -4,10 +4,10 @@ import { randomUUID } from 'crypto'
 import { mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 
-// Mock config
-vi.mock('../../../src/config.js', () => ({
+// Mock config — migrated from vitest to bun:test
+mock.module('../../../src/config.js', () => ({
   config: {
     get systemDbPath() {
       return join(testDir, 'system.db')
@@ -26,7 +26,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(testDir, { recursive: true, force: true })
-  vi.restoreAllMocks()
+  mock.restore()
 })
 
 describe('snapshot metadata', () => {

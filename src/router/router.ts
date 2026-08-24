@@ -89,7 +89,18 @@ export class Router {
 
     // Dispatch through active targets (priority order)
     let lastError: string | undefined
+    const attemptedProviders = new Set<string>()
     for (const target of activeTargets) {
+      // Idempotency guard (H12): never dispatch the same provider twice within
+      // one request, even if duplicate target rows exist. Cross-target failover
+      // (sending the same payload to the next provider on failure) is intentional
+      // at-least-once behavior and is preserved.
+      if (attemptedProviders.has(target.provider_id)) {
+        await this.recordEvent(requestId, 'skipped_duplicate', { targetId: target.id, providerId: target.provider_id }, now)
+        continue
+      }
+      attemptedProviders.add(target.provider_id)
+
       // Record dispatched event
       await this.recordEvent(
         requestId,
@@ -147,8 +158,10 @@ export class Router {
 
     return {
       requestId,
-      targetProviderId: activeTargets[0]?.provider_id ?? '',
-      targetAccountId: activeTargets[0]?.account_id ?? null,
+      // Do not report a failed target as the provenance of a failed route — that
+      // is misleading for error reporting. Leave it empty on total failure.
+      targetProviderId: '',
+      targetAccountId: null,
       ok: false,
       error: lastError ?? 'all targets failed',
     }

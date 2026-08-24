@@ -95,8 +95,10 @@ export class TrustScoreEngine {
       select: { durationMs: true },
     })
     const p95Latency = this.p95(latencyRows.map((r) => r.durationMs ?? 0).filter((d) => d > 0))
+    // No latency evidence (p95 === 0) must not score as "good" (100). Absence of
+    // evidence is treated as untrusted, not trusted.
     const latencyScore =
-      p95Latency < 3000 ? 100 : p95Latency < 5000 ? 75 : p95Latency < 10000 ? 50 : 25
+      p95Latency === 0 ? 0 : p95Latency < 3000 ? 100 : p95Latency < 5000 ? 75 : p95Latency < 10000 ? 50 : 25
     factors.push({
       name: 'latency',
       weight: DEFAULT_WEIGHTS.latency,
@@ -123,11 +125,13 @@ export class TrustScoreEngine {
 
     // 4. Circuit state (10%)
     const circuits = await this.db.prisma.circuitBreakerState.findMany({})
-    const providerCircuits = circuits.filter((c) => c.slaveId.includes(providerId))
+    const providerCircuits = circuits.filter((c) => c.slaveId === providerId)
     const openCount = providerCircuits.filter((c) => c.state === 'open').length
+    // No circuit records means we have no evidence of healthy circuit state, so
+    // score it as untrusted (0) rather than "fully healthy" (100).
     const circuitScore =
       providerCircuits.length === 0
-        ? 100
+        ? 0
         : openCount === 0
           ? 100
           : openCount < providerCircuits.length

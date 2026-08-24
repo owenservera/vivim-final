@@ -65,8 +65,6 @@
     "tauri:dev": "cargo tauri dev",
     "tauri:build": "cargo tauri build",
     "seed:snapshot": "bun run scripts/seed-snapshot.ts",
-    "db:backup": "bun run scripts/backup-db.ts",
-    "db:restore": "bun run scripts/restore-db.ts",
     "ci": "bun run scripts/ci.ts",
     "ci:fix": "bun run scripts/ci.ts --fix",
     "coverage": "bun test --coverage tests/unit/ --exclude 'docs/**'"
@@ -115,6 +113,14 @@
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
     "typescript-language-server": "^5.3.0"
+  },
+  "overrides": {
+    "tar": ">=7.5.7",
+    "brace-expansion": ">=1.1.17",
+    "deepmerge-ts": ">=8.0.0",
+    "adm-zip": ">=0.6.0",
+    "sharp": ">=0.35.0",
+    "esbuild": ">=0.28.1"
   },
   "trustedDependencies": [
     "@biomejs/biome",

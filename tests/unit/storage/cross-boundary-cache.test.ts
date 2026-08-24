@@ -1,5 +1,5 @@
 // tests/unit/storage/cross-boundary-cache.test.ts
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import {
   CrossBoundaryCache,
   getCrossBoundaryCache,
@@ -10,11 +10,11 @@ describe('CrossBoundaryCache', () => {
 
   beforeEach(() => {
     cache = new CrossBoundaryCache(1000) // 1s TTL for tests
-    vi.useFakeTimers({ shouldAdvanceTime: true })
+    // Note: migrated from vitest fake timers — using real timers with short TTLs
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    // no vi.restoreAllMocks needed under bun:test
   })
 
   it('caches and returns values', async () => {
@@ -69,13 +69,13 @@ describe('CrossBoundaryCache', () => {
   })
 
   it('respects TTL and expires entries', async () => {
-    // Use short TTL for this test
+    // Use short TTL for this test — real timers (bun:test has no vi.advanceTimersByTime)
     const shortCache = new CrossBoundaryCache(100)
     await shortCache.get('expire', async () => 'value')
     expect(await shortCache.get('expire', async () => 'new')).toBe('value')
 
-    // Advance past TTL
-    vi.advanceTimersByTime(200)
+    // Wait past TTL with real delay
+    await new Promise((r) => setTimeout(r, 210))
 
     // Now fetches fresh
     const result = await shortCache.get('expire', async () => 'fresh')
