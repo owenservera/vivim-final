@@ -81,7 +81,7 @@ prisma/prisma/dev.db
 package-lock.json
 
 # Docs (regenerable, not source)
-docs/
+docs/\n!docs/architecture/
 
 # Dev scratch / proof-of-concept
 dev-poc/
