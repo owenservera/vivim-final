@@ -5,13 +5,13 @@
 
 import { describe, expect, it, mock } from 'bun:test'
 import type { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
-import { ConversationManager } from '../../../src/engines/conversation-manager.js'
 import type {
   CapabilityEventBus,
   CapabilityResolutionEngine,
   StreamBlockStore,
   StreamParserEngine,
 } from '../../../src/engines/conversation-manager.js'
+import { ConversationManager } from '../../../src/engines/conversation-manager.js'
 import type { ExecutionMemoizer } from '../../../src/engines/execution-memoizer.js'
 import type {
   ConversationRow,

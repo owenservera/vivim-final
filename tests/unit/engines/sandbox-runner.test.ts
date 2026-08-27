@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { SandboxRunner } from '../../../src/engines/sandbox-runner.js'
 import type { SandboxPermissions } from '../../../src/engines/sandbox-runner.js'
+import { SandboxRunner } from '../../../src/engines/sandbox-runner.js'
 import type {
   SandboxAuditRow,
   SandboxAuditStore,

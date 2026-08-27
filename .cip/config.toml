@@ -1,0 +1,6 @@
+# Local overrides for vivim-final
+# Most settings are auto-loaded from CIP repo-settings/profiles/vivim-final.toml
+
+[custom_rules]
+enabled = true
+rules_file = ".cip/rules.py"

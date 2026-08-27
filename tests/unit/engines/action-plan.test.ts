@@ -116,13 +116,14 @@ describe('CapabilityRisk', () => {
   })
 
   test('all risk values parse', () => {
-    for (const risk of [
+    const risks = [
       'read',
       'reversible_write',
       'external_communication',
       'destructive',
       'security_sensitive',
-    ]) {
+    ] as const
+    for (const risk of risks) {
       expect(CapabilityRiskSchema.parse(risk)).toBe(risk)
     }
   })
@@ -311,7 +312,7 @@ describe('validateActionPlan', () => {
       capabilities,
     )
     expect(plan.nodes).toHaveLength(1)
-    expect(plan.nodes[0].capability).toBe('browser.click')
+    expect(plan.nodes[0]?.capability).toBe('browser.click')
   })
 
   test('accepts multi-step plan with valid dependencies', () => {
@@ -467,7 +468,7 @@ describe('ActionPlanCompiler', () => {
     })
     expect(plan.version).toBe(1)
     expect(plan.nodes).toHaveLength(1)
-    expect(plan.nodes[0].id).toBe('n1')
+    expect(plan.nodes[0]?.id).toBe('n1')
   })
 
   test('rejects unknown capability', () => {
@@ -487,8 +488,8 @@ describe('ActionPlanCompiler', () => {
         { capability: 'browser.click', input: { ref: 'E1' }, dependsOn: ['n1'] },
       ],
     })
-    expect(plan.nodes[0].dependsOn).toEqual([])
-    expect(plan.nodes[1].dependsOn).toEqual(['n1'])
+    expect(plan.nodes[0]?.dependsOn).toEqual([])
+    expect(plan.nodes[1]?.dependsOn).toEqual(['n1'])
   })
 
   test('infers risk from capability definition', () => {
@@ -496,7 +497,7 @@ describe('ActionPlanCompiler', () => {
       goal: 'click',
       candidates: [{ capability: 'browser.click', input: { ref: 'E1' } }],
     })
-    expect(plan.nodes[0].risk).toBe('reversible_write')
+    expect(plan.nodes[0]?.risk).toBe('reversible_write')
   })
 })
 
@@ -519,7 +520,7 @@ describe('ActionPlanCompiler.intentToCandidates', () => {
       classification: 'write',
     })
     expect(candidates).toHaveLength(1)
-    expect(candidates[0].capability).toBe('browser.click')
-    expect(candidates[0].input.ref).toBe('E3')
+    expect(candidates[0]?.capability).toBe('browser.click')
+    expect(candidates[0]?.input.ref).toBe('E3')
   })
 })

@@ -5,15 +5,15 @@
 // and unused exports.  It is deliberately CONSERVATIVE — it never deletes
 // anything, only annotates and reports.
 
+export type { DeprecatedEvent } from './deprecated-events.js'
 export {
   DEPRECATED_EVENTS,
   deprecationWarning,
   getActiveDeprecatedEvents,
   isEventDeprecated,
 } from './deprecated-events.js'
-export { analyzeBarrelExports } from './unused-exports.js'
-export type { DeprecatedEvent } from './deprecated-events.js'
 export type { UnusedExport } from './unused-exports.js'
+export { analyzeBarrelExports } from './unused-exports.js'
 
 // ── Composite runner ──────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export async function runCleanupAnalysis(rootDir: string): Promise<{
       : `${rootDir}/src/index.ts`
     unusedExports = await analyzeBarrelExports(barrelPath, rootDir)
   } catch {
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     // If barrel analysis fails (e.g. in bundled contexts), return empty.
   }
 

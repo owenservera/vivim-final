@@ -9,7 +9,7 @@
 //
 // This is a read-only audit — no side effects, no mutations.
 
-import { type CapabilityRisk, CapabilityRiskSchema, RISK_TIER } from './action-plan.js'
+import type { CapabilityRisk } from './action-plan.js'
 import type { CommandPattern } from './nlcl/types.js'
 import type { UnifiedCapability, UnifiedCapabilityRegistry } from './unified-registry.js'
 

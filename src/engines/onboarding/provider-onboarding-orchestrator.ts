@@ -39,12 +39,12 @@ import type { ProviderStore } from '../../storage/contracts/provider-store.js'
 import { CapabilityTestGate } from './capability-test-gate.js'
 import { type CapturedEvents, DomCapabilityDiscoverer } from './dom-capability-discoverer.js'
 import { ParserSynthesisEngine } from './parser-synthesis-engine.js'
-import { type Result, err, ok } from './result.js'
+import { err, ok, type Result } from './result.js'
 import type {
   GovernorHandleLike,
+  OnboardingStatus,
   OnboardResult,
   OnboardStartInput,
-  OnboardingStatus,
   TestableCapability,
   WebAppFingerprintVector,
 } from './types.js'
@@ -57,8 +57,8 @@ import {
   snapshotDomProbe,
 } from './webapp-fingerprint.js'
 import {
-  WebAppTaxonomySynthesizer,
   deriveProvisionalTemplate,
+  WebAppTaxonomySynthesizer,
 } from './webapp-taxonomy-synthesizer.js'
 
 /**

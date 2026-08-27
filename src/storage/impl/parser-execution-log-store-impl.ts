@@ -7,8 +7,8 @@ import type {
   ParserExecutionLogRow,
   ParserExecutionLogStore,
 } from '../contracts/parser-execution-log-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 type ParserExecutionLogPrismaRow = Prisma.ParserExecutionLogGetPayload<Record<string, never>>
 

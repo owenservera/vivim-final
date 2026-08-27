@@ -113,7 +113,7 @@ export class NodeStoreImpl implements NodeStoreContract {
         properties: e.properties,
         createdAt: row.createdAt,
       }).catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
   }
 
@@ -341,7 +341,7 @@ export class NodeStoreImpl implements NodeStoreContract {
             },
           })
           .catch(() => {})
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         count++
       }
     }

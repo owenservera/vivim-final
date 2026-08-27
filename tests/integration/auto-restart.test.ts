@@ -4,10 +4,10 @@
 
 import { describe, expect, it } from 'bun:test'
 import {
-  type SlaveLifecycle,
   backoffDelay,
   computeSuperState,
   nextState,
+  type SlaveLifecycle,
 } from '../../src/executor/slave-states.js'
 
 describe('Auto-Restart (US2)', () => {

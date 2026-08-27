@@ -12,7 +12,7 @@ export class GenericBrowserExecutor implements CommandExecutor {
   readonly id = 'generic-browser' as const
 
   constructor(
-    private governor?: ChromeGovernor,
+    _governor?: ChromeGovernor,
     private orchestrator?: AutomationOrchestrator,
   ) {}
 

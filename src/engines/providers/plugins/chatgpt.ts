@@ -2,8 +2,8 @@
 // ChatGPT provider plugin.
 // Phase 8: Migrated from scattered provider-selectors.ts, composer-typing.ts.
 
-import { BaseProviderPlugin } from '../plugin.js'
 import type { ProviderPlugin } from '../plugin.js'
+import { BaseProviderPlugin } from '../plugin.js'
 
 export class ChatGPTPlugin extends BaseProviderPlugin implements ProviderPlugin {
   id = 'chatgpt'

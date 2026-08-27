@@ -3,8 +3,8 @@
 
 import { describe, expect, test } from 'bun:test'
 import { CapabilityEventBus } from '../../src/engines/capability-event-bus.js'
-import { ConversationManager } from '../../src/engines/conversation-manager.js'
 import type { ResolvedCapabilities } from '../../src/engines/conversation-manager.js'
+import { ConversationManager } from '../../src/engines/conversation-manager.js'
 import type { ExecutionMemoizer } from '../../src/engines/execution-memoizer.js'
 
 const mockResolved: ResolvedCapabilities = {

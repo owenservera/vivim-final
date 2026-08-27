@@ -24,7 +24,7 @@ async function waitForHealth(timeoutMs = 30_000): Promise<void> {
       const r = await fetch(`${BASE}/health`)
       if (r.ok) return
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       /* not up yet */
     }
     await new Promise((res) => setTimeout(res, 500))
@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   // [audit] removed: console.log('[tauri-sidecar] ALL CHECKS PASSED')
 }
 
-main().catch((err) => {
+main().catch((_err) => {
   // [audit] removed: console.error(err.message)
   process.exit(1)
 })

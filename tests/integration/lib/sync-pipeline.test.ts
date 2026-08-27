@@ -157,7 +157,7 @@ describe('sync-pipeline (integration)', () => {
     try {
       await client.sync()
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Expected: signature verification fails with test key
     }
 

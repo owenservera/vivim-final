@@ -24,7 +24,7 @@ import {
 } from './generated-frontend-routes.js'
 
 // Keep the compiler honest about the entry shape without importing type for runtime.
-export type { FrontendRouteEntry, FrontendHandler }
+export type { FrontendHandler, FrontendRouteEntry }
 
 // /api/agent/canvas/[id] → /^\/api\/agent\/canvas\/([^/]+)\/?$/
 function compilePath(path: string): { re: RegExp; keys: string[] } {
@@ -35,7 +35,7 @@ function compilePath(path: string): { re: RegExp; keys: string[] } {
       const dyn = seg.match(/^\[([^\]]+)\]$/)
       if (dyn) {
         // dynamic segment — emit a capture group and keep its key
-        keys.push(dyn[1])
+        keys.push(dyn[1]!)
         return '([^/]+)'
       }
       // static segment — escape every regex metacharacter, nothing more
@@ -70,7 +70,7 @@ export async function dispatchFrontendRoute(req: Request, url: URL): Promise<Res
       if (!handler) continue
       const params: Record<string, string> = {}
       for (let i = 0; i < entry.keys.length; i++) {
-        params[entry.keys[i]] = decodeURIComponent(match[i + 1] ?? '')
+        params[entry.keys[i]!] = decodeURIComponent(match[i + 1] ?? '')
       }
       const result = await handler(req, params)
       if (result instanceof Response) return result
@@ -79,8 +79,6 @@ export async function dispatchFrontendRoute(req: Request, url: URL): Promise<Res
           headers: { 'content-type': 'application/json' },
         })
       }
-      // handler returned nothing → fall through to backend chain
-      continue
     }
   } catch (err) {
     return new Response(

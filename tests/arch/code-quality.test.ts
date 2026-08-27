@@ -3,16 +3,16 @@
 
 import { describe, expect, it } from 'bun:test'
 import { existsSync } from 'node:fs'
-import { readFile, readdir } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { basename, join, relative, resolve } from 'node:path'
 
 const ROOT = resolve(import.meta.dir, '../..')
 
 // ── Soft assertion helper (bun:test lacks expect.soft) ───────────────────
-function softFail(label: string, items: string[]): void {
+function softFail(_label: string, items: string[]): void {
   if (items.length === 0) return
   // [audit] removed: console.warn(`\n  [SOFT FAIL] ${label} (${items.length} issues):`)
-  for (const item of items.slice(0, 10)) {
+  for (const _item of items.slice(0, 10)) {
     // [audit] removed: console.warn(`    - ${item}`)
   }
   // [audit] removed: if (items.length > 10) console.warn(`    ... and ${items.length - 10} more`)
@@ -151,8 +151,8 @@ describe('Code Quality Gates', () => {
 
     // Sort by size descending
     largeFiles.sort((a, b) => {
-      const aLines = Number.parseInt(a.match(/\((\d+) lines\)/)?.[1] ?? '0')
-      const bLines = Number.parseInt(b.match(/\((\d+) lines\)/)?.[1] ?? '0')
+      const aLines = Number.parseInt(a.match(/\((\d+) lines\)/)?.[1] ?? '0', 10)
+      const bLines = Number.parseInt(b.match(/\((\d+) lines\)/)?.[1] ?? '0', 10)
       return bLines - aLines
     })
 

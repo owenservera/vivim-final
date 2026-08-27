@@ -2,8 +2,8 @@
 // Unit 4.2 — Workspace default layouts + presets
 
 import { describe, expect, it } from 'bun:test'
-import { WorkspacePresets } from '../../../src/engines/workspace-presets.js'
 import type { WorkspaceLayoutRow } from '../../../src/engines/workspace-presets.js'
+import { WorkspacePresets } from '../../../src/engines/workspace-presets.js'
 
 class MockManager {
   layouts = new Map<string, WorkspaceLayoutRow>()

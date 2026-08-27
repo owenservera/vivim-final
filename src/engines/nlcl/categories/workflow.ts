@@ -52,7 +52,7 @@ export const workflowPatterns: CommandPattern[] = [
     inputSchema: z.object({
       cron: z.string(),
       action: z.string(),
-      actionConfig: z.record(z.unknown()).optional(),
+      actionConfig: z.record(z.string(), z.unknown()).optional(),
       name: z.string().optional(),
     }),
     executor: 'capability',

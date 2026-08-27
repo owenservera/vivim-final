@@ -16,8 +16,7 @@ import {
   type CapturedWsFrame,
   classifyTransport,
 } from './protocol-sniffer.js'
-import type { GovernorHandleLike } from './types.js'
-import type { ProtocolFingerprintResult } from './types.js'
+import type { GovernorHandleLike, ProtocolFingerprintResult } from './types.js'
 
 const FIND_AFFORDANCES_JS = `(() => {
   const inputs = Array.from(document.querySelectorAll('[contenteditable="true"], textarea, [role="textbox"]'));

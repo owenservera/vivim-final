@@ -1,6 +1,6 @@
 // tests/unit/engines/nlcl/tfidf.test.ts
 import { describe, expect, it } from 'bun:test'
-import { Tfidf, cosineSimilarity } from '../../../../src/engines/nlcl/tfidf.js'
+import { cosineSimilarity, Tfidf } from '../../../../src/engines/nlcl/tfidf.js'
 
 describe('Tfidf', () => {
   const corpus = [

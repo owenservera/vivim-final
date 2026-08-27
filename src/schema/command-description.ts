@@ -31,6 +31,6 @@ export function validateCommandDescription(
   }
   return {
     success: false,
-    error: result.error.errors.map((e) => e.message).join(', '),
+    error: result.error.issues.map((e) => e.message).join(', '),
   }
 }

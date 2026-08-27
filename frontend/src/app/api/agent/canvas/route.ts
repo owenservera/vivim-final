@@ -1,6 +1,6 @@
+import { type NextRequest, NextResponse } from 'next/server'
 import { ulid } from '@/lib/ulid'
 import type { AgentCanvasOp, AgentCanvasPlan } from '@/shared/agent-canvas'
-import { type NextRequest, NextResponse } from 'next/server'
 
 /**
  * POST /api/agent/canvas/plan
@@ -8,7 +8,7 @@ import { type NextRequest, NextResponse } from 'next/server'
  * Production: wire to nlcl engine for structured extraction.
  */
 export async function POST(req: NextRequest) {
-  const parsed = await req.json().catch(() => ({}))
+  const parsed = (await req.json().catch(() => ({}))) as { prompt?: string }
   // [audit] log the error with context here
   const prompt = (parsed.prompt ?? '').toString().trim()
 

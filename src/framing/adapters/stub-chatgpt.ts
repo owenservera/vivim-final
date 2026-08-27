@@ -102,7 +102,7 @@ export class StubChatGptFramingAdapter implements FramingAdapter {
           } as ContentPart
         }
       } catch {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // Not JSON — skip.
       }
     }

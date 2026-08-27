@@ -14,8 +14,8 @@ import type {
   SelectorStrategyRow,
   SnapshotRow,
 } from '../contracts/capability-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 interface PrismaTaxonomy {
   id: string
@@ -54,8 +54,8 @@ interface PrismaTaxonomy {
   aliasesJson: string
   availabilityJson: string
   prefetch: number
-  createdAt: number
-  updatedAt: number
+  createdAt: bigint
+  updatedAt: bigint
 }
 
 interface PrismaBinding {
@@ -67,8 +67,8 @@ interface PrismaBinding {
   currentProgramId: string | null
   promotionHistoryJson: string
   confidence: number
-  createdAt: number
-  updatedAt: number
+  createdAt: bigint
+  updatedAt: bigint
 }
 
 interface PrismaProgram {
@@ -79,24 +79,24 @@ interface PrismaProgram {
   supersededById: string | null
   isActive: number
   configJson: string
-  createdAt: number
-  updatedAt: number
+  createdAt: bigint
+  updatedAt: bigint
 }
 
 interface PrismaSelector {
   id: string
-  name?: string
+  name: string
   capabilityId: string
   providerId: string
-  selector: string
+  selectorValue: string
   priority: number
   strategyType: string
   hitCount: number
   missCount: number
   isActive: number
-  lastUsedAt?: number | null
-  createdAt: number
-  updatedAt: number
+  lastUsedAt: bigint | null
+  createdAt: bigint
+  updatedAt: bigint
 }
 
 function toTaxonomyRow(r: PrismaTaxonomy): CapabilityTaxonomyRow {
@@ -137,8 +137,8 @@ function toTaxonomyRow(r: PrismaTaxonomy): CapabilityTaxonomyRow {
     aliasesJson: r.aliasesJson,
     availabilityJson: r.availabilityJson,
     prefetch: r.prefetch,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    createdAt: Number(r.createdAt),
+    updatedAt: Number(r.updatedAt),
   }
 }
 
@@ -152,8 +152,8 @@ function toBindingRow(r: PrismaBinding): CapabilityBindingRow {
     currentProgramId: r.currentProgramId,
     promotionHistoryJson: r.promotionHistoryJson,
     confidence: r.confidence,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    createdAt: Number(r.createdAt),
+    updatedAt: Number(r.updatedAt),
   }
 }
 
@@ -167,8 +167,8 @@ function toProgramRow(r: PrismaProgram): CapabilityProgramRow {
     isActive: r.isActive,
     status: r.isActive === 1 ? 'promoted' : 'candidate',
     configJson: r.configJson,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    createdAt: Number(r.createdAt),
+    updatedAt: Number(r.updatedAt),
   }
 }
 
@@ -178,15 +178,15 @@ function toSelectorRow(r: PrismaSelector): SelectorStrategyRow {
     name: r.name as string,
     capabilityId: r.capabilityId,
     providerId: r.providerId,
-    selectorValue: r.selector,
+    selectorValue: r.selectorValue,
     priority: r.priority,
     strategyType: r.strategyType,
     isActive: r.isActive,
     hitCount: r.hitCount,
     missCount: r.missCount,
-    lastUsedAt: (r.lastUsedAt as number | null) ?? null,
-    createdAt: r.createdAt,
-    updatedAt: r.updatedAt,
+    lastUsedAt: r.lastUsedAt ? Number(r.lastUsedAt) : null,
+    createdAt: Number(r.createdAt),
+    updatedAt: Number(r.updatedAt),
   }
 }
 
@@ -350,7 +350,7 @@ export class CapabilityStoreImpl implements CapabilityStore {
         uiPosition: string
         uiInputSchema: string
       }
-      programs: Array<{ id: string; configJson: string; status: string }>
+      programs: Array<{ id: string; configJson: string }>
     }>
 
     const rows: SnapshotRow[] = []

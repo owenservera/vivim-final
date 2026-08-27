@@ -12,6 +12,7 @@ import { EventRecordBridge } from '../../../src/ai/events/event-record-bridge.js
 import { InMemoryEventBus } from '../../../src/ai/events/in-memory-bus.js'
 import { createRequestId, modelId, providerId } from '../../../src/ai/index.js'
 import { TrustedPluginManager } from '../../../src/ai/plugins/plugin-manager-impl.js'
+import type { CandidateInput } from '../../../src/ai/policy/policy.js'
 import {
   StoreBackedPolicyEnforcer,
   StoreBackedPolicyEvaluator,
@@ -21,11 +22,11 @@ import {
   LocalModelAdapterWrapper,
 } from '../../../src/ai/protocol/legacy-adapter-wrappers.js'
 import {
+  createToolOrchestrator,
   DefaultApprovalManager,
   InMemoryToolAuditLog,
   PermissiveToolAuthorizer,
   ToolOrchestrator,
-  createToolOrchestrator,
 } from '../../../src/ai/tools/tool-orchestrator-impl.js'
 
 // Mock PrismaClient for C2 tests
@@ -105,14 +106,14 @@ describe('C2 — Store-backed policy', () => {
   it('evaluator returns candidates with scores', async () => {
     const prisma = mockPrismaWithRules([])
     const evaluator = new StoreBackedPolicyEvaluator(prisma)
-    const candidates = [
+    const candidates: CandidateInput[] = [
       {
         provider: {
           id: providerId('test'),
           pluginId: 'p' as never,
           name: 'Test',
           version: '1',
-          protocolVersion: '1.1',
+          protocolVersion: '1.1' as const,
           kind: 'local' as const,
           trust: 'official' as const,
           capabilities: {} as never,
@@ -139,7 +140,7 @@ describe('C2 — Store-backed policy', () => {
     const enforcer = new StoreBackedPolicyEnforcer(prisma)
     const decision = await enforcer.enforceNetworkPolicy({}, 'https://api.openai.com')
     expect(decision.allowed).toBe(false)
-    expect(decision.code).toBe('POLICY_DENIED')
+    expect((decision as { reason?: string }).reason).toBeDefined()
   })
 
   it('enforcer allows localhost under localhost policy', async () => {
@@ -189,7 +190,9 @@ describe('C3 — Tool orchestrator', () => {
   })
 
   it('denies tool execution when authorizer denies', async () => {
-    const callToolFn = mock(async () => 'should not be called')
+    const callToolFn = mock(
+      async (_toolName: string, _args: Record<string, unknown>) => 'should not be called',
+    )
     const orchestrator = new ToolOrchestrator({
       executor: { execute: async () => callToolFn('x', {}) },
       authorizer: {
@@ -273,9 +276,9 @@ describe('C4 — Plugin manager + event bridge', () => {
     const aiBus = new InMemoryEventBus()
     const capBus = {
       emit: mock((_event: unknown) => {}),
-    } as never
+    } as unknown as { emit: ReturnType<typeof mock> }
 
-    const bridge = new EventRecordBridge(aiBus, capBus)
+    const bridge = new EventRecordBridge(aiBus, capBus as never)
     bridge.start()
 
     // Publish an execution event

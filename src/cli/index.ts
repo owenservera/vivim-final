@@ -8,12 +8,16 @@ import { config } from '../config.js'
 import type { UnifiedCapabilityRegistry } from '../engines/unified-registry.js'
 import { CommandRegistry } from './command-registry.js'
 import { registerBuiltinCommands } from './commands/builtins.js'
-import { syncCliFromUnified } from './commands/registry-bridge.js'
-import { executeRemote, fetchCliCapabilities, matchCapability } from './commands/registry-bridge.js'
+import {
+  executeRemote,
+  fetchCliCapabilities,
+  matchCapability,
+  syncCliFromUnified,
+} from './commands/registry-bridge.js'
 import { OutputFormatter, type OutputMode } from './output-formatter.js'
 
 const registry = new CommandRegistry()
-const formatter = new OutputFormatter()
+const _formatter = new OutputFormatter()
 
 const _DEFAULT_PORT = 9420
 

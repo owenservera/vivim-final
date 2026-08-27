@@ -1,59 +1,58 @@
 // ─── Command Language Engine ──────────────────────────────────────────
 // Core routing engine for the command language system.
 
-export { parseInput, extractCommandName, hasPrefix } from './parser.js'
-export { resolveCommand, getSuggestions } from './resolver.js'
-export {
-  matchPatterns,
-  detectIntent,
-  isHighConfidence,
-  getConfidenceLevel,
-  getCategoryColor,
-  getShade,
-} from './nlp-matcher.js'
-export { CommandLanguageRegistry } from './registry.js'
-export { validateArgs, getArgSuggestions } from './args.js'
-export { resolveContextRef, isContextRef, getContextRefTypes } from './context-ref.js'
-export { parseCapCommand, validateCapCommand, createCapSpec } from './capability-specs.js'
-export { detectCombo } from './combo-detector.js'
-export { InterpretationEngine } from './interpretation.js'
+export { getArgSuggestions, validateArgs } from './args.js'
 export { AutocompleteEngine } from './autocomplete.js'
+export { createCapSpec, parseCapCommand, validateCapCommand } from './capability-specs.js'
 export {
   CATEGORY_COLORS,
-  getShade as getColorShade,
   getBlendedColor,
   getContrastRatio,
+  getShade as getColorShade,
   hexToHsl,
   hslToHex,
 } from './colors.js'
-
-// ─── Spec Files ──────────────────────────────────────────────────────
-export { slashSpecs } from './slash-specs.js'
-export { mentionSpecs } from './mention-specs.js'
-export { tagSpecs } from './tag-specs.js'
+export { detectCombo } from './combo-detector.js'
+export { getContextRefTypes, isContextRef, resolveContextRef } from './context-ref.js'
 export { devopsSpecs } from './devops-specs.js'
 export { discoverySpecs } from './discovery-specs.js'
+export { InterpretationEngine } from './interpretation.js'
+export { mentionSpecs } from './mention-specs.js'
+export {
+  detectIntent,
+  getCategoryColor,
+  getConfidenceLevel,
+  getShade,
+  isHighConfidence,
+  matchPatterns,
+} from './nlp-matcher.js'
+export { extractCommandName, hasPrefix, parseInput } from './parser.js'
+export { CommandLanguageRegistry } from './registry.js'
+export { getSuggestions, resolveCommand } from './resolver.js'
+// ─── Spec Files ──────────────────────────────────────────────────────
+export { slashSpecs } from './slash-specs.js'
+export { tagSpecs } from './tag-specs.js'
 
 // ─── Types ───────────────────────────────────────────────────────────
 export type {
-  Prefix,
-  CommandCategory,
   ArgKind,
-  CommandContext,
-  Suggestion,
   ArgSpec,
+  CategoryColor,
+  CommandCategory,
+  CommandCombo,
+  CommandContext,
+  CommandDescriptionRow,
+  CommandIntent,
   CommandResult,
+  DisclosureLevel,
+  InterpretationConfig,
+  InterpretationState,
+  ParsedCommand,
+  PatternMatchResult,
+  Prefix,
+  Suggestion,
   UnifiedCommandSpec,
   UnifiedLiveCommand,
-  ParsedCommand,
-  CommandIntent,
-  CommandCombo,
-  DisclosureLevel,
-  InterpretationState,
-  InterpretationConfig,
-  CategoryColor,
-  PatternMatchResult,
-  CommandDescriptionRow,
 } from './types.js'
 
 export { ALL_PREFIXES, isPrefix } from './types.js'

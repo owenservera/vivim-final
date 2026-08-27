@@ -28,6 +28,7 @@ export interface CdpBindingStore {
     reason?: string
   }): Promise<void>
 }
+
 import { catchDebug } from '../lib/catch-logger.js'
 import { makeHarnessCapability } from './harness/make-harness-capability.js'
 import { configToProgram } from './harness/program-schema.js'
@@ -182,7 +183,7 @@ export function registerDiscoveredCdpMethods(
               reason: opts.verified ? 'd2-live-protocol-verified' : 'd2-pending-verification',
             })
             .catch(() => {})
-  // [audit] log the error with context here
+          // [audit] log the error with context here
           bound.push(desc.fullName)
         } catch (err) {
           catchDebug(err, 'engines:cdp-capability-registrar:185')

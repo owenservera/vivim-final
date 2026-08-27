@@ -6,17 +6,19 @@ pre-commit:
   commands:
     lint:
       glob: "*.ts"
-      run: bun x @biomejs/biome lint {staged_files} || true
+      run: bun x @biomejs/biome lint {staged_files}
     format:
       glob: "*.{js,ts,json,md}"
-      run: bun x @biomejs/biome check --write {staged_files} || true
+      run: bun x @biomejs/biome check --write {staged_files}
     guard:
       # Refuse to commit while servers run (orphan risk) or a migration is pending.
-      run: bun run devops runtime-test guard || true
+      run: bun run devops runtime-test guard
     typecheck:
       glob: "*.ts"
-      # Background-only: logs errors but never blocks commit.
-      run: bun run typecheck 2>&1 || true
+      run: bun run typecheck
 
 pre-push:
-  commands: {}
+  commands:
+    audit:
+      run: bun audit --audit-level=high
+      # Blocks push if high/critical CVEs present (enhancement #1)

@@ -13,7 +13,11 @@
 
 import { getLogger } from '../lib/logger.js'
 import { makeCapability } from './capability-bootstrap.js'
-import type { UnifiedCapability, UnifiedCapabilityRegistry } from './unified-registry.js'
+import type {
+  CapabilitySurface,
+  UnifiedCapability,
+  UnifiedCapabilityRegistry,
+} from './unified-registry.js'
 
 const log = getLogger('router-capability-bridge')
 
@@ -573,7 +577,7 @@ export function registerRouterCapabilities(
         name: ep.description,
         description: ep.description,
         category: ep.category,
-        surfaces: ep.surfaces ?? ['cli', 'api', 'mcp'],
+        surfaces: (ep.surfaces ?? ['cli', 'api', 'mcp']) as CapabilitySurface[],
         inputSchema: { type: 'object', properties: {} },
         outputSchema: { type: 'object' },
         cliCommand: {
@@ -582,14 +586,13 @@ export function registerRouterCapabilities(
           examples: [`vivim ${cliName}`],
         },
         apiEndpoint: { method: ep.method, path: ep.path },
-        tags: ['router-bridge', 'auto-generated'],
       },
       // Handler: proxy to self (the running server)
       async (input) => {
         let url = `${baseUrl}${ep.path}`
         // Replace :param placeholders with input values
         const paramNames: string[] = []
-        const regexStr = ep.path.replace(/:([^/]+)/g, (_, name) => {
+        const _regexStr = ep.path.replace(/:([^/]+)/g, (_, name) => {
           paramNames.push(name)
           return '([^/]+)'
         })

@@ -18,7 +18,10 @@ interface SinkPattern {
 }
 
 const SOURCE_PATTERNS: SourcePattern[] = [
-  { name: 'request body', regex: /req\.body|request\.body|RequestBody|searchParams|params\b|req\.query|body\b/ },
+  {
+    name: 'request body',
+    regex: /req\.body|request\.body|RequestBody|searchParams|params\b|req\.query|body\b/,
+  },
   { name: 'environment', regex: /process\.env|Bun\.env/ },
   { name: 'user input', regex: /userInput|user_input|prompt|cli\s+arg|argv|commandLine/ },
   { name: 'network response', regex: /fetch\(|\.json\(\)|response\.text\(|res\.body/ },
@@ -39,7 +42,8 @@ const SINK_PATTERNS: SinkPattern[] = [
   {
     name: 'raw database query',
     regex: /\b(queryRawUnsafe|executeRawUnsafe|queryUnsafe|executeUnsafe)\s*\(|\.raw\s*\(/,
-    detect: (l) => /\b(queryRawUnsafe|executeRawUnsafe|queryUnsafe|executeUnsafe)\s*\(|\.raw\s*\(/.test(l),
+    detect: (l) =>
+      /\b(queryRawUnsafe|executeRawUnsafe|queryUnsafe|executeUnsafe)\s*\(|\.raw\s*\(/.test(l),
   },
 ]
 
@@ -69,7 +73,8 @@ export function analyzeTaint(
   const taint: Map<number, Set<string>> = new Map()
 
   const varNameRe = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/
-  const memberNameRe = /\b([A-Za-z_$][\w$]*)\s*=\s*(?:body|query|params|searchParams|env|argv|process\.env\.\w+)/
+  const memberNameRe =
+    /\b([A-Za-z_$][\w$]*)\s*=\s*(?:body|query|params|searchParams|env|argv|process\.env\.\w+)/
 
   for (let idx = 0; idx < codeLines.length; idx++) {
     const lineNo = idx + 1

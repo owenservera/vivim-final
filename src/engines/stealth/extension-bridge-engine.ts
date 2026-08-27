@@ -37,7 +37,7 @@ export class ExtensionBridgeEngine {
   private cdpResolver: ((slaveId: string) => StealthCdpProxy | null) | null = null
 
   constructor(
-    private readonly store: StealthProfileStore,
+    readonly _store: StealthProfileStore,
     private readonly eventBus?: CapabilityEventBus,
     private readonly logger?: Logger,
   ) {}

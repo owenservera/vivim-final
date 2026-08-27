@@ -5,10 +5,10 @@
 
 import { beforeAll, describe, expect, it } from 'bun:test'
 import {
-  PROBE_PORT,
-  type ServerHandle,
   knownUniverseCaps,
+  PROBE_PORT,
   parseHelpCommands,
+  type ServerHandle,
   spawnCli,
   startServer,
 } from './harness.ts'
@@ -33,18 +33,16 @@ describe('T3 Right-data coverage', () => {
     })
     const missing = universe.filter((id) => !reachable.includes(id))
     const coverage = universe.length === 0 ? 0 : reachable.length / universe.length
-    // [audit] removed: console.log(
-      `[T3] serverOk=${serverOk} universe=${universe.length} reachable=${reachable.length} missing=${missing.length} coverage=${(coverage * 100).toFixed(1)}%`,
-    )
+    // [audit] removed: console.log — T3 coverage result
     if (missing.length > 0) {
-      // [audit] removed: console.log(`[T3] missing sample: ${missing.slice(0, 10).join(', ')}`)
+      // [audit] removed: console.log — T3 missing sample
     }
     expect(universe.length).toBeGreaterThan(0)
     // GAP-1/GAP-2: server crash or missing cli surface means coverage < 100%
     if (serverOk) {
       expect(coverage).toBeLessThan(1)
     } else {
-      // [audit] removed: console.log('[T3] GAP-5: server unreachable; CLI returns no capabilities — document this')
+      // [audit] removed: console.log — GAP-5: server unreachable
     }
   })
 
@@ -54,7 +52,7 @@ describe('T3 Right-data coverage', () => {
     // The exit code is always 0.
     expect(help.code).toBe(0)
     if (help.stdout.includes('No commands registered')) {
-      // [audit] removed: console.log('[T3] No commands registered (server offline) — consistent with GAP-5')
+      // [audit] removed: console.log — No commands registered (server offline)
     }
   })
 })

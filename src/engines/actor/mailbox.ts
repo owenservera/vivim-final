@@ -38,15 +38,6 @@ export class Mailbox<M> {
   }
 
   /**
-   * Get the next message from the queue (internal use).
-   */
-  private async next(): Promise<M | null> {
-    const entry = this.queue.shift()
-    if (!entry) return null
-    return entry.msg
-  }
-
-  /**
    * Process messages sequentially.
    */
   private async processNext(): Promise<void> {

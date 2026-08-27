@@ -77,6 +77,11 @@ export function createMockConversationStore(
         tokenCount: input.tokenCount ?? null,
         model: input.model ?? null,
         metadataJson: input.metadataJson ?? '{}',
+        providerMessageId: null,
+        identityHash: null,
+        isPinned: 0,
+        isArchived: 0,
+        readStatus: 'unread',
         createdAt: Date.now(),
       }
       const list = messages.get(input.conversationId) ?? []

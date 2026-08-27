@@ -212,7 +212,7 @@ function mapLaunchRow(row: Record<string, unknown>): LaunchProfileRow {
   }
 }
 
-function parseJson<T>(value: unknown, fallback: T): T {
+function _parseJson<T>(value: unknown, fallback: T): T {
   if (typeof value !== 'string') return fallback
   try {
     return JSON.parse(value) as T

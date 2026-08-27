@@ -10,8 +10,8 @@
 import { beforeAll, describe, expect, it } from 'bun:test'
 import {
   PROBE_PORT,
-  type ServerHandle,
   parseHelpCommands,
+  type ServerHandle,
   spawnCli,
   spawnDevops,
   startServer,
@@ -40,9 +40,7 @@ describe('T4 Oracle single-call reachability', () => {
 
   it('devops tooling provides offline oracle-equivalent discovery', async () => {
     const r = await spawnDevops(['runtime-test', 'discover', '--offline'])
-    // [audit] removed: console.log(
-      `[T4] devops discover --offline exit=${r.code} output=${r.stdout.length}b in ${r.ms}ms`,
-    )
+    // [audit] removed: console.log — devops discover offline result
     expect(r.code).toBe(0)
   })
 })

@@ -25,6 +25,7 @@ datasource db {
 // L0: Bookkeeping
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: schema
 model SchemaMeta {
   key   String
   value String
@@ -36,6 +37,7 @@ model SchemaMeta {
 // L1: Provider Knowledge Graph
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: provider
 model ProviderDefinition {
   id               String  @id
   slug             String  @unique
@@ -98,6 +100,7 @@ model ProviderDefinition {
   @@map("provider_definition")
 }
 
+// ctx: provider
 model ProviderEndpoint {
   id            String @id
   providerId    String @map("provider_id")
@@ -124,6 +127,7 @@ model ProviderEndpoint {
   @@map("provider_endpoint")
 }
 
+// ctx: provider
 model ProviderParser {
   id               String  @id
   providerId       String  @map("provider_id")
@@ -147,6 +151,7 @@ model ProviderParser {
   @@map("provider_parser")
 }
 
+// ctx: provider
 model ProviderCapability {
   id                          String  @id
   providerId                  String  @map("provider_id")
@@ -194,6 +199,7 @@ model ProviderCapability {
   @@map("provider_capability")
 }
 
+// ctx: provider
 model ProviderConfig {
   id          String @id
   providerId  String @map("provider_id")
@@ -210,6 +216,7 @@ model ProviderConfig {
   @@map("provider_config")
 }
 
+// ctx: provider
 model ProviderModel {
   id                 String @id
   providerId         String @map("provider_id")
@@ -235,6 +242,7 @@ model ProviderModel {
   @@map("provider_model")
 }
 
+// ctx: provider
 model ProviderAccount {
   id                String  @id
   providerId        String  @map("provider_id")
@@ -263,6 +271,7 @@ model ProviderAccount {
   @@map("provider_account")
 }
 
+// ctx: provider
 model ProviderStreamConfig {
   id                      String  @id
   providerId              String  @map("provider_id")
@@ -293,6 +302,7 @@ model ProviderStreamConfig {
 // L2: Trace
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: ops
 model TraceEntry {
   id             String  @id
   engine         String
@@ -321,6 +331,7 @@ model TraceEntry {
 // L3: Universal Capability System
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: capability
 model CapabilityTaxonomy {
   id                       String  @id
   name                     String
@@ -387,6 +398,7 @@ model CapabilityTaxonomy {
   @@map("capability_taxonomy")
 }
 
+// ctx: capability
 model CapabilityTier {
   id                    String  @id
   capabilityId          String  @map("capability_id")
@@ -409,6 +421,7 @@ model CapabilityTier {
   @@map("capability_tier")
 }
 
+// ctx: capability
 model CapabilityBinding {
   id                   String  @id
   globalId             String  @map("global_id")
@@ -440,6 +453,7 @@ model CapabilityBinding {
 }
 
 // Unit 1.3 — capability_override (per-provider override of canonical taxonomy)
+// ctx: provider
 model ProviderOverride {
   id           String @id
   providerId   String @map("provider_id")
@@ -456,6 +470,7 @@ model ProviderOverride {
 }
 
 // Unit 1.3 — capability_intent (human-readable NL intent linking to capability)
+// ctx: capability
 model CapabilityIntent {
   id           String @id
   capabilityId String @map("capability_id")
@@ -472,6 +487,7 @@ model CapabilityIntent {
   @@map("capability_intent")
 }
 
+// ctx: capability
 model CapabilityProgram {
   id             String  @id
   bindingId      String  @map("binding_id")
@@ -492,6 +508,7 @@ model CapabilityProgram {
   @@map("capability_program")
 }
 
+// ctx: capability
 model SelectorStrategy {
   id            String  @id
   name          String
@@ -516,6 +533,7 @@ model SelectorStrategy {
   @@map("selector_strategy")
 }
 
+// ctx: capability
 model Outcome {
   id                 String  @id
   capabilityId       String  @map("capability_id")
@@ -546,6 +564,7 @@ model Outcome {
 // L4: State & Session
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: session
 model VivimSession {
   id          String @id
   state       String @default("idle")
@@ -559,6 +578,7 @@ model VivimSession {
   @@map("vivim_session")
 }
 
+// ctx: session
 model ProviderSession {
   id             String @id
   vivimSessionId String @map("vivim_session_id")
@@ -579,6 +599,7 @@ model ProviderSession {
   @@map("provider_session")
 }
 
+// ctx: session
 model ProfileSession {
   id                String  @id
   providerSessionId String  @map("provider_session_id")
@@ -595,6 +616,7 @@ model ProfileSession {
   @@map("profile_session")
 }
 
+// ctx: conversation
 model Conversation {
   id                String  @id
   providerSessionId String? @map("provider_session_id") // Nullable for history-synced conversations
@@ -629,6 +651,7 @@ model Conversation {
   @@map("conversation")
 }
 
+// ctx: conversation
 model ConversationMessage {
   id              String  @id
   conversationId  String  @map("conversation_id")
@@ -681,6 +704,7 @@ model ConversationMessage {
 // Collections System (Phase 3)
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: collection
 model Collection {
   id          String   @id @default(cuid())
   name        String
@@ -701,6 +725,7 @@ model Collection {
   @@map("collection")
 }
 
+// ctx: collection
 model CollectionItem {
   id            String   @id @default(cuid())
   collectionId  String   @map("collection_id")
@@ -717,6 +742,7 @@ model CollectionItem {
   @@map("collection_item")
 }
 
+// ctx: conversation
 model MessageAttachment {
   id            String  @id
   messageId     String  @map("message_id")
@@ -734,6 +760,7 @@ model MessageAttachment {
   @@map("message_attachment")
 }
 
+// ctx: session
 model StateTransition {
   id           String  @id
   entityType   String  @map("entity_type")
@@ -748,6 +775,7 @@ model StateTransition {
   @@map("state_transition")
 }
 
+// ctx: session
 model SessionCheckpoint {
   id             String @id
   vivimSessionId String @map("vivim_session_id")
@@ -760,6 +788,7 @@ model SessionCheckpoint {
   @@map("session_checkpoint")
 }
 
+// ctx: conversation
 model StreamBlock {
   id             String @id
   conversationId String @map("conversation_id")
@@ -786,6 +815,7 @@ model StreamBlock {
 // parse → log → analyze → repair → reparse.
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: provider
 model ParserExecutionLog {
   id             String  @id
   providerId     String  @map("provider_id")
@@ -821,6 +851,7 @@ model ParserExecutionLog {
 // SQLite has no native JSON/array, so structured fields are stored as JSON TEXT.
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: node
 model Node {
   id               String  @id
   type             String  @map("type")
@@ -902,6 +933,7 @@ model Node {
 
 // Version chain for a Node (mirrors OG temporal_log). Enables time-travel:
 // point-in-time reads (getNodeAtVersion) and full history (getNodeHistory).
+// ctx: node
 model NodeVersion {
   id            String @id
   nodeId        String @map("node_id")
@@ -921,6 +953,7 @@ model NodeVersion {
 
 // Entity alias -> canonical resolution (mirrors OG EntityAlias). Enables
 // contacts/entities to be merged under a single canonical node id.
+// ctx: node
 model NodeAlias {
   id          String @id
   aliasId     String @map("alias_id")
@@ -936,6 +969,7 @@ model NodeAlias {
 
 // Materialized edge table for efficient graph traversal (denormalized from
 // edgesJson). One row per directed edge. Mirrors the in-memory Edge shape.
+// ctx: node
 model NodeEdge {
   id             String  @id
   sourceId       String  @map("source_id")
@@ -956,6 +990,7 @@ model NodeEdge {
   @@map("node_edge")
 }
 
+// ctx: provider
 model ProviderManifestVersion {
   id            String  @id
   providerId    String  @map("provider_id")
@@ -974,6 +1009,7 @@ model ProviderManifestVersion {
   @@map("provider_manifest_version")
 }
 
+// ctx: provider
 model RegistrationEvent {
   id                String  @id
   providerId        String  @map("provider_id")
@@ -996,6 +1032,7 @@ model RegistrationEvent {
   @@map("registration_event")
 }
 
+// ctx: provider
 model ManifestDrift {
   id              String  @id
   providerId      String  @map("provider_id")
@@ -1019,6 +1056,7 @@ model ManifestDrift {
 // L6: Versioning Lifecycle
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: capability
 model CapabilityTaxonomyVersion {
   id                String  @id
   capabilityId      String  @map("capability_id")
@@ -1037,6 +1075,7 @@ model CapabilityTaxonomyVersion {
   @@map("capability_taxonomy_version")
 }
 
+// ctx: capability
 model BindingStatusLog {
   id                      String  @id
   bindingId               String  @map("binding_id")
@@ -1060,6 +1099,7 @@ model BindingStatusLog {
   @@map("binding_status_log")
 }
 
+// ctx: capability
 model ProgramVersionMetric {
   id               String  @id
   bindingId        String  @map("binding_id")
@@ -1097,6 +1137,7 @@ model ProgramVersionMetric {
 // L7: Telemetry Lifecycle
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: provider
 model ProviderHealthHistory {
   id                    String  @id
   providerId            String  @map("provider_id")
@@ -1129,6 +1170,7 @@ model ProviderHealthHistory {
   @@map("provider_health_history")
 }
 
+// ctx: telemetry
 model CapabilityTelemetry {
   id                    String  @id
   capabilityId          String  @map("capability_id")
@@ -1164,6 +1206,7 @@ model CapabilityTelemetry {
   @@map("capability_telemetry")
 }
 
+// ctx: capability
 model SelectorHealthHistory {
   id                 String @id
   selectorStrategyId String @map("selector_strategy_id")
@@ -1187,6 +1230,7 @@ model SelectorHealthHistory {
   @@map("selector_health_history")
 }
 
+// ctx: telemetry
 model TelemetrySummaryDaily {
   id                        String @id
   providerId                String @map("provider_id")
@@ -1219,6 +1263,7 @@ model TelemetrySummaryDaily {
   @@map("telemetry_summary_daily")
 }
 
+// ctx: provider
 model ManifestChangeLog {
   id                 String  @id
   providerId         String  @map("provider_id")
@@ -1242,6 +1287,7 @@ model ManifestChangeLog {
   @@map("manifest_change_log")
 }
 
+// ctx: telemetry
 model TelemetryCycleLog {
   id           String  @id
   scheduleName String  @map("schedule_name")
@@ -1258,6 +1304,7 @@ model TelemetryCycleLog {
 // L8: Config
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: config
 model ConfigEntry {
   id            String  @id
   engineId      String  @map("engine_id")
@@ -1275,6 +1322,7 @@ model ConfigEntry {
   @@map("config_entry")
 }
 
+// ctx: config
 model ConfigAudit {
   id       String  @id
   engineId String  @map("engine_id")
@@ -1296,6 +1344,7 @@ model ConfigAudit {
 // L9: Harness
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: harness
 model HarnessCheckpoint {
   id                String  @id
   slaveId           String  @map("slave_id")
@@ -1314,6 +1363,7 @@ model HarnessCheckpoint {
 }
 
 // ── Harness Command Registry (017-harness-command-registry) ──
+// ctx: harness
 model HarnessCommand {
   id               String @id
   commandId        String @map("command_id")
@@ -1330,6 +1380,7 @@ model HarnessCommand {
   @@map("harness_command")
 }
 
+// ctx: harness
 model RepairSession {
   id              String  @id
   conversationId  String? @map("conversation_id")
@@ -1347,6 +1398,7 @@ model RepairSession {
   @@map("repair_session")
 }
 
+// ctx: capability
 model CapabilityMacro {
   id          String  @id
   name        String
@@ -1367,6 +1419,7 @@ model CapabilityMacro {
 // L10: MCP Server Config
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: mcp
 model McpServerConfig {
   id        String @id
   name      String @unique
@@ -1383,6 +1436,7 @@ model McpServerConfig {
 // L11: Operations
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: health
 model HealthTick {
   id         String  @id
   providerId String  @map("provider_id")
@@ -1398,6 +1452,7 @@ model HealthTick {
   @@map("health_tick")
 }
 
+// ctx: health
 model CircuitBreakerState {
   id            String  @id
   slaveId       String  @map("slave_id")
@@ -1414,6 +1469,7 @@ model CircuitBreakerState {
   @@map("circuit_breaker_state")
 }
 
+// ctx: health
 model DriftEvent {
   id             String  @id
   providerId     String  @map("provider_id")
@@ -1430,6 +1486,7 @@ model DriftEvent {
   @@map("drift_event")
 }
 
+// ctx: health
 model FleetEvent {
   id            String  @id
   slaveId       String  @map("slave_id")
@@ -1445,6 +1502,7 @@ model FleetEvent {
   @@map("fleet_event")
 }
 
+// ctx: provider
 model ProviderHealth {
   id                  String  @id
   providerId          String  @map("provider_id")
@@ -1469,6 +1527,7 @@ model ProviderHealth {
   @@map("provider_health")
 }
 
+// ctx: ops
 model AutomationSchedule {
   id               String  @id
   name             String
@@ -1487,6 +1546,7 @@ model AutomationSchedule {
   @@map("automation_schedule")
 }
 
+// ctx: ops
 model AutomationRun {
   id          String  @id
   scheduleId  String  @map("schedule_id")
@@ -1502,6 +1562,7 @@ model AutomationRun {
   @@map("automation_run")
 }
 
+// ctx: health
 model AlertCondition {
   id         String  @id
   name       String
@@ -1521,6 +1582,7 @@ model AlertCondition {
   @@map("alert_condition")
 }
 
+// ctx: health
 model AlertEvent {
   id             String  @id
   conditionId    String  @map("condition_id")
@@ -1542,6 +1604,7 @@ model AlertEvent {
 // L12: Transfer & Learning
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: routing
 model RouteSpec {
   id           String @id
   name         String
@@ -1560,6 +1623,7 @@ model RouteSpec {
   @@map("route_spec")
 }
 
+// ctx: routing
 model RouteRequest {
   id             String  @id
   routeSpecId    String  @map("route_spec_id")
@@ -1574,6 +1638,7 @@ model RouteRequest {
   @@map("route_request")
 }
 
+// ctx: routing
 model RouteTarget {
   id          String  @id
   routeSpecId String  @map("route_spec_id")
@@ -1588,6 +1653,7 @@ model RouteTarget {
   @@map("route_target")
 }
 
+// ctx: routing
 model RouteEvent {
   id             String @id
   routeRequestId String @map("route_request_id")
@@ -1600,6 +1666,7 @@ model RouteEvent {
   @@map("route_event")
 }
 
+// ctx: routing
 model TransferPattern {
   id                String  @id
   fromProviderId    String  @map("from_provider_id")
@@ -1618,6 +1685,7 @@ model TransferPattern {
   @@map("transfer_pattern")
 }
 
+// ctx: routing
 model TransferCandidate {
   id                String @id
   transferPatternId String @map("transfer_pattern_id")
@@ -1631,6 +1699,7 @@ model TransferCandidate {
   @@map("transfer_candidate")
 }
 
+// ctx: routing
 model TransferAttempt {
   id                  String  @id
   transferCandidateId String  @map("transfer_candidate_id")
@@ -1645,6 +1714,7 @@ model TransferAttempt {
   @@map("transfer_attempt")
 }
 
+// ctx: routing
 model LearningEvent {
   id           String @id
   providerId   String @map("provider_id")
@@ -1659,6 +1729,7 @@ model LearningEvent {
   @@map("learning_event")
 }
 
+// ctx: config
 model Rule {
   id            String @id
   name          String
@@ -1673,6 +1744,7 @@ model Rule {
   @@map("rule")
 }
 
+// ctx: capability
 model BindingEvent {
   id        String @id
   bindingId String @map("binding_id")
@@ -1685,6 +1757,7 @@ model BindingEvent {
   @@map("binding_event")
 }
 
+// ctx: capability
 model FailureClassification {
   id              String  @id
   outcomeId       String  @map("outcome_id")
@@ -1702,6 +1775,7 @@ model FailureClassification {
 // L13: Testing
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: ops
 model TestRun {
   id           String  @id
   capabilityId String? @map("capability_id")
@@ -1720,6 +1794,7 @@ model TestRun {
 // L14: SOTA — Shape-Agnostic Registration (Phase 8)
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: capability
 model CapabilityShape {
   id                     String @id
   name                   String
@@ -1734,6 +1809,7 @@ model CapabilityShape {
   @@map("capability_shape")
 }
 
+// ctx: capability
 model CapabilityShapeBinding {
   id           String @id
   shapeId      String @map("shape_id")
@@ -1746,6 +1822,7 @@ model CapabilityShapeBinding {
   @@map("capability_shape_binding")
 }
 
+// ctx: provider
 model ProviderArchetype {
   id           String  @id
   shapeId      String  @map("shape_id")
@@ -1759,6 +1836,7 @@ model ProviderArchetype {
   @@map("provider_archetype")
 }
 
+// ctx: provider
 model ProviderShapeBinding {
   id          String  @id
   providerId  String  @map("provider_id")
@@ -1771,6 +1849,7 @@ model ProviderShapeBinding {
   @@map("provider_shape_binding")
 }
 
+// ctx: discovery
 model DiscoverySession {
   id                String  @id
   url               String
@@ -1788,6 +1867,7 @@ model DiscoverySession {
   @@map("discovery_session")
 }
 
+// ctx: discovery
 model DiscoveryResult {
   id           String  @id
   sessionId    String  @map("session_id")
@@ -1800,6 +1880,7 @@ model DiscoveryResult {
   @@map("discovery_result")
 }
 
+// ctx: mirror
 model MirrorState {
   id              String  @id
   conversationId  String  @unique @map("conversation_id")
@@ -1813,6 +1894,7 @@ model MirrorState {
   @@map("mirror_state")
 }
 
+// ctx: mirror
 model OptimisticUpdate {
   id                String  @id
   conversationId    String  @map("conversation_id")
@@ -1826,6 +1908,7 @@ model OptimisticUpdate {
   @@map("optimistic_update")
 }
 
+// ctx: mirror
 model LatencyMeasurement {
   id             String @id
   conversationId String @map("conversation_id")
@@ -1836,6 +1919,7 @@ model LatencyMeasurement {
   @@map("latency_measurement")
 }
 
+// ctx: mirror
 model MirrorSnapshot {
   id             String @id
   conversationId String @map("conversation_id")
@@ -1846,6 +1930,7 @@ model MirrorSnapshot {
   @@map("mirror_snapshot")
 }
 
+// ctx: mirror
 model ObservationEvent {
   id             String @id
   conversationId String @map("conversation_id")
@@ -1859,6 +1944,7 @@ model ObservationEvent {
 
 // ── Phase 9: SOTA Workflow ─────────────────────────────────────────────
 
+// ctx: workflow
 model WorkflowDefinition {
   id            String  @id
   name          String
@@ -1872,6 +1958,7 @@ model WorkflowDefinition {
   @@map("workflow_definition")
 }
 
+// ctx: workflow
 model WorkflowNode {
   id         String @id
   workflowId String @map("workflow_id")
@@ -1885,6 +1972,7 @@ model WorkflowNode {
   @@map("workflow_node")
 }
 
+// ctx: workflow
 model WorkflowEdge {
   id         String  @id
   workflowId String  @map("workflow_id")
@@ -1896,6 +1984,7 @@ model WorkflowEdge {
   @@map("workflow_edge")
 }
 
+// ctx: workflow
 model WorkflowExecution {
   id          String  @id
   workflowId  String  @map("workflow_id")
@@ -1908,6 +1997,7 @@ model WorkflowExecution {
   @@map("workflow_execution")
 }
 
+// ctx: workflow
 model WorkflowNodeExecution {
   id          String  @id
   executionId String  @map("execution_id")
@@ -1922,6 +2012,7 @@ model WorkflowNodeExecution {
   @@map("workflow_node_execution")
 }
 
+// ctx: workflow
 model WorkflowWebhook {
   id         String  @id
   workflowId String  @map("workflow_id")
@@ -1934,6 +2025,7 @@ model WorkflowWebhook {
   @@map("workflow_webhook")
 }
 
+// ctx: workflow
 model WorkflowCredential {
   id             String @id
   workflowId     String @map("workflow_id")
@@ -1949,6 +2041,7 @@ model WorkflowCredential {
 // L10: MCP Integration
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: mcp
 model McpTool {
   id              String  @id
   serverId        String  @map("server_id")
@@ -1960,6 +2053,7 @@ model McpTool {
   @@map("mcp_tool")
 }
 
+// ctx: mcp
 model McpToolCall {
   id         String  @id
   serverId   String  @map("server_id")
@@ -1977,6 +2071,7 @@ model McpToolCall {
 // L12: Memory
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: memory
 model EpisodicMemory {
   id           String  @id
   providerId   String  @map("provider_id")
@@ -1994,6 +2089,7 @@ model EpisodicMemory {
   @@map("episodic_memory")
 }
 
+// ctx: memory
 model SemanticMemory {
   id         String  @id
   subject    String
@@ -2008,6 +2104,7 @@ model SemanticMemory {
   @@map("semantic_memory")
 }
 
+// ctx: memory
 model ProceduralRule {
   id            String @id
   name          String
@@ -2023,6 +2120,7 @@ model ProceduralRule {
   @@map("procedural_rule")
 }
 
+// ctx: agent
 model AgentDecisionLog {
   id           String  @id
   agentId      String  @map("agent_id")
@@ -2041,6 +2139,7 @@ model AgentDecisionLog {
 // L15: Agent Loop
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: agent
 model AgentLoopRun {
   id          String  @id
   agentId     String  @map("agent_id")
@@ -2054,6 +2153,7 @@ model AgentLoopRun {
   @@map("agent_loop_run")
 }
 
+// ctx: agent
 model AgentStep {
   id         String  @id
   runId      String  @map("run_id")
@@ -2072,6 +2172,7 @@ model AgentStep {
 // L16: Sovereign Intelligence (Phase 15)
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: entity
 model Entity {
   id              String          @id
   name            String
@@ -2091,6 +2192,7 @@ model Entity {
   @@map("entity")
 }
 
+// ctx: entity
 model EntityMention {
   id             String @id
   entityId       String @map("entity_id")
@@ -2107,6 +2209,7 @@ model EntityMention {
   @@map("entity_mention")
 }
 
+// ctx: entity
 model DecisionRecord {
   id               String  @id
   conversationId   String  @map("conversation_id")
@@ -2121,6 +2224,7 @@ model DecisionRecord {
   @@map("decision_record")
 }
 
+// ctx: entity
 model PatternExtract {
   id          String @id
   name        String
@@ -2137,6 +2241,7 @@ model PatternExtract {
   @@map("pattern_extract")
 }
 
+// ctx: topic
 model Topic {
   id                String  @id
   name              String
@@ -2149,6 +2254,7 @@ model Topic {
   @@map("topic")
 }
 
+// ctx: topic
 model Project {
   id                String  @id
   name              String
@@ -2161,6 +2267,7 @@ model Project {
   @@map("project")
 }
 
+// ctx: conversation
 model ConversationTopic {
   id             String @id
   conversationId String @map("conversation_id")
@@ -2173,6 +2280,7 @@ model ConversationTopic {
   @@map("conversation_topic")
 }
 
+// ctx: sync
 model ImportJob {
   id          String  @id
   source      String  @map("import_source")
@@ -2188,6 +2296,7 @@ model ImportJob {
   @@map("import_job")
 }
 
+// ctx: memory
 model MemoryEmbedding {
   id          String @id
   entityType  String @map("entity_type")
@@ -2206,6 +2315,7 @@ model MemoryEmbedding {
 // L17: Provider Muxing (Upgrade — Phase 16)
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: mux
 model MuxSession {
   id                  String  @id
   message             String
@@ -2226,6 +2336,7 @@ model MuxSession {
   @@map("mux_session")
 }
 
+// ctx: mux
 model MuxResponseRow {
   id           String  @id
   muxSessionId String  @map("mux_session_id")
@@ -2245,6 +2356,7 @@ model MuxResponseRow {
   @@map("mux_response")
 }
 
+// ctx: routing
 model RoutingPreference {
   id           String @id
   capabilityId String @map("capability_id")
@@ -2258,6 +2370,7 @@ model RoutingPreference {
   @@map("routing_preference")
 }
 
+// ctx: telemetry
 model ProviderCostLog {
   id           String  @id
   providerId   String  @map("provider_id")
@@ -2271,6 +2384,7 @@ model ProviderCostLog {
   @@map("provider_cost_log")
 }
 
+// ctx: telemetry
 model ProviderLatencyLog {
   id           String  @id
   providerId   String  @map("provider_id")
@@ -2284,6 +2398,7 @@ model ProviderLatencyLog {
 
 // ── Phase 17: Context Assembly Tables ──────────────────────────────────────
 
+// ctx: context
 model SituationLog {
   id             String  @id
   conversationId String? @map("conversation_id")
@@ -2297,6 +2412,7 @@ model SituationLog {
   @@map("situation_log")
 }
 
+// ctx: context
 model ContextLayerRow {
   id             String @id
   conversationId String @map("conversation_id")
@@ -2312,6 +2428,7 @@ model ContextLayerRow {
   @@map("context_layer")
 }
 
+// ctx: context
 model TokenBudgetRow {
   id             String @id
   conversationId String @map("conversation_id")
@@ -2326,6 +2443,7 @@ model TokenBudgetRow {
 
 // ── Phase 18: Workspace Tables ──────────────────────────────────────────
 
+// ctx: workspace
 model WorkspaceMode {
   id         String @id
   userId     String @default("default") @map("user_id")
@@ -2337,6 +2455,7 @@ model WorkspaceMode {
   @@map("workspace_mode")
 }
 
+// ctx: workspace
 model UserPreference {
   id         String @id
   userId     String @default("default") @map("user_id")
@@ -2349,6 +2468,7 @@ model UserPreference {
   @@map("user_preference")
 }
 
+// ctx: workspace
 model PluginRegistry {
   id            String  @id
   name          String
@@ -2368,6 +2488,7 @@ model PluginRegistry {
   @@map("plugin_registry")
 }
 
+// ctx: memory
 model MemoryCurated {
   id         String  @id
   memoryType String  @map("memory_type")
@@ -2382,6 +2503,7 @@ model MemoryCurated {
   @@map("memory_curated")
 }
 
+// ctx: memory
 model MemoryFeedback {
   id         String  @id
   memoryType String  @map("memory_type")
@@ -2397,6 +2519,7 @@ model MemoryFeedback {
 
 // ── Phase 19: Autonomous Execution ──────────────────────────────────────
 
+// ctx: config
 model PolicyRule {
   id               String @id
   name             String
@@ -2416,6 +2539,7 @@ model PolicyRule {
   @@map("policy_rule")
 }
 
+// ctx: autonomous
 model AutonomousTask {
   id              String  @id
   goalJson        String  @map("goal_json")
@@ -2433,6 +2557,7 @@ model AutonomousTask {
   @@map("autonomous_task")
 }
 
+// ctx: autonomous
 model AutonomousStep {
   id                    String  @id
   taskId                String  @map("task_id")
@@ -2454,6 +2579,7 @@ model AutonomousStep {
   @@map("autonomous_step")
 }
 
+// ctx: autonomous
 model HitlGate {
   id           String  @id
   taskId       String  @map("task_id")
@@ -2478,6 +2604,7 @@ model HitlGate {
 
 // ── Phase 8.10: Task Templates ──────────────────────────────────────────
 
+// ctx: autonomous
 model TaskTemplate {
   id         String @id
   name       String @unique
@@ -2493,6 +2620,7 @@ model TaskTemplate {
 
 // ── Phase 20: Sovereign Data ─────────────────────────────────────────────
 
+// ctx: sync
 model SyncLog {
   id        String  @id
   deviceId  String  @map("device_id")
@@ -2508,6 +2636,7 @@ model SyncLog {
   @@map("sync_log")
 }
 
+// ctx: sync
 model SyncPeer {
   id         String  @id
   deviceId   String  @map("device_id")
@@ -2523,6 +2652,7 @@ model SyncPeer {
 
 // ── Phase 21: v1 Gap Closure — HpeSession ────────────────────────────────
 
+// ctx: autonomous
 model HpeSession {
   id          String  @id
   agentId     String  @map("agent_id")
@@ -2542,6 +2672,7 @@ model HpeSession {
 // Phase 0: Kernel Core — self-understanding layer
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: kernel
 model KernelSpan {
   id        String  @id
   traceId   String  @map("trace_id")
@@ -2562,6 +2693,7 @@ model KernelSpan {
   @@map("kernel_spans")
 }
 
+// ctx: kernel
 model KernelProvenance {
   id          String  @id
   traceId     String  @map("trace_id")
@@ -2580,6 +2712,7 @@ model KernelProvenance {
   @@map("kernel_provenance")
 }
 
+// ctx: kernel
 model KernelTopology {
   id        Int    @id @default(autoincrement())
   snapshot  String
@@ -2588,6 +2721,7 @@ model KernelTopology {
   @@map("kernel_topology")
 }
 
+// ctx: kernel
 model KernelEvent {
   id        Int     @id @default(autoincrement())
   kind      String
@@ -2606,6 +2740,7 @@ model KernelEvent {
 // synonyms, normalization rules). Expansion = add nodes/edges, no code edits.
 // ───────────────────────────────────────────────────────────────────────────
 
+// ctx: kernel
 model NlclGraphNode {
   id        String  @id
   kind      String
@@ -2618,6 +2753,7 @@ model NlclGraphNode {
   @@map("nlcl_graph_nodes")
 }
 
+// ctx: kernel
 model NlclGraphEdge {
   id        String  @id
   fromId    String  @map("from_id")
@@ -2637,6 +2773,7 @@ model NlclGraphEdge {
 // Stealth Core (Phase 11)
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: harness
 model StealthLaunchProfile {
   id               String  @id
   mode             String  @default("cdp_stealth")
@@ -2652,6 +2789,7 @@ model StealthLaunchProfile {
   @@map("stealth_launch_profile")
 }
 
+// ctx: harness
 model StealthModuleProfile {
   id          String @id
   name        String
@@ -2662,6 +2800,7 @@ model StealthModuleProfile {
   @@map("stealth_module_profile")
 }
 
+// ctx: harness
 model StealthPolicy {
   id                     String  @id @default("default")
   defaultLaunchProfileId String? @map("default_launch_profile_id")
@@ -2675,6 +2814,7 @@ model StealthPolicy {
 // Sandbox (Unit 31.1) — audit log for untrusted inline handler runs
 // ───────────────────────────────────────────────────────────────
 
+// ctx: kernel
 model SandboxAudit {
   id              String  @id
   handlerSlug     String  @map("handler_slug")
@@ -2687,6 +2827,7 @@ model SandboxAudit {
   @@map("sandbox_audit")
 }
 
+// ctx: health
 model HealthDigest {
   id          String @id
   day         String @unique @map("day")
@@ -2704,6 +2845,7 @@ model HealthDigest {
 
 // ── Group 1: Rich Message Content ────────────────────────────────────────
 
+// ctx: conversation
 model ContentUnit {
   id             String  @id
   messageId      String  @map("message_id")
@@ -2723,6 +2865,7 @@ model ContentUnit {
   @@map("content_unit")
 }
 
+// ctx: conversation
 model MessageLink {
   id              String @id
   sourceMessageId String @map("source_message_id")
@@ -2741,6 +2884,7 @@ model MessageLink {
   @@map("message_link")
 }
 
+// ctx: conversation
 model MessageEntity {
   id               String @id
   messageId        String @map("message_id")
@@ -2761,6 +2905,7 @@ model MessageEntity {
 
 // ── Group 2: Memory & Learning ───────────────────────────────────────────
 
+// ctx: memory
 model MemoryLink {
   id               String @id
   sourceMemoryType String @map("source_memory_type")
@@ -2778,6 +2923,7 @@ model MemoryLink {
   @@map("memory_link")
 }
 
+// ctx: memory
 model MemoryAccess {
   id           String  @id
   memoryType   String  @map("memory_type")
@@ -2794,6 +2940,7 @@ model MemoryAccess {
   @@map("memory_access")
 }
 
+// ctx: memory
 model ReflectionLog {
   id             String  @id
   providerId     String? @map("provider_id")
@@ -2813,6 +2960,7 @@ model ReflectionLog {
 
 // ── Group 3: Context Assembly ────────────────────────────────────────────
 
+// ctx: context
 model ContextBudgetConfig {
   id                   String @id
   userId               String @default("default") @map("user_id")
@@ -2836,6 +2984,7 @@ model ContextBudgetConfig {
   @@map("context_budget_config")
 }
 
+// ctx: context
 model SituationDetection {
   id                String  @id
   conversationId    String? @map("conversation_id")
@@ -2857,6 +3006,7 @@ model SituationDetection {
 // Backing tables for ProviderTypeStore / PrimitiveStore / UiComponentStore.
 // See docs/vivim-canvas/implementation/10-conceptual-matrix.md §3.
 
+// ctx: ui-system
 model ProviderType {
   id                     String  @id
   slug                   String  @unique @map("slug")
@@ -2875,6 +3025,7 @@ model ProviderType {
   @@map("provider_type")
 }
 
+// ctx: ui-system
 model Primitive {
   id                String  @id
   scope             String  @map("scope")
@@ -2896,6 +3047,7 @@ model Primitive {
   @@map("primitive")
 }
 
+// ctx: ui-system
 model UiComponent {
   id                String  @id
   primitiveId       String  @map("primitive_id")
@@ -2929,6 +3081,7 @@ model UiComponent {
 
 // ── User Identity ───────────────────────────────────────────────────────────
 
+// ctx: workspace
 model User {
   id            String  @id
   displayName   String  @map("display_name")
@@ -2947,6 +3100,7 @@ model User {
   @@map("user")
 }
 
+// ctx: workspace
 model UserOnboarding {
   id              String  @id @default(cuid())
   userId          String  @unique @map("user_id")
@@ -2964,6 +3118,7 @@ model UserOnboarding {
 
 // ── Workflow Engine storage ──────────────────────────────────────────────
 
+// ctx: workflow
 model WorkflowRetryQueue {
   id              String @id
   nodeExecutionId String @map("node_execution_id")
@@ -2977,6 +3132,7 @@ model WorkflowRetryQueue {
   @@map("workflow_retry_queue")
 }
 
+// ctx: workflow
 model WorkflowVersion {
   id             String @id
   workflowId     String @map("workflow_id")
@@ -2996,6 +3152,7 @@ model WorkflowVersion {
 // ═══════════════════════════════════════════════════════════════════
 
 // ── Agent builder pipeline (human_led / agent_led) ──────────────────
+// ctx: agent-def
 model AgentBuilderRun {
   id              String  @id
   initiatorJson   String  @map("initiator_json") // ActorRef JSON
@@ -3015,6 +3172,7 @@ model AgentBuilderRun {
 }
 
 // ── Mid-run task inbox (asap / when_idle) ────────────────────────────
+// ctx: agent-def
 model RunInbox {
   id          String @id
   runId       String @map("run_id")
@@ -3029,6 +3187,7 @@ model RunInbox {
 }
 
 // ── Audited UI↔agent/role hot-swap binding ──────────────────────────
+// ctx: agent-def
 model SlotBinding {
   id           String  @id
   slotId       String  @map("slot_id")
@@ -3048,6 +3207,7 @@ model SlotBinding {
 // ── Durable event outbox (source-tagged, hash-chained) ───────────────
 // Shared substrate: OpenCode + browser fleet + capability layer all write here.
 // This is the single source of truth for cross-surface event replay.
+// ctx: agent-def
 model EventRecord {
   id                String  @id
   source            String // opencode|browser_fleet|capability|...
@@ -3067,6 +3227,7 @@ model EventRecord {
 }
 
 // ── OpenCode supervision extension of ProviderSession ────────────────
+// ctx: agent
 model AgentSession {
   id                String  @id
   providerSessionId String  @unique @map("provider_session_id")
@@ -3089,6 +3250,7 @@ model AgentSession {
 }
 
 // ── Governor-owned permission decisions ──────────────────────────────
+// ctx: agent
 model AgentPermissionDecision {
   id                   String  @id
   agentSessionId       String  @map("agent_session_id")
@@ -3109,6 +3271,7 @@ model AgentPermissionDecision {
 }
 
 // ── Filesystem truth from /session/:id/diff ──────────────────────────
+// ctx: agent
 model AgentFileEdit {
   id             String  @id
   agentSessionId String  @map("agent_session_id")
@@ -3126,6 +3289,7 @@ model AgentFileEdit {
 }
 
 // ── Versioned agent / permission presets as data ─────────────────────
+// ctx: agent-def
 model AgentDefinition {
   id              String  @id
   name            String  @unique
@@ -3141,6 +3305,7 @@ model AgentDefinition {
 }
 
 // ── Command Language: NLP description + patterns ────────────────────
+// ctx: ops
 model CommandDescription {
   id          String  @id
   commandId   String  @unique @map("command_id")
@@ -3160,6 +3325,7 @@ model CommandDescription {
 }
 
 // ── Onboarding pipeline: Provider auto-onboarding ─────────────────────
+// ctx: discovery
 model ProviderOnboardingSession {
   id                      String          @id @default(cuid())
   providerId              String?
@@ -3188,6 +3354,7 @@ model ProviderOnboardingSession {
   @@map("provider_onboarding_session")
 }
 
+// ctx: discovery
 model DiscoveredDomEntity {
   id           String                    @id @default(cuid())
   sessionId    String
@@ -3202,6 +3369,7 @@ model DiscoveredDomEntity {
   @@map("discovered_dom_entity")
 }
 
+// ctx: discovery
 model ProtocolFingerprint {
   id                String                    @id @default(cuid())
   sessionId         String
@@ -3217,6 +3385,7 @@ model ProtocolFingerprint {
   @@map("protocol_fingerprint")
 }
 
+// ctx: discovery
 model ParserCandidate {
   id                    String                    @id @default(cuid())
   sessionId             String
@@ -3234,6 +3403,7 @@ model ParserCandidate {
   @@map("parser_candidate")
 }
 
+// ctx: discovery
 model ParserTestResult {
   id                String          @id @default(cuid())
   parserCandidateId String
@@ -3245,6 +3415,7 @@ model ParserTestResult {
   @@map("parser_test_result")
 }
 
+// ctx: discovery
 model WebAppTaxonomy {
   id                     String   @id @default(cuid())
   slug                   String   @unique
@@ -3264,6 +3435,7 @@ model WebAppTaxonomy {
   @@map("webapp_taxonomy")
 }
 
+// ctx: discovery
 model TaxonomyGenerationRun {
   id                  String                    @id @default(cuid())
   taxonomyId          String
@@ -3279,6 +3451,7 @@ model TaxonomyGenerationRun {
 }
 
 // ── Reprogrammability: Surface versioning ─────────────────────────────
+// ctx: ui-system
 model SurfaceVersion {
   id         String   @id @default(cuid())
   surfaceId  String
@@ -3294,6 +3467,7 @@ model SurfaceVersion {
 }
 
 // ── Workspace management ──────────────────────────────────────────────
+// ctx: workspace
 model WorkspaceBackup {
   id           String   @id @default(cuid())
   snapshotJson String
@@ -3304,6 +3478,7 @@ model WorkspaceBackup {
   @@map("workspace_backup")
 }
 
+// ctx: workspace
 model WorkspaceTemplateRow {
   id          String   @id @default(cuid())
   name        String
@@ -3323,6 +3498,7 @@ model WorkspaceTemplateRow {
 
 // ── Cross-Cutting Schema ──────────────────────────────────────────────────
 
+// ctx: webapp
 model EntityContainer {
   id                String  @id
   providerId        String  @map("provider_id")
@@ -3358,6 +3534,7 @@ model EntityContainer {
   @@map("entity_container")
 }
 
+// ctx: webapp
 model EntityContainerMembership {
   id                     String  @id
   containerId            String  @map("container_id")
@@ -3377,6 +3554,7 @@ model EntityContainerMembership {
   @@map("entity_container_membership")
 }
 
+// ctx: webapp
 model ContentItem {
   id                   String  @id
   providerId           String  @map("provider_id")
@@ -3432,6 +3610,7 @@ model ContentItem {
   @@map("content_item")
 }
 
+// ctx: webapp
 model Notification {
   id               String  @id
   providerId       String  @map("provider_id")
@@ -3460,6 +3639,7 @@ model Notification {
   @@map("notification")
 }
 
+// ctx: webapp
 model Contact {
   id               String  @id
   providerId       String  @map("provider_id")
@@ -3491,6 +3671,7 @@ model Contact {
   @@map("contact")
 }
 
+// ctx: webapp
 model ContactIdentity {
   id                 String @id
   canonicalContactId String @map("canonical_contact_id")
@@ -3507,6 +3688,7 @@ model ContactIdentity {
   @@map("contact_identity")
 }
 
+// ctx: sync
 model SyncState {
   id            String  @id
   providerId    String  @map("provider_id")
@@ -3536,6 +3718,7 @@ model SyncState {
   @@map("sync_state")
 }
 
+// ctx: webapp
 model MediaAttachment {
   id                 String  @id
   providerId         String  @map("provider_id")
@@ -3569,6 +3752,7 @@ model MediaAttachment {
   @@map("media_attachment")
 }
 
+// ctx: webapp
 model ProviderCapabilityTaxonomy {
   id                    String @id
   providerId            String @map("provider_id")
@@ -3597,6 +3781,7 @@ model ProviderCapabilityTaxonomy {
 
 // ── Discord Extensions ────────────────────────────────────────────────────
 
+// ctx: platform-ext
 model DiscordVoiceState {
   id                      String  @id
   containerId             String  @map("container_id") // guild/channel ID
@@ -3620,6 +3805,7 @@ model DiscordVoiceState {
   @@map("discord_voice_state")
 }
 
+// ctx: platform-ext
 model DiscordMemberMeta {
   id                         String  @id
   containerId                String  @map("container_id") // guild ID
@@ -3641,6 +3827,7 @@ model DiscordMemberMeta {
 
 // ── Slack Extensions ──────────────────────────────────────────────────────
 
+// ctx: platform-ext
 model SlackChannelMeta {
   id            String  @id
   containerId   String  @map("container_id") // channel ID
@@ -3662,6 +3849,7 @@ model SlackChannelMeta {
   @@map("slack_channel_meta")
 }
 
+// ctx: platform-ext
 model SlackThreadMeta {
   id             String  @id
   containerId    String  @map("container_id") // channel ID
@@ -3681,6 +3869,7 @@ model SlackThreadMeta {
 
 // ── WhatsApp Extensions ───────────────────────────────────────────────────
 
+// ctx: platform-ext
 model WhatsAppEncryptionMeta {
   id             String  @id
   containerId    String  @map("container_id") // chat ID
@@ -3699,6 +3888,7 @@ model WhatsAppEncryptionMeta {
   @@map("whatsapp_encryption_meta")
 }
 
+// ctx: platform-ext
 model WhatsAppContactMeta {
   id                  String  @id
   contactId           String  @map("contact_id")
@@ -3723,6 +3913,7 @@ model WhatsAppContactMeta {
 
 // ── Reddit Extensions ─────────────────────────────────────────────────────
 
+// ctx: platform-ext
 model RedditSubredditMeta {
   id               String  @id
   containerId      String  @map("container_id") // subreddit ID
@@ -3743,6 +3934,7 @@ model RedditSubredditMeta {
   @@map("reddit_subreddit_meta")
 }
 
+// ctx: platform-ext
 model RedditPostMeta {
   id            String  @id
   contentItemId String  @map("content_item_id")
@@ -3773,6 +3965,7 @@ model RedditPostMeta {
 
 // ── Notion Extensions ─────────────────────────────────────────────────────
 
+// ctx: platform-ext
 model NotionBlockMeta {
   id            String  @id
   contentItemId String  @map("content_item_id")
@@ -3791,6 +3984,7 @@ model NotionBlockMeta {
   @@map("notion_block_meta")
 }
 
+// ctx: platform-ext
 model NotionDatabaseMeta {
   id             String  @id
   contentItemId  String  @map("content_item_id")
@@ -3810,6 +4004,7 @@ model NotionDatabaseMeta {
   @@map("notion_database_meta")
 }
 
+// ctx: platform-ext
 model NotionPageMeta {
   id             String  @id
   contentItemId  String  @map("content_item_id")
@@ -3834,6 +4029,7 @@ model NotionPageMeta {
 // L4: Conversation History Sync
 // ═══════════════════════════════════════════════════════════════════
 
+// ctx: sync
 model ConversationSyncState {
   id                  String  @id
   providerId          String  @map("provider_id")
@@ -3857,6 +4053,7 @@ model ConversationSyncState {
   @@map("conversation_sync_state")
 }
 
+// ctx: sync
 model ConversationSyncLog {
   id                  String  @id
   providerId          String  @map("provider_id")
@@ -3878,12 +4075,12 @@ model ConversationSyncLog {
 }
 
 // ── AI Gateway (src/ai/) — additive tables for AI execution persistence ────────
-// ctx: ai-gateway. These tables are SEPARATE from ProviderDefinition/ProviderModel
+// These tables are SEPARATE from ProviderDefinition/ProviderModel
 // (CDP providers) per bounded coexistence [AUDIT R-10]. No cross-write.
 // Added Round 3 (2026-08-08) for AIExecutionStore persistence.
 
+// ctx: ai-gateway
 model AIExecution {
-  // ctx: ai-gateway
   id        String  @id // ExecutionId (ULID)
   requestId String  @map("request_id") // RequestId (ULID)
   sessionId String? @map("session_id") // SessionId, if request had one
@@ -3916,6 +4113,7 @@ model AIExecution {
   @@map("ai_execution")
 }
 
+// ctx: ai-gateway
 model AIExecutionEvent {
   // ctx: ai-gateway
   id          String @id // EventId (ULID)
@@ -3932,6 +4130,7 @@ model AIExecutionEvent {
   @@map("ai_execution_event")
 }
 
+// ctx: ai-gateway
 model AIProviderInstance {
   // ctx: ai-gateway — gateway-local provider registry (separate identity namespace
   // from ProviderDefinition which holds CDP providers). No cross-write [AUDIT R-10].

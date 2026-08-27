@@ -139,7 +139,7 @@ export class PortReaper {
     const ms = intervalMs ?? this.opts.periodicIntervalMs
     this.periodicTimer = setInterval(() => {
       this.reap().catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }, ms)
   }
 

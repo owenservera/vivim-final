@@ -2,12 +2,12 @@
 // Integration: AutomationScheduler + CapabilityEventBus + event triggers
 
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { AutomationScheduler } from '../../../src/automation/scheduler.js'
 import type {
   AutomationRunRow,
   AutomationScheduleRow,
   AutomationStore,
 } from '../../../src/automation/scheduler.js'
+import { AutomationScheduler } from '../../../src/automation/scheduler.js'
 import { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
 
 function makeAutomationStore() {

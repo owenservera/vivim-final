@@ -57,7 +57,7 @@ export class WebhookRouter {
         input = body
       }
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Non-JSON body is ok — use empty input
     }
 

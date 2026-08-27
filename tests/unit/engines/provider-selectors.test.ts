@@ -4,11 +4,11 @@
 import { describe, expect, it } from 'bun:test'
 import {
   COMPOSER_SELECTORS,
-  PROVIDER_URLS,
-  PROVIDER_URL_PATTERNS,
-  SEND_BUTTON_SELECTORS,
   findComposerHeuristic,
   findWorkingSelector,
+  PROVIDER_URL_PATTERNS,
+  PROVIDER_URLS,
+  SEND_BUTTON_SELECTORS,
   waitForSelector,
 } from '../../../src/engines/provider-selectors.js'
 

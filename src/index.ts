@@ -358,7 +358,10 @@ export { registerStreamingChannelCaps } from './engines/streaming-channel-caps.j
 export type { SyncConfig, SyncLogEntry, SyncPeer, SyncResult, SyncStore } from './engines/sync.js'
 export { SyncEngine } from './engines/sync.js'
 export { TelemetryAggregator } from './engines/telemetry-aggregator.js'
-export type { AuditReport, NetworkCallRecord } from './engines/telemetry-audit.js'
+export type {
+  AuditReport as TelemetryAuditReport,
+  NetworkCallRecord,
+} from './engines/telemetry-audit.js'
 export { TelemetryAudit } from './engines/telemetry-audit.js'
 export type {
   CapabilityContext,

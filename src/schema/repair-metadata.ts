@@ -30,11 +30,7 @@ export function getRepairMetadata(schema: z.ZodType): RepairMetadata | undefined
 // Each returns the Zod type and registers its metadata in the side-table.
 
 export function repairString(
-  opts: {
-    aliases?: string[]
-    default?: string
-    coerce?: boolean
-  } = {},
+  opts: { aliases?: string[]; default?: string; coerce?: boolean } = {},
 ): z.ZodString {
   const schema = z.string().min(1)
   registerRepair(schema, {
@@ -46,12 +42,7 @@ export function repairString(
 }
 
 export function repairNumber(
-  opts: {
-    aliases?: string[]
-    default?: number
-    min?: number
-    max?: number
-  } = {},
+  opts: { aliases?: string[]; default?: number; min?: number; max?: number } = {},
 ): z.ZodNumber {
   const schema = z.coerce
     .number()
@@ -62,14 +53,11 @@ export function repairNumber(
     coerceFrom: [z.string()],
     defaultValue: opts.default,
   })
-  return schema
+  return schema as unknown as z.ZodNumber
 }
 
 export function repairBoolean(
-  opts: {
-    aliases?: string[]
-    default?: boolean
-  } = {},
+  opts: { aliases?: string[]; default?: boolean } = {},
 ): z.ZodDefault<z.ZodBoolean> {
   const schema = z.coerce.boolean().default(opts.default ?? true)
   registerRepair(schema, {
@@ -77,5 +65,5 @@ export function repairBoolean(
     coerceFrom: [z.string(), z.number()],
     defaultValue: opts.default,
   })
-  return schema
+  return schema as unknown as z.ZodDefault<z.ZodBoolean>
 }

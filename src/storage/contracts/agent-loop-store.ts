@@ -18,11 +18,7 @@ export interface AgentLoopRunRow {
 }
 
 export interface AgentLoopStore {
-  createRun(input: {
-    runId: string
-    slaveId: string
-    goal: string
-  }): Promise<AgentLoopRunRow>
+  createRun(input: { runId: string; slaveId: string; goal: string }): Promise<AgentLoopRunRow>
   appendStep(runId: string, step: AgentStep): Promise<void>
   finishRun(
     runId: string,

@@ -13,7 +13,9 @@ import { getLogger } from '../lib/logger.js'
 import type { BootstrapServices } from './capability-bootstrap.js'
 
 const log = getLogger('capability-bootstrap-generated')
+
 import { makeCapability } from './capability-bootstrap.js'
+import type { ImportSource } from './knowledge-ingestion.js'
 import type { UnifiedCapability, UnifiedCapabilityRegistry } from './unified-registry.js'
 
 // ── Taxonomy pool type ────────────────────────────────────────────────────
@@ -71,6 +73,7 @@ export function extendHandlerMap(slug: string, handler: UnifiedCapability['handl
 }
 
 function createHandlerMap(
+  registry: UnifiedCapabilityRegistry,
   services: BootstrapServices,
 ): Record<string, UnifiedCapability['handler']> {
   const base: Record<string, UnifiedCapability['handler']> = {
@@ -122,7 +125,10 @@ function createHandlerMap(
       if (!query) return []
       try {
         return (
-          (await services.semanticSearch?.search(query, { limit: Number(input.limit ?? 10) })) ?? []
+          (await services.semanticSearch?.search({
+            text: query,
+            limit: Number(input.limit ?? 10),
+          })) ?? []
         )
       } catch {
         return []
@@ -132,8 +138,13 @@ function createHandlerMap(
       const content = String(input.content ?? input.text ?? '')
       if (!content) return { ok: false, error: 'content is required' }
       try {
-        const jobId = await services.knowledgeIngestion?.ingest(content, {
-          source: String(input.source ?? 'cli'),
+        const jobId = await services.knowledgeIngestion?.ingest({
+          source: String(input.source ?? 'generic') as ImportSource,
+          filePath: String(input.filePath ?? input.content ?? ''),
+          deduplicate: Boolean(input.deduplicate ?? true),
+          extractEntities: Boolean(input.extractEntities ?? true),
+          extractDecisions: Boolean(input.extractDecisions ?? false),
+          generateEmbeddings: Boolean(input.generateEmbeddings ?? true),
         })
         return { ok: true, jobId: jobId ?? 'pending' }
       } catch {
@@ -145,8 +156,11 @@ function createHandlerMap(
       if (!question) return { answer: '', sources: [], confidence: 0 }
       try {
         return (
-          (await services.synthesizer?.synthesize(question, {
+          (await services.synthesizer?.synthesize({
+            question,
+            scope: {},
             maxSources: Number(input.maxSources ?? 5),
+            synthesisStyle: 'summary',
           })) ?? { answer: '', sources: [], confidence: 0 }
         )
       } catch {
@@ -160,7 +174,7 @@ function createHandlerMap(
       if (!query) return { results: [] }
       try {
         return (
-          (await services.memoryEngine?.query(query, { limit: Number(input.limit ?? 10) })) ?? {
+          (await services.memoryEngine?.recallEpisodes({ limit: Number(input.limit ?? 10) })) ?? {
             results: [],
           }
         )
@@ -170,8 +184,11 @@ function createHandlerMap(
     },
     memory_assert: async (input) => {
       try {
-        await services.memoryEngine?.assert(String(input.key ?? ''), String(input.value ?? ''), {
-          namespace: String(input.namespace ?? 'default'),
+        await services.memoryEngine?.assertFact({
+          subject: String(input.subject ?? input.key ?? ''),
+          predicate: String(input.predicate ?? 'is'),
+          object: input.object ?? input.value ?? '',
+          source: String(input.source ?? 'capability'),
         })
         return { ok: true }
       } catch {
@@ -180,9 +197,7 @@ function createHandlerMap(
     },
     memory_forget: async (input) => {
       try {
-        await services.memoryEngine?.forget(String(input.key ?? ''), {
-          namespace: String(input.namespace ?? 'default'),
-        })
+        await services.memoryEngine?.forgetFact(String(input.key ?? input.id ?? ''))
         return { ok: true }
       } catch {
         return { ok: true }
@@ -222,8 +237,7 @@ function createHandlerMap(
       }
     },
     system_status: async () => {
-      const caps = (await import('./unified-registry.js')).getRegistry?.()
-      const count = caps?.size ?? 0
+      const count = registry.list().length
       return {
         ok: true,
         capabilities: count,
@@ -264,7 +278,7 @@ export function registerGeneratedCapabilities(
   services: BootstrapServices,
 ): void {
   const pool = loadPool()
-  const handlerMap = createHandlerMap(services)
+  const handlerMap = createHandlerMap(registry, services)
 
   let registered = 0
   let skipped = 0

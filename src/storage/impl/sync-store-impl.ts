@@ -35,7 +35,7 @@ export interface SyncStateRow {
 export class SyncStoreImpl {
   protected readonly prisma: PrismaClient
 
-  constructor(private readonly db: CapStoreDb) {
+  constructor(readonly db: CapStoreDb) {
     this.prisma = db.prisma
   }
 

@@ -41,15 +41,15 @@ export function jsonSchemaToZod(schema: CliCapability['inputSchema']): z.ZodType
       case 'array': {
         // Support typed arrays when items schema is available
         const items = (def as { items?: { type: string } }).items
-        let itemZod = z.string()
+        let itemZod: z.ZodTypeAny = z.string()
         if (items?.type === 'number' || items?.type === 'integer') itemZod = z.number()
         else if (items?.type === 'boolean') itemZod = z.boolean()
-        else if (items?.type === 'object') itemZod = z.record(z.any())
+        else if (items?.type === 'object') itemZod = z.record(z.string(), z.any())
         zod = z.array(itemZod)
         break
       }
       case 'object':
-        zod = z.record(z.any())
+        zod = z.record(z.string(), z.any())
         break
       default:
         zod = z.string()
@@ -77,9 +77,7 @@ export function syncCliFromUnified(
     const names = [cli.name, ...(cli.aliases ?? [])]
     for (const name of names) {
       if (seen.has(name)) {
-        // [audit] removed: console.warn(
-          `[cli-bridge] alias collision: "${name}" already registered (skipping ${cap.slug})`,
-        )
+        // [audit] removed: console.warn — alias collision
         skipped++
         continue
       }

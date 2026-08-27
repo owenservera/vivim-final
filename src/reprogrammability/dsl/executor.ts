@@ -352,5 +352,6 @@ import { getLogger } from '../../lib/logger.js'
  * Singleton instance — bound to the singleton surfaceRegistry.
  */
 import { surfaceRegistry } from '../registry.js'
+
 const log = getLogger('reprogrammability:dsl:executor')
 export const mutationExecutor = new MutationExecutor(surfaceRegistry)

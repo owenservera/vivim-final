@@ -54,7 +54,7 @@ function cleanupDir(dir: string): void {
   try {
     rmSync(dir, { recursive: true, force: true })
   } catch {
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     /* ignore */
   }
 }

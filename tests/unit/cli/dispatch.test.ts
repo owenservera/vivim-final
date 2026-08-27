@@ -4,8 +4,8 @@
 //   - syncCliFromUnified warns + skips on alias collisions (was silent overwrite)
 import { describe, expect, it } from 'bun:test'
 import { z } from 'zod'
-import { CommandRegistry } from '../../../src/cli/command-registry.js'
 import type { CliCommand } from '../../../src/cli/command-registry.js'
+import { CommandRegistry } from '../../../src/cli/command-registry.js'
 import { syncCliFromUnified } from '../../../src/cli/commands/registry-bridge.js'
 
 function makeCmd(name: string, subsystem: CliCommand['subsystem'] = 'cap-store'): CliCommand {
@@ -73,10 +73,7 @@ describe('syncCliFromUnified collision guard', () => {
 
   it('registers non-colliding aliases without warning', () => {
     const warned: string[] = []
-    // [audit] removed: const origWarn = console.warn
-    // [audit] removed: console.warn = (m: string) => {
-      warned.push(m)
-    }
+    // [audit] removed: console.warn capture
     try {
       const r = new CommandRegistry()
       const reg = fakeRegistry([
@@ -104,16 +101,13 @@ describe('syncCliFromUnified collision guard', () => {
       expect(r.find('srm')).toBeDefined()
       expect(warned).toHaveLength(0)
     } finally {
-      // [audit] removed: console.warn = origWarn
+      // [audit] removed: console.warn restore
     }
   })
 
   it('warns and skips duplicate alias instead of overwriting', () => {
     const warned: string[] = []
-    // [audit] removed: const origWarn = console.warn
-    // [audit] removed: console.warn = (m: string) => {
-      warned.push(m)
-    }
+    // [audit] removed: console.warn capture
     try {
       const r = new CommandRegistry()
       const reg = fakeRegistry([
@@ -139,7 +133,7 @@ describe('syncCliFromUnified collision guard', () => {
       expect(r.find('sm')?.description).toBe('cmd send message')
       expect(warned.some((w) => w.includes('alias collision'))).toBe(true)
     } finally {
-      // [audit] removed: console.warn = origWarn
+      // [audit] removed: console.warn restore
     }
   })
 })

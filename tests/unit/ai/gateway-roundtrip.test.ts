@@ -5,13 +5,13 @@
 import { describe, expect, it } from 'bun:test'
 import {
   type AIRequest,
+  createGateway,
+  createRequestId,
   SIMULATOR_MANIFEST,
   SIMULATOR_MODEL,
   SIMULATOR_MODEL_ID,
   SIMULATOR_PROVIDER_ID,
   SimulatorAdapter,
-  createGateway,
-  createRequestId,
 } from '../../../src/ai/index.js'
 
 async function setupGatewayWithSimulator() {

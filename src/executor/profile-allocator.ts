@@ -6,7 +6,7 @@
 // is the authenticated one. See specs/033-profile-cleanup/.
 
 import { existsSync, lstatSync } from 'node:fs'
-import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { catchDebug } from '../lib/catch-logger.js'
 

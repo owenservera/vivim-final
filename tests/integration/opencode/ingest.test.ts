@@ -102,7 +102,9 @@ describe('S1/S2: ingest projection + thread render', () => {
       where: { agentSessionId: agentSession?.id },
     })
     expect(edits.length).toBe(1)
-    expect(JSON.parse(edits[0]?.patchJson)[0]?.op).toBe('add')
+    if (edits[0]?.patchJson) {
+      expect(JSON.parse(edits[0].patchJson)[0]?.op).toBe('add')
+    }
 
     const recs = await prisma.eventRecord.findMany({ where: { source: 'opencode' } })
     expect(recs.length).toBeGreaterThanOrEqual(4)

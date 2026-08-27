@@ -384,7 +384,7 @@ export class MigrationRunner {
 
     for (const [id, step] of this.migrations) {
       const record = this.records.get(id)
-      if (!record || record.status !== 'completed') continue
+      if (record?.status !== 'completed') continue
 
       const currentChecksum = await computeChecksum(step, 'up')
       if (record.checksum !== currentChecksum) {

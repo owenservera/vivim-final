@@ -18,8 +18,8 @@ import { type CdpWatchdog, setupWatchdog } from '../cdp-watchdog.js'
 import { submitMessage, typeMessage } from '../composer-typing.js'
 import { AsyncMutex } from './async-mutex.js'
 import type {
-  CDPTransport,
   CaptureResult,
+  CDPTransport,
   ChromeSlave,
   GovernorEventBus,
   HarnessDAG,
@@ -33,6 +33,9 @@ export class CDPProxy {
   /** Watchdog instances per slave for dialog/crash recovery. */
   private watchdogs = new Map<string, CdpWatchdog>()
 
+  /** Boot-loaded capability snapshot (source of truth for execution). */
+  private capabilitySnapshot?: CapabilitySnapshot
+
   constructor(
     private slaveGetter: () => Map<string, ChromeSlave>,
     private mutexes: Map<string, AsyncMutex>,
@@ -45,9 +48,6 @@ export class CDPProxy {
   private get slaves(): Map<string, ChromeSlave> {
     return this.slaveGetter()
   }
-
-  /** 019 — in-memory snapshot of DB-backed capabilities, loaded at boot. */
-  private capabilitySnapshot?: CapabilitySnapshot
 
   /** Wire the boot-loaded capability snapshot (source of truth for execution). */
   setCapabilitySnapshot(snapshot: CapabilitySnapshot): void {
@@ -266,7 +266,7 @@ export class CDPProxy {
             await this.transport
               ?.send(slaveId, 'Target.activateTarget', { targetId: params.targetId })
               .catch(() => {})
-  // [audit] log the error with context here
+            // [audit] log the error with context here
             stepsCompleted++
             break
           }

@@ -272,7 +272,7 @@ describe('ChatGPTAdapter', () => {
       expect(result?.title).toBe('My Chat')
       expect(result?.messages).toHaveLength(3)
       // Messages sorted by timestamp
-      const msgs = result?.messages
+      const msgs = result?.messages ?? []
       expect(msgs[0]?.role).toBe('system')
       expect(msgs[0]?.content).toBe('You are helpful.')
       expect(msgs[1]?.role).toBe('user')

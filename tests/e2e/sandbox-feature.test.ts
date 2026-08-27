@@ -7,7 +7,7 @@ describe.skip('Sandbox System E2E (web scaffold not implemented)', () => {
     try {
       await createServer(9421)
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // Server may fail if Chrome not available - that's okay for this test
     }
   })

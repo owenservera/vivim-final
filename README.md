@@ -167,23 +167,30 @@ The system is built around **13 core engines** organized in layers, with 455+ en
 4. The response streams back in real-time
 5. Everything is persisted to a local SQLite database
 
-See [Architecture Docs](docs/architecture/OVERVIEW.md) for the full picture.
+See [Architecture Docs](docs/architecture/overview.md) for the full picture.
 
 ---
 
 ## Documentation
 
+Full documentation at [docs/](docs/)
+
 | Area | Document | What It Covers |
 |------|----------|----------------|
-| **Architecture** | [Overview](docs/architecture/OVERVIEW.md) | 30-second mental model |
-| | [Engines](docs/architecture/ENGINES.md) | Every engine and its code path |
-| | [Data](docs/architecture/DATA.md) | Schema, Node model, store contracts |
-| | [API](docs/architecture/API.md) | Routes, WebSocket, surfaces |
-| | [Frontend](docs/architecture/FRONTEND.md) | React UI, canvas, slots |
-| **Runbooks** | [Dev](docs/runbooks/DEV.md) | Local development |
-| | [Desktop](docs/runbooks/DESKTOP.md) | Tauri build & testing |
-| | [Providers](docs/runbooks/PROVIDERS.md) | Provider setup & testing |
-| **Decisions** | [ADR Index](docs/decisions/README.md) | Architecture decisions |
+| **Architecture** | [Overview](docs/architecture/overview.md) | 30-second mental model |
+| | [Engines](docs/architecture/backend.md) | Every engine and its code path |
+| | [Data](docs/architecture/data-model.md) | Schema, Node model, store contracts |
+| | [API](docs/architecture/api-philosophy.md) | Routes, WebSocket, surfaces |
+| | [Frontend](docs/architecture/frontend.md) | React UI, canvas, slots |
+| **Modules** | [Engines](docs/modules/engines.md) | Core computation engines |
+| | [Storage](docs/modules/storage.md) | Data persistence layer |
+| | [API](docs/modules/api.md) | HTTP API layer |
+| | [Desktop](docs/modules/desktop.md) | Tauri desktop application |
+| **Runbooks** | [Dev](docs/runbooks/dev.md) | Local development |
+| | [Desktop](docs/runbooks/desktop.md) | Tauri build & testing |
+| | [Providers](docs/runbooks/providers.md) | Provider setup & testing |
+| **Decisions** | [ADR Index](docs/decisions/) | Architecture decisions |
+| **Glossary** | [Glossary](docs/GLOSSARY.md) | Domain terms and shorthand |
 
 ---
 
@@ -231,7 +238,7 @@ pwsh scripts/tauri/build.ps1
 bun run devops desktop-loop run --version <x.y.z>
 ```
 
-See [Desktop Runbook](docs/runbooks/DESKTOP.md) for details.
+See [Desktop Runbook](docs/runbooks/desktop.md) for details.
 
 ### Testing
 

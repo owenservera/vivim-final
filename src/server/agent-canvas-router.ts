@@ -28,6 +28,7 @@ import { DEFAULT_POLICY } from '../shared/agent-canvas.js'
 import type { ServerContext } from './index.js'
 
 const log = getLogger('agent-canvas-router')
+
 import { appErrorResponse, errorResponse, json } from './response.js'
 
 // In-memory policy store (replace with DB in production)

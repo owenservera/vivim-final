@@ -5,7 +5,7 @@
 // stores it under a local backup dir, rotates old backups beyond the retention
 // count, and can restore a snapshot. Fully local-first (no cloud).
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { EngineError } from '../errors.js'
 import { ulid } from '../ids.js'

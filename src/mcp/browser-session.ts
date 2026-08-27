@@ -10,8 +10,8 @@
 import { BrowserCapabilityRegistry } from '../engines/browser-automation/registry.js'
 import { SelectorHealer } from '../engines/browser-automation/selector-healer.js'
 import type { SemanticGroundingEngine } from '../engines/browser-automation/semantic-grounding.js'
-import { ChromeGovernor } from '../engines/chrome-governor.js'
 import { AsyncMutex } from '../engines/chrome/async-mutex.js'
+import { ChromeGovernor } from '../engines/chrome-governor.js'
 import { getLogger } from '../lib/logger.js'
 import { type CapStoreDb, getDb } from '../storage/db.js'
 import { GovernorStoreImpl } from '../storage/impl/governor-store-impl.js'
@@ -94,7 +94,8 @@ export class BrowserSession {
     if (!this.slaveId) return false
     const slave = this.stack.governor.getSlave(this.slaveId)
     if (!slave) return false
-    return slave.status !== 'dead' && slave.status !== 'error' && slave.status !== 'terminated'
+    const status = slave.status as string
+    return status !== 'dead' && status !== 'error' && status !== 'terminated'
   }
 
   /** Current session info: slaveId, page state, pid, status. */

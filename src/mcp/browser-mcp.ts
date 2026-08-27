@@ -11,8 +11,8 @@
 
 import { createInterface } from 'node:readline'
 import { getLogger } from '../lib/logger.js'
-import { BrowserSession, buildBrowserStack } from './browser-session.js'
 import type { BrowserStack } from './browser-session.js'
+import { BrowserSession, buildBrowserStack } from './browser-session.js'
 import { buildConvenienceTools, buildTools } from './browser-tools.js'
 import type { McpTool } from './types.js'
 
@@ -217,7 +217,7 @@ async function run() {
     // inflight set so drain() doesn't wait on itself.
     if (isExitLine) {
       if (session) await session.quit().catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       log.info('exit notification received — terminating')
       process.exit(0)
     }
@@ -226,18 +226,18 @@ async function run() {
   rl.on('close', async () => {
     await drain()
     if (session) await session.quit().catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     process.exit(0)
   })
 
   process.on('SIGINT', async () => {
     if (session) await session.quit().catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     process.exit(0)
   })
   process.on('SIGTERM', async () => {
     if (session) await session.quit().catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     process.exit(0)
   })
 }

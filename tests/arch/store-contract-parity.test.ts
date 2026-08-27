@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'bun:test'
 import { existsSync } from 'node:fs'
-import { readFile, readdir } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { basename, join, resolve } from 'node:path'
 
 const ROOT = resolve(import.meta.dir, '../..')
@@ -11,10 +11,10 @@ const CONTRACTS_DIR = resolve(ROOT, 'src', 'storage', 'contracts')
 const IMPL_DIR = resolve(ROOT, 'src', 'storage', 'impl')
 
 // ── Soft assertion helper (bun:test lacks expect.soft) ───────────────────
-function softFail(label: string, items: string[]): void {
+function softFail(_label: string, items: string[]): void {
   if (items.length === 0) return
   // [audit] removed: console.warn(`\n  [SOFT FAIL] ${label} (${items.length} issues):`)
-  for (const item of items.slice(0, 10)) {
+  for (const _item of items.slice(0, 10)) {
     // [audit] removed: console.warn(`    - ${item}`)
   }
   // [audit] removed: if (items.length > 10) console.warn(`    ... and ${items.length - 10} more`)
@@ -80,7 +80,7 @@ function contractToImplPattern(contractFile: string): string {
 /** Extract the 'implements' clause from a class declaration. */
 function extractImplements(content: string): string[] {
   const impls: string[] = []
-  const re = /class\s+\w+\s+(?:extends\s+\w+\s+)?implements\s+([^\{]+)/g
+  const re = /class\s+\w+\s+(?:extends\s+\w+\s+)?implements\s+([^{]+)/g
   let m: RegExpExecArray | null
   while ((m = re.exec(content)) !== null) {
     const implList = (m[1] as string)

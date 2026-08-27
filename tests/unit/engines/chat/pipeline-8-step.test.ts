@@ -81,6 +81,11 @@ function makeMsg(overrides?: Partial<ConversationMessageRow>): ConversationMessa
     tokenCount: null,
     model: null,
     metadataJson: '{}',
+    providerMessageId: null,
+    identityHash: null,
+    isPinned: 0,
+    isArchived: 0,
+    readStatus: 'unread',
     createdAt: Date.now(),
     ...overrides,
   }
@@ -166,6 +171,10 @@ function mockStore(overrides?: Partial<ConversationStore>): ConversationStore {
     ),
     listConversationsByAccountId: mock(() => Promise.resolve([])),
     createMessages: mock(() => Promise.resolve([])),
+    getMessageByIdentityHash: mock(() => Promise.resolve(null)),
+    createMessageWithIdentity: mock(() => Promise.resolve(makeMsg({ id: 'msg_new' }))),
+    updateMessageMetadata: mock(() => Promise.resolve()),
+    queryMessagesByMetadata: mock(() => Promise.resolve([])),
     ...overrides,
   }
 }

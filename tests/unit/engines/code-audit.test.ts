@@ -1,18 +1,26 @@
 // tests/unit/engines/code-audit.test.ts
 import { describe, expect, test } from 'bun:test'
 import * as path from 'node:path'
+import {
+  applyDebateVerdicts,
+  deterministicDebate,
+  runDebate,
+} from '../../../src/engines/code-audit/debate.js'
 import { CodeAuditEngine } from '../../../src/engines/code-audit/index.js'
-import { tokenize, hasCodeCall, tokensOnLine } from '../../../src/engines/code-audit/tokenizer.js'
 import { getRules, isRuleAllowed } from '../../../src/engines/code-audit/rules.js'
 import {
   computeHealthScore,
   computeRisk,
-  dedupeFindings,
   computeSummary,
+  dedupeFindings,
 } from '../../../src/engines/code-audit/scoring.js'
-import { deterministicDebate, runDebate, applyDebateVerdicts } from '../../../src/engines/code-audit/debate.js'
 import { analyzeTaint } from '../../../src/engines/code-audit/taint.js'
-import type { DebateContext, Finding, SeverityLevel } from '../../../src/engines/code-audit/types.js'
+import { hasCodeCall, tokenize, tokensOnLine } from '../../../src/engines/code-audit/tokenizer.js'
+import type {
+  DebateContext,
+  Finding,
+  SeverityLevel,
+} from '../../../src/engines/code-audit/types.js'
 
 function sampleFinding(overrides: Partial<Finding> = {}): Finding {
   return {
@@ -69,7 +77,10 @@ describe('rule registry (token-aware, allowlisted)', () => {
 
   test('eval rule ignores string references', () => {
     const evalRule = getRules().find((r) => r.id === 'SEC-CODE-EXEC-EVAL')!
-    const tf = tokenize('t.ts', `const re = /eval\\(/\nconst s = "eval('x')"\n// eval('y')\nconst ok = 1`)
+    const tf = tokenize(
+      't.ts',
+      `const re = /eval\\(/\nconst s = "eval('x')"\n// eval('y')\nconst ok = 1`,
+    )
     expect(evalRule.detect(tf)).toHaveLength(0)
   })
 
@@ -78,7 +89,7 @@ describe('rule registry (token-aware, allowlisted)', () => {
     const tf = tokenize('t.ts', 'function run() { return eval(input) }')
     const seeds = evalRule.detect(tf)
     expect(seeds).toHaveLength(1)
-    expect(seeds[0]!.line).toBe(1)
+    expect(seeds[0]?.line).toBe(1)
   })
 
   test('new Function fires, safe-eval file is exempt', () => {
@@ -102,7 +113,7 @@ describe('rule registry (token-aware, allowlisted)', () => {
     )
     const seeds = rule.detect(tf)
     expect(seeds).toHaveLength(1)
-    expect(seeds[0]!.line).toBe(1)
+    expect(seeds[0]?.line).toBe(1)
   })
 
   test('DRIFT-ENGINE-STORAGE-IMPL ignores contracts imports, comments and strings', () => {
@@ -131,7 +142,7 @@ describe('rule registry (token-aware, allowlisted)', () => {
     )
     const seeds = rule.detect(tf)
     expect(seeds).toHaveLength(1)
-    expect(seeds[0]!.line).toBe(1)
+    expect(seeds[0]?.line).toBe(1)
   })
 
   test('DRIFT-ENGINE-IMPORTS-CDP fires on executor/cdp import in a non-governor engine', () => {
@@ -142,7 +153,7 @@ describe('rule registry (token-aware, allowlisted)', () => {
     )
     const seeds = rule.detect(tf)
     expect(seeds).toHaveLength(1)
-    expect(seeds[0]!.line).toBe(1)
+    expect(seeds[0]?.line).toBe(1)
   })
 
   test('DRIFT-ENGINE-IMPORTS-CDP exempts ChromeGovernor and ignores comments/strings', () => {
@@ -167,7 +178,12 @@ describe('scoring (confidence-weighted health)', () => {
 
   test('a wall of low-confidence MEDIUMs no longer zeroes the score', () => {
     const findings = Array.from({ length: 40 }, (_, i) =>
-      sampleFinding({ id: `m-${i}`, severity: 'MEDIUM', confidenceScore: 0.3, dimension: 'quality' }),
+      sampleFinding({
+        id: `m-${i}`,
+        severity: 'MEDIUM',
+        confidenceScore: 0.3,
+        dimension: 'quality',
+      }),
     )
     const score = computeHealthScore(findings)
     expect(score).toBeGreaterThan(0)
@@ -175,7 +191,12 @@ describe('scoring (confidence-weighted health)', () => {
 
   test('health is density-aware: same defects score higher across more files', () => {
     const findings = Array.from({ length: 40 }, (_, i) =>
-      sampleFinding({ id: `m-${i}`, severity: 'MEDIUM', confidenceScore: 0.3, dimension: 'quality' }),
+      sampleFinding({
+        id: `m-${i}`,
+        severity: 'MEDIUM',
+        confidenceScore: 0.3,
+        dimension: 'quality',
+      }),
     )
     const smallRepo = computeHealthScore(findings, 40)
     const largeRepo = computeHealthScore(findings, 400)
@@ -190,6 +211,7 @@ describe('scoring (confidence-weighted health)', () => {
         opinions: [],
         verdict: 'FALSE_POSITIVE',
         moderatorSummary: 'refuted',
+        engine: 'deterministic-fallback' as const,
       },
       falsePositive: true,
     })
@@ -215,13 +237,17 @@ describe('scoring (confidence-weighted health)', () => {
         opinions: [],
         verdict: 'FALSE_POSITIVE',
         moderatorSummary: 'x',
+        engine: 'deterministic-fallback' as const,
       },
     })
     expect(computeRisk([allRefuted])).toBe('L')
   })
 
   test('summary counts severities and false positives', () => {
-    const sum = computeSummary([sampleFinding({ severity: 'HIGH' }), sampleFinding({ severity: 'LOW' })])
+    const sum = computeSummary([
+      sampleFinding({ severity: 'HIGH' }),
+      sampleFinding({ severity: 'LOW' }),
+    ])
     expect(sum.severity.HIGH).toBe(1)
     expect(sum.severity.LOW).toBe(1)
     expect(sum.falsePositiveCount).toBe(0)
@@ -271,19 +297,34 @@ describe('taint tracking', () => {
 
   test('does not flag a clean line with a sink but no taint source', () => {
     const raw = ['const q = "SELECT * FROM t"', 'db.query(q)']
-    const { flows } = analyzeTaint('t.ts', raw.map((l) => l), raw)
+    const { flows } = analyzeTaint(
+      't.ts',
+      raw.map((l) => l),
+      raw,
+    )
     expect(flows).toHaveLength(0)
   })
 
   test('does not flag property-access .query()/.execute() as a database sink', () => {
     const raw = ['const body = req.body', 'db.query(body)']
-    const { flows } = analyzeTaint('t.ts', raw.map((l) => l), raw)
+    const { flows } = analyzeTaint(
+      't.ts',
+      raw.map((l) => l),
+      raw,
+    )
     expect(flows).toHaveLength(0)
   })
 
   test('flags raw SQL sink when tainted input reaches queryRawUnsafe', () => {
-    const raw = ['const body = req.body', 'prisma.$queryRawUnsafe(`SELECT * FROM t WHERE id = ${body}`)']
-    const { flows } = analyzeTaint('t.ts', raw.map((l) => l), raw)
+    const raw = [
+      'const body = req.body',
+      'prisma.$queryRawUnsafe(`SELECT * FROM t WHERE id = ${body}`)',
+    ]
+    const { flows } = analyzeTaint(
+      't.ts',
+      raw.map((l) => l),
+      raw,
+    )
     expect(flows.length).toBeGreaterThanOrEqual(1)
   })
 })

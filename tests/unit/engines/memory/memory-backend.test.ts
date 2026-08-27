@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  RESERVED_TOOL_NAMES,
   normalizeToolSchema,
+  RESERVED_TOOL_NAMES,
 } from '../../../../src/engines/memory/memory-backend.js'
 
 describe('memory-backend', () => {

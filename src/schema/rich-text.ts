@@ -202,7 +202,11 @@ export const PhrasingContentSchema: z.ZodType<PhrasingContent> = z.lazy(() =>
     }),
     z.object({ type: z.literal('break') }),
     z.object({ type: z.literal('math'), value: z.string() }),
-    z.object({ type: z.literal('widget'), kind: z.string(), props: z.record(z.unknown()) }),
+    z.object({
+      type: z.literal('widget'),
+      kind: z.string(),
+      props: z.record(z.string(), z.unknown()),
+    }),
     z.object({ type: z.literal('mention'), id: z.string() }),
   ] as any),
 )

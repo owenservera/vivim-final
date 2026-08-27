@@ -187,7 +187,7 @@ export function createPluginRouter(ctx: ServerContext) {
           const dep = await db.prisma.pluginRegistry.findUnique({
             where: { name: depPluginId },
           })
-          if (!dep || dep.isActive !== 1) {
+          if (dep?.isActive !== 1) {
             await rm(extractDir, { recursive: true, force: true })
             return errorResponse(`Missing dependency: ${depPluginId}`, 'Conflict', 400)
           }

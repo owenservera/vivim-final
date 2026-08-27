@@ -12,9 +12,7 @@ function getOpenCodeServe():
     | undefined
 }
 
-function getAiGateway():
-  | import('../../ai/gateway/gateway.js').IVIVIMGateway
-  | undefined {
+function getAiGateway(): import('../../ai/gateway/gateway.js').IVIVIMGateway | undefined {
   return (globalThis as Record<string, unknown>).__aiGateway as
     | import('../../ai/gateway/gateway.js').IVIVIMGateway
     | undefined
@@ -149,7 +147,7 @@ export function buildConversationCaps(services: BootstrapServices): UnifiedCapab
   ]
 }
 
-export function buildKnowledgeCaps(services: BootstrapServices): UnifiedCapability[] {
+export function buildKnowledgeCaps(_services: BootstrapServices): UnifiedCapability[] {
   return [
     makeCapability(
       {
@@ -525,7 +523,7 @@ export function buildAdminCaps(services: BootstrapServices): UnifiedCapability[]
   ]
 }
 
-export function buildSystemCaps(services: BootstrapServices): UnifiedCapability[] {
+export function buildSystemCaps(_services: BootstrapServices): UnifiedCapability[] {
   return [
     makeCapability(
       {
@@ -586,7 +584,7 @@ export function buildProviderHealthCaps(services: BootstrapServices): UnifiedCap
   ]
 }
 
-export function buildTelemetryCaps(services: BootstrapServices): UnifiedCapability[] {
+export function buildTelemetryCaps(_services: BootstrapServices): UnifiedCapability[] {
   return [
     makeCapability(
       {
@@ -716,7 +714,7 @@ export function buildAgentCaps(services: BootstrapServices): UnifiedCapability[]
   ]
 }
 
-export function buildOpenCodeServeCaps(services: BootstrapServices): UnifiedCapability[] {
+export function buildOpenCodeServeCaps(_services: BootstrapServices): UnifiedCapability[] {
   const getServe = getOpenCodeServe
   return [
     makeCapability(
@@ -747,7 +745,8 @@ export function buildOpenCodeServeCaps(services: BootstrapServices): UnifiedCapa
       },
       async (input) => {
         const serve = getServe()
-        if (!serve) return { ok: false, error: 'OpenCode serve not enabled (OPENCODE_SERVE_ENABLED=1)' }
+        if (!serve)
+          return { ok: false, error: 'OpenCode serve not enabled (OPENCODE_SERVE_ENABLED=1)' }
         if (typeof input.prompt !== 'string' || input.prompt.trim().length === 0) {
           return { ok: false, error: 'prompt is required' }
         }
@@ -1160,7 +1159,7 @@ export function buildStorageCaps(services: BootstrapServices): UnifiedCapability
   ]
 }
 
-export function buildAiGatewayCaps(services: BootstrapServices): UnifiedCapability[] {
+export function buildAiGatewayCaps(_services: BootstrapServices): UnifiedCapability[] {
   const getGateway = getAiGateway
   return [
     makeCapability(

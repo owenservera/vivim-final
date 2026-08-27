@@ -74,7 +74,7 @@ describe('response.ts — json', () => {
 
   it('serializes BigInt values as strings (BigInt-safe)', async () => {
     const res = json({ count: 9007199254740993n })
-    const body = await res.json()
+    const body = (await res.json()) as { count: string }
     expect(body.count).toBe('9007199254740993')
   })
 
@@ -107,7 +107,7 @@ describe('response.ts — errorResponse', () => {
   it('returns the canonical { error, code, details } shape', async () => {
     const res = errorResponse('thing not found', 'NotFound', 404)
     expect(res.status).toBe(404)
-    const body = await res.json()
+    const body = (await res.json()) as { error: string; code: string; details?: unknown }
     expect(body.error).toBe('thing not found')
     expect(body.code).toBe('NotFound')
     expect(body.details).toBeUndefined()
@@ -118,7 +118,11 @@ describe('response.ts — errorResponse', () => {
       field: 'email',
       issue: 'required',
     })
-    const body = await res.json()
+    const body = (await res.json()) as {
+      error: string
+      code: string
+      details: Record<string, unknown>
+    }
     expect(body.details).toEqual({ field: 'email', issue: 'required' })
   })
 
@@ -138,7 +142,11 @@ describe('response.ts — appErrorResponse', () => {
     const err = AppError.notFound('conversation 123 not found', { id: '123' })
     const res = appErrorResponse(err)
     expect(res.status).toBe(404)
-    const body = await res.json()
+    const body = (await res.json()) as {
+      error: string
+      code: string
+      details: Record<string, unknown>
+    }
     expect(body.error).toBe('conversation 123 not found')
     expect(body.code).toBe('NotFound')
     expect(body.details).toEqual({ id: '123' })
@@ -147,7 +155,7 @@ describe('response.ts — appErrorResponse', () => {
   it('converts a plain Error to a 500 InternalError', async () => {
     const res = appErrorResponse(new Error('something broke'))
     expect(res.status).toBe(500)
-    const body = await res.json()
+    const body = (await res.json()) as { error: string; code: string }
     expect(body.error).toBe('something broke')
     expect(body.code).toBe('InternalError')
   })
@@ -155,7 +163,7 @@ describe('response.ts — appErrorResponse', () => {
   it('converts a non-Error value to a 500 InternalError', async () => {
     const res = appErrorResponse('a string was thrown')
     expect(res.status).toBe(500)
-    const body = await res.json()
+    const body = (await res.json()) as { code: string }
     expect(body.code).toBe('InternalError')
   })
 })
@@ -165,7 +173,7 @@ describe('response.ts — dispatch', () => {
     const primary = () => json({ from: 'primary' })
     const fallback = () => json({ from: 'fallback' })
     const res = await dispatch(primary, fallback)
-    const body = await res.json()
+    const body = (await res.json()) as { from: string }
     expect(body.from).toBe('primary')
   })
 
@@ -173,7 +181,7 @@ describe('response.ts — dispatch', () => {
     const primary = () => null
     const fallback = () => json({ from: 'fallback' })
     const res = await dispatch(primary, fallback)
-    const body = await res.json()
+    const body = (await res.json()) as { from: string }
     expect(body.from).toBe('fallback')
   })
 
@@ -184,7 +192,7 @@ describe('response.ts — dispatch', () => {
     const fallback = () => json({ from: 'fallback' })
     const res = await dispatch(primary, fallback)
     expect(res.status).toBe(500)
-    const body = await res.json()
+    const body = (await res.json()) as { error: string; code: string }
     expect(body.error).toBe('primary crashed')
     expect(body.code).toBe('InternalError')
   })
@@ -196,7 +204,7 @@ describe('response.ts — dispatch', () => {
     const fallback = () => json({ from: 'fallback' })
     const res = await dispatch(primary, fallback)
     expect(res.status).toBe(400)
-    const body = await res.json()
+    const body = (await res.json()) as { code: string }
     expect(body.code).toBe('ValidationError')
   })
 })

@@ -2,7 +2,7 @@
 // FileExecutor — file system operations (open, list, search, create).
 
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { platform } from 'node:os'
 import { basename, extname, join } from 'node:path'
 import { getHomeDir } from '../../../config.js'

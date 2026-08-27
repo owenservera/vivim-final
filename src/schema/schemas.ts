@@ -13,6 +13,7 @@ import { emailNodeSchema, emailThreadNodeSchema } from './email.js'
 import { eventNodeSchema, locationNodeSchema, reminderNodeSchema } from './event.js'
 import { mediaNodeSchema } from './media.js'
 import { conversationNodeSchema, messageNodeSchema } from './message.js'
+import { schemaRegistry } from './node.js'
 import {
   AcuDataSchema,
   ArtifactDataSchema,
@@ -20,10 +21,9 @@ import {
   DocumentNodeDataSchema,
   EmailNodeDataSchema,
   MemoryDataSchema,
-  NoteDataSchema,
   NotebookDataSchema,
+  NoteDataSchema,
 } from './node-data.js'
-import { schemaRegistry } from './node.js'
 import { socialPostNodeSchema } from './social.js'
 import { projectNodeSchema, taskNodeSchema } from './task.js'
 

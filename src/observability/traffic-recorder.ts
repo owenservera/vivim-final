@@ -160,9 +160,6 @@ export class TrafficRecorder {
     const record: TrafficEntry = {
       timestamp: new Date().toISOString(),
       direction: 'response',
-      headers: { ...entry.headers },
-      url: entry.url,
-      body: entry.body,
       redactedFields: [],
       ...entry,
     }

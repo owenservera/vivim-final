@@ -1,66 +1,53 @@
 // scripts/restore-db.ts
-// Restores dev.db from the latest backup or from the seed snapshot.
-// Run: bun run scripts/restore-db.ts [--from snapshot|backup]
-//
-// Default: restores from the most recent backup (dev.db.bak-*).
-// Use --from snapshot to restore from seeds/seed-snapshot.db instead.
+// Restores system.db + user.db from the latest paired snapshot.
+// Run: bun run db:restore [--from <snapshot-dir>]
 
-import { existsSync, copyFileSync, statSync, readdirSync } from 'node:fs'
+import { existsSync, copyFileSync, readdirSync, mkdirSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 const ROOT = resolve(import.meta.dir, '..')
-const DEV_DB = join(ROOT, 'prisma', 'dev.db')
-const PRISMA_DIR = join(ROOT, 'prisma')
-const SNAPSHOT = join(ROOT, 'seeds', 'seed-snapshot.db')
+const DATA_DIR = join(ROOT, 'prisma', 'data')
+const SYSTEM_DB = join(DATA_DIR, 'system.db')
+const USER_DB = join(DATA_DIR, 'user.db')
+const SNAPSHOTS_DIR = join(ROOT, 'snapshots')
 
-function findLatestBackup(): string | null {
-  if (!existsSync(PRISMA_DIR)) return null
-  const backups = readdirSync(PRISMA_DIR)
-    .filter((f) => f.startsWith('dev.db.bak-'))
+function findLatestSnapshot(): string | null {
+  if (!existsSync(SNAPSHOTS_DIR)) return null
+  const dirs = readdirSync(SNAPSHOTS_DIR)
+    .filter(d => existsSync(join(SNAPSHOTS_DIR, d, 'snapshot.json')))
     .sort()
     .reverse()
-  return backups.length > 0 ? join(PRISMA_DIR, backups[0]) : null
+  return dirs.length > 0 ? join(SNAPSHOTS_DIR, dirs[0]!) : null
 }
 
 function main() {
   const args = process.argv.slice(2)
   const fromIdx = args.indexOf('--from')
-  const source = fromIdx >= 0 ? args[fromIdx + 1] : 'backup'
+  const snapDir = fromIdx >= 0
+    ? join(SNAPSHOTS_DIR, args[fromIdx + 1]!)
+    : findLatestSnapshot()
 
-  let restoreFrom: string | null = null
-  let sourceLabel: string = ''
-
-  if (source === 'snapshot') {
-    restoreFrom = existsSync(SNAPSHOT) ? SNAPSHOT : null
-    sourceLabel = 'seed snapshot'
-  } else {
-    restoreFrom = findLatestBackup()
-    sourceLabel = 'latest backup'
-  }
-
-  if (!restoreFrom) {
-    // [audit] removed: console.error(`  ✗ No ${sourceLabel} found.`)
-    if (source === 'snapshot') {
-      // [audit] removed: console.error(`    Expected: ${SNAPSHOT}`)
-      // [audit] removed: console.error('    Run: bun run seed:snapshot')
-    } else {
-      // [audit] removed: console.error('    Expected: prisma/dev.db.bak-*')
-      // [audit] removed: console.error('    Run: bun run db:backup')
-    }
+  if (!snapDir || !existsSync(snapDir)) {
+    console.error('No snapshot found. Create one first with: bun run db:backup')
     process.exit(1)
   }
 
-  const size = statSync(restoreFrom).size
-  // [audit] removed: console.log(`  Restoring from ${sourceLabel}:`)
-  // [audit] removed: console.log(`    Source: ${restoreFrom} (${(size / 1024).toFixed(0)} KB)`)
-  // [audit] removed: console.log(`    Target: ${DEV_DB}`)
+  const sysSrc = join(snapDir, 'system.db')
+  const usrSrc = join(snapDir, 'user.db')
 
-  // Copy restore source → dev.db
-  copyFileSync(restoreFrom, DEV_DB)
+  if (!existsSync(sysSrc) || !existsSync(usrSrc)) {
+    console.error(`Invalid snapshot: missing DB files in ${snapDir}`)
+    process.exit(1)
+  }
 
-  const restoredSize = statSync(DEV_DB).size
-  // [audit] removed: console.log(`  ✓ Restored (${(restoredSize / 1024).toFixed(0)} KB)`)
-  // [audit] removed: console.log('  Restart the server to use the restored database.')
+  if (!existsSync(DATA_DIR)) {
+    mkdirSync(DATA_DIR, { recursive: true })
+  }
+
+  copyFileSync(sysSrc, SYSTEM_DB)
+  copyFileSync(usrSrc, USER_DB)
+
+  console.log(`Restored from snapshot: ${snapDir}`)
 }
 
 main()

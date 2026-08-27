@@ -8,8 +8,7 @@ import type { FleetSuperState, SlaveLifecycle } from '../executor/slave-states.j
 export type SlaveStatus = SlaveLifecycle
 export type SuperState = FleetSuperState
 
-export type { ChromeChannel, ChromeMode }
-export type { FleetSuperState, SlaveLifecycle }
+export type { ChromeChannel, ChromeMode, FleetSuperState, SlaveLifecycle }
 
 export interface LaunchOptions {
   headless: boolean

@@ -3,15 +3,15 @@
 // Precedence (highest → lowest), see 10-conceptual-matrix.md §3:
 //   provider + variant > provider > family + variant > family > cross-type
 
-import { type UiComponent, rowToUiComponent } from 'shared/ui-component.js'
+import { rowToUiComponent, type UiComponent } from 'shared/ui-component.js'
 import type {
   ResolveContext,
   UiComponentInput,
   UiComponentRow,
   UiComponentStore,
 } from '../contracts/ui-component-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class UiComponentStoreImpl implements UiComponentStore {
   private db: PrismaClient
@@ -25,7 +25,7 @@ export class UiComponentStoreImpl implements UiComponentStore {
   }
 
   async create(input: UiComponentInput): Promise<UiComponentRow> {
-    const now = Date.now()
+    const now = BigInt(Date.now())
     return this.p.uiComponent.create({
       data: {
         id: input.id,
@@ -50,11 +50,11 @@ export class UiComponentStoreImpl implements UiComponentStore {
         createdAt: now,
         updatedAt: now,
       },
-    })
+    }) as unknown as UiComponentRow
   }
 
   async get(id: string): Promise<UiComponentRow | null> {
-    return this.p.uiComponent.findUnique({ where: { id } })
+    return this.p.uiComponent.findUnique({ where: { id } }) as unknown as UiComponentRow | null
   }
 
   /** Walk the 4-tier precedence; return the first published match. */
@@ -77,27 +77,27 @@ export class UiComponentStoreImpl implements UiComponentStore {
           status: 'published',
         },
       })
-      if (row) return row
+      if (row) return row as unknown as UiComponentRow
     }
     return null
   }
 
   async listByOwner(scope: string, ownerId: string): Promise<UiComponentRow[]> {
-    return this.p.uiComponent.findMany({ where: { scope, ownerId } })
+    return this.p.uiComponent.findMany({ where: { scope, ownerId } }) as unknown as UiComponentRow[]
   }
 
   async listByPrimitive(primitiveId: string): Promise<UiComponentRow[]> {
-    return this.p.uiComponent.findMany({ where: { primitiveId } })
+    return this.p.uiComponent.findMany({ where: { primitiveId } }) as unknown as UiComponentRow[]
   }
 
   async listByFamily(familyId: string): Promise<UiComponentRow[]> {
     return this.p.uiComponent.findMany({
       where: { OR: [{ scope: 'family', ownerId: familyId }, { scope: 'cross-type' }] },
-    })
+    }) as unknown as UiComponentRow[]
   }
 
   async update(id: string, patch: Partial<Omit<UiComponentInput, 'id'>>): Promise<UiComponentRow> {
-    const data: Record<string, unknown> = { updatedAt: Date.now() }
+    const data: Record<string, unknown> = { updatedAt: BigInt(Date.now()) }
     if (patch.primitiveId !== undefined) data.primitiveId = patch.primitiveId
     if (patch.scope !== undefined) data.scope = patch.scope
     if (patch.ownerId !== undefined) data.ownerId = patch.ownerId
@@ -117,7 +117,7 @@ export class UiComponentStoreImpl implements UiComponentStore {
     if (patch.defaultRegion !== undefined)
       data.defaultRegionJson = patch.defaultRegion ? JSON.stringify(patch.defaultRegion) : ''
     if (patch.tags !== undefined) data.tagsJson = JSON.stringify(patch.tags)
-    return this.p.uiComponent.update({ where: { id }, data })
+    return this.p.uiComponent.update({ where: { id }, data }) as unknown as UiComponentRow
   }
 
   async delete(id: string): Promise<void> {

@@ -1,13 +1,14 @@
 // src/storage/impl/episodic-memory-store-impl.ts
 // EpisodicMemoryStoreImpl — Prisma-backed episodic memory store
 
+import type { Prisma } from '@prisma/client'
 import type {
   EpisodeQueryOpts,
   EpisodicMemory,
   EpisodicMemoryStore,
 } from '../../engines/memory-engine.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class EpisodicMemoryStoreImpl implements EpisodicMemoryStore {
   private db: PrismaClient
@@ -31,18 +32,18 @@ export class EpisodicMemoryStoreImpl implements EpisodicMemoryStore {
         action: episode.action,
         inputJson: JSON.stringify(episode.input),
         outputJson: JSON.stringify(episode.output),
-        success: episode.success ? 1 : 0,
+        success: episode.success,
         durationMs: episode.durationMs,
         tagsJson: JSON.stringify(episode.tags),
         timestamp: episode.timestamp,
-        createdAt: Date.now(),
+        createdAt: BigInt(Date.now()),
       },
       update: {},
     })
   }
 
   async query(opts: EpisodeQueryOpts): Promise<EpisodicMemory[]> {
-    const where = {}
+    const where: Prisma.EpisodicMemoryWhereInput = {}
     if (opts.providerId) where.providerId = opts.providerId
     if (opts.capabilityId) where.capabilityId = opts.capabilityId
     if (opts.action) where.action = opts.action

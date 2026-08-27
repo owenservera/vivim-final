@@ -2,9 +2,9 @@
 // CORS middleware + JSON response helpers + ETag cache (Unit 1.5)
 // + canonical error response helper (Work Items 01/03)
 
-import { AppError } from './errors.js'
-import type { ErrorCode } from './errors.js'
 import { getLogger } from '../lib/logger.js'
+import type { ErrorCode } from './errors.js'
+import { AppError } from './errors.js'
 
 /**
  * Response shape conventions:

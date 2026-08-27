@@ -5,8 +5,7 @@
 
 import { EngineError } from '../../errors.js'
 import type { Logger } from '../../lib/logger.js'
-import type { StealthProfileStore } from '../../storage/contracts/stealth-store.js'
-import type { LaunchMode } from '../../storage/contracts/stealth-store.js'
+import type { LaunchMode, StealthProfileStore } from '../../storage/contracts/stealth-store.js'
 
 export type { LaunchMode } from '../../storage/contracts/stealth-store.js'
 

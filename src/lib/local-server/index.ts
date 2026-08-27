@@ -190,7 +190,7 @@ export class LocalServer {
         return new Response(file)
       }
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // File not found, fall through to 404
     }
 
@@ -201,7 +201,7 @@ export class LocalServer {
         return new Response(indexFile)
       }
     } catch {
-  // [audit] log the error with context here
+      // [audit] log the error with context here
       // No index.html
     }
 

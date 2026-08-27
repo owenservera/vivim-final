@@ -42,7 +42,13 @@ export function extractSymbols(tf: TokenizedFile): SymbolRecord[] {
     if (t.text === 'const' || t.text === 'let' || t.text === 'var') {
       const nameTok = tokens[i + 1]
       const eq = tokens[i + 2]
-      if (nameTok && nameTok.kind === 'identifier' && eq && eq.text === '=' && isArrowFunction(tokens, i + 3)) {
+      if (
+        nameTok &&
+        nameTok.kind === 'identifier' &&
+        eq &&
+        eq.text === '=' &&
+        isArrowFunction(tokens, i + 3)
+      ) {
         decls.push({ name: nameTok, kind: 'EXPRESSION' })
       }
     }
@@ -110,7 +116,7 @@ export function buildTopology(
   const edgeSet = new Set<string>()
   const edges: GraphEdge[] = []
 
-  for (const [file, syms] of symbolsByFile) {
+  for (const [_file, syms] of symbolsByFile) {
     for (const s of syms) {
       nodes.push(s.node)
       const arr = nodeMap.get(s.node.label)
@@ -198,7 +204,13 @@ function resolveImport(fromFile: string, spec: string): string | null {
   ]
   for (const c of candidates) {
     const norm = path.normalize(c)
-    if (norm.endsWith('.ts') || norm.endsWith('.tsx') || norm.endsWith('.js') || norm.endsWith('.jsx') || norm.endsWith('index.ts')) {
+    if (
+      norm.endsWith('.ts') ||
+      norm.endsWith('.tsx') ||
+      norm.endsWith('.js') ||
+      norm.endsWith('.jsx') ||
+      norm.endsWith('index.ts')
+    ) {
       return norm
     }
   }

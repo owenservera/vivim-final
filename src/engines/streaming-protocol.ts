@@ -33,9 +33,9 @@ export interface ParserModule {
 export class StreamingProtocol {
   private handlers: StreamingEventHandler[] = []
   private blockBuffer: ContentBlock[] = []
+  private eventBus: CapabilityEventBus | null = null
   private currentConversationId = ''
   private currentMessageId = ''
-  private eventBus: CapabilityEventBus | null = null
 
   constructor(
     private readonly parser: ParserModule,
@@ -125,9 +125,9 @@ export class StreamingProtocol {
       timestamp: Date.now(),
     })
 
-    if (this.store && allBlocks.length > 0) {
-      await this.store.storeBlocks(conversationId, messageId, allBlocks)
-    }
+    // Blocks were already persisted incrementally (captureChunk / the
+    // parseIncremental branch below). Re-storing the full buffer here would
+    // duplicate every block, so only the completion event is emitted here.
 
     this.emit({
       type: 'conversation:complete',
@@ -158,6 +158,11 @@ export class StreamingProtocol {
             block,
             timestamp: Date.now(),
           })
+        }
+        // Persist each yielded batch (the per-chunk path below stores via
+        // captureChunk; this branch must store too or blocks are lost).
+        if (this.store && blocks.length > 0) {
+          await this.store.storeBlocks(conversationId, messageId, blocks)
         }
       }
       return allBlocks

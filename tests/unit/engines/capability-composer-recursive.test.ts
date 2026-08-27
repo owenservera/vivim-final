@@ -2,17 +2,17 @@
 // CapabilityComposer recursive composition + versioning (Unit 2.5).
 
 import { describe, expect, it } from 'bun:test'
-import { CapabilityComposer } from '../../../src/engines/capability-composer.js'
 import type {
   CompositeCapability,
   CompositeCapabilityStore,
 } from '../../../src/engines/capability-composer.js'
+import { CapabilityComposer } from '../../../src/engines/capability-composer.js'
 import { CapabilityEventBus } from '../../../src/engines/capability-event-bus.js'
 import { ConfigManager } from '../../../src/engines/config-manager.js'
-import { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { CapabilityContext, UnifiedCapability } from '../../../src/engines/unified-registry.js'
-import { VersionManager } from '../../../src/engines/version-manager.js'
+import { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { CompositeSnapshot } from '../../../src/engines/version-manager.js'
+import { VersionManager } from '../../../src/engines/version-manager.js'
 import type {
   TaxonomyVersionRow,
   VersionStore,

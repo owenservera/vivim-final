@@ -8,8 +8,8 @@
 // lives in capability-binding-store.ts and is unchanged.
 
 import type { CapabilityBindingStoreContract } from '../../contracts/onboarding/capability-binding-store.js'
-import type { PrismaClient } from '../../../prisma.js'
 import type { CapStoreDb } from '../../db.js'
+import type { PrismaClient } from '../../prisma.js'
 
 export class CapabilityBindingStoreImpl implements CapabilityBindingStoreContract {
   private db: PrismaClient

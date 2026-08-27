@@ -10,8 +10,9 @@ import type {
   ProviderParserRow,
   ProviderStreamConfigRow,
 } from '../../schema/types.js'
-import type { PrismaClient } from '../prisma.js'
+import { getCrossBoundaryCache } from '../cross-boundary-cache.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class ProviderStoreImpl {
   private db: PrismaClient
@@ -27,7 +28,7 @@ export class ProviderStoreImpl {
   // ── Definitions ────────────────────────────────────────────────────────────
 
   async upsertDefinition(def: ProviderDefinitionRow): Promise<void> {
-    const now = Date.now()
+    const now = BigInt(Date.now())
     await this.p.providerDefinition.upsert({
       where: { slug: def.slug },
       create: {
@@ -47,7 +48,7 @@ export class ProviderStoreImpl {
         fleetConfigJson: def.fleet_config_json,
         capabilitiesJson: def.capabilities_json,
         modelsJson: def.models_json,
-        createdAt: def.created_at,
+        createdAt: BigInt(def.created_at),
         updatedAt: now,
       },
       update: {
@@ -69,6 +70,8 @@ export class ProviderStoreImpl {
         updatedAt: now,
       },
     })
+    // Invalidate cross-boundary cache for this provider
+    getCrossBoundaryCache().invalidate(`provider:${def.id}`)
   }
 
   async getDefinition(id: string): Promise<ProviderDefinitionRow | null> {
@@ -91,8 +94,8 @@ export class ProviderStoreImpl {
       fleet_config_json: r.fleetConfigJson,
       capabilities_json: r.capabilitiesJson,
       models_json: r.modelsJson,
-      created_at: r.createdAt,
-      updated_at: r.updatedAt,
+      created_at: Number(r.createdAt),
+      updated_at: Number(r.updatedAt),
     }
   }
 
@@ -116,8 +119,8 @@ export class ProviderStoreImpl {
       fleet_config_json: r.fleetConfigJson,
       capabilities_json: r.capabilitiesJson,
       models_json: r.modelsJson,
-      created_at: r.createdAt,
-      updated_at: r.updatedAt,
+      created_at: Number(r.createdAt),
+      updated_at: Number(r.updatedAt),
     }
   }
 
@@ -135,6 +138,7 @@ export class ProviderStoreImpl {
       category: r.category as string,
       provider_type: r.providerType as string,
       is_active: r.isActive as number,
+      protocol_status: r.protocolStatus as string,
       website_url: r.websiteUrl as string | null,
       documentation_url: r.documentationUrl as string | null,
       auth_type: r.authType as string,
@@ -143,8 +147,8 @@ export class ProviderStoreImpl {
       fleet_config_json: r.fleetConfigJson as string,
       capabilities_json: r.capabilitiesJson as string,
       models_json: r.modelsJson as string,
-      created_at: r.createdAt as number,
-      updated_at: r.updatedAt as number,
+      created_at: Number(r.createdAt),
+      updated_at: Number(r.updatedAt),
     }))
   }
 
@@ -184,6 +188,7 @@ export class ProviderStoreImpl {
 
   async deleteProviderEndpoints(providerId: string): Promise<void> {
     await this.p.providerEndpoint.deleteMany({ where: { providerId } })
+    getCrossBoundaryCache().invalidate(`provider:${providerId}`)
   }
 
   // ── Parsers ────────────────────────────────────────────────────────────────
@@ -231,6 +236,7 @@ export class ProviderStoreImpl {
 
   async deleteProviderParsers(providerId: string): Promise<void> {
     await this.p.providerParser.deleteMany({ where: { providerId } })
+    getCrossBoundaryCache().invalidate(`provider:${providerId}`)
   }
 
   // ── Stream Config (derived parser findings) ────────────────────────────────
@@ -374,6 +380,7 @@ export class ProviderStoreImpl {
 
   async deleteProviderCapabilities(providerId: string): Promise<void> {
     await this.p.providerCapability.deleteMany({ where: { providerId } })
+    getCrossBoundaryCache().invalidate(`provider:${providerId}`)
   }
 
   // ── Configs ────────────────────────────────────────────────────────────────
@@ -404,6 +411,7 @@ export class ProviderStoreImpl {
 
   async deleteProviderConfigs(providerId: string): Promise<void> {
     await this.p.providerConfig.deleteMany({ where: { providerId } })
+    getCrossBoundaryCache().invalidate(`provider:${providerId}`)
   }
 
   // ── Models ─────────────────────────────────────────────────────────────────
@@ -452,6 +460,7 @@ export class ProviderStoreImpl {
 
   async deleteProviderModels(providerId: string): Promise<void> {
     await this.p.providerModel.deleteMany({ where: { providerId } })
+    getCrossBoundaryCache().invalidate(`provider:${providerId}`)
   }
 
   // ── 1.3 Provider Taxonomy Layer ────────────────────────────────────────────

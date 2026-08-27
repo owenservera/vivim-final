@@ -3,7 +3,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["bun"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -22,10 +22,11 @@
     "outDir": "dist",
     "rootDir": ".",
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["./src/*", "./frontend/src/*"],
+      "@backend/*": ["./src/*"],
       "shared/*": ["./shared/*"]
     }
   },
   "include": ["src/**/*", "tests/**/*", "seeds/**/*", "shared/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules", "src/generated", "src/__generated__"]
 }

@@ -39,9 +39,9 @@ export interface NodeBackendDeps {
 export class NodeBackend implements MemoryBackend {
   readonly name = 'node'
   private agentId = ''
-  private ctx: BackendInitContext | null = null
-  private used = 0
   private sync = new BackgroundSyncQueue()
+  private used = 0
+  private ctx?: BackendInitContext
 
   constructor(private readonly deps: NodeBackendDeps) {}
 

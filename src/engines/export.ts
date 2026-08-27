@@ -36,9 +36,10 @@ export interface ExportManifest {
 }
 
 export interface ExportStore {
-  listConversations(opts?: { dateFrom?: number; dateTo?: number }): Promise<
-    Array<{ id: string; state: string; title?: string | null }>
-  >
+  listConversations(opts?: {
+    dateFrom?: number
+    dateTo?: number
+  }): Promise<Array<{ id: string; state: string; title?: string | null }>>
   listMessages(
     conversationId: string,
   ): Promise<Array<{ id: string; role: string; content: string; ts: number }>>

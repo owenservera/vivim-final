@@ -71,7 +71,7 @@ export class McpClientAdapter {
 
   async listTools(serverId: string): Promise<ToolDefinition[]> {
     const conn = this.connections.get(serverId)
-    if (!conn || conn.status !== 'connected') {
+    if (conn?.status !== 'connected') {
       throw new EngineError(`Server not connected: ${serverId}`)
     }
     return conn.tools
@@ -83,7 +83,7 @@ export class McpClientAdapter {
     input: Record<string, unknown>,
   ): Promise<ToolResult> {
     const conn = this.connections.get(serverId)
-    if (!conn || conn.status !== 'connected') {
+    if (conn?.status !== 'connected') {
       throw new EngineError(`Server not connected: ${serverId}`)
     }
 

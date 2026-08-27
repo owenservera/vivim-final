@@ -106,7 +106,7 @@ export class StoreBackedPolicyEvaluator implements IPolicyEvaluator {
  * scoped to 'gateway' or 'both'. Per [AUDIT R-1]: LLM provider-execution egress ONLY.
  */
 export class StoreBackedPolicyEnforcer implements IPolicyEnforcer {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(readonly _prisma: PrismaClient) {}
 
   async enforceNetworkPolicy(policy: ExecutionPolicy, targetHost: string): Promise<PolicyDecision> {
     const network = policy.network ?? 'deny'
@@ -120,7 +120,7 @@ export class StoreBackedPolicyEnforcer implements IPolicyEnforcer {
         const url = new URL(targetHost)
         host = url.hostname
       } catch {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // Not a URL — use as-is
       }
       const isLocal =

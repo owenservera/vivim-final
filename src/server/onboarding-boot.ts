@@ -21,6 +21,7 @@ import { OnboardingSessionStoreImpl } from '../storage/impl/onboarding/onboardin
 import { ParserCandidateStoreImpl } from '../storage/impl/onboarding/parser-candidate-store-impl.js'
 
 const log = getLogger('server:onboarding-boot')
+
 import { ProtocolFingerprintStoreImpl } from '../storage/impl/onboarding/protocol-fingerprint-store-impl.js'
 import { WebAppTaxonomyStoreImpl } from '../storage/impl/onboarding/webapp-taxonomy-store-impl.js'
 import { serviceContainer } from './service-container.js'

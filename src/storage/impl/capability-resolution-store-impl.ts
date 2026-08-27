@@ -68,9 +68,13 @@ export class CapabilityResolutionStoreImpl implements CapabilityResolutionStore 
       WHERE (ct.name ILIKE $3 OR ct.slug ILIKE $3 OR ct.search_hints_json ILIKE $3)
         AND (cb.status = 'active' OR cb.id IS NULL)
       ORDER BY ct.ui_position, ct.ui_order
-      LIMIT 20
     `
-    const pattern = `%${query}%`
+    // Escape LIKE metacharacters so a user query such as "50%" matches the
+    // literal string "50%" instead of treating `%`/`_` as wildcards. The engine
+    // re-filters the candidate rows precisely, so we must not truncate with a
+    // LIMIT before that filter runs (otherwise valid literal matches are lost).
+    const escaped = query.replace(/[\\%_]/g, '\\$&')
+    const pattern = `%${escaped}%`
     const rows = (await this.p.$queryRawUnsafe(
       sql,
       providerId,

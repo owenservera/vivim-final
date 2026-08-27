@@ -38,7 +38,7 @@ export class KnowledgeIngestionEngine {
   constructor(
     private store: KnowledgeIngestionStore,
     private conversationStore: ConversationStore,
-    private blockStore: StreamBlockStoreContract,
+    _blockStore: StreamBlockStoreContract,
     private extractor: KnowledgeExtractor,
     private eventBus: CapabilityEventBus,
   ) {}
@@ -213,9 +213,9 @@ export class KnowledgeIngestionEngine {
     return { jobId: job.id, phase: job.status, current: 0, total: 0 }
   }
 
-  async listJobs(opts?: { limit?: number }): Promise<
-    Array<{ id: string; source: string; status: string; startedAt: number }>
-  > {
+  async listJobs(opts?: {
+    limit?: number
+  }): Promise<Array<{ id: string; source: string; status: string; startedAt: number }>> {
     const jobs = await this.store.listImportJobs(opts)
     return jobs.map((j) => ({
       id: j.id,

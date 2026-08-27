@@ -22,11 +22,11 @@ export interface MessageData {
 export const MessageDataSchema = z.object({
   role: z.enum(['system', 'user', 'assistant', 'tool']),
   parts: z.array(ContentPartSchema),
-  rawSource: z.string().optional(),
-  parseVersion: z.number().int().positive().default(1),
-  model: z.string().optional(),
-  finishReason: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  rawSource: z.string({ error: 'Invalid string' }).optional(),
+  parseVersion: z.number({ error: 'Invalid number' }).int().positive().default(1),
+  model: z.string({ error: 'Invalid string' }).optional(),
+  finishReason: z.string({ error: 'Invalid string' }).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 // ── ConversationData (data payload for cap-store.conversation nodes) ──────
@@ -42,13 +42,13 @@ export interface ConversationData {
 }
 
 export const ConversationDataSchema = z.object({
-  title: z.string().optional(),
-  provider: z.string().optional(),
-  model: z.string().optional(),
-  messageIds: z.array(z.string()),
+  title: z.string({ error: 'Invalid string' }).optional(),
+  provider: z.string({ error: 'Invalid string' }).optional(),
+  model: z.string({ error: 'Invalid string' }).optional(),
+  messageIds: z.array(z.string({ error: 'Invalid string' })),
   importedFrom: z.enum(['chatgpt', 'claude', 'gemini', 'manual', 'live']).optional(),
-  importBatchId: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  importBatchId: z.string({ error: 'Invalid string' }).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 // ── Node schemas for registration ─────────────────────────────────────────

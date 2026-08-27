@@ -4,8 +4,8 @@
 import { describe, expect, it } from 'bun:test'
 import { parseOpencodeJson } from '../../../src/engines/local-agent/local-agent-executor.js'
 import {
-  type OpencodeEvent,
   autoDenyTier,
+  type OpencodeEvent,
   riskTierForTool,
 } from '../../../src/engines/opencode/types.js'
 

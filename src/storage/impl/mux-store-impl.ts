@@ -10,8 +10,8 @@ import type {
   RoutingPreferenceInput,
   RoutingPreferenceRow,
 } from '../contracts/mux-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class MuxStoreImpl implements MuxStore {
   private db: PrismaClient

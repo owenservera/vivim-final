@@ -121,10 +121,10 @@ export class ProviderMuxEngine {
   constructor(
     private store: MuxStore,
     private dispatcher: MuxDispatcher,
-    private router: Router,
+    _router: Router,
     private eventBus: CapabilityEventBus,
-    private channelStore?: ChannelStore,
-    private governor?: ChromeGovernor,
+    _channelStore?: ChannelStore,
+    _governor?: ChromeGovernor,
   ) {}
 
   // Phase 27.6: Subscribe a channel to route messages to a conversation
@@ -163,6 +163,22 @@ export class ProviderMuxEngine {
 
   async mux(request: MuxRequest): Promise<MuxResponse> {
     const providerIds = request.targetProviderIds ?? (await this.resolveProviderIds(request))
+
+    // D1 (fail-loud): an empty resolution is a real error, not a silent
+    // "success-ish" partial. `autoRoute` already throws on empty; keep the two
+    // entry points consistent.
+    if (providerIds.length === 0) {
+      throw new EngineError(
+        'mux: no providers resolved for request (targetProviderIds empty and resolveProviderIds returned none)',
+      )
+    }
+
+    // D2: `maxProviders: 0` is a deliberate "send to nobody" no-op (distinct from
+    // "unset"). Make it explicit/loud rather than a mysterious empty result.
+    const limit = request.maxProviders ?? providerIds.length
+    if (providerIds.length > 0 && limit === 0) {
+      console.warn('[provider-mux] maxProviders:0 — dispatching to nobody (deliberate no-op)')
+    }
 
     switch (request.strategy) {
       case 'fan_out':
@@ -380,6 +396,11 @@ export class ProviderMuxEngine {
       )
       results.push(result)
       accruedCost += result.costCents
+      // D3: stop immediately once over budget so we never dispatch further
+      // providers. (Residual: a single provider whose own cost crosses the
+      // budget is still dispatched, because its cost is only known after
+      // dispatch — true pre-estimation would require a dispatcher cost hint.)
+      if (request.costBudgetCents !== undefined && accruedCost > request.costBudgetCents) break
     }
 
     return this.buildResponse(

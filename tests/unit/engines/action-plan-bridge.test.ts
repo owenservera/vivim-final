@@ -7,6 +7,7 @@ import type { NLCContext, ParsedIntent } from '../../../src/engines/nlcl/types.j
 
 const CTX: NLCContext = {
   conversationId: 'conv-bridge-test',
+  surface: 'cli',
   metadata: { lastSubject: 'the report' },
 }
 
@@ -21,7 +22,7 @@ function makeIntent(overrides: Partial<ParsedIntent>): ParsedIntent {
     alternatives: [],
     resolvedAt: Date.now(),
     capabilityId: 'cap:browser:open_url',
-    classification: 'safe',
+    classification: 'read' as any,
     ...overrides,
   }
 }
@@ -34,8 +35,8 @@ describe('ActionPlanBridge', () => {
     const result = bridge.intentToPlan(intent, CTX)
 
     expect(result.plan).not.toBeNull()
-    expect(result.plan!.goal).toBe('open the report in the browser')
-    expect(result.plan!.nodes.length).toBeGreaterThanOrEqual(1)
+    expect(result.plan?.goal).toBe('open the report in the browser')
+    expect(result.plan?.nodes.length).toBeGreaterThanOrEqual(1)
   })
 
   it('should ground entity references from the input', () => {
@@ -46,7 +47,7 @@ describe('ActionPlanBridge', () => {
     // Should resolve "the report" from context
     const reportRef = result.groundedRefs.find((r) => r.raw.toLowerCase().includes('report'))
     expect(reportRef).toBeDefined()
-    expect(reportRef!.resolvedValue).toBe('the report')
+    expect(reportRef?.resolvedValue).toBe('the report')
   })
 
   it('should return null plan for unresolved intent', () => {
@@ -65,7 +66,7 @@ describe('ActionPlanBridge', () => {
     const result = bridge.intentsToPlan(intents, CTX)
 
     expect(result.plan).not.toBeNull()
-    expect(result.plan!.nodes.length).toBeGreaterThanOrEqual(2)
+    expect(result.plan?.nodes.length).toBeGreaterThanOrEqual(2)
   })
 
   it('should resolve dependencies via the grounder', () => {
@@ -74,6 +75,6 @@ describe('ActionPlanBridge', () => {
 
     const resolved = bridge.resolveDependency('the report', CTX, refs)
     expect(resolved).not.toBeNull()
-    expect(resolved!.resolvedValue).toBe('the report')
+    expect(resolved?.resolvedValue).toBe('the report')
   })
 })

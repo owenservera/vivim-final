@@ -18,13 +18,13 @@ import type {
   AIEvent,
   AIRequest,
   ModelDescriptor,
+  PluginId,
   ProviderHealth,
   ProviderId,
   ProviderManifest,
   RequestId,
   RoutingDecision,
 } from '../core/types.js'
-import type { PluginId } from '../core/types.js'
 import type { GatewayEvent, GatewayEventFilter } from '../events/bus.js'
 import type { ExecutionHandle, ExecutionId } from '../execution/types.js'
 

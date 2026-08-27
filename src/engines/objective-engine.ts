@@ -6,7 +6,7 @@
 // cursor by cursor; sleeps until a wake time; wakes to active.
 
 import { safeJsonParse } from '../lib/safe-json.js'
-import { AGENTIC_EDGE, type ActorRef, actorDid } from '../schema/agentic.js'
+import { type ActorRef, AGENTIC_EDGE, actorDid } from '../schema/agentic.js'
 import type { AgenticStoreContract } from '../storage/contracts/agentic-store.js'
 
 export class ObjectiveEngine {

@@ -9,9 +9,9 @@ import type { ChromeGovernor } from '../chrome-governor.js'
 import type { SemanticGroundingEngine } from './semantic-grounding.js'
 import type {
   AccessibilityNode,
+  AgenticGoal,
   AgentLoopResult,
   AgentStep,
-  AgenticGoal,
   BudgetCap,
   CapResult,
   Observation,

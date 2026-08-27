@@ -9,9 +9,12 @@ import {
   registerDiscoveredCdpMethods,
 } from '../../../src/engines/cdp-capability-registrar.js'
 import { CDP_PROTOCOL_CATALOG } from '../../../src/engines/cdp-discovery.js'
+import type {
+  CDPTransport,
+  FleetConfig,
+  GovernorEventBus,
+} from '../../../src/engines/chrome-governor.js'
 import { ChromeGovernor } from '../../../src/engines/chrome-governor.js'
-import type { CDPTransport, GovernorEventBus } from '../../../src/engines/chrome-governor.js'
-import type { FleetConfig } from '../../../src/engines/chrome-governor.js'
 import { UnifiedCapabilityRegistry } from '../../../src/engines/unified-registry.js'
 import type { GovernorStore } from '../../../src/storage/contracts/governor-store.js'
 

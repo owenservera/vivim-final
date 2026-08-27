@@ -46,7 +46,7 @@ export function classifyTransport(
     const cadence = inferCadence(wsFrames.map((f) => f.ts))
     return {
       transportClass: 'websocket',
-      endpointPattern: normalizeEndpoint(wsFrames[0]?.url),
+      endpointPattern: normalizeEndpoint(wsFrames[0]?.url ?? ''),
       sampleHeaders: null,
       cadenceMs: cadence,
       confidence: 0.9,

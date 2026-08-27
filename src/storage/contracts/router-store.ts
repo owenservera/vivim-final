@@ -9,9 +9,11 @@ import type {
 } from '../../schema/types.js'
 
 export interface RouterStore {
-  listSpecs(opts?: { providerId?: string; capabilityId?: string; activeOnly?: boolean }): Promise<
-    RouteSpecRow[]
-  >
+  listSpecs(opts?: {
+    providerId?: string
+    capabilityId?: string
+    activeOnly?: boolean
+  }): Promise<RouteSpecRow[]>
   getSpec(id: string): Promise<RouteSpecRow | null>
   createSpec(input: RouteSpecRow): Promise<RouteSpecRow>
   updateSpec(id: string, patch: Partial<RouteSpecRow>): Promise<void>

@@ -35,8 +35,16 @@ export interface SandboxResult {
 // ── Selector ──────────────────────────────────────────────────────────────
 // VIVIM_SANDBOX_MODE: 'quickjs' (default) | 'vm' (rollback)
 // QuickJS: WASM-based true isolation, no shared heap, no native addon risk.
-// node:vm: V8 context in host isolate, kept for one-line rollback.
+// node:vm: V8 context in host isolate, kept only for one-line rollback and
+// requires explicit opt-in via VIVIM_UNSAFE_VM=1 (hazard H9 — denylist fail-open).
 const mode = process.env.VIVIM_SANDBOX_MODE ?? 'quickjs'
+
+if (mode === 'vm' && process.env.VIVIM_UNSAFE_VM !== '1') {
+  throw new Error(
+    'Sandbox mode "vm" requires VIVIM_UNSAFE_VM=1 — use default "quickjs" for true isolation. ' +
+      'The vm fallback is retained only for rollback and is weaker (shared V8 heap, denylist-dependent).',
+  )
+}
 
 const mod =
   mode === 'vm'

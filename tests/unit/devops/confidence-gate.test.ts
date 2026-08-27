@@ -1,9 +1,9 @@
 // tests/unit/devops/confidence-gate.test.ts
 import { describe, expect, it } from 'bun:test'
 import {
+  confidenceGate,
   PARSER_MIN_CONFIDENCE,
   SELECTOR_MIN_CONFIDENCE,
-  confidenceGate,
 } from '../../../devops/confidence-gate.js'
 
 describe('confidenceGate', () => {

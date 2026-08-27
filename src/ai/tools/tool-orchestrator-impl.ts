@@ -105,9 +105,10 @@ export class InMemoryToolAuditLog implements IToolAuditLog {
     }
   }
 
-  async query(filter: { readonly tool?: string; readonly since?: string }): Promise<
-    readonly unknown[]
-  > {
+  async query(filter: {
+    readonly tool?: string
+    readonly since?: string
+  }): Promise<readonly unknown[]> {
     let out = this.entries
     if (filter.tool) out = out.filter((e) => e.tool === filter.tool)
     if (filter.since) out = out.filter((e) => e.at >= filter.since!)

@@ -75,17 +75,22 @@ export class P0PolicyEngine {
   }
 
   private evaluateNodeRisk(risk: CapabilityRisk): PolicyDecision {
-    const tier = RISK_TIER[risk] ?? 0
+    const tier = (RISK_TIER as Record<string, number | undefined>)[risk]
 
-    // Check tier threshold
-    if (tier > this.opts.maxRiskTier) {
+    // Fail closed: an unrecognized risk classification must be denied, not
+    // silently allowed via a permissive default.
+    if (tier === undefined) {
       return {
         allowed: false,
-        reason: `Risk tier ${tier} exceeds maximum allowed (${this.opts.maxRiskTier})`,
+        reason: `Refusing to authorize unrecognized risk classification: ${String(risk)}`,
       }
     }
 
-    // Check specific risk categories
+    // Check specific risk categories. An explicit category allow makes the flag
+    // functional (previously `allowFinancial` was dead — financial ops are mapped
+    // to `security_sensitive`, so `allowFinancial` is honored as an alternative
+    // gate for them — and `allowSecuritySensitive` was vetoed by the threshold
+    // below; now an explicit allow overrides the threshold for that category).
     switch (risk) {
       case 'destructive':
         if (!this.opts.allowDestructive) {
@@ -98,10 +103,21 @@ export class P0PolicyEngine {
         }
         break
       case 'security_sensitive':
-        if (!this.opts.allowSecuritySensitive) {
-          return { allowed: false, reason: 'Security-sensitive action is disabled by policy' }
+        // Financial operations are classified here too; either flag permits them.
+        if (!this.opts.allowSecuritySensitive && !this.opts.allowFinancial) {
+          return { allowed: false, reason: 'Security-sensitive/financial action is disabled by policy' }
         }
-        break
+        // Explicit allow overrides the numeric threshold for this category.
+        return { allowed: true, requiresConfirmation: true }
+    }
+
+    // Threshold as the default cap for the remaining (non-explicitly-allowed)
+    // categories. `maxRiskTier` still bounds destructive/read/write/communication.
+    if (tier > this.opts.maxRiskTier) {
+      return {
+        allowed: false,
+        reason: `Risk tier ${tier} exceeds maximum allowed (${this.opts.maxRiskTier})`,
+      }
     }
 
     return { allowed: true, requiresConfirmation: false }

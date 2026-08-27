@@ -81,7 +81,9 @@ export class ConnectionManager extends EventEmitter {
         headers['X-Subdomain'] = this.config.subdomain
       }
 
-      const ws = new WebSocket(url, { headers })
+      // Bun's WebSocket constructor types only expose subprotocols; headers are
+      // supported at runtime (used by the tunnel gateway for auth/subdomain).
+      const ws = new WebSocket(url, { headers } as unknown as string | string[])
 
       await new Promise<void>((resolve, reject) => {
         const connectTimeout = setTimeout(() => {

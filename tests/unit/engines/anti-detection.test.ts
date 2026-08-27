@@ -21,8 +21,9 @@ describe('anti-detection', () => {
     const transport = mockTransport()
     await injectAntiDetection(transport, 'slave-1', 'unknown')
 
-    expect(transport.send).toHaveBeenCalledTimes(3) // 3 default scripts
     const calls = (transport.send as ReturnType<typeof mock>).mock.calls
+    // 7 default scripts (webdriver, automation artifacts, chrome.runtime, plugins, languages, permissions, CDP vars)
+    expect(calls.length).toBe(7)
     for (const call of calls) {
       expect(call[1]).toBe('Page.addScriptToEvaluateOnNewDocument')
       expect(call[2]).toHaveProperty('source')
@@ -34,8 +35,8 @@ describe('anti-detection', () => {
     await injectAntiDetection(transport, 'slave-1', 'chatgpt')
 
     const calls = (transport.send as ReturnType<typeof mock>).mock.calls
-    // 3 default + 2 chatgpt-specific = 5
-    expect(calls.length).toBe(5)
+    // 7 default + 0 chatgpt-specific (plugins/languages moved to _default)
+    expect(calls.length).toBe(7)
   })
 
   it('injects only default scripts for gemini (no extra)', async () => {
@@ -43,7 +44,7 @@ describe('anti-detection', () => {
     await injectAntiDetection(transport, 'slave-1', 'gemini')
 
     const calls = (transport.send as ReturnType<typeof mock>).mock.calls
-    expect(calls.length).toBe(3) // only defaults
+    expect(calls.length).toBe(7) // only defaults
   })
 
   it('scripts hide webdriver flag', async () => {

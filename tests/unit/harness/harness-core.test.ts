@@ -1,8 +1,8 @@
 // tests/unit/harness/harness-core.test.ts
 import { describe, expect, it } from 'bun:test'
 import {
-  PROGRAM_STATUS,
   configToProgram,
+  PROGRAM_STATUS,
   recipeToConfig,
 } from '../../../src/engines/harness/program-schema.js'
 import { compileRecipe } from '../../../src/engines/harness/recipe-compiler.js'

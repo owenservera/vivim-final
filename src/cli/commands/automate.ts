@@ -48,7 +48,7 @@ export async function runAutomate(args: string[]): Promise<void> {
           // [audit] removed: console.error('Usage: automate click <selector>')
           process.exit(1)
         }
-        const result = await api('/api/automate/click', {
+        const _result = await api('/api/automate/click', {
           method: 'POST',
           body: JSON.stringify({ selector: { selector: selector } }),
         })
@@ -63,7 +63,7 @@ export async function runAutomate(args: string[]): Promise<void> {
           // [audit] removed: console.error('Usage: automate type <selector> <text>')
           process.exit(1)
         }
-        const result = await api('/api/automate/type', {
+        const _result = await api('/api/automate/type', {
           method: 'POST',
           body: JSON.stringify({ selector: { selector }, text }),
         })
@@ -77,7 +77,7 @@ export async function runAutomate(args: string[]): Promise<void> {
           // [audit] removed: console.error('Usage: automate text <selector>')
           process.exit(1)
         }
-        const result = await api<{ ok: boolean; text: string }>(
+        const _result = await api<{ ok: boolean; text: string }>(
           `/api/automate/text?selector=${encodeURIComponent(selector)}`,
         )
         // [audit] removed: console.log(result.text)
@@ -90,7 +90,7 @@ export async function runAutomate(args: string[]): Promise<void> {
           // [audit] removed: console.error('Usage: automate value <selector>')
           process.exit(1)
         }
-        const result = await api<{ ok: boolean; value: string }>(
+        const _result = await api<{ ok: boolean; value: string }>(
           `/api/automate/value?selector=${encodeURIComponent(selector)}`,
         )
         // [audit] removed: console.log(result.value)
@@ -103,7 +103,7 @@ export async function runAutomate(args: string[]): Promise<void> {
           // [audit] removed: console.error('Usage: automate exists <selector>')
           process.exit(1)
         }
-        const result = await api<{ ok: boolean; exists: boolean }>(
+        const _result = await api<{ ok: boolean; exists: boolean }>(
           `/api/automate/exists?selector=${encodeURIComponent(selector)}`,
         )
         // [audit] removed: console.log(result.exists ? 'yes' : 'no')
@@ -124,7 +124,7 @@ export async function runAutomate(args: string[]): Promise<void> {
       }
 
       case 'page': {
-        const result = await api<{ ok: boolean; title: string; url: string; content: string }>(
+        const _result = await api<{ ok: boolean; title: string; url: string; content: string }>(
           '/api/automate/page',
         )
         // [audit] removed: console.log(`Title: ${result.title}`)
@@ -140,35 +140,17 @@ export async function runAutomate(args: string[]): Promise<void> {
       }
 
       default: {
-        // [audit] removed: console.log(`
-Frontend Automation CLI
-
-Commands:
-  navigate <url>                    Navigate to URL
-  click <css-selector>              Click an element
-  text <css-selector>               Get element text content
-  value <css-selector>              Get input value
-  exists <css-selector>             Check if element exists
-  screenshot                        Take screenshot (saves PNG)
-  page                              Get page content
-
-Examples:
-  automate navigate http://localhost:5173
-  automate type "input[placeholder*='message']" "HELLO"
-  click "button[data-testid='send']"
-  automate text "h1"
-  automate screenshot
-`)
+        // [audit] removed: console.log — help text
       }
     }
-  } catch (err) {
+  } catch (_err) {
     // [audit] removed: console.error(`Error: ${err instanceof Error ? err.message : String(err)}`)
     process.exit(1)
   }
 }
 
 if (import.meta.main) {
-  runAutomate(process.argv.slice(2)).catch((err) => {
+  runAutomate(process.argv.slice(2)).catch((_err) => {
     // [audit] removed: console.error(err)
     process.exit(1)
   })

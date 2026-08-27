@@ -39,7 +39,7 @@ export function createInterpretRouter(nlclEngine: NLCLEngine) {
           providerId: z.string().optional(),
           slaveId: z.string().optional(),
           userId: z.string().optional(),
-          metadata: z.record(z.unknown()).optional(),
+          metadata: z.record(z.string(), z.unknown()).optional(),
         })
         .optional(),
     })

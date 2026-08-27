@@ -143,9 +143,10 @@ class MemTelemetryStore implements TelemetryStore {
     return this.exec(sql) as unknown as DailySummaryRow[]
   }
 
-  async getCrossProviderSummary(opts?: { from?: string; to?: string }): Promise<
-    import('../../../src/storage/contracts/telemetry-store').CrossProviderSummary
-  > {
+  async getCrossProviderSummary(opts?: {
+    from?: string
+    to?: string
+  }): Promise<import('../../../src/storage/contracts/telemetry-store').CrossProviderSummary> {
     let sql = 'SELECT * FROM telemetry_summary_daily'
     if (opts?.from) sql += ` WHERE day_ts >= '${opts.from}'`
     if (opts?.to) sql += `${opts.from ? ' AND' : ' WHERE'} day_ts <= '${opts.to}'`

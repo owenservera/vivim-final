@@ -30,7 +30,7 @@ export const FleetStopSchema = z.object({
 })
 
 export const ConfigUpdateSchema = z.object({
-  config: z.record(z.unknown()),
+  config: z.record(z.string(), z.unknown()),
   scopeType: z.enum(['global', 'provider', 'account', 'engine']).optional(),
   scopeId: z.string().optional(),
 })

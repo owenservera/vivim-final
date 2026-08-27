@@ -3,15 +3,6 @@
 
 import { beforeAll, describe, expect, test } from 'bun:test'
 import {
-  addHumanReview,
-  addReview,
-  formatReviewStatus,
-  generateReviewPrompt,
-  getReviewStatus,
-  validateDecisionReadiness,
-  validateReviewReadiness,
-} from '../../../devops/decision-review.ts'
-import {
   approve,
   compareOptions,
   createDecision,
@@ -22,6 +13,15 @@ import {
   updateAnalysis,
   updateDecision,
 } from '../../../devops/decision.ts'
+import {
+  addHumanReview,
+  addReview,
+  formatReviewStatus,
+  generateReviewPrompt,
+  getReviewStatus,
+  validateDecisionReadiness,
+  validateReviewReadiness,
+} from '../../../devops/decision-review.ts'
 
 // ── Test data ─────────────────────────────────────────────────────────────
 

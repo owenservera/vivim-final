@@ -7,7 +7,7 @@
 import { EngineError } from '../../errors.js'
 import type { Recipe, RecipeBranch, RecipeStep } from '../../storage/contracts/program-store.js'
 
-export type { RecipeStep, RecipeBranch, Recipe }
+export type { Recipe, RecipeBranch, RecipeStep }
 
 export const RECIPE_META = {
   schemaVersion: 1,

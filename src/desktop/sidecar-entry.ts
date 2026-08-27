@@ -7,8 +7,8 @@
 // This keeps the "One Entry Point" invariant — every operation is still a
 // UnifiedCapability resolved through POST /api/interpret + /api/capabilities/:id/execute.
 
-import { createServerWithEngines } from '../server/index.js'
 import { getLogger } from '../lib/logger.js'
+import { createServerWithEngines } from '../server/index.js'
 
 const log = getLogger('vivim-server')
 
@@ -141,9 +141,10 @@ function bootstrapDb(): void {
     fs.copyFileSync(snapshotPath, dbPath)
     log.info(`[vivim-server] Bootstrapped DB from snapshot → ${dbPath}`)
   } catch (err) {
-    log.error('[vivim-server] Failed to bootstrap DB from snapshot:', {
-      err: err instanceof Error ? err.message : String(err),
-    })
+    log.error(
+      { err: err instanceof Error ? err.message : String(err) },
+      '[vivim-server] Failed to bootstrap DB from snapshot:',
+    )
   }
 }
 
@@ -161,6 +162,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  log.error('vivim-server fatal:', { err: err instanceof Error ? err.message : String(err) })
+  log.error({ err: err instanceof Error ? err.message : String(err) }, 'vivim-server fatal:')
   process.exit(1)
 })

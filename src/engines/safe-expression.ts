@@ -301,7 +301,7 @@ class Parser {
 
 // ── Evaluator ──────────────────────────────────────────────────────────
 
-function resolvePath(obj: unknown, path: string): unknown {
+function _resolvePath(obj: unknown, path: string): unknown {
   if (obj == null) return undefined
   const parts = path.split('.')
   let current: unknown = obj

@@ -153,22 +153,24 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
 
   /** Run a single round of probes against all targets. */
   async function check(): Promise<void> {
-    if (!probeFn) return
+    const probe = probeFn
+    if (!probe) return
 
     const now = Date.now()
 
     // Fire all probes concurrently for speed.
     const promises = activeTargets.map(async (target) => {
       try {
-        const probe = await probeFn!(target)
-        const classification = classify(probe.pidAlive, probe.endpointResponsive)
+        const result = await probe(target)
+        if (!result) return
+        const classification = classify(result.pidAlive, result.endpointResponsive)
 
-        const result: HealthCheckResult = {
+        const outcome: HealthCheckResult = {
           targetId: target.id,
           classification,
-          pidAlive: probe.pidAlive,
-          endpointResponsive: probe.endpointResponsive,
-          latencyMs: probe.latencyMs,
+          pidAlive: result.pidAlive,
+          endpointResponsive: result.endpointResponsive,
+          latencyMs: result.latencyMs,
           checkedAt: now,
         }
 
@@ -186,9 +188,9 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
               to: classification,
               timestamp: now,
               metadata: {
-                latencyMs: probe.latencyMs,
-                pidAlive: probe.pidAlive,
-                endpointResponsive: probe.endpointResponsive,
+                latencyMs: result.latencyMs,
+                pidAlive: result.pidAlive,
+                endpointResponsive: result.endpointResponsive,
               },
             }
             events.push(event)
@@ -205,7 +207,7 @@ export function createHealthMonitor(config?: Partial<HealthMonitorConfig>): Heal
           })
         }
 
-        results.set(target.id, result)
+        results.set(target.id, outcome)
       } catch (err) {
         // Probe itself threw — treat as crashed.
         const prev = results.get(target.id)

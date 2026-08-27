@@ -47,11 +47,11 @@ export function createAutomationRouter(deps: AutomationRouterDeps) {
           role: z.string().min(1, 'role is required'),
           recipeId: z.string().optional(),
           intent: z.string().optional(),
-          params: z.record(z.string()).optional(),
+          params: z.record(z.string(), z.string()).optional(),
           destructive: z.boolean().optional(),
         })
         const parsed = schema.safeParse(await req.json().catch(() => ({})))
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
         const { role, recipeId, intent, params, destructive } = parsed.data
         const result = await orchestrator.run({

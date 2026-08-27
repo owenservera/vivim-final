@@ -17,7 +17,7 @@ import { getLogger } from '../tunnel-shared/logger.js'
 import type { FileComplete, FileSyncAccept, FileSyncRequest } from '../tunnel-shared/types.js'
 import type { FileTransferProgress, P2PMetrics } from './types.js'
 
-const log = getLogger('file-sync')
+const _log = getLogger('file-sync')
 
 /** Legacy stream shape with source/sink (pre-MessageStream libp2p versions). */
 interface LegacyStream {
@@ -66,7 +66,8 @@ export class FileSyncHandler extends EventEmitter {
 
         const sinkFn = (stream as unknown as LegacyStream).sink
         if (typeof sinkFn === 'function') {
-          await sinkFn([new TextEncoder().encode(JSON.stringify(accept))])
+          const payload = new TextEncoder().encode(JSON.stringify(accept))
+          await sinkFn([payload] as unknown as AsyncIterable<Uint8Array>)
         }
 
         const filePath = join(process.cwd(), 'downloads', request.fileName)
@@ -108,7 +109,8 @@ export class FileSyncHandler extends EventEmitter {
           sha256: computedHash,
         }
         if (typeof sinkFn === 'function') {
-          await sinkFn([new TextEncoder().encode(JSON.stringify(complete))])
+          const payload = new TextEncoder().encode(JSON.stringify(complete))
+          await sinkFn([payload] as unknown as AsyncIterable<Uint8Array>)
         }
 
         this.activeTransfers.delete(request.fileId)

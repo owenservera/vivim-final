@@ -1,6 +1,7 @@
 // src/storage/impl/mirror-store-impl.ts
 // Prisma-backed MirrorStore for MirrorEngine persistence.
 
+import type { Prisma } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type {
   LatencyMeasurementInput,
@@ -13,8 +14,8 @@ import type {
   SnapshotInput,
   SnapshotRow,
 } from '../contracts/mirror-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class MirrorStoreImpl implements MirrorStore {
   private db: PrismaClient
@@ -24,7 +25,7 @@ export class MirrorStoreImpl implements MirrorStore {
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async getMirrorState(conversationId: string): Promise<MirrorStateRow | null> {
@@ -34,7 +35,7 @@ export class MirrorStoreImpl implements MirrorStore {
       conversationId: row.conversationId,
       chromeState: JSON.parse((row.chromeStateJson as string) ?? '{}'),
       uiState: JSON.parse((row.uiStateJson as string) ?? '{}'),
-      lastSyncAt: row.lastSyncAt as number,
+      lastSyncAt: row.lastSyncAt as unknown as number,
     }
   }
 
@@ -46,15 +47,15 @@ export class MirrorStoreImpl implements MirrorStore {
         conversationId: state.conversationId,
         chromeStateJson: JSON.stringify(state.chromeState),
         uiStateJson: JSON.stringify(state.uiState),
-        lastSyncAt: Date.now(),
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        lastSyncAt: BigInt(Date.now()),
+        createdAt: BigInt(Date.now()),
+        updatedAt: BigInt(Date.now()),
       },
       update: {
         chromeStateJson: JSON.stringify(state.chromeState),
         uiStateJson: JSON.stringify(state.uiState),
-        lastSyncAt: Date.now(),
-        updatedAt: Date.now(),
+        lastSyncAt: BigInt(Date.now()),
+        updatedAt: BigInt(Date.now()),
       },
     })
   }
@@ -66,8 +67,8 @@ export class MirrorStoreImpl implements MirrorStore {
         conversationId: input.conversationId,
         action: input.action,
         expectedStateJson: JSON.stringify(input.expectedState),
-        confirmed: false,
-        createdAt: Date.now(),
+        confirmed: 0,
+        createdAt: BigInt(Date.now()),
       },
     })
     return {
@@ -76,7 +77,7 @@ export class MirrorStoreImpl implements MirrorStore {
       action: row.action,
       expectedState: input.expectedState,
       confirmed: false,
-      createdAt: row.createdAt as number,
+      createdAt: row.createdAt as unknown as number,
     }
   }
 
@@ -88,9 +89,9 @@ export class MirrorStoreImpl implements MirrorStore {
     await this.p.optimisticUpdate.update({
       where: { id: updateId },
       data: {
-        confirmed,
+        confirmed: confirmed ? 1 : 0,
         actualStateJson: actualValue !== undefined ? JSON.stringify(actualValue) : undefined,
-        resolvedAt: Date.now(),
+        resolvedAt: BigInt(Date.now()),
       },
     })
   }
@@ -111,9 +112,9 @@ export class MirrorStoreImpl implements MirrorStore {
     conversationId: string,
     opts?: { from?: number; to?: number },
   ): Promise<LatencyReport> {
-    const where: Record<string, unknown> = { conversationId }
+    const where: Prisma.LatencyMeasurementWhereInput = { conversationId }
     if (opts?.from || opts?.to) {
-      const tsFilter: Record<string, number> = {}
+      const tsFilter: Prisma.IntFilter = {}
       if (opts.from) tsFilter.gte = opts.from
       if (opts.to) tsFilter.lte = opts.to
       where.timestamp = tsFilter
@@ -165,9 +166,9 @@ export class MirrorStoreImpl implements MirrorStore {
     conversationId: string,
     opts?: { from?: number; to?: number; limit?: number },
   ): Promise<SnapshotRow[]> {
-    const where: Record<string, unknown> = { conversationId }
+    const where: Prisma.MirrorSnapshotWhereInput = { conversationId }
     if (opts?.from || opts?.to) {
-      const tsFilter: Record<string, number> = {}
+      const tsFilter: Prisma.IntFilter = {}
       if (opts.from) tsFilter.gte = opts.from
       if (opts.to) tsFilter.lte = opts.to
       where.timestamp = tsFilter

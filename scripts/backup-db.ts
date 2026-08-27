@@ -1,68 +1,77 @@
 // scripts/backup-db.ts
-// Creates a timestamped backup of the current dev.db.
-// Run: bun run scripts/backup-db.ts
-//
-// Backups are stored as prisma/dev.db.bak-{ISO-timestamp} and can be
-// restored with `bun run db:restore`.
+// Creates a timestamped paired backup of system.db + user.db.
+// Run: bun run db:backup
 
-import { existsSync, copyFileSync, statSync, readdirSync } from 'node:fs'
+import { existsSync, copyFileSync, mkdirSync, writeFileSync, statSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import { join, resolve } from 'node:path'
 
 const ROOT = resolve(import.meta.dir, '..')
-const DEV_DB = join(ROOT, 'prisma', 'dev.db')
+const DATA_DIR = join(ROOT, 'prisma', 'data')
+const SYSTEM_DB = join(DATA_DIR, 'system.db')
+const USER_DB = join(DATA_DIR, 'user.db')
+const SNAPSHOTS_DIR = join(ROOT, 'snapshots')
 
-function main() {
-  // 1. Check source DB exists
-  if (!existsSync(DEV_DB)) {
-    // [audit] removed: console.error(`  ✗ Source DB not found: ${DEV_DB}`)
-    process.exit(1)
-  }
-
-  const size = statSync(DEV_DB).size
-  if (size < 1024) {
-    // [audit] removed: console.error(`  ✗ Source DB too small (${size} bytes) — likely empty or corrupt.`)
-    process.exit(1)
-  }
-
-  // 2. WAL checkpoint to flush WAL into main DB file
-  // [audit] removed: console.log('  Flushing WAL...')
+function walCheckpoint(dbPath: string) {
   try {
-    execSync(
-      `sqlite3 "${DEV_DB}" "PRAGMA wal_checkpoint(TRUNCATE);"`,
+    execSync(`sqlite3 "${dbPath}" "PRAGMA wal_checkpoint(TRUNCATE);"`, {
+      encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+    })
+  } catch { /* non-fatal */ }
+}
+
+function readSchemaMeta(dbPath: string): Record<string, string> {
+  try {
+    const rows = execSync(
+      `sqlite3 "${dbPath}" "SELECT key, value FROM SchemaMeta;"`,
       { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] },
     )
+    const meta: Record<string, string> = {}
+    for (const line of rows.trim().split('\n')) {
+      const [key, ...rest] = line.split('|')
+      if (key) meta[key] = rest.join('|')
+    }
+    return meta
   } catch {
-    // [audit] removed: console.log('  ⚠ WAL checkpoint failed (non-fatal, continuing)')
+    return {}
+  }
+}
+
+function main() {
+  for (const db of [SYSTEM_DB, USER_DB]) {
+    if (!existsSync(db)) {
+      console.error(`Missing: ${db}`)
+      process.exit(1)
+    }
+    const size = statSync(db).size
+    if (size < 1024) {
+      console.error(`DB too small (${size} bytes): ${db}`)
+      process.exit(1)
+    }
   }
 
-  // 3. Create timestamped backup
+  walCheckpoint(SYSTEM_DB)
+  walCheckpoint(USER_DB)
+
   const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-  const backupPath = join(ROOT, 'prisma', `dev.db.bak-${ts}`)
+  const snapDir = join(SNAPSHOTS_DIR, ts)
+  mkdirSync(snapDir, { recursive: true })
 
-  // [audit] removed: console.log(`  Copying ${DEV_DB} → ${backupPath}`)
-  copyFileSync(DEV_DB, backupPath)
+  copyFileSync(SYSTEM_DB, join(snapDir, 'system.db'))
+  copyFileSync(USER_DB, join(snapDir, 'user.db'))
 
-  const backupSize = statSync(backupPath).size
-  // [audit] removed: console.log(`  ✓ Backup created: ${backupPath} (${(backupSize / 1024).toFixed(0)} KB)`)
+  const systemMeta = readSchemaMeta(SYSTEM_DB)
+  const userMeta = readSchemaMeta(USER_DB)
+  writeFileSync(join(snapDir, 'system-meta.json'), JSON.stringify(systemMeta, null, 2))
+  writeFileSync(join(snapDir, 'user-meta.json'), JSON.stringify(userMeta, null, 2))
+  writeFileSync(join(snapDir, 'snapshot.json'), JSON.stringify({
+    timestamp: new Date().toISOString(),
+    app_version: '1.3.14',
+    system_schema_version: systemMeta.schema_version ?? 'unknown',
+    user_schema_version: userMeta.schema_version ?? 'unknown',
+  }, null, 2))
 
-  // 4. Show existing backups
-  const prismaDir = join(ROOT, 'prisma')
-  const backups = readdirSync(prismaDir)
-    .filter((f) => f.startsWith('dev.db.bak-'))
-    .sort()
-    .reverse()
-
-  if (backups.length > 0) {
-    // [audit] removed: console.log(`\n  Existing backups (${backups.length}):`)
-    for (const b of backups.slice(0, 10)) {
-      const bSize = statSync(join(prismaDir, b)).size
-      // [audit] removed: console.log(`    ${b} (${(bSize / 1024).toFixed(0)} KB)`)
-    }
-    if (backups.length > 10) {
-      // [audit] removed: console.log(`    ... and ${backups.length - 10} more`)
-    }
-  }
+  console.log(`Paired snapshot created: ${snapDir}`)
 }
 
 main()

@@ -181,7 +181,7 @@ export function validateInput(
   }
   return {
     ok: false,
-    errors: result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`),
+    errors: result.error.issues.map((e: z.ZodIssue) => `${e.path.join('.')}: ${e.message}`),
   }
 }
 
@@ -198,7 +198,7 @@ export function coerceValues(
   const coerced: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(input)) {
     const zodType = shape[key] as z.ZodTypeAny | undefined
-    const typeName = zodType?._def?.typeName
+    const typeName = (zodType?._def as unknown as { typeName?: string } | undefined)?.typeName
 
     if (typeName === 'ZodNumber' && typeof value === 'string') {
       const num = Number.parseInt(value, 10)

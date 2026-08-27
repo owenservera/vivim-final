@@ -5,7 +5,6 @@
 // wrappers. High-signal rules from the classic engine and devops/audit-code
 // are ported here as first-class, token-aware entries.
 
-import { hasCodeCall } from './tokenizer.js'
 import type { AuditRule, FindingSeed, TokenizedFile } from './types.js'
 
 const CODE_EXT = ['.ts', '.tsx', '.js', '.jsx']
@@ -17,7 +16,7 @@ const FRONTEND_EXT = ['.tsx', '.jsx']
 /** Does the code projection contain a real (non-string) `callee(...)` call anywhere? */
 function codeHasCall(tf: TokenizedFile, callee: string): boolean {
   for (let i = 0; i < tf.tokens.length; i++) {
-    if (tf.tokens[i]!.text === callee && tf.tokens[i + 1]?.text === '(') return true
+    if (tf.tokens[i]?.text === callee && tf.tokens[i + 1]?.text === '(') return true
   }
   return false
 }
@@ -381,7 +380,7 @@ export const RULES: AuditRule[] = [
       const out: FindingSeed[] = []
       const codeLines = tf.code.split('\n')
       for (let i = 0; i < codeLines.length; i++) {
-        if (!codeLines[i]!.includes('.exitCode')) continue
+        if (!codeLines[i]?.includes('.exitCode')) continue
         const before = codeLines.slice(Math.max(0, i - 5), i).join('\n')
         if (!before.includes('.exited')) {
           out.push({
@@ -677,7 +676,7 @@ export const POWERSHELL_RULES: AuditRule[] = [
     confidence: 0.96,
     extensions: ['.ps1'],
     detect: () => [],
-    detectRaw(filePath, lines) {
+    detectRaw(_filePath, lines) {
       const out: FindingSeed[] = []
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i]!

@@ -42,7 +42,13 @@ function cmpSemver(a: string, b: string): number {
 const PLACEHOLDER_SCHEMA: z.ZodTypeAny = z.object({}).passthrough()
 
 function makeZodError(message: string): z.ZodError {
-  return new z.ZodError([{ code: 'custom', message, path: [] }])
+  return new z.ZodError([
+    {
+      code: z.ZodIssueCode.custom,
+      message,
+      path: [],
+    },
+  ])
 }
 
 export class HarnessCommandRegistry {
@@ -68,7 +74,10 @@ export class HarnessCommandRegistry {
   }
 
   /** Validate params against the resolved command's stored schema. */
-  validateParams(cmd: ResolvedCommand, params: unknown): z.SafeParseReturnType<unknown, unknown> {
+  validateParams(
+    cmd: ResolvedCommand,
+    params: unknown,
+  ): { success: boolean; data?: unknown; error?: z.ZodError } {
     // If a real Zod schema is wired (e.g. by the caller), use it directly.
     if (cmd.paramsSchema !== PLACEHOLDER_SCHEMA) {
       return cmd.paramsSchema.safeParse(params)

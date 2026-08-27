@@ -2,8 +2,8 @@
 // MemoryFabric — federated per-agent memory provisioning, backend guards, idempotency.
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import type { MemoryBackend } from '../../../src/engines/memory/memory-backend.js'
-import { MemoryFabric } from '../../../src/engines/memory/memory-fabric.js'
 import type { MemoryFabricDeps } from '../../../src/engines/memory/memory-fabric.js'
+import { MemoryFabric } from '../../../src/engines/memory/memory-fabric.js'
 import { MemoryBackendLimitError, MemoryError } from '../../../src/errors.js'
 
 function makeDeps(overrides?: Partial<MemoryFabricDeps>): MemoryFabricDeps {

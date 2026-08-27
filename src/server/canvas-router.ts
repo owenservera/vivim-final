@@ -63,7 +63,7 @@ export function createCanvasRouter(ctx: ServerContext) {
     // POST /api/canvas/definitions → canvas_define (body = LayerDraft)
     if (url.pathname === '/api/canvas/definitions' && req.method === 'POST') {
       try {
-        const body = z.record(z.unknown()).parse(await req.json())
+        const body = z.record(z.string(), z.unknown()).parse(await req.json())
         return json({ ok: true, result: await cap('cap:canvas:define', body) })
       } catch (e) {
         return appErrorResponse(e)
@@ -73,7 +73,7 @@ export function createCanvasRouter(ctx: ServerContext) {
     // POST /api/canvas/spawn → canvas_spawn
     if (url.pathname === '/api/canvas/spawn' && req.method === 'POST') {
       try {
-        const body = z.record(z.unknown()).parse(await req.json())
+        const body = z.record(z.string(), z.unknown()).parse(await req.json())
         return json({ ok: true, result: await cap('cap:canvas:spawn', body) })
       } catch (e) {
         return appErrorResponse(e)
@@ -211,7 +211,7 @@ export function createCanvasRouter(ctx: ServerContext) {
     const mutateMatch = url.pathname.match(/^\/api\/canvas\/instance\/([^/]+)\/mutate$/)
     if (mutateMatch && req.method === 'POST') {
       try {
-        const body = z.record(z.unknown()).parse(await req.json())
+        const body = z.record(z.string(), z.unknown()).parse(await req.json())
         return json({
           ok: true,
           result: await cap('cap:canvas:mutate', {

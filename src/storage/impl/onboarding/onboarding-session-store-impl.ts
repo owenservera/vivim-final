@@ -8,8 +8,8 @@ import type {
   OnboardingSessionRow,
   OnboardingSessionStoreContract,
 } from '../../contracts/onboarding/onboarding-session-store.js'
-import type { PrismaClient } from '../../../prisma.js'
 import type { CapStoreDb } from '../../db.js'
+import type { PrismaClient } from '../../prisma.js'
 
 export class OnboardingSessionStoreImpl implements OnboardingSessionStoreContract {
   private db: PrismaClient

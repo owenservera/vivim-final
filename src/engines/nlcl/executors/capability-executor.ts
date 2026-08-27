@@ -114,7 +114,7 @@ export class CapabilityExecutor implements CommandExecutor {
         }
 
         const kernelResult = await this.kernel.execute(plan, async (_node, nodeInput) =>
-          this.registry!.execute(cap.id, nodeInput, capCtx),
+          this.registry?.execute(cap.id, nodeInput, capCtx),
         )
 
         if (!kernelResult.ok) {

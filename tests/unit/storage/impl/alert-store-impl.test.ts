@@ -18,7 +18,9 @@ function createMockDb() {
     alertEvent: {
       async create({
         data,
-      }: { data: { id: string; conditionId: string; firedAt: number; acknowledged: number } }) {
+      }: {
+        data: { id: string; conditionId: string; firedAt: number; acknowledged: number }
+      }) {
         events.push({ ...data, acknowledgedAt: null })
       },
       async findUnique({ where }: { where: { id: string } }) {

@@ -20,7 +20,7 @@ import type {
   ProviderManifest,
   RequestId,
 } from '../core/types.js'
-import { VIVIM_AI_PROTOCOL, createEventId, modelId } from '../core/types.js'
+import { createEventId, modelId, VIVIM_AI_PROTOCOL } from '../core/types.js'
 import type { IProviderAdapter, ProviderConnection } from './adapter.js'
 
 /**

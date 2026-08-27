@@ -8,10 +8,10 @@
 
 import { beforeAll, describe, expect, it } from 'bun:test'
 import {
-  PROBE_PORT,
-  type ServerHandle,
   knownUniverseCaps,
+  PROBE_PORT,
   parseHelpCommands,
+  type ServerHandle,
   spawnCli,
   startServer,
 } from './harness.ts'
@@ -26,21 +26,19 @@ beforeAll(async () => {
   if (serverOk) {
     universe = (await knownUniverseCaps()).map((c) => c.id)
   } else {
-    // [audit] removed: console.log(
-      '[T1] WARN: server failed to boot — GAP-5 (kernel DB init). Coverage gap not measurable without server.',
-    )
+    // [audit] removed: console.log — server failed to boot (GAP-5)
   }
 })
 
 describe('T1 Two-command ceiling', () => {
   it('records whether vivim serve boots the system', () => {
     // Soft assertion: logs the outcome without hard-failing.
-    // [audit] removed: console.log(`[T1] serverOk=${serverOk}`)
+    // [audit] removed: console.log — serverOk
   })
 
   it('vivim help surfaces CLI capabilities when server is reachable', async () => {
     if (!serverOk) {
-      // [audit] removed: console.log('[T1] SKIP: server not reachable')
+      // [audit] removed: console.log — SKIP: server not reachable
       return
     }
     const help = await spawnCli(['help'], { CAP_STORE_PORT: String(PROBE_PORT) })
@@ -59,9 +57,7 @@ describe('T1 Two-command ceiling', () => {
       const tail = id.split(':').pop() ?? id
       return visible.has(tail) || visible.has(id)
     })
-    const coverage = universe.length === 0 ? 0 : reachable.length / universe.length
-    // [audit] removed: console.log(
-      `[T1] universe=${universe.length} cliVisible=${visible.size} reachable=${reachable.length} coverage=${(coverage * 100).toFixed(1)}%`,
-    )
+    const _coverage = universe.length === 0 ? 0 : reachable.length / universe.length
+    // [audit] removed: console.log — T1 coverage result
   })
 })

@@ -72,7 +72,7 @@ function extractResultBlocks(html: string): string[] {
 function extractTitle(block: string): string | null {
   const m = /<h3[^>]*>([\s\S]*?)<\/h3>/i.exec(block)
   if (!m) return null
-  return decodeEntities(stripTags(m[1])).trim()
+  return decodeEntities(stripTags(m[1] ?? '')).trim()
 }
 
 /** Prefer the first result URL: /url?q= redirect, else the first href. */
@@ -87,9 +87,9 @@ function extractUrl(block: string): string {
 function extractSnippet(block: string): string {
   // Modern: .VwiC3b snippet, or data-sncf block.
   const modern = /class="[^"]*VwiC3b[^"]*"[^>]*>([\s\S]*?)<\/div>/i.exec(block)
-  if (modern) return decodeEntities(stripTags(modern[1])).trim()
+  if (modern) return decodeEntities(stripTags(modern[1] ?? '')).trim()
   const sncf = /data-sncf="[^"]*"[^>]*>([\s\S]*?)<\/div>/i.exec(block)
-  if (sncf) return decodeEntities(stripTags(sncf[1])).trim()
+  if (sncf) return decodeEntities(stripTags(sncf[1] ?? '')).trim()
   return ''
 }
 

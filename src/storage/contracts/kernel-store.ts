@@ -115,9 +115,11 @@ export interface KernelStore {
   upsertStore(desc: StoreDescriptor): Promise<void>
   upsertCapability(desc: CapabilityDescriptor): Promise<void>
   getEngine(id: string): Promise<EngineDescriptor | null>
-  listEngines(filter?: { layer?: string; kind?: string; status?: string }): Promise<
-    EngineDescriptor[]
-  >
+  listEngines(filter?: {
+    layer?: string
+    kind?: string
+    status?: string
+  }): Promise<EngineDescriptor[]>
 
   insertEvent(kind: string, engineId: string | null, data: unknown): Promise<void>
   queryRecentEvents(limit: number): Promise<SystemEvent[]>

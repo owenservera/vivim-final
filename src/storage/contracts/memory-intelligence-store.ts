@@ -47,9 +47,10 @@ export interface MemoryIntelligenceStore {
   }): Promise<DecisionRecordRow>
 
   // Pattern
-  listPatternExtracts(filter: { patternType?: string; limit?: number }): Promise<
-    PatternExtractRow[]
-  >
+  listPatternExtracts(filter: {
+    patternType?: string
+    limit?: number
+  }): Promise<PatternExtractRow[]>
   incrementOccurrences(id: string): Promise<void>
   createPatternExtract(input: {
     name: string

@@ -23,8 +23,25 @@
 - **Lifecycle:** RegistrationAuditor, VersionManager, TelemetryAggregator
 
 Design docs are in `docs/` (fresh set: `docs/README.md` map, `docs/architecture/`,
-`docs/runbooks/`, `docs/decisions/`). The old `docs/merged-design-v2/` set is
-archived in `.archive/`.
+`docs/runbooks/`, `docs/decisions/`, `docs/modules/`). The old docs structure is
+archived in `.archive/docs-legacy-2026-08-15/`.
+
+## Documentation Protocol (CRITICAL)
+
+**Docs-as-a-byproduct-of-work:** Every time code changes in a way that affects how the system works, the relevant doc gets touched in the *same commit/PR*. Not later. Not "I'll circle back."
+
+**Rule for agents:** If you touch code that changes behavior, architecture, an API contract, or a decision — you touch the matching doc in the same change. No exceptions, no "TODO: update docs."
+
+### Documentation Instructions for Agents
+
+1. **Before modifying a module**, read its `/docs/modules/<name>.md` (or in-folder README) and any linked ADRs.
+2. **If your change alters architecture, a public interface, a schema, or a non-obvious decision** — update the matching doc file in the same change, not as a follow-up.
+3. **If you make a call between two real alternatives and picked one for a non-obvious reason**, write a new ADR in `/docs/decisions/` using `TEMPLATE.md`.
+4. **Add a one-line entry to `CHANGELOG.md`** for anything user- or API-visible.
+5. **Never delete or rewrite an old ADR** — supersede it with a new one and cross-link.
+6. **If you introduce new domain terminology**, add it to `GLOSSARY.md`.
+7. **Keep each doc file under ~300 lines**. If a file is growing past that, split it and update the index/links.
+8. **Once a month (or every ~50 merged changes)**, do a "docs sweep": grep for `TODO: update docs`, check for modules with no `last-reviewed` date in the last 90 days, and flag stale ones to the user rather than silently rewriting them.
 
 ## Binary Size Optimization (CRITICAL)
 

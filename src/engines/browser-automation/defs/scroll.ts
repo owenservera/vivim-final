@@ -69,7 +69,7 @@ export const zoom: BrowserCapabilityDef = {
         mobile: false,
       })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return { ok: true, detail: `zoom ${ctx.params.factor}` }
   },
 }
@@ -89,7 +89,7 @@ export const resize: BrowserCapabilityDef = {
         mobile: false,
       })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return { ok: true, detail: `resized ${ctx.params.width}x${ctx.params.height}` }
   },
 }
@@ -165,14 +165,14 @@ export const pinch: BrowserCapabilityDef = {
         touchPoints: [{ x: 640, y: 400 }],
       })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     await ctx.governor.cdp
       .send(ctx.slaveId, 'Input.dispatchTouchEvent', {
         type: 'touchEnd',
         touchPoints: [],
       })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return { ok: true, detail: `pinch ${ctx.params.scale}` }
   },
 }
@@ -189,7 +189,7 @@ export const orientation: BrowserCapabilityDef = {
         orientation: ctx.params.orientation,
       })
       .catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     return { ok: true, detail: `orientation ${ctx.params.orientation}` }
   },
 }

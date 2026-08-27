@@ -4,11 +4,12 @@
 // Session 7 (2026-08-07): Types extracted to autonomous-types.ts.
 // This file now contains only the engine class + planner functions.
 
-import { BudgetExceededError, ConsentViolationError, EngineError } from '../errors.js'
+import { BudgetExceededError, EngineError } from '../errors.js'
 import { newId } from '../ids.js'
 import { catchDebug } from '../lib/catch-logger.js'
 import { safeJsonParse } from '../lib/safe-json.js'
 import type { AutonomousExecutionStore } from '../storage/contracts/autonomous-store.js'
+import { planStepsFromIntent, planStepsLocally, resolvePlanner } from './autonomous-planner.js'
 import { ReplayController, type ReplayResult } from './autonomous-replay.js'
 import type {
   ActionClassification,
@@ -30,10 +31,14 @@ import type { CapabilityEventBus } from './capability-event-bus.js'
 import type { ChromeGovernor } from './chrome-governor.js'
 import type { ExecutionPolicyEngine, PolicyDecision } from './execution-policy.js'
 import type { IntentResolver, NLCContext } from './nlcl/types.js'
-import { planStepsFromIntent, planStepsLocally, resolvePlanner } from './autonomous-planner.js'
 import type { SelectorHealer } from './selector-healer.js'
 import type { UnifiedCapabilityRegistry } from './unified-registry.js'
 
+export type { PlannerResolution } from './autonomous-planner.js'
+
+// Planner helpers extracted to autonomous-planner.ts (Phase 1.3). Re-exported
+// so existing imports (src/index.ts, autonomous-*.test.ts) continue to work.
+export { planStepsFromIntent, planStepsLocally, resolvePlanner } from './autonomous-planner.js'
 // Re-export types so existing imports continue to work
 export type {
   ActionClassification,
@@ -50,11 +55,6 @@ export type {
   TaskStatus,
   TaskTemplate,
 } from './autonomous-types.js'
-
-// Planner helpers extracted to autonomous-planner.ts (Phase 1.3). Re-exported
-// so existing imports (src/index.ts, autonomous-*.test.ts) continue to work.
-export { planStepsFromIntent, planStepsLocally, resolvePlanner } from './autonomous-planner.js'
-export type { PlannerResolution } from './autonomous-planner.js'
 
 export class AutonomousExecutionEngine {
   private activeTasks = new Map<string, AutonomousTask>()
@@ -1250,7 +1250,7 @@ export class AutonomousExecutionEngine {
           }
         })
         .catch(() => {
-  // [audit] log the error with context here
+          // [audit] log the error with context here
           /* poll failure — timer fallback handles it */
         })
     })

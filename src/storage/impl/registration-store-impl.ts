@@ -1,6 +1,7 @@
 // src/storage/impl/registration-store-impl.ts
 // Prisma-backed RegistrationStore for RegistrationAuditor.
 
+import type { Prisma } from '@prisma/client'
 import { newId } from '../../ids.js'
 import type {
   ManifestDriftInput,
@@ -11,8 +12,8 @@ import type {
   RegistrationEventRow,
 } from '../../schema/types.js'
 import type { RegistrationStore } from '../contracts/registration-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class RegistrationStoreImpl implements RegistrationStore {
   private db: PrismaClient
@@ -22,35 +23,35 @@ export class RegistrationStoreImpl implements RegistrationStore {
   }
 
   private get p() {
-    return this.db.prisma
+    return this.db
   }
 
   async createManifestVersion(input: ManifestVersionInput): Promise<ProviderManifestVersionRow> {
     const id = newId()
-    const now = Date.now()
+    const now = BigInt(Date.now())
     const r = await this.p.providerManifestVersion.create({
       data: {
         id,
-        provider_id: input.provider_id,
-        manifest_file: input.manifest_file,
+        providerId: input.provider_id,
+        manifestFile: input.manifest_file,
         version: input.version,
         hash: input.hash,
-        content_json: input.content_json,
-        change_summary: input.change_summary ?? null,
+        contentJson: input.content_json,
+        changeSummary: input.change_summary ?? null,
         actor: input.actor,
-        created_at: now,
+        createdAt: now,
       },
     })
     return {
       id: r.id,
-      provider_id: r.provider_id,
-      manifest_file: r.manifest_file,
+      provider_id: r.providerId,
+      manifest_file: r.manifestFile,
       version: r.version,
       hash: r.hash,
-      content_json: r.content_json,
-      change_summary: r.change_summary,
+      content_json: r.contentJson,
+      change_summary: r.changeSummary,
       actor: r.actor,
-      created_at: r.created_at,
+      created_at: Number(r.createdAt),
     }
   }
 
@@ -59,20 +60,20 @@ export class RegistrationStoreImpl implements RegistrationStore {
     file: string,
   ): Promise<ProviderManifestVersionRow | null> {
     const r = await this.p.providerManifestVersion.findFirst({
-      where: { provider_id: providerId, manifest_file: file },
+      where: { providerId, manifestFile: file },
       orderBy: { version: 'desc' },
     })
     if (!r) return null
     return {
       id: r.id,
-      provider_id: r.provider_id,
-      manifest_file: r.manifest_file,
+      provider_id: r.providerId,
+      manifest_file: r.manifestFile,
       version: r.version,
       hash: r.hash,
-      content_json: r.content_json,
-      change_summary: r.change_summary,
+      content_json: r.contentJson,
+      change_summary: r.changeSummary,
       actor: r.actor,
-      created_at: r.created_at,
+      created_at: Number(r.createdAt),
     }
   }
 
@@ -81,55 +82,55 @@ export class RegistrationStoreImpl implements RegistrationStore {
     limit?: number,
   ): Promise<ProviderManifestVersionRow[]> {
     const rows = await this.p.providerManifestVersion.findMany({
-      where: { provider_id: providerId },
-      orderBy: { created_at: 'desc' },
+      where: { providerId },
+      orderBy: { createdAt: 'desc' },
       take: limit ?? 50,
     })
-    return (rows as Record<string, unknown>[]).map((r) => ({
-      id: r.id as string,
-      provider_id: r.provider_id as string,
-      manifest_file: r.manifest_file as string,
-      version: r.version as number,
-      hash: r.hash as string,
-      content_json: r.content_json as string,
-      change_summary: (r.change_summary as string) ?? null,
-      actor: r.actor as string,
-      created_at: r.created_at as number,
+    return rows.map((r) => ({
+      id: r.id,
+      provider_id: r.providerId,
+      manifest_file: r.manifestFile,
+      version: r.version,
+      hash: r.hash,
+      content_json: r.contentJson,
+      change_summary: r.changeSummary,
+      actor: r.actor,
+      created_at: Number(r.createdAt),
     }))
   }
 
   async createRegistrationEvent(input: RegistrationEventInput): Promise<RegistrationEventRow> {
     const id = newId()
-    const now = Date.now()
+    const now = BigInt(Date.now())
     const r = await this.p.registrationEvent.create({
       data: {
         id,
-        provider_id: input.provider_id,
-        manifest_version_id: input.manifest_version_id ?? null,
-        event_type: input.event_type,
-        table_name: input.table_name,
-        record_id: input.record_id ?? null,
-        field_name: input.field_name ?? null,
-        from_value: input.from_value ?? null,
-        to_value: input.to_value ?? null,
-        change_summary: input.change_summary ?? null,
+        providerId: input.provider_id,
+        manifestVersionId: input.manifest_version_id ?? null,
+        eventType: input.event_type,
+        tableName: input.table_name,
+        recordId: input.record_id ?? null,
+        fieldName: input.field_name ?? null,
+        fromValue: input.from_value ?? null,
+        toValue: input.to_value ?? null,
+        changeSummary: input.change_summary ?? null,
         actor: input.actor,
         ts: now,
       },
     })
     return {
       id: r.id,
-      provider_id: r.provider_id,
-      manifest_version_id: r.manifest_version_id,
-      event_type: r.event_type,
-      table_name: r.table_name,
-      record_id: r.record_id,
-      field_name: r.field_name,
-      from_value: r.from_value,
-      to_value: r.to_value,
-      change_summary: r.change_summary,
+      provider_id: r.providerId,
+      manifest_version_id: r.manifestVersionId,
+      event_type: r.eventType,
+      table_name: r.tableName,
+      record_id: r.recordId,
+      field_name: r.fieldName,
+      from_value: r.fromValue,
+      to_value: r.toValue,
+      change_summary: r.changeSummary,
       actor: r.actor,
-      ts: r.ts,
+      ts: Number(r.ts),
     }
   }
 
@@ -137,7 +138,7 @@ export class RegistrationStoreImpl implements RegistrationStore {
     providerId: string,
     opts?: { limit?: number; since?: number },
   ): Promise<RegistrationEventRow[]> {
-    const where: Record<string, unknown> = { provider_id: providerId }
+    const where: Prisma.RegistrationEventWhereInput = { providerId }
     if (opts?.since !== undefined) {
       where.ts = { gte: opts.since }
     }
@@ -146,19 +147,19 @@ export class RegistrationStoreImpl implements RegistrationStore {
       orderBy: { ts: 'desc' },
       take: opts?.limit ?? 100,
     })
-    return (rows as Record<string, unknown>[]).map((r) => ({
-      id: r.id as string,
-      provider_id: r.provider_id as string,
-      manifest_version_id: (r.manifest_version_id as string) ?? null,
-      event_type: r.event_type as string,
-      table_name: r.table_name as string,
-      record_id: (r.record_id as string) ?? null,
-      field_name: (r.field_name as string) ?? null,
-      from_value: (r.from_value as string) ?? null,
-      to_value: (r.to_value as string) ?? null,
-      change_summary: (r.change_summary as string) ?? null,
-      actor: r.actor as string,
-      ts: r.ts as number,
+    return rows.map((r) => ({
+      id: r.id,
+      provider_id: r.providerId,
+      manifest_version_id: r.manifestVersionId,
+      event_type: r.eventType,
+      table_name: r.tableName,
+      record_id: r.recordId,
+      field_name: r.fieldName,
+      from_value: r.fromValue,
+      to_value: r.toValue,
+      change_summary: r.changeSummary,
+      actor: r.actor,
+      ts: Number(r.ts),
     }))
   }
 
@@ -167,104 +168,104 @@ export class RegistrationStoreImpl implements RegistrationStore {
     opts?: { limit?: number },
   ): Promise<RegistrationEventRow[]> {
     const rows = await this.p.registrationEvent.findMany({
-      where: { table_name: table },
+      where: { tableName: table },
       orderBy: { ts: 'desc' },
       take: opts?.limit ?? 100,
     })
-    return (rows as Record<string, unknown>[]).map((r) => ({
-      id: r.id as string,
-      provider_id: r.provider_id as string,
-      manifest_version_id: (r.manifest_version_id as string) ?? null,
-      event_type: r.event_type as string,
-      table_name: r.table_name as string,
-      record_id: (r.record_id as string) ?? null,
-      field_name: (r.field_name as string) ?? null,
-      from_value: (r.from_value as string) ?? null,
-      to_value: (r.to_value as string) ?? null,
-      change_summary: (r.change_summary as string) ?? null,
-      actor: r.actor as string,
-      ts: r.ts as number,
+    return rows.map((r) => ({
+      id: r.id,
+      provider_id: r.providerId,
+      manifest_version_id: r.manifestVersionId,
+      event_type: r.eventType,
+      table_name: r.tableName,
+      record_id: r.recordId,
+      field_name: r.fieldName,
+      from_value: r.fromValue,
+      to_value: r.toValue,
+      change_summary: r.changeSummary,
+      actor: r.actor,
+      ts: Number(r.ts),
     }))
   }
 
   async createManifestDrift(drift: ManifestDriftInput): Promise<ManifestDriftRow> {
     const id = newId()
-    const now = Date.now()
+    const now = BigInt(Date.now())
     const r = await this.p.manifestDrift.create({
       data: {
         id,
-        provider_id: drift.provider_id,
-        drift_type: drift.drift_type,
-        table_name: drift.table_name ?? null,
-        record_id: drift.record_id ?? null,
-        seed_value: drift.seed_value ?? null,
-        db_value: drift.db_value ?? null,
+        providerId: drift.provider_id,
+        driftType: drift.drift_type,
+        tableName: drift.table_name ?? null,
+        recordId: drift.record_id ?? null,
+        seedValue: drift.seed_value ?? null,
+        dbValue: drift.db_value ?? null,
         resolved: 0,
-        resolved_by_actor: null,
-        resolved_at: null,
-        detected_at: now,
+        resolvedByActor: null,
+        resolvedAt: null,
+        detectedAt: now,
       },
     })
     return {
       id: r.id,
-      provider_id: r.provider_id,
-      drift_type: r.drift_type,
-      table_name: r.table_name,
-      record_id: r.record_id,
-      seed_value: r.seed_value,
-      db_value: r.db_value,
+      provider_id: r.providerId,
+      drift_type: r.driftType,
+      table_name: r.tableName,
+      record_id: r.recordId,
+      seed_value: r.seedValue,
+      db_value: r.dbValue,
       resolved: r.resolved,
-      resolved_by_actor: r.resolved_by_actor,
-      resolved_at: r.resolved_at,
-      detected_at: r.detected_at,
+      resolved_by_actor: r.resolvedByActor,
+      resolved_at: r.resolvedAt !== null ? Number(r.resolvedAt) : null,
+      detected_at: Number(r.detectedAt),
     }
   }
 
   async getUnresolvedDrifts(providerId: string): Promise<ManifestDriftRow[]> {
     const rows = await this.p.manifestDrift.findMany({
-      where: { provider_id: providerId, resolved: 0 },
-      orderBy: { detected_at: 'desc' },
+      where: { providerId, resolved: 0 },
+      orderBy: { detectedAt: 'desc' },
     })
-    return (rows as Record<string, unknown>[]).map((r) => ({
-      id: r.id as string,
-      provider_id: r.provider_id as string,
-      drift_type: r.drift_type as string,
-      table_name: (r.table_name as string) ?? null,
-      record_id: (r.record_id as string) ?? null,
-      seed_value: (r.seed_value as string) ?? null,
-      db_value: (r.db_value as string) ?? null,
-      resolved: r.resolved as number,
-      resolved_by_actor: (r.resolved_by_actor as string) ?? null,
-      resolved_at: (r.resolved_at as number) ?? null,
-      detected_at: r.detected_at as number,
+    return rows.map((r) => ({
+      id: r.id,
+      provider_id: r.providerId,
+      drift_type: r.driftType,
+      table_name: r.tableName,
+      record_id: r.recordId,
+      seed_value: r.seedValue,
+      db_value: r.dbValue,
+      resolved: r.resolved,
+      resolved_by_actor: r.resolvedByActor,
+      resolved_at: r.resolvedAt !== null ? Number(r.resolvedAt) : null,
+      detected_at: Number(r.detectedAt),
     }))
   }
 
   async resolveDrift(driftId: string, actor: string): Promise<void> {
     await this.p.manifestDrift.update({
       where: { id: driftId },
-      data: { resolved: 1, resolved_by_actor: actor, resolved_at: Date.now() },
+      data: { resolved: 1, resolvedByActor: actor, resolvedAt: BigInt(Date.now()) },
     })
   }
 
   async getDriftHistory(providerId: string, limit?: number): Promise<ManifestDriftRow[]> {
     const rows = await this.p.manifestDrift.findMany({
-      where: { provider_id: providerId },
-      orderBy: { detected_at: 'desc' },
+      where: { providerId },
+      orderBy: { detectedAt: 'desc' },
       take: limit ?? 50,
     })
-    return (rows as Record<string, unknown>[]).map((r) => ({
-      id: r.id as string,
-      provider_id: r.provider_id as string,
-      drift_type: r.drift_type as string,
-      table_name: (r.table_name as string) ?? null,
-      record_id: (r.record_id as string) ?? null,
-      seed_value: (r.seed_value as string) ?? null,
-      db_value: (r.db_value as string) ?? null,
-      resolved: r.resolved as number,
-      resolved_by_actor: (r.resolved_by_actor as string) ?? null,
-      resolved_at: (r.resolved_at as number) ?? null,
-      detected_at: r.detected_at as number,
+    return rows.map((r) => ({
+      id: r.id,
+      provider_id: r.providerId,
+      drift_type: r.driftType,
+      table_name: r.tableName,
+      record_id: r.recordId,
+      seed_value: r.seedValue,
+      db_value: r.dbValue,
+      resolved: r.resolved,
+      resolved_by_actor: r.resolvedByActor,
+      resolved_at: r.resolvedAt !== null ? Number(r.resolvedAt) : null,
+      detected_at: Number(r.detectedAt),
     }))
   }
 }

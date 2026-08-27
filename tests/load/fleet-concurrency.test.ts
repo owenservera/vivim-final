@@ -3,8 +3,8 @@
 // Phase 11: Production hardening via load testing.
 
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { BrowserPool } from '../../src/engines/pool/browser-pool.js'
 import type { AcquireResult } from '../../src/engines/pool/browser-pool.js'
+import { BrowserPool } from '../../src/engines/pool/browser-pool.js'
 import { ResourceManager } from '../../src/engines/resource/resource-manager.js'
 
 describe('Load: Fleet Concurrency', () => {

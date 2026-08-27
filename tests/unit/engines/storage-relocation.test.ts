@@ -4,11 +4,11 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setStoragePaths } from '../../../src/config.js'
-import { StorageRelocationEngine } from '../../../src/engines/storage-relocation-engine.js'
 import type {
   ArchivedLocation,
   RelocationStore,
 } from '../../../src/engines/storage-relocation-engine.js'
+import { StorageRelocationEngine } from '../../../src/engines/storage-relocation-engine.js'
 
 function createMockStore(overrides?: Partial<RelocationStore>): RelocationStore {
   const archivedLocations: ArchivedLocation[] = []
@@ -65,11 +65,11 @@ describe('StorageRelocationEngine', () => {
     try {
       rmSync(sourceDir, { recursive: true, force: true })
     } catch {}
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     try {
       rmSync(targetDir, { recursive: true, force: true })
     } catch {}
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   })
 
   it('should copy all files from source to target', async () => {

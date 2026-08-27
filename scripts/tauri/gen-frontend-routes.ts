@@ -61,8 +61,8 @@ export function collectFrontendRoutes(): RouteSeg[] {
       // request fall through to the backend routing chain instead.
       if (src.includes('proxyToBackend')) continue
       const methods = [
-        ...src.matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/g),
-      ].map((m) => m[1])
+        ...src.matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(([^)]*)\)/g),
+      ].map((m) => ({ method: m[1], rawArgs: m[2].trim() }))
       if (methods.length === 0) continue
       out.push({ hint, methods })
     }
@@ -83,10 +83,18 @@ export function generateFrontendRoutes(): string {
     const alias = `_m${i}`
     importLines.push(`import * as ${alias} from ${JSON.stringify(impRel)}`)
     const handlers = r.methods
-      .map(
-        (m) =>
-          `    ${m}: (req: Request, params: Record<string, string>) => ${alias}.${m}?.(req, { params: Promise.resolve(params) }),`,
-      )
+      .map((m) => {
+        // Match the call shape to the handler's declared arity. Casts use
+        // Parameters<typeof _mX> so the call stays type-true regardless of the
+        // route's exact Request subclass (NextRequest) or params shape.
+        const call =
+          m.rawArgs === ''
+            ? `${alias}.${m.method}?.()`
+            : m.rawArgs.includes(',')
+              ? `${alias}.${m.method}?.(req as Parameters<typeof ${alias}.${m.method}>[0], { params: Promise.resolve(params) } as Parameters<typeof ${alias}.${m.method}>[1])`
+              : `${alias}.${m.method}?.(req as Parameters<typeof ${alias}.${m.method}>[0])`
+        return `    ${m.method}: (req: Request, params: Record<string, string>) => ${call},`
+      })
       .join('\n')
     entryLines.push(`  {\n    path: ${JSON.stringify(`/api/${r.hint}`)},\n    handlers: {\n${handlers}\n    },\n  }`)
   })

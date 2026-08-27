@@ -78,7 +78,7 @@ export class Alerter {
 
       if (value !== null) {
         this.evaluate(metric, providerId, value).catch(() => {
-  // [audit] log the error with context here
+          // [audit] log the error with context here
           // Best-effort evaluation; errors logged by store
         })
       }

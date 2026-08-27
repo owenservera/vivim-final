@@ -9,8 +9,10 @@ import { ConceptualModelService } from '../../../src/engines/conceptual-model-se
 import type { PrimitiveStore } from '../../../src/storage/contracts/primitive-store.js'
 import type { ProviderStore } from '../../../src/storage/contracts/provider-store.js'
 import type { ProviderTypeStore } from '../../../src/storage/contracts/provider-type-store.js'
-import type { UiComponentStore } from '../../../src/storage/contracts/ui-component-store.js'
-import type { ResolveContext } from '../../../src/storage/contracts/ui-component-store.js'
+import type {
+  ResolveContext,
+  UiComponentStore,
+} from '../../../src/storage/contracts/ui-component-store.js'
 
 // ── In-memory fakes ────────────────────────────────────────────────────────
 

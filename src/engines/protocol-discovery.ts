@@ -292,7 +292,7 @@ export class ProtocolDiscoveryEngine {
     const hint = opts?.providerNameHint ?? new URL(url).hostname.split('.')[0] ?? 'unknown'
 
     await this.client.send('Page.navigate', { url }, { sessionId: this.sessionId }).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
     await new Promise((r) => setTimeout(r, 5000))
 
     const networkPatterns = await _collectNetworkPatterns(this.client, this.sessionId)

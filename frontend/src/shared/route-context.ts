@@ -19,6 +19,16 @@ export const TIER_RANK: Record<PlanTier, number> = {
   enterprise: 2,
 }
 
+/**
+ * Normalized tier rank — mirrors backend capability-resolution.ts fix (H1+H3).
+ * Lowercases + trims, fails CLOSED (Infinity) on unknown tier so gating denies.
+ */
+export function tierRank(tier: string): number {
+  const normalized = tier.toLowerCase().trim() as PlanTier
+  const rank = TIER_RANK[normalized]
+  return rank ?? Number.POSITIVE_INFINITY
+}
+
 export interface AccountContext {
   accountId: string
   providerId: string

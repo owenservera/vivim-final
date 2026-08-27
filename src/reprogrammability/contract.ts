@@ -136,7 +136,7 @@ export interface ReprogrammableSurface {
    * Modal (Phase 5) and the LLM Harness (Phase 7) to validate plans.
    * If omitted, the registry falls back to the kind's default schema.
    */
-  readonly specSchema?: z.ZodType<SurfaceSpec, z.ZodTypeDef, unknown>
+  readonly specSchema?: z.ZodType<SurfaceSpec>
 }
 
 /**
@@ -175,7 +175,7 @@ export class InvalidMutationPayloadError extends Error {
   }
 }
 
+export type { SurfaceMutation, SurfaceMutationSchema } from './mutation-schema.js'
 // Re-export the schema types for callers that import from the contract module.
 // The canonical exports live in schema/spec.ts and mutation-schema.ts.
 export type { SurfaceSpec, SurfaceSpecSchema } from './schema/spec.js'
-export type { SurfaceMutation, SurfaceMutationSchema } from './mutation-schema.js'

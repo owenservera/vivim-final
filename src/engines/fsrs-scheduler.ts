@@ -105,7 +105,7 @@ export class FsrsScheduler {
     return this.w[2] + this.w[3] * (rating - 3)
   }
 
-  private nextStability(stability: number, difficulty: number, rating: number): number {
+  private nextStability(stability: number, _difficulty: number, rating: number): number {
     if (rating < 3) {
       return stability * (1 - this.w[0] * (3 - rating))
     }

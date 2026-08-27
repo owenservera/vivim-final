@@ -125,11 +125,36 @@
     "typescript": {
       "disabled": false,
       "command": ["bun", "run", "--bun", "typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"],
       "initialization": {
         "preferences": {
           "importModuleSpecifierPreference": "relative"
         }
       }
+    },
+    "prisma": {
+      "disabled": false,
+      "command": ["prisma-language-server", "--stdio"],
+      "extensions": [".prisma"],
+      "filetypes": ["prisma"]
+    },
+    "css": {
+      "disabled": false,
+      "command": ["vscode-css-language-server", "--stdio"],
+      "extensions": [".css", ".scss", ".less"],
+      "filetypes": ["css", "scss", "less"]
+    },
+    "json": {
+      "disabled": false,
+      "command": ["vscode-json-language-server", "--stdio"],
+      "extensions": [".json", ".jsonc"],
+      "filetypes": ["json", "jsonc"]
+    },
+    "tailwindcss": {
+      "disabled": false,
+      "command": ["tailwindcss-language-server", "--stdio"],
+      "extensions": [".css", ".scss", ".html", ".jsx", ".tsx"],
+      "filetypes": ["css", "scss", "html", "jsx", "tsx"]
     }
   },
   "permission": "allow"

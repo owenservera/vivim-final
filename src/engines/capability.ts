@@ -8,8 +8,8 @@ import type {
   CapabilityStore,
   SelectorStrategyRow,
 } from '../storage/contracts/capability-store.js'
-import type { ChromeGovernor } from './chrome-governor.js'
 import type { CapabilityEventBus } from './capability-event-bus.js'
+import type { ChromeGovernor } from './chrome-governor.js'
 
 export interface CapabilityExecutionResult {
   ok: boolean

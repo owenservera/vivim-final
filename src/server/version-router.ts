@@ -151,9 +151,7 @@ export function createVersionRouter() {
         type: 'version-store-snapshot',
         surfaces: Array.from(
           new Set(
-            versionStore
-              .listBackups(1000)
-              .flatMap(() => []), // empty placeholder
+            versionStore.listBackups(1000).flatMap(() => []), // empty placeholder
           ),
         ),
         takenAt: Date.now(),

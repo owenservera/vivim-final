@@ -2,11 +2,11 @@
 // Unit 2.10 — LiveCapabilityRegistry HTTP handler kind.
 
 import { describe, expect, it } from 'bun:test'
-import { LiveCapabilityRegistry } from '../../../src/engines/live-capability-registry.js'
 import type {
   LiveCapabilitySpec,
   LiveCapabilityStore,
 } from '../../../src/engines/live-capability-registry.js'
+import { LiveCapabilityRegistry } from '../../../src/engines/live-capability-registry.js'
 import type { AuditReport } from '../../../src/engines/telemetry-audit.js'
 import { EngineError } from '../../../src/errors.js'
 

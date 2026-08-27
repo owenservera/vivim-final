@@ -3,14 +3,14 @@
 
 import { describe, expect, it } from 'bun:test'
 import { existsSync } from 'node:fs'
-import { readFile, readdir } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
 // ── Soft assertion helper (bun:test lacks expect.soft) ───────────────────
-function softFail(label: string, items: string[]): void {
+function softFail(_label: string, items: string[]): void {
   if (items.length === 0) return
   // [audit] removed: console.warn(`\n  [SOFT FAIL] ${label} (${items.length} issues):`)
-  for (const item of items.slice(0, 10)) {
+  for (const _item of items.slice(0, 10)) {
     // [audit] removed: console.warn(`    - ${item}`)
   }
   // [audit] removed: if (items.length > 10) console.warn(`    ... and ${items.length - 10} more`)

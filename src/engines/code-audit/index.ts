@@ -226,7 +226,7 @@ export class CodeAuditEngine {
       try {
         totalLines += fs.readFileSync(file, 'utf-8').split('\n').length
       } catch {
-  // [audit] log the error with context here
+        // [audit] log the error with context here
         // unreadable file: skip
       }
     }
@@ -314,7 +314,7 @@ export class CodeAuditEngine {
       for (const rule of rules) {
         if (!rule.extensions.some((e) => file.endsWith(e))) continue
         if (!isRuleAllowed(rule, file)) continue
-        let seeds
+        let seeds: ReturnType<NonNullable<typeof rule.detectRaw>> | ReturnType<typeof rule.detect>
         try {
           if (rule.detectRaw && !/[.](ts|tsx|js|jsx|prisma)$/.test(file)) {
             seeds = rule.detectRaw(file, lines)

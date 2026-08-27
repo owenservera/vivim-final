@@ -201,4 +201,4 @@ export function finalizeDefinition(
   }
 }
 
-export { CanvasSpawnError, CanvasMutationError, SandboxPermissionError }
+export { CanvasMutationError, CanvasSpawnError, SandboxPermissionError }

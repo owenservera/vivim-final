@@ -5,14 +5,14 @@
 // factories. Provides createDefaultPipeline() for a production-ready pipeline
 // with tracing, logging, CORS, and error handling pre-wired.
 
-export * from './types.js'
-export { MiddlewarePipeline } from './pipeline.js'
 export { createCorsMiddleware } from './built-in/cors.js'
+export { createErrorHandlerMiddleware } from './built-in/error-handler.js'
+export type { RateLimitOptions } from './built-in/rate-limiter.js'
+export { createRateLimiterMiddleware } from './built-in/rate-limiter.js'
 export { createRequestLoggerMiddleware } from './built-in/request-logger.js'
 export { createTracePropagationMiddleware } from './built-in/trace-propagation.js'
-export { createRateLimiterMiddleware } from './built-in/rate-limiter.js'
-export type { RateLimitOptions } from './built-in/rate-limiter.js'
-export { createErrorHandlerMiddleware } from './built-in/error-handler.js'
+export { MiddlewarePipeline } from './pipeline.js'
+export * from './types.js'
 
 import { createCorsMiddleware } from './built-in/cors.js'
 import { createErrorHandlerMiddleware } from './built-in/error-handler.js'

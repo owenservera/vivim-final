@@ -52,7 +52,7 @@ export class WorkflowStoreImpl implements WorkflowStore {
 
   async deleteWorkflow(id: string): Promise<void> {
     await this.db.prisma.workflowDefinition.delete({ where: { id } }).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 
   async saveExecution(exec: WorkflowExecution): Promise<void> {

@@ -13,9 +13,11 @@ import type {
 // ── Test schema ────────────────────────────────────────────────────────────
 
 const TestConfigSchema = z.object({
-  maxRetries: z.number().min(0).max(10),
-  timeoutMs: z.number().min(100),
-  featureFlags: z.record(z.boolean()).optional(),
+  maxRetries: z.number({ error: 'Invalid number' }).min(0).max(10),
+  timeoutMs: z.number({ error: 'Invalid number' }).min(100),
+  featureFlags: z
+    .record(z.string({ error: 'Invalid string' }), z.boolean({ error: 'Invalid boolean' }))
+    .optional(),
 })
 
 type TestConfig = z.infer<typeof TestConfigSchema>
@@ -23,6 +25,7 @@ type TestConfig = z.infer<typeof TestConfigSchema>
 const TEST_DEFAULTS: TestConfig = {
   maxRetries: 3,
   timeoutMs: 5000,
+  featureFlags: { feature1: true },
 }
 
 // ── Mock store ─────────────────────────────────────────────────────────────

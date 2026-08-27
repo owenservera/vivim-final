@@ -48,7 +48,7 @@ export class AlertStoreImpl implements AlertStore {
 
   async delete(id: string): Promise<void> {
     await this.db.prisma.alertEvent.delete({ where: { id } }).catch(() => {})
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 
   private toAlert(row: {

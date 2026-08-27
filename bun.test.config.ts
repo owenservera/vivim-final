@@ -6,5 +6,6 @@ export default defineConfig({
     'research-clones',
     'dist',
     '.runtime',
+    'docs/dev-code-impl/**',
   ],
 })

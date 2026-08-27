@@ -1,11 +1,12 @@
 // src/storage/impl/onboarding/parser-candidate-store-impl.ts
+
 import type {
   ParserCandidateCreateInput,
   ParserCandidateRow,
   ParserCandidateStoreContract,
 } from '../../contracts/onboarding/parser-candidate-store.js'
-import type { PrismaClient } from '../../../prisma.js'
 import type { CapStoreDb } from '../../db.js'
+import type { PrismaClient } from '../../prisma.js'
 
 export class ParserCandidateStoreImpl implements ParserCandidateStoreContract {
   private db: PrismaClient

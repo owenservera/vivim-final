@@ -3,8 +3,8 @@
 // Mocks SendResilienceDeps (governor / health / wizard / send) — no real Chrome.
 
 import { describe, expect, it, mock } from 'bun:test'
-import { SendResilienceEngine } from '../../../src/engines/send-resilience.js'
 import type { SendInput, SendResilienceDeps } from '../../../src/engines/send-resilience.js'
+import { SendResilienceEngine } from '../../../src/engines/send-resilience.js'
 import { SendResilienceError } from '../../../src/errors.js'
 
 const INPUT: SendInput = {

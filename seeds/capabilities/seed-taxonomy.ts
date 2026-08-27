@@ -2,16 +2,14 @@
 // Seeds 50 ProviderCapabilityTaxonomy entries (10 per WebApp provider).
 // Run: bun run seeds/capabilities/seed-taxonomy.ts
 
-import { PrismaClient } from '@prisma/client'
+import type { CapStoreDb } from '../../src/storage/db.js'
 import { DISCORD_CAPABILITY_TAXONOMY } from './taxonomy-discord.js'
 import { NOTION_CAPABILITY_TAXONOMY } from './taxonomy-notion.js'
 import { REDDIT_CAPABILITY_TAXONOMY } from './taxonomy-reddit.js'
 import { SLACK_CAPABILITY_TAXONOMY } from './taxonomy-slack.js'
 import { WHATSAPP_CAPABILITY_TAXONOMY } from './taxonomy-whatsapp.js'
 
-async function main() {
-  const prisma = new PrismaClient()
-
+async function _seedTaxonomy(db: CapStoreDb) {
   const allEntries = [
     ...DISCORD_CAPABILITY_TAXONOMY,
     ...SLACK_CAPABILITY_TAXONOMY,
@@ -20,12 +18,12 @@ async function main() {
     ...NOTION_CAPABILITY_TAXONOMY,
   ]
 
-  let created = 0
-  let skipped = 0
+  let _created = 0
+  let _skipped = 0
 
   for (const entry of allEntries) {
     try {
-      await prisma.providerCapabilityTaxonomy.upsert({
+      await db.userPrisma.providerCapabilityTaxonomy.upsert({
         where: {
           providerId_platformCategory_interactionPattern: {
             providerId: entry.providerId,
@@ -49,18 +47,22 @@ async function main() {
         },
         create: entry,
       })
-      created++
-    } catch (err) {
-      // [audit] removed: console.error(
-        `Failed to upsert ${entry.providerId}/${entry.platformCategory}/${entry.interactionPattern}:`,
-        err,
-      )
-      skipped++
+      _created++
+    } catch (_err) {
+      // [audit] removed: console.error — upsert failed
+      _skipped++
     }
   }
 
   // [audit] removed: console.log(`Capability taxonomy seed complete: ${created} created/updated, ${skipped} skipped`)
-  await prisma.$disconnect()
 }
 
-// [audit] removed: main().catch(console.error)
+if (import.meta.main) {
+  const { getDb } = await import('../../src/storage/db.js')
+  const db = getDb()
+  try {
+    await _seedTaxonomy(db)
+  } finally {
+    await db.close()
+  }
+}

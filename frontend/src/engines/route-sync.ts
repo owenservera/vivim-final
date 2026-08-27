@@ -27,7 +27,7 @@ import type {
   ResolvedSurface,
   RouteContext,
 } from '../shared/route-context';
-import { TIER_RANK } from '../shared/route-context';
+import { TIER_RANK, tierRank } from '../shared/route-context';
 import type { AccountStore } from '../storage/contracts/account-store';
 import type { CapabilityTierStore } from '../storage/contracts/capability-tier-store';
 import type { PrimitiveStore } from '../storage/contracts/primitive-store';
@@ -117,7 +117,8 @@ export async function resolveActions(
   const cap = await store.getTaxonomy(capabilityId);
   if (!cap) return [];
   // S10/S51/S52: tier < minPlanTier → all actions hidden.
-  if (TIER_RANK[planTier] < TIER_RANK[cap.minPlanTier]) {
+  // Use normalized tierRank (fail-closed on unknown) — mirrors backend H1+H3 fix.
+  if (tierRank(planTier) < tierRank(cap.minPlanTier)) {
     return [];
   }
   const tierRow = await store.getTier(capabilityId, planTier);

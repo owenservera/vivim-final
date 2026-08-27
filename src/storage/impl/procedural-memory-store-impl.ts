@@ -6,8 +6,8 @@ import type {
   ProceduralRule,
   RuleContext,
 } from '../../engines/memory-engine.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class ProceduralMemoryStoreImpl implements ProceduralMemoryStore {
   private db: PrismaClient
@@ -29,18 +29,18 @@ export class ProceduralMemoryStoreImpl implements ProceduralMemoryStore {
         condition: rule.condition,
         action: rule.action,
         confidence: rule.confidence,
-        success_count: rule.successCount,
-        failure_count: rule.failureCount,
-        last_triggered: rule.lastTriggered ?? null,
-        created_at: rule.createdAt,
-        updated_at: rule.updatedAt,
+        successCount: rule.successCount,
+        failureCount: rule.failureCount,
+        lastTriggered: rule.lastTriggered ?? null,
+        createdAt: BigInt(rule.createdAt),
+        updatedAt: BigInt(rule.updatedAt),
       },
       update: {},
     })
   }
 
   async findByContext(ctx: RuleContext): Promise<ProceduralRule[]> {
-    const where = {}
+    const where: any = {}
     if (ctx.providerId) where.condition = { contains: ctx.providerId }
     if (ctx.capabilityId) where.condition = { contains: ctx.capabilityId }
     if (ctx.action) where.action = ctx.action
@@ -56,11 +56,11 @@ export class ProceduralMemoryStoreImpl implements ProceduralMemoryStore {
       condition: r.condition as string,
       action: r.action as string,
       confidence: r.confidence as number,
-      successCount: r.success_count as number,
-      failureCount: r.failure_count as number,
-      lastTriggered: (r.last_triggered as number) ?? undefined,
-      createdAt: r.created_at as number,
-      updatedAt: r.updated_at as number,
+      successCount: r.successCount as number,
+      failureCount: r.failureCount as number,
+      lastTriggered: r.lastTriggered ? Number(r.lastTriggered) : undefined,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }))
   }
 
@@ -75,11 +75,11 @@ export class ProceduralMemoryStoreImpl implements ProceduralMemoryStore {
       condition: r.condition as string,
       action: r.action as string,
       confidence: r.confidence as number,
-      successCount: r.success_count as number,
-      failureCount: r.failure_count as number,
-      lastTriggered: (r.last_triggered as number) ?? undefined,
-      createdAt: r.created_at as number,
-      updatedAt: r.updated_at as number,
+      successCount: r.successCount as number,
+      failureCount: r.failureCount as number,
+      lastTriggered: r.lastTriggered ? Number(r.lastTriggered) : undefined,
+      createdAt: Number(r.createdAt),
+      updatedAt: Number(r.updatedAt),
     }))
   }
 

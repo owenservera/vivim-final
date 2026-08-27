@@ -104,6 +104,11 @@ function makeConversationStore(): ConversationStore {
         tokenCount: null,
         model: null,
         metadataJson: '{}',
+        providerMessageId: null,
+        identityHash: null,
+        isPinned: 0,
+        isArchived: 0,
+        readStatus: 'unread',
         createdAt: Date.now(),
       }
     },
@@ -130,6 +135,10 @@ function makeConversationStore(): ConversationStore {
     upsertConversationByExternalId: async () => ({ id: 'x' }) as never,
     listConversationsByAccountId: async () => [],
     createMessages: async () => [],
+    getMessageByIdentityHash: async () => null,
+    createMessageWithIdentity: async () => ({}) as any,
+    updateMessageMetadata: async () => {},
+    queryMessagesByMetadata: async () => [],
   }
 }
 

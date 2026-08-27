@@ -14,11 +14,7 @@ export interface FleetEventRow {
 }
 
 export interface EventStore {
-  create(data: {
-    slaveId: string
-    type: string
-    payload: string
-  }): Promise<FleetEventRow>
+  create(data: { slaveId: string; type: string; payload: string }): Promise<FleetEventRow>
 }
 
 /**

@@ -64,10 +64,10 @@ export const recordVideo: BrowserCapabilityDef = {
       await ctx.governor.cdp
         .send(ctx.slaveId, 'Page.startScreencast', { format: 'png', everyNthFrame: 1 })
         .catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     } else {
       await ctx.governor.cdp.send(ctx.slaveId, 'Page.stopScreencast', {}).catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
     return { ok: true, detail: `screencast ${ctx.params.action}` }
   },
@@ -123,10 +123,10 @@ export const captureTrace: BrowserCapabilityDef = {
       await ctx.governor.cdp
         .send(ctx.slaveId, 'Tracing.start', { categories: 'devtools.timeline' })
         .catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     } else {
       await ctx.governor.cdp.send(ctx.slaveId, 'Tracing.end', {}).catch(() => {})
-  // [audit] log the error with context here
+      // [audit] log the error with context here
     }
     return { ok: true, detail: `trace ${ctx.params.action}` }
   },

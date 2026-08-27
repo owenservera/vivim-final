@@ -6,7 +6,7 @@
 
 import { EngineError } from '../../errors.js'
 import type { Recipe, RecipeStep } from '../../storage/contracts/program-store.js'
-import { RECIPES, getRecipe } from '../browser-automation/recipes.js'
+import { getRecipe, RECIPES } from '../browser-automation/recipes.js'
 import type { ChromeGovernor } from '../chrome-governor.js'
 import { compileRecipe } from '../harness/recipe-compiler.js'
 import { getAgentRole } from './agents.js'

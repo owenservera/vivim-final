@@ -153,7 +153,7 @@ export async function seedMemoryIntelligence(db: CapStoreDb): Promise<SeedResult
   for (const entity of SEED_ENTITIES) {
     try {
       // Check if entity already exists (by unique name+type constraint)
-      const existing = await db.prisma.entity.findFirst({
+      const existing = await db.userPrisma.entity.findFirst({
         where: { name: entity.name, type: entity.type },
       })
       if (existing) {
@@ -161,7 +161,7 @@ export async function seedMemoryIntelligence(db: CapStoreDb): Promise<SeedResult
         continue
       }
 
-      await db.prisma.entity.create({
+      await db.userPrisma.entity.create({
         data: {
           id: newId(),
           name: entity.name,
@@ -190,7 +190,7 @@ export async function seedMemoryIntelligence(db: CapStoreDb): Promise<SeedResult
   // ── Seed topics ────────────────────────────────────────────────────────
   for (const topic of SEED_TOPICS) {
     try {
-      const existing = await db.prisma.topic.findFirst({
+      const existing = await db.userPrisma.topic.findFirst({
         where: { name: topic.name },
       })
       if (existing) {
@@ -198,7 +198,7 @@ export async function seedMemoryIntelligence(db: CapStoreDb): Promise<SeedResult
         continue
       }
 
-      await db.prisma.topic.create({
+      await db.userPrisma.topic.create({
         data: {
           id: newId(),
           name: topic.name,
@@ -223,7 +223,7 @@ export async function seedMemoryIntelligence(db: CapStoreDb): Promise<SeedResult
   // ── Seed projects ──────────────────────────────────────────────────────
   for (const project of SEED_PROJECTS) {
     try {
-      const existing = await db.prisma.project.findFirst({
+      const existing = await db.userPrisma.project.findFirst({
         where: { name: project.name },
       })
       if (existing) {
@@ -231,7 +231,7 @@ export async function seedMemoryIntelligence(db: CapStoreDb): Promise<SeedResult
         continue
       }
 
-      await db.prisma.project.create({
+      await db.userPrisma.project.create({
         data: {
           id: newId(),
           name: project.name,
@@ -257,7 +257,7 @@ export async function seedMemoryIntelligence(db: CapStoreDb): Promise<SeedResult
   for (const pref of SEED_PREFERENCES) {
     try {
       // Use upsert to handle the unique (userId, key) constraint
-      await db.prisma.userPreference.upsert({
+      await db.userPrisma.userPreference.upsert({
         where: {
           userId_key: { userId: pref.userId, key: pref.key },
         },
@@ -297,9 +297,9 @@ if (import.meta.main) {
   try {
     await configurePrisma(db)
     // [audit] removed: console.log('[seed] Seeding memory intelligence tables...')
-    const result = await seedMemoryIntelligence(db)
+    const _result = await seedMemoryIntelligence(db)
     // [audit] removed: console.log('[seed] Results:', JSON.stringify(result, null, 2))
-  } catch (err) {
+  } catch (_err) {
     // [audit] removed: console.error('[seed] Error:', err)
     process.exit(1)
   } finally {

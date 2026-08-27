@@ -26,10 +26,10 @@ import {
 } from '../metrics.js'
 import { DEFAULT_SLA_POLICY, SlaMonitor, type SlaPolicy } from '../sla-monitor.js'
 
+export * from '../audit-trail.js'
+export * from '../error-tracker.js'
 export * from '../logger.js'
 export * from '../metrics.js'
-export * from '../error-tracker.js'
-export * from '../audit-trail.js'
 export * from '../sla-monitor.js'
 
 export interface ObservabilityPolicies {
@@ -73,4 +73,4 @@ export function createObservability(
 }
 
 // Convenience re-exports for sink/exporter/reporter typing at call sites.
-export type { MetricsExporter, ErrorReporter, AuditSink }
+export type { AuditSink, ErrorReporter, MetricsExporter }

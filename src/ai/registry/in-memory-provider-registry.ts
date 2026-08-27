@@ -8,8 +8,7 @@
 
 import { AI_ERRORS } from '../core/errors.js'
 import type { ProviderId, ProviderManifest, ProviderState } from '../core/types.js'
-import type { IEventBus } from '../events/bus.js'
-import type { GatewayEvent } from '../events/bus.js'
+import type { GatewayEvent, IEventBus } from '../events/bus.js'
 import type { IProviderRegistry } from './registry.js'
 import { canTransitionProvider } from './registry.js'
 

@@ -112,6 +112,13 @@ class FakeStore implements LocalAgentStore {
   async isModelAllowed(_slug: string, model: string) {
     return this.allowed.includes(model)
   }
+  async syncAgentModels(_slug: string, _models: any) {
+    return { synced: [], skipped: [], added: [], removed: [], kept: [], defaultModel: '' }
+  }
+  async setAgentDefaultModel() {}
+  async getAgentModelSyncState(_slug: string) {
+    return { lastSyncedAt: null, syncStatus: 'ok' as const }
+  }
 }
 
 describe('LocalAgentProviderExecutor allow-list gate', () => {

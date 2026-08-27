@@ -5,23 +5,23 @@
 // combined pipeline execution, health aggregator, and preset configurations.
 
 import { beforeEach, describe, expect, it } from 'bun:test'
+import type { CircuitBreakerConfig, RetryConfig } from '../../../src/resilience/index.js'
 import {
   Bulkhead,
   BulkheadRejectedError,
   CircuitBreaker,
   CircuitBreakerOpenError,
+  createPipeline,
+  createPolicy,
   HealthAggregator,
   PRESETS,
   ResilienceTimeoutError,
   RetryExhaustedError,
   RetryPolicy,
-  createPipeline,
-  createPolicy,
   registerPipelineHealth,
   withCircuitBreaker,
   worstHealthStatus,
 } from '../../../src/resilience/index.js'
-import type { CircuitBreakerConfig, RetryConfig } from '../../../src/resilience/index.js'
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

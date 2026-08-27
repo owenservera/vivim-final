@@ -7,8 +7,8 @@ import type {
   ProviderTypeRow,
   ProviderTypeStore,
 } from '../contracts/provider-type-store.js'
-import type { PrismaClient } from '../prisma.js'
 import type { CapStoreDb } from '../db.js'
+import type { PrismaClient } from '../prisma.js'
 
 export class ProviderTypeStoreImpl implements ProviderTypeStore {
   private db: PrismaClient
@@ -22,7 +22,7 @@ export class ProviderTypeStoreImpl implements ProviderTypeStore {
   }
 
   async create(input: ProviderTypeInput): Promise<ProviderTypeRow> {
-    const now = Date.now()
+    const now = BigInt(Date.now())
     return this.p.providerType.create({
       data: {
         id: input.id,
@@ -37,26 +37,28 @@ export class ProviderTypeStoreImpl implements ProviderTypeStore {
         createdAt: now,
         updatedAt: now,
       },
-    })
+    }) as unknown as ProviderTypeRow
   }
 
   async get(id: string): Promise<ProviderTypeRow | null> {
-    return this.p.providerType.findUnique({ where: { id } })
+    return this.p.providerType.findUnique({ where: { id } }) as unknown as ProviderTypeRow | null
   }
 
   async getBySlug(slug: string): Promise<ProviderTypeRow | null> {
-    return this.p.providerType.findUnique({ where: { slug } })
+    return this.p.providerType.findUnique({
+      where: { slug },
+    }) as unknown as ProviderTypeRow | null
   }
 
   async list(): Promise<ProviderTypeRow[]> {
-    return this.p.providerType.findMany()
+    return this.p.providerType.findMany() as unknown as ProviderTypeRow[]
   }
 
   async update(
     id: string,
     patch: Partial<Omit<ProviderTypeInput, 'id'>>,
   ): Promise<ProviderTypeRow> {
-    const data: Record<string, unknown> = { updatedAt: Date.now() }
+    const data: Record<string, unknown> = { updatedAt: BigInt(Date.now()) }
     if (patch.slug !== undefined) data.slug = patch.slug
     if (patch.displayName !== undefined) data.displayName = patch.displayName
     if (patch.description !== undefined) data.description = patch.description
@@ -66,7 +68,7 @@ export class ProviderTypeStoreImpl implements ProviderTypeStore {
       data.interactionGrammarJson = JSON.stringify(patch.interactionGrammar)
     if (patch.basePrimitive !== undefined) data.basePrimitive = patch.basePrimitive
     if (patch.version !== undefined) data.version = patch.version
-    return this.p.providerType.update({ where: { id }, data })
+    return this.p.providerType.update({ where: { id }, data }) as unknown as ProviderTypeRow
   }
 
   async delete(id: string): Promise<void> {

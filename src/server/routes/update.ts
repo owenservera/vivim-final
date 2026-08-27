@@ -126,7 +126,7 @@ export function createUpdateRouter() {
           type: z.enum(['app', 'provider']),
           provider: z.string().optional(),
           parserCode: z.string().optional(),
-          capabilities: z.array(z.record(z.unknown())).optional(),
+          capabilities: z.array(z.record(z.string(), z.unknown())).optional(),
         })
         const parsed = schema.safeParse(await req.json())
         if (!parsed.success) return errorResponse(parsed.error.message, 'ValidationError', 400)
@@ -177,7 +177,7 @@ export function createUpdateRouter() {
 
         // Check for update
         const updateInfo = await engine.checkForAppUpdates()
-        if (!updateInfo || !updateInfo.available) {
+        if (!updateInfo?.available) {
           return json({
             ok: true,
             updated: false,

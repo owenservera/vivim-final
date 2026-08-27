@@ -12,12 +12,13 @@ import { getLogger } from '../lib/logger.js'
 import { ContentPartSchema, isLegacyBlock, migrateLegacyParts } from '../schema/streaming.js'
 
 const log = getLogger('stream-parser')
+
 import type { ContentPart } from '../schema/streaming.js'
 import type { ParserExecutionLogStore } from '../storage/contracts/parser-execution-log-store.js'
 import type { ParserStore, ProviderParserRow } from '../storage/contracts/parser-store.js'
 import { repairLowConfidenceParser } from './parser-repair.js'
-import { SandboxRunner } from './sandbox-runner.js'
 import type { SandboxPermissions } from './sandbox-runner.js'
+import { SandboxRunner } from './sandbox-runner.js'
 
 export type ContentBlock = ContentPart
 
@@ -218,11 +219,15 @@ export class StreamParserEngine {
   constructor(
     private store: ParserStore,
     private config?: ParserConfig,
-    private sandbox?: SandboxRunner,
+    private sandbox?: InstanceType<typeof SandboxRunner>,
     private logStore?: ParserExecutionLogStore,
   ) {}
 
-  async parse(rawBody: string, providerId: string): Promise<ParseResult> {
+  async parse(
+    rawBody: string,
+    providerId: string,
+    isFinal = true,
+  ): Promise<ParseResult> {
     const start = Date.now()
 
     // Fast path: if primed from the generated protocol, parse with zero DB reads.
@@ -271,7 +276,7 @@ export class StreamParserEngine {
         version: 0,
         providerId,
         parse: () => blocks,
-        detectCompletion: () => true,
+        detectCompletion: () => false,
         getConfidence: () => 0,
       }
     }
@@ -316,7 +321,18 @@ export class StreamParserEngine {
     return result
   }
 
-  async detectCompletion(rawBody: string, providerId: string): Promise<boolean> {
+  async detectCompletion(
+    rawBody: string,
+    providerId: string,
+    isFinal = false,
+  ): Promise<boolean> {
+    // Callers that already know the stream ended can force completion. This is
+    // the only path that returns true for a body that never showed a real
+    // completion sentinel — preventing the "always-complete" footgun where the
+    // natural per-chunk loop (`if (detectCompletion(p)) parse(p)`) fires on the
+    // first chunk and emits partial content.
+    if (isFinal) return true
+
     const primed = this.resolvePrimed(providerId, rawBody)
     if (primed) return primed.detectCompletion(rawBody)
 
@@ -329,7 +345,9 @@ export class StreamParserEngine {
         catchDebug(e, 'stream-parser: detectCompletion failed, trying next')
       }
     }
-    return true
+    // No parser could be loaded: do NOT claim completion on a prefix. The caller
+    // must wait for `isFinal` (or a real sentinel) before committing.
+    return false
   }
 
   /**
@@ -577,6 +595,6 @@ export class StreamParserEngine {
         }),
       })
       .catch(() => {}) // swallow — diagnostic logging is best-effort
-  // [audit] log the error with context here
+    // [audit] log the error with context here
   }
 }

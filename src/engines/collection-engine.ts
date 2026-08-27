@@ -1,7 +1,6 @@
 // src/engines/collection-engine.ts
 // CollectionEngine — manages collections and collection items
 
-import { newId } from '../ids.js'
 import type {
   CollectionInput,
   CollectionItemInput,
