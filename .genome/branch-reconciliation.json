@@ -1,0 +1,49 @@
+{
+  "master": {
+    "commits": "186",
+    "shortlog": [
+      "186\tOwen Alexander Wallace Servera"
+    ]
+  },
+  "origin/master": {
+    "commits": "178",
+    "shortlog": [
+      "178\tOwen Alexander Wallace Servera"
+    ]
+  },
+  "experimental-dev": {
+    "commits": "179",
+    "shortlog": [
+      "179\tOwen Alexander Wallace Servera"
+    ]
+  },
+  "reconstruction-v010": {
+    "commits": "102",
+    "shortlog": [
+      "102\tOwen Alexander Wallace Servera"
+    ]
+  },
+  "divergence": {
+    "mergeBase": "3949aa57901ed2bbc992aabf83964a540279a4ff",
+    "masterOnly": [
+      "9ca5527 docs/test/feat: final fixes (journal update + characterization test PowerShell compat + resilience module final)",
+      "6cceb95 docs(architecture): add KNOWN_LIMITATIONS.md + FINAL_ARCHITECTURE_SUMMARY.md (Migration 014 / Phase 23-24 final audit)",
+      "24ffc9c chore: carve docs/architecture/ out of .gitignore (Migration 007 fix)",
+      "ad6d2f2 feat(chrome-governor): add session resilience (detach/reconnect/degradation) (Migration 004)",
+      "7f44bfd feat: add runtime boundary assertions for system/user DB split (Migration 003)",
+      "3b05fcb test: add characterization tests for v0.1.0 baseline (Migration 001)",
+      "76d219f docs(architecture): add EVOLUTION_JOURNAL.md (live tracker + 27-phase status + unexpected findings + SOTA evidence + commit log)",
+      "f56ea0f docs(architecture): add MIGRATION_PLAN.md (14-step evolution sequence)",
+      "0b111ea docs(architecture): add SOTA_GAP_ANALYSIS.md (baseline vs current vs SOTA per 10 problems)",
+      "615d0c5 docs(architecture): add SOTA_IDENTIFICATION.md (10 architectural problems identified)",
+      "a08aaa8 docs(architecture): add ARCHITECTURAL_DECISIONS.md (8 major decisions reconstructed)",
+      "fe1c220 docs(architecture): add Phase 8 forensic doc set"
+    ],
+    "originOnly": [
+      "2b6adde chore: cleanup bloat and minor formatting fixes",
+      "11e6458 chore: remove generated binaries and bloat from tracking",
+      "391e36b docs: implement documentation system blueprint and archive straggling docs",
+      "24576ce feat: dual-DB split (system/user), prisma schema split, and cross-boundary storage layer"
+    ]
+  }
+}

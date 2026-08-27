@@ -1,0 +1,3251 @@
+{
+  "generatedAt": "2026-08-27T03:28:20.102Z",
+  "repo": "C:\\0-BlackBoxProject-0\\vivim-final",
+  "filesByRoot": {
+    "src": 967,
+    "frontend": 575,
+    "prisma": 1,
+    "seeds": 49,
+    "scripts": 69,
+    "devops": 185,
+    "shared": 12,
+    "src-tauri": 25,
+    "tests": 476
+  },
+  "totalCodeFiles": 2359,
+  "storeContracts": 93,
+  "storeImpls": 105,
+  "engines": 490,
+  "engineFiles": [
+    "src/engines/action-plan-bridge.ts",
+    "src/engines/action-plan-compiler.ts",
+    "src/engines/action-plan.ts",
+    "src/engines/actor/actor-supervisor.ts",
+    "src/engines/actor/browser-actor.ts",
+    "src/engines/actor/index.ts",
+    "src/engines/actor/mailbox.ts",
+    "src/engines/actor/messages.ts",
+    "src/engines/adapters/chatgpt-adapter.ts",
+    "src/engines/adaptive-workspace.ts",
+    "src/engines/agent-builder.ts",
+    "src/engines/agentic-loop.ts",
+    "src/engines/agentic-slm.ts",
+    "src/engines/airgap.ts",
+    "src/engines/anti-detection.ts",
+    "src/engines/api-provider-adapter.ts",
+    "src/engines/audit-trail.ts",
+    "src/engines/automation/agents.ts",
+    "src/engines/automation/orchestrator.ts",
+    "src/engines/automation/types.ts",
+    "src/engines/autonomous-execution.ts",
+    "src/engines/autonomous-planner.ts",
+    "src/engines/autonomous-replay.ts",
+    "src/engines/autonomous-types.ts",
+    "src/engines/backup-manager.ts",
+    "src/engines/backup-scheduler.ts",
+    "src/engines/belief-store.ts",
+    "src/engines/browser-action-types.ts",
+    "src/engines/browser-automation/agentic-loop.ts",
+    "src/engines/browser-automation/defs/capture.ts",
+    "src/engines/browser-automation/defs/extract.ts",
+    "src/engines/browser-automation/defs/flow.ts",
+    "src/engines/browser-automation/defs/input.ts",
+    "src/engines/browser-automation/defs/nav.ts",
+    "src/engines/browser-automation/defs/net.ts",
+    "src/engines/browser-automation/defs/observe.ts",
+    "src/engines/browser-automation/defs/os.ts",
+    "src/engines/browser-automation/defs/scroll.ts",
+    "src/engines/browser-automation/defs/state.ts",
+    "src/engines/browser-automation/defs/tab.ts",
+    "src/engines/browser-automation/defs/wait.ts",
+    "src/engines/browser-automation/harness-actions.ts",
+    "src/engines/browser-automation/recipes.ts",
+    "src/engines/browser-automation/registry.ts",
+    "src/engines/browser-automation/selector-healer.ts",
+    "src/engines/browser-automation/semantic-grounding.ts",
+    "src/engines/browser-automation/types.ts",
+    "src/engines/budget-engine.ts",
+    "src/engines/builtin-capability-wrappers.ts",
+    "src/engines/canvas-layer-mounter.ts",
+    "src/engines/capability-binder.ts",
+    "src/engines/capability-bootstrap/default-caps.ts",
+    "src/engines/capability-bootstrap/default.ts",
+    "src/engines/capability-bootstrap/discovery.ts",
+    "src/engines/capability-bootstrap/index.ts",
+    "src/engines/capability-bootstrap/kernel.ts",
+    "src/engines/capability-bootstrap/nl-interpret.ts",
+    "src/engines/capability-bootstrap/seed.ts",
+    "src/engines/capability-bootstrap/types.ts",
+    "src/engines/capability-bootstrap-generated.ts",
+    "src/engines/capability-bootstrap.ts",
+    "src/engines/capability-composer.ts",
+    "src/engines/capability-discovery-loop.ts",
+    "src/engines/capability-event-bus-v2.ts",
+    "src/engines/capability-event-bus.ts",
+    "src/engines/capability-macro.ts",
+    "src/engines/capability-parity.ts",
+    "src/engines/capability-resolution.ts",
+    "src/engines/capability-shape-registry.ts",
+    "src/engines/capability-snapshot.ts",
+    "src/engines/capability-taxonomy.ts",
+    "src/engines/capability.ts",
+    "src/engines/cdp-capability-registrar.ts",
+    "src/engines/cdp-discovery.ts",
+    "src/engines/cdp-watchdog.ts",
+    "src/engines/chrome/async-mutex.ts",
+    "src/engines/chrome/cdp-proxy.ts",
+    "src/engines/chrome/circuit-breaker.ts",
+    "src/engines/chrome/health-monitor.ts",
+    "src/engines/chrome/index.ts",
+    "src/engines/chrome/trace-log.ts",
+    "src/engines/chrome/types.ts",
+    "src/engines/chrome-governor-resilience.ts",
+    "src/engines/chrome-governor.ts",
+    "src/engines/chrome-setup-wizard.ts",
+    "src/engines/classifier-nli.ts",
+    "src/engines/code-audit/debate.ts",
+    "src/engines/code-audit/dynamic.ts",
+    "src/engines/code-audit/index.ts",
+    "src/engines/code-audit/patch.ts",
+    "src/engines/code-audit/rules.ts",
+    "src/engines/code-audit/scoring.ts",
+    "src/engines/code-audit/stream.ts",
+    "src/engines/code-audit/symbols.ts",
+    "src/engines/code-audit/taint.ts",
+    "src/engines/code-audit/tokenizer.ts",
+    "src/engines/code-audit/types.ts",
+    "src/engines/collection-engine.ts",
+    "src/engines/command-language/args.ts",
+    "src/engines/command-language/autocomplete.ts",
+    "src/engines/command-language/capability-specs.ts",
+    "src/engines/command-language/colors.ts",
+    "src/engines/command-language/combo-detector.ts",
+    "src/engines/command-language/context-ref.ts",
+    "src/engines/command-language/devops-specs.ts",
+    "src/engines/command-language/discovery-specs.ts",
+    "src/engines/command-language/index.ts",
+    "src/engines/command-language/interpretation.ts",
+    "src/engines/command-language/mention-specs.ts",
+    "src/engines/command-language/nlp-matcher.ts",
+    "src/engines/command-language/parser.ts",
+    "src/engines/command-language/registry.ts",
+    "src/engines/command-language/resolver.ts",
+    "src/engines/command-language/slash-specs.ts",
+    "src/engines/command-language/tag-specs.ts",
+    "src/engines/command-language/types.ts",
+    "src/engines/command-parity-capabilities.ts",
+    "src/engines/compaction-manager.ts",
+    "src/engines/composer-typing.ts",
+    "src/engines/conceptual-model-service.ts",
+    "src/engines/config-manager.ts",
+    "src/engines/config-universal-surface.ts",
+    "src/engines/consent-engine.ts",
+    "src/engines/contact-engine.ts",
+    "src/engines/content-item-engine.ts",
+    "src/engines/content-unit-decomposer.ts",
+    "src/engines/context-assembly.ts",
+    "src/engines/conversation-history-sync.ts",
+    "src/engines/conversation-manager.ts",
+    "src/engines/conversation-organizer.ts",
+    "src/engines/cortex-budget.ts",
+    "src/engines/cost-optimizer.ts",
+    "src/engines/cross-conversation-synthesis.ts",
+    "src/engines/db-encryption.ts",
+    "src/engines/dcb-profile.ts",
+    "src/engines/dcb-projector.ts",
+    "src/engines/discovery-session-runner.ts",
+    "src/engines/embedding-classifier.ts",
+    "src/engines/embedding-hf.ts",
+    "src/engines/embedding-minilm.ts",
+    "src/engines/embedding-ollama.ts",
+    "src/engines/encryption.ts",
+    "src/engines/entity-container-engine.ts",
+    "src/engines/error-tracker.ts",
+    "src/engines/event-record-store.ts",
+    "src/engines/events/db-subscriber.ts",
+    "src/engines/events/event-bus.ts",
+    "src/engines/events/index.ts",
+    "src/engines/eviction-manager.ts",
+    "src/engines/execution-kernel.ts",
+    "src/engines/execution-memoizer.ts",
+    "src/engines/execution-policy.ts",
+    "src/engines/export.ts",
+    "src/engines/format-classifier.ts",
+    "src/engines/fsrs-scheduler.ts",
+    "src/engines/gateway-provider-llm-adapter.ts",
+    "src/engines/generative/generative-task-store.ts",
+    "src/engines/governance-engine.ts",
+    "src/engines/harness/binding-status-ladder.ts",
+    "src/engines/harness/capability-program-registrar.ts",
+    "src/engines/harness/circuit-breaker-adapter.ts",
+    "src/engines/harness/confidence-promotion.ts",
+    "src/engines/harness/content-pipeline-adapter.ts",
+    "src/engines/harness/fleet-lifecycle-adapter.ts",
+    "src/engines/harness/harness-contract.ts",
+    "src/engines/harness/harness-executor-engine.ts",
+    "src/engines/harness/health-probe-adapter.ts",
+    "src/engines/harness/index.ts",
+    "src/engines/harness/make-harness-capability.ts",
+    "src/engines/harness/observability-streaming.ts",
+    "src/engines/harness/program-schema.ts",
+    "src/engines/harness/recipe-compiler.ts",
+    "src/engines/harness/recipe-types.ts",
+    "src/engines/harness/stream-capture-reconstruct.ts",
+    "src/engines/harness/timeout-guard.ts",
+    "src/engines/harness-checkpoint.ts",
+    "src/engines/harness-command-registry.ts",
+    "src/engines/harness-feedback-coordinator.ts",
+    "src/engines/harness-protocol-engine.ts",
+    "src/engines/harness-repair-engine.ts",
+    "src/engines/harness-runtime.ts",
+    "src/engines/health-digest.ts",
+    "src/engines/humanized-interaction.ts",
+    "src/engines/idempotency-guard.ts",
+    "src/engines/image-gen-bridge.ts",
+    "src/engines/indexing-pipeline.ts",
+    "src/engines/intent-decomposer.ts",
+    "src/engines/kernel/index.ts",
+    "src/engines/kernel/kernel-bootstrap.ts",
+    "src/engines/kernel/kernel-context.ts",
+    "src/engines/kernel/kernel-provenance.ts",
+    "src/engines/kernel/kernel-registry.ts",
+    "src/engines/kernel/kernel-tracer.ts",
+    "src/engines/kernel/oracle-actuator.ts",
+    "src/engines/kernel/oracle-diagnostic.ts",
+    "src/engines/kernel/oracle-event-stream.ts",
+    "src/engines/kernel/oracle-query.ts",
+    "src/engines/knowledge-envelope.ts",
+    "src/engines/knowledge-extractor-continuous.ts",
+    "src/engines/knowledge-extractor.ts",
+    "src/engines/knowledge-index-pipeline.ts",
+    "src/engines/knowledge-ingestion.ts",
+    "src/engines/lifecycle-engine.ts",
+    "src/engines/live-capability-registry.ts",
+    "src/engines/live-capture-engine.ts",
+    "src/engines/local-agent/local-agent-executor.ts",
+    "src/engines/local-agent/opencode-model-sync.ts",
+    "src/engines/local-model-adapter.ts",
+    "src/engines/local-server/index.ts",
+    "src/engines/lock-manager.ts",
+    "src/engines/logger.ts",
+    "src/engines/loop-detector.ts",
+    "src/engines/manifest-inference.ts",
+    "src/engines/mcp-client-adapter.ts",
+    "src/engines/mcp-server-adapter.ts",
+    "src/engines/media-engine.ts",
+    "src/engines/memory/background-sync.ts",
+    "src/engines/memory/memory-backend.ts",
+    "src/engines/memory/memory-fabric.ts",
+    "src/engines/memory/memory-oracle.ts",
+    "src/engines/memory/memory-warden.ts",
+    "src/engines/memory/node-backend.ts",
+    "src/engines/memory/skill-scaffolding.ts",
+    "src/engines/memory/streaming-context-scrubber.ts",
+    "src/engines/memory-engine.ts",
+    "src/engines/memory-export.ts",
+    "src/engines/memory-indexer.ts",
+    "src/engines/message-identity.ts",
+    "src/engines/messaging-archetypes.ts",
+    "src/engines/metrics.ts",
+    "src/engines/mirror-engine.ts",
+    "src/engines/nlcl/catalog.ts",
+    "src/engines/nlcl/categories/ai.ts",
+    "src/engines/nlcl/categories/app.ts",
+    "src/engines/nlcl/categories/automation.ts",
+    "src/engines/nlcl/categories/browser.ts",
+    "src/engines/nlcl/categories/builder.ts",
+    "src/engines/nlcl/categories/canvas.ts",
+    "src/engines/nlcl/categories/channel.ts",
+    "src/engines/nlcl/categories/conversation.ts",
+    "src/engines/nlcl/categories/email.ts",
+    "src/engines/nlcl/categories/file.ts",
+    "src/engines/nlcl/categories/llm.ts",
+    "src/engines/nlcl/categories/memory.ts",
+    "src/engines/nlcl/categories/opencode.ts",
+    "src/engines/nlcl/categories/provider-cap.ts",
+    "src/engines/nlcl/categories/session.ts",
+    "src/engines/nlcl/categories/system.ts",
+    "src/engines/nlcl/categories/workflow.ts",
+    "src/engines/nlcl/categories/_generate.ts",
+    "src/engines/nlcl/classifier-resolver.ts",
+    "src/engines/nlcl/command-registry.ts",
+    "src/engines/nlcl/composite-splitter.ts",
+    "src/engines/nlcl/confirmation-store.ts",
+    "src/engines/nlcl/context-binder.ts",
+    "src/engines/nlcl/dialogue-session-store.ts",
+    "src/engines/nlcl/dynamic-entity-linker.ts",
+    "src/engines/nlcl/entity-resolution.ts",
+    "src/engines/nlcl/executors/app-executor.ts",
+    "src/engines/nlcl/executors/browser-executor.ts",
+    "src/engines/nlcl/executors/capability-executor.ts",
+    "src/engines/nlcl/executors/conversation-executor.ts",
+    "src/engines/nlcl/executors/email-executor.ts",
+    "src/engines/nlcl/executors/file-executor.ts",
+    "src/engines/nlcl/executors/generic-browser-executor.ts",
+    "src/engines/nlcl/executors/index.ts",
+    "src/engines/nlcl/executors/provider-llm-executor.ts",
+    "src/engines/nlcl/executors/system-executor.ts",
+    "src/engines/nlcl/executors/workflow-executor.ts",
+    "src/engines/nlcl/fuzzy-matcher.ts",
+    "src/engines/nlcl/fuzzy-resolver.ts",
+    "src/engines/nlcl/graph/graph-model.ts",
+    "src/engines/nlcl/help-resolver.ts",
+    "src/engines/nlcl/index.ts",
+    "src/engines/nlcl/intent-resolver.ts",
+    "src/engines/nlcl/intent-router.ts",
+    "src/engines/nlcl/layered-resolver.ts",
+    "src/engines/nlcl/llm-slave-resolver.ts",
+    "src/engines/nlcl/nl-parser.ts",
+    "src/engines/nlcl/nlcl-engine.ts",
+    "src/engines/nlcl/nlcl-otel.ts",
+    "src/engines/nlcl/parameter-extraction.ts",
+    "src/engines/nlcl/pattern-match.ts",
+    "src/engines/nlcl/prerouter.ts",
+    "src/engines/nlcl/response-interpreter.ts",
+    "src/engines/nlcl/semantic-resolver.ts",
+    "src/engines/nlcl/text-normalizer.ts",
+    "src/engines/nlcl/tfidf-embedding-provider.ts",
+    "src/engines/nlcl/tfidf.ts",
+    "src/engines/nlcl/types.ts",
+    "src/engines/nlcl/workflow-synthesis-resolver.ts",
+    "src/engines/notification-engine.ts",
+    "src/engines/objective-engine.ts",
+    "src/engines/observability/index.ts",
+    "src/engines/observation-tap.ts",
+    "src/engines/onboarding/capability-test-gate.ts",
+    "src/engines/onboarding/dom-capability-discoverer.ts",
+    "src/engines/onboarding/index.ts",
+    "src/engines/onboarding/live-network-capturer.ts",
+    "src/engines/onboarding/parser-synthesis-engine.ts",
+    "src/engines/onboarding/protocol-sniffer.ts",
+    "src/engines/onboarding/provider-onboarding-orchestrator.ts",
+    "src/engines/onboarding/result.ts",
+    "src/engines/onboarding/types.ts",
+    "src/engines/onboarding/webapp-fingerprint.ts",
+    "src/engines/onboarding/webapp-taxonomy-synthesizer.ts",
+    "src/engines/opencode/opencode-client.ts",
+    "src/engines/opencode/opencode-executor.ts",
+    "src/engines/opencode/opencode-ingest.ts",
+    "src/engines/opencode/opencode-instance-registry.ts",
+    "src/engines/opencode/opencode-supervisor.ts",
+    "src/engines/opencode/types.ts",
+    "src/engines/otel-sink.ts",
+    "src/engines/outcome-tracker.ts",
+    "src/engines/p2p-node/crdt-sync.ts",
+    "src/engines/p2p-node/file-sync.ts",
+    "src/engines/p2p-node/index.ts",
+    "src/engines/p2p-node/node-manager.ts",
+    "src/engines/p2p-node/types.ts",
+    "src/engines/parser-repair.ts",
+    "src/engines/parsers/artifact-extractor.ts",
+    "src/engines/parsers/chatgpt-import.ts",
+    "src/engines/parsers/claude-import.ts",
+    "src/engines/parsers/gemini-import.ts",
+    "src/engines/parsers/sse-parser.ts",
+    "src/engines/parsers/to-content-parts.ts",
+    "src/engines/plan-validation-gate.ts",
+    "src/engines/plugin-hot-reload.ts",
+    "src/engines/plugin-system.ts",
+    "src/engines/policy-engine.ts",
+    "src/engines/pool/browser-pool.ts",
+    "src/engines/pool/index.ts",
+    "src/engines/pool/lease.ts",
+    "src/engines/protocol-discovery.ts",
+    "src/engines/protocol-loop-parser.ts",
+    "src/engines/provider-caps.ts",
+    "src/engines/provider-conversation-adapter.ts",
+    "src/engines/provider-discovery.ts",
+    "src/engines/provider-health.ts",
+    "src/engines/provider-mux.ts",
+    "src/engines/provider-protocol-generator.ts",
+    "src/engines/provider-protocol-loader.ts",
+    "src/engines/provider-registrar.ts",
+    "src/engines/provider-selectors.ts",
+    "src/engines/provider-test-harness.ts",
+    "src/engines/providers/abstract-provider-plugin.ts",
+    "src/engines/providers/index.ts",
+    "src/engines/providers/plugin-registry.ts",
+    "src/engines/providers/plugin.ts",
+    "src/engines/providers/plugins/chatgpt.ts",
+    "src/engines/providers/plugins/claude.ts",
+    "src/engines/providers/plugins/gemini.ts",
+    "src/engines/providers/plugins/index.ts",
+    "src/engines/providers/provider-plugin-interface.ts",
+    "src/engines/providers/registry.ts",
+    "src/engines/reference-grounding.ts",
+    "src/engines/registration-auditor.ts",
+    "src/engines/reliability/classifier.ts",
+    "src/engines/reliability/event-store.ts",
+    "src/engines/reliability/index.ts",
+    "src/engines/reliability/recovery-orchestrator.ts",
+    "src/engines/reliability/strategies.ts",
+    "src/engines/reprogrammability/llm-harness-agent.ts",
+    "src/engines/reprogrammability/llm-prompt.ts",
+    "src/engines/reprogrammability/plugin-builder.ts",
+    "src/engines/reprogrammability/version-store.ts",
+    "src/engines/reprogrammability/__tests__/llm-harness-agent.test.ts",
+    "src/engines/reprogrammability/__tests__/plugin-builder.test.ts",
+    "src/engines/reprogrammability/__tests__/version-store.test.ts",
+    "src/engines/request-queue.ts",
+    "src/engines/resource/adaptive-limiter.ts",
+    "src/engines/resource/gpu-allocator.ts",
+    "src/engines/resource/index.ts",
+    "src/engines/resource/pressure-feed.ts",
+    "src/engines/resource/resource-manager.ts",
+    "src/engines/retry-engine.ts",
+    "src/engines/router-capability-bridge.ts",
+    "src/engines/runtime/browser-runtime.ts",
+    "src/engines/runtime/index.ts",
+    "src/engines/safe-eval.ts",
+    "src/engines/safe-expression.ts",
+    "src/engines/sandbox-runner-quickjs.ts",
+    "src/engines/sandbox-runner-vm.ts",
+    "src/engines/sandbox-runner.ts",
+    "src/engines/scheduler/browser-scheduler.ts",
+    "src/engines/scheduler/index.ts",
+    "src/engines/scheduler/policy.ts",
+    "src/engines/scheduler/queues.ts",
+    "src/engines/selector-cache.ts",
+    "src/engines/selector-healer.ts",
+    "src/engines/selector-refiner.ts",
+    "src/engines/semantic-grounding.ts",
+    "src/engines/semantic-search.ts",
+    "src/engines/send-capability.ts",
+    "src/engines/send-resilience.ts",
+    "src/engines/session-caps.ts",
+    "src/engines/session-checkpoint.ts",
+    "src/engines/session-lifecycle-manager.ts",
+    "src/engines/session-state-persistence.ts",
+    "src/engines/situation-detector.ts",
+    "src/engines/sla-monitor.ts",
+    "src/engines/state-transition.ts",
+    "src/engines/stealth/audio-context-engine.ts",
+    "src/engines/stealth/behavioral-pattern-engine.ts",
+    "src/engines/stealth/canvas-noise-engine.ts",
+    "src/engines/stealth/cdp-artifact-cleaner.ts",
+    "src/engines/stealth/extension-bridge-engine.ts",
+    "src/engines/stealth/font-screen-engine.ts",
+    "src/engines/stealth/human-keyboard-engine.ts",
+    "src/engines/stealth/human-mouse-engine.ts",
+    "src/engines/stealth/human-scroll-engine.ts",
+    "src/engines/stealth/index.ts",
+    "src/engines/stealth/launch-profile-engine.ts",
+    "src/engines/stealth/navigator-patch-module.ts",
+    "src/engines/stealth/network-fingerprint-engine.ts",
+    "src/engines/stealth/profile-warmup-engine.ts",
+    "src/engines/stealth/register-defaults.ts",
+    "src/engines/stealth/stealth-module-engine.ts",
+    "src/engines/stealth/stealth-module.ts",
+    "src/engines/stealth/stealth-profile-store.ts",
+    "src/engines/stealth/webgl-spoof-engine.ts",
+    "src/engines/storage-relocation-engine.ts",
+    "src/engines/stream-align.ts",
+    "src/engines/stream-block-store.ts",
+    "src/engines/stream-parser.ts",
+    "src/engines/streaming-channel-caps.ts",
+    "src/engines/streaming-protocol.ts",
+    "src/engines/streaming-response-analyzer.ts",
+    "src/engines/sync-engine.ts",
+    "src/engines/sync.ts",
+    "src/engines/task-history.ts",
+    "src/engines/telemetry-aggregator.ts",
+    "src/engines/telemetry-audit.ts",
+    "src/engines/tool-orchestrator-facade.ts",
+    "src/engines/tool-use-protocol.ts",
+    "src/engines/transfer-accelerator.ts",
+    "src/engines/trust-score.ts",
+    "src/engines/tunnel-client/connection-manager.ts",
+    "src/engines/tunnel-client/frame-protocol.ts",
+    "src/engines/tunnel-client/heartbeat.ts",
+    "src/engines/tunnel-client/index.ts",
+    "src/engines/tunnel-client/reconnection.ts",
+    "src/engines/tunnel-client/request-handler.ts",
+    "src/engines/tunnel-client/types.ts",
+    "src/engines/tunnel-orchestrator/config.ts",
+    "src/engines/tunnel-orchestrator/health-monitor.ts",
+    "src/engines/tunnel-orchestrator/index.ts",
+    "src/engines/tunnel-orchestrator/service-manager.ts",
+    "src/engines/unified-registry.ts",
+    "src/engines/update-engine.ts",
+    "src/engines/user-identity.ts",
+    "src/engines/version-manager.ts",
+    "src/engines/workflow-compiler.ts",
+    "src/engines/workflow-engine.ts",
+    "src/engines/workflow-templates/cleanup-inactive.ts",
+    "src/engines/workflow-templates/daily-digest.ts",
+    "src/engines/workflow-templates/health-report.ts",
+    "src/engines/workflow-templates/newsletter.ts",
+    "src/engines/workflow-templates/reindex-memory.ts",
+    "src/engines/workspace-presets.ts",
+    "frontend/src/engines/adaptive-workspace.ts",
+    "frontend/src/engines/agents-builder.ts",
+    "frontend/src/engines/annotation-engine.ts",
+    "frontend/src/engines/audit-engine.ts",
+    "frontend/src/engines/automation-builder.ts",
+    "frontend/src/engines/canvas-command-executor.ts",
+    "frontend/src/engines/canvas-layer-mounter.ts",
+    "frontend/src/engines/canvas-registry.ts",
+    "frontend/src/engines/capability-event-bus.ts",
+    "frontend/src/engines/conceptual-model-service.ts",
+    "frontend/src/engines/document-editor-engine.ts",
+    "frontend/src/engines/document-engine.ts",
+    "frontend/src/engines/drawer-engine.ts",
+    "frontend/src/engines/index.ts",
+    "frontend/src/engines/media-bridge.ts",
+    "frontend/src/engines/media-engine.ts",
+    "frontend/src/engines/notification-engine.ts",
+    "frontend/src/engines/plugin-hot-reload.ts",
+    "frontend/src/engines/plugin-system.ts",
+    "frontend/src/engines/presence-engine.ts",
+    "frontend/src/engines/rbac-engine.ts",
+    "frontend/src/engines/route-sync-workspace.ts",
+    "frontend/src/engines/route-sync.ts",
+    "frontend/src/engines/search-engine.ts",
+    "frontend/src/engines/shell-command-engine.ts",
+    "frontend/src/engines/structured-logger.ts",
+    "frontend/src/engines/template-engine.ts",
+    "frontend/src/engines/ui-engine.ts",
+    "frontend/src/engines/workspace-engine.ts",
+    "frontend/src/engines/z-layer-engine.ts"
+  ],
+  "engineExports": {
+    "src/engines/action-plan-bridge.ts": [
+      "PlanResult",
+      "ActionPlanBridge"
+    ],
+    "src/engines/action-plan-compiler.ts": [
+      "PlanCandidate",
+      "PlanCompilerInput",
+      "ActionPlanCompiler"
+    ],
+    "src/engines/action-plan.ts": [
+      "CapabilityRiskSchema",
+      "CapabilityRisk",
+      "RISK_TIER",
+      "VerifyTypeSchema",
+      "VerifyType",
+      "VerifySpecSchema",
+      "VerifySpec",
+      "ExecutionEvidenceSchema",
+      "ExecutionEvidence",
+      "GroundedReferenceSchema",
+      "GroundedReference",
+      "ActionNodeSchema",
+      "ActionNode",
+      "ActionPlanSchema",
+      "ActionPlan",
+      "CapabilityDefinition",
+      "ActionPlanValidationError",
+      "validateActionPlan",
+      "topologicalOrder",
+      "requiresConfirmation",
+      "maxRiskTier"
+    ],
+    "src/engines/actor/actor-supervisor.ts": [
+      "ActorSupervisor"
+    ],
+    "src/engines/actor/browser-actor.ts": [
+      "BrowserActor"
+    ],
+    "src/engines/actor/mailbox.ts": [
+      "Mailbox"
+    ],
+    "src/engines/actor/messages.ts": [
+      "ActorMsg",
+      "FailureClass",
+      "RecoveryStrategy",
+      "isLifecycleMsg",
+      "isCommandMsg"
+    ],
+    "src/engines/adapters/chatgpt-adapter.ts": [
+      "GovernorHandle",
+      "ChatGPTAdapter"
+    ],
+    "src/engines/adaptive-workspace.ts": [
+      "WorkspaceMode",
+      "PanelConfig",
+      "AdaptiveWorkspaceEngine"
+    ],
+    "src/engines/agent-builder.ts": [
+      "AgentBuilderEngine"
+    ],
+    "src/engines/agentic-loop.ts": [
+      "AgenticGoal",
+      "AgenticLoopResult",
+      "PlanningStrategy",
+      "EpisodeRecord",
+      "RuleUpdate",
+      "AgenticLoopEngine"
+    ],
+    "src/engines/agentic-slm.ts": [
+      "ChatMessage",
+      "GenerateOptions",
+      "SmallLanguageModelProvider",
+      "AgenticSlmProvider"
+    ],
+    "src/engines/airgap.ts": [
+      "AirGapConfig",
+      "AirGapStatus",
+      "LocalModelRouteResult",
+      "AirGapEngine"
+    ],
+    "src/engines/api-provider-adapter.ts": [
+      "ApiProviderConfig",
+      "ApiProviderAdapter"
+    ],
+    "src/engines/audit-trail.ts": [
+      "AuditSink",
+      "AuditEntry",
+      "AuditPolicy",
+      "DEFAULT_AUDIT_POLICY",
+      "AuditTrail"
+    ],
+    "src/engines/automation/agents.ts": [
+      "RESEARCH_TRUST",
+      "EXTRACTOR_TRUST",
+      "SYNTHESIZER_TRUST",
+      "MONITOR_TRUST",
+      "TESTER_TRUST",
+      "AGENT_ROLES",
+      "getAgentRole"
+    ],
+    "src/engines/automation/orchestrator.ts": [
+      "AutomationOrchestrator"
+    ],
+    "src/engines/automation/types.ts": [
+      "TrustPolicy",
+      "CapTrustPolicy",
+      "FanOutPolicy",
+      "LoopPolicy",
+      "OutputPolicy",
+      "AgentRole",
+      "AutomationGoal",
+      "AutomationResult"
+    ],
+    "src/engines/autonomous-execution.ts": [
+      "AutonomousExecutionEngine"
+    ],
+    "src/engines/autonomous-planner.ts": [
+      "PlannerResolution",
+      "resolvePlanner",
+      "planStepsFromIntent",
+      "planStepsLocally"
+    ],
+    "src/engines/autonomous-replay.ts": [
+      "ReplayBranchOptions",
+      "ReplayStepDiff",
+      "ReplayResult",
+      "ReplayStepExecutor",
+      "ReplayController"
+    ],
+    "src/engines/autonomous-types.ts": [
+      "FailoverRouter",
+      "TaskStatus",
+      "StepStatus",
+      "ActionClassification",
+      "GateType",
+      "GateStatus",
+      "AutonomousGoal",
+      "BudgetUsage",
+      "AutonomousStep",
+      "HitlGate",
+      "AutonomousTask",
+      "TaskTemplate",
+      "ReplayOptions",
+      "classificationAtLeast",
+      "toAutonomousClassification"
+    ],
+    "src/engines/backup-manager.ts": [
+      "BackupManagerConfig",
+      "BackupManager"
+    ],
+    "src/engines/backup-scheduler.ts": [
+      "BackupCadence",
+      "BackupScheduleConfig",
+      "BackupEntry",
+      "BackupScheduler"
+    ],
+    "src/engines/belief-store.ts": [
+      "BeliefStore"
+    ],
+    "src/engines/browser-action-types.ts": [
+      "BrowserRefSchema",
+      "BrowserRef",
+      "BrowserActionSchema",
+      "BrowserAction",
+      "GroundedElement",
+      "BrowserSnapshot",
+      "compactSnapshot",
+      "BrowserGrounder"
+    ],
+    "src/engines/browser-automation/agentic-loop.ts": [
+      "LoopPlanner",
+      "CapabilityResolver",
+      "AgenticLoopEngine"
+    ],
+    "src/engines/browser-automation/defs/capture.ts": [
+      "screenshot",
+      "screenshotElement",
+      "pdf",
+      "recordVideo",
+      "captureConsole",
+      "captureNetwork",
+      "capturePerformance",
+      "captureTrace",
+      "clipCopy",
+      "ocrRegion"
+    ],
+    "src/engines/browser-automation/defs/extract.ts": [
+      "extractText",
+      "extractHtml",
+      "extractMarkdown",
+      "extractJson",
+      "extractTable",
+      "extractList",
+      "extractMeta",
+      "extractLinks",
+      "extractImages",
+      "extractFeed",
+      "readDom",
+      "readA11y",
+      "readForms",
+      "readCookies",
+      "readStorage"
+    ],
+    "src/engines/browser-automation/defs/flow.ts": [
+      "branchIf",
+      "loopWhile",
+      "retry",
+      "parallel",
+      "sequential",
+      "delay",
+      "assert",
+      "forEach",
+      "exitOn",
+      "humanGate"
+    ],
+    "src/engines/browser-automation/defs/input.ts": [
+      "click",
+      "doubleClick",
+      "rightClick",
+      "type",
+      "clear",
+      "press",
+      "keyDown",
+      "keyUp",
+      "hover",
+      "focus",
+      "blur",
+      "drag",
+      "drop",
+      "select",
+      "check",
+      "uncheck",
+      "rangeSet",
+      "colorSet",
+      "upload",
+      "paste",
+      "copy",
+      "cut"
+    ],
+    "src/engines/browser-automation/defs/nav.ts": [
+      "navigate",
+      "reload",
+      "back",
+      "forward",
+      "stop",
+      "closePage",
+      "newPage",
+      "gotoFragment",
+      "historyList",
+      "prefetch"
+    ],
+    "src/engines/browser-automation/defs/net.ts": [
+      "requestIntercept",
+      "requestMock",
+      "requestAbort",
+      "requestContinue",
+      "responseFake",
+      "headerSet",
+      "cookieSet",
+      "cookieClear",
+      "authBasic",
+      "proxySet"
+    ],
+    "src/engines/browser-automation/defs/observe.ts": [
+      "observeDom",
+      "observeA11y",
+      "observeNetwork",
+      "observeConsole",
+      "observeMutation",
+      "observeVisibility",
+      "observePresence",
+      "observeStyle",
+      "observePerformance",
+      "diffSnapshot"
+    ],
+    "src/engines/browser-automation/defs/os.ts": [
+      "clipboardRead",
+      "clipboardWrite",
+      "shellRun",
+      "notify",
+      "fileWrite"
+    ],
+    "src/engines/browser-automation/defs/scroll.ts": [
+      "scroll",
+      "scrollTo",
+      "scrollIntoView",
+      "zoom",
+      "resize",
+      "scrollByPixel",
+      "smoothScroll",
+      "infiniteScrollUntil",
+      "pinch",
+      "orientation"
+    ],
+    "src/engines/browser-automation/defs/state.ts": [
+      "authLogin",
+      "authLogout",
+      "formSubmit",
+      "sessionSave",
+      "sessionRestore",
+      "storageSet",
+      "storageClear",
+      "geoSet",
+      "permissionGrant",
+      "permissionDeny"
+    ],
+    "src/engines/browser-automation/defs/tab.ts": [
+      "tabOpen",
+      "tabClose",
+      "tabSwitch",
+      "tabList",
+      "tabDuplicate",
+      "tabPin",
+      "tabMute",
+      "windowOpen",
+      "windowResize",
+      "windowFocus"
+    ],
+    "src/engines/browser-automation/defs/wait.ts": [
+      "waitFixed",
+      "waitSelector",
+      "waitText",
+      "waitNetworkIdle",
+      "waitFunction",
+      "waitAnimation",
+      "waitDownload",
+      "waitModal",
+      "waitRedirect",
+      "pollUntil"
+    ],
+    "src/engines/browser-automation/harness-actions.ts": [
+      "BrowserHarnessActions"
+    ],
+    "src/engines/browser-automation/recipes.ts": [
+      "RECIPES",
+      "getRecipe"
+    ],
+    "src/engines/browser-automation/registry.ts": [
+      "BrowserCapabilityRegistry",
+      "parseSelector"
+    ],
+    "src/engines/browser-automation/selector-healer.ts": [
+      "SelectorHealer"
+    ],
+    "src/engines/browser-automation/semantic-grounding.ts": [
+      "SemanticGroundingEngine"
+    ],
+    "src/engines/browser-automation/types.ts": [
+      "SemanticSelector",
+      "ResolvedElement",
+      "AccessibilityNode",
+      "TrustLevel",
+      "TrustPolicy",
+      "TRUST",
+      "BudgetCap",
+      "CapabilityAxis",
+      "CapCtx",
+      "CapResult",
+      "BrowserCapabilityDef",
+      "AgenticGoal",
+      "AgentStepKind",
+      "AgentStep",
+      "AgentLoopResult",
+      "Observation"
+    ],
+    "src/engines/budget-engine.ts": [
+      "UsageLimits",
+      "RunUsage",
+      "BudgetEngine"
+    ],
+    "src/engines/builtin-capability-wrappers.ts": [
+      "registerBuiltinCapabilities"
+    ],
+    "src/engines/canvas-layer-mounter.ts": [
+      "LayerDefinition",
+      "MountedLayer",
+      "CanvasLayerMounter"
+    ],
+    "src/engines/capability-binder.ts": [
+      "BoundCapability",
+      "CapabilityBinder"
+    ],
+    "src/engines/capability-bootstrap/default-caps.ts": [
+      "buildConversationCaps",
+      "buildKnowledgeCaps",
+      "buildMemoryCaps",
+      "buildAdminCaps",
+      "buildSystemCaps",
+      "buildProviderHealthCaps",
+      "buildTelemetryCaps",
+      "buildAgentCaps",
+      "buildOpenCodeServeCaps",
+      "buildOpenCodeModelSyncCaps",
+      "buildStorageCaps",
+      "buildAiGatewayCaps"
+    ],
+    "src/engines/capability-bootstrap/discovery.ts": [
+      "registerDiscoveryCapabilities"
+    ],
+    "src/engines/capability-bootstrap/kernel.ts": [
+      "registerKernelCapabilities"
+    ],
+    "src/engines/capability-bootstrap/nl-interpret.ts": [
+      "registerNlInterpretCapability"
+    ],
+    "src/engines/capability-bootstrap/seed.ts": [
+      "LOCAL_AGENT_FREE_MODELS"
+    ],
+    "src/engines/capability-bootstrap/types.ts": [
+      "BootstrapServices",
+      "ALL_SURFACES",
+      "makeCapability"
+    ],
+    "src/engines/capability-bootstrap-generated.ts": [
+      "extendHandlerMap",
+      "registerGeneratedCapabilities"
+    ],
+    "src/engines/capability-composer.ts": [
+      "CompositeNode",
+      "CompositeEdge",
+      "CompositeCapability",
+      "CompositeCapabilityStore",
+      "CapabilityComposer"
+    ],
+    "src/engines/capability-discovery-loop.ts": [
+      "DiscoveredCapability",
+      "DiscoveryOptions",
+      "CapabilityDiscoveryLoop"
+    ],
+    "src/engines/capability-event-bus-v2.ts": [
+      "EventEnvelope",
+      "AsyncEventHandler",
+      "HandlerEntry",
+      "DLQEntry",
+      "CapabilityEventBusV2"
+    ],
+    "src/engines/capability-event-bus.ts": [
+      "CapabilityEvent",
+      "GenericEvent",
+      "EngineEvent",
+      "EventHandler",
+      "WsLike",
+      "CapabilityEventBus"
+    ],
+    "src/engines/capability-macro.ts": [
+      "CapabilityMacroRow",
+      "MacroRunResult",
+      "HarnessRuntime",
+      "CapabilityMacroStore",
+      "CapabilityMacroEngine"
+    ],
+    "src/engines/capability-parity.ts": [
+      "ParitySeverity",
+      "ParityFinding",
+      "ParityReport",
+      "CapabilityParityAuditor"
+    ],
+    "src/engines/capability-resolution.ts": [
+      "PlanTier",
+      "OverrideSource",
+      "AvailabilityGating",
+      "CapabilityResolutionOptions",
+      "ResolvedCapability",
+      "ResolvedCapabilities",
+      "CapabilityResolutionEngine"
+    ],
+    "src/engines/capability-shape-registry.ts": [
+      "DomIndicator",
+      "InteractiveElementPattern",
+      "ProjectionRule",
+      "CapabilityShape",
+      "CapabilityAdapter",
+      "CapabilityShapeRegistry"
+    ],
+    "src/engines/capability-snapshot.ts": [
+      "CapabilitySnapshotEntry",
+      "CapabilitySnapshot"
+    ],
+    "src/engines/capability-taxonomy.ts": [
+      "CapabilityTaxonomyEntry",
+      "CAPABILITY_TAXONOMY_V2"
+    ],
+    "src/engines/capability.ts": [
+      "CapabilityExecutionResult",
+      "LoginDetectionResult",
+      "LoginIndicator",
+      "RecoveryStrategyResult",
+      "RecoveryStrategy",
+      "CapabilityEngine"
+    ],
+    "src/engines/cdp-capability-registrar.ts": [
+      "CdpBindingStore",
+      "CdpExecutor",
+      "CdpRegisterOptions",
+      "cdpMethodToCapability",
+      "RegisterCdpResult",
+      "registerDiscoveredCdpMethods",
+      "programToCapability"
+    ],
+    "src/engines/cdp-discovery.ts": [
+      "CdpParameter",
+      "CdpMethodDescriptor",
+      "CdpProtocolJson",
+      "parseCdpProtocolJson",
+      "CDP_PROTOCOL_CATALOG",
+      "listCdpDomains",
+      "discoverCdpMethods"
+    ],
+    "src/engines/cdp-watchdog.ts": [
+      "WatchdogEvent",
+      "WatchdogHandler",
+      "CdpWatchdog",
+      "setupDialogWatchdog",
+      "setupCrashWatchdog",
+      "setupWatchdog"
+    ],
+    "src/engines/chrome/async-mutex.ts": [
+      "AsyncMutex"
+    ],
+    "src/engines/chrome/cdp-proxy.ts": [
+      "CDPProxy"
+    ],
+    "src/engines/chrome/circuit-breaker.ts": [
+      "CircuitBreaker",
+      "createCircuitBreaker",
+      "circuitRecordSuccess",
+      "circuitRecordFailure",
+      "circuitTryAcquire"
+    ],
+    "src/engines/chrome/health-monitor.ts": [
+      "HealthMonitor"
+    ],
+    "src/engines/chrome/trace-log.ts": [
+      "TraceLog"
+    ],
+    "src/engines/chrome/types.ts": [
+      "SlaveStatus",
+      "SuperState",
+      "CircuitState",
+      "FleetConfig",
+      "LaunchOptions",
+      "ChromeSlave",
+      "SlaveHealth",
+      "CaptureResult",
+      "PageState",
+      "HarnessResult",
+      "HarnessDAG",
+      "HarnessNode",
+      "HarnessEdge",
+      "GovernorEventBus",
+      "CDPTransport"
+    ],
+    "src/engines/chrome-governor-resilience.ts": [
+      "ResilienceConfig",
+      "DEFAULT_RESILIENCE_CONFIG",
+      "onSessionClose",
+      "gracefulFallbackEnabled"
+    ],
+    "src/engines/chrome-governor.ts": [
+      "ChromeGovernor"
+    ],
+    "src/engines/chrome-setup-wizard.ts": [
+      "SetupResult",
+      "ChromeSetupWizard"
+    ],
+    "src/engines/classifier-nli.ts": [
+      "ClassificationResult",
+      "IntentClassifierProvider",
+      "NliClassifierProvider"
+    ],
+    "src/engines/code-audit/debate.ts": [
+      "DEBATE_AGENTS",
+      "deterministicDebate",
+      "applyDebateVerdicts"
+    ],
+    "src/engines/code-audit/dynamic.ts": [
+      "DynamicTestResult",
+      "applyDynamicResults"
+    ],
+    "src/engines/code-audit/index.ts": [
+      "CodeAuditEngine"
+    ],
+    "src/engines/code-audit/patch.ts": [
+      "SuggestedPatch",
+      "renderPatch",
+      "verifyPatch"
+    ],
+    "src/engines/code-audit/rules.ts": [
+      "RULES",
+      "POWERSHELL_RULES",
+      "getRules",
+      "getRule",
+      "isRuleAllowed"
+    ],
+    "src/engines/code-audit/scoring.ts": [
+      "findingWeight",
+      "computeHealthScore",
+      "computeRisk",
+      "computeSummary",
+      "RiskTriage",
+      "triageByConsensus",
+      "dedupeFindings",
+      "computeByRule"
+    ],
+    "src/engines/code-audit/stream.ts": [
+      "NdjsonWriter",
+      "emitEvent",
+      "BusEmitter",
+      "StreamSink",
+      "composeSink",
+      "phaseEvent",
+      "resultToEvent",
+      "findingEvent"
+    ],
+    "src/engines/code-audit/symbols.ts": [
+      "SymbolRecord",
+      "extractSymbols",
+      "buildTopology"
+    ],
+    "src/engines/code-audit/taint.ts": [
+      "TaintReport",
+      "analyzeTaint",
+      "attachTaint"
+    ],
+    "src/engines/code-audit/tokenizer.ts": [
+      "tokenize",
+      "tokensOnLine",
+      "hasCodeCall",
+      "tokenIndex"
+    ],
+    "src/engines/code-audit/types.ts": [
+      "AuditPhase",
+      "SeverityLevel",
+      "Priority",
+      "Dimension",
+      "Risk",
+      "CodeLocation",
+      "TaintStep",
+      "TaintFlow",
+      "AgentName",
+      "AgentOpinion",
+      "DebateConsensus",
+      "VerificationStatus",
+      "Finding",
+      "GraphNode",
+      "GraphEdge",
+      "CodebaseTopology",
+      "IngestionStats",
+      "PhaseResult",
+      "AuditSummary",
+      "AuditReport",
+      "SarifLog",
+      "TokenKind",
+      "Token",
+      "TokenizedFile",
+      "RulePatchRecipe",
+      "AuditRule",
+      "FindingSeed",
+      "DebateVerdict",
+      "DebateContext",
+      "StreamEvent"
+    ],
+    "src/engines/collection-engine.ts": [
+      "CollectionEngine"
+    ],
+    "src/engines/command-language/args.ts": [
+      "validateArgs"
+    ],
+    "src/engines/command-language/autocomplete.ts": [
+      "AutocompleteEngine"
+    ],
+    "src/engines/command-language/capability-specs.ts": [
+      "ParsedCapability",
+      "parseCapCommand",
+      "validateCapCommand",
+      "createCapSpec"
+    ],
+    "src/engines/command-language/colors.ts": [
+      "HslColor",
+      "CategoryColor",
+      "CATEGORY_COLORS",
+      "getShade",
+      "getBlendedColor",
+      "getContrastRatio",
+      "hexToHsl",
+      "hslToHex"
+    ],
+    "src/engines/command-language/combo-detector.ts": [
+      "detectCombo"
+    ],
+    "src/engines/command-language/context-ref.ts": [
+      "resolveContextRef",
+      "isContextRef",
+      "getContextRefTypes"
+    ],
+    "src/engines/command-language/devops-specs.ts": [
+      "devopsSpecs"
+    ],
+    "src/engines/command-language/discovery-specs.ts": [
+      "discoverySpecs"
+    ],
+    "src/engines/command-language/interpretation.ts": [
+      "InterpretationEngine"
+    ],
+    "src/engines/command-language/mention-specs.ts": [
+      "mentionSpecs"
+    ],
+    "src/engines/command-language/nlp-matcher.ts": [
+      "getCategoryColor",
+      "getShade",
+      "isHighConfidence",
+      "getConfidenceLevel"
+    ],
+    "src/engines/command-language/parser.ts": [
+      "parseInput",
+      "extractCommandName",
+      "hasPrefix"
+    ],
+    "src/engines/command-language/registry.ts": [
+      "CommandLanguageRegistry"
+    ],
+    "src/engines/command-language/resolver.ts": [
+      "resolveCommand",
+      "getSuggestions"
+    ],
+    "src/engines/command-language/slash-specs.ts": [
+      "slashSpecs"
+    ],
+    "src/engines/command-language/tag-specs.ts": [
+      "tagSpecs"
+    ],
+    "src/engines/command-language/types.ts": [
+      "Prefix",
+      "ALL_PREFIXES",
+      "isPrefix",
+      "CommandCategory",
+      "ArgKind",
+      "CommandContext",
+      "Suggestion",
+      "ArgSpec",
+      "CommandResult",
+      "UnifiedCommandSpec",
+      "UnifiedLiveCommand",
+      "ParsedCommand",
+      "CommandIntent",
+      "ComboStep",
+      "CommandCombo",
+      "DisclosureLevel",
+      "InterpretationState",
+      "InterpretationConfig",
+      "HslColor",
+      "CategoryColor",
+      "PatternMatchResult",
+      "CommandDescriptionRow"
+    ],
+    "src/engines/command-parity-capabilities.ts": [
+      "registerCommandParityCapabilities",
+      "listNewsletters",
+      "listSchedules",
+      "getActiveConversation"
+    ],
+    "src/engines/compaction-manager.ts": [
+      "CompactionManagerConfig",
+      "CompactionManager"
+    ],
+    "src/engines/composer-typing.ts": [
+      "ComposerType"
+    ],
+    "src/engines/conceptual-model-service.ts": [
+      "ResolvedSlot",
+      "ConceptualModelService"
+    ],
+    "src/engines/config-manager.ts": [
+      "ConfigEventBus",
+      "ConfigAuditEntry",
+      "ConfigManager"
+    ],
+    "src/engines/config-universal-surface.ts": [
+      "ConfigScope",
+      "ConfigValue",
+      "ConfigUniversalSurface"
+    ],
+    "src/engines/consent-engine.ts": [
+      "ConsentConfig",
+      "ConsentGrant",
+      "ConsentStore",
+      "ConsentEngine"
+    ],
+    "src/engines/contact-engine.ts": [
+      "Contact",
+      "ContactInput",
+      "ContactIdentity",
+      "ContactStore",
+      "ContactEngine"
+    ],
+    "src/engines/content-item-engine.ts": [
+      "ContentItem",
+      "ContentItemInput",
+      "ContentItemQuery",
+      "ContentItemStore",
+      "ContentItemEngine"
+    ],
+    "src/engines/content-unit-decomposer.ts": [
+      "decomposeToContentUnits"
+    ],
+    "src/engines/context-assembly.ts": [
+      "ContextLayerName",
+      "ContextLayer",
+      "AssembledContext",
+      "ContextAssemblyEngine"
+    ],
+    "src/engines/conversation-history-sync.ts": [
+      "SyncOptions",
+      "SyncResult",
+      "ConversationHistorySyncEngine"
+    ],
+    "src/engines/conversation-manager.ts": [
+      "MessageMetadataInput",
+      "ResolvedCapability",
+      "ConversationContext",
+      "StageTiming",
+      "SendResult",
+      "ConversationManager"
+    ],
+    "src/engines/conversation-organizer.ts": [
+      "ConversationOrganizer"
+    ],
+    "src/engines/cortex-budget.ts": [
+      "LAYER_TYPES",
+      "LayerType",
+      "DepthMode",
+      "BudgetConfig",
+      "LayerAllocation",
+      "PressureSignals",
+      "PackItem",
+      "defaultLayerConfigs",
+      "applyPressure",
+      "allocate",
+      "packItems"
+    ],
+    "src/engines/cost-optimizer.ts": [
+      "CostReport",
+      "ProviderCostSummary",
+      "CostOptimizer"
+    ],
+    "src/engines/cross-conversation-synthesis.ts": [
+      "SynthesisQuery",
+      "SynthesisResult",
+      "SynthesisLlmProvider",
+      "CrossConversationSynthesizer"
+    ],
+    "src/engines/db-encryption.ts": [
+      "EncryptedDbBlob",
+      "DbEncryptionEngine"
+    ],
+    "src/engines/dcb-profile.ts": [
+      "DcbProfile",
+      "activeLayers",
+      "profileToDepth",
+      "DCB_PROFILES"
+    ],
+    "src/engines/dcb-projector.ts": [
+      "Surface",
+      "LayerItem",
+      "DynamicContextBundle",
+      "project"
+    ],
+    "src/engines/discovery-session-runner.ts": [
+      "CaptureOptions",
+      "StreamCapturer",
+      "RunSessionInput",
+      "RunSessionResult",
+      "DiscoverySessionRunner"
+    ],
+    "src/engines/embedding-classifier.ts": [
+      "CategoryAnchor",
+      "EmbeddingClassifier"
+    ],
+    "src/engines/embedding-hf.ts": [
+      "HfEmbeddingProvider"
+    ],
+    "src/engines/embedding-minilm.ts": [
+      "MiniLmEmbeddingProvider"
+    ],
+    "src/engines/embedding-ollama.ts": [
+      "OllamaEmbeddingProvider"
+    ],
+    "src/engines/encryption.ts": [
+      "EncryptionConfig",
+      "EncryptedData",
+      "EncryptionEngine"
+    ],
+    "src/engines/entity-container-engine.ts": [
+      "Container",
+      "ContainerInput",
+      "ContainerMembership",
+      "ContainerMembershipInput",
+      "EntityContainerStore",
+      "EntityContainerEngine"
+    ],
+    "src/engines/error-tracker.ts": [
+      "ErrorReporter",
+      "TrackedError",
+      "ErrorTrackingPolicy",
+      "DEFAULT_ERROR_TRACKING_POLICY",
+      "ErrorTracker"
+    ],
+    "src/engines/event-record-store.ts": [
+      "EventSource",
+      "EventRecordInput",
+      "EventRecordRow",
+      "EventRecordStore"
+    ],
+    "src/engines/events/db-subscriber.ts": [
+      "FleetEventRow",
+      "EventStore",
+      "DbSubscriber"
+    ],
+    "src/engines/events/event-bus.ts": [
+      "FleetEvent",
+      "EventType",
+      "EventHandler",
+      "EventBus",
+      "getEventBus"
+    ],
+    "src/engines/eviction-manager.ts": [
+      "EvictionPolicy",
+      "EvictionManager"
+    ],
+    "src/engines/execution-kernel.ts": [
+      "PolicyDecision",
+      "ExecutionEvent",
+      "VerificationResult",
+      "ExecutionResult",
+      "JournalSink",
+      "ExecutionKernelDeps",
+      "ExecutionKernel",
+      "MemoryJournal"
+    ],
+    "src/engines/execution-memoizer.ts": [
+      "MemoizerEventBus",
+      "MemoizerConfig",
+      "CacheEntry",
+      "MemoizerStats",
+      "ExecutionMemoizer"
+    ],
+    "src/engines/execution-policy.ts": [
+      "PolicyRule",
+      "PolicyDecision",
+      "PolicyStore",
+      "ExecutionPolicyEngine"
+    ],
+    "src/engines/export.ts": [
+      "ExportFormat",
+      "ExportScope",
+      "ExportOptions",
+      "ExportManifest",
+      "ExportStore",
+      "ExportEngine"
+    ],
+    "src/engines/format-classifier.ts": [
+      "LlmClient",
+      "FormatClassification",
+      "FormatClassifier"
+    ],
+    "src/engines/fsrs-scheduler.ts": [
+      "CardState",
+      "Card",
+      "ReviewResult",
+      "FsrsScheduler"
+    ],
+    "src/engines/gateway-provider-llm-adapter.ts": [
+      "ProviderLLMAdapter",
+      "SynthesisLlmProvider",
+      "GatewayProviderLLMAdapterOptions",
+      "GatewayProviderLLMAdapter",
+      "getGatewayProviderLLMAdapter"
+    ],
+    "src/engines/generative/generative-task-store.ts": [
+      "GenerativeTaskStatus",
+      "GenerativeTaskProgress",
+      "GenerativeTask",
+      "GenerativeTaskSubscriber",
+      "GenerativeTaskEvent",
+      "GenerativeTaskStore",
+      "InMemoryGenerativeTaskStore",
+      "AsyncCapabilityResult",
+      "isAsyncCapabilityResult",
+      "GENERATIVE_SLOT_MAP",
+      "isGenerativeSlot",
+      "getGeneratorForSlot"
+    ],
+    "src/engines/governance-engine.ts": [
+      "EndStrategy",
+      "AllocationCtx",
+      "ResolvedRole",
+      "GovernanceEngine"
+    ],
+    "src/engines/harness/binding-status-ladder.ts": [
+      "BindingStatus",
+      "nextStatus",
+      "promoteProgram",
+      "isActive"
+    ],
+    "src/engines/harness/capability-program-registrar.ts": [
+      "ProgramRegistrarDeps",
+      "CapabilityProgramRegistrar"
+    ],
+    "src/engines/harness/circuit-breaker-adapter.ts": [
+      "CircuitGate"
+    ],
+    "src/engines/harness/confidence-promotion.ts": [
+      "HealthInput",
+      "updateHealthScore",
+      "shouldPromote",
+      "shouldDemote"
+    ],
+    "src/engines/harness/content-pipeline-adapter.ts": [
+      "NormalizedBlock",
+      "reconstructCapture"
+    ],
+    "src/engines/harness/fleet-lifecycle-adapter.ts": [
+      "createGovernorSlaveResolver"
+    ],
+    "src/engines/harness/harness-contract.ts": [
+      "SlaveResolver",
+      "HarnessSink",
+      "HubStreamBlock",
+      "HarnessExecutorDeps",
+      "HarnessExecutionRequest",
+      "HarnessExecutionResult",
+      "HarnessExecutor"
+    ],
+    "src/engines/harness/harness-executor-engine.ts": [
+      "HarnessExecutorEngine"
+    ],
+    "src/engines/harness/health-probe-adapter.ts": [
+      "SlaveHealthSnapshot"
+    ],
+    "src/engines/harness/index.ts": [
+      "HarnessComposition",
+      "ComposeHarnessDeps",
+      "composeHarness"
+    ],
+    "src/engines/harness/make-harness-capability.ts": [
+      "MakeHarnessCapabilityOpts",
+      "makeHarnessCapability"
+    ],
+    "src/engines/harness/observability-streaming.ts": [
+      "HarnessObservabilityDeps",
+      "emitStreamBlock",
+      "emitStreamDone"
+    ],
+    "src/engines/harness/program-schema.ts": [
+      "ProgramConfig",
+      "PROGRAM_STATUS",
+      "recipeToConfig",
+      "configToProgram"
+    ],
+    "src/engines/harness/recipe-compiler.ts": [
+      "compileRecipe"
+    ],
+    "src/engines/harness/recipe-types.ts": [
+      "RECIPE_META",
+      "assertRecipe"
+    ],
+    "src/engines/harness/stream-capture-reconstruct.ts": [
+      "CaptureTarget"
+    ],
+    "src/engines/harness/timeout-guard.ts": [
+      "TimeoutGuardResult"
+    ],
+    "src/engines/harness-checkpoint.ts": [
+      "HarnessCheckpointRow",
+      "CheckpointInput",
+      "HarnessCheckpointStore",
+      "HarnessCheckpointEngine"
+    ],
+    "src/engines/harness-command-registry.ts": [
+      "ResolvedCommand",
+      "HarnessCommandRegistry"
+    ],
+    "src/engines/harness-feedback-coordinator.ts": [
+      "FeedbackStrategy",
+      "FeedbackTurn",
+      "FeedbackConfig",
+      "FeedbackOutcome",
+      "HarnessFeedbackCoordinator"
+    ],
+    "src/engines/harness-protocol-engine.ts": [
+      "HarnessAction",
+      "PromptContext",
+      "ExtractedResponse",
+      "HarnessProtocolConfig",
+      "PromptAugmenter",
+      "ExtractionStrategy",
+      "ResponseExtractor",
+      "ActionTarget",
+      "ActionRouter",
+      "HarnessProtocolEngine"
+    ],
+    "src/engines/harness-repair-engine.ts": [
+      "RepairResult",
+      "RepairInput",
+      "HarnessRepairEngine"
+    ],
+    "src/engines/harness-runtime.ts": [
+      "HarnessNode",
+      "HarnessCondition",
+      "HarnessContext",
+      "HarnessModuleResult",
+      "HarnessTelemetryEvent",
+      "HarnessProgressEvent",
+      "Element",
+      "HarnessRuntime",
+      "HarnessModule",
+      "HarnessDAG",
+      "HarnessResult"
+    ],
+    "src/engines/health-digest.ts": [
+      "HealthDigestMetrics",
+      "HealthDigestMetricsProvider",
+      "HealthDigestOptions",
+      "renderDigest",
+      "HealthDigestEngine"
+    ],
+    "src/engines/idempotency-guard.ts": [
+      "IdempotencyPolicy",
+      "IdempotencyGuard"
+    ],
+    "src/engines/image-gen-bridge.ts": [
+      "LocalModelAdapter",
+      "ProviderLLMAdapterBridge",
+      "ImageGenDeps",
+      "ImageGenBridge"
+    ],
+    "src/engines/indexing-pipeline.ts": [
+      "IndexingPipeline"
+    ],
+    "src/engines/intent-decomposer.ts": [
+      "ClarificationOption",
+      "IntentClarification",
+      "CapabilityDagNodeSchema",
+      "CapabilityDAGSchema",
+      "CapabilityDagNode",
+      "CapabilityDAG",
+      "IntentTemplate",
+      "IntentDecomposerStore",
+      "DecomposeContext",
+      "IntentDecomposer"
+    ],
+    "src/engines/kernel/kernel-bootstrap.ts": [
+      "KernelBootstrapDeps",
+      "bootstrapKernel"
+    ],
+    "src/engines/kernel/kernel-context.ts": [
+      "KernelLogger",
+      "ConsoleKernelLogger",
+      "KernelContext",
+      "Kernel",
+      "KernelImpl",
+      "createKernel"
+    ],
+    "src/engines/kernel/kernel-provenance.ts": [
+      "ProvenanceChain",
+      "KernelProvenance"
+    ],
+    "src/engines/kernel/kernel-registry.ts": [
+      "KernelRegistry"
+    ],
+    "src/engines/kernel/kernel-tracer.ts": [
+      "KernelTracer"
+    ],
+    "src/engines/kernel/oracle-actuator.ts": [
+      "HealKind",
+      "HealAction",
+      "AutoHealPolicy",
+      "Reconnectable",
+      "CacheClearable",
+      "OracleActuator"
+    ],
+    "src/engines/kernel/oracle-diagnostic.ts": [
+      "DiagnosticSeverity",
+      "DiagnosticCategory",
+      "DiagnosticIssue",
+      "OracleDiagnosticEngine",
+      "newDiagnosticId"
+    ],
+    "src/engines/kernel/oracle-event-stream.ts": [
+      "OracleEventKind",
+      "OracleEvent",
+      "OracleEventStream"
+    ],
+    "src/engines/kernel/oracle-query.ts": [
+      "SystemQueryType",
+      "SystemQuery",
+      "QueryResult",
+      "TopologyDescription",
+      "HealthSnapshot",
+      "Explanation",
+      "CapabilitySummary",
+      "OracleQueryEngine"
+    ],
+    "src/engines/knowledge-envelope.ts": [
+      "KnowledgeEnvelopeSchema",
+      "KnowledgeEnvelope",
+      "VersionedKnowledgeEnvelope",
+      "normalizeKnowledge"
+    ],
+    "src/engines/knowledge-extractor-continuous.ts": [
+      "KnowledgeExtractorContinuous"
+    ],
+    "src/engines/knowledge-extractor.ts": [
+      "ExtractionType",
+      "ExtractionResult",
+      "KnowledgeExtractorConfig",
+      "KnowledgeExtractor"
+    ],
+    "src/engines/knowledge-index-pipeline.ts": [
+      "KnowledgeChunk",
+      "KnowledgeExtraction",
+      "KnowledgePipelineDeps",
+      "KnowledgeIndexPipeline"
+    ],
+    "src/engines/knowledge-ingestion.ts": [
+      "ImportSource",
+      "ImportConfig",
+      "ImportResult",
+      "KnowledgeIngestionEngine"
+    ],
+    "src/engines/lifecycle-engine.ts": [
+      "LifecycleEngineConfig",
+      "LifecycleEngine"
+    ],
+    "src/engines/live-capability-registry.ts": [
+      "LiveHandlerKind",
+      "LiveHandlerSpec",
+      "LiveCapabilitySpec",
+      "LiveCapabilityRecord",
+      "LiveCapabilityStore",
+      "LiveCapabilityRegistry"
+    ],
+    "src/engines/live-capture-engine.ts": [
+      "LiveCaptureOptions",
+      "LiveCaptureResult",
+      "LiveCaptureEngine"
+    ],
+    "src/engines/local-agent/local-agent-executor.ts": [
+      "LOCAL_AGENT_SLUG",
+      "AgentRunInput",
+      "AgentRunResult",
+      "parseOpencodeJson",
+      "LocalAgentProviderExecutor"
+    ],
+    "src/engines/local-agent/opencode-model-sync.ts": [
+      "OpenCodeDiscoveredModel",
+      "ModelSyncSummary",
+      "OpenCodeModelSyncOptions",
+      "isFreeModel",
+      "parseOpencodeModelsVerbose",
+      "OpenCodeModelSync"
+    ],
+    "src/engines/local-model-adapter.ts": [
+      "LocalModelProvider",
+      "LocalModelConfig",
+      "LocalModelResponse",
+      "LocalModelAdapter"
+    ],
+    "src/engines/local-server/index.ts": [
+      "LocalServer"
+    ],
+    "src/engines/lock-manager.ts": [
+      "LockPolicy",
+      "LockManager"
+    ],
+    "src/engines/logger.ts": [
+      "StructuredLog",
+      "LogTransport",
+      "LoggingPolicy",
+      "DEFAULT_LOGGING_POLICY",
+      "StructuredLogger"
+    ],
+    "src/engines/loop-detector.ts": [
+      "LoopDetectorConfig",
+      "LoopDetector"
+    ],
+    "src/engines/manifest-inference.ts": [
+      "ProviderManifest",
+      "InferredManifest",
+      "ValidationResult",
+      "ManifestInferenceEngine"
+    ],
+    "src/engines/mcp-client-adapter.ts": [
+      "ToolDefinition",
+      "ToolResult",
+      "McpServerConnection",
+      "McpClientAdapter"
+    ],
+    "src/engines/mcp-server-adapter.ts": [
+      "McpToolDefinition",
+      "McpToolCallResult",
+      "McpServerConfig",
+      "McpServerAdapter"
+    ],
+    "src/engines/media-engine.ts": [
+      "MediaAttachment",
+      "MediaAttachmentInput",
+      "MediaStore",
+      "MediaEngine"
+    ],
+    "src/engines/memory/background-sync.ts": [
+      "_SYNC_DRAIN_TIMEOUT_MS",
+      "_EXTERNAL_PREFETCH_TIMEOUT_MS",
+      "BackgroundSyncQueue"
+    ],
+    "src/engines/memory/memory-backend.ts": [
+      "ToolSchema",
+      "BackendInitContext",
+      "PrefetchOpts",
+      "SyncTurnArgs",
+      "MemoryWriteMetadata",
+      "SessionSwitchOpts",
+      "PreCompressArgs",
+      "MemoryBackend",
+      "RESERVED_TOOL_NAMES",
+      "normalizeToolSchema"
+    ],
+    "src/engines/memory/memory-fabric.ts": [
+      "MemoryFabricDeps",
+      "MemoryFabric"
+    ],
+    "src/engines/memory/memory-oracle.ts": [
+      "MemoryOracleDeps",
+      "MemoryOracle"
+    ],
+    "src/engines/memory/memory-warden.ts": [
+      "MemoryWardenDeps",
+      "MemoryWarden"
+    ],
+    "src/engines/memory/node-backend.ts": [
+      "NodeBackendDeps",
+      "NodeBackend"
+    ],
+    "src/engines/memory/skill-scaffolding.ts": [
+      "stripSkillScaffolding"
+    ],
+    "src/engines/memory/streaming-context-scrubber.ts": [
+      "StreamingContextScrubber",
+      "sanitizeContext"
+    ],
+    "src/engines/memory-engine.ts": [
+      "EpisodicMemory",
+      "EpisodicMemoryInput",
+      "SemanticMemory",
+      "SemanticMemoryInput",
+      "ProceduralRule",
+      "ProceduralRuleInput",
+      "EpisodeQueryOpts",
+      "ConsolidationConfig",
+      "ConsolidationReport",
+      "RuleContext",
+      "AgentMemoryContext",
+      "MiningResult",
+      "EpisodicMemoryStore",
+      "SemanticMemoryStore",
+      "ProceduralMemoryStore",
+      "MemoryEngine"
+    ],
+    "src/engines/memory-export.ts": [
+      "MemoryExportFormat",
+      "MemoryExport",
+      "MemoryImportResult",
+      "MemoryExportEngine"
+    ],
+    "src/engines/memory-indexer.ts": [
+      "IndexCursorStore",
+      "InMemoryCursorStore",
+      "MemoryIndexerOptions",
+      "MemoryIndexer"
+    ],
+    "src/engines/message-identity.ts": [
+      "MessageIdentityInput",
+      "MessageIdentity",
+      "ConversationMessageInput"
+    ],
+    "src/engines/messaging-archetypes.ts": [
+      "NormalizedMessage",
+      "MessagingArchetype",
+      "MESSAGING_ARCHETYPES"
+    ],
+    "src/engines/metrics.ts": [
+      "MetricsExporter",
+      "MetricSnapshot",
+      "MetricsPolicy",
+      "DEFAULT_POLICY",
+      "DEFAULT_METRICS_POLICY",
+      "MetricsRegistry"
+    ],
+    "src/engines/mirror-engine.ts": [
+      "MirrorStateRow",
+      "MirrorStateInput",
+      "OptimisticUpdateRow",
+      "OptimisticUpdateInput",
+      "LatencyMeasurementInput",
+      "LatencyReport",
+      "SnapshotRow",
+      "SnapshotInput",
+      "MirrorStore",
+      "MirrorAction",
+      "ActionResult",
+      "ObservationOptions",
+      "MirrorState",
+      "BudgetResult",
+      "MirrorEngine"
+    ],
+    "src/engines/nlcl/catalog.ts": [
+      "getDefaultCommandPatterns",
+      "getPatternsByCategory"
+    ],
+    "src/engines/nlcl/categories/ai.ts": [
+      "aiPatterns"
+    ],
+    "src/engines/nlcl/categories/app.ts": [
+      "appPatterns"
+    ],
+    "src/engines/nlcl/categories/automation.ts": [
+      "automationPatterns"
+    ],
+    "src/engines/nlcl/categories/browser.ts": [
+      "browserPatterns"
+    ],
+    "src/engines/nlcl/categories/builder.ts": [
+      "pattern",
+      "extractEmails",
+      "dayToCron"
+    ],
+    "src/engines/nlcl/categories/canvas.ts": [
+      "canvasPatterns"
+    ],
+    "src/engines/nlcl/categories/channel.ts": [
+      "channelPatterns"
+    ],
+    "src/engines/nlcl/categories/conversation.ts": [
+      "conversationPatterns"
+    ],
+    "src/engines/nlcl/categories/email.ts": [
+      "emailPatterns"
+    ],
+    "src/engines/nlcl/categories/file.ts": [
+      "filePatterns"
+    ],
+    "src/engines/nlcl/categories/llm.ts": [
+      "llmPatterns"
+    ],
+    "src/engines/nlcl/categories/memory.ts": [
+      "memoryPatterns"
+    ],
+    "src/engines/nlcl/categories/opencode.ts": [
+      "opencodePatterns"
+    ],
+    "src/engines/nlcl/categories/provider-cap.ts": [
+      "providerCapPatterns"
+    ],
+    "src/engines/nlcl/categories/session.ts": [
+      "sessionPatterns"
+    ],
+    "src/engines/nlcl/categories/system.ts": [
+      "systemPatterns"
+    ],
+    "src/engines/nlcl/categories/workflow.ts": [
+      "workflowPatterns"
+    ],
+    "src/engines/nlcl/categories/_generate.ts": [
+      "xPatterns",
+      "getDefaultCommandPatterns",
+      "getPatternsByCategory"
+    ],
+    "src/engines/nlcl/classifier-resolver.ts": [
+      "ClassifierResolverOpts",
+      "ClassifierResolver"
+    ],
+    "src/engines/nlcl/command-registry.ts": [
+      "CommandPatternRegistry"
+    ],
+    "src/engines/nlcl/composite-splitter.ts": [
+      "CompositeSplit",
+      "detectCompositeSplit"
+    ],
+    "src/engines/nlcl/confirmation-store.ts": [
+      "PendingConfirmation",
+      "ConfirmationStoreCreateInput",
+      "ConfirmationStore",
+      "InMemoryConfirmationStore",
+      "NullConfirmationStore"
+    ],
+    "src/engines/nlcl/context-binder.ts": [
+      "RawRequestContext",
+      "resolvePronouns"
+    ],
+    "src/engines/nlcl/dialogue-session-store.ts": [
+      "DialogueSession",
+      "DialogueSessionStore",
+      "computeDialogueSessionKey",
+      "InMemoryDialogueSessionStoreOpts",
+      "InMemoryDialogueSessionStore",
+      "NullDialogueSessionStore",
+      "resumePendingTurn",
+      "newAnonymousSessionKey"
+    ],
+    "src/engines/nlcl/dynamic-entity-linker.ts": [
+      "EntityLinkResult",
+      "EntityCandidate",
+      "EntityLinkerProvider",
+      "DynamicEntityLinker",
+      "WorkspaceStoreContract",
+      "WorkspaceEntityLinker"
+    ],
+    "src/engines/nlcl/entity-resolution.ts": [
+      "normalizeRelativeDate",
+      "normalizeRelativeTime",
+      "normalizeNumberWords",
+      "normalizeBoolean",
+      "resolveEntityValues",
+      "registerIntent",
+      "listIntents",
+      "resolveIntentFromRegistry"
+    ],
+    "src/engines/nlcl/executors/app-executor.ts": [
+      "AppExecutor"
+    ],
+    "src/engines/nlcl/executors/browser-executor.ts": [
+      "BrowserExecutor"
+    ],
+    "src/engines/nlcl/executors/capability-executor.ts": [
+      "CapabilityExecutor"
+    ],
+    "src/engines/nlcl/executors/conversation-executor.ts": [
+      "ConversationExecutor"
+    ],
+    "src/engines/nlcl/executors/email-executor.ts": [
+      "MailAdapter",
+      "EmailExecutor"
+    ],
+    "src/engines/nlcl/executors/file-executor.ts": [
+      "FileExecutor"
+    ],
+    "src/engines/nlcl/executors/generic-browser-executor.ts": [
+      "GenericBrowserExecutor"
+    ],
+    "src/engines/nlcl/executors/provider-llm-executor.ts": [
+      "ProviderLLMExecutor"
+    ],
+    "src/engines/nlcl/executors/system-executor.ts": [
+      "SystemExecutor"
+    ],
+    "src/engines/nlcl/executors/workflow-executor.ts": [
+      "WorkflowExecutor"
+    ],
+    "src/engines/nlcl/fuzzy-matcher.ts": [
+      "levenshtein",
+      "levenshteinSimilarity",
+      "jaroWinkler",
+      "diceCoefficient",
+      "fuzzySimilarity"
+    ],
+    "src/engines/nlcl/fuzzy-resolver.ts": [
+      "FuzzyResolver"
+    ],
+    "src/engines/nlcl/graph/graph-model.ts": [
+      "NlclNodeKind",
+      "NlclGraphNode",
+      "NlclGraphEdge",
+      "IntentVocabulary",
+      "NormalizationConfig",
+      "slugify",
+      "NORMALIZATION_ROOT_ID",
+      "NlclGraph"
+    ],
+    "src/engines/nlcl/help-resolver.ts": [
+      "HelpResolverOpts",
+      "HelpResolver"
+    ],
+    "src/engines/nlcl/intent-resolver.ts": [
+      "DeterministicResolver",
+      "LocalLLMAdapter",
+      "LocalLLMResolver",
+      "ProviderLLMAdapter",
+      "ProviderLLMResolver",
+      "HybridResolver",
+      "createResolver",
+      "unresolvedIntent"
+    ],
+    "src/engines/nlcl/intent-router.ts": [
+      "CompositeIntent",
+      "IntentRouter"
+    ],
+    "src/engines/nlcl/layered-resolver.ts": [
+      "ResolutionLayer",
+      "LayeredResolverOptions",
+      "LayerTelemetry",
+      "LayeredResolver"
+    ],
+    "src/engines/nlcl/llm-slave-resolver.ts": [
+      "LLMSlaveResolverDeps",
+      "ProviderLLMAdapter",
+      "LLMSlaveResolver"
+    ],
+    "src/engines/nlcl/nl-parser.ts": [
+      "ParseOptions",
+      "NLCommandParser"
+    ],
+    "src/engines/nlcl/nlcl-engine.ts": [
+      "NLCLEngineDeps",
+      "NLCLEngine"
+    ],
+    "src/engines/nlcl/nlcl-otel.ts": [
+      "NlclLayerName",
+      "NlclSpanAttrs",
+      "hashInputForTelemetry"
+    ],
+    "src/engines/nlcl/parameter-extraction.ts": [
+      "ExtractResult",
+      "extractParameters",
+      "validateInput",
+      "coerceValues"
+    ],
+    "src/engines/nlcl/pattern-match.ts": [
+      "extractPatternInput",
+      "buildIntentFromPattern"
+    ],
+    "src/engines/nlcl/prerouter.ts": [
+      "PrerouterResult",
+      "PrerouterOpts",
+      "Prerouter"
+    ],
+    "src/engines/nlcl/response-interpreter.ts": [
+      "ResponseInterpreterContext",
+      "ResponseInterpreter",
+      "createResponseInterpreter",
+      "createNoOpResponseInterpreter"
+    ],
+    "src/engines/nlcl/semantic-resolver.ts": [
+      "SemanticResolverOpts",
+      "SemanticResolver"
+    ],
+    "src/engines/nlcl/text-normalizer.ts": [
+      "TextNormalizer",
+      "defaultNormalizer",
+      "normalizeText",
+      "tokenizeText"
+    ],
+    "src/engines/nlcl/tfidf-embedding-provider.ts": [
+      "TfidfEmbeddingProvider"
+    ],
+    "src/engines/nlcl/tfidf.ts": [
+      "SparseVector",
+      "TfidfOptions",
+      "Tfidf",
+      "cosineSimilarity"
+    ],
+    "src/engines/nlcl/types.ts": [
+      "NLCLSurface",
+      "ActionClassification",
+      "ExecutorId",
+      "NLCContext",
+      "RawRequestContext",
+      "CommandResult",
+      "ParsedIntent",
+      "NLPattern",
+      "CommandPattern",
+      "IntentResolver",
+      "ResolverConfig",
+      "CommandExecutor",
+      "NLCLEngineConfig",
+      "DEFAULT_NLCL_CONFIG",
+      "classificationAtLeast"
+    ],
+    "src/engines/nlcl/workflow-synthesis-resolver.ts": [
+      "WorkflowStepSchema",
+      "WorkflowSpecSchema",
+      "WorkflowSpec",
+      "WorkflowStep",
+      "WorkflowSynthesisResolverDeps",
+      "WorkflowSynthesisResolver"
+    ],
+    "src/engines/notification-engine.ts": [
+      "Notification",
+      "NotificationInput",
+      "NotificationStore",
+      "NotificationEngine"
+    ],
+    "src/engines/objective-engine.ts": [
+      "ObjectiveEngine"
+    ],
+    "src/engines/observability/index.ts": [
+      "ObservabilityPolicies",
+      "Observability",
+      "createObservability"
+    ],
+    "src/engines/observation-tap.ts": [
+      "ObservationOptions",
+      "ObservationEvent",
+      "ObservationTap"
+    ],
+    "src/engines/onboarding/capability-test-gate.ts": [
+      "GateResult",
+      "CapabilityTestGate"
+    ],
+    "src/engines/onboarding/dom-capability-discoverer.ts": [
+      "DiscoverySessionResult",
+      "CapturedEvents",
+      "DomCapabilityDiscoverer"
+    ],
+    "src/engines/onboarding/live-network-capturer.ts": [
+      "LiveNetworkCapturer"
+    ],
+    "src/engines/onboarding/parser-synthesis-engine.ts": [
+      "ParserSynthesisEngine"
+    ],
+    "src/engines/onboarding/protocol-sniffer.ts": [
+      "CapturedResponse",
+      "CapturedWsFrame",
+      "classifyTransport",
+      "unwrapPayload"
+    ],
+    "src/engines/onboarding/provider-onboarding-orchestrator.ts": [
+      "GovernorHandleProvider",
+      "OnboardingOrchestratorDeps",
+      "ProviderOnboardingOrchestrator",
+      "OnboardingError"
+    ],
+    "src/engines/onboarding/result.ts": [
+      "Result",
+      "ok",
+      "err",
+      "isOk",
+      "isErr"
+    ],
+    "src/engines/onboarding/types.ts": [
+      "WebAppFingerprintVector",
+      "WebAppFingerprintVector",
+      "TransportClass",
+      "TransportClass",
+      "ProtocolFingerprintResult",
+      "InducedField",
+      "InducedShape",
+      "TestableCapability",
+      "GateOptions",
+      "DEFAULT_GATE_OPTIONS",
+      "GovernorHandleLike",
+      "OnboardingStatus",
+      "OnboardStartInput",
+      "OnboardResult"
+    ],
+    "src/engines/onboarding/webapp-fingerprint.ts": [
+      "NetworkEvent",
+      "inferNetworkShape",
+      "computeDelta",
+      "hashShape",
+      "cosineSimilarity",
+      "toNumericVector"
+    ],
+    "src/engines/onboarding/webapp-taxonomy-synthesizer.ts": [
+      "TaxonomyResolution",
+      "ProvisionalTemplate",
+      "WebAppTaxonomySynthesizer",
+      "deriveProvisionalTemplate"
+    ],
+    "src/engines/opencode/opencode-client.ts": [
+      "mapDecisionToResponse",
+      "OpenCodeClientOptions",
+      "OpenCodeClient"
+    ],
+    "src/engines/opencode/opencode-executor.ts": [
+      "OpenCodeExecutorOptions",
+      "OpenCodeExecutor"
+    ],
+    "src/engines/opencode/opencode-ingest.ts": [
+      "OpenCodeIngestOptions",
+      "OpenCodeIngest"
+    ],
+    "src/engines/opencode/opencode-instance-registry.ts": [
+      "OpenCodeInstanceEvent",
+      "ClassifiedOpenCodeProcess",
+      "InstanceRegistryOptions",
+      "OpenCodeInstanceRegistry",
+      "createInstanceRegistry"
+    ],
+    "src/engines/opencode/opencode-supervisor.ts": [
+      "OpenCodeSupervisorOptions",
+      "OpenCodeSupervisorHandle",
+      "OpenCodeSupervisor"
+    ],
+    "src/engines/opencode/types.ts": [
+      "OpencodeEvent",
+      "textDeltaFromEvent",
+      "isSessionDone",
+      "PermissionDecision",
+      "RiskTier",
+      "riskTierForTool",
+      "autoDenyTier"
+    ],
+    "src/engines/otel-sink.ts": [
+      "OtelLogRecord",
+      "OtelSinkConfig",
+      "OtelSink",
+      "getOtelSink"
+    ],
+    "src/engines/outcome-tracker.ts": [
+      "OutcomeKind",
+      "EmaScore",
+      "OutcomeRecord",
+      "OutcomeTracker"
+    ],
+    "src/engines/p2p-node/crdt-sync.ts": [
+      "CRDTDocument",
+      "CRDTSyncHandler"
+    ],
+    "src/engines/p2p-node/file-sync.ts": [
+      "FileSyncHandler"
+    ],
+    "src/engines/p2p-node/index.ts": [
+      "P2PNode"
+    ],
+    "src/engines/p2p-node/node-manager.ts": [
+      "NodeManager"
+    ],
+    "src/engines/p2p-node/types.ts": [
+      "P2PNodeState",
+      "P2PPeerInfo",
+      "FileTransferProgress",
+      "P2PMetrics"
+    ],
+    "src/engines/parser-repair.ts": [
+      "RepairReport",
+      "ParserRepairer",
+      "generateParserModuleCode",
+      "RepairOptions"
+    ],
+    "src/engines/parsers/artifact-extractor.ts": [
+      "CodeFence",
+      "AntArtifact",
+      "ArtifactEvent",
+      "extractCodeFences",
+      "extractAntArtifacts",
+      "extractThinkingBlocks",
+      "extractAll"
+    ],
+    "src/engines/parsers/chatgpt-import.ts": [
+      "ParsedMessage",
+      "ParserSource",
+      "ParsedConversation",
+      "ChatGPTExportParser",
+      "ChatGPTExportParserImpl"
+    ],
+    "src/engines/parsers/claude-import.ts": [
+      "ClaudeExportParserImpl"
+    ],
+    "src/engines/parsers/gemini-import.ts": [
+      "GeminiExportParserImpl"
+    ],
+    "src/engines/parsers/sse-parser.ts": [
+      "SSEFrame",
+      "createSSEParser"
+    ],
+    "src/engines/parsers/to-content-parts.ts": [
+      "toContentParts"
+    ],
+    "src/engines/plan-validation-gate.ts": [
+      "PlanValidationResult",
+      "PlanValidationConfig",
+      "PlanValidationGate"
+    ],
+    "src/engines/plugin-hot-reload.ts": [
+      "ProviderPlugin",
+      "PluginHandler",
+      "PluginErrorHandler",
+      "PluginUnloadHandler",
+      "PluginHotReload"
+    ],
+    "src/engines/plugin-system.ts": [
+      "ProviderPlugin",
+      "PluginHookName",
+      "PluginManager",
+      "PluginManagerImpl"
+    ],
+    "src/engines/policy-engine.ts": [
+      "P0PolicyEngineOptions",
+      "P0PolicyEngine"
+    ],
+    "src/engines/pool/browser-pool.ts": [
+      "PoolOptions",
+      "PoolSlave",
+      "AcquireResult",
+      "BrowserPool"
+    ],
+    "src/engines/pool/lease.ts": [
+      "LeaseOptions",
+      "Lease"
+    ],
+    "src/engines/protocol-discovery.ts": [
+      "CdpSender",
+      "DiscoveredComposer",
+      "DiscoveredSendButton",
+      "DiscoveredNetworkPattern",
+      "DiscoveredDOMResponse",
+      "DiscoveredProtocol",
+      "ProtocolDiscoveryEngine"
+    ],
+    "src/engines/protocol-loop-parser.ts": [
+      "ProtocolFrame",
+      "LoopState",
+      "ProtocolLoopParser"
+    ],
+    "src/engines/provider-caps.ts": [
+      "registerProviderCapabilities"
+    ],
+    "src/engines/provider-conversation-adapter.ts": [
+      "ConversationHeader",
+      "ConversationMessage",
+      "ConversationArtifact",
+      "ConversationFull",
+      "PaginatedResult",
+      "ProviderConversationAdapter",
+      "AuthContext",
+      "AdapterError",
+      "AdapterErrorCode"
+    ],
+    "src/engines/provider-discovery.ts": [
+      "DiscoveryOptions",
+      "DiscoverySession",
+      "InteractiveElement",
+      "DomSnapshot",
+      "ShapeMatchResult",
+      "InferredCapability",
+      "NetworkObservation",
+      "ProviderManifestDraft",
+      "ManifestEdits",
+      "RegisterResult",
+      "PageState",
+      "DomMutationResult",
+      "AccessibilityNode",
+      "ManifestEditsLegacy",
+      "RegisterResultLegacy",
+      "ProviderDiscoveryEngine"
+    ],
+    "src/engines/provider-health.ts": [
+      "HealthStatus",
+      "ProviderSignal",
+      "ProviderHealth",
+      "ProviderHealthKernel"
+    ],
+    "src/engines/provider-mux.ts": [
+      "MuxSessionInput",
+      "MuxSessionRow",
+      "MuxResponseInput",
+      "MuxResponseRow",
+      "RoutingPreferenceInput",
+      "RoutingPreferenceRow",
+      "MuxStore",
+      "MuxStrategy",
+      "MuxRequest",
+      "MuxResponse",
+      "MuxDispatcher",
+      "ProviderMuxEngine"
+    ],
+    "src/engines/provider-protocol-generator.ts": [
+      "ProviderProtocol",
+      "ProviderProtocolEntry",
+      "EndpointEntry",
+      "ParserModuleEntry",
+      "StreamConfigEntry",
+      "CapabilityBindingEntry",
+      "GeneratedProtocolResult",
+      "ProviderProtocolGenerator",
+      "protocol"
+    ],
+    "src/engines/provider-protocol-loader.ts": [
+      "ProtocolSource",
+      "normalizeProtocolSource"
+    ],
+    "src/engines/provider-registrar.ts": [
+      "ProviderRegistrarEventBus",
+      "RegisterResult",
+      "SeedAllResult",
+      "VerifyResult",
+      "ProviderRegistrarAuditor",
+      "ProviderRegistrar"
+    ],
+    "src/engines/provider-selectors.ts": [
+      "getComposerSelectors",
+      "getSendButtonSelectors",
+      "getProviderUrl",
+      "getProviderLoginUrl",
+      "getProviderUrlPattern",
+      "COMPOSER_SELECTORS",
+      "SEND_BUTTON_SELECTORS",
+      "PROVIDER_URLS",
+      "PROVIDER_URL_PATTERNS"
+    ],
+    "src/engines/provider-test-harness.ts": [
+      "HarnessOutcome",
+      "ProviderTestHarness"
+    ],
+    "src/engines/providers/plugin-registry.ts": [
+      "ProviderPluginRegistry",
+      "getProviderPluginRegistry",
+      "resetProviderPluginRegistry"
+    ],
+    "src/engines/providers/plugin.ts": [
+      "ProviderPlugin",
+      "TypingStrategy",
+      "AntiDetectionScript",
+      "RecoveryProfile",
+      "ProviderCapability"
+    ],
+    "src/engines/providers/plugins/chatgpt.ts": [
+      "ChatGPTPlugin"
+    ],
+    "src/engines/providers/plugins/claude.ts": [
+      "ClaudePlugin"
+    ],
+    "src/engines/providers/plugins/gemini.ts": [
+      "GeminiPlugin"
+    ],
+    "src/engines/providers/plugins/index.ts": [
+      "getBuiltinPlugins",
+      "getPluginById"
+    ],
+    "src/engines/providers/provider-plugin-interface.ts": [
+      "ProviderHealthStatus",
+      "ProviderCapabilityDescriptor",
+      "HealthCheckResult",
+      "ProviderMetadata",
+      "ProviderPluginContext",
+      "ProviderPlugin",
+      "ProviderPluginFactory",
+      "ProviderPluginManifest"
+    ],
+    "src/engines/providers/registry.ts": [
+      "ProviderRegistry",
+      "getProviderRegistry"
+    ],
+    "src/engines/reference-grounding.ts": [
+      "ReferencePattern",
+      "ReferenceGroundingEngine"
+    ],
+    "src/engines/registration-auditor.ts": [
+      "AuditorConfig",
+      "DEFAULT_AUDITOR_CONFIG",
+      "AuditorEventBus",
+      "ConfigManager",
+      "UpsertResult",
+      "AuditResult",
+      "SeedAuditResult",
+      "DriftDetectionResult",
+      "RegistrationAuditor"
+    ],
+    "src/engines/reliability/classifier.ts": [
+      "ClassificationResult",
+      "classifyFailure"
+    ],
+    "src/engines/reliability/event-store.ts": [
+      "EventStoreEntry",
+      "EventStoreBackend",
+      "InMemoryEventStore"
+    ],
+    "src/engines/reliability/recovery-orchestrator.ts": [
+      "RecoveryAttempt",
+      "RecoveryOrchestrator"
+    ],
+    "src/engines/reliability/strategies.ts": [
+      "StrategyResult",
+      "RecoveryContext"
+    ],
+    "src/engines/reprogrammability/llm-harness-agent.ts": [
+      "LlmHarnessAgentDeps",
+      "LlmHarnessPlanResult",
+      "LlmHarnessAgent"
+    ],
+    "src/engines/reprogrammability/llm-prompt.ts": [
+      "LlmPromptInput",
+      "LlmPromptResult",
+      "LLM_HARNESS_SYSTEM_PROMPT",
+      "buildLlmHarnessPrompt"
+    ],
+    "src/engines/reprogrammability/plugin-builder.ts": [
+      "PluginBuilderInput",
+      "PluginBuilderResult",
+      "PluginManifest",
+      "PluginBuilder",
+      "pluginBuilder"
+    ],
+    "src/engines/reprogrammability/version-store.ts": [
+      "SurfaceVersion",
+      "WorkspaceBackup",
+      "PROVENANCE_WEIGHTS",
+      "provenanceWeight",
+      "VersionStore",
+      "versionStore",
+      "hookVersionStoreToExecutor"
+    ],
+    "src/engines/request-queue.ts": [
+      "BackpressurePolicy",
+      "RequestQueue"
+    ],
+    "src/engines/resource/adaptive-limiter.ts": [
+      "AdaptiveLimiterOptions",
+      "AdaptiveLimiter"
+    ],
+    "src/engines/resource/gpu-allocator.ts": [
+      "GpuAllocatorOptions",
+      "GpuAllocator"
+    ],
+    "src/engines/resource/pressure-feed.ts": [
+      "Pressure",
+      "PressureFeedOptions",
+      "PressureFeed"
+    ],
+    "src/engines/resource/resource-manager.ts": [
+      "ResourceManagerOptions",
+      "ResourceManager"
+    ],
+    "src/engines/retry-engine.ts": [
+      "RetryPolicy",
+      "RetryEngine"
+    ],
+    "src/engines/router-capability-bridge.ts": [
+      "registerRouterCapabilities"
+    ],
+    "src/engines/runtime/browser-runtime.ts": [
+      "CDPTransport",
+      "BrowserSession",
+      "ReconnectPolicy",
+      "CDPProxy",
+      "CdpWatchdog",
+      "HealthMonitor",
+      "ReconnectManager",
+      "BrowserRuntime"
+    ],
+    "src/engines/safe-eval.ts": [
+      "assertTrustedExpressionSource"
+    ],
+    "src/engines/safe-expression.ts": [
+      "safeEval",
+      "compileExpression",
+      "MigrationStep",
+      "parseMigrationScript"
+    ],
+    "src/engines/sandbox-runner-quickjs.ts": [
+      "SandboxRunner"
+    ],
+    "src/engines/sandbox-runner-vm.ts": [
+      "SandboxRunner"
+    ],
+    "src/engines/sandbox-runner.ts": [
+      "SandboxPermissions",
+      "SandboxBudget",
+      "SandboxRunOptions",
+      "SandboxResult",
+      "SandboxRunner"
+    ],
+    "src/engines/scheduler/browser-scheduler.ts": [
+      "Task",
+      "TaskResult",
+      "SchedulerSnapshot",
+      "SchedulerBackpressureError",
+      "TaskTimeoutError",
+      "BrowserScheduler"
+    ],
+    "src/engines/scheduler/policy.ts": [
+      "PolicyConfig",
+      "SchedulerPolicy"
+    ],
+    "src/engines/scheduler/queues.ts": [
+      "QueueName",
+      "QueueConfig",
+      "QUEUE_CONFIGS",
+      "METHOD_TO_RESOURCE_CLASS",
+      "getResourceClass",
+      "getQueueConfig"
+    ],
+    "src/engines/selector-cache.ts": [
+      "SelectorCacheConfig",
+      "SelectorCache"
+    ],
+    "src/engines/selector-healer.ts": [
+      "HealStrategy",
+      "HealResult",
+      "SelectorHealerConfig",
+      "SelectorHealerStore",
+      "SelectorHealer",
+      "FailureType",
+      "FailureClassification",
+      "classifyFailure",
+      "healingPriority"
+    ],
+    "src/engines/selector-refiner.ts": [
+      "SelectorRefinement",
+      "SelectorRefiner"
+    ],
+    "src/engines/semantic-grounding.ts": [
+      "SemanticSelector",
+      "AccessibilityNode",
+      "ResolvedElement",
+      "ScreenshotRegion",
+      "SemanticGroundingEngine"
+    ],
+    "src/engines/semantic-search.ts": [
+      "SearchQuery",
+      "SearchResult",
+      "EmbeddingProvider",
+      "SemanticSearchEngine"
+    ],
+    "src/engines/send-capability.ts": [
+      "SendDeps",
+      "registerSendCaps"
+    ],
+    "src/engines/send-resilience.ts": [
+      "SendPreflightResult",
+      "SendInput",
+      "SendOutput",
+      "SendResilienceDeps",
+      "SendResilienceEngine"
+    ],
+    "src/engines/session-caps.ts": [
+      "SessionDeps",
+      "registerSessionCaps"
+    ],
+    "src/engines/session-checkpoint.ts": [
+      "SessionCheckpointStore",
+      "SessionCheckpointEngine"
+    ],
+    "src/engines/session-lifecycle-manager.ts": [
+      "SessionState",
+      "SessionType",
+      "SessionConfig",
+      "SessionRecord",
+      "SessionEvents",
+      "SessionLifecycleOptions",
+      "RecoveryStrategy",
+      "SessionLifecycleHooks",
+      "SessionLifecycleManager"
+    ],
+    "src/engines/session-state-persistence.ts": [
+      "SessionStatePersistence"
+    ],
+    "src/engines/situation-detector.ts": [
+      "TaskType",
+      "SituationSignal",
+      "DetectionInput",
+      "SituationDetector"
+    ],
+    "src/engines/sla-monitor.ts": [
+      "SlaTarget",
+      "SlaOperation",
+      "SlaPolicy",
+      "DEFAULT_SLA_POLICY",
+      "SlaMonitor"
+    ],
+    "src/engines/state-transition.ts": [
+      "EntityType",
+      "StateTransitionInput",
+      "StateTransitionRow",
+      "StateTransitionStore",
+      "StateTransitionEngine"
+    ],
+    "src/engines/stealth/audio-context-engine.ts": [
+      "AudioContextModule"
+    ],
+    "src/engines/stealth/behavioral-pattern-engine.ts": [
+      "BehavioralPatternModule"
+    ],
+    "src/engines/stealth/canvas-noise-engine.ts": [
+      "CanvasNoiseModule"
+    ],
+    "src/engines/stealth/cdp-artifact-cleaner.ts": [
+      "CdpArtifactCleanerModule"
+    ],
+    "src/engines/stealth/extension-bridge-engine.ts": [
+      "ExtensionCommand",
+      "ExtensionResponse",
+      "ExtensionBridgeEngine"
+    ],
+    "src/engines/stealth/font-screen-engine.ts": [
+      "FontScreenModule"
+    ],
+    "src/engines/stealth/human-keyboard-engine.ts": [
+      "HumanKeyboardModule"
+    ],
+    "src/engines/stealth/human-mouse-engine.ts": [
+      "HumanMouseModule"
+    ],
+    "src/engines/stealth/human-scroll-engine.ts": [
+      "HumanScrollModule"
+    ],
+    "src/engines/stealth/launch-profile-engine.ts": [
+      "LaunchProfile",
+      "LaunchProfilePolicy",
+      "LaunchProfileEngine"
+    ],
+    "src/engines/stealth/navigator-patch-module.ts": [
+      "navigatorPatchConfig",
+      "NavigatorPatchConfig",
+      "navigatorPatchModule"
+    ],
+    "src/engines/stealth/network-fingerprint-engine.ts": [
+      "NetworkFingerprintModule"
+    ],
+    "src/engines/stealth/profile-warmup-engine.ts": [
+      "ProfileWarmupModule"
+    ],
+    "src/engines/stealth/register-defaults.ts": [
+      "registerDefaultStealthModules"
+    ],
+    "src/engines/stealth/stealth-module-engine.ts": [
+      "StealthModule",
+      "StealthContext",
+      "StealthModuleConfig",
+      "StealthModuleProfile",
+      "StealthModuleEngine"
+    ],
+    "src/engines/stealth/stealth-module.ts": [
+      "StealthCdpProxy",
+      "StealthContext",
+      "StealthModuleConfig",
+      "StealthModuleProfile",
+      "StealthModule"
+    ],
+    "src/engines/stealth/webgl-spoof-engine.ts": [
+      "WebGlSpoofModule"
+    ],
+    "src/engines/storage-relocation-engine.ts": [
+      "RelocationStatus",
+      "RelocationPhase",
+      "RelocationResult",
+      "StorageStatus",
+      "ArchivedLocation",
+      "RelocationEngineConfig",
+      "RelocationStore",
+      "StorageRelocationEngine"
+    ],
+    "src/engines/stream-align.ts": [
+      "StreamFormat",
+      "AlignmentReport",
+      "DeltaPathValidation",
+      "StreamAlignmentEngine"
+    ],
+    "src/engines/stream-block-store.ts": [
+      "StreamBlockStore"
+    ],
+    "src/engines/stream-parser.ts": [
+      "ContentBlock",
+      "ParserModule",
+      "BlockDiagnostics",
+      "WireFormat",
+      "ParseResult",
+      "ParserConfig",
+      "StreamParserEngine"
+    ],
+    "src/engines/streaming-channel-caps.ts": [
+      "registerStreamingChannelCaps"
+    ],
+    "src/engines/streaming-protocol.ts": [
+      "StreamingEvent",
+      "StreamingEventHandler",
+      "ParserModule",
+      "StreamingProtocol"
+    ],
+    "src/engines/streaming-response-analyzer.ts": [
+      "StreamTransport",
+      "StreamAnalysis",
+      "AnalyzerOptions",
+      "StreamingResponseAnalyzer"
+    ],
+    "src/engines/sync-engine.ts": [
+      "SyncState",
+      "SyncStateInput",
+      "SyncStateStore",
+      "SyncEngine"
+    ],
+    "src/engines/sync.ts": [
+      "SyncConfig",
+      "SyncPeer",
+      "SyncLogEntry",
+      "SyncStore",
+      "SyncResult",
+      "SyncEngine"
+    ],
+    "src/engines/task-history.ts": [
+      "TaskStatus",
+      "TaskSummary",
+      "TaskTimelineStep",
+      "TaskTimelineGate",
+      "TaskTimeline",
+      "TaskHistoryStore",
+      "TaskHistoryService"
+    ],
+    "src/engines/telemetry-aggregator.ts": [
+      "AggregationFn",
+      "AggregationMetric",
+      "AggregationSchedule",
+      "RetentionRule",
+      "RetentionPolicy",
+      "TelemetryPipelineSettings",
+      "TelemetryPipelineConfig",
+      "CycleResult",
+      "RetentionResult",
+      "TrendPoint",
+      "TELEMETRY_ENGINE_ID",
+      "DEFAULT_TELEMETRY_PIPELINE",
+      "TelemetryAggregator"
+    ],
+    "src/engines/telemetry-audit.ts": [
+      "NetworkCallRecord",
+      "AuditReport",
+      "TelemetryAudit"
+    ],
+    "src/engines/tool-orchestrator-facade.ts": [
+      "createMcpToolOrchestrator",
+      "activateToolOrchestrator"
+    ],
+    "src/engines/tool-use-protocol.ts": [
+      "ToolDefinition",
+      "ToolResult",
+      "ToolUseProtocol",
+      "ToolUseProtocolImpl"
+    ],
+    "src/engines/transfer-accelerator.ts": [
+      "TransferCandidate",
+      "TransferAttemptResult",
+      "BatchTransferResult",
+      "ProviderCapabilityStore",
+      "TransferAccelerator"
+    ],
+    "src/engines/trust-score.ts": [
+      "TrustFactor",
+      "TrustReport",
+      "TrustScoreEngine",
+      "MUTATION_PROVENANCE_WEIGHTS",
+      "MutationProvenanceForTrust",
+      "computeMutationTrustScore"
+    ],
+    "src/engines/tunnel-client/connection-manager.ts": [
+      "ConnectionManagerEvents",
+      "ConnectionManager"
+    ],
+    "src/engines/tunnel-client/frame-protocol.ts": [
+      "createHttpResponseFrame",
+      "createHttpChunkFrame",
+      "createHttpAbortFrame",
+      "createPingFrame",
+      "createStatusFrame",
+      "encodeFrame",
+      "decodeFrame"
+    ],
+    "src/engines/tunnel-client/heartbeat.ts": [
+      "HeartbeatConfig",
+      "Heartbeat"
+    ],
+    "src/engines/tunnel-client/index.ts": [
+      "TunnelClient"
+    ],
+    "src/engines/tunnel-client/reconnection.ts": [
+      "ReconnectionConfig",
+      "ReconnectionManager"
+    ],
+    "src/engines/tunnel-client/request-handler.ts": [
+      "RequestHandlerConfig",
+      "RequestHandler"
+    ],
+    "src/engines/tunnel-client/types.ts": [
+      "TunnelConnectionState",
+      "TunnelClientEvents",
+      "PendingRequest"
+    ],
+    "src/engines/tunnel-orchestrator/config.ts": [
+      "loadConfig"
+    ],
+    "src/engines/tunnel-orchestrator/health-monitor.ts": [
+      "HealthMonitor"
+    ],
+    "src/engines/tunnel-orchestrator/service-manager.ts": [
+      "ServiceManager"
+    ],
+    "src/engines/unified-registry.ts": [
+      "CapabilitySurface",
+      "CapabilityContext",
+      "UnifiedCapability",
+      "UnifiedCapabilityRegistry",
+      "parseProgSlug"
+    ],
+    "src/engines/update-engine.ts": [
+      "UpdateEngine",
+      "getUpdateEngine"
+    ],
+    "src/engines/user-identity.ts": [
+      "ProfilePatch",
+      "UserIdentityEngine"
+    ],
+    "src/engines/version-manager.ts": [
+      "VersionConfig",
+      "PromotionCondition",
+      "PromotionRule",
+      "DegradationRule",
+      "VersionComparison",
+      "PromotionTimeline",
+      "CompositeSnapshot",
+      "VersionManager"
+    ],
+    "src/engines/workflow-compiler.ts": [
+      "ExpressionFn",
+      "CompiledWorkflow",
+      "CompileError",
+      "CompileResult",
+      "WorkflowCompiler"
+    ],
+    "src/engines/workflow-engine.ts": [
+      "WorkflowNode",
+      "WorkflowEdge",
+      "WorkflowDefinition",
+      "NodeExecution",
+      "WorkflowExecution",
+      "WorkflowStore",
+      "McpClientAdapter",
+      "WorkflowEngine",
+      "HitlGateStore",
+      "WorkflowRetryQueueStore",
+      "WorkflowVersionStore"
+    ],
+    "src/engines/workflow-templates/cleanup-inactive.ts": [
+      "buildCleanupInactiveWorkflow"
+    ],
+    "src/engines/workflow-templates/daily-digest.ts": [
+      "buildDailyDigestWorkflow"
+    ],
+    "src/engines/workflow-templates/health-report.ts": [
+      "buildHealthReportWorkflow"
+    ],
+    "src/engines/workflow-templates/newsletter.ts": [
+      "NewsletterOpts",
+      "buildNewsletterWorkflow"
+    ],
+    "src/engines/workflow-templates/reindex-memory.ts": [
+      "buildReindexMemoryWorkflow"
+    ],
+    "src/engines/workspace-presets.ts": [
+      "PresetId",
+      "PanelKind",
+      "BuiltinPanel",
+      "CanvasPanel",
+      "PanelSpec",
+      "WorkspaceLayoutRow",
+      "WorkspaceManager",
+      "CanvasSpawner",
+      "WorkspacePresets"
+    ],
+    "frontend/src/engines/adaptive-workspace.ts": [
+      "WorkspaceMode",
+      "Workspace",
+      "AdaptiveWorkspace"
+    ],
+    "frontend/src/engines/agents-builder.ts": [
+      "AgentsBuilderDeps",
+      "AgentsBuilder"
+    ],
+    "frontend/src/engines/annotation-engine.ts": [
+      "Annotation",
+      "AnnotationEngineDeps",
+      "AnnotationEngine"
+    ],
+    "frontend/src/engines/audit-engine.ts": [
+      "AuditEngineDeps",
+      "AuditEngine"
+    ],
+    "frontend/src/engines/automation-builder.ts": [
+      "AutomationBuilderDeps",
+      "AutomationBuilder"
+    ],
+    "frontend/src/engines/canvas-command-executor.ts": [
+      "CanvasCommandExecutor",
+      "createCanvasCommandExecutor"
+    ],
+    "frontend/src/engines/canvas-layer-mounter.ts": [
+      "LayerDefinition",
+      "MountedLayer",
+      "CanvasLayerMounter"
+    ],
+    "frontend/src/engines/canvas-registry.ts": [
+      "CanvasRegistry"
+    ],
+    "frontend/src/engines/capability-event-bus.ts": [
+      "EngineEvent",
+      "EventHandler",
+      "WsLike",
+      "CapabilityEventBus"
+    ],
+    "frontend/src/engines/conceptual-model-service.ts": [
+      "ResolvedSlot",
+      "ConceptualModelService",
+      "buildRouteSyncDeps"
+    ],
+    "frontend/src/engines/document-editor-engine.ts": [
+      "DocumentEditorEngineDeps",
+      "DocumentEditorEngine"
+    ],
+    "frontend/src/engines/document-engine.ts": [
+      "DocumentEngineDeps",
+      "DocumentCapabilityHandler",
+      "DocumentEngine"
+    ],
+    "frontend/src/engines/drawer-engine.ts": [
+      "DrawerEngineDeps",
+      "DrawerEngine"
+    ],
+    "frontend/src/engines/media-bridge.ts": [
+      "MediaBridgePlayOptions",
+      "MediaBridgeExtractOptions",
+      "MediaBridgeTranscribeOptions",
+      "FrameThumb",
+      "MediaBridge",
+      "MemoryMediaBridge"
+    ],
+    "frontend/src/engines/media-engine.ts": [
+      "MediaEngineDeps",
+      "MediaEngine"
+    ],
+    "frontend/src/engines/notification-engine.ts": [
+      "NotificationEngineDeps",
+      "NotificationEngine"
+    ],
+    "frontend/src/engines/plugin-hot-reload.ts": [
+      "ProviderPlugin",
+      "PluginHandler",
+      "PluginErrorHandler",
+      "PluginUnloadHandler",
+      "DefChangeHandler",
+      "PluginHotReload"
+    ],
+    "frontend/src/engines/plugin-system.ts": [
+      "ProviderPlugin",
+      "PluginManager"
+    ],
+    "frontend/src/engines/presence-engine.ts": [
+      "PresenceEngineDeps",
+      "PresenceEngine"
+    ],
+    "frontend/src/engines/rbac-engine.ts": [
+      "RbacEngineDeps",
+      "RbacEngine"
+    ],
+    "frontend/src/engines/route-sync-workspace.ts": [
+      "WorkspaceRouteSyncDeps",
+      "cardKindToSlot",
+      "WorkspaceSurfaceDelta",
+      "diffWorkspaceSurfaces"
+    ],
+    "frontend/src/engines/route-sync.ts": [
+      "RouteSyncDeps",
+      "slotToPrimitive",
+      "SurfaceDelta",
+      "diffSurfaces"
+    ],
+    "frontend/src/engines/search-engine.ts": [
+      "SearchEngineDeps",
+      "SearchEngine"
+    ],
+    "frontend/src/engines/shell-command-engine.ts": [
+      "ShellCommandEngineDeps",
+      "StreamSink",
+      "ShellCommandEngine"
+    ],
+    "frontend/src/engines/structured-logger.ts": [
+      "StructuredLog",
+      "LogSink",
+      "Span",
+      "StructuredLogger",
+      "TraceEntry",
+      "TraceStore"
+    ],
+    "frontend/src/engines/template-engine.ts": [
+      "TemplateEngineDeps",
+      "TemplateEngine"
+    ],
+    "frontend/src/engines/ui-engine.ts": [
+      "UIEngineDeps",
+      "UIEngine"
+    ],
+    "frontend/src/engines/workspace-engine.ts": [
+      "WorkspaceEngineDeps",
+      "WorkspaceEngine"
+    ],
+    "frontend/src/engines/z-layer-engine.ts": [
+      "ZLayerEngineDeps",
+      "ZLayerEngine"
+    ]
+  },
+  "testFiles": 476,
+  "importCycles": [],
+  "routeHints": {},
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.30",
+    "@huggingface/transformers": "^4.2.0",
+    "@libp2p/autonat": "^3.0.26",
+    "@libp2p/bootstrap": "^12.0.29",
+    "@libp2p/circuit-relay-v2": "^4.2.11",
+    "@libp2p/identify": "^4.1.12",
+    "@libp2p/kad-dht": "^16.4.2",
+    "@libp2p/mdns": "^12.0.29",
+    "@libp2p/noise": "^1.0.1",
+    "@libp2p/tcp": "^11.0.26",
+    "@libp2p/websockets": "^10.1.19",
+    "@libp2p/yamux": "^8.0.1",
+    "@noble/ed25519": "^3.1.0",
+    "@noble/hashes": "^2.3.0",
+    "@prisma/client": "^6.19.3",
+    "alasql": "^4.17.3",
+    "cozo-node": "^0.7.6",
+    "isolated-vm": "^7.0.1",
+    "libp2p": "^3.3.8",
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-gfm": "^3.1.0",
+    "micromark": "^4.0.2",
+    "micromark-extension-gfm": "^3.0.0",
+    "pino": "^10.3.1",
+    "quickjs-emscripten": "^0.32.0",
+    "ulid": "^3.0.2",
+    "ulidx": "^2.4.1",
+    "zod": "^4.4.3",
+    "@biomejs/biome": "^2.5.8",
+    "@types/bun": "^1.3.14",
+    "lefthook": "^2.1.10",
+    "pino-pretty": "^13.1.3",
+    "prisma": "^6.19.3",
+    "rollup-plugin-dts": "^6.5.1",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2",
+    "typescript-language-server": "^5.3.0"
+  }
+}

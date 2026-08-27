@@ -1,0 +1,388 @@
+[
+  {
+    "short": "8e3b7c6",
+    "name": "Genesis",
+    "exists": true,
+    "full": "8e3b7c6a73fc6edb17fe36bb6a961d27e3614d17",
+    "date": "2026-07-09T18:25:39+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: initial vivim-final cap-store v1 project",
+    "parents": [],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "b23813f",
+    "name": "Node/ACU v2",
+    "exists": true,
+    "full": "b23813ffa79b7603243db08c7295cb20e4847a1f",
+    "date": "2026-07-18T04:01:49+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat(node-layer): universal compliant Node DB with ACU/FSRS/version-chain/alias",
+    "parents": [
+      "3fc74d400a2e0bef1e1595f75453bc3770d80408"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "a356d1f",
+    "name": "OG data migration",
+    "exists": true,
+    "full": "a356d1fdee7f2125b652fdd9a987c143078f039b",
+    "date": "2026-07-18T04:33:59+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: port all OG cap-store data into vivim-final DB",
+    "parents": [
+      "72126283362d35f0c89dd7eb441bebc5ac7c15d7"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "8e4202e",
+    "name": "DevOps/knowledge consolidation",
+    "exists": true,
+    "full": "8e4202edc052679846ada601973d597fc435d685",
+    "date": "2026-07-20T12:17:38+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: vivim-final accumulated work — devops engine wiring, skills, docs, specs, and 030-v9-user-moments plan",
+    "parents": [
+      "d32b16bb0ca98deaa1807326b2e1c3ba56c017c8"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "88e6d2f",
+    "name": "Canvas-native",
+    "exists": true,
+    "full": "88e6d2f10a39d4015ea619ff5c38171ea27d53fb",
+    "date": "2026-07-23T21:33:57+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat(frontend): complete canvas-native upgrade + streaming unification + all 17 bugs fixed",
+    "parents": [
+      "f84aabff224b05047d1363c41c3874de28e2320c"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "7c544eb",
+    "name": "HITL execution",
+    "exists": true,
+    "full": "7c544eb38daf4ab1c970bb16ba8c4cfcd586e9b6",
+    "date": "2026-07-26T18:12:55+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat(CapabilityExecutionEngine): add pause/resume with HITL v2 snapshot support",
+    "parents": [
+      "f01736fc219c0215a970080f7b76b94353ffe0db"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "e527f21",
+    "name": "VVV transplant",
+    "exists": true,
+    "full": "e527f21f3a0678b3583d558e75ae8f1d62562b7f",
+    "date": "2026-07-27T16:18:11+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat(vvv-merge): integrate all vvv enhancements — NLCL, reprogrammability, framing, onboarding",
+    "parents": [
+      "7c544eb38daf4ab1c970bb16ba8c4cfcd586e9b6"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "a208a0b",
+    "name": "VVV convergence",
+    "exists": true,
+    "full": "a208a0bc857791b53d9523921b14d6cbe6a68335",
+    "date": "2026-07-27T18:20:18+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "fix(vvv-converge): resolve merge type errors, fix infrastructure, push local branches",
+    "parents": [
+      "e527f21f3a0678b3583d558e75ae8f1d62562b7f"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "8cd6d9f",
+    "name": "282-error checkpoint",
+    "exists": true,
+    "full": "8cd6d9f2e65a22184fd43d85bcf6477e48b1b95d",
+    "date": "2026-07-28T13:56:25+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "fix: resolve all 282 tsc errors + chore: untrack junk, add prov_claude/ to gitignore",
+    "parents": [
+      "a208a0bc857791b53d9523921b14d6cbe6a68335"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "123b661",
+    "name": "UnifiedIO",
+    "exists": true,
+    "full": "123b661fc91c5c0b322560042178e865bb28d66c",
+    "date": "2026-07-30T22:14:14+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "refactor: migrate remaining fetch() calls to UnifiedIO",
+    "parents": [
+      "c4f6858004ee82e5009d2c65a847c907e04f31c8"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "0766007",
+    "name": "StorageProvider",
+    "exists": true,
+    "full": "076600795aa56f077767b180e187e8d7c9844d93",
+    "date": "2026-08-03T17:51:15+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: StorageProvider centralization v2",
+    "parents": [
+      "8b0186aa294128975965d1bafca610de9d2dc0df"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master",
+      "reconstruction-v010"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "3abafce",
+    "name": "WP-10 transplant",
+    "exists": true,
+    "full": "3abafcef47d1b71355b238c67ed8940e6b44de5e",
+    "date": "2026-08-05T23:48:55+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: upgrade from WP-10 source — 2377 files copied, src/ type errors fixed",
+    "parents": [
+      "30d468884e25001787ff411fdd055e070be9434b"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "14ffb4a",
+    "name": "Deep scan",
+    "exists": true,
+    "full": "14ffb4abe15543240bc383b2581f41bc74bb2a14",
+    "date": "2026-08-06T12:36:56+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat(devops): add 10-phase deep-scan CLI (correctness/arch/perf/quality)",
+    "parents": [
+      "3abafcef47d1b71355b238c67ed8940e6b44de5e"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "e1952fc",
+    "name": "Tauri V2",
+    "exists": true,
+    "full": "e1952fcd59b95b9e7a3f909b5f7dda168a0611d8",
+    "date": "2026-08-11T17:41:11+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: integrate Tauri V2 desktop layer + new backend modules, fix capability boot await",
+    "parents": [
+      "9ca857eb212ad04032330e6da2b4daf5a21f9dfa"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "f21042c",
+    "name": "ActionPlan",
+    "exists": true,
+    "full": "f21042cb84130d702e0142fe9b01b180422f8dbd",
+    "date": "2026-08-12T09:24:39+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: add ActionPlan contract, knowledge envelope/pipeline, capability parity + NLCL response interpreter",
+    "parents": [
+      "018475cadcbc7aa079ca1d29e5d139d78ce6b882"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "7521b3b",
+    "name": "ExecutionKernel wiring",
+    "exists": true,
+    "full": "7521b3ba2867a3c4aea6b41e964ab6e685400cad",
+    "date": "2026-08-12T11:06:37+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat(P0): wire ExecutionKernel into NLCL behind VIVIM_EXECUTION_KERNEL flag",
+    "parents": [
+      "f21042cb84130d702e0142fe9b01b180422f8dbd"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "8d29543",
+    "name": "Intelligence upgrade",
+    "exists": true,
+    "full": "8d295438fea3d4cef7497d1c9a013d5209e54f98",
+    "date": "2026-08-13T19:36:03+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: implement Intelligence Upgrade Report — 9 phases, zero new deps",
+    "parents": [
+      "edd8fa5fd5f1828850c0ec9b77d34d729157abb9"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "master",
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "24576ce",
+    "name": "Dual DB",
+    "exists": true,
+    "full": "24576cead3d035470a0d4cc77297cfc67c2cbbdf",
+    "date": "2026-08-14T21:02:23+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "feat: dual-DB split (system/user), prisma schema split, and cross-boundary storage layer",
+    "parents": [
+      "3949aa57901ed2bbc992aabf83964a540279a4ff"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "391e36b",
+    "name": "Docs governance",
+    "exists": true,
+    "full": "391e36b2e83d47b5c0c4d718d8d08eaab1508f23",
+    "date": "2026-08-15T16:03:01+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "docs: implement documentation system blueprint and archive straggling docs",
+    "parents": [
+      "24576cead3d035470a0d4cc77297cfc67c2cbbdf"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  },
+  {
+    "short": "2b6adde",
+    "name": "Cleanup HEAD",
+    "exists": true,
+    "full": "2b6addee8044ea6ed5a308a3fc44ad4936479119",
+    "date": "2026-08-15T21:01:33+02:00",
+    "author": "Owen Alexander Wallace Servera",
+    "subject": "chore: cleanup bloat and minor formatting fixes",
+    "parents": [
+      "11e64580589a6f536f54b3c4fe11612fdd9d540a"
+    ],
+    "filesInTree": 0,
+    "reachableFrom": [
+      "experimental-dev",
+      "origin/master"
+    ],
+    "classification": "reachable"
+  }
+]

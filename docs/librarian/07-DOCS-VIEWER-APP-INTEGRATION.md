@@ -1,0 +1,61 @@
+# 07 — DOCS VIEWER APP INTEGRATION
+### Generates: an actual Next.js route + components inside the app's own source tree
+
+Everything before this file produced content. This file makes the content **live inside the running desktop app** — a real screen a user opens, not a README they'd have to go find on GitHub.
+
+---
+
+## 1. Placement and constraints
+
+- Add the viewer as a normal route within the existing Next.js app (App Router assumed unless discovery found Pages Router — adapt accordingly): e.g. `app/docs/[[...slug]]/page.tsx` for a catch-all that handles `/docs`, `/docs/architecture`, `/docs/architecture#trust-boundaries` (hash handled client-side).
+- **Offline-first, no exceptions.** This is a Tauri desktop app; the docs route must never `fetch()` from an external host for its content. Bundle the Markdown/manifest/search-index as static imports or read them via Tauri's filesystem/resource APIs at build time, matching however the rest of the app already handles local resources (check discovery for the pattern already in use — don't introduce a second one).
+- Prefer static generation (`generateStaticParams` from the manifest's slug list) so every doc route is pre-built, not client-fetched on demand.
+
+## 2. Required components
+
+### 2.1 `DocsLayout`
+Two-pane layout: persistent sidebar (nav tree) + content pane. On narrow/mobile-equivalent window sizes, collapse sidebar to a toggle.
+
+### 2.2 `DocsSidebar`
+- Built entirely from `docs-manifest.json` filtered to `audience_visibility !== "internal-only"` (unless a dev-mode flag is on — see §5).
+- Group by `category` (product / architecture / interfaces / extensibility), ordered by `nav_order`.
+- Highlight the active doc/section based on current route + scroll position (scrollspy against section anchors).
+
+### 2.3 `DocsSearch`
+- Client-side fuzzy search against `search-index.json` (a small library like Fuse.js is appropriate; if the repo already has a search dependency from discovery, reuse it instead of adding a new one).
+- Keyboard shortcut to open (e.g. `Cmd/Ctrl+K`) — check discovery for an existing shortcut convention before picking a binding, avoid collisions.
+- Each result links to `route` from the index entry, exactly as stored — do not reconstruct the URL differently in two places.
+
+### 2.4 `DocsRenderer`
+- Renders the Markdown body for the current doc. Use whatever Markdown pipeline fits the repo (`react-markdown` + `remark-gfm` is a safe default if nothing else exists).
+- **Mermaid blocks must render as diagrams, not code text.** Detect fenced ```mermaid blocks and render them client-side with the `mermaid` package (`mermaid.initialize` once, `mermaid.render` per block, inside a `useEffect`/client component since Mermaid needs the DOM). Cache rendered SVGs per diagram ID so navigating away and back doesn't re-render from scratch.
+- Apply the section-level `audience_visibility` filter here too: if a section is `internal-only` and the viewer isn't in dev-mode, strip it from render entirely (don't just visually hide — don't ship the content to the client at all for a genuinely end-user-facing build, to avoid leaking internal detail in bundled JS).
+- Every explicit anchor ID from the source Markdown must become a real DOM `id` on its heading element, so `/docs/architecture#trust-boundaries` scrolls to the right place and browser back/forward works normally.
+
+### 2.5 `DocsBreadcrumb`
+Simple: Category / Doc Title / Section Title, each a link, derived from the manifest — not hardcoded per page.
+
+## 3. Deep-linking contract
+
+Any part of the app — a settings page, an error toast, an empty state — should be able to link into the wiki with a plain route string, e.g. `/docs/io-reference#env-vars`. Establish one small helper so this isn't ad hoc:
+
+```ts
+// lib/docs-link.ts
+export function docsLink(docId: string, sectionId?: string): string {
+  // look up current slug for docId from the manifest at build time,
+  // so callers reference the stable id, never a slug that might change
+}
+```
+Callers use `docsLink('io-reference', 'env-vars')`, not raw route strings — this keeps the ID/slug indirection from `06` actually load-bearing instead of decorative.
+
+## 4. Empty/error states
+- Unknown slug → render a "this page moved or was removed" screen listing nearby matches from the manifest (fuzzy match on title), not a bare 404 — the audience for this app is end users, not developers reading stack traces.
+- Manifest fails to parse at build time → build should fail loudly in CI/dev, never ship a broken docs route silently.
+
+## 5. Dev-mode toggle (optional but recommended)
+If the app already has any kind of debug/dev flag (check discovery), gate a "show internal docs" toggle behind it so contributors browsing the built app can still see `internal-only` sections without needing to read raw Markdown files. Default off in production builds.
+
+## 6. What NOT to build here
+- Do not build a CMS or an editing UI — this viewer is read-only, regenerated by the agent, not hand-edited through the app.
+- Do not add a network sync/hosting layer for docs — offline bundling is the whole point of this being a desktop app.
+- Do not duplicate the Markdown content into the manifest — the manifest indexes structure (ids, anchors, routes); the Markdown files remain the actual body content the renderer reads.

@@ -1,0 +1,515 @@
+{
+  "generatedAt": "2026-08-27T03:51:05.404Z",
+  "repo": "C:\\0-BlackBoxProject-0\\vivim-final",
+  "rows": [
+    {
+      "entry": "node_modules",
+      "sizeMB": 1527.53,
+      "tracked": false,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-IGNORED",
+      "reason": "deps"
+    },
+    {
+      "entry": "frontend",
+      "sizeMB": 1281.75,
+      "tracked": true,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-TRACKED",
+      "reason": "product source"
+    },
+    {
+      "entry": "data",
+      "sizeMB": 537.51,
+      "tracked": false,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "ASSESS",
+      "reason": "runtime data?"
+    },
+    {
+      "entry": "chrome-profiles",
+      "sizeMB": 411.57,
+      "tracked": false,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-IGNORED",
+      "reason": "runtime browser profiles"
+    },
+    {
+      "entry": ".archive",
+      "sizeMB": 244.38,
+      "tracked": false,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-IGNORED-OR-TRACKED",
+      "reason": "intent evidence — required by principal for mining"
+    },
+    {
+      "entry": ".cip",
+      "sizeMB": 136.24,
+      "tracked": false,
+      "untracked": true,
+      "ignored": true,
+      "verdict": "ASSESS",
+      "reason": "CIP tool state; track config, ignore reports/logs"
+    },
+    {
+      "entry": "src",
+      "sizeMB": 68.03,
+      "tracked": true,
+      "untracked": true,
+      "ignored": true,
+      "verdict": "KEEP-TRACKED",
+      "reason": "product source"
+    },
+    {
+      "entry": "src-tauri",
+      "sizeMB": 60.62,
+      "tracked": true,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-TRACKED",
+      "reason": "desktop source"
+    },
+    {
+      "entry": ".kilo",
+      "sizeMB": 53.43,
+      "tracked": false,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "ASSESS",
+      "reason": "speckit/tool state"
+    },
+    {
+      "entry": ".opencode",
+      "sizeMB": 52.94,
+      "tracked": true,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-TRACKED",
+      "reason": "repo agent config (skills etc.)"
+    },
+    {
+      "entry": "scripts",
+      "sizeMB": 43.48,
+      "tracked": true,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-TRACKED",
+      "reason": "tooling"
+    },
+    {
+      "entry": "prisma",
+      "sizeMB": 27.76,
+      "tracked": true,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-TRACKED",
+      "reason": "schema source"
+    },
+    {
+      "entry": "tests",
+      "sizeMB": 15.62,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "tests"
+    },
+    {
+      "entry": "seeds",
+      "sizeMB": 13.93,
+      "tracked": true,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-TRACKED",
+      "reason": "seed truth"
+    },
+    {
+      "entry": "snapshots",
+      "sizeMB": 11.73,
+      "tracked": false,
+      "untracked": true,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "screenshots — archive or ignore"
+    },
+    {
+      "entry": ".genome",
+      "sizeMB": 3.57,
+      "tracked": false,
+      "untracked": true,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "our evidence artifacts (canon)"
+    },
+    {
+      "entry": "devops",
+      "sizeMB": 2.14,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "tooling"
+    },
+    {
+      "entry": "context-pack-md",
+      "sizeMB": 0.77,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "context pack source"
+    },
+    {
+      "entry": "docs",
+      "sizeMB": 0.47,
+      "tracked": true,
+      "untracked": true,
+      "ignored": true,
+      "verdict": "KEEP-TRACKED",
+      "reason": "docs (gitignore conflict must be fixed)"
+    },
+    {
+      "entry": "intelligence-pack-acu-dcb-storage",
+      "sizeMB": 0.36,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unverified directory"
+    },
+    {
+      "entry": "package-lock.json",
+      "sizeMB": 0.22,
+      "tracked": false,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "context-pack.zip",
+      "sizeMB": 0.21,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "PROPOSE-REMOVE",
+      "reason": "duplicate of context-pack-md/ (generated archive)"
+    },
+    {
+      "entry": "bun.lock",
+      "sizeMB": 0.17,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "prd-merged",
+      "sizeMB": 0.12,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "PRD records"
+    },
+    {
+      "entry": "AGENTS.md",
+      "sizeMB": 0.05,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": ".runtime",
+      "sizeMB": 0.04,
+      "tracked": false,
+      "untracked": false,
+      "ignored": true,
+      "verdict": "KEEP-IGNORED",
+      "reason": "runtime state"
+    },
+    {
+      "entry": "CHANGELOG.md",
+      "sizeMB": 0.04,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "claude-investigate",
+      "sizeMB": 0.03,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "dev signals dir"
+    },
+    {
+      "entry": "shared",
+      "sizeMB": 0.03,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "shared source"
+    },
+    {
+      "entry": "IMPLEMENTATION_PLAN_PHASE6.md",
+      "sizeMB": 0.02,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": ".devin",
+      "sizeMB": 0.01,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "devin config"
+    },
+    {
+      "entry": ".github",
+      "sizeMB": 0.01,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "CI config"
+    },
+    {
+      "entry": "CODE_OF_CONDUCT.md",
+      "sizeMB": 0.01,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "CONTRIBUTING.md",
+      "sizeMB": 0.01,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "README.md",
+      "sizeMB": 0.01,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "sdk",
+      "sizeMB": 0.01,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "source"
+    },
+    {
+      "entry": ".backups",
+      "sizeMB": 0,
+      "tracked": false,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "backups — verify not needed for recovery"
+    },
+    {
+      "entry": ".env",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-IGNORED",
+      "reason": "secrets"
+    },
+    {
+      "entry": ".env.example",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "KEEP-TRACKED",
+      "reason": "env template"
+    },
+    {
+      "entry": ".gitattributes",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": ".gitignore",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": ".taurignore",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": ".test-tmp",
+      "sizeMB": 0,
+      "tracked": false,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "PROPOSE-REMOVE",
+      "reason": "test scratch"
+    },
+    {
+      "entry": "biome.json",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "bun.test.config.ts",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "bunfig.toml",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "lefthook.yml",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "LICENSE",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "opencode.json",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "package.json",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "SECURITY.md",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "specs",
+      "sizeMB": 0,
+      "tracked": false,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "tsconfig.json",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "tsconfig.verify.json",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "tsup.config.ts",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    },
+    {
+      "entry": "_repro2_stream_parser.ts",
+      "sizeMB": 0,
+      "tracked": true,
+      "untracked": false,
+      "ignored": false,
+      "verdict": "ASSESS",
+      "reason": "unclassified"
+    }
+  ],
+  "gitignoreIssues": [],
+  "proposedIgnores": [
+    "src/generated/"
+  ],
+  "applyMode": false
+}

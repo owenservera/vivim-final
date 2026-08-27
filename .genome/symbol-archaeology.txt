@@ -1,0 +1,73 @@
+ActionPlan: 5 commits referencing it
+   fe1c2209b1edd65a8c370b8faaa6d38aa3cf7ee9	2026-08-26T22:00:34+02:00	docs(architecture): add Phase 8 forensic doc set
+   24576cead3d035470a0d4cc77297cfc67c2cbbdf	2026-08-14T21:02:23+02:00	feat: dual-DB split (system/user), prisma schema split, and cross-boundary storage layer
+   a355d655d7abf6cb298c71785a10b852cbd9f6ed	2026-08-13T13:10:27+02:00	chore: normalize formatting and capture in-flight edits
+   7521b3ba2867a3c4aea6b41e964ab6e685400cad	2026-08-12T11:06:37+02:00	feat(P0): wire ExecutionKernel into NLCL behind VIVIM_EXECUTION_KERNEL flag
+   f21042cb84130d702e0142fe9b01b180422f8dbd	2026-08-12T09:24:39+02:00	feat: add ActionPlan contract, knowledge envelope/pipeline, capability parity + NLCL response interpreter
+ExecutionKernel: 6 commits referencing it
+   a08aaa800e7a2355767de37392e0a615bdb4854e	2026-08-26T23:36:52+02:00	docs(architecture): add ARCHITECTURAL_DECISIONS.md (8 major decisions reconstructed)
+   fe1c2209b1edd65a8c370b8faaa6d38aa3cf7ee9	2026-08-26T22:00:34+02:00	docs(architecture): add Phase 8 forensic doc set
+   391e36b2e83d47b5c0c4d718d8d08eaab1508f23	2026-08-15T16:03:01+02:00	docs: implement documentation system blueprint and archive straggling docs
+   3949aa57901ed2bbc992aabf83964a540279a4ff	2026-08-13T23:24:13+02:00	feat: Phase 6 — collections, memory upgrades, engine improvements
+   a355d655d7abf6cb298c71785a10b852cbd9f6ed	2026-08-13T13:10:27+02:00	chore: normalize formatting and capture in-flight edits
+   7521b3ba2867a3c4aea6b41e964ab6e685400cad	2026-08-12T11:06:37+02:00	feat(P0): wire ExecutionKernel into NLCL behind VIVIM_EXECUTION_KERNEL flag
+ChromeGovernor: 56 commits referencing it
+   6cceb95e161dcd511f4ec7f470ee9590b2cb3855	2026-08-27T04:54:09+02:00	docs(architecture): add KNOWN_LIMITATIONS.md + FINAL_ARCHITECTURE_SUMMARY.md (Migration 014 / Phase 23-24 final audit)
+   24ffc9c292391bd71b89286fa8b4f2ab374a056d	2026-08-27T04:48:48+02:00	chore: carve docs/architecture/ out of .gitignore (Migration 007 fix)
+   ad6d2f2566c5c686d1be4ebbcb5bdc4f423dabcd	2026-08-27T04:46:43+02:00	feat(chrome-governor): add session resilience (detach/reconnect/degradation) (Migration 004)
+   76d219f8ee27605e14cd2b1d51a5cf218dd55bc7	2026-08-27T04:38:36+02:00	docs(architecture): add EVOLUTION_JOURNAL.md (live tracker + 27-phase status + unexpected findings + SOTA evidence + commit log)
+   f56ea0f6cb1c4ee467803581a802127903ab3a09	2026-08-27T04:37:11+02:00	docs(architecture): add MIGRATION_PLAN.md (14-step evolution sequence)
+   0b111eadbd57a247076af8896d38f288600e79f4	2026-08-27T04:32:54+02:00	docs(architecture): add SOTA_GAP_ANALYSIS.md (baseline vs current vs SOTA per 10 problems)
+CapabilityEngine: 25 commits referencing it
+   6cceb95e161dcd511f4ec7f470ee9590b2cb3855	2026-08-27T04:54:09+02:00	docs(architecture): add KNOWN_LIMITATIONS.md + FINAL_ARCHITECTURE_SUMMARY.md (Migration 014 / Phase 23-24 final audit)
+   0b111eadbd57a247076af8896d38f288600e79f4	2026-08-27T04:32:54+02:00	docs(architecture): add SOTA_GAP_ANALYSIS.md (baseline vs current vs SOTA per 10 problems)
+   615d0c5ab3e1857277303fcc7ee447ad92b69270	2026-08-27T00:52:16+02:00	docs(architecture): add SOTA_IDENTIFICATION.md (10 architectural problems identified)
+   a08aaa800e7a2355767de37392e0a615bdb4854e	2026-08-26T23:36:52+02:00	docs(architecture): add ARCHITECTURAL_DECISIONS.md (8 major decisions reconstructed)
+   fe1c2209b1edd65a8c370b8faaa6d38aa3cf7ee9	2026-08-26T22:00:34+02:00	docs(architecture): add Phase 8 forensic doc set
+   391e36b2e83d47b5c0c4d718d8d08eaab1508f23	2026-08-15T16:03:01+02:00	docs: implement documentation system blueprint and archive straggling docs
+CapabilityResolutionEngine: 32 commits referencing it
+   615d0c5ab3e1857277303fcc7ee447ad92b69270	2026-08-27T00:52:16+02:00	docs(architecture): add SOTA_IDENTIFICATION.md (10 architectural problems identified)
+   a08aaa800e7a2355767de37392e0a615bdb4854e	2026-08-26T23:36:52+02:00	docs(architecture): add ARCHITECTURAL_DECISIONS.md (8 major decisions reconstructed)
+   fe1c2209b1edd65a8c370b8faaa6d38aa3cf7ee9	2026-08-26T22:00:34+02:00	docs(architecture): add Phase 8 forensic doc set
+   391e36b2e83d47b5c0c4d718d8d08eaab1508f23	2026-08-15T16:03:01+02:00	docs: implement documentation system blueprint and archive straggling docs
+   3949aa57901ed2bbc992aabf83964a540279a4ff	2026-08-13T23:24:13+02:00	feat: Phase 6 — collections, memory upgrades, engine improvements
+   8ce86b676e8bd4bf70b86b9680930a460c56f75a	2026-08-06T19:10:48+02:00	chore: track docs, cleanup stale docs and artifacts, fix invariants and NLCL engines
+MemoryEngine: 26 commits referencing it
+   6cceb95e161dcd511f4ec7f470ee9590b2cb3855	2026-08-27T04:54:09+02:00	docs(architecture): add KNOWN_LIMITATIONS.md + FINAL_ARCHITECTURE_SUMMARY.md (Migration 014 / Phase 23-24 final audit)
+   0b111eadbd57a247076af8896d38f288600e79f4	2026-08-27T04:32:54+02:00	docs(architecture): add SOTA_GAP_ANALYSIS.md (baseline vs current vs SOTA per 10 problems)
+   615d0c5ab3e1857277303fcc7ee447ad92b69270	2026-08-27T00:52:16+02:00	docs(architecture): add SOTA_IDENTIFICATION.md (10 architectural problems identified)
+   fe1c2209b1edd65a8c370b8faaa6d38aa3cf7ee9	2026-08-26T22:00:34+02:00	docs(architecture): add Phase 8 forensic doc set
+   391e36b2e83d47b5c0c4d718d8d08eaab1508f23	2026-08-15T16:03:01+02:00	docs: implement documentation system blueprint and archive straggling docs
+   3949aa57901ed2bbc992aabf83964a540279a4ff	2026-08-13T23:24:13+02:00	feat: Phase 6 — collections, memory upgrades, engine improvements
+StreamParserEngine: 34 commits referencing it
+   f56ea0f6cb1c4ee467803581a802127903ab3a09	2026-08-27T04:37:11+02:00	docs(architecture): add MIGRATION_PLAN.md (14-step evolution sequence)
+   0b111eadbd57a247076af8896d38f288600e79f4	2026-08-27T04:32:54+02:00	docs(architecture): add SOTA_GAP_ANALYSIS.md (baseline vs current vs SOTA per 10 problems)
+   615d0c5ab3e1857277303fcc7ee447ad92b69270	2026-08-27T00:52:16+02:00	docs(architecture): add SOTA_IDENTIFICATION.md (10 architectural problems identified)
+   a08aaa800e7a2355767de37392e0a615bdb4854e	2026-08-26T23:36:52+02:00	docs(architecture): add ARCHITECTURAL_DECISIONS.md (8 major decisions reconstructed)
+   fe1c2209b1edd65a8c370b8faaa6d38aa3cf7ee9	2026-08-26T22:00:34+02:00	docs(architecture): add Phase 8 forensic doc set
+   391e36b2e83d47b5c0c4d718d8d08eaab1508f23	2026-08-15T16:03:01+02:00	docs: implement documentation system blueprint and archive straggling docs
+HarnessRuntime: 17 commits referencing it
+   a08aaa800e7a2355767de37392e0a615bdb4854e	2026-08-26T23:36:52+02:00	docs(architecture): add ARCHITECTURAL_DECISIONS.md (8 major decisions reconstructed)
+   fe1c2209b1edd65a8c370b8faaa6d38aa3cf7ee9	2026-08-26T22:00:34+02:00	docs(architecture): add Phase 8 forensic doc set
+   391e36b2e83d47b5c0c4d718d8d08eaab1508f23	2026-08-15T16:03:01+02:00	docs: implement documentation system blueprint and archive straggling docs
+   3949aa57901ed2bbc992aabf83964a540279a4ff	2026-08-13T23:24:13+02:00	feat: Phase 6 — collections, memory upgrades, engine improvements
+   8ce86b676e8bd4bf70b86b9680930a460c56f75a	2026-08-06T19:10:48+02:00	chore: track docs, cleanup stale docs and artifacts, fix invariants and NLCL engines
+   5f24dfa4c02843f7976266625067a11ec9c6de8c	2026-08-04T03:52:51+02:00	fix(desktop): update AGENTS.md with devops/desktop toolkit docs, fix health route export
+HarnessRepairEngine: 10 commits referencing it
+   0b111eadbd57a247076af8896d38f288600e79f4	2026-08-27T04:32:54+02:00	docs(architecture): add SOTA_GAP_ANALYSIS.md (baseline vs current vs SOTA per 10 problems)
+   615d0c5ab3e1857277303fcc7ee447ad92b69270	2026-08-27T00:52:16+02:00	docs(architecture): add SOTA_IDENTIFICATION.md (10 architectural problems identified)
+   a08aaa800e7a2355767de37392e0a615bdb4854e	2026-08-26T23:36:52+02:00	docs(architecture): add ARCHITECTURAL_DECISIONS.md (8 major decisions reconstructed)
+   9ca857eb212ad04032330e6da2b4daf5a21f9dfa	2026-08-09T18:38:37+02:00	feat: canvas resolve-loop fix, browser MCP hardening, desktop toolkit + round-5 bundle sync
+   3b21bf31bd228b7680463bdf42ffe38bd9cd7713	2026-08-07T11:04:52+02:00	chore: refactor engine split, Docker/CI packaging, tunnel+p2p rework
+   8ce86b676e8bd4bf70b86b9680930a460c56f75a	2026-08-06T19:10:48+02:00	chore: track docs, cleanup stale docs and artifacts, fix invariants and NLCL engines
+ModuleRegistry: 2 commits referencing it
+   8ce86b676e8bd4bf70b86b9680930a460c56f75a	2026-08-06T19:10:48+02:00	chore: track docs, cleanup stale docs and artifacts, fix invariants and NLCL engines
+   3abafcef47d1b71355b238c67ed8940e6b44de5e	2026-08-05T23:48:55+02:00	feat: upgrade from WP-10 source — 2377 files copied, src/ type errors fixed
+ConversationManager: 34 commits referencing it
+   fe1c2209b1edd65a8c370b8faaa6d38aa3cf7ee9	2026-08-26T22:00:34+02:00	docs(architecture): add Phase 8 forensic doc set
+   391e36b2e83d47b5c0c4d718d8d08eaab1508f23	2026-08-15T16:03:01+02:00	docs: implement documentation system blueprint and archive straggling docs
+   3949aa57901ed2bbc992aabf83964a540279a4ff	2026-08-13T23:24:13+02:00	feat: Phase 6 — collections, memory upgrades, engine improvements
+   edd8fa5fd5f1828850c0ec9b77d34d729157abb9	2026-08-13T17:24:26+02:00	chore: massive repo cleanup — reclaim ~8.5 GB
+   331071b97a625abdc8de41ca17f77689b243d388	2026-08-12T06:29:43+02:00	chore: full session checkpoint — engine fixes, frontend refinement, devops tooling, code audit, schema updates
+   3b21bf31bd228b7680463bdf42ffe38bd9cd7713	2026-08-07T11:04:52+02:00	chore: refactor engine split, Docker/CI packaging, tunnel+p2p rework
+NodeGraphStorage: 0 commits referencing it

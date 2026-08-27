@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-08-27T03-52-37-210Z",
+  "commit": "9ca5527f1394a4b3e3b325487ca204a297a8d014",
+  "hygiene": {
+    "dirtyFiles": 19,
+    "detail": "A  docs/architecture/MIGRATION_008_NOTE.md\nA  docs/architecture/MIGRATION_009_NOTE.md\nA  docs/architecture/MIGRATION_010_NOTE.md\nA  docs/architecture/MIGRATION_011_NOTE.md\nA  docs/architecture/MIGRATION_012_NOTE.md\nAM tests/unit/fsrs-preservation/property-test-skeleton.test.ts\nAM tests/unit/harness-repair/property-test-skeleton.test.ts\nA  tests/unit/protocol-generation/property-test-skeleton.test.ts\n?? .cip/\n?? .genome/\n?? docs/agent-cip-output-guide.md\n?? docs/alpha/\n?? docs/architecture/TARGET_ARCHITECTURE.md\n?? docs/librarian-v3/\n?? docs/librarian/\n?? docs/research/\n?? docs/session/\n?? snapshots/\n?? src/generated/"
+  },
+  "evidence": {
+    "topology.json": true,
+    "commits.jsonl": true,
+    "lineage.json": true,
+    "deleted-files.json": true,
+    "census.json": true,
+    "intent-corpus.jsonl": true,
+    "sota-report.json": true,
+    "branch-recovery.json": true,
+    "checkpoint-map.json": true,
+    "hygiene.json": true,
+    "DECISIONS.md": true
+  },
+  "untrackedCount": 11,
+  "gateSummary": {
+    "hygienePass": true,
+    "evidencePass": true,
+    "typecheckPass": true,
+    "testsPass": true,
+    "lintPass": true
+  }
+}
