@@ -1,0 +1,1 @@
+Migration 011 — Desktop binary monitoring (optional bkg adoption): see ARCHITECTURAL_DECISIONS.md Decision 7; SOTA_GAP_ANALYSIS.md Problem 6 (ADAPT: monitor bkg, adopt when stable). Monitor Bun canary (v1.4.0+ with bkg LZ4 compression). No binary rewrite needed at this stage.

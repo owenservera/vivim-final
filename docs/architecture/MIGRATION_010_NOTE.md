@@ -1,0 +1,1 @@
+Migration 010 — SQLite WAL mode + connection pool tuning: see ARCHITECTURAL_DECISIONS.md Decision 3; SOTA_GAP_ANALYSIS.md Problem 1 (ADAPT). Settings: journal_mode=WAL, synchronous=NORMAL, mmap_size=appropriate. Connection pool: minConnections=1, maxConnections=10, connectionTimeout=30, idleConnectionTimeout=600. No DB engine replacement (KEEP SQLite + Prisma).

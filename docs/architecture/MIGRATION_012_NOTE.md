@@ -1,0 +1,1 @@
+Migration 012 — MCP adapter compliance verification: see SOTA_IDENTIFICATION.md Problem 7 (RESEARCH). Verify adapter against MCP 2025-06-18 spec (Resources, Prompts, Tools, Sampling, Roots, Elicitation, Security: user consent, data privacy, tool safety, sampling controls). Integration: devops/ MCP references; ARCHITECTURAL_DECISIONS.md Decision 8 (MCP adapter maturity).

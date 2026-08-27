@@ -1,0 +1,1 @@
+Migration 008 — Capability registry embedding lookup (optional adoption): see SOTA_IDENTIFICATION.md Problem 4 (RESEARCH + ADD). Embedding model: nomic-embed-text (localhost:11434) or jina-embeddings-v3. Integration point: src/storage/embedding_lookup/ (optional, future).
