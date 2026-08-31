@@ -1,77 +1,108 @@
-<![CDATA[<div align="center">
+<div align="center">
 
-# Vivim
+# 🚀 Vivim
 
-**Talk to every AI from one place.**
+### **Talk to every AI from one place.**
 
-[![GitHub release](https://img.shields.io/github/v/release/owenservera/vivim-final?include-prereleases)](https://github.com/owenservera/vivim-final/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Bun](https://img.shields.io/badge/Bun-1.3.14-%23000000?logo=bun)](https://bun.sh)
-[![Next.js](https://img.shields.io/badge/Next.js-16-%23000000?logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-7.0-%23007ACC?logo=typescript)](https://www.typescriptlang.org)
+[![GitHub release](https://img.shields.io/github/v/release/owenservera/vivim-final?include_prereleases&style=for-the-badge&logo=github)](https://github.com/owenservera/vivim-final/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&logo=mit)](LICENSE)
+[![Bun](https://img.shields.io/badge/Bun-1.3.14-%23000000?style=for-the-badge&logo=bun)](https://bun.sh)
+[![Next.js](https://img.shields.io/badge/Next.js-16-%23000000?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0-%23007ACC?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
 
-[Download](#download) • [How It Works](#how-it-works) • [Quick Start](#quick-start) • [Architecture](#architecture) • [Docs](#documentation) • [Contributing](#contributing)
+**Local-first • Multi-provider • Capability-driven • Open source**
+
+[📥 Download](#download) &nbsp;|&nbsp; [⚡ Quick Start](#quick-start) &nbsp;|&nbsp; [🏗️ Architecture](#architecture) &nbsp;|&nbsp; [📚 Documentation](#documentation) &nbsp;|&nbsp; [🤝 Contributing](#contributing)
 
 </div>
 
 ---
 
-## What Is Vivim?
+## 🌟 What Is Vivim?
 
-Vivim is a **local-first AI conversation platform** that connects to ChatGPT, Claude, Gemini, DeepSeek, Qwen, and Grok through a single interface. It runs entirely on your machine — no cloud account required.
+> **Vivim is a local-first AI conversation platform** that unifies ChatGPT, Claude, Gemini, DeepSeek, Qwen, and Grok into a single, powerful interface. Run entirely on your machine — no cloud account required.
 
-Instead of writing provider-specific code, Vivim uses a **capability system**: every provider interaction is a typed, composable operation with a single API. You describe what you want in natural language, and the system figures out how to do it.
+Instead of juggling multiple tabs or writing provider-specific code, Vivim introduces a revolutionary **capability system**: every AI interaction becomes a typed, composable operation with a unified API. Simply describe what you want in natural language, and the system intelligently figures out how to execute it.
 
----
+### ✨ Key Features
 
-## How It Works
-
-Three core concepts make Vivim work:
-
-### Capabilities
-
-A **capability** is an atomic operation — `send_message`, `select_model`, `create_chat`, `upload_file`. Every capability has a unique ID (like `cap:chat:send_message`), a category, and bindings to multiple surfaces (CLI, API, MCP, UI).
-
-When you type "send a message to Claude," the **Capability Resolution Engine** translates that into a resolved capability with a confidence score, then executes it against the right provider.
-
-```
-You: "send a message to Claude"
-  ↓
-Capability Resolution: cap:chat:send_message (confidence: 0.95)
-  ↓
-Provider Routing: Claude
-  ↓
-Execution via Chrome Governor
-  ↓
-Response streamed back to you
-```
-
-### Providers
-
-Each AI provider is described by a **manifest** — a declarative JSON document that declares endpoints, browser selectors, streaming parsers, model lists, and capabilities. Vivim currently supports **16 registered providers** with full streaming support for ChatGPT, Claude, Gemini, DeepSeek, Qwen, and Grok.
-
-Providers are connected through authenticated Chrome browser profiles — Vivim interacts with them the same way you would in a browser, but automated.
-
-### Chrome Governor
-
-The **ChromeGovernor** is the single point of control for all browser interaction. It manages Chrome processes, proxies commands through the Chrome DevTools Protocol (CDP), logs traces for debugging, and enforces a hard architectural rule: **no other engine touches the browser directly**.
-
-This keeps the system predictable and debuggable.
+| Feature | Description |
+|---------|-------------|
+| 🎯 **Universal Access** | Connect to 16+ AI providers from one interface |
+| 🔒 **Local-First** | Your data stays on your machine — privacy by default |
+| ⚡ **Real-Time Streaming** | Live response streaming from all supported providers |
+| 🧩 **Capability System** | Natural language commands resolved to typed operations |
+| 🛠️ **Multi-Surface** | CLI, HTTP API, WebSocket, MCP, and Desktop UI |
+| 🔍 **Fully Debuggable** | Complete trace logging via Chrome Governor |
 
 ---
 
-## Download
+## 🎯 How It Works
+
+Vivim's architecture rests on three foundational pillars:
+
+### 1️⃣ Capabilities
+
+A **capability** is an atomic operation — `send_message`, `select_model`, `create_chat`, `upload_file`. Each capability has:
+- A unique ID (e.g., `cap:chat:send_message`)
+- A category and taxonomy
+- Bindings to multiple surfaces (CLI, API, MCP, UI)
+
+When you type *"send a message to Claude"*, the **Capability Resolution Engine** translates that intent into a resolved capability with a confidence score, then executes it against the appropriate provider.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CRE as Capability Resolution Engine
+    participant Provider as AI Provider
+    participant CG as Chrome Governor
+    
+    User->>CRE: "send a message to Claude"
+    CRE->>CRE: Resolve: cap:chat:send_message<br/>(confidence: 0.95)
+    CRE->>Provider: Route to Claude
+    Provider->>CG: Execute via CDP
+    CG-->>User: Stream response
+```
+
+### 2️⃣ Providers
+
+Each AI provider is defined by a **manifest** — a declarative JSON document specifying:
+- Endpoints and browser selectors
+- Streaming parsers
+- Model lists
+- Supported capabilities
+
+Vivim currently supports **16 registered providers** with full streaming support for ChatGPT, Claude, Gemini, DeepSeek, Qwen, and Grok. Providers connect through authenticated Chrome browser profiles, interacting exactly as you would manually — but automated.
+
+### 3️⃣ Chrome Governor
+
+The **ChromeGovernor** is the single point of control for all browser automation:
+- Manages Chrome processes
+- Proxies commands through Chrome DevTools Protocol (CDP)
+- Logs complete traces for debugging
+- Enforces a strict architectural rule: **no other engine touches the browser directly**
+
+This ensures predictability, debuggability, and maintainability.
+
+---
+
+## 📥 Download
 
 ### Windows Installer (Recommended)
 
-Download the latest installer from [GitHub Releases](https://github.com/owenservera/vivim-final/releases):
+Get up and running in seconds with the official installer:
 
-- **[vivim-desktop-setup.exe](https://github.com/owenservera/vivim-final/releases/latest/download/vivim-desktop-setup.exe)** (~44 MB)
-  - Includes backend server, frontend UI, and desktop launcher
-  - Installs to `%LOCALAPPDATA%\Vivim`
-  - Creates Start Menu and Desktop shortcuts
+[![Download for Windows](https://img.shields.io/badge/Download-Windows-blue?style=for-the-badge&logo=windows)](https://github.com/owenservera/vivim-final/releases/latest/download/vivim-desktop-setup.exe)
+
+**vivim-desktop-setup.exe** (~44 MB)
+- ✅ Includes backend server, frontend UI, and desktop launcher
+- ✅ Installs to `%LOCALAPPDATA%\Vivim`
+- ✅ Creates Start Menu and Desktop shortcuts
+- ✅ Auto-updates enabled
 
 ### Manual Installation
+
+Prefer building from source?
 
 ```bash
 git clone https://github.com/owenservera/vivim-final.git
@@ -87,39 +118,43 @@ bun run seed
 bun run dev
 ```
 
-This starts:
+This launches:
 - **Backend** at `http://localhost:9420` (API + WebSocket)
 - **Frontend** at `http://localhost:3000` (Next.js)
 
-Open `http://localhost:3000` to start chatting.
+Open `http://localhost:3000` to start chatting!
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
-### 1. Install
+### Step 1: Install
 
-Either download the Windows installer or clone the repo (see above).
+Choose your preferred method above (Windows installer or manual clone).
 
-### 2. Configure
+### Step 2: Configure
 
-Set your API keys in `.env` (defaults work for local dev — keys only needed for live provider connections):
+Set your API keys in `.env` (defaults work for local development — keys only needed for live provider connections):
 
 ```bash
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 GOOGLE_API_KEY=...
+DEEPSEEK_API_KEY=...
+QWEN_API_KEY=...
 ```
 
-### 3. Launch
+### Step 3: Launch
 
 ```bash
 bun run dev
 ```
 
-### 4. Use
+### Step 4: Use
 
-Open `http://localhost:3000` and start a conversation. The CLI is also available:
+Open `http://localhost:3000` in your browser and start a conversation.
+
+**Prefer the command line?** The CLI is also available:
 
 ```bash
 bun run src/cli/index.ts
@@ -127,7 +162,7 @@ bun run src/cli/index.ts
 
 ---
 
-## Architecture
+## 🏗️ Architecture
 
 ### System Layers
 
@@ -147,38 +182,41 @@ bun run src/cli/index.ts
 └──────────────────────────────────────────────────────┘
 ```
 
-### Engine Architecture
+### Core Engines
 
-The system is built around **13 core engines** organized in layers, with 455+ engine files total:
+Vivim is built around **13 core engines** organized in layers, with 455+ engine files total:
 
-| Layer | Engines | Job |
-|-------|---------|-----|
-| **Provider KG** | ProviderRegistrar, ProviderHealthKernel | Register providers, track health |
+| Layer | Engines | Responsibility |
+|-------|---------|----------------|
+| **Provider KG** | ProviderRegistrar, ProviderHealthKernel | Register providers, track health status |
 | **Capabilities** | CapabilityResolutionEngine, CapabilityEngine | Resolve & execute operations |
-| **Session** | ConversationManager, StreamBlockStore | State, history, streaming |
+| **Session** | ConversationManager, StreamBlockStore | State management, history, streaming |
 | **Chrome** | ChromeGovernor | Browser automation, CDP proxy |
 | **Cross-cutting** | EventBus, ConfigManager, StreamParser | Shared infrastructure |
 
 ### Data Flow
 
-1. You type a message
-2. The system resolves which capability to execute
-3. The request is routed to the appropriate AI provider
-4. The response streams back in real-time
-5. Everything is persisted to a local SQLite database
+```mermaid
+graph LR
+    A[You type a message] --> B[Capability Resolution]
+    B --> C[Route to Provider]
+    C --> D[Chrome Governor Executes]
+    D --> E[Stream Response Back]
+    E --> F[Persist to SQLite]
+```
 
-See [Architecture Docs](docs/architecture/overview.md) for the full picture.
+📖 See [Architecture Docs](docs/architecture/overview.md) for the complete deep-dive.
 
 ---
 
-## Documentation
+## 📚 Documentation
 
-Full documentation at [docs/](docs/)
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
 
-| Area | Document | What It Covers |
-|------|----------|----------------|
+| Category | Document | Coverage |
+|----------|----------|----------|
 | **Architecture** | [Overview](docs/architecture/overview.md) | 30-second mental model |
-| | [Engines](docs/architecture/backend.md) | Every engine and its code path |
+| | [Engines](docs/architecture/backend.md) | Every engine and code path |
 | | [Data](docs/architecture/data-model.md) | Schema, Node model, store contracts |
 | | [API](docs/architecture/api-philosophy.md) | Routes, WebSocket, surfaces |
 | | [Frontend](docs/architecture/frontend.md) | React UI, canvas, slots |
@@ -186,21 +224,23 @@ Full documentation at [docs/](docs/)
 | | [Storage](docs/modules/storage.md) | Data persistence layer |
 | | [API](docs/modules/api.md) | HTTP API layer |
 | | [Desktop](docs/modules/desktop.md) | Tauri desktop application |
-| **Runbooks** | [Dev](docs/runbooks/dev.md) | Local development |
+| **Runbooks** | [Dev](docs/runbooks/dev.md) | Local development workflow |
 | | [Desktop](docs/runbooks/desktop.md) | Tauri build & testing |
 | | [Providers](docs/runbooks/providers.md) | Provider setup & testing |
-| **Decisions** | [ADR Index](docs/decisions/) | Architecture decisions |
-| **Glossary** | [Glossary](docs/GLOSSARY.md) | Domain terms and shorthand |
+| **Decisions** | [ADR Index](docs/decisions/) | Architecture decision records |
+| **Reference** | [Glossary](docs/GLOSSARY.md) | Domain terms and shorthand |
 
 ---
 
-## Development
+## 🛠️ Development
 
 ### Prerequisites
 
-- **Bun** 1.3.14+ ([Install](https://bun.sh))
-- **Node.js** 20+ ([Install](https://nodejs.org))
-- **Git** ([Install](https://git-scm.com))
+| Tool | Version | Install |
+|------|---------|---------|
+| **Bun** | 1.3.14+ | [Install](https://bun.sh) |
+| **Node.js** | 20+ | [Install](https://nodejs.org) |
+| **Git** | Latest | [Install](https://git-scm.com) |
 
 ### Setup
 
@@ -214,7 +254,7 @@ bun run seed
 bun run dev
 ```
 
-### Scripts
+### Available Scripts
 
 | Command | Description |
 |---------|-------------|
@@ -238,9 +278,9 @@ pwsh scripts/tauri/build.ps1
 bun run devops desktop-loop run --version <x.y.z>
 ```
 
-See [Desktop Runbook](docs/runbooks/desktop.md) for details.
+📘 See [Desktop Runbook](docs/runbooks/desktop.md) for complete details.
 
-### Testing
+### Testing Strategy
 
 ```bash
 bun test                    # All tests
@@ -252,7 +292,7 @@ bun run test:arch           # Architecture boundary tests
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 vivim-final/
@@ -281,9 +321,9 @@ vivim-final/
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions from the community! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ### Quick Start for Contributors
 
@@ -294,13 +334,15 @@ bun install && bun run prisma:generate && bun run seed
 bun run dev
 ```
 
-### What to Work On
+### Areas We Need Help
 
-- **Bug fixes** — Check [issues](https://github.com/owenservera/vivim-final/issues)
-- **New capabilities** — Register in `src/engines/capability-bootstrap/`
-- **Provider support** — Add manifests in `seeds/providers/manifests.ts`
-- **Documentation** — Improve docs in `docs/`
-- **Tests** — Increase coverage in `tests/`
+| Area | Opportunities |
+|------|---------------|
+| 🐛 **Bug Fixes** | Check [open issues](https://github.com/owenservera/vivim-final/issues) |
+| 🧩 **New Capabilities** | Register in `src/engines/capability-bootstrap/` |
+| 🌐 **Provider Support** | Add manifests in `seeds/providers/manifests.ts` |
+| 📖 **Documentation** | Improve docs in `docs/` |
+| ✅ **Tests** | Increase coverage in `tests/` |
 
 ### Code Standards
 
@@ -311,19 +353,19 @@ bun run dev
 
 ---
 
-## Security
+## 🔒 Security
 
-If you discover a security vulnerability, please report it responsibly:
+Found a security vulnerability? Please report it responsibly:
 
-1. **Do NOT** open a public GitHub issue
-2. **Email** security@vivim.dev with details
-3. **Wait** for response before public disclosure
+1. ❌ **Do NOT** open a public GitHub issue
+2. 📧 **Email** security@vivim.dev with full details
+3. ⏳ **Wait** for our response before any public disclosure
 
-See [SECURITY.md](SECURITY.md) for more information.
+See [SECURITY.md](SECURITY.md) for our complete security policy.
 
 ---
 
-## License
+## 📄 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
@@ -331,7 +373,10 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 <div align="center">
 
-**[Download Vivim Desktop](https://github.com/owenservera/vivim-final/releases/latest/download/vivim-desktop-setup.exe)** • **[Read the Docs](docs/)** • **[GitHub](https://github.com/owenservera/vivim-final)**
+### Ready to get started?
+
+[📥 Download Vivim Desktop](https://github.com/owenservera/vivim-final/releases/latest/download/vivim-desktop-setup.exe) &nbsp;•&nbsp; [📚 Read the Docs](docs/) &nbsp;•&nbsp; [🐙 View on GitHub](https://github.com/owenservera/vivim-final)
+
+**Built with ❤️ by the Vivim Team**
 
 </div>
-]]>
